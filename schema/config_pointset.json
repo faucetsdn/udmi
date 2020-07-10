@@ -1,0 +1,34 @@
+{
+  "title": "pointset config snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "sample_limit_sec": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 86400
+    },
+    "sample_rate_sec": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 86400
+    },
+    "points": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "additionalProperties": false,
+          "properties": {
+            "ref": {
+              "type": "string"
+            },
+            "fix_value": {
+              "type": ["number", "string", "boolean"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

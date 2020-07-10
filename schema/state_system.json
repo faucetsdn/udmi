@@ -1,0 +1,56 @@
+{
+  "title": "System state snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "make_model": {
+      "type": "string"
+    },
+    "auth_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "private_hash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "private_hash"
+      ]
+    },
+    "firmware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ]
+    },
+    "last_config": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operational": {
+      "type": "boolean"
+    },
+    "statuses": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:system.json#/definitions/entry"
+        }
+      }
+    }
+  },
+  "required": [
+    "make_model",
+    "firmware",
+    "operational"
+  ]
+}

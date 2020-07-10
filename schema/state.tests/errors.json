@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "id": "monkey_brains",
+  "system": {
+    "device_id": "33895507",
+    "device_status": "ok",
+    "object_name": "UK-BRH-XX_AHU-001",
+    "fling": "hello",
+    "firmware": {
+      "revision": "should be version"
+    },
+    "system_status": "Operational",
+    "statuses": {
+      "default": {
+        "timestamp": "2018-08-26T21:39:30.364Z",
+        "level": 30
+      }
+    },
+    "status": "hunky-dory"
+  },
+  "status": [
+    {
+      "level": 30
+    }
+  ],
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+        "object_type": "analog_input",
+        "instance_number": 4,
+        "cov_increment": 0.300000011920929,
+        "deadband": 0,
+        "rapt": "hello",
+        "high_limit": 0,
+        "low_limit": 0,
+        "resolution": 0.04952822998166084,
+        "units": "Degrees Celsius",
+        "status": "it's working!"
+      }
+    }
+  }
+}

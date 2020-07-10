@@ -1,0 +1,35 @@
+{
+  "title": "pointset state snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "points": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "additionalProperties": false,
+          "properties": {
+            "fault": {
+              "type": "boolean"
+            },
+            "units": {
+              "type": "string",
+            },
+            "source": {
+              "enum": [
+                "fix"
+              ]
+            },
+            "status": {
+              "$ref": "file:system.json#/definitions/entry"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "points"
+  ]
+}

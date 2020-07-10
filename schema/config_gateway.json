@@ -1,0 +1,18 @@
+{
+  "title": "Gateway Config Snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "required": [
+    "proxy_ids"
+  ],
+  "properties": {
+    "proxy_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+Validating 1 schemas
+  Validating 1 files against system.json
+    Against input system.tests/errors.json
+      #/logentries: 5 schema violations found
+        #/logentries/0: 4 schema violations found
+          #/logentries/0/category: string [com.testCategory$] does not match pattern ^[a-z][.a-zA-Z]*[a-zA-Z]$
+          #/logentries/0/level: 60 is not greater or equal to 100
+          #/logentries/0: required key [message] not found
+          #/logentries/0: required key [timestamp] not found
+        #/logentries/1: expected type: JSONObject, found: String

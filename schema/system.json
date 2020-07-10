@@ -1,0 +1,62 @@
+{
+  "title": "Log entry schema",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "enum": [
+        1
+      ]
+    },
+    "logentries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/entry"
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version"
+  ],
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "pattern": "^[a-z][.a-zA-Z]*[a-zA-Z]$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "level": {
+          "$comment": "https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity",
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 100,
+          "maximum": 800
+        }
+      },
+      "required": [
+        "message",
+        "category",
+        "timestamp",
+        "level"
+      ]
+    }
+  }
+}

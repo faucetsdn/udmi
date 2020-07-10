@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "make_model": "ACME Bird Trap",
+    "firmware": {
+      "version": "3.2a"
+    },
+    "auth_key": {
+      "private_hash": "sha512:4e61746f21abe6708ca81a45a1851b82efd1f3ad7f9e6f6fc2dcf431e0ff95cdbcc6f5940a4bfb77df7aeb2f057d19cf5f234a664775edc66175025a14a87c3b"
+    },
+    "last_config": "2018-08-26T21:49:29.364Z",
+    "operational": true,
+    "statuses": {
+      "base_system": {
+        "message": "Tickity Boo",
+        "category": "device.state.com",
+        "timestamp": "2018-08-26T21:39:30.364Z",
+        "level": 600
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+        "units": "Celsius",
+        "status": {
+          "message": "Invalid sample time",
+          "category": "device.config.validate",
+          "timestamp": "2018-08-26T21:39:28.364Z",
+          "level": 800
+        }
+      }
+    }
+  }
+}
+

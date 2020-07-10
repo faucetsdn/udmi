@@ -1,0 +1,28 @@
+{
+  "title": "Pointset metadata snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "points": {
+      "additionalProperties": false,
+      "maxProperties": 150,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "additionalProperties": false,
+          "properties": {
+            "units": {
+              "$ref": "file:units.json#"
+            },
+            "ref": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "points"
+  ]
+}

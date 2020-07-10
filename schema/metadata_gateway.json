@@ -1,0 +1,27 @@
+{
+  "title": "Gateway metadata snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "gateway_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
+    },
+    "subsystem": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "proxy_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
+      }
+    }
+  },
+  "oneOf": [
+    { "required": ["gateway_id"] },
+    { "required": ["proxy_ids"] }
+  ]
+}

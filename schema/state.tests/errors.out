@@ -1,0 +1,32 @@
+Validating 1 schemas
+  Validating 1 files against state.json
+    Against input state.tests/errors.json
+      #: 24 schema violations found
+        #/pointset/points/return_air_temperature_sensor: 9 schema violations found
+          #/pointset/points/return_air_temperature_sensor/status: expected type: JSONObject, found: String
+          #/pointset/points/return_air_temperature_sensor: extraneous key [cov_increment] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [deadband] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [high_limit] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [instance_number] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [low_limit] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [object_type] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [rapt] is not permitted
+          #/pointset/points/return_air_temperature_sensor: extraneous key [resolution] is not permitted
+        #/system: 13 schema violations found
+          #/system/firmware: 2 schema violations found
+            #/system/firmware: extraneous key [revision] is not permitted
+            #/system/firmware: required key [version] not found
+          #/system/statuses/default: 3 schema violations found
+            #/system/statuses/default/level: 30 is not greater or equal to 100
+            #/system/statuses/default: required key [category] not found
+            #/system/statuses/default: required key [message] not found
+          #/system: extraneous key [device_id] is not permitted
+          #/system: extraneous key [device_status] is not permitted
+          #/system: extraneous key [fling] is not permitted
+          #/system: extraneous key [object_name] is not permitted
+          #/system: extraneous key [status] is not permitted
+          #/system: extraneous key [system_status] is not permitted
+          #/system: required key [make_model] not found
+          #/system: required key [operational] not found
+        #: extraneous key [id] is not permitted
+        #: extraneous key [status] is not permitted

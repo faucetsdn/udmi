@@ -1,0 +1,86 @@
+{
+  "title": "System metadata snippet",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "site": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}-[A-Z]{3}-[A-Z0-9]{2,9}$"
+        },
+        "section": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        }
+      },
+      "required": [
+        "site"
+      ]
+    },
+    "physical_tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guid": {
+              "type": "string",
+              "pattern": "^[a-z]+://[-0-9a-zA-Z_$]+$"
+            },
+            "site": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}-[A-Z]{3}-[A-Z0-9]{2,9}$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+            }
+          },
+          "required": [
+            "guid",
+            "name"
+          ]
+        }
+      },
+      "required": [
+        "asset"
+      ]
+    },
+    "aux": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "suffix": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-]+$"
+        }
+      }
+    }
+  },
+  "required": [
+    "location",
+    "physical_tag"
+  ]
+}

@@ -1,0 +1,22 @@
+Validating 1 schemas
+  Validating 1 files against pointset.json
+    Against input pointset.tests/errors.json
+      #: 13 schema violations found
+        #/points: 10 schema violations found
+          #/points/guid: expected type: JSONObject, found: String
+          #/points/missing_present_value: required key [present_value] not found
+          #/points/old_properties: 2 schema violations found
+            #/points/old_properties/properties: #: 0 subschemas matched instead of one
+              #/points/old_properties/properties: properties is not a valid enum value
+            #/points/old_properties: required key [present_value] not found
+          #/points/yoyo_motion_sensor: 2 schema violations found
+            #/points/yoyo_motion_sensor/bad_property_name: #: 0 subschemas matched instead of one
+              #/points/yoyo_motion_sensor/bad_property_name: bad_property_name is not a valid enum value
+            #/points/yoyo_motion_sensor: required key [present_value] not found
+          #/points: extraneous key [analogValue_1] is not permitted
+          #/points: extraneous key [bad_____sensor] is not permitted
+          #/points: extraneous key [bad_entity_name_] is not permitted
+          #/points: extraneous key [comment$string] is not permitted
+        #: extraneous key [comment$string] is not permitted
+        #: extraneous key [id] is not permitted
+        #: extraneous key [properties] is not permitted

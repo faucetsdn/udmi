@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "properties": {
+    "make_model": "com.yoyodine.flux_capacitor",
+    "whoowhoo": true,
+    "release": "231_rev_8"
+  },
+  "type": "config",
+  "system": {
+  },
+  "points": {
+  },
+  "pointset": {
+    "sample_rate_sec": "5",
+    "version": 1,
+    "id": "miXeD_CaSE",
+    "timestamp": "2018-08-26T21:39:29.364Z",
+    "properties": {
+      "device_id": "33895507",
+      "object_name": "UK-BRH-XX_AHU-001",
+    },
+    "points": {
+      "return_air_temperature_sensor": {
+        "object_type": "analog_input",
+        "units": "Degrees Celsius"
+      }
+    }
+  }
+}

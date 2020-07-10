@@ -1,0 +1,7 @@
+Validating 1 schemas
+  Validating 1 files against pointset.json
+    Against input pointset.tests/empty.json
+      #: 3 schema violations found
+        #: required key [points] not found
+        #: required key [timestamp] not found
+        #: required key [version] not found

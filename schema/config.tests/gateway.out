@@ -1,0 +1,4 @@
+Validating 1 schemas
+  Validating 1 files against config.json
+    Against input config.tests/gateway.json
+      #/gateway/proxy_ids/2: string [991] does not match pattern ^[A-Z]{3}-[1-9][0-9]{0,2}$
