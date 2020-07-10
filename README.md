@@ -14,7 +14,7 @@ By deisgn, this schema is intended to be:
 * <b>I</b>nterface: Define an interface specification, rather than a client-library or
 RPC mechanism.
 
-See the associated [UDMI Tech Stack](TECH_STACK.md) for details about transport mechanism
+See the associated [UDMI Tech Stack](docs/tech_stack.md) for details about transport mechanism
 outside of the core schema definition. For questions and discussion pertaining to this topic,
 please join/monitor the
 [daq-users@googlegroups.com](https://groups.google.com/forum/#!forum/daq-users) email list 
