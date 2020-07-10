@@ -1,0 +1,37 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/../..
+cd $ROOT
+
+jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+
+if [ "$#" -lt 2 ]; then
+    echo Usage: $0 [schema] [target] [devset] [sitepath]
+    false
+fi
+
+schema=$1
+target=$2
+devset=${3:-$USER}
+sitepath=$4
+
+if [ ! -f $jarfile ]; then
+    echo Building validator...
+    validator/bin/build
+fi
+
+echo Using gcloud auth:
+gcloud config get-value account || true
+
+echo Executing validator $schema $target...
+
+echo Validating against schema $schemafile into validations/
+rm -rf validations
+
+echo java -jar $jarfile $schema $target $devset $sitepath
+
+error=0
+java -jar $jarfile $schema $target $devset $sitepath || error=$?
+
+echo Validation complete, exit $error
+exit $error

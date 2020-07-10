@@ -1,0 +1,51 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.2.0"
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+    id 'maven'
+}
+
+group 'daq-validator'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.google.daq.mqtt.validator.Validator'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
+    compile group: 'com.github.everit-org.json-schema', name: 'org.everit.json.schema', version: '1.9.1'
+
+    compile 'com.google.guava:guava:22.0'
+    compile 'com.google.cloud:google-cloud-logging:1.66.0'
+    compile ('com.google.apis:google-api-services-cloudiot:v1-rev20181120-1.27.0') {
+      exclude group: 'com.google.guava', module: 'guava-jdk5'
+    }
+    compile 'commons-io:commons-io:2.5'
+
+    compile 'com.google.cloud:google-cloud-pubsub:1.66.0'
+    compile 'com.google.cloud:google-cloud-firestore:0.84.0-beta'
+    testCompile group: 'junit', name: 'junit', version: '4.13'
+}

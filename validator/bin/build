@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+
+cd $ROOT
+rm -rf build
+./gradlew shadow
+
+ls -l build/libs/validator-1.0-SNAPSHOT-all.jar
+
+echo Done with validator build.
