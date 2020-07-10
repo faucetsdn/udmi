@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.librato.metrics:metrics-librato:5.1.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.librato.metrics/metrics-librato/5.1.0/af651d64ace2f0bd2dcbd92fbdf4839fa5c3dcc1/metrics-librato-5.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.librato.metrics/metrics-librato/5.1.0/f669e52ad817115269a8f4a00cfc40b7018e6291/metrics-librato-5.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

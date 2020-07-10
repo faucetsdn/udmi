@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/../..)
+cd $ROOT
+
+conf_file=local/pubber.json
+
+if [ ! -f $conf_file ]; then
+    echo Pubber config file not found: $(realpath $conf_file)
+    false
+fi
+
+java -jar pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar $conf_file

@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+rundir=$(dirname $0)
+cd $rundir/..
+
+echo Running in $PWD
+
+rm -rf build
+
+./gradlew build
+./gradlew shadow
