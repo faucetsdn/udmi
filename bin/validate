@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+cd $ROOT
+
+source etc/config_base.sh
+
+if [ -z "$gcp_cred" ]; then
+  echo Please make sure gcp_cred is defined in local/system.conf
+  false
+fi
+
+if [ -z "$gcp_topic" ]; then
+  echo Please make sure gcp_topic is defined in local/system.conf
+  false
+fi
+
+if [ -z "$schema_path" ]; then
+  echo Please make sure schema_path is defined in local/system.conf
+  false
+fi
+
+echo Building validator...
+validator/bin/build > /dev/null
+
+echo Configured topic is $gcp_topic
+echo Configured schema is $schema_path
+echo Configured site path is $site_path
+echo
+
+echo Running tools version `git describe`
+
+validator/bin/validate $schema_path pubsub:$gcp_topic dev $site_path

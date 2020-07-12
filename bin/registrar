@@ -1,0 +1,30 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+cd $ROOT
+
+if [ $# != 1 ]; then
+    echo $0 [project_id]
+    false
+fi
+project_id=$1
+shift
+
+source etc/config_base.sh
+
+if [ -z "$site_path" ]; then
+    echo Need to define [site_path] config variable.
+    false
+fi
+
+if [ -z "$schema_path" ]; then
+    echo Need to define [schema_path] config variable.
+    false
+fi
+
+echo Building validator...
+validator/bin/build > /dev/null
+
+echo Running tools version `git describe`
+
+validator/bin/registrar $project_id $site_path $schema_path $* 2>&1
