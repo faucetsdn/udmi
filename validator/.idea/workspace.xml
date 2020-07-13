@@ -5,6 +5,7 @@
       <change afterPath="$PROJECT_DIR$/../docs/pubber.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../docs/registrar.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../docs/validator.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_private.pem" beforeDir="false" afterPath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_private.pem" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_private.pkcs8" beforeDir="false" afterPath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_private.pkcs8" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_public.pem" beforeDir="false" afterPath="$PROJECT_DIR$/../test_site/devices/AHU-1/rsa_public.pem" afterDir="false" />
@@ -19,6 +20,7 @@
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,9 +56,6 @@
         </projects_view>
       </state>
     </system>
-  </component>
-  <component name="FavoritesManager">
-    <favorites_list name="validator" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -308,7 +307,7 @@
       <workItem from="1594190649418" duration="2461000" />
       <workItem from="1594215965414" duration="1034000" />
       <workItem from="1594217807932" duration="1218000" />
-      <workItem from="1594672407403" duration="317000" />
+      <workItem from="1594672407403" duration="637000" />
     </task>
     <servers />
   </component>
@@ -469,10 +468,10 @@
       <screen x="0" y="0" width="1280" height="693" />
     </state>
     <state x="464" y="191" width="526" height="481" key="extract.method.dialog/0.0.1280.693@0.0.1280.693" timestamp="1593546626522" />
-    <state x="441" y="277" width="998" height="1539" key="find.popup" timestamp="1594216123596">
-      <screen x="0" y="0" width="1440" height="2109" />
+    <state x="418" y="91" width="663" height="512" key="find.popup" timestamp="1594672723075">
+      <screen x="0" y="0" width="1280" height="693" />
     </state>
-    <state x="418" y="91" width="663" height="512" key="find.popup/0.0.1280.693@0.0.1280.693" timestamp="1594185064359" />
+    <state x="418" y="91" width="663" height="512" key="find.popup/0.0.1280.693@0.0.1280.693" timestamp="1594672723075" />
     <state x="100" y="125" width="1036" height="800" key="find.popup/0.0.2000.1082@0.0.2000.1082" timestamp="1587156523563" />
     <state x="801" y="503" width="1139" height="620" key="find.popup/0.0.2000.1144@0.0.2000.1144" timestamp="1587580096966" />
     <state x="881" y="221" width="1036" height="670" key="find.popup/0.0.2000.906@0.0.2000.906" timestamp="1587664889452" />
@@ -515,12 +514,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java</url>
-          <line>233</line>
+          <line>218</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java</url>
-          <line>381</line>
+          <line>366</line>
           <option name="timeStamp" value="29" />
         </line-breakpoint>
       </breakpoints>

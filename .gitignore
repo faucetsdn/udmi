@@ -1,5 +1,6 @@
 *~
 
-validator/build/
-validator/out/
-pubber/build/
+/out
+/validator/build/
+/validator/out/
+/pubber/build/
