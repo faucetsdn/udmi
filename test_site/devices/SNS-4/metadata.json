@@ -1,0 +1,34 @@
+{
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "units": "Bars"
+      },
+      "filter_differential_pressure_sensor": {
+        "units": "No-units"
+      },
+      "filter_differential_pressure_setpoint": {
+        "units": "Bars"
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "site": "ZZ-TRI-FECTA",
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "site": "ZZ-TRI-FECTA",
+        "name": "SNS-4"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
+  "version": 1,
+  "timestamp": "2020-05-01T13:39:07Z",
+  "hash": "6073d78f"
+}

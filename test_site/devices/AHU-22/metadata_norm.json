@@ -1,0 +1,47 @@
+{
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "units": "Bars",
+        "ref": "BV11.present_value"
+      },
+      "filter_differential_pressure_sensor": {
+        "units": "Degrees-Celsius",
+        "ref": "AV12.present_value"
+      },
+      "filter_differential_pressure_setpoint": {
+        "units": "No-units"
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "site": "ZZ-TRI-FECTA",
+      "section": "2-3N8C",
+      "position": {
+        "x": -111.0,
+        "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "AHU-22",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
+  "localnet": {
+    "subsystem": {
+      "bacnet": {
+        "local_id": "0x65"
+      }
+    }
+  },
+  "version": 1,
+  "timestamp": "2020-07-13T20:23:27Z",
+  "hash": "bf82176c"
+}

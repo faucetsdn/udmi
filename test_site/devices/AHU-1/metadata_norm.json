@@ -1,0 +1,38 @@
+{
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "units": "Bars"
+      },
+      "filter_differential_pressure_sensor": {
+        "units": "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint": {
+        "units": "No-units"
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "site": "ZZ-TRI-FECTA",
+      "section": "2-3N8C",
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "AHU-1",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "cloud": {
+    "auth_type": "RS256"
+  },
+  "version": 1,
+  "timestamp": "2020-07-13T20:23:27Z",
+  "hash": "ddf813e3"
+}

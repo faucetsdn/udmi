@@ -1,0 +1,29 @@
+{
+  "device_info": {
+    "guid": "*** GUID ***",
+    "hostname": "*** Network Hostname ***",
+    "make": "*** Make ***",
+    "model": "*** Model ***",
+    "name": "*** Name ***",
+    "serial": "*** Serial ***",
+    "type": "*** Type ***",
+    "version": "*** Version ***",
+    "firmware_version": "*** Firmware Version ***"
+  },
+  "device_type": "rocket",
+  "modules": {
+    "foobar": {
+      "enabled": false
+    }
+  },
+  "servers": {
+    "tcp": {
+      "ports": {
+        "443": {
+          "allowed": true,
+          "description": "Administrative Secure Web-Server"
+        }
+      }
+    }
+  }
+}

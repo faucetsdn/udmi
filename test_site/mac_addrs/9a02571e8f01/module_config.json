@@ -1,0 +1,54 @@
+{
+  "device_datasheets_url": "*** Device Datasheets URL ***",
+  "device_description": "*** Device Description ***",
+  "device_image": "*** Device Image URL ***",
+  "device_info": {
+    "guid": "*** GUID ***",
+    "hostname": "*** Network Hostname ***",
+    "make": "*** Make ***",
+    "model": "*** Model ***",
+    "name": "*** Name ***",
+    "serial": "*** Serial ***",
+    "type": "*** Type ***",
+    "firmware_version": "*** Firmware Version ***"
+  },
+  "device_manuals_url": "*** Device Manuals URL ***",
+  "modules": {
+    "pass": {
+      "enabled": true
+    },
+    "hold": {
+      "enabled": false
+    }
+  },
+  "servers": {
+    "tcp": {
+      "ports": {
+        "23": {
+          "allowed": false,
+          "description": "Telnet Server"
+        },
+        "80": {
+          "allowed": false,
+          "description": "Administrative Insecure Web-Server"
+        },
+        "443": {
+          "allowed": true,
+          "description": "Administrative Secure Web-Server"
+        }
+      }
+    },
+    "udp": {
+      "ports": {
+        "47808": {
+          "allowed": false,
+          "description": "BACnet protocol"
+        }
+      }
+    }
+  },
+  "process": {
+     "attempt_number": 1
+  },
+  "device_type": "rocket"
+}

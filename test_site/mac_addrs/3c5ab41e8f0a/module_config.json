@@ -1,0 +1,39 @@
+{
+  "device_datasheets_url": "*** Device Datasheets URL ***",
+  "device_description": "*** Device Description ***",
+  "device_image": "*** Device Image URL ***",
+  "device_info": {
+    "guid": "*** GUID ***",
+    "hostname": "*** Network Hostname ***",
+    "make": "*** Make ***",
+    "model": "*** Model ***",
+    "name": "*** Name ***",
+    "serial": "*** Serial ***",
+    "type": "*** Type ***",
+    "firmware_version": "?\\xFF\\xFF\\x19,>u\\x08\\x00no"
+  },
+  "device_manuals_url": "*** Device Manuals URL ***",
+  "modules": {
+    "pass": {
+      "enabled": true
+    },
+    "switch": {
+      "enabled": true
+    }
+  },
+  "servers": {
+    "tcp": {
+      "ports": {
+        "443": {
+          "allowed": true,
+          "reason": "Administrative Web-Server"
+        }
+      }
+    }
+  },
+  "process": {
+     "attempt_number": 1
+  },
+  "device_type": "rocket",
+  "device_id": "SNS-4"
+}

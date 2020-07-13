@@ -1,30 +1,25 @@
 #!/bin/bash -e
 
-ROOT=$(realpath $(dirname $0)/..)
-cd $ROOT
+ROOT_DIR=$(dirname $0)/..
 
-if [ $# != 1 ]; then
-    echo $0 [project_id]
+if [ $# != 2 ]; then
+    echo $0 PROJECT_ID SITE_PATH [device filter]
     false
 fi
+
 project_id=$1
+site_path=$2
 shift
-
-source etc/config_base.sh
-
-if [ -z "$site_path" ]; then
-    echo Need to define [site_path] config variable.
-    false
-fi
-
-if [ -z "$schema_path" ]; then
-    echo Need to define [schema_path] config variable.
-    false
-fi
+shift
 
 echo Building validator...
 validator/bin/build > /dev/null
 
 echo Running tools version `git describe`
 
-validator/bin/registrar $project_id $site_path $schema_path $* 2>&1
+if [ ! -f $site_path/cloud_iot_config.json ]; then
+    echo cloud_iot_config.json not found at $site_path
+    false
+fi
+
+$ROOT_DIR/validator/bin/registrar $project_id $site_path schema $* 2>&1

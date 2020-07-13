@@ -1,0 +1,59 @@
+{
+  "modules": {
+    "pass": {
+      "enabled": false
+    },
+    "switch": {
+      "enabled": true
+    },
+    "bacext": {
+      "enabled": true
+    },
+    "hold": {
+      "enabled": true
+    },
+    "network": {
+      "enabled": true
+    },
+    "manual": {
+      "enabled": true
+    },
+    "ntp": {
+      "enabled": true
+    }
+  },
+  "process": {
+    "approver": "*** Approver Name ***",
+    "operator": "*** Operator Name ***"
+  },
+  "report": {
+    "results": [ "pass", "fail", "skip" ],
+    "categories": [ "Security" ],
+    "expected": [ "Required", "Recommended" ]
+  },
+  "tests": {
+    "unknown.fake.llama": {
+      "required": "gone"
+    },
+    "unknown.fake.monkey": {
+      "required": "pass"
+    },
+    "base.target.ping": {
+      "category": "Connectivity",
+      "expected": "Required"
+    },
+    "security.ports.nmap": {
+      "required": "pass",
+      "category": "Security",
+      "expected": "Recommended"
+    },
+    "manual.test.travis": {
+      "required": "pass",
+      "category": "Security",
+      "expected": "Recommended",
+      "type": "manual",
+      "outcome" : "pass",
+      "summary" : "for testing"
+    }
+  }
+}
