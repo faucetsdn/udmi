@@ -57,7 +57,6 @@ class LocalDevice {
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
 
-  private static final String KEYGEN_EXEC_FORMAT = "validator/bin/keygen %s %s";
   public static final String METADATA_SUBFOLDER = "metadata";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
@@ -178,7 +177,7 @@ class LocalDevice {
       }
       File deviceKeyFile = new File(deviceDir, publicKeyFile());
       if (!deviceKeyFile.exists()) {
-        generateNewKey();
+        throw new RuntimeException("Missing public key file " + publicKeyFile());
       }
       return CloudIotManager.makeCredentials(getAuthFileType(),
           IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
@@ -196,20 +195,6 @@ class LocalDevice {
 
   private String publicKeyFile() {
     return RSA_CERT_TYPE.equals(getAuthType()) ? RSA_CERT_PEM : RSA_PUBLIC_PEM;
-  }
-
-  private void generateNewKey() {
-    String absolutePath = deviceDir.getAbsolutePath();
-    try {
-      String command = String.format(KEYGEN_EXEC_FORMAT, getAuthType(), absolutePath);
-      System.err.println(command);
-      int exitCode = Runtime.getRuntime().exec(command).waitFor();
-      if (exitCode != 0) {
-        throw new RuntimeException("Keygen exit code " + exitCode);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While generating new credential for " + deviceId, e);
-    }
   }
 
   boolean isGateway() {
