@@ -12,6 +12,6 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install openjdk-11-jdk
-          java --version
+          update-alternatives --config java < /dev/null
       - name: Running unit tests
         run: bin/test_schema
