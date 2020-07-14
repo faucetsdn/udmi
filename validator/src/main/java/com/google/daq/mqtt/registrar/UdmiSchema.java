@@ -11,7 +11,7 @@ public class UdmiSchema {
     public final String subFolder = LocalDevice.METADATA_SUBFOLDER;
   }
 
-  static class Metadata {
+  public static class Metadata {
     public PointsetMetadata pointset;
     public SystemMetadata system;
     public GatewayMetadata gateway;
@@ -26,7 +26,7 @@ public class UdmiSchema {
     public String auth_type;
   }
 
-  static class PointsetMetadata {
+  public static class PointsetMetadata {
     public Map<String, PointMetadata> points;
   }
 
@@ -98,5 +98,13 @@ public class UdmiSchema {
 
   static class LocalnetSubsystem {
     public String local_id;
+  }
+
+  public static class PointsetMessage {
+    public Map<String, PointData> points = new TreeMap<>();
+  }
+
+  static class PointData {
+
   }
 }

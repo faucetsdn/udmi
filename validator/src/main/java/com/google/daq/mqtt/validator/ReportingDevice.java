@@ -2,6 +2,9 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 
+import com.google.daq.mqtt.registrar.UdmiSchema;
+import com.google.daq.mqtt.registrar.UdmiSchema.Metadata;
+import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import java.util.*;
 
 public class ReportingDevice {
@@ -74,28 +77,5 @@ public class ReportingDevice {
     public List<String> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;
-  }
-
-  public static class PointsetMessage {
-    public Integer version;
-    public String timestamp;
-    public Map<String, PointDescriptor> points;
-  }
-
-  public static class Metadata {
-    public Integer version;
-    public String timestamp;
-    public String hash;
-    public Object system;
-    public PointSet pointset;
-  }
-
-  public static class PointSet {
-    public Map<String, PointDescriptor> points;
-  }
-
-  public static class PointDescriptor {
-    public String units;
-    public Object present_value;
   }
 }

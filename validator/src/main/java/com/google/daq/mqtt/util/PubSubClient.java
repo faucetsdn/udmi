@@ -5,17 +5,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient.ListSubscriptionsPagedResponse;
 import com.google.protobuf.Timestamp;
-import com.google.pubsub.v1.*;
+import com.google.pubsub.v1.ProjectName;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PubsubMessage;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.SeekRequest;
+import com.google.pubsub.v1.Subscription;
 import io.grpc.LoadBalancerRegistry;
 import io.grpc.internal.PickFirstLoadBalancerProvider;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,17 +35,17 @@ public class PubSubClient {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setSerializationInclusion(Include.NON_NULL);
-  private static final String SUBSCRIPTION_NAME_FORMAT = "daq-validator-%s";
+  private static final String SUBSCRIPTION_NAME_FORMAT = "udmi-validator-%s";
   private static final String
       REFRESH_ERROR_FORMAT = "While refreshing subscription to topic %s subscription %s";
 
-  private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
   private static final String WAS_BASE_64 = "wasBase64";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final BlockingQueue<PubsubMessage> messages = new LinkedBlockingDeque<>();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
+  private final String projectId;
 
   private Subscriber subscriber;
 
@@ -50,18 +54,19 @@ public class PubSubClient {
     LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
   }
 
-  public PubSubClient(String instName, String topicId) {
+  public PubSubClient(String projectId, String instName, String topicId) {
     try {
-      ProjectTopicName projectTopicName = ProjectTopicName.of(PROJECT_ID, topicId);
+      this.projectId = projectId;
+      ProjectTopicName projectTopicName = ProjectTopicName.of(projectId, topicId);
       String name = String.format(SUBSCRIPTION_NAME_FORMAT, instName);
-      ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(PROJECT_ID, name);
+      ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, name);
       System.out.println("Resetting and connecting to pubsub subscription " + subscriptionName);
       resetSubscription(projectTopicName, subscriptionName);
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
       subscriber.startAsync().awaitRunning();
       active.set(true);
     } catch (Exception e) {
-      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, PROJECT_ID, topicId), e);
+      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId, topicId), e);
     }
   }
 
@@ -137,12 +142,12 @@ public class PubSubClient {
 
   private void resetSubscription(ProjectTopicName topicName, ProjectSubscriptionName subscriptionName) {
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
-      if (subscriptionExists(subscriptionAdminClient, topicName, subscriptionName)) {
+      if (subscriptionExists(subscriptionAdminClient, subscriptionName)) {
         System.out.println("Resetting existing subscription " + subscriptionName);
         subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
         Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
       } else {
-        System.out.println("Creating new subscription " + subscriptionName);
+        System.out.println("Creating new subscription " + subscriptionName + " for topic " + topicName);
         subscriptionAdminClient.createSubscription(
             subscriptionName, topicName, PushConfig.getDefaultInstance(), 0);
       }
@@ -153,9 +158,9 @@ public class PubSubClient {
   }
 
   private boolean subscriptionExists(SubscriptionAdminClient subscriptionAdminClient,
-      ProjectTopicName topicName, ProjectSubscriptionName subscriptionName) {
+      ProjectSubscriptionName subscriptionName) {
     ListSubscriptionsPagedResponse listSubscriptionsPagedResponse = subscriptionAdminClient
-        .listSubscriptions(ProjectName.of(PROJECT_ID));
+        .listSubscriptions(ProjectName.of(projectId));
     for (Subscription subscription : listSubscriptionsPagedResponse.iterateAll()) {
       if (subscription.getName().equals(subscriptionName.toString())) {
         return true;

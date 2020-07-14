@@ -9,6 +9,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.registrar.UdmiSchema;
+import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import com.google.daq.mqtt.util.*;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import org.everit.json.schema.Schema;
@@ -57,6 +59,7 @@ public class Validator {
   private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
   private static final String POINTSET_TYPE = "pointset";
   private static final String NO_SITE = "--";
+  private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
@@ -67,18 +70,22 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, METADATA_REPORT_JSON);
 
+  public Validator(String projectId) {
+    this.projectId = projectId;
+  }
+
   public static void main(String[] args) {
-    Validator validator = new Validator();
+    if (args.length != 5) {
+      throw new IllegalArgumentException("Args: [project] [schema] [target] [instance] [site]");
+    }
     try {
-      if (args.length != 4) {
-        throw new IllegalArgumentException("Args: [schema] [target] [inst_name] [site]");
-      }
-      validator.setSchemaSpec(args[0]);
-      String targetSpec = args[1];
-      String instName = args[2];
-      String siteDir = args[3];
+      Validator validator = new Validator(args[0]);
+      validator.setSchemaSpec(args[1]);
+      String targetSpec = args[2];
+      String instName = args[3];
+      String siteDir = args[4];
       if (!NO_SITE.equals(siteDir)) {
-        validator.setSiteDir(args[3]);
+        validator.setSiteDir(siteDir);
       }
       if (targetSpec.startsWith(PUBSUB_PREFIX)) {
         String topicName = targetSpec.substring(PUBSUB_PREFIX.length());
@@ -112,7 +119,7 @@ public class Validator {
           File metadataFile = new File(deviceDir, METADATA_JSON);
           ReportingDevice reportingDevice = new ReportingDevice(device);
           reportingDevice.setMetadata(
-              OBJECT_MAPPER.readValue(metadataFile, ReportingDevice.Metadata.class));
+              OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class));
           expectedDevices.put(device, reportingDevice);
         } catch (Exception e) {
           throw new RuntimeException("While loading device " + device, e);
@@ -150,13 +157,13 @@ public class Validator {
     if (!schemaMap.containsKey(ENVELOPE_SCHEMA_ID)) {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
-    dataSink = new FirestoreDataSink();
+    dataSink = new FirestoreDataSink(projectId);
     System.out.println("Results will be uploaded to " + dataSink.getViewUrl());
     OUT_BASE_FILE.mkdirs();
     System.out.println("Also found in such directories as " + OUT_BASE_FILE.getAbsolutePath());
     System.out.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
     System.out.println("Connecting to pubsub topic " + topicName);
-    PubSubClient client = new PubSubClient(instName, topicName);
+    PubSubClient client = new PubSubClient(projectId, instName, topicName);
     System.out.println("Entering pubsub message loop on " + client.getSubscriptionId());
     while(client.isActive()) {
       try {
@@ -263,8 +270,8 @@ public class Validator {
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
           if (POINTSET_TYPE.equals(schemaId)) {
-            ReportingDevice.PointsetMessage pointsetMessage =
-                OBJECT_MAPPER.convertValue(message, ReportingDevice.PointsetMessage.class);
+            PointsetMessage pointsetMessage =
+                OBJECT_MAPPER.convertValue(message, PointsetMessage.class);
             updated = !reportingDevice.hasBeenValidated();
             reportingDevice.validateMetadata(pointsetMessage);
           }

@@ -22,11 +22,12 @@ public class FirestoreDataSink {
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX").withZone(ZoneOffset.UTC);
 
   private final Firestore db;
-  private final String projectId = ServiceOptions.getDefaultProjectId();
 
   private final AtomicReference<RuntimeException> oldError = new AtomicReference<>();
+  private final String projectId;
 
-  public FirestoreDataSink() {
+  public FirestoreDataSink(String projectId) {
+    this.projectId = projectId;
     try {
       GoogleCredentials credential = GoogleCredentials.getApplicationDefault();
       FirestoreOptions firestoreOptions =

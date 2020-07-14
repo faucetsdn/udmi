@@ -12,14 +12,14 @@ site_path=$2
 shift
 shift
 
-echo Building validator...
-validator/bin/build > /dev/null
-
-echo Running tools version `git describe`
-
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
     false
 fi
+
+echo Building validator...
+validator/bin/build > /dev/null
+
+echo Running tools version `git describe`
 
 $ROOT_DIR/validator/bin/registrar $project_id $site_path schema $* 2>&1
