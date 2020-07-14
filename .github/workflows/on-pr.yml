@@ -10,6 +10,8 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v2.3.1
       - name: Install dependencies
-        run: sudo apt-get install openjdk-11-jdk
+        run: |
+          sudo apt-get install openjdk-11-jdk
+          java --version
       - name: Running unit tests
         run: bin/test_schema
