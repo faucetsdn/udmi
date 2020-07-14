@@ -15,7 +15,6 @@ import com.google.pubsub.v1.ProjectName;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.PushConfig;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.pubsub.v1.Subscription;
 import io.grpc.LoadBalancerRegistry;
@@ -30,14 +29,13 @@ import java.util.function.BiConsumer;
 
 public class PubSubClient {
 
-  private static final String CONNECT_ERROR_FORMAT = "While connecting to %s/%s";
+  private static final String CONNECT_ERROR_FORMAT = "While connecting to project %s";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setSerializationInclusion(Include.NON_NULL);
   private static final String SUBSCRIPTION_NAME_FORMAT = "udmi-validator-%s";
-  private static final String
-      REFRESH_ERROR_FORMAT = "While refreshing subscription to topic %s subscription %s";
+  private static final String SUBSCRIPTION_ERROR_FORMAT = "While accessing subscription %s";
 
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
   private static final String WAS_BASE_64 = "wasBase64";
@@ -54,19 +52,18 @@ public class PubSubClient {
     LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
   }
 
-  public PubSubClient(String projectId, String instName, String topicId) {
+  public PubSubClient(String projectId, String instName) {
     try {
       this.projectId = projectId;
-      ProjectTopicName projectTopicName = ProjectTopicName.of(projectId, topicId);
       String name = String.format(SUBSCRIPTION_NAME_FORMAT, instName);
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, name);
       System.out.println("Resetting and connecting to pubsub subscription " + subscriptionName);
-      resetSubscription(projectTopicName, subscriptionName);
+      resetSubscription(subscriptionName);
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
       subscriber.startAsync().awaitRunning();
       active.set(true);
     } catch (Exception e) {
-      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId, topicId), e);
+      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
     }
   }
 
@@ -140,20 +137,18 @@ public class PubSubClient {
     }
   }
 
-  private void resetSubscription(ProjectTopicName topicName, ProjectSubscriptionName subscriptionName) {
+  private void resetSubscription(ProjectSubscriptionName subscriptionName) {
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
       if (subscriptionExists(subscriptionAdminClient, subscriptionName)) {
         System.out.println("Resetting existing subscription " + subscriptionName);
         subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
         Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
       } else {
-        System.out.println("Creating new subscription " + subscriptionName + " for topic " + topicName);
-        subscriptionAdminClient.createSubscription(
-            subscriptionName, topicName, PushConfig.getDefaultInstance(), 0);
+        throw new RuntimeException("Missing subscription for " + subscriptionName);
       }
     } catch (Exception e) {
       throw new RuntimeException(
-          String.format(REFRESH_ERROR_FORMAT, topicName, subscriptionName), e);
+          String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
     }
   }
 

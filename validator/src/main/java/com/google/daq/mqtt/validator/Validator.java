@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.cloud.ServiceOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +40,7 @@ public class Validator {
   private static final String JSON_SUFFIX = ".json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
-  private static final String PUBSUB_PREFIX = "pubsub:";
+  private static final String PUBSUB_MARKER = "pubsub";
   private static final File OUT_BASE_FILE = new File("validations");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
@@ -87,9 +86,8 @@ public class Validator {
       if (!NO_SITE.equals(siteDir)) {
         validator.setSiteDir(siteDir);
       }
-      if (targetSpec.startsWith(PUBSUB_PREFIX)) {
-        String topicName = targetSpec.substring(PUBSUB_PREFIX.length());
-        validator.validatePubSub(instName, topicName);
+      if (targetSpec.equals(PUBSUB_MARKER)) {
+        validator.validatePubSub(instName);
       } else {
         validator.validateFilesOutput(targetSpec);
       }
@@ -145,7 +143,7 @@ public class Validator {
     }
   }
 
-  private void validatePubSub(String instName, String topicName) {
+  private void validatePubSub(String instName) {
     Map<String, Schema> schemaMap = new TreeMap<>();
     for (File schemaFile : makeFileList(schemaRoot)) {
       Schema schema = getSchema(schemaFile);
@@ -162,8 +160,7 @@ public class Validator {
     OUT_BASE_FILE.mkdirs();
     System.out.println("Also found in such directories as " + OUT_BASE_FILE.getAbsolutePath());
     System.out.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
-    System.out.println("Connecting to pubsub topic " + topicName);
-    PubSubClient client = new PubSubClient(projectId, instName, topicName);
+    PubSubClient client = new PubSubClient(projectId, instName);
     System.out.println("Entering pubsub message loop on " + client.getSubscriptionId());
     while(client.isActive()) {
       try {

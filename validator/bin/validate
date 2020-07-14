@@ -5,15 +5,21 @@ cd $ROOT
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
-if [ "$#" -lt 2 ]; then
-    echo Usage: $0 [schema] [target] [devset] [sitepath]
+if [ $# != 5 ]; then
+    echo Usage: $0 [project] [schema] [target] [instance] [sitepath]
     false
 fi
 
-schema=$1
-target=$2
-devset=${3:-$USER}
-sitepath=$4
+project=$1
+schema=$2
+target=$3
+devset=$4
+sitepath=$5
+shift
+shift
+shift
+shift
+shift
 
 if [ ! -f $jarfile ]; then
     echo Building validator...
@@ -28,10 +34,10 @@ echo Executing validator $schema $target...
 echo Validating against schema $schemafile into validations/
 rm -rf validations
 
-echo java -jar $jarfile $schema $target $devset $sitepath
+echo java -jar $jarfile $project $schema $target $devset $sitepath
 
 error=0
-java -jar $jarfile $schema $target $devset $sitepath || error=$?
+java -jar $jarfile $project $schema $target $devset $sitepath || error=$?
 
 echo Validation complete, exit $error
 exit $error
