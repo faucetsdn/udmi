@@ -14,5 +14,6 @@ jobs:
           sudo apt-get install openjdk-11-jdk
           update-alternatives --config java < /dev/null
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
+          java --version
       - name: Running unit tests
         run: bin/test_schema
