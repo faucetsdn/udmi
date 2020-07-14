@@ -28,6 +28,7 @@ outroot=out
 rm -rf $outroot
 
 if [ "$build" == y ]; then
+    java --version
     validator/bin/build
 fi
 
