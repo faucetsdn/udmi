@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/..)

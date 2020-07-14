@@ -1,0 +1,15 @@
+name: UDMI on pull-request tests
+
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2.3.1
+      - name: Install dependencies
+        run: apt-get install openjdk-11-jdk
+      - name: Running unit tests
+        run: bin/test_schema
