@@ -68,6 +68,7 @@ public class Validator {
   private final Set<String> base64Devices = new TreeSet<>();
   private CloudIotConfig cloudIotConfig;
   public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, METADATA_REPORT_JSON);
+  private Set<String> ignoredRegistries = new HashSet();
 
   public Validator(String projectId) {
     this.projectId = projectId;
@@ -192,7 +193,9 @@ public class Validator {
 
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
     if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
-      // Silently drop messages for different registries.
+      if (ignoredRegistries.add(registryId)) {
+        System.out.println("Ignoring data for not-configured registry " + registryId);
+      }
       return false;
     }
 

@@ -18,8 +18,8 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
 fi
 
 echo Building validator...
-validator/bin/build > /dev/null
+$ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `git describe`
 
-$ROOT_DIR/validator/bin/registrar $project_id $site_path schema $* 2>&1
+$ROOT_DIR/validator/bin/registrar $project_id $site_path $ROOT_DIR/schema $* 2>&1

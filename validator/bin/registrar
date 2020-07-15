@@ -1,9 +1,8 @@
 #!/bin/bash -e
 
 ROOT=$(dirname $0)/../..
-cd $ROOT
 
-jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.registrar.Registrar
 
 if [ -z "$1" -o -z "$2" ]; then
@@ -24,11 +23,9 @@ echo Using site config dir $devices_dir
 echo Using schema root dir $schema_dir
 echo Using device filter $device_filter
 
-JAVA=/usr/lib/jvm/java-11-openjdk-amd64/bin/java
-
 error=0
 echo java args $project_id $devices_dir $schema_dir $device_filter
-$JAVA -cp $jarfile $mainclass $project_id $devices_dir $schema_dir $device_filter || error=$?
+java -cp $jarfile $mainclass $project_id $devices_dir $schema_dir $device_filter || error=$?
 
 echo Registrar complete, exit $error
 exit $error

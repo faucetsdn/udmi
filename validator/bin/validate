@@ -6,14 +6,14 @@ cd $ROOT
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 if [ $# != 5 ]; then
-    echo Usage: $0 [project] [schema] [target] [instance] [sitepath]
+    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
     false
 fi
 
 project=$1
 schema=$2
 target=$3
-devset=$4
+subscription=$4
 sitepath=$5
 shift
 shift
@@ -34,10 +34,10 @@ echo Executing validator $schema $target...
 echo Validating against schema $schemafile into validations/
 rm -rf validations
 
-echo java -jar $jarfile $project $schema $target $devset $sitepath
+echo java -jar $jarfile $project $schema $target $subscription $sitepath
 
 error=0
-java -jar $jarfile $project $schema $target $devset $sitepath || error=$?
+java -jar $jarfile $project $schema $target $subscription $sitepath || error=$?
 
 echo Validation complete, exit $error
 exit $error

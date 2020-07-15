@@ -286,6 +286,7 @@ class LocalDevice {
       UdmiSchema.Envelope envelope = new UdmiSchema.Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
+      envelope.subFolder = METADATA_SUBFOLDER;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);

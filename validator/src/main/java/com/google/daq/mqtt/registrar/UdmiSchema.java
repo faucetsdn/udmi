@@ -1,14 +1,19 @@
 package com.google.daq.mqtt.registrar;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class UdmiSchema {
+
   static class Envelope {
     public String deviceId;
     public String deviceNumId;
     public String deviceRegistryId;
     public String projectId;
-    public final String subFolder = LocalDevice.METADATA_SUBFOLDER;
+    public String subFolder;
   }
 
   public static class UdmiBase {

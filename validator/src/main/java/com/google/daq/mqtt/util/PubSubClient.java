@@ -13,7 +13,6 @@ import com.google.cloud.pubsub.v1.SubscriptionAdminClient.ListSubscriptionsPaged
 import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectName;
 import com.google.pubsub.v1.ProjectSubscriptionName;
-import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.pubsub.v1.Subscription;
@@ -34,7 +33,6 @@ public class PubSubClient {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setSerializationInclusion(Include.NON_NULL);
-  private static final String SUBSCRIPTION_NAME_FORMAT = "udmi-validator-%s";
   private static final String SUBSCRIPTION_ERROR_FORMAT = "While accessing subscription %s";
 
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
@@ -52,10 +50,9 @@ public class PubSubClient {
     LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
   }
 
-  public PubSubClient(String projectId, String instName) {
+  public PubSubClient(String projectId, String name) {
     try {
       this.projectId = projectId;
-      String name = String.format(SUBSCRIPTION_NAME_FORMAT, instName);
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, name);
       System.out.println("Resetting and connecting to pubsub subscription " + subscriptionName);
       resetSubscription(subscriptionName);

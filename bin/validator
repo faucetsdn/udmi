@@ -2,13 +2,15 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-if [ $# != 2 ]; then
-    echo $0 PROJECT_ID SITE_PATH
+if [ $# != 3 ]; then
+    echo $0 PROJECT_ID SITE_PATH SUBSCRIPTION_ID
     false
 fi
 
 project_id=$1
 site_path=$2
+subscription=$3
+shift
 shift
 shift
 
@@ -22,4 +24,4 @@ validator/bin/build > /dev/null
 
 echo Running tools version `git describe`
 
-$ROOT_DIR/validator/bin/validate $project_id schema pubsub $USER $site_path
+$ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
