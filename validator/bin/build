@@ -2,6 +2,8 @@
 
 ROOT=$(dirname $0)/..
 
+export JAVA_HOME=$JAVA_HOME_11_X64
+
 cd $ROOT
 rm -rf build
 ./gradlew shadow
