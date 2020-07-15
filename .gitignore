@@ -2,6 +2,7 @@
 
 /out
 /validator/build/
+/validator/.gradle/**
 /validator/out/
 /pubber/build/
 /validations/
