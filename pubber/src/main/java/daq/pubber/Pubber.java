@@ -3,8 +3,10 @@ package daq.pubber;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
 import daq.udmi.Message;
+import daq.udmi.Message.Config;
 import daq.udmi.Message.Pointset;
 import daq.udmi.Message.PointsetState;
 import daq.udmi.Message.State;
@@ -46,7 +48,7 @@ public class Pubber {
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-  private final Configuration configuration;
+  private final Configuration configuration = new Configuration();
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_MS);
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
@@ -60,30 +62,38 @@ public class Pubber {
   private int sendCount;
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 1) {
-      throw new IllegalArgumentException("Expected [configPath] as argument");
+    if (args.length != 3) {
+      throw new IllegalArgumentException("Usage: project_id site_path/ device_id");
     }
-    Pubber pubber = new Pubber(args[0]);
+    String projectId = args[0];
+    String sitePath = args[1];
+    String deviceId = args[2];
+    Pubber pubber = new Pubber(projectId, sitePath, deviceId);
     pubber.initialize();
     pubber.startConnection();
     LOG.info("Done with main");
   }
 
-  private Pubber(String configFile) {
-    File configurationFile = new File(configFile);
-    LOG.info("Reading configuration from " + configurationFile.getAbsolutePath());
-    try {
-      configuration = OBJECT_MAPPER.readValue(configurationFile, Configuration.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While reading configuration file " + configurationFile.getAbsolutePath(), e);
-    }
-    info(String.format("Starting instance for project %s registry %s",
-        configuration.projectId, configuration.registryId));
-
+  public Pubber(String projectId, String sitePath, String deviceId) {
+    configuration.projectId = projectId;
+    configuration.sitePath = sitePath;
+    configuration.deviceId = deviceId;
+    loadCloudConfig();
     initializeDevice();
     addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
     addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
+  }
+
+  private void loadCloudConfig() {
+    File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
+    try {
+      CloudIotConfig cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
+      configuration.registryId = cloudIotConfig.registry_id;
+      configuration.cloudRegion = cloudIotConfig.cloud_region;
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
+    }
   }
 
   private void initializeDevice() {

@@ -42,7 +42,7 @@
     <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.6.1" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:metrics-librato:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:librato-java:2.1.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.10.3" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.0" level="project" />
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.9.7" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: io.dropwizard.metrics:metrics-jvm:3.2.2" level="project" />
@@ -57,8 +57,8 @@
     <orderEntry type="library" name="Gradle: com.google.j2objc:j2objc-annotations:1.1" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.14" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-tcnative-boringssl-static:2.0.3.Final" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.10.3" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.10.3" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.11.0" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-epoll:4.1.12.Final:linux-x86_64" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-unix-common:4.1.12.Final" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-codec-http2:4.1.14.Final" level="project" />

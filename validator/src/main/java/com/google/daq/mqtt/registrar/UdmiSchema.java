@@ -11,14 +11,17 @@ public class UdmiSchema {
     public final String subFolder = LocalDevice.METADATA_SUBFOLDER;
   }
 
-  public static class Metadata {
+  public static class UdmiBase {
+    public Integer version = 1;
+    public Date timestamp;
+  }
+
+  public static class Metadata extends UdmiBase {
     public PointsetMetadata pointset;
     public SystemMetadata system;
     public GatewayMetadata gateway;
     public LocalnetMetadata localnet;
     public CloudMetadata cloud;
-    public Integer version;
-    public Date timestamp;
     public String hash;
   }
 
@@ -62,9 +65,7 @@ public class UdmiSchema {
     public String site;
   }
 
-  static class Config {
-    public Integer version = 1;
-    public Date timestamp;
+  static class Config extends UdmiBase {
     public GatewayConfig gateway;
     public LocalnetConfig localnet;
     public PointsetConfig pointset;
@@ -100,11 +101,11 @@ public class UdmiSchema {
     public String local_id;
   }
 
-  public static class PointsetMessage {
+  public static class PointsetMessage extends UdmiBase {
     public Map<String, PointData> points = new TreeMap<>();
   }
 
   static class PointData {
-
+    public Object present_value;
   }
 }
