@@ -67,7 +67,6 @@ public class MqttPublisher {
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
-  private final AtomicInteger expiredCounter = new AtomicInteger(0);
   private final Map<String, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;

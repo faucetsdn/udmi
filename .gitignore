@@ -1,5 +1,6 @@
 *~
 
+workspace.xml
 .gradle/
 /out
 /validator/build/

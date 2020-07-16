@@ -48,7 +48,7 @@ public class Pubber {
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-  private final Configuration configuration = new Configuration();
+  private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_MS);
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
@@ -62,27 +62,33 @@ public class Pubber {
   private int sendCount;
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 3) {
-      throw new IllegalArgumentException("Usage: project_id site_path/ device_id");
+    final Pubber pubber;
+    if (args.length == 1) {
+      pubber = new Pubber(args[0]);
+    } else if (args.length == 3) {
+      pubber = new Pubber(args[0], args[1], args[2]);
+    } else {
+      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id }");
     }
-    String projectId = args[0];
-    String sitePath = args[1];
-    String deviceId = args[2];
-    Pubber pubber = new Pubber(projectId, sitePath, deviceId);
     pubber.initialize();
     pubber.startConnection();
     LOG.info("Done with main");
   }
 
+  public Pubber(String configPath) {
+    File configFile = new File(configPath);
+    try {
+      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config " + configFile.getAbsolutePath());
+    }
+  }
+
   public Pubber(String projectId, String sitePath, String deviceId) {
+    configuration = new Configuration();
     configuration.projectId = projectId;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
-    loadCloudConfig();
-    initializeDevice();
-    addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
-    addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
   }
 
   private void loadCloudConfig() {
@@ -173,6 +179,12 @@ public class Pubber {
   }
 
   private void initialize() {
+    loadCloudConfig();
+    initializeDevice();
+    addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
+    addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
+    addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
+
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null) {
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
