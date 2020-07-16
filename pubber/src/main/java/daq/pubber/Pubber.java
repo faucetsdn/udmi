@@ -92,6 +92,7 @@ public class Pubber {
   }
 
   private void loadCloudConfig() {
+    Preconditions.checkState(configuration.sitePath != null, 'sitePath not defined in configuration);
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
       CloudIotConfig cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
