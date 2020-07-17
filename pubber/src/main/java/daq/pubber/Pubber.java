@@ -89,10 +89,11 @@ public class Pubber {
     configuration.projectId = projectId;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
+    loadCloudConfig();
   }
 
   private void loadCloudConfig() {
-    Preconditions.checkState(configuration.sitePath != null, 'sitePath not defined in configuration);
+    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined in configuration");
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
       CloudIotConfig cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
@@ -180,7 +181,6 @@ public class Pubber {
   }
 
   private void initialize() {
-    loadCloudConfig();
     initializeDevice();
     addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
