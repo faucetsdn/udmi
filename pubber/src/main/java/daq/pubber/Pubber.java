@@ -109,6 +109,9 @@ public class Pubber {
     deviceState.system.firmware.version = "v1";
     deviceState.pointset = new PointsetState();
     devicePoints.extraField = configuration.extraField;
+    addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
+    addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
+    addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -182,12 +185,9 @@ public class Pubber {
 
   private void initialize() {
     initializeDevice();
-    addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
-    addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
 
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
-    if (configuration.sitePath != null) {
+    if (configuration.sitePath != null && configuration.keyFile != null) {
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
           configuration.deviceId);
     }
