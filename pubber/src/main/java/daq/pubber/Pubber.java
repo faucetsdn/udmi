@@ -6,7 +6,6 @@ import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
 import daq.udmi.Message;
-import daq.udmi.Message.Config;
 import daq.udmi.Message.Pointset;
 import daq.udmi.Message.PointsetState;
 import daq.udmi.Message.State;
@@ -139,10 +138,11 @@ public class Pubber {
 
   private void sendMessages() {
     try {
-      sendDeviceMessage(configuration.deviceId);
       updatePoints();
+      sendDeviceMessage(configuration.deviceId);
       if (sendCount % LOGGING_MOD_COUNT == 0) {
         publishLogMessage(configuration.deviceId,"Sent " + sendCount + " messages");
+        publishStateMessage();
       }
       sendCount++;
     } catch (Exception e) {
@@ -222,11 +222,11 @@ public class Pubber {
       LOG.error("Error receiving message: " + toReport);
       Entry report = new Entry(toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
-      publishStateMessage(configuration.deviceId);
+      publishStateMessage();
     } else {
       Entry previous = deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
       if (previous != null) {
-        publishStateMessage(configuration.deviceId);
+        publishStateMessage();
       }
     }
   }
@@ -249,7 +249,7 @@ public class Pubber {
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
-      publishStateMessage(configuration.deviceId);
+      publishStateMessage();
       reportError(null);
     } catch (Exception e) {
       reportError(e);
@@ -258,8 +258,7 @@ public class Pubber {
 
   private void errorHandler(GatewayError error) {
     // TODO: Handle error and give up on device.
-    info(String.format("%s for %s: %s",
-        error.error_type, error.device_id, error.description));
+    info(String.format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -288,9 +287,10 @@ public class Pubber {
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }
 
-  private void publishStateMessage(String deviceId) {
+  private void publishStateMessage() {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
+    String deviceId = configuration.deviceId;
     info("Sending state message for device " + deviceId + " at " + deviceState.timestamp);
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
   }
