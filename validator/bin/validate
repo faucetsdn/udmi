@@ -29,10 +29,10 @@ fi
 echo Using gcloud auth:
 gcloud config get-value account || true
 
-echo Executing validator $schema $target...
+echo Cleaning output directory out/
+rm -rf out/
 
-echo Validating against schema $schemafile into validations/
-rm -rf validations
+echo Executing validator $schema $target...
 
 echo java -jar $jarfile $project $schema $target $subscription $sitepath
 
