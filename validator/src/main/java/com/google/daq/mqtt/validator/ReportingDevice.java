@@ -13,6 +13,7 @@ public class ReportingDevice {
   private final MetadataDiff metadataDiff = new MetadataDiff();
   private Metadata metadata;
   private List<Exception> errors = new ArrayList<>();
+  private Set<String> validatedTypes = new HashSet<>();
 
   public ReportingDevice(String deviceId) {
     this.deviceId = deviceId;
@@ -71,6 +72,10 @@ public class ReportingDevice {
       metadataDiff.errors = new ArrayList<>();
     }
     metadataDiff.errors.add(error.toString());
+  }
+
+  public boolean markMessageType(String subFolder) {
+    return validatedTypes.add(subFolder);
   }
 
   public static class MetadataDiff {

@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "timestamp": "2020-07-18T04:33:09Z",
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
@@ -28,7 +30,5 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "version": 1,
-  "timestamp": "2020-07-13T20:23:27Z",
-  "hash": "f701f900"
+  "hash": "879557b4"
 }

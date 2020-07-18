@@ -41,7 +41,7 @@ public class Validator {
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String PUBSUB_MARKER = "pubsub";
-  private static final File OUT_BASE_FILE = new File("validations");
+  private static final File OUT_BASE_FILE = new File("out");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
@@ -203,19 +203,23 @@ public class Validator {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
 
-      String schemaId = attributes.get("subFolder");
+      String subFolder = attributes.get("subFolder");
 
-      if (Strings.isNullOrEmpty(schemaId)) {
-        schemaId = UNKNOWN_SCHEMA_DEFAULT;
+      if (Strings.isNullOrEmpty(subFolder)) {
+        subFolder = UNKNOWN_SCHEMA_DEFAULT;
       }
 
-      if (!expectedDevices.isEmpty()) {
-        if (!processedDevices.add(deviceId)) {
-          return false;
-        }
-        System.out.println(String.format("Processing device #%d/%d: %s",
-                processedDevices.size(), expectedDevices.size(), deviceId));
+      if (expectedDevices.containsKey(deviceId)) {
+        processedDevices.add(deviceId);
       }
+
+      final ReportingDevice reportingDevice = getReportingDevice(deviceId);
+      if (!reportingDevice.markMessageType(subFolder)) {
+        return false;
+      }
+
+      System.out.println(String.format("Processing device #%d/%d: %s/%s",
+          processedDevices.size(), expectedDevices.size(), deviceId, subFolder));
 
       if (attributes.get("wasBase64").equals("true")) {
         base64Devices.add(deviceId);
@@ -224,19 +228,17 @@ public class Validator {
       File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
       deviceDir.mkdirs();
 
-      File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaId));
+      File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, subFolder));
       OBJECT_MAPPER.writeValue(attributesFile, attributes);
 
-      File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaId));
+      File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, subFolder));
       OBJECT_MAPPER.writeValue(messageFile, message);
 
-      File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, schemaId));
-
-      final ReportingDevice reportingDevice = getReportingDevice(deviceId);
+      File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, subFolder));
 
       try {
-        if (!schemaMap.containsKey(schemaId)) {
-          throw new IllegalArgumentException(String.format(SCHEMA_SKIP_FORMAT, schemaId, deviceId));
+        if (!schemaMap.containsKey(subFolder)) {
+          throw new IllegalArgumentException(String.format(SCHEMA_SKIP_FORMAT, subFolder, deviceId));
         }
       } catch (Exception e) {
         System.out.println(e.getMessage());
@@ -252,12 +254,12 @@ public class Validator {
         reportingDevice.addError(e);
       }
 
-      if (schemaMap.containsKey(schemaId)) {
+      if (schemaMap.containsKey(subFolder)) {
         try {
-          validateMessage(schemaMap.get(schemaId), message);
-          dataSink.validationResult(deviceId, schemaId, attributes, message, null);
+          validateMessage(schemaMap.get(subFolder), message);
+          dataSink.validationResult(deviceId, subFolder, attributes, message, null);
         } catch (ExceptionMap | ValidationException e) {
-          processViolation(message, attributes, deviceId, schemaId, messageFile, errorFile, e);
+          processViolation(message, attributes, deviceId, subFolder, messageFile, errorFile, e);
           reportingDevice.addError(e);
         }
       }
@@ -269,7 +271,7 @@ public class Validator {
         updated = false;
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
-          if (POINTSET_TYPE.equals(schemaId)) {
+          if (POINTSET_TYPE.equals(subFolder)) {
             PointsetMessage pointsetMessage =
                 OBJECT_MAPPER.convertValue(message, PointsetMessage.class);
             updated = !reportingDevice.hasBeenValidated();
@@ -285,7 +287,7 @@ public class Validator {
       }
 
       if (!reportingDevice.hasError()) {
-        System.out.println(String.format("Success validating %s/%s", deviceId, schemaId));
+        System.out.println(String.format("Validation complete %s/%s", deviceId, subFolder));
       }
 
       return updated;
@@ -309,7 +311,7 @@ public class Validator {
       metadataReport.updated = new Date();
       metadataReport.missingDevices = new TreeSet<>();
       metadataReport.extraDevices = extraDevices;
-      metadataReport.successfulDevices = new TreeSet<>();
+      metadataReport.pointsetDevices = new TreeSet<>();
       metadataReport.base64Devices = base64Devices;
       metadataReport.expectedDevices = expectedDevices.keySet();
       metadataReport.errorDevices = new TreeMap<>();
@@ -318,7 +320,7 @@ public class Validator {
         if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
           metadataReport.errorDevices.put(deviceId, deviceInfo.getMetadataDiff());
         } else if (deviceInfo.hasBeenValidated()) {
-          metadataReport.successfulDevices.add(deviceId);
+          metadataReport.pointsetDevices.add(deviceId);
         } else {
           metadataReport.missingDevices.add(deviceId);
         }
@@ -334,7 +336,7 @@ public class Validator {
     public Set<String> expectedDevices;
     public Set<String> missingDevices;
     public Set<String> extraDevices;
-    public Set<String> successfulDevices;
+    public Set<String> pointsetDevices;
     public Set<String> base64Devices;
     public Map<String, ReportingDevice.MetadataDiff> errorDevices;
   }
