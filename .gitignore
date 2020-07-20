@@ -2,7 +2,8 @@
 
 workspace.xml
 .gradle/
-/out
+/out/
 /validator/build/
 /validator/out/
 /pubber/build/
+/sites/
