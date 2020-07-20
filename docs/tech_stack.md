@@ -60,12 +60,3 @@ are validated against the `.../state.json` schema on `/devices/{device-id}/state
 * (There currently is no stream validation of
 [device config messages](https://cloud.google.com/iot/docs/how-tos/config/configuring-devices#mqtt), which are sent on the
 `/devices/{device-id}/config` topic.)
-
-See this handy-dandy table:
-
-| Type     | Category | subFolder |                MQTT Topic              |  Schema File  |
-|----------|----------|-----------|----------------------------------------|---------------|
-| state    | state    | _n/a_     | `/devices/{device_id}/state`           | state.json    |
-| config   | config   | _n/a_     | `/devices/{device-id}/config`          | config.json   |
-| pointset | event    | pointset  | `/devices/{device-id}/events/pointset` | pointset.json |
-| logentry | event    | logentry  | `/devices/{device-id}/events/logentry` | logentry.json |
