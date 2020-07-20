@@ -18,9 +18,9 @@ technology stack for compliant IoT devices.
 | Type     | Category | subFolder |                MQTT Topic              |  Schema File  |
 |----------|----------|-----------|----------------------------------------|---------------|
 | state    | state    | _n/a_     | `/devices/{device_id}/state`           | state.json    |
-| config   | config   | _n/a_     | `/devices/{device-id}/config`          | config.json   |
-| pointset | event    | pointset  | `/devices/{device-id}/events/pointset` | pointset.json |
-| system   | event    | system    | `/devices/{device-id}/events/system`   | system.json   |
+| config   | config   | _n/a_     | `/devices/{device_id}/config`          | config.json   |
+| pointset | event    | pointset  | `/devices/{device_id}/events/pointset` | pointset.json |
+| system   | event    | system    | `/devices/{device_id}/events/system`   | system.json   |
 
 # Backend Systems
 
@@ -44,3 +44,28 @@ gcloud pubsub topics publish target \
 
 The reason for the redirection of any data through a PubSub topic is so that the Cloud IoT registry, if necessary,
 can be housed in a different cloud project from the backend applications.
+
+## Types and Topics
+
+When using the
+[GCP Cloud IoT Core MQTT Bridge](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
+there are multiple ways the subschema used during validation is chosen.
+* All messages have their attributes validated against the `.../attributes.json` schema. These attributes are
+automatically defined server-side by the MQTT Client ID and Topic, and are not explicitly included in any message payload.
+* A [device event message](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
+is validated against the sub-schema indicated by the MQTT topic `subFolder`. E.g., the MQTT
+topic `/devices/{device-id}/events/pointset` will be validated against `.../pointset.json`.
+* [Device state messages](https://cloud.google.com/iot/docs/how-tos/config/getting-state#reporting_device_state)
+are validated against the `.../state.json` schema on `/devices/{device-id}/state` MQTT topic.
+* (There currently is no stream validation of
+[device config messages](https://cloud.google.com/iot/docs/how-tos/config/configuring-devices#mqtt), which are sent on the
+`/devices/{device-id}/config` topic.)
+
+See this handy-dandy table:
+
+| Type     | Category | subFolder |                MQTT Topic              |  Schema File  |
+|----------|----------|-----------|----------------------------------------|---------------|
+| state    | state    | _n/a_     | `/devices/{device_id}/state`           | state.json    |
+| config   | config   | _n/a_     | `/devices/{device-id}/config`          | config.json   |
+| pointset | event    | pointset  | `/devices/{device-id}/events/pointset` | pointset.json |
+| logentry | event    | logentry  | `/devices/{device-id}/events/logentry` | logentry.json |
