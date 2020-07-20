@@ -17,7 +17,7 @@ It requres a few pieces of information to work:
 * `SITE_PATH`: A directory structure containing a valid `cloud_iot_config.json` file (see below).
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by project admin, if necessary).
 
-The [`cloud_iot_config.json`](cloud_iot_config.md) file contains a few key pieces of
+The [`cloud_iot_config.json`](site_dir.md) file contains a few key pieces of
 information necessary for the tool, and generally indicates the root of a
 site-specific directory (e.g., as stored in its own independent git repo).
 

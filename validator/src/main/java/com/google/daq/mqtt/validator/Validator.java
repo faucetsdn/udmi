@@ -111,6 +111,10 @@ public class Validator {
     }
 
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
+    if (!devicesDir.exists()) {
+      System.out.println("Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
+      return;
+    }
     try {
       for (String device : Objects.requireNonNull(devicesDir.list())) {
         try {
