@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "points": {
+    "scene_preset": {
+      "present_value": 10
+    },
+    "lamp_brightness": {
+      "fittings_values": {
+        "bw": [ 9, 9, 10, 11 ]
+      }
+    }
+  }
+}
