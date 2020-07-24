@@ -2,14 +2,21 @@
   "version": 1,
   "timestamp": "2018-08-26T21:39:29.364Z",
   "pointset": {
-    "scene_preset": {
-      "available_values": [ 10, 22, 32, 101 ]
-    },
     "points": {
+      "scene_preset": {
+        "available_values": [ 10, 22, 32, 101 ]
+      },
+      "goup_brightness": {
+        "fittings_count": {
+          "group_1": 1,
+          "group_2": 1
+        }
+      },
       "lamp_brightness": {
         "units": "lumens",
         "fittings_count": {
-          "bw": 5
+          "lcs_1": 5,
+          "lcs_2": 5
         }
       }
     }

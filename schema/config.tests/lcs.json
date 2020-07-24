@@ -6,9 +6,16 @@
       "scene_preset": {
         "fix_value": 10
       },
+      "goup_brightness": {
+        "fix_values": {
+          "group_1": [ 10 ],
+          "group_2": [ 20 ]
+        }
+      },
       "lamp_brightness": {
-        "fittings_values": {
-          "bw": [ 1, 2, 3, 4, 5 ]
+        "fix_values": {
+          "lcs_1": [ 1, 2, 3, 4, 5 ],
+          "lcs_2": [ 1, 2, 3, 4, 5 ]
         }
       }
     }
