@@ -79,7 +79,7 @@ public class Pubber {
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
     } catch (Exception e) {
-      throw new RuntimeException("While reading config " + configFile.getAbsolutePath());
+      throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
     }
   }
 
