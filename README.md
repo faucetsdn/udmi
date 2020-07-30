@@ -2,10 +2,9 @@
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
 management and operation of physical IoT systems. This data is typically exchanged
-with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud.
-Nominally meant for use with [Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/),
-as a schema it can be applied to any set of data or hosting setup. Additionally, the schema
-has provisions for basic telemetry ingestion, such as datapoint streaming from an IoT device.
+with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud. Please
+join the [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss)
+mailing list for questions and discussion.
 
 By deisgn, this schema is intended to be:
 * <b>U</b>niversal: Apply to all subsystems in a building, not a singular vertical solution.
@@ -15,9 +14,9 @@ By deisgn, this schema is intended to be:
 RPC mechanism.
 
 See the associated [UDMI Tech Stack](docs/tech_stack.md) for details about transport mechanism
-outside of the core schema definition. For questions and discussion pertaining to this topic,
-please join/monitor the
-[daq-users@googlegroups.com](https://groups.google.com/forum/#!forum/daq-users) email list 
+outside of the core schema definition. Nominally meant for use with
+[Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
+of data or hosting setup.
 
 ## Use Cases
 
@@ -103,12 +102,12 @@ one or more telemetry messages (e.g. _pointset_), while all others are meant for
 infrastructure. Additionally, the _state_ and _config_ parts are comprised of several distinct
 subsections (e.g. _system_, _pointset_, or _gateway_) that relate to various bits of functionality.
 
-## Validation
+## Registration & Validation
 
-To verify correct operation of a real system, follow the instructions outlined in the
-[validator subsystem docs](docs/validator.md), which provides for a suitable
-communication channel. Additional sample messages are easy to include in the regression
-suite if there are new cases to test.
+Using UDMI on a project entails not only the base device and server implementations, but also
+properly registering and validating device configuration. The [registrar](docs/registrar.md)
+tool and [valudator](docs/validator.md) tool provide a means to configure and check site
+instalations, respectively.
 
 ## Message Detail Notes
 
