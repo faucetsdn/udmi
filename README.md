@@ -18,6 +18,12 @@ outside of the core schema definition. Nominally meant for use with
 [Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
 of data or hosting setup.
 
+## Recommended Workflow
+
+The [recommended workflow](docs/workflow.md) for UDMI covers using the _registrar_ and
+_validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool
+is instrumental in setting up and testing the system independent of actual device setup.
+
 ## Use Cases
 
 The essence behind UDMI is an automated mechanism for IoT system management. Many current
