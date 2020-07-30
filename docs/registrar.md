@@ -1,18 +1,14 @@
 # Registrar Overview
 
 The `registrar` is a utility program that registers and updates devies in Cloud IoT.
-Running `bin/registrar` will pull the necessary configuraiton values from `local/system.conf`,
-build the executable, and register/update devices.
+Running `bin/registrar` will validate local metadata and (optionally) register devices
+in a cloud project.
 
-## Configuration
+See the [setup docs](setup.md) for common setup required for runing this tool.
 
-The `local/system.conf` file should have the following parameters (in `x=y` syntax):
-* `gcp_cred`: Defines the target project and [service account](service.md) to use for configuration.
-* `site_path`: [Site-specific configuration](site_path.md) for the devices that need to be registered.
-* `schema_path`: Path to metadata schema (see the [DAQ PubSub documentation](pubsub.md) for more details/examples).
-
-The target `gcp_cred` service account will need the _Cloud IoT Provisioner_ and _Pub/Sub Publisher_ roles.
-There also needs to be an existing `registrar` topic (or as configured in `cloud_iot_config.json`, below).
+The [site path](site_path.md) documentation covers the basic structure of the
+site-specific configuration. Ideally, this directory would be placed under
+source control as a site-specific repo.
 
 ## Theory Of Operation
 
@@ -20,103 +16,84 @@ There also needs to be an existing `registrar` topic (or as configured in `cloud
 <code>_{site_path}_/devices/</code>.
 * Existing devices that are not listed in the site config are blocked (as per
 Cloud IoT device setting).
-* If a device directory does not have an appropriate key, one will be automaticaly generated.
 * Devices not found in the target registry are automatically created.
-* Existing device registy entries are unblocked and updated with the appropriate keys.
+* Existing device registy entries are unblocked and updated with the new configuration.
+* Various intermediate and summary files are written to the site directory. Typically,
+these can be safely comitted to source control as they are deterministic.
 
-## Device Settings
+## Device Metadata & Keys
 
-When registering or updating a device, the Registrar manipulates a few key pieces of device
-information:
-* Auth keys: Public authentiation keys for the device.
-* Metadata: Various information about a device (e.g. site-code, location in the building).
+The expected model of a device is defined by a [device metadata](metadata.md) file,
+along with a public key for that device (required for communication with the cloud).
+Devices (that aren't proxied by a gateway) that do not auto-generate a public key
+can use the [bin/keygen](keygen.md) utility to create a proper public/private key pair.
 
-This information is sourced from a few key files:
+## Tool Execution
 
-* `{site_dir}/cloud_iot_config.json`:
-Cloud project configuration parameters (`registry_id`, `cloud_region`, etc...).
-* `{site_dir}/devices/{device_id}/metadata.json`:
-Device metadata (e.g. location, key type).
-* `{site_dir}/devices/{device_id}/rsa_private.pem`:
-Generated private key for device (used on-device).
+The `bin/registrar` tool takes two arguments:
+* `project_id`: The GCP project ID that contains the target registry, or `--` for metadata validation only.
+* `site_path`: The directory containing the site specification.
 
-## Sample Output
-
-The produced `registration_summary.json` document provides an overview of the analyzed files,
-clearly any errors that should be addressed for full spec compliance. Additionaly, an
-`errors.json`
+Running the tool will create some output files for each device, and also a top-level
+`registration_summary.json` file with summary results. Detailed error reports (if any)
+for individual devies will be in their respective device directories.
 
 <pre>
-user@machine:~/daq$ <b>cat local/site/cloud_iot_config.json </b>
+<b>~/udmi$ cat test_site/cloud_iot_config.json </b>
 {
   "cloud_region": "us-central1",
-  "site_name": "SG-MBC2-B80",
-  "registry_id": "iotRegistry",
+  "site_name": "ZZ-TRI-FECTA",
+  "registry_id": "registrar_test",
   "registrar_topic": "registrar"
 }
-user@machine:~/daq$ <b>bin/registrar daq-testing</b>
-Activating venv
-Flattening config from local/system.yaml into inst/config/system.conf
+<b>~/udmi$ bin/registrar -- test_site/</b>
+Building validator...
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-Running tools version 1.5.1-16-g9ed5861
-Using cloud project bos-daq-testing
-Using site config dir local/site
-Using schema root dir schemas/udmi
+Note: /home/user/udmi/validator/src/main/java/com/google/daq/mqtt/validator/Validator.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+Running tools version 1.0.0-2-ga413c4e
+Using gcloud auth:
+Your active configuration is: [udmi-test]
+user@google.com
+Using cloud project --
+Using site config dir test_site/
+Using schema root dir bin/../schema
 Using device filter
-Reading Cloud IoT config from /home/user/daq/local/site/cloud_iot_config.json
+java args -- test_site/ bin/../schema
+Reading Cloud IoT config from /home/user/udmi/test_site/cloud_iot_config.json
 Initializing with default credentials...
-Jun 12, 2020 1:24:37 PM com.google.auth.oauth2.DefaultCredentialsProvider warnAboutProblematicCredentials
+Jul 30, 2020 4:02:12 PM com.google.auth.oauth2.DefaultCredentialsProvider warnAboutProblematicCredentials
 WARNING: Your application has authenticated using end user credentials from Google Cloud SDK. We recommend that most server applications use service accounts instead. If your application continues to use end user credentials from Cloud SDK, you might receive a "quota exceeded" or "API not enabled" error. For more information about service accounts, see https://cloud.google.com/docs/authentication/.
-Created service for project bos-daq-testing
-Working with project bos-daq-testing registry iotRegistry
-Loading local device AHU-1-1
-Loading local device AHU-1-2
-Fetching remote registry iotRegistry
-Updated device entry AHU-1-1
-Sending metadata message for AHU-1-1
-WARNING: An illegal reflective access operation has occurred
-WARNING: Illegal reflective access by com.google.protobuf.UnsafeUtil (file:/home/user/daq/validator/build/libs/validator-1.0-SNAPSHOT-all.jar) to field java.nio.Buffer.address
-WARNING: Please consider reporting this to the maintainers of com.google.protobuf.UnsafeUtil
-WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
-WARNING: All illegal access operations will be denied in a future release
-Updated device entry AHU-1-2
-Sending metadata message for AHU-1-2
-Processed 2 devices
-Updating local/site/devices/AHU-1-1/errors.json
-Updating local/site/devices/AHU-1-2/errors.json
+Created service for project projects/--/locations/us-central1
+Working with project -- registry us-central1/registrar_test
+Loading local device GAT-123
+Loading local device AHU-22
+Loading local device SNS-4
+Loading local device AHU-1
+Skipping remote registry fetch
+Processed 4 devices
+Removing test_site/devices/GAT-123/errors.json
+Removing test_site/devices/AHU-1/errors.json
+Removing test_site/devices/AHU-22/errors.json
+Removing test_site/devices/SNS-4/errors.json
 
 Summary:
-  Device Envelope: 2
-  Device Key: 1
-  Device Validating: 2
-Out of 2 total.
+  Device Clean: 4
+Out of 4 total.
 Done with PubSubPusher
 Registrar complete, exit 0
-user@machine:~/daq$ <b>cat local/site/registration_summary.json </b>
+<b>~/udmi$ cat test_site/registration_summary.json </b>
 {
-  "Envelope" : {
-    "AHU-1-1" : "java.lang.IllegalStateException: Validating envelope AHU-1-1",
-    "AHU-1-2" : "java.lang.IllegalStateException: Validating envelope AHU-1-2"
-  },
-  "Key" : {
-    "AHU-1-2" : "java.lang.RuntimeException: Duplicate credentials found for AHU-1-1 & AHU-1-2"
-  },
-  "Validating" : {
-    "AHU-1-1" : "org.everit.json.schema.ValidationException: #: 43 schema violations found",
-    "AHU-1-2" : "org.everit.json.schema.ValidationException: #: 43 schema violations found"
+  "Clean" : {
+    "AHU-1" : "True",
+    "AHU-22" : "True",
+    "GAT-123" : "True",
+    "SNS-4" : "True"
   }
 }
-user@machine:~/daq$ <b>head local/site/devices/AHU-1-1/errors.json </b>
-Exceptions for AHU-1-1
-  Validating envelope AHU-1-1
-    #/deviceId: string [AHU-1-1] does not match pattern ^[A-Z]{2,6}-[1-9][0-9]{0,2}$
-  #: 43 schema violations found
-    #/pointset/points: 40 schema violations found
-      #/pointset/points/chilled_return_water_temperature_sensor/units: °C is not a valid enum value
-      #/pointset/points/chilled_supply_water_temperature_sensor/units: °C is not a valid enum value
-      #/pointset/points/chilled_water_valve_percentage_command/units: % is not a valid enum value
 </pre>
+
 
 ## Sequence Diagram
 
