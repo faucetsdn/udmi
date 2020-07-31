@@ -1,7 +1,7 @@
 # Registrar Overview
 
 The `registrar` is a utility program that registers and updates devies in Cloud IoT.
-Running `bin/registrar` will pull the necessary configuraiton values from `local/system.conf`,
+Running `bin/registrar` will pull the necessary configuration values from `local/system.conf`,
 build the executable, and register/update devices.
 
 ## Configuration
