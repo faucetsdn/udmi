@@ -2,7 +2,7 @@
 
 The _gateway_ functionality is used for systems that have legacy, heritage,
 or traditional devices that do not communicate directly to the cloud using
-the [UDMI specification](../README.md). For example, an older BacNET based
+a MQTT/UDMI connection. For example, an older BacNET based
 system could use a gateway to translate on-prem communications into UDMI.
 
 The
