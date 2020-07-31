@@ -1,15 +1,15 @@
 # Registrar Overview
 
 The `registrar` is a utility program that registers and updates devies in Cloud IoT.
-Running `bin/registrar` will pull the necessary configuraiton values from `local/system.conf`,
+Running `bin/registrar` will pull the necessary configuration values from `local/system.conf`,
 build the executable, and register/update devices.
 
 ## Configuration
 
 The `local/system.conf` file should have the following parameters (in `x=y` syntax):
-* `gcp_cred`: Defines the target project and [service account](service.md) to use for configuration.
-* `site_path`: [Site-specific configuration](site_path.md) for the devices that need to be registered.
-* `schema_path`: Path to metadata schema (see the [DAQ PubSub documentation](pubsub.md) for more details/examples).
+* `gcp_cred`: Defines the target project and [service account](https://github.com/faucetsdn/daq/blob/master/docs/service.md) to use for configuration.
+* `site_path`: [Site-specific configuration](https://github.com/faucetsdn/daq/blob/master/docs/site_path.md) for the devices that need to be registered.
+* `schema_path`: Path to metadata schema (see the [DAQ PubSub documentation](https://github.com/faucetsdn/daq/blob/master/docs/pubsub.md) for more details/examples).
 
 The target `gcp_cred` service account will need the _Cloud IoT Provisioner_ and _Pub/Sub Publisher_ roles.
 There also needs to be an existing `registrar` topic (or as configured in `cloud_iot_config.json`, below).
