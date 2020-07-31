@@ -20,7 +20,7 @@ BUILD SUCCESSFUL in 2s
 ## Key Generation
 
 <pre>
-~/daq$ <b>pubber/bin/keygen RS256_X509 local</b>
+~/daq$ <b>bin/keygen RS256_X509 local</b>
 Generating a 2048 bit RSA private key
 ............+++
 ......................................+++
