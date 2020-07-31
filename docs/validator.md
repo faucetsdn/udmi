@@ -16,12 +16,8 @@ See the [setup docs](setup.md) for common setup required for runing this tool.
 PubSub stream validation works against a live data stream pulled from a pre-existing subscription.
 `bin/validator` takes three arguments:
 * `PROJECT_ID`: The GCP project ID to validate against.
-* `SITE_PATH`: A directory structure containing a valid `cloud_iot_config.json` file (see below).
+* `SITE_PATH`: A [site path](site_path.md) definition directory.
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by a project admin, as necessary).
-
-The [`cloud_iot_config.json`](site_dir.md) file contains a few key pieces of
-information necessary for the tool, and generally indicates the root of a
-site-specific directory (e.g., as stored in its own independent repo).
 
 ## Regression Testing
 
