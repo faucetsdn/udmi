@@ -1,8 +1,8 @@
 # Pubber Reference Client
 
 The _Pubber_ reference client is a sample implementation of a client-side 'device' that implements
-the [UDMI Schema](../README.md). It's not intended to be any sort of production-worthy
-code or library, rather just a proof-of-concept of what needs to happen.
+the UDMI schema. It's not intended to be any sort of production-worthy code or library, rather just
+a proof-of-concept of what needs to happen.
 
 ## Build Pubber
 

@@ -10,7 +10,7 @@ technology stack for compliant IoT devices.
   * Other transports (non-Google MQTT, CoAP, etc...) are acceptable with prior approval.
   * Connected to a specific Cloud IoT Registry designated for each site-specific project.
 * Utilizes the MQTT Topic table listed below.
-* JSON encoding following the core [UDMI Schema](../README.md), specifying the semantic structure of the data.
+* JSON encoding following the core schema definition, specifying the semantic structure of the data.
 * Passes the [DAQ Validation Tool](validator.md) for all requirements.
 
 # MQTT Topic Table
