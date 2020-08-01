@@ -17,8 +17,8 @@ returns to _low_ after a (locally defined) timeout value.
 * The cloud system is always at an implicit _medium_ priority. More complex interactions could
 utilize other cloud priorities following the same logic.
 * The _message_ sent in each case corresponds to three different associations:
-  * _state_ messages represent the state of the _controller_ (touch panel in this case).
+  * _state_ messages represent the state of the _controller_ (the touch panel in this case).
   * _telem_ (telemetry) messages represent the state of the _light_ (visible output).
-  * _config_ messages represent the cloud-bsaed configuration/control of the system.
+  * _config_ messages represent the cloud-based configuration/control of the system.
 * Cloud interactions are _not_ real-time, so the delay between _switch_ and _converge_ could be
 on the order of minutes in extreme cases.
