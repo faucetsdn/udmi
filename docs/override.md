@@ -4,14 +4,15 @@ In this example, the "local" switch is modelled as a virtual on/off controller (
 panel with two buttons). When touched, it's priority _temporarily_ changes to _high_, and then
 returns to _low_ after a (locally defined) timeout value.
 
-| step     | local | priority | cloud | output | message     | notes                            |
-|----------|-------|----------|-------|--------|-------------|----------------------------------|
-| start    | off   | low      | off   | off    |             | quiescent state                  | 
-| switch   | on    | high     | off   | on     | state/telem | manual switch on                 | 
-| wait     | on    | high     | off   | on     |             | waiting for cloud response       |
-| converge | on    | high     | on    | on     | config      | cloud converges with local       |
-| expire   | on    | low      | on    | on     | state       | local override expires           |
-| settle   | on    | low      | off   | off    | telem       | return to quiescent state        |
+| step     | local | priority | cloud | output | message      | notes                            |
+|----------|-------|----------|-------|--------|--------------|----------------------------------|
+| start    | off   | low      | off   | off    |              | quiescent state                  | 
+| switch   | on    | high     | off   | on     | state/telem  | manual switch on                 | 
+| wait     | on    | high     | off   | on     |              | waiting for cloud response       |
+| converge | on    | high     | on    | on     | config       | cloud converges with local       |
+| expire   | on    | low      | on    | on     | state        | local override expires           |
+| settle   | on    | low      | off   | on     | config       | cloud-based shutdown             |
+| restore  | on    | low      | off   | off    | telem        | return to quiescent state        |
 
 * Highest priority _local_ vs _cloud_ state determines the _output_ value.
 * The cloud system is always at an implicit _medium_ priority. More complex interactions could
