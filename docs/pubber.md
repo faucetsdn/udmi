@@ -1,8 +1,8 @@
 # Pubber Reference Client
 
 The _Pubber_ reference client is a sample implementation of a client-side 'device' that implements
-the [UDMI Schema](../schemas/udmi/README.md). It's not intended to be any sort of production-worthy
-code or library, rather just a proof-of-concept of what needs to happen.
+the UDMI schema. It's not intended to be any sort of production-worthy code or library, rather just
+a proof-of-concept of what needs to happen.
 
 ## Build Pubber
 
@@ -20,7 +20,7 @@ BUILD SUCCESSFUL in 2s
 ## Key Generation
 
 <pre>
-~/daq$ <b>pubber/bin/keygen</b>
+~/daq$ <b>bin/keygen RS256_X509 local</b>
 Generating a 2048 bit RSA private key
 ............+++
 ......................................+++
@@ -32,7 +32,7 @@ writing new private key to 'local/rsa_private.pem'
 -rw-r--r-- 1 user primarygroup 1216 Nov 19 18:56 local/rsa_private.pkcs8
 </pre>
 
-After generating the key pair, you'll have to upload/associate the `pubber_cert.pem` public certificate
+After generating the key pair, you'll have to upload/associate the `rsa_cert.pem` public certificate
 with the device entry in the cloud console as an _RS256_cert_. (This can be done when the device is
 created, or anytime after.)
 

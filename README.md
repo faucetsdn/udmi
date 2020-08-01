@@ -2,12 +2,11 @@
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
 management and operation of physical IoT systems. This data is typically exchanged
-with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud.
-Nominally meant for use with [Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/),
-as a schema it can be applied to any set of data or hosting setup. Additionally, the schema
-has provisions for basic telemetry ingestion, such as datapoint streaming from an IoT device.
+with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud. Please
+join the [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss)
+mailing list for questions and discussion.
 
-By deisgn, this schema is intended to be:
+By design, this schema is intended to be:
 * <b>U</b>niversal: Apply to all subsystems in a building, not a singular vertical solution.
 * <b>D</b>evice: Operations on an IoT _device_, a managed entity in physical space.
 * <b>M</b>anagement: Focus on device _management_, rather than command & control.
@@ -15,9 +14,15 @@ By deisgn, this schema is intended to be:
 RPC mechanism.
 
 See the associated [UDMI Tech Stack](docs/tech_stack.md) for details about transport mechanism
-outside of the core schema definition. For questions and discussion pertaining to this topic,
-please join/monitor the
-[daq-users@googlegroups.com](https://groups.google.com/forum/#!forum/daq-users) email list 
+outside of the core schema definition. Nominally meant for use with
+[Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
+of data or hosting setup.
+
+## Recommended Workflow
+
+The [recommended workflow](docs/workflow.md) for UDMI covers using the _registrar_ and
+_validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool
+is instrumental in setting up and testing the system independent of actual device setup.
 
 ## Use Cases
 
@@ -32,15 +37,15 @@ UDMI is intended to support a few primary use-cases:
 * [_Gateway Proxy_](docs/gateway.md): Proxy data/connection for non-UDMI devices,
 allowing adaptation to legacy systems.
 * _On-Prem Actuation_: Ability to effect on-prem device behavior.
-* _Device Testability_: e.g. Trigger a fake alarm to test reporting mechanims.
+* _Device Testability_: e.g. Trigger a fake alarm to test reporting mechanisms.
 * _Commissioning Tools_: Streamline complete system setup and install.
-* _Operational Diagnostics_: Make it easy for system operators to diagnoe basic faults.
+* _Operational Diagnostics_: Make it easy for system operators to diagnose basic faults.
 * _Status and Logging_: Report system operational metrics to hosting infrastructure.
 * _Key Rotation_: Manage encryption keys and certificates in accordance with best practice.
 * _Credential Exchange_: Bootstrap higher-layer authentication to restricted resources.
 * _Firmware Updates_: Initiate, monitor, and track firmware updates across an entire fleet
 of devices.
-* _On-Prem Discovery_: Enumerate and on-prem devices to aid setup or anomaly detection.
+* _On-Prem Discovery_: Enumerate any on-prem devices to aid setup or anomaly detection.
 
 All these situations are conceptually about _management_ of devices, which is conceptually
 different than the _control_ or _operation_. These concepts are similar to the _management_,
@@ -49,14 +54,14 @@ _control_, and _data_ planes of
 Once operational, the system should be able to operate completely autonomoulsy from the
 management capabilities, which are only required to diagnose or tweak system behavior.
 
-## Design Philiosphy
+## Design Philosophy
 
 In order to provide for management automation, UDMI strives for the following principles:
-* <b>Secure and Authenticated:</b> Requires a propertly secure and authenticated channel
+* <b>Secure and Authenticated:</b> Requires a properly secure and authenticated channel
 from the device to managing infrastructure.
 * <b>Declarative Specification:</b> The schema describes the _desired_ state of the system,
 relying on the underlying mechanisms to match actual state with desired state. This is
-conceptually similar to Kubernetes-style configuraiton files.
+conceptually similar to Kubernetes-style configuration files.
 * <b>Minimal Elegant Design:</b> Initially underspecified, with an eye towards making it easy to
 add new capabilities in the future. <em>It is easier to add something than it is to remove it.</em>
 * <b>Reduced Choices:</b> In the long run, choice leads to more work
@@ -78,7 +83,7 @@ is comprised of several subsections (e.g. _system_ or _pointset_) that describe 
 relevant sub-state components.
 * Device _config_ ([example](schema/config.tests/example.json)), passed from cloud to device,
 defined by [<em>config.json</em>](schema/config.json). There is one active _config_ per device,
-which is considered current until a new config is recevied.
+which is considered current until a new config is received.
 * Message _envelope_ ([example](schema/envelope.tests/example.json)) for server-side
 attributes of received messages, defined by [<em>envelope.json</em>](schema/envelope.json). This is
 automatically generated by the transport layer and is then available for server-side
@@ -103,12 +108,12 @@ one or more telemetry messages (e.g. _pointset_), while all others are meant for
 infrastructure. Additionally, the _state_ and _config_ parts are comprised of several distinct
 subsections (e.g. _system_, _pointset_, or _gateway_) that relate to various bits of functionality.
 
-## Validation
+## Registration & Validation
 
-To verify correct operation of a real system, follow the instructions outlined in the
-[validator subsystem docs](docs/validator.md), which provides for a suitable
-communication channel. Additional sample messages are easy to include in the regression
-suite if there are new cases to test.
+Using UDMI on a project entails not only the base device and server implementations, but also
+properly registering and validating device configuration. The [registrar](docs/registrar.md)
+tool and [validator](docs/validator.md) tool provide a means to configure and check site
+installations, respectively.
 
 ## Message Detail Notes
 
