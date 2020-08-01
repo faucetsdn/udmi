@@ -31,7 +31,7 @@ if [ "$build" == y ]; then
     validator/bin/build
 fi
 
-jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
+jarfile="$(cd "$(dirname "validator/build/libs/validator-1.0-SNAPSHOT-all.jar")"; pwd)/$(basename "validator/build/libs/validator-1.0-SNAPSHOT-all.jar")"
 
 rootdir=schema
 subsets=$(cd $rootdir; ls -d *.tests)

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/../..)
+ROOT_DIR="$(pwd)/$line"
 
 java -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar $@
 

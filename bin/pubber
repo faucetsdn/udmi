@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
+ROOT_DIR="$(pwd)/$line"
 
 if [ $# != 3 ]; then
     echo $0 PROJECT_ID SITE_PATH DEVICE_ID
