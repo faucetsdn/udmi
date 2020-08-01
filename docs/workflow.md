@@ -12,4 +12,4 @@ It is strongly recommended to go through all of these steps with one or two test
 rather than trying to take on an entire site without fully vetting the workflow and tools.
 The [pubber](pubber.md) tool can be used to mock out devices in liu of physical devices,
 this is very useful for isolating problems between a cloud-configuration issue vs. a
-device configuraiton one.
+device configuration one.

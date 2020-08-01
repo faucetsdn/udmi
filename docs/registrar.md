@@ -1,10 +1,10 @@
 # Registrar Overview
 
-The `registrar` is a utility program that registers and updates devies in Cloud IoT.
+The `registrar` is a utility program that registers and updates devices in Cloud IoT.
 Running `bin/registrar` will validate local metadata and (optionally) register devices
 in a cloud project.
 
-See the [setup docs](setup.md) for common setup required for runing this tool.
+See the [setup docs](setup.md) for common setup required for running this tool.
 
 The [site path](site_path.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
@@ -19,7 +19,7 @@ Cloud IoT device setting).
 * Devices not found in the target registry are automatically created.
 * Existing device registy entries are unblocked and updated with the new configuration.
 * Various intermediate and summary files are written to the site directory. Typically,
-these can be safely comitted to source control as they are deterministic.
+these can be safely committed to source control as they are deterministic.
 
 ## Device Metadata & Keys
 
@@ -36,7 +36,7 @@ The `bin/registrar` tool takes two arguments:
 
 Running the tool will create some output files for each device, and also a top-level
 `registration_summary.json` file with summary results. Detailed error reports (if any)
-for individual devies will be in their respective device directories.
+for individual devices will be in their respective device directories.
 
 <pre>
 <b>~/udmi$ cat test_site/cloud_iot_config.json </b>

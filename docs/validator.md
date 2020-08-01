@@ -9,7 +9,7 @@ There are several different ways to run the validator depending on the specific 
 * Regression Testing
 * (TODO: Fix _local device sample_ validation)
 
-See the [setup docs](setup.md) for common setup required for runing this tool.
+See the [setup docs](setup.md) for common setup required for running this tool.
 
 ## PubSub Stream Validation
 

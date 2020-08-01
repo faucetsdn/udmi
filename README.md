@@ -113,7 +113,7 @@ subsections (e.g. _system_, _pointset_, or _gateway_) that relate to various bit
 Using UDMI on a project entails not only the base device and server implementations, but also
 properly registering and validating device configuration. The [registrar](docs/registrar.md)
 tool and [validator](docs/validator.md) tool provide a means to configure and check site
-instalations, respectively.
+installations, respectively.
 
 ## Message Detail Notes
 
