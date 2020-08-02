@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ROOT_DIR="$(pwd)/$line"
+ROOT_DIR="$(pwd)"
 
 if [ $# != 3 ]; then
     echo $0 PROJECT_ID SITE_PATH SUBSCRIPTION_ID

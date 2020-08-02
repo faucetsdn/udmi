@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+JAR=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 ROOT=$(dirname $0)/..
 cd $ROOT
 
@@ -31,7 +32,7 @@ if [ "$build" == y ]; then
     validator/bin/build
 fi
 
-jarfile="$(cd "$(dirname "validator/build/libs/validator-1.0-SNAPSHOT-all.jar")"; pwd)/$(basename "validator/build/libs/validator-1.0-SNAPSHOT-all.jar")"
+jarfile=$(cd $(dirname $JAR); pwd)/$(basename $JAR)
 
 rootdir=schema
 subsets=$(cd $rootdir; ls -d *.tests)
