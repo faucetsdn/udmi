@@ -2,7 +2,7 @@
 
 ROOT_DIR=$(dirname $0)/..
 
-if [ $# != 2 ]; then
+if [ $# != 2 -a $# != 3 ]; then
     echo $0 PROJECT_ID SITE_PATH [device filter]
     false
 fi
