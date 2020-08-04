@@ -20,6 +20,6 @@ fi
 echo Building validator...
 $ROOT_DIR/validator/bin/build > /dev/null
 
-echo Running tools version `git describe`
+echo Running tools version `(cd $ROOT_DIR; git describe)`
 
 $ROOT_DIR/validator/bin/registrar $project_id $site_path $ROOT_DIR/schema $* 2>&1

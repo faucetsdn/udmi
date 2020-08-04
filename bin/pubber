@@ -22,6 +22,6 @@ fi
 echo Building pubber...
 $ROOT_DIR/pubber/bin/build > /dev/null
 
-echo Running tools version `git describe`
+echo Running tools version `(cd $ROOT_DIR; git describe)`
 
 $ROOT_DIR/pubber/bin/run $project_id $site_path $device_id
