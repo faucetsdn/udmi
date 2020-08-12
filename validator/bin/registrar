@@ -18,6 +18,7 @@ shift || true
 echo Using gcloud auth:
 gcloud config get-value account || true
 
+echo Using tool root $ROOT
 echo Using cloud project $project_id
 echo Using site config dir $site_dir
 echo Using devices $*
@@ -26,7 +27,7 @@ export UDMI_VERSION=`cd $ROOT; git describe --dirty`
 
 error=0
 echo java args $site_dir $project_id $*
-java -cp $jarfile $mainclass $site_dir $project_id $* || error=$?
+java -cp $jarfile $mainclass $ROOT $site_dir $project_id $* || error=$?
 
 echo Registrar complete, exit $error
 exit $error

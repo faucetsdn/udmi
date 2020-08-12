@@ -70,17 +70,17 @@ public class Registrar {
   public static void main(String[] args) {
     Registrar registrar = new Registrar();
     try {
-      registrar.setSchemaBase(SCHEMA_BASE_PATH);
-      if (args.length < 1) {
-        throw new IllegalArgumentException("Args: [site_dir] [project_id] [devices...]");
+      if (args.length < 2) {
+        throw new IllegalArgumentException("Args: tool_root site_dir [project_id] [devices...]");
       }
-      registrar.setSiteConfigPath(args[0]);
-      if (args.length > 1) {
-        registrar.setProjectId(args[1]);
+      registrar.setSchemaBase(new File(args[0], SCHEMA_BASE_PATH).getPath());
+      registrar.setSiteConfigPath(args[1]);
+      if (args.length > 2) {
+        registrar.setProjectId(args[2]);
       }
-      if(args.length > 2) {
-        String[] devices = new String[args.length - 2];
-        System.arraycopy(args, 2, devices, 0, args.length - 2);
+      if(args.length > 3) {
+        String[] devices = new String[args.length - 3];
+        System.arraycopy(args, 3, devices, 0, args.length - 3);
         registrar.processDevices(devices);
       } else {
         registrar.processDevices();
