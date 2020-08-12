@@ -200,7 +200,7 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  public List<Device> fetchDeviceList(Pattern devicePattern) {
+  public List<Device> fetchDeviceList() {
     Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
     try {
       List<Device> devices = cloudIotRegistries
@@ -215,7 +215,7 @@ public class CloudIotManager {
       if (devices.size() == LIST_PAGE_SIZE) {
         throw new RuntimeException("Returned exact page size, likely not fetched all devices");
       }
-      return devices.stream().filter(device -> devicePattern.matcher(device.getId()).find()).collect(toList());
+      return devices;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for registry " + registryId, e);
     }

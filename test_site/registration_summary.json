@@ -4,5 +4,8 @@
     "AHU-22" : "True",
     "GAT-123" : "True",
     "SNS-4" : "True"
+  },
+  "Version" : {
+    "main" : "1.1.0"
   }
 }

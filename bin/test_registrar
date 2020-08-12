@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+rm -f test_site/registration_summary.json
+
+bin/registrar test_site
+
+cat test_site/registration_summary.json
+echo
+
+devices=$(fgrep True test_site/registration_summary.json | wc -l)
+
+echo Found $devices True devices.
+
+[ "$devices" == 4 ]

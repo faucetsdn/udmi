@@ -5,27 +5,30 @@ ROOT=$(dirname $0)/../..
 jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.registrar.Registrar
 
-if [ -z "$1" -o -z "$2" ]; then
-    echo Usage: $0 [project_id] [devices_dir] [schema_dir] '(device_filter)'
+if [ -z "$1" ]; then
+    echo Usage: $0 site_dir [project_id] [devices...]
     false
 fi
 
+site_dir=$1
+shift
 project_id=$1
-devices_dir=$2
-schema_dir=$3
-device_filter=$4
+shift || true
 
 echo Using gcloud auth:
 gcloud config get-value account || true
 
+export UDMI_VERSION=`cd $ROOT; git describe`
+
+echo Using tool version $UDMI_VERSION
+echo Using tool root $ROOT
 echo Using cloud project $project_id
-echo Using site config dir $devices_dir
-echo Using schema root dir $schema_dir
-echo Using device filter $device_filter
+echo Using site config dir $site_dir
+echo Using devices $*
 
 error=0
-echo java args $project_id $devices_dir $schema_dir $device_filter
-java -cp $jarfile $mainclass $project_id $devices_dir $schema_dir $device_filter || error=$?
+echo java args $site_dir $project_id $*
+java -cp $jarfile $mainclass $ROOT $site_dir $project_id $* || error=$?
 
 echo Registrar complete, exit $error
 exit $error
