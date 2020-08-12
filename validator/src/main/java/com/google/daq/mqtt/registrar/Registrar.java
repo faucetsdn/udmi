@@ -189,9 +189,6 @@ public class Registrar {
         bindGatewayDevices(localDevices, deviceSet);
         blockErrors = blockExtraDevices(extraDevices);
       }
-      if (deviceSet != null && !deviceSet.isEmpty()) {
-        throw new RuntimeException("Unknown specified devices: " + Joiner.on(", ").join(deviceSet));
-      }
       System.err.println(String.format("Processed %d devices", localDevices.size()));
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
