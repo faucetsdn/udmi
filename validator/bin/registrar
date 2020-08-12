@@ -18,12 +18,13 @@ shift || true
 echo Using gcloud auth:
 gcloud config get-value account || true
 
+export UDMI_VERSION=`cd $ROOT; git describe --dirty`
+
+echo Using tool version $UDMI_VERSION
 echo Using tool root $ROOT
 echo Using cloud project $project_id
 echo Using site config dir $site_dir
 echo Using devices $*
-
-export UDMI_VERSION=`cd $ROOT; git describe --dirty`
 
 error=0
 echo java args $site_dir $project_id $*
