@@ -18,7 +18,7 @@ shift || true
 echo Using gcloud auth:
 gcloud config get-value account || true
 
-export UDMI_VERSION=`cd $ROOT; git describe --dirty`
+export UDMI_VERSION=`cd $ROOT; git describe`
 
 echo Using tool version $UDMI_VERSION
 echo Using tool root $ROOT
