@@ -8,4 +8,6 @@ cat test_site/registration_summary.json
 
 devices=$(fgrep True test_site/registration_summary.json | wc -l)
 
+echo Found $devices True devices.
+
 [ "$devices" == 4 ]
