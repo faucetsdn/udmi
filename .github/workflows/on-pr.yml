@@ -15,3 +15,5 @@ jobs:
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
       - name: Running unit tests
         run: bin/test_schema
+      - name: Run registrar validation
+        run: bin/test_registrar

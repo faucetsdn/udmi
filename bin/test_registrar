@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+rm -f test_site/registration_summary.json
+
+bin/registrar test_site
+
+cat test_site/registration_summary.json
+
+devices=$(fgrep True test_site/registration_summary.json | wc -l)
+
+[ "$devices" == 4 ]
