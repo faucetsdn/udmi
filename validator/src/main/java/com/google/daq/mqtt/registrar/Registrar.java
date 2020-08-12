@@ -11,6 +11,7 @@ import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -153,6 +154,12 @@ public class Registrar {
         List<Device> cloudDevices = fetchDeviceList();
         extraDevices = cloudDevices.stream().map(Device::getId).collect(toSet());
       }
+      if (deviceSet != null) {
+        Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
+        if (!unknowns.isEmpty()) {
+          throw new RuntimeException("Unknown specified devices: " + Joiner.on(", ").join(unknowns));
+        }
+      }
       for (String localName : localDevices.keySet()) {
         LocalDevice localDevice = localDevices.get(localName);
         if (!localDevice.isValid()) {
@@ -162,7 +169,7 @@ public class Registrar {
         extraDevices.remove(localName);
         try {
           localDevice.writeConfigFile();
-          if (deviceSet == null || deviceSet.remove(localName)) {
+          if (deviceSet == null || deviceSet.contains(localName)) {
             if (!localOnly()) {
               updateCloudIoT(localDevice);
               Device device = Preconditions.checkNotNull(fetchDevice(localName),
@@ -179,11 +186,8 @@ public class Registrar {
         }
       }
       if (!localOnly()) {
-        bindGatewayDevices(localDevices);
+        bindGatewayDevices(localDevices, deviceSet);
         blockErrors = blockExtraDevices(extraDevices);
-      }
-      if (deviceSet != null && !deviceSet.isEmpty()) {
-        throw new RuntimeException("Unknown specified devices: " + Joiner.on(", ").join(deviceSet));
       }
       System.err.println(String.format("Processed %d devices", localDevices.size()));
     } catch (Exception e) {
@@ -199,10 +203,14 @@ public class Registrar {
   }
 
   private String deviceNameFromPath(String device) {
-    String prefix = new File(siteConfig, DEVICES_DIR).getAbsolutePath() + File.separator;
-    File devPath = new File(device);
-    String absolutePath = devPath.getAbsolutePath();
-    return absolutePath.startsWith(prefix) ? absolutePath.substring(prefix.length()) : device;
+    while (device.endsWith("/")) {
+      device = device.substring(0, device.length() - 1);
+    }
+    int slashPos = device.lastIndexOf('/');
+    if (slashPos >= 0) {
+      device = device.substring(slashPos + 1);
+    }
+    return device;
   }
 
   private ExceptionMap blockExtraDevices(Set<String> extraDevices) {
@@ -248,17 +256,22 @@ public class Registrar {
     }
   }
 
-  private void bindGatewayDevices(Map<String, LocalDevice> localDevices) {
-    localDevices.values().stream().filter(localDevice -> localDevice.getSettings().proxyDevices != null).forEach(
-        localDevice -> localDevice.getSettings().proxyDevices.forEach(proxyDeviceId -> {
-          try {
-            System.err.println("Binding " + proxyDeviceId + " to gateway " + localDevice.getDeviceId());
-            cloudIotManager.bindDevice(proxyDeviceId, localDevice.getDeviceId());
-          } catch (Exception e) {
-            throw new RuntimeException("While binding device " + proxyDeviceId, e);
-          }
-        })
-    );
+  private void bindGatewayDevices(Map<String, LocalDevice> localDevices,
+      Set<String> deviceSet) {
+    localDevices.values().stream()
+        .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
+        .forEach(localDevice -> localDevice.getSettings().proxyDevices.stream()
+            .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
+            .forEach(proxyDeviceId -> {
+              try {
+                String gatewayId = localDevice.getDeviceId();
+                System.err.println("Binding " + proxyDeviceId + " to gateway " + gatewayId);
+                cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+              } catch (Exception e) {
+                throw new RuntimeException("While binding device " + proxyDeviceId, e);
+              }
+            })
+        );
   }
 
   private void shutdown() {
