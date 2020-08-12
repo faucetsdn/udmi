@@ -51,9 +51,10 @@ public class Registrar {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(Include.NON_NULL);
-  public static final String ALL_MATCH = "";
-  private static final String LOCAL_ONLY_PROJECT_ID = "--";
   public static final String SCHEMA_BASE_PATH = "schema";
+  private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
+  private static final String VERSION_KEY = "Version";
+  public static final String VERSION_MAIN_KEY = "main";
 
   private CloudIotManager cloudIotManager;
   private File siteConfig;
@@ -117,6 +118,7 @@ public class Registrar {
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println("  Device " + key + ": " + value.size()));
     System.err.println("Out of " + localDevices.size() + " total.");
+    errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, System.getenv(UDMI_VERSION_KEY)));
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
   }
 
@@ -339,10 +341,14 @@ public class Registrar {
         } catch (Exception e) {
           localDevice.getErrors().put("Credential", e);
         }
-        try {
-          localDevice.validateEnvelope(cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
-        } catch (Exception e) {
-          localDevice.getErrors().put("Envelope", e);
+        if (cloudIotManager != null) {
+          try {
+            localDevice
+                .validateEnvelope(cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
+          } catch (Exception e) {
+            localDevice.getErrors()
+                .put("Envelope", new RuntimeException("While validating envelope", e));
+          }
         }
       }
     }

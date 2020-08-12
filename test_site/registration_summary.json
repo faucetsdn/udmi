@@ -4,5 +4,8 @@
     "AHU-22" : "True",
     "GAT-123" : "True",
     "SNS-4" : "True"
+  },
+  "Version" : {
+    "main" : "1.0.0-6-g81834a3-dirty"
   }
 }

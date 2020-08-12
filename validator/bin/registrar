@@ -22,6 +22,8 @@ echo Using cloud project $project_id
 echo Using site config dir $site_dir
 echo Using devices $*
 
+export UDMI_VERSION=`cd $ROOT; git describe --dirty`
+
 error=0
 echo java args $site_dir $project_id $*
 java -cp $jarfile $mainclass $site_dir $project_id $* || error=$?
