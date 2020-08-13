@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 if [ $# != 3 ]; then
     echo $0 site_path project_id device_id
@@ -27,7 +27,7 @@ key_gen=RS256
 key_type=rsa-pem
 key_file=$device_dir/rsa_public.pem
 
-../bin/keygen $key_gen $device_dir
+$ROOT_DIR/bin/keygen $key_gen $device_dir
 
 gcloud_opts="--device=$device --registry=$registry --region=$region --project=$project"
 yes | gcloud iot devices credentials clear $gcloud_opts
