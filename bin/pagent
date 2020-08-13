@@ -36,7 +36,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         keyfile = '%s/devices/%s/rsa_private.pem' % (site_path, device_id)
         keystr = open(keyfile, "r").read()  
         reply = {
-            'site_path': site_path,
             'project_id': project_id,
             'device_id': device_id,
             'rsa_private.pem': keystr
