@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
