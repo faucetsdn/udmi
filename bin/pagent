@@ -60,5 +60,5 @@ filename = '%s/cloud_iot_config.json' % site_path
 with open(filename) as data_file:
     cloud_iot_config = yaml.safe_load(data_file)
 
-httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
+httpd = HTTPServer(('localhost', 8192), SimpleHTTPRequestHandler)
 httpd.serve_forever()
