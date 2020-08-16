@@ -28,6 +28,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     
     def generate_reply(self, params):
         device_id = params['device'][0]
+        print("Processing provisioning request for device %s" % device_id)
         code, stdout, stderr = self._provision(device_id)
         if code:
             print(stdout)
@@ -60,5 +61,7 @@ filename = '%s/cloud_iot_config.json' % site_path
 with open(filename) as data_file:
     cloud_iot_config = yaml.safe_load(data_file)
 
-httpd = HTTPServer(('localhost', 8192), SimpleHTTPRequestHandler)
+ADDRESS = ('0.0.0.0', 8192)
+httpd = HTTPServer(ADDRESS, SimpleHTTPRequestHandler)
+print("Listening for provisioning requests on %s" % str(ADDRESS))
 httpd.serve_forever()
