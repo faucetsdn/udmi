@@ -1,7 +1,7 @@
 # UDMI Validation Workflow
 
 The overall UDMI project validation workflow generally looks like this:
-1. Setup site-specific repo with appropriate configuration and metadata.
+1. Setup a [`site_path`](site_path.md) in a git repo with appropriate configuration and metadata.
 2. Run [`registrar`](registrar.md) with no specified project to validate metadata.
 3. Use [`keygen`](keygen.md) as necessary to generate keys.
 4. Run `registrar` tool again with a cloud project to actually register devices.
