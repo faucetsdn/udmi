@@ -8,6 +8,7 @@ Web-based configuraiton flow that applies BACnetSC gateway devices.
 
 https://textart.io/sequence#
 
+```
 object OnPrem Cloud OffPrem
 OffPrem->Cloud: Create GCP Project and Registry
 note right of OffPrem: Provision GCP connection in IoT Gateway Device
@@ -25,3 +26,4 @@ note right of OffPrem: Provision UDMI Registrar for GCP and Metadata
 OffPrem->Cloud: Run UDMI Registrar
 Cloud->OnPrem: UDMI Gateway & Device Config Blocks
 OnPrem->Cloud: Telemetry
+```
