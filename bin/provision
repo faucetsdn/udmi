@@ -1,0 +1,35 @@
+#!/bin/bash -e
+
+if [ $# != 3 ]; then
+    echo $0 site_path project_id device_id
+    false
+fi
+
+ROOT_DIR=$(dirname $0)/..
+
+site_path=$(realpath $1)
+project=$2
+device=$3
+shift 3
+
+config_file=$site_path/cloud_iot_config.json
+device_dir=$site_path/devices/$device 
+
+if [ ! -d $site_path/devices/$device ]; then
+    echo Device directory $device_dir not found.
+    false
+fi
+
+device=AHU-1
+registry=registrar_test
+region=us-central1
+key_gen=RS256
+key_type=rsa-pem
+key_file=$device_dir/rsa_public.pem
+
+$ROOT_DIR/bin/keygen $key_gen $device_dir
+
+gcloud_opts="--device=$device --registry=$registry --region=$region --project=$project"
+yes | gcloud iot devices credentials clear $gcloud_opts
+gcloud iot devices credentials create $gcloud_opts --type=$key_type --path=$key_file
+
