@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -9,6 +10,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.registrar.UdmiSchema;
+import com.google.daq.mqtt.registrar.UdmiSchema.Config;
 import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import com.google.daq.mqtt.util.*;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -58,6 +60,9 @@ public class Validator {
   private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
   private static final String POINTSET_TYPE = "pointset";
   private static final String NO_SITE = "--";
+  private static final String SUB_FOLDER_KEY = "subFolder";
+  private static final String STATE_SUBFOLER = "state";
+  private static final String DEVICE_ID_KEY = "deviceId";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -69,10 +74,7 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private Set<String> ignoredRegistries = new HashSet();
-
-  public Validator(String projectId) {
-    this.projectId = projectId;
-  }
+  private CloudIotManager cloudIotManager;
 
   public static void main(String[] args) {
     if (args.length != 5) {
@@ -102,12 +104,22 @@ public class Validator {
     System.exit(0);
   }
 
+  public Validator(String projectId) {
+    this.projectId = projectId;
+  }
+
   private void setSiteDir(String siteDir) {
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
     try {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudConfig);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
+    }
+
+    try {
+      this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
+    } catch (Exception e) {
+      throw new RuntimeException("While initializating cloud IoT for project " + projectId);
     }
 
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
@@ -190,6 +202,16 @@ public class Validator {
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
+    if (STATE_SUBFOLER.equals(attributes.get(SUB_FOLDER_KEY))) {
+      if (!checkStateResponse(message, attributes)) {
+        sendConfigUpdate(attributes.get(DEVICE_ID_KEY));
+      }
+    }
+  }
+
+  private boolean checkStateResponse(Map<String, Object> message, Map<String, String> attributes) {
+    System.out.println("Handling state response");
+    return false;
   }
 
   private boolean validateUpdate(Map<String, Schema> schemaMap, Map<String, Object> message,
@@ -353,6 +375,25 @@ public class Validator {
     dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
     try (PrintStream errorOut = new PrintStream(errorFile)) {
       errorTree.write(errorOut);
+    }
+  }
+
+  private void sendConfigUpdate(String deviceId) {
+    Config config = getCurrentConfig(deviceId);
+    config.timestamp = new Date();
+    try {
+      cloudIotManager.setDeviceConfig(deviceId, OBJECT_MAPPER.writeValueAsString(config));
+    } catch (Exception e) {
+      throw new RuntimeException("While setting device config for " + deviceId);
+    }
+  }
+
+  private Config getCurrentConfig(String deviceId) {
+    String deviceConfig = cloudIotManager.getDeviceConfig(deviceId);
+    try {
+      return OBJECT_MAPPER.readValue(deviceConfig, Config.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting previous config " + deviceId);
     }
   }
 
