@@ -2,5 +2,3 @@
 
 sudo apt-get install openjdk-11-jdk
 sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
-
-env
