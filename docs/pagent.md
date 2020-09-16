@@ -41,10 +41,10 @@ To accomplish there, there are four main steps:
 
 https://textart.io/sequence#
 
-<em>
+```
 object Device Cloud Agent
 Device->Agent: Request
 Agent->Cloud: Provision
 Agent->Device: Success
 Device->Cloud: Connect
-</em>
+```
