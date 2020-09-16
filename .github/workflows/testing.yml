@@ -10,9 +10,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v2.3.1
       - name: Install dependencies
-        run: |
-          sudo apt-get install openjdk-11-jdk
-          sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
+        run: bin/setup_dep
       - name: Running unit tests
         run: bin/test_schema
       - name: Run registrar validation
