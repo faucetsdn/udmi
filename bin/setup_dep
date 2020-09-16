@@ -3,5 +3,4 @@
 sudo apt-get install openjdk-11-jdk
 sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
 
-# https://stackoverflow.com/questions/26074446/picked-up-java-tool-options-javaagent-usr-share-java-jayatanaag-jar-when-st
-sudo rm /usr/share/upstart/sessions/jayatana.conf
+env
