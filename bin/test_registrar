@@ -1,13 +1,28 @@
 #!/bin/bash -e
 
-rm -f test_site/registration_summary.json
+TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.0
 
-bin/registrar test_site
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
 
-cat test_site/registration_summary.json
+TEST_SITE=sites/udmi_site_model
+
+rm -rf $TEST_SITE
+mkdir -p sites
+(
+    cd sites
+    git clone ${TEST_SITE_GIT%~*}
+    cd udmi_site_model
+    git checkout ${TEST_SITE_GIT#*~}
+    git log -n 1
+)
+
+bin/registrar $TEST_SITE
+
+cat $TEST_SITE/registration_summary.json
 echo
 
-devices=$(fgrep True test_site/registration_summary.json | wc -l)
+devices=$(fgrep True $TEST_SITE/registration_summary.json | wc -l)
 
 echo Found $devices True devices.
 
