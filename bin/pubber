@@ -3,16 +3,14 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
 if [ $# != 3 ]; then
-    echo $0 PROJECT_ID SITE_PATH DEVICE_ID
+    echo $0 SITE_PATH PROJECT_ID DEVICE_ID
     false
 fi
 
-project_id=$1
-site_path=$2
+site_path=$1
+project_id=$2
 device_id=$3
-shift
-shift
-shift
+shift 3
 
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
