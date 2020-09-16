@@ -9,6 +9,7 @@ import com.google.api.services.cloudiot.v1.CloudIot;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
 import com.google.api.services.cloudiot.v1.model.Device;
+import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
@@ -20,15 +21,14 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -72,7 +72,7 @@ public class CloudIotManager {
     return projectPath + "/registries/" + registryId;
   }
 
-  private String getDevicePath(String registryId, String deviceId) {
+  private String getDevicePath(String deviceId) {
     return getRegistryPath() + "/devices/" + deviceId;
   }
 
@@ -115,7 +115,7 @@ public class CloudIotManager {
 
   private void writeDeviceConfig(String deviceId, String config) {
     try {
-      cloudIotRegistries.devices().modifyCloudToDeviceConfig(getDevicePath(registryId, deviceId),
+      cloudIotRegistries.devices().modifyCloudToDeviceConfig(getDevicePath(deviceId),
           new ModifyCloudToDeviceConfigRequest().setBinaryData(
               Base64.getEncoder().encodeToString(config.getBytes()))
       ).execute();
@@ -128,7 +128,7 @@ public class CloudIotManager {
     try {
       Device device = new Device();
       device.setBlocked(blocked);
-      String path = getDevicePath(registryId, deviceId);
+      String path = getDevicePath(deviceId);
       cloudIotRegistries.devices().patch(path, device).setUpdateMask("blocked").execute();
     } catch (Exception e) {
       throw new RuntimeException(String.format("While (un)blocking device %s/%s=%s", registryId, deviceId, blocked), e);
@@ -183,7 +183,7 @@ public class CloudIotManager {
           .setNumId(null);
       cloudIotRegistries
           .devices()
-          .patch(getDevicePath(registryId, deviceId), device).setUpdateMask(DEVICE_UPDATE_MASK)
+          .patch(getDevicePath(deviceId), device).setUpdateMask(DEVICE_UPDATE_MASK)
           .execute();
     } catch (Exception e) {
       throw new RuntimeException("Remote error patching device " + deviceId, e);
@@ -227,7 +227,7 @@ public class CloudIotManager {
 
   private Device fetchDeviceFromCloud(String deviceId) {
     try {
-      return cloudIotRegistries.devices().get(getDevicePath(registryId, deviceId)).execute();
+      return cloudIotRegistries.devices().get(getDevicePath(deviceId)).execute();
     } catch (Exception e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == 404) {
@@ -260,5 +260,33 @@ public class CloudIotManager {
 
   private BindDeviceToGatewayRequest getBindRequest(String deviceId, String gatewayId) {
     return new BindDeviceToGatewayRequest().setDeviceId(deviceId).setGatewayId(gatewayId);
+  }
+
+  public String getDeviceConfig(String deviceId) {
+    try {
+      List<DeviceConfig> deviceConfigs = cloudIotRegistries.devices().configVersions()
+          .list(getDevicePath(deviceId)).execute().getDeviceConfigs();
+      if (deviceConfigs.size() > 0) {
+        return new String(Base64.getDecoder().decode(deviceConfigs.get(0).getBinaryData()));
+      }
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("While fetching device configurations for " + deviceId);
+    }
+  }
+
+  public void setDeviceConfig(String deviceId, String data) {
+    try {
+      ModifyCloudToDeviceConfigRequest req = new ModifyCloudToDeviceConfigRequest();
+
+      String encPayload = Base64.getEncoder()
+          .encodeToString(data.getBytes(StandardCharsets.UTF_8.name()));
+      req.setBinaryData(encPayload);
+
+      cloudIotRegistries.devices()
+          .modifyCloudToDeviceConfig(getDevicePath(deviceId), req).execute();
+    } catch (Exception e) {
+      throw new RuntimeException("While setting device config for " + deviceId);
+    }
   }
 }

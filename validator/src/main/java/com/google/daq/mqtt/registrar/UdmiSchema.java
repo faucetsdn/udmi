@@ -70,7 +70,7 @@ public class UdmiSchema {
     public String site;
   }
 
-  static class Config extends UdmiBase {
+  public static class Config extends UdmiBase {
     public GatewayConfig gateway;
     public LocalnetConfig localnet;
     public PointsetConfig pointset;

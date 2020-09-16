@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+
+if [ $# != 1 ]; then
+    echo $0 SITE_PATH
+    false
+fi
+
+site_path=$1
+shift
+
+if [ ! -f $site_path/cloud_iot_config.json ]; then
+    echo cloud_iot_config.json not found at $site_path
+    false
+fi
+
+metadatas=`find ${site_path%/}/devices -name metadata.json`
+
+for metadata in $metadatas; do
+    auth_type=`jq -r .cloud.auth_type $metadata`
+    if [ "$auth_type" == null ]; then
+        echo $metadata missing .cloud.auth_type
+    else
+        filepath=${metadata%/metadata.json}
+        keyfile=`ls $filepath/*_public.pem` 2>/dev/null || true
+        if [ -n "$keyfile" ]; then
+            echo $keyfile exists.
+        else
+            $ROOT_DIR/bin/keygen $auth_type $filepath
+        fi
+    fi
+done
