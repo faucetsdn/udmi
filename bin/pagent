@@ -25,7 +25,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def _provision(self, device_id):
         return self._process_command('bin/provision %s %s %s' % (site_path, project_id, device_id))
-    
+
     def generate_reply(self, params):
         device_id = params['device'][0]
         print("Processing provisioning request for device %s" % device_id)
@@ -35,7 +35,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             print(stderr)
             raise Exception('keygen failed')
         keyfile = '%s/devices/%s/rsa_private.pem' % (site_path, device_id)
-        keystr = open(keyfile, "r").read()  
+        keystr = open(keyfile, "r").read()
         reply = {
             'project_id': project_id,
             'device_id': device_id,
@@ -43,7 +43,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         }
         reply.update(cloud_iot_config)
         return reply
-    
+
     def do_GET(self):
         parsed_path = urlparse(self.path)
         print(parsed_path)
@@ -54,7 +54,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write((json.dumps(reply) + '\n').encode('utf-8'))
 
 assert len(sys.argv) == 3, 'usage: pagent site_path project_id'
-    
+
 site_path = sys.argv[1]
 project_id = sys.argv[2]
 filename = '%s/cloud_iot_config.json' % site_path
