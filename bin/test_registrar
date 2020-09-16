@@ -14,6 +14,7 @@ mkdir -p sites
     git clone ${TEST_SITE_GIT%~*}
     cd udmi_site_model
     git checkout ${TEST_SITE_GIT#*~}
+    git long -n 1
 )
 
 bin/registrar $TEST_SITE
