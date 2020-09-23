@@ -7,7 +7,7 @@ if [ $# != 3 ]; then
     false
 fi
 
-site_path=$1
+site_path=$(realpath $1)
 project_id=$2
 subscription=$3
 shift 3
