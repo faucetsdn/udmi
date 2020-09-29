@@ -1,0 +1,28 @@
+#!/bin/bash -e
+
+if [ $# != 1 ]; then
+    echo $0 [project_id]
+    false
+fi
+
+project=$1
+shift
+
+rundir=$(dirname $0)
+cd $rundir/..
+
+echo Running in $PWD
+
+rm -rf build
+
+./gradlew build
+./gradlew shadow
+
+ls -l build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar
+
+docker build -f Dockerfile.proxy . -t iot-core-proxy
+docker tag iot-core-proxy:latest eu.gcr.io/${project}/iot-core-proxy:latest
+docker push eu.gcr.io/${project}/iot-core-proxy:latest
+
+echo Deploy instance: kubectl apply -f k8s_deployment.yaml
+echo Modify/restart : kubectl edit deployments/iot-core-proxy

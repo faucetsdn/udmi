@@ -1,0 +1,12 @@
+FROM ubuntu:xenial
+
+ENV AG="apt-get -qqy --no-install-recommends -o=Dpkg::Use-Pty=0"
+
+WORKDIR /root
+
+RUN $AG update && $AG install default-jre
+
+ADD bin bin
+ADD build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar
+
+CMD ["bin/run", "/var/secrets/site-config/"]

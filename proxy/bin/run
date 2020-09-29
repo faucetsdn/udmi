@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+if [ -z "$1" ]; then
+    echo Usage: $0 [config_path] [project_id] [site_id]
+    false
+fi
+
+config_path=$1
+project_id=$2
+registry_id=$3
+shift
+
+ls -l $config_path/
+
+java -jar build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar ${config_path} ${project_id} ${registry_id}
