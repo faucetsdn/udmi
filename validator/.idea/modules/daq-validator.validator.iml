@@ -12,8 +12,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.5" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.2" level="project" />
     <orderEntry type="library" name="Gradle: com.github.everit-org.json-schema:org.everit.json.schema:1.9.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
@@ -46,8 +47,9 @@
     <orderEntry type="library" name="Gradle: io.opencensus:opencensus-contrib-http-util:0.18.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:26.0-android" level="project" />
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.11.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.5" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.11.2" level="project" />
     <orderEntry type="library" name="Gradle: org.yaml:snakeyaml:1.26" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20180130" level="project" />
     <orderEntry type="library" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
