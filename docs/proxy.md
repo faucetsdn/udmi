@@ -1,5 +1,25 @@
 # UDMI Proxy
 
+The _UDMI Proxy_ is a cloud-based capability to proxy UDMI/MQTT exchanges through an
+intermediary proxy cloud project. This allows sharing of data among different cloud
+administrative domains. From a device perspective, it's 'transparent' in the sense
+that there's no functional difference between communicating with the proxy project
+and the original target project. The switch from one project to another is based on
+updating the device's configuration (Cloud IoT Core endpoint).
+
+Configuration of the Cloud IoT Core registry in both projects is accomplished through
+the site's `site_model` and the `registrar` tool. The same model is run against both
+projects, executed by an appropriately authorized agent with appropriate access rights.
+
+Before using the project, it's generally best practice to test a few device connections
+direct to the target project, to make sure it's known-working before switching the
+devices over to a proxied connection. This is considered the _dev_ setup below, in
+comparison to the _proxy_ setup, which is required for a complete install.
+
+Internally, the Proxy project needs special setup and operation, but that is beyond
+the scope of this document, and doesn't directly effect the device or target project
+setups.
+
 ## Sequence Diagram
 
 * _Devices_ are the UDMI/MQTT clients talking to GCP endpoints.
