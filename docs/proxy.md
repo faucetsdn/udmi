@@ -2,7 +2,13 @@
 
 The _UDMI Proxy_ is a cloud-based capability to proxy UDMI/MQTT exchanges through an
 intermediary proxy cloud project. This allows sharing of data among different cloud
-administrative domains. From a device perspective, it's 'transparent' in the sense
+administrative domains. Given the two requirements:
+* All data must be ingested through a project owned by _Organization X_.
+* Application level software must run in a cloud project owned by _Organization Y_.
+Then the UDMI Proxy will allow resolving this by proxying data through a Proxy project
+owned by _Organization X_ through to the project owned by _Organization Y_.
+
+From a device perspective, it's 'transparent' in the sense
 that there's no functional difference between communicating with the proxy project
 and the original target project. The switch from one project to another is based on
 updating the device's configuration (Cloud IoT Core endpoint).
