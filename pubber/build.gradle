@@ -42,7 +42,7 @@ dependencies {
     compile('com.google.api-client:google-api-client:1.22.0') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
     compile('com.google.apis:google-api-services-cloudiot:v1-rev20170922-1.22.0') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
