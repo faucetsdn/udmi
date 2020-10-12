@@ -16,7 +16,7 @@ See the [setup docs](setup.md) for common setup required for running this tool.
 PubSub stream validation works against a live data stream pulled from a pre-existing subscription.
 `bin/validator` takes three arguments:
 * `PROJECT_ID`: The GCP project ID to validate against.
-* `SITE_PATH`: A [site path](site_path.md) definition directory.
+* `SITE_PATH`: A [site model](site_model.md) definition directory.
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by a project admin, as necessary).
 
 ## Regression Testing
