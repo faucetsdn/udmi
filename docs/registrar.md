@@ -6,7 +6,7 @@ in a cloud project.
 
 See the [setup docs](setup.md) for common setup required for running this tool.
 
-The [site path](site_path.md) documentation covers the basic structure of the
+The [site model](site_model.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
 source control as a site-specific repo.
 
@@ -36,7 +36,7 @@ be used to specific specific device(s) to register (rather than all).
 
 Usage: `bin/registrar site_path [project_id] [devices...]`
 
-* `site_path`: The directory containing the site specification.
+* `site_path`: The directory containing the site model.
 * `project_id`: The (optional) GCP project ID that contains the target registry
 * `devices`: Multiple device entries for limited registration. Can be just the device name
 (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
