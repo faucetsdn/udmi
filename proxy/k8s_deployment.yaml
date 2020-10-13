@@ -16,10 +16,6 @@ spec:
         role: master
         tier: backend
     spec:
-      volumes:
-      - name: site-config
-        secret:
-          secretName: site-config
       containers:
       - name: master
         image: eu.gcr.io/bacnet-gateway/iot-core-proxy
@@ -28,6 +24,3 @@ spec:
           requests:
             cpu: 100m
             memory: 100Mi
-        volumeMounts:
-        - name: site-config
-          mountPath: /var/secrets/site-config

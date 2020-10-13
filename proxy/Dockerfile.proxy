@@ -7,6 +7,7 @@ WORKDIR /root
 RUN $AG update && $AG install default-jre
 
 ADD bin bin
-ADD build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar build/libs/iot_core_proxy-1.0-SNAPSHOT-all.jar
+ADD validator/build/libs/validator-1.0-SNAPSHOT-all.jar build/libs/validator-1.0-SNAPSHOT-all.jar
 
-CMD ["bin/run", "/var/secrets/site-config/"]
+CMD ["bin/run"]
+

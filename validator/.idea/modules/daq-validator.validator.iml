@@ -14,8 +14,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.5" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt:0.7.0" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.2" level="project" />
     <orderEntry type="library" name="Gradle: com.github.everit-org.json-schema:org.everit.json.schema:1.9.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-firestore:0.84.0-beta" level="project" />
