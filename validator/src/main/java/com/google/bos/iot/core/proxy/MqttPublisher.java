@@ -1,17 +1,9 @@
 package com.google.bos.iot.core.proxy;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -41,11 +33,6 @@ import org.slf4j.LoggerFactory;
 class MqttPublisher implements MessagePublisher {
 
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .setDateFormat(new ISO8601DateFormat())
-      .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private static final boolean MQTT_SHOULD_RETAIN = false;
 
