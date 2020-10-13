@@ -74,7 +74,12 @@ public class ProxyTarget {
     String keyPrefix = getKeyPrefix();
     String regionKey = keyPrefix + "region";
     String targetKey = keyPrefix + "target";
-    if (!configMap.containsKey(regionKey) || !configMap.containsKey(targetKey)) {
+    if (!configMap.containsKey(targetKey)) {
+      LOG.warn("Proxy target key not found: " + targetKey);
+      return null;
+    }
+    if (!configMap.containsKey(regionKey)) {
+      LOG.warn("Proxy target key not found: " + regionKey);
       return null;
     }
     ProxyConfig proxyConfig = new ProxyConfig();
