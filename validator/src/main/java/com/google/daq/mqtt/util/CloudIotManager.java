@@ -222,10 +222,10 @@ public class CloudIotManager {
   }
 
   public Device fetchDevice(String deviceId) {
-    return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceFromCloud);
+    return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceRaw);
   }
 
-  private Device fetchDeviceFromCloud(String deviceId) {
+  private Device fetchDeviceRaw(String deviceId) {
     try {
       return cloudIotRegistries.devices().get(getDevicePath(deviceId)).execute();
     } catch (Exception e) {

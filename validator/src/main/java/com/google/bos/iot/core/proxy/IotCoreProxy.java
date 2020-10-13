@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.cloud.ServiceOptions;
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
@@ -26,12 +27,10 @@ public class IotCoreProxy {
 
   public static final int DEVICE_CHECKOUT_COUNT = 100;
   private static final String SUBSCRIPTION_NAME = "iot-core-proxy";
-  private static final String HACK_PROJECT = "bos-uk-lon-6ps";
-  private static final String HACK_REGISTRY = "UK-LON-6PS";
 
   private final Map<String, ProxyTarget> proxyTargets = new ConcurrentHashMap<>();
-  private final String configDir;
   private final AtomicInteger messageCount = new AtomicInteger();
+  private final ProjectMetadata configMap;
 
   private PubSubClient pubSubClient;
   private int exitCode;
@@ -42,7 +41,7 @@ public class IotCoreProxy {
     LOG.warn("Hello. Starting at " + new Date());
     try {
       if (args.length != 1) {
-        throw new IllegalArgumentException("Usage: [configPath]");
+        throw new IllegalArgumentException("Usage: [config_file]");
       }
       IotCoreProxy iotCoreProxy = new IotCoreProxy(args[0]);
       try {
@@ -64,8 +63,12 @@ public class IotCoreProxy {
     }
   }
 
-  private IotCoreProxy(String configDir) {
-    this.configDir = configDir;
+  private IotCoreProxy(String configFile) {
+    try {
+      this.configMap = OBJECT_MAPPER.readValue(new File(configFile), ProjectMetadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config file " + configFile);
+    }
   }
 
   private void messageLoop() {
@@ -88,9 +91,6 @@ public class IotCoreProxy {
     String deviceId = attributes.get("deviceId");
     String subFolder = attributes.get("subFolder");
     try {
-      if (HACK_PROJECT.equals(PROJECT_ID)) {
-        registryId = HACK_REGISTRY;
-      }
       ProxyTarget proxyTarget = getProxyTarget(registryId);
       proxyTarget.publish(deviceId, subFolder, augmentRawMessage(data, deviceId, registryId));
     } catch (Exception e) {
@@ -100,14 +100,12 @@ public class IotCoreProxy {
   }
 
   private ProxyTarget getProxyTarget(String registryId) {
-    return proxyTargets.computeIfAbsent(registryId, id -> new ProxyTarget(configDir, registryId));
+    return proxyTargets.computeIfAbsent(registryId,
+        id -> new ProxyTarget(configMap, registryId));
   }
 
   private String augmentRawMessage(String data, String deviceId, String registryId) {
     try {
-      if (!HACK_REGISTRY.equals(registryId)) {
-        return data;
-      }
       ObjectNode jsonObject = (ObjectNode) OBJECT_MAPPER.readTree(data);
       jsonObject.put("deviceId", deviceId);
       jsonObject.put("registryId", registryId);

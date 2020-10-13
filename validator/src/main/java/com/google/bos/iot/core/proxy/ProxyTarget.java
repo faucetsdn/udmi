@@ -1,12 +1,12 @@
 package com.google.bos.iot.core.proxy;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
 import com.google.common.base.Joiner;
 import java.io.File;
@@ -22,12 +22,8 @@ public class ProxyTarget {
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
 
-  private static final String PROXY_CONFIG_FORMAT = "%s_proxy.json";
   private static final String CLOUD_CONFIG_FORMAT = "%s_cloud.json";
   public static final String DEVICE_KEY_FORMAT = "%s_%s_rsa.pkcs8";
-
-  public static final String HELLO_TOPIC = "events/hello";
-  public static final String HELLO_DATA = "hello";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -38,25 +34,23 @@ public class ProxyTarget {
   public static final String DEVICE_TOPIC_PREFIX = "/devices/";
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
-  private final String configDir;
+  private final Map<String, String> configMap;
   private final String registryId;
   private final ProxyConfig proxyConfig;
-  private final CloudIotConfig cloudConfig;
+  private CloudIotConfig cloudConfig;
   private CloudIotManager cloudIotManager;
   private final Set<String> ignoredDevices = new ConcurrentSkipListSet<>();
   private Set<String> targetDevices;
 
-  public ProxyTarget(String configDir, String registryId) {
-    this.configDir = configDir;
+  public ProxyTarget(Map<String, String> configMap, String registryId) {
+    this.configMap = configMap;
     this.registryId = registryId;
-    if (!configExists(registryId)) {
+    proxyConfig = loadProxyConfig();
+    if (proxyConfig == null) {
       info("Ignoring unknown proxy target " + registryId);
-      this.proxyConfig = null;
-      this.cloudConfig = null;
       return;
     }
-    this.proxyConfig = loadProxyConfig();
-    this.cloudConfig = loadCloudConfig();
+    cloudConfig = loadCloudConfig();
     initialize();
     info("Created proxy target instance for registry " + registryId);
   }
@@ -64,15 +58,11 @@ public class ProxyTarget {
   private void initialize() {
     checkNotNull(cloudConfig.cloud_region,"cloud config cloud_region not defined");
     checkNotNull(cloudConfig.registry_id,"cloud config registry_id not defined");
-    checkNotNull(proxyConfig.algorithm, "proxy config algorithm not defined");
     checkNotNull(proxyConfig.dstProjectId,"proxy config dstProjectId not defined");
     checkNotNull(proxyConfig.dstCloudRegion,"proxy config dstCloudRegion not defined");
-    checkNotNull(proxyConfig.registryId,"proxy config registryId not defined");
-    checkArgument(proxyConfig.registryId.equals(cloudConfig.registry_id),
-        "config registry id mismatch");
 
     LOG.info(String.format("Pushing to Cloud IoT registry %s/%s/%s",
-        proxyConfig.dstProjectId,proxyConfig.dstCloudRegion,proxyConfig.registryId));
+        proxyConfig.dstProjectId,proxyConfig.dstCloudRegion, registryId));
 
     cloudIotManager = new CloudIotManager(PROJECT_ID, cloudConfig);
 
@@ -80,61 +70,48 @@ public class ProxyTarget {
     LOG.info("Proxying for devices "+Joiner.on(", ").join(targetDevices));
   }
 
-  private void publishHello(String deviceId) {
-    getMqttPublisher(deviceId).publish(deviceId, HELLO_TOPIC, HELLO_DATA);
-  }
-
-  private boolean configExists(String registryId) {
-    return new File(configDir, String.format(PROXY_CONFIG_FORMAT, registryId)).exists();
-  }
-
   private ProxyConfig loadProxyConfig() {
-    File proxyConfig = new File(configDir, String.format(PROXY_CONFIG_FORMAT, registryId));
-    info("Reading proxy configuration from " + proxyConfig.getAbsolutePath());
-    try {
-      return OBJECT_MAPPER.readValue(proxyConfig, ProxyConfig.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While reading configuration file " + proxyConfig.getAbsolutePath(), e);
+    String keyPrefix = getKeyPrefix();
+    String regionKey = keyPrefix + "region";
+    String targetKey = keyPrefix + "target";
+    if (!configMap.containsKey(regionKey) || !configMap.containsKey(targetKey)) {
+      return null;
     }
+    ProxyConfig proxyConfig = new ProxyConfig();
+    proxyConfig.dstProjectId = configMap.get(targetKey);
+    proxyConfig.dstCloudRegion = configMap.get(regionKey);
+    return proxyConfig;
+  }
+
+  private String getKeyPrefix() {
+    return String.format("proxy_%s_", registryId);
   }
 
   private CloudIotConfig loadCloudConfig() {
-    File cloudConfig = new File(configDir, String.format(CLOUD_CONFIG_FORMAT, registryId));
-    info("Reading cloud configuration from " + cloudConfig.getAbsolutePath());
-    try {
-      return OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While reading configuration file " + cloudConfig.getAbsolutePath(), e);
-    }
+    CloudIotConfig cloudIotConfig = new CloudIotConfig();
+    cloudIotConfig.registry_id = registryId;
+    cloudIotConfig.cloud_region = proxyConfig.dstCloudRegion;
+    return cloudIotConfig;
   }
 
   private String getPublisherKey(String deviceId) {
-    return Joiner.on(":").join(proxyConfig.dstProjectId, proxyConfig.registryId, deviceId);
+    return Joiner.on(":").join(proxyConfig.dstProjectId, registryId, deviceId);
   }
 
   public MessagePublisher getMqttPublisher(String deviceId) {
     String publisherKey = getPublisherKey(deviceId);
     return messagePublishers
-        .computeIfAbsent(publisherKey, deviceKey -> newMqttPublisher(proxyConfig, deviceId));
+        .computeIfAbsent(publisherKey, deviceKey -> newMqttPublisher(deviceId));
   }
 
-  private MessagePublisher newMqttPublisher(ProxyConfig proxyConfig, String deviceId) {
-    File deviceKeyFile = getDeviceKeyFile(proxyConfig.registryId, deviceId);
-    if (!deviceKeyFile.exists()) {
-      LOG.warn(String.format("Disabling %s with missing key file %s", deviceId, deviceKeyFile));
-      return new NullPublisher(deviceId);
-    }
-    LOG.info(String.format("Publishing %s from key file %s", deviceId, deviceKeyFile));
+  private MessagePublisher newMqttPublisher(String deviceId) {
+    Device device = cloudIotManager.fetchDevice(deviceId);
+    Map<String, String> metadata = device.getMetadata();
+    String keyAlgorithm = metadata.get("key_algorithm");
+    byte[] keyBytes = null;
     return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
-        proxyConfig.registryId, deviceId, deviceKeyFile, proxyConfig.algorithm,
+        registryId, deviceId, keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
-  }
-
-  private File getDeviceKeyFile(String siteName, String deviceId) {
-    String deviceKeyFileName = String.format(DEVICE_KEY_FORMAT, siteName, deviceId);
-    return new File(configDir, deviceKeyFileName);
   }
 
   public void publish(String deviceId, String subFolder, String data) {

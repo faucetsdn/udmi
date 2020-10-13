@@ -88,7 +88,7 @@ class MqttPublisher implements MessagePublisher {
   public static final String BRIDGE_PORT = "8883";
 
   MqttPublisher(String projectId, String cloudRegion, String registryId,
-      String deviceId, File keyFile, String algorithm, BiConsumer<String, String> onMessage,
+      String deviceId, byte[] keyBytes, String algorithm, BiConsumer<String, String> onMessage,
       Consumer<Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
@@ -97,19 +97,10 @@ class MqttPublisher implements MessagePublisher {
     this.registryId = registryId;
     this.deviceId = deviceId;
     this.algorithm = algorithm;
-    keyBytes = getKeyBytes(keyFile);
+    this.keyBytes = keyBytes;
     LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
     mqttClient = newMqttClient(deviceId);
     connectMqttClient(deviceId);
-  }
-
-  private byte[] getKeyBytes(File keyFile) {
-    Path dataPath = Paths.get(keyFile.getAbsolutePath());
-    try {
-      return Files.readAllBytes(dataPath);
-    } catch (Exception e) {
-      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
-    }
   }
 
   public void publish(String deviceId, String topic, String data) {

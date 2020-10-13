@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -14,6 +15,8 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +31,16 @@ public class CloudIotManager {
   private final CloudIotConfig iotConfig;
   private final CloudIot cloudIot;
   private final String projectId;
+  private final String projectPath;
+  private final String registryId;
+  private Map<String, Device> deviceMap = new HashMap<>();
+  private CloudIot.Projects.Locations.Registries cloudIotRegistries;
 
   CloudIotManager(String projectId, CloudIotConfig iotConfig) {
     this.projectId = projectId;
     this.iotConfig = iotConfig;
+    projectPath = "projects/" + projectId + "/locations/" + iotConfig.cloud_region;
+    registryId = iotConfig.registry_id;
     try {
       LOG.info("Initializing with default credentials...");
       GoogleCredentials credential =
@@ -41,8 +50,33 @@ public class CloudIotManager {
       cloudIot = new CloudIot.Builder(
           GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
           .setApplicationName(APPLICATION_NAME).build();
+      cloudIotRegistries = cloudIot.projects().locations().registries();
     } catch (Exception e) {
       throw new RuntimeException("Could not connect to Cloud IoT", e);
+    }
+  }
+
+  public String getRegistryPath() {
+    return projectPath + "/registries/" + registryId;
+  }
+
+  private String getDevicePath(String deviceId) {
+    return getRegistryPath() + "/devices/" + deviceId;
+  }
+
+  public Device fetchDevice(String deviceId) {
+    return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceRaw);
+  }
+
+  private Device fetchDeviceRaw(String deviceId) {
+    try {
+      return cloudIotRegistries.devices().get(getDevicePath(deviceId)).execute();
+    } catch (Exception e) {
+      if (e instanceof GoogleJsonResponseException
+          && ((GoogleJsonResponseException) e).getDetails().getCode() == 404) {
+        return null;
+      }
+      throw new RuntimeException("While fetching " + deviceId, e);
     }
   }
 
