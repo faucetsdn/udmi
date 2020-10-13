@@ -17,6 +17,7 @@
     <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt:0.7.0" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.2" level="project" />
     <orderEntry type="library" name="Gradle: com.github.everit-org.json-schema:org.everit.json.schema:1.9.1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.xml.bind:jaxb-api:2.3.1" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
@@ -57,6 +58,7 @@
     <orderEntry type="library" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
     <orderEntry type="library" name="Gradle: com.damnhandy:handy-uri-templates:2.1.6" level="project" />
     <orderEntry type="library" name="Gradle: com.google.re2j:re2j:1.1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.activation:javax.activation-api:1.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.errorprone:error_prone_annotations:2.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.j2objc:j2objc-annotations:1.1" level="project" />

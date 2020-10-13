@@ -294,8 +294,12 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private char[] createJwt() throws Exception {
-    return createJwt(projectId, keyBytes, algorithm).toCharArray();
+  private char[] createJwt() {
+    try {
+      return createJwt(projectId, keyBytes, algorithm).toCharArray();
+    } catch (Throwable t) {
+      throw new RuntimeException("While creating jwt", t);
+    }
   }
 
   /** Create a Cloud IoT JWT for the given project id, signed with the given private key */

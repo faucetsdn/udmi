@@ -10,6 +10,7 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
 import com.google.common.base.Joiner;
 import java.io.File;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,7 +114,7 @@ public class ProxyTarget {
     Device device = cloudIotManager.fetchDevice(deviceId);
     Map<String, String> metadata = device.getMetadata();
     String keyAlgorithm = metadata.get("key_algorithm");
-    byte[] keyBytes = null;
+    byte[] keyBytes = Base64.getDecoder().decode(metadata.get("key_bytes"));
     return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
         registryId, deviceId, keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
