@@ -28,7 +28,7 @@ information will be included about what exactly went wrong.
 ## Error Output
 
 If there is an error validating a particular device, a warning/error message will be shown
-on the console and diagnostic files will be saved in `{udmi_root}/out/{device_id}/`. Example
+on the console and diagnostic files will be saved in `{udmi_root}/out/devices/{device_id}/`. Example
 run:
 
 ```
