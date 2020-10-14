@@ -15,11 +15,16 @@ cd $rundir/../..
 
 echo Running in $PWD
 
+validator/bin/build
+
 ls -l $JAR
 
-docker build -f Dockerfile.proxy . -t iot-core-proxy
+docker build -f proxy/Dockerfile.proxy . -t iot-core-proxy
 docker tag iot-core-proxy:latest eu.gcr.io/${project}/iot-core-proxy:latest
 docker push eu.gcr.io/${project}/iot-core-proxy:latest
 
+echo kubectl config get-contexts
+kubectl config get-contexts
+echo
 echo Deploy instance: kubectl apply -f k8s_deployment.yaml
 echo Modify/restart : kubectl edit deployments/iot-core-proxy

@@ -33,6 +33,11 @@ repositories {
     }
 }
 
+// Address reallky weird bug of 'pick_first' load balancer not loading.
+shadowJar {
+    mergeServiceFiles()
+}
+
 dependencies {
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.5'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.2'

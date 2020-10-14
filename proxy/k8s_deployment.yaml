@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: master
-        image: eu.gcr.io/bacnet-gateway/iot-core-proxy
+        image: eu.gcr.io/@PROJECT_NAME@/iot-core-proxy
         imagePullPolicy: Always
         resources:
           requests:
