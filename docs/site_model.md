@@ -35,7 +35,7 @@ reporting.
 ## `devices/`
 
 The `devices` directory contains a set of descriptions for individual devices in the system. Each
-device directory name corresponds to the Cloud IoT Core device entry and represents the cananoical
+device directory name corresponds to the Cloud IoT Core device entry and represents the canonical
 name for the device. Inside of this directory will be various bits and pieces of information used
 by different tools for managing the devices.
 
