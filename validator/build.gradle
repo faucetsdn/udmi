@@ -39,7 +39,7 @@ dependencies {
     compile group: 'com.github.everit-org.json-schema', name: 'org.everit.json.schema', version: '1.9.1'
 
     compile 'com.google.guava:guava:22.0'
-    compile 'com.google.cloud:google-cloud-logging:1.66.0'
+    compile 'com.google.cloud:google-cloud-logging:1.102.0'
     compile ('com.google.apis:google-api-services-cloudiot:v1-rev20181120-1.27.0') {
       exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
