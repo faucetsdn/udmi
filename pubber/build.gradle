@@ -36,7 +36,7 @@ dependencies {
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.5'
     compile 'io.jsonwebtoken:jjwt:0.7.0'
     compile 'javax.xml.bind:jaxb-api:2.3.1'
-    compile 'com.sun.xml.bind:jaxb-impl:2.3.2'
+    compile 'com.sun.xml.bind:jaxb-impl:2.3.3'
     compile 'com.google.guava:guava:22.0'
     compile 'com.google.cloud:google-cloud-logging:1.102.0'
     compile('com.google.api-client:google-api-client:1.22.0') {
