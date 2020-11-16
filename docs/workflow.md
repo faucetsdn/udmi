@@ -11,6 +11,8 @@ The overall UDMI project validation workflow generally looks like this:
 
 It is strongly recommended to go through all of these steps with one or two test devices,
 rather than trying to take on an entire site without fully vetting the workflow and tools.
-The [pubber](pubber.md) tool can be used to mock out devices in liu of physical devices,
+The [pubber](pubber.md) tool can be used to mock out devices in lieu of physical devices,
 this is very useful for isolating problems between a cloud-configuration issue vs. a
 device configuration one.
+
+An example site directory, as a reference, is available at [udmi_site_model](http://github.com/faucetsdn/udmi_site_model).

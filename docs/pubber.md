@@ -39,7 +39,7 @@ created, or anytime after.)
 ## Configuration
 
 The `local/pubber.json` file configures the key cloud parameters needed for operation
-(the actual values in the file shold match your GCP setup):
+(the actual values in the file should match your GCP setup):
 <pre>
 ~/daq$ <b>cat local/pubber.json</b>
 {
