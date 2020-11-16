@@ -28,8 +28,10 @@ information will be included about what exactly went wrong.
 ## Error Output
 
 If there is an error validating a particular device, a warning/error message will be shown
-on the console and diagnostic files will be saved in `{udmi_root}/out/devices/{device_id}/`. Example
-run:
+on the console and diagnostic files will be saved in `{udmi_root}/out/devices/{device_id}/`.
+A typical error could be a mismatch between the points published by the device
+and what was expected from it, as defined in the device's [metadata.json](metadata.md) file.
+Example run showing a device publishing points not in its metadata:
 
 ```
 ~/sites/gcp-project$ ~/udmi/bin/validator . gcp-project udmi-validator
