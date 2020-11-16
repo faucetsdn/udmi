@@ -1,6 +1,10 @@
 name: UDMI test suite
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 */2 * * *'
 
 jobs:
   unit-tests:
