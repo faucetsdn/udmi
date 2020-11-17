@@ -38,7 +38,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
     compile group: 'com.github.everit-org.json-schema', name: 'org.everit.json.schema', version: '1.9.1'
 
-    compile 'com.google.guava:guava:22.0'
+    compile 'com.google.guava:guava:30.0-jre'
     compile 'com.google.cloud:google-cloud-logging:2.0.1'
     compile ('com.google.apis:google-api-services-cloudiot:v1-rev20201027-1.30.10') {
       exclude group: 'com.google.guava', module: 'guava-jdk5'
