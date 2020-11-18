@@ -22,8 +22,8 @@ The general structure of a `pointset` block (as seen in this
 
 ## Telemetry
 
-A [basic pointset telemetry message](../schema/pointset.tests/example.json) contains the point
-data sent from a device. The structure of this message contains:
+A basic `pointset` [telemetry](../schema/pointset.tests/example.json) message contains
+the point data sent from a device. The structure of this message contains:
  
 * `points`: Collection of point names.
   * _{`point_name`}_: Point name.

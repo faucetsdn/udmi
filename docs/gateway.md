@@ -59,7 +59,7 @@ network, should be indicated as part of the proxy device status block.
 ### telemetry
 
 Telemety from the gateway would primarily consist of standard
-[_logentry_](../schema/logentry.tests/logentry.json) messages, which
+[_system_](../schema/system.tests/example.json) messages, which
 provide a running comentary about gateway operation. Specificaly, if there
 is an error attaching, then there should be appropriate logging to help
 diagnose the problem.
