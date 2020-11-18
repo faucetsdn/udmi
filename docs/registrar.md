@@ -6,7 +6,7 @@ in a cloud project.
 
 See the [setup docs](setup.md) for common setup required for running this tool.
 
-The [site path](site_path.md) documentation covers the basic structure of the
+The [site model](site_model.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
 source control as a site-specific repo.
 
@@ -30,9 +30,16 @@ can use the [bin/keygen](keygen.md) utility to create a proper public/private ke
 
 ## Tool Execution
 
-The `bin/registrar` tool takes two arguments:
-* `project_id`: The GCP project ID that contains the target registry, or `--` for metadata validation only.
-* `site_path`: The directory containing the site specification.
+The registrar tool can be run locally to just validate the metadata, or with an optional
+`project_id` to specify a target GCP project. Additional command-line arguments can
+be used to specific specific device(s) to register (rather than all).
+
+Usage: `bin/registrar site_path [project_id] [devices...]`
+
+* `site_path`: The directory containing the site model.
+* `project_id`: The (optional) GCP project ID that contains the target registry
+* `devices`: Multiple device entries for limited registration. Can be just the device name
+(`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
 
 Running the tool will create some output files for each device, and also a top-level
 `registration_summary.json` file with summary results. Detailed error reports (if any)
@@ -46,7 +53,7 @@ for individual devices will be in their respective device directories.
   "registry_id": "registrar_test",
   "registrar_topic": "registrar"
 }
-<b>~/udmi$ bin/registrar -- test_site/</b>
+<b>~/udmi$ bin/registrar test_site/</b>
 Building validator...
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
