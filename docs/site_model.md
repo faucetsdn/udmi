@@ -1,12 +1,12 @@
-# Project Site Directory Setup
+# Project Site Model
 
-A project "site directory" contains information necessary to specify the configuration for
+A project "site model" contains information necessary to specify the configuration for
 a particular site. This is a logical representation of the underlying information, and can be
 applied against different cloud projects or device configurations to ensure that things are
 configured appropriately. It's fundamentally the building model that describes the on-prem
 devices and how they communicate with the cloud.
 
-An test site directory shows specific examples of how this would be constructed for a complete
+An site model directory shows specific examples of how this would be constructed for a complete
 site. Typically, however, each site would have its own git repo (with the `cloud_iot_config.json`
 file in the repo root). For test and development, this only needs to be a on-disk directory.
 
@@ -35,7 +35,7 @@ reporting.
 ## `devices/`
 
 The `devices` directory contains a set of descriptions for individual devices in the system. Each
-device directory name corresponds to the Cloud IoT Core device entry and represents the cananoical
+device directory name corresponds to the Cloud IoT Core device entry and represents the canonical
 name for the device. Inside of this directory will be various bits and pieces of information used
 by different tools for managing the devices.
 
@@ -45,4 +45,3 @@ by different tools for managing the devices.
 * `rsa_private.pem`: Private device key.
 * `rsa_private.pkcs8`: Private device key (binary format).
 * `rsa_public.pem`: Public device key (for registering with the cloud registry).
-

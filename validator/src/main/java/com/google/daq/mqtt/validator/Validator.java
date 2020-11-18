@@ -120,7 +120,7 @@ public class Validator {
     try {
       this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
     } catch (Exception e) {
-      throw new RuntimeException("While initializating cloud IoT for project " + projectId);
+      throw new RuntimeException("While initializing cloud IoT for project " + projectId);
     }
 
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
