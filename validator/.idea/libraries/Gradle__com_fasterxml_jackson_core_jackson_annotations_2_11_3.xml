@@ -1,13 +1,4 @@
 <component name="libraryTable">
-<<<<<<< HEAD:validator/.idea/libraries/Gradle__com_fasterxml_jackson_core_jackson_annotations_2_11_2.xml
-  <library name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.2">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.11.2/e0a7f61fce3e3eac38a079c11831868269de2ea/jackson-annotations-2.11.2.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.11.2/128e08218b68149f37f56b209fc8ccc5b5321142/jackson-annotations-2.11.2-sources.jar!/" />
-=======
   <library name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.3">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.11.3/25d4e9c777e7a8805c4a000a8629d3009c779c9b/jackson-annotations-2.11.3.jar!/" />
@@ -15,7 +6,6 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.11.3/149aff8156a3886a6e9ea6e6b7f9e5bbdb82db25/jackson-annotations-2.11.3-sources.jar!/" />
->>>>>>> master:validator/.idea/libraries/Gradle__com_fasterxml_jackson_core_jackson_annotations_2_11_3.xml
     </SOURCES>
   </library>
 </component>
