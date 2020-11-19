@@ -43,7 +43,6 @@ block with the following structure:
 * `pointset`: Top level block designator.
   * `points`: Collection of point names. 
     * _{`point_name`}_: Point name.
-      * `units`: As-operating units for this point.
       * (`status`): Optional [status](status.md) information about this point.
 
 ## Config
@@ -58,7 +57,8 @@ block with the following structure:
   and COV updates). Updates more frequent than this should be coalesced into one update. 
   * `points`: Collection of point names, defining the representative point set for this device. 
     * _{`point_name`}_: Point name.
-      * (_In the base form, this will be an empty object_)
+      * `units`: Set as-operating units for this point.
+      * (`cov_threshold`):  Optional threshold for triggering a COV telemetry update.
 
 The `points` set defined in the `config` message is the authoritative source indicating the
 representative points for the device (in both `telemetry` and `state` messages). If the device
