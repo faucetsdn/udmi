@@ -6,7 +6,7 @@ and store them in an appropriate database.
 
 Specific `point_names` within a `pointset` should be specified in _snake_case_ and adhere to the
 data ontology for the device (stipulated and verified elsewhere).
-  
+
 ## Metadata
 
 The `metadata.pointset` block represents the abstract system expectation for what the device
@@ -14,9 +14,9 @@ _should_ be doing, and how it _should_ be configured and operated. This block sp
 expected points that a device holds, along with (optionally) the expected units of those points.
 The general structure of a `pointset` block (as seen in this
 [example](../schema/metadata.tests/example.json)):
- 
+
 * `pointset`: Top level block designator.
-  * `points`: Collection of point names. 
+  * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
       * `units`: Expected units designation for this point.
 
@@ -24,7 +24,7 @@ The general structure of a `pointset` block (as seen in this
 
 A basic `pointset` [telemetry](../schema/pointset.tests/example.json) message contains
 the point data sent from a device. The structure of this message contains:
- 
+
 * `points`: Collection of point names.
   * _{`point_name`}_: Point name.
     * `present_value`: The specific point data reading.
@@ -33,7 +33,7 @@ Telemetry update messages should be sent "as needed" or according to specific re
 stipulated in the `config` block. The basic `pointset` telemetry message for a device should
 contain the values for all representative points from that device, as determined by either
 device programming or the associated `config` block. Incremental updates (e.g. for COV) can
-only the specific updated points as an optimization. 
+only the specific updated points as an optimization.
 
 ## State
 
@@ -41,7 +41,7 @@ The [state](../schema/state.tests/example.json) message from a device contains a
 block with the following structure:
 
 * `pointset`: Top level block designator.
-  * `points`: Collection of point names. 
+  * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
       * (`status`): Optional [status](status.md) information about this point.
 
@@ -54,8 +54,8 @@ block with the following structure:
   * `sample_rate_sec`: Maximum time between samples for the device to send out a _complete_
   update. It can send out updates more frequently than this.
   * `sample_limit_sec`: Minimum time between sample updates for the device (including complete
-  and COV updates). Updates more frequent than this should be coalesced into one update. 
-  * `points`: Collection of point names, defining the representative point set for this device. 
+  and COV updates). Updates more frequent than this should be coalesced into one update.
+  * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
       * (`cov_threshold`):  Optional threshold for triggering a COV telemetry update.
