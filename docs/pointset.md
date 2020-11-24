@@ -44,10 +44,10 @@ block with the following structure:
   * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
       * (`status`): Optional [status](status.md) information about this point.
-      * (`mode`): Optional enumeration to indicate what is determining the points reported value.
+      * (`source`): Optional enumeration indicating the source of the points value.
 
-Valid `mode` settings include:
-* _<empty>_: No `fix_value` _config_ has been specified.
+Valid `source` settings include:
+* _<empty>_: No `fix_value` _config_ has been specified, the source is device-native.
 * _applied_: The `fix_value` _config_ has been successfully applied.
 * _overridden_: The _config_ setting is being overridden by another source.
 * _invalid_: A problem has been identified with the _config_ setting.
