@@ -76,6 +76,14 @@ public class UdmiSchema {
     public PointsetConfig pointset;
   }
 
+  public static class State extends UdmiBase {
+    public SystemState system;
+  }
+
+  public static class SystemState {
+    public Date last_config;
+  }
+
   static class GatewayConfig {
     public List<String> proxy_ids = new ArrayList<>();
   }
