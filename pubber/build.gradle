@@ -39,7 +39,7 @@ dependencies {
     compile 'com.sun.xml.bind:jaxb-impl:2.3.3'
     compile 'com.google.guava:guava:30.0-jre'
     compile 'com.google.cloud:google-cloud-logging:2.0.1'
-    compile('com.google.api-client:google-api-client:1.31.0') {
+    compile('com.google.api-client:google-api-client:1.31.1') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
