@@ -174,7 +174,7 @@ public class MqttPublisher {
       if (mqttClient.isConnected()) {
         return mqttClient;
       }
-      LOG.info("Attempting connection to " + registryId + ":" + deviceId);
+      LOG.info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);

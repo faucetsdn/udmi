@@ -9,4 +9,6 @@ public class CloudDeviceSettings {
   public String metadata;
   public List<String> proxyDevices;
   public String config;
+  public String keyAlgorithm;
+  public byte[] keyBytes;
 }

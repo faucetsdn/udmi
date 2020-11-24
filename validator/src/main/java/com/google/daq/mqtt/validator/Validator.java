@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.registrar.UdmiSchema;
 import com.google.daq.mqtt.registrar.UdmiSchema.Config;
 import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
+import com.google.daq.mqtt.registrar.UdmiSchema.State;
 import com.google.daq.mqtt.util.*;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import org.everit.json.schema.Schema;
@@ -30,11 +31,10 @@ import java.util.stream.Collectors;
 
 public class Validator {
 
-  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy hh:mm");
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(Include.NON_NULL);
 
@@ -73,8 +73,9 @@ public class Validator {
   private final Set<String> base64Devices = new TreeSet<>();
   private CloudIotConfig cloudIotConfig;
   public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
-  private Set<String> ignoredRegistries = new HashSet();
+  private final HashSet ignoredRegistries = new HashSet();
   private CloudIotManager cloudIotManager;
+  private final Map<String, Date> last_config_timestamps = new HashMap<>();
 
   public static void main(String[] args) {
     if (args.length != 5) {
@@ -203,15 +204,23 @@ public class Validator {
       writeDeviceMetadataReport();
     }
     if (STATE_SUBFOLER.equals(attributes.get(SUB_FOLDER_KEY))) {
-      if (!checkStateResponse(message, attributes)) {
-        sendConfigUpdate(attributes.get(DEVICE_ID_KEY));
+      String deviceId = attributes.get(DEVICE_ID_KEY);
+      if (!checkStateResponse(message, deviceId)) {
+        sendConfigUpdate(deviceId);
       }
     }
   }
 
-  private boolean checkStateResponse(Map<String, Object> message, Map<String, String> attributes) {
-    System.out.println("Handling state response");
-    return false;
+  private boolean checkStateResponse(Map<String, Object> message, String deviceId) {
+    State state = OBJECT_MAPPER.convertValue(message, State.class);
+    Date state_timestamp = state.system.last_config;
+    Date config_timestamp = last_config_timestamps.get(deviceId);
+    if (config_timestamp == null) {
+      return false;
+    }
+    boolean updated = config_timestamp.equals(state_timestamp);
+    System.out.println(String.format("State match for %s is %s", deviceId, updated));
+    return true;
   }
 
   private boolean validateUpdate(Map<String, Schema> schemaMap, Map<String, Object> message,
@@ -379,18 +388,20 @@ public class Validator {
   }
 
   private void sendConfigUpdate(String deviceId) {
-    Config config = getCurrentConfig(deviceId);
-    config.timestamp = new Date();
     try {
+      Config config = getCurrentConfig(deviceId);
+      Date last_config_timestamp = new Date();
+      last_config_timestamps.put(deviceId, last_config_timestamp);
+      config.timestamp = last_config_timestamp;
       cloudIotManager.setDeviceConfig(deviceId, OBJECT_MAPPER.writeValueAsString(config));
     } catch (Exception e) {
-      throw new RuntimeException("While setting device config for " + deviceId);
+      throw new RuntimeException("While sending a config update " + deviceId);
     }
   }
 
   private Config getCurrentConfig(String deviceId) {
-    String deviceConfig = cloudIotManager.getDeviceConfig(deviceId);
     try {
+      String deviceConfig = cloudIotManager.getDeviceConfig(deviceId);
       return OBJECT_MAPPER.readValue(deviceConfig, Config.class);
     } catch (Exception e) {
       throw new RuntimeException("While converting previous config " + deviceId);

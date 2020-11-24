@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+ATTRIBUTES_FILE=attributes.json
+
+if [ -n "$1" ]; then
+    echo Usage: $0
+    false
+fi
+
+if curl metadata.google.internal -i; then
+    echo Running inside GCE instance.
+    curl "http://metadata.google.internal/computeMetadata/v1/project/attributes/?recursive=true" \
+         -H "Metadata-Flavor: Google"  > $ATTRIBUTES_FILE
+else
+    echo Running outside of GCE.
+    if [ ! -f $ATTRIBUTES_FILE ]; then
+        echo Expected $ATTRIBUTES_FILE file not found
+        false
+    fi
+fi
+
+java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar \
+     com.google.bos.iot.core.proxy.IotCoreProxy \
+     $ATTRIBUTES_FILE
