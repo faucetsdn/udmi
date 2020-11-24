@@ -27,7 +27,7 @@ echo Using site config dir $site_dir
 echo Using devices $*
 
 error=0
-echo java args $site_dir $project_id $*
+echo java -cp $jarfile $mainclass $ROOT $site_dir $project_id $*
 java -cp $jarfile $mainclass $ROOT $site_dir $project_id $* || error=$?
 
 echo Registrar complete, exit $error

@@ -18,6 +18,9 @@ import com.google.daq.mqtt.registrar.UdmiSchema.Metadata;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.apache.commons.io.IOUtils;
 import org.everit.json.schema.Schema;
 import org.json.JSONObject;
@@ -225,9 +228,28 @@ class LocalDevice {
       settings.metadata = metadataString();
       settings.config = deviceConfigString();
       settings.proxyDevices = getProxyDevicesList();
+      settings.keyAlgorithm = getAuthType();
+      settings.keyBytes = getKeyBytes();
       return settings;
     } catch (Exception e) {
       throw new RuntimeException("While getting settings for device " + deviceId, e);
+    }
+  }
+
+  private byte[] getKeyBytes() {
+    File keyBytesFile = new File(deviceDir, RSA_PRIVATE_PKCS8);
+    if (!keyBytesFile.exists()) {
+      return null;
+    }
+    return getFileBytes(keyBytesFile.getAbsolutePath());
+  }
+
+  private byte[] getFileBytes(String dataFile) {
+    Path dataPath = Paths.get(dataFile);
+    try {
+      return Files.readAllBytes(dataPath);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting data from " + dataPath.toAbsolutePath(), e);
     }
   }
 
@@ -324,8 +346,10 @@ class LocalDevice {
   public void writeErrors() {
     File errorsFile = new File(deviceDir, DEVICE_ERRORS_JSON);
     if (exceptionMap.isEmpty()) {
-      System.err.println("Removing " + errorsFile);
-      errorsFile.delete();
+      if (errorsFile.exists()) {
+        System.err.println("Removing " + errorsFile);
+        errorsFile.delete();
+      }
       return;
     }
     System.err.println("Updating " + errorsFile);

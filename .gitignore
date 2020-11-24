@@ -7,3 +7,5 @@ workspace.xml
 /validator/out/
 /pubber/build/
 /sites/
+/attributes.json
+

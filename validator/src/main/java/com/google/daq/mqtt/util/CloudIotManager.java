@@ -38,6 +38,8 @@ public class CloudIotManager {
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final String REGISTERED_KEY = "registered";
   private static final String SCHEMA_KEY = "schema_name";
+  private static final String KEY_BYTES_KEY = "key_bytes";
+  private static final String KEY_ALGORITHM_KEY = "key_algorithm";
   private static final int LIST_PAGE_SIZE = 1000;
 
   private final CloudIotConfig cloudIotConfig;
@@ -143,6 +145,11 @@ public class CloudIotManager {
     }
     metadataMap.put(REGISTERED_KEY, settings.metadata);
     metadataMap.put(SCHEMA_KEY, schemaName);
+    if (settings.keyBytes != null) {
+      String keyBase64 = Base64.getEncoder().encodeToString(settings.keyBytes);
+      metadataMap.put(KEY_BYTES_KEY, keyBase64);
+      metadataMap.put(KEY_ALGORITHM_KEY, settings.keyAlgorithm);
+    }
     return new Device()
         .setId(deviceId)
         .setGatewayConfig(getGatewayConfig(settings))
@@ -222,10 +229,10 @@ public class CloudIotManager {
   }
 
   public Device fetchDevice(String deviceId) {
-    return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceFromCloud);
+    return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceRaw);
   }
 
-  private Device fetchDeviceFromCloud(String deviceId) {
+  private Device fetchDeviceRaw(String deviceId) {
     try {
       return cloudIotRegistries.devices().get(getDevicePath(deviceId)).execute();
     } catch (Exception e) {

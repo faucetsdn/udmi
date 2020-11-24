@@ -12,9 +12,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.5" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt:0.7.0" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.11.3" level="project" />
     <orderEntry type="library" name="Gradle: com.github.everit-org.json-schema:org.everit.json.schema:1.9.1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.xml.bind:jaxb-api:2.3.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:2.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-firestore:0.84.0-beta" level="project" />
@@ -39,6 +43,7 @@
     <orderEntry type="library" name="Gradle: com.google.protobuf:protobuf-java-util:3.13.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:30.0-jre" level="project" />
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.11.3" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.11.3" level="project" />
     <orderEntry type="library" name="Gradle: org.yaml:snakeyaml:1.26" level="project" />
@@ -46,6 +51,7 @@
     <orderEntry type="library" name="Gradle: commons-validator:commons-validator:1.6" level="project" />
     <orderEntry type="library" name="Gradle: com.damnhandy:handy-uri-templates:2.1.6" level="project" />
     <orderEntry type="library" name="Gradle: com.google.re2j:re2j:1.1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.activation:javax.activation-api:1.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api.grpc:proto-google-cloud-logging-v2:0.85.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:failureaccess:1.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" level="project" />
