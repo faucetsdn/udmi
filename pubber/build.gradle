@@ -43,7 +43,7 @@ dependencies {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
-    compile('com.google.apis:google-api-services-cloudiot:v1-rev20201027-1.30.10') {
+    compile('com.google.apis:google-api-services-cloudiot:v1-rev20201110-1.30.10') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
     compile 'joda-time:joda-time:2.10.8'
