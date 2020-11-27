@@ -23,16 +23,11 @@ public class ProxyTarget {
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
 
-  private static final String CLOUD_CONFIG_FORMAT = "%s_cloud.json";
-  public static final String DEVICE_KEY_FORMAT = "%s_%s_rsa.pkcs8";
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .setDateFormat(new ISO8601DateFormat())
-      .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   public static final String EVENTS_TOPIC_FORMAT = "events/%s";
   public static final String CONFIG_TOPIC = "config";
+  public static final String STATE_TOPIC = "state";
   public static final String DEVICE_TOPIC_PREFIX = "/devices/";
+  private static final String STATE_SUBFOLDER = "state";
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
   private final Map<String, String> configMap;
@@ -130,10 +125,16 @@ public class ProxyTarget {
       }
       return;
     }
-    info("Sending " + subFolder + " message for " + registryId + ":" + deviceId);
+    boolean isState = isStateMessage(subFolder);
+    String messageName = isState ? STATE_SUBFOLDER : subFolder;
+    info("Sending " + messageName + " message for " + registryId + ":" + deviceId);
     MessagePublisher messagePublisher = getMqttPublisher(deviceId);
-    String mqttTopic = String.format(EVENTS_TOPIC_FORMAT, subFolder);
+    String mqttTopic = isState ? STATE_TOPIC : String.format(EVENTS_TOPIC_FORMAT, subFolder);
     messagePublisher.publish(deviceId, mqttTopic, data);
+  }
+
+  private boolean isStateMessage(String subFolder) {
+    return subFolder == null;
   }
 
   public void terminate() {
