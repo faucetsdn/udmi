@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.api.grpc:proto-google-cloud-logging-v2:0.85.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.api.grpc/proto-google-cloud-logging-v2/0.85.1/7f78cb1971d25804917df498e149294618c6b446/proto-google-cloud-logging-v2-0.85.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.api.grpc/proto-google-cloud-logging-v2/0.85.1/bccf8330c479f34809d1bb62789f9bd0106f4624/proto-google-cloud-logging-v2-0.85.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

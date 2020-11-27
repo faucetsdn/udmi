@@ -229,6 +229,11 @@ public class Pubber {
         publishStateMessage();
       }
     }
+
+    // Handle the corner case of a borked config.
+    if (configLatch.getCount() > 0) {
+      configHandler(null);
+    }
   }
 
   private void info(String msg) {

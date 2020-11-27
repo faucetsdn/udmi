@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: io.grpc:grpc-api:1.33.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.grpc/grpc-api/1.33.1/110c50b7376a5083392a35cace95fbe121fefbc3/grpc-api-1.33.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.grpc/grpc-api/1.33.1/9162d1d5630511572ff8b48af78f8e2139c9bfda/grpc-api-1.33.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
