@@ -49,7 +49,7 @@ dependencies {
 
     compile 'com.google.guava:guava:30.0-jre'
     compile 'com.google.cloud:google-cloud-logging:2.0.1'
-    compile ('com.google.apis:google-api-services-cloudiot:v1-rev20201110-1.30.10') {
+    compile ('com.google.apis:google-api-services-cloudiot:v1-rev20201110-1.31.0') {
       exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
     compile 'commons-io:commons-io:2.5'
