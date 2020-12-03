@@ -3,15 +3,15 @@ package com.google.bos.iot.core.proxy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.cloud.ServiceOptions;
+import com.google.daq.mqtt.util.PubSubPusher;
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,14 +25,23 @@ public class IotCoreProxy {
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-  public static final int DEVICE_CHECKOUT_COUNT = 100;
-  private static final String SUBSCRIPTION_NAME = "iot-core-proxy";
+  private static final long POLL_DELAY_MS = 1000;
+  private static final String PROXY_SUBSCRIPTION_NAME = "udmi-proxy";
+  private static final String STATE_SUBSCRIPTION_NAME = "udmi-state";
+  private static final String CONFIG_TOPIC_NAME = "udmi-config";
+  private static final String VALIDATION_TOPIC_NAME = "udmi-validation";
+  private static final String STATE_SUBFOLDER = "state";
+  private static final String CONFIG_SUBFOLDER = "config";
+  private static final String SCHEMA_ROOT_PATH = "schema";
 
   private final Map<String, ProxyTarget> proxyTargets = new ConcurrentHashMap<>();
-  private final AtomicInteger messageCount = new AtomicInteger();
   private final ProjectMetadata configMap;
 
-  private PubSubClient pubSubClient;
+  private PubSubClient proxySubscription;
+  private PubSubClient stateSubscription;
+  private PubSubPusher configPublisher;
+  private PubSubPusher validationPublisher;
+  private MessageValidator messageValidator;
   private int exitCode;
 
   public static void main(String[] args) {
@@ -73,12 +82,10 @@ public class IotCoreProxy {
 
   private void messageLoop() {
     LOG.info("Starting pubsub message loop");
-    while (pubSubClient.isActive()) {
+    while (proxySubscription.isActive() && stateSubscription.isActive()) {
       try {
-        if (messageCount.incrementAndGet() % DEVICE_CHECKOUT_COUNT == 0) {
-          LOG.info("Processing message #" + messageCount.get());
-        }
-        pubSubClient.processMessage(this::processMessage);
+        proxySubscription.processMessage(this::processProxyMessage, POLL_DELAY_MS);
+        stateSubscription.processMessage(this::processStateMessage, 0);
       } catch (Exception e) {
         LOG.error("Error with PubSub message loop", e);
         exitCode = -2;
@@ -86,40 +93,79 @@ public class IotCoreProxy {
     }
   }
 
-  private void processMessage(String data, Map<String, String> attributes) {
+  private void processStateMessage(Map<String, String> attributes, String data) {
+    String registryId = attributes.get("deviceRegistryId");
+    String deviceId = attributes.get("deviceId");
+    String subFolder = attributes.get("subFolder");
+
+    if (subFolder != null) {
+      LOG.warn(String.format("Ignoring state message from %s:%s with subFolder %s",
+          registryId, deviceId, subFolder));
+      return;
+    }
+
+    Map<String, String> modAttributes = new HashMap<>(attributes);
+    modAttributes.put("subFolder", STATE_SUBFOLDER);
+    processProxyMessage(modAttributes, data);
+  }
+
+  private void processProxyMessage(Map<String, String> attributes, String data) {
     String registryId = attributes.get("deviceRegistryId");
     String deviceId = attributes.get("deviceId");
     String subFolder = attributes.get("subFolder");
     try {
       ProxyTarget proxyTarget = getProxyTarget(registryId);
-      proxyTarget.publish(deviceId, subFolder, augmentRawMessage(data, deviceId, registryId));
+      proxyTarget.publish(deviceId, subFolder, data);
+      validateMessage(attributes, data);
     } catch (Exception e) {
       String path = String.format("%s/%s/%s", registryId, deviceId, subFolder);
       LOG.error("Error processing message for " + path, e);
     }
   }
 
-  private ProxyTarget getProxyTarget(String registryId) {
-    return proxyTargets.computeIfAbsent(registryId,
-        id -> new ProxyTarget(configMap, registryId));
+  private void validateMessage(Map<String, String> attributes, String data) {
+    String subFolder = attributes.get("subFolder");
+    List<String> validationErrors = messageValidator.validateMessage(subFolder, data);
+    if (!validationErrors.isEmpty()) {
+      LOG.warn(String.format("Found %d errors while validating %s:%s",
+          validationErrors.size(), attributes.get("deviceRegistryId"),
+          attributes.get("deviceId")));
+    }
+    ValidationBundle validationBundle = new ValidationBundle();
+    validationBundle.errors = validationErrors;
+    sendValidationResult(attributes, validationBundle);
   }
 
-  private String augmentRawMessage(String data, String deviceId, String registryId) {
+  private void sendValidationResult(Map<String, String> attributes, ValidationBundle bundle) {
     try {
-      ObjectNode jsonObject = (ObjectNode) OBJECT_MAPPER.readTree(data);
-      jsonObject.put("deviceId", deviceId);
-      jsonObject.put("registryId", registryId);
-      return OBJECT_MAPPER.writeValueAsString(jsonObject);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not augment data message " + data);
+      String data = OBJECT_MAPPER.writeValueAsString(bundle);
+      validationPublisher.sendMessage(attributes, data);
+    } catch (Exception e) {
+      throw new RuntimeException("While sending validation bundle", e);
     }
   }
-  
+
+  private void mirrorMessage(MessageBundle messageBundle) {
+    if (CONFIG_SUBFOLDER.equals(messageBundle.attributes.get("subFolder"))) {
+      configPublisher.sendMessage(messageBundle.attributes, messageBundle.data);
+      validateMessage(messageBundle.attributes, messageBundle.data);
+    }
+  }
+
+  private ProxyTarget getProxyTarget(String registryId) {
+    return proxyTargets.computeIfAbsent(registryId,
+        id -> new ProxyTarget(configMap, registryId, this::mirrorMessage));
+  }
+
   private int terminate() {
     info("Terminating");
-    if (pubSubClient != null) {
-      pubSubClient.stop();
-      pubSubClient = null;
+    if (proxySubscription != null) {
+      proxySubscription.stop();
+      proxySubscription = null;
+    }
+    if (stateSubscription != null) {
+      stateSubscription.stop();
+      stateSubscription = null;
     }
     proxyTargets.values().forEach(ProxyTarget::terminate);
     proxyTargets.clear();
@@ -127,12 +173,18 @@ public class IotCoreProxy {
   }
 
   private void initialize() {
-    LOG.info(String.format("Pulling from pubsub subscription %s/%s",
-        PROJECT_ID, SUBSCRIPTION_NAME));
-    pubSubClient = new PubSubClient(PROJECT_ID, SUBSCRIPTION_NAME);
+    proxySubscription = new PubSubClient(PROJECT_ID, PROXY_SUBSCRIPTION_NAME);
+    stateSubscription = new PubSubClient(PROJECT_ID, STATE_SUBSCRIPTION_NAME);
+    configPublisher = new PubSubPusher(PROJECT_ID, CONFIG_TOPIC_NAME);
+    validationPublisher = new PubSubPusher(PROJECT_ID, VALIDATION_TOPIC_NAME);
+    messageValidator = new MessageValidator(SCHEMA_ROOT_PATH);
   }
 
   private void info(String msg) {
     LOG.info(msg);
+  }
+
+  private static class ValidationBundle {
+    public List<String> errors;
   }
 }

@@ -1,12 +1,16 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -36,6 +41,7 @@ class MqttPublisher implements MessagePublisher {
 
   private static final boolean MQTT_SHOULD_RETAIN = false;
 
+  private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
   private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
@@ -57,6 +63,7 @@ class MqttPublisher implements MessagePublisher {
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
+  private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
 
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
@@ -113,6 +120,9 @@ class MqttPublisher implements MessagePublisher {
         attachedClients.add(deviceId);
         attachClient(deviceId);
       }
+      if (STATE_TOPIC.equals(topic)) {
+        delayStateUpdate(deviceId);
+      }
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
@@ -121,6 +131,25 @@ class MqttPublisher implements MessagePublisher {
     } finally {
       connectWait.release();
     }
+  }
+
+  private synchronized void delayStateUpdate(String deviceId) {
+    long now = System.currentTimeMillis();
+    long last = lastStateTime.get(deviceId);
+    long delta = now - last;
+    long delay = STATE_RATE_LIMIT_MS - delta;
+    if (delay > 0) {
+      LOG.warn("Delaying state message by " + delay);
+      try {
+        Thread.sleep(delay);
+      } catch (InterruptedException e) {
+        LOG.warn("Interrupted sleep", e);
+      }
+      now += delay;
+    } else {
+      LOG.debug("Delta for state message was " + delta);
+    }
+    lastStateTime.put(deviceId, now);
   }
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {

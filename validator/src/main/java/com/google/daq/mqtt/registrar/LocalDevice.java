@@ -226,7 +226,6 @@ class LocalDevice {
       }
       settings.credential = deviceCredential;
       settings.metadata = metadataString();
-      settings.updated = new Date().toString();
       settings.config = deviceConfigString();
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();

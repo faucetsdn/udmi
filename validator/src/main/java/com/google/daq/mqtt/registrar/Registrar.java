@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -13,6 +14,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
+import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -134,7 +136,10 @@ public class Registrar {
     File cloudIotConfig = new File(siteConfig, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
-    pubSubPusher = new PubSubPusher(projectId, cloudIotConfig);
+    String registrarTopic =
+        Preconditions.checkNotNull(cloudIotManager.cloudIotConfig.registrar_topic,
+            "registrar_topic not defined");
+    pubSubPusher = new PubSubPusher(projectId, registrarTopic);
     System.err.println(String.format("Working with project %s registry %s/%s",
         cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(), cloudIotManager.getRegistryId()));
   }

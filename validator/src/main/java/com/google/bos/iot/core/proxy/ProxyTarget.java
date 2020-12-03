@@ -2,19 +2,17 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
 import com.google.common.base.Joiner;
-import java.io.File;
+import com.google.common.collect.Maps;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,24 +21,29 @@ public class ProxyTarget {
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
 
-  public static final String EVENTS_TOPIC_FORMAT = "events/%s";
-  public static final String CONFIG_TOPIC = "config";
-  public static final String STATE_TOPIC = "state";
-  public static final String DEVICE_TOPIC_PREFIX = "/devices/";
+  private static final String EVENTS_TOPIC_FORMAT = "events/%s";
+  private static final String CONFIG_TOPIC = "config";
+  private static final String DEVICE_TOPIC_PREFIX = "/devices/";
   private static final String STATE_SUBFOLDER = "state";
+
+  static final String STATE_TOPIC = "state";
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
   private final Map<String, String> configMap;
   private final String registryId;
   private final ProxyConfig proxyConfig;
+  private final Consumer<MessageBundle> bundleOut;
   private CloudIotConfig cloudConfig;
   private CloudIotManager cloudIotManager;
   private final Set<String> ignoredDevices = new ConcurrentSkipListSet<>();
   private Set<String> targetDevices;
 
-  public ProxyTarget(Map<String, String> configMap, String registryId) {
+  public ProxyTarget(Map<String, String> configMap, String registryId,
+      Consumer<MessageBundle> bundleOut) {
+    info("Creating new proxy target for " + registryId);
     this.configMap = configMap;
     this.registryId = registryId;
+    this.bundleOut = bundleOut;
     proxyConfig = loadProxyConfig();
     if (proxyConfig == null) {
       info("Ignoring unknown proxy target " + registryId);
@@ -75,7 +78,7 @@ public class ProxyTarget {
       return null;
     }
     if (!configMap.containsKey(regionKey)) {
-      LOG.warn("Proxy target key not found: " + regionKey);
+      LOG.warn("Proxy region key not found: " + regionKey);
       return null;
     }
     ProxyConfig proxyConfig = new ProxyConfig();
@@ -119,22 +122,27 @@ public class ProxyTarget {
     if (proxyConfig == null) {
       return;
     }
+    String deviceKey = getDeviceKey(deviceId);
+    if (subFolder == null) {
+      info("Ignoring message with no subFolder for " + deviceKey);
+      return;
+    }
     if (!targetDevices.contains(deviceId)) {
       if (ignoredDevices.add(deviceId)) {
-        info("Ignoring " + subFolder + " message for " + registryId + ":" + deviceId);
+        info("Ignoring " + subFolder + " message for " + deviceKey);
       }
       return;
     }
-    boolean isState = isStateMessage(subFolder);
-    String messageName = isState ? STATE_SUBFOLDER : subFolder;
-    info("Sending " + messageName + " message for " + registryId + ":" + deviceId);
+    info("Sending " + subFolder + " message for " + deviceKey);
     MessagePublisher messagePublisher = getMqttPublisher(deviceId);
-    String mqttTopic = isState ? STATE_TOPIC : String.format(EVENTS_TOPIC_FORMAT, subFolder);
+    String mqttTopic = STATE_SUBFOLDER.equals(subFolder) ? STATE_TOPIC :
+        String.format(EVENTS_TOPIC_FORMAT, subFolder);
     messagePublisher.publish(deviceId, mqttTopic, data);
+    mirrorMessage(deviceId, data, subFolder);
   }
 
-  private boolean isStateMessage(String subFolder) {
-    return subFolder == null;
+  private String getDeviceKey(String deviceId) {
+    return registryId + ":" + deviceId;
   }
 
   public void terminate() {
@@ -153,7 +161,16 @@ public class ProxyTarget {
       String deviceId = topic.substring(DEVICE_TOPIC_PREFIX.length(), topic.length() - CONFIG_TOPIC.length() - 1);
       info(String.format("Updating device config for %s/%s", registryId, deviceId));
       cloudIotManager.setDeviceConfig(deviceId, message);
+      mirrorMessage(deviceId, message, CONFIG_TOPIC);
     }
+  }
+
+  private void mirrorMessage(String deviceId, String message, String subFolder) {
+    MessageBundle bundle = new MessageBundle(message);
+    bundle.attributes.put("deviceRegistryId", registryId);
+    bundle.attributes.put("deviceId", deviceId);
+    bundle.attributes.put("subFolder", subFolder);
+    bundleOut.accept(bundle);
   }
 
   private void info(String msg) {
