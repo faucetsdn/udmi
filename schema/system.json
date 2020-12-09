@@ -37,7 +37,7 @@
         },
         "category": {
           "type": "string",
-          "pattern": "^[a-z][.a-zA-Z]*[a-zA-Z]$"
+          "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$"
         },
         "timestamp": {
           "type": "string",
