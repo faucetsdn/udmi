@@ -1,36 +1,53 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
+import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.daq.mqtt.registrar.UdmiSchema.Metadata;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.everit.json.schema.Schema;
+import org.everit.json.schema.ValidationException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.*;
-
-import static com.google.daq.mqtt.registrar.Registrar.*;
 
 class LocalDevice {
 
@@ -55,16 +72,28 @@ class LocalDevice {
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
+  private static final String SAMPLES_DIR = "samples";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
   private static final Set<String> KEY_FILES = ImmutableSet.of(RSA_PUBLIC_PEM, RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
-      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
+      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
 
   public static final String METADATA_SUBFOLDER = "metadata";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
   public static final String INVALID_METADATA_HASH = "INVALID";
+
+  public static final String EXCEPTION_VALIDATING = "Validating";
+  public static final String EXCEPTION_LOADING = "Loading";
+  public static final String EXCEPTION_READING = "Reading";
+  public static final String EXCEPTION_WRITING = "Writing";
+  public static final String EXCEPTION_FILES = "Files";
+  public static final String EXCEPTION_REGISTERING = "Registering";
+  public static final String EXCEPTION_CREDENTIALS = "Credential";
+  public static final String EXCEPTION_ENVELOPE = "Envelope";
+  public static final String EXCEPTION_SAMPLES = "Samples";
+  private static final String SAMPLE_SUFFIX = ".json";
 
   private final String deviceId;
   private final Map<String, Schema> schemas;
@@ -93,7 +122,7 @@ class LocalDevice {
     return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
   }
 
-  public void validatedDeviceDir() {
+  public void validateExpected() {
     try {
       String[] files = deviceDir.list();
       Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
@@ -116,13 +145,15 @@ class LocalDevice {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(new JSONObject(new JSONTokener(targetStream)));
-    } catch (Exception metadata_exception) {
-      exceptionMap.put("Validating", metadata_exception);
+    } catch (ValidationException metadata_exception) {
+      exceptionMap.put(EXCEPTION_VALIDATING, metadata_exception);
+    } catch (IOException ioException) {
+      exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
     try {
       return OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class);
     } catch (Exception mapping_exception) {
-      exceptionMap.put("Reading", mapping_exception);
+      exceptionMap.put(EXCEPTION_READING, mapping_exception);
     }
     return null;
   }
@@ -227,6 +258,7 @@ class LocalDevice {
       settings.credential = deviceCredential;
       settings.metadata = metadataString();
       settings.config = deviceConfigString();
+      settings.updated = getUpdatedTimestamp();
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
@@ -255,6 +287,15 @@ class LocalDevice {
 
   private List<String> getProxyDevicesList() {
     return isGateway() ? metadata.gateway.proxy_ids : null;
+  }
+
+  private String getUpdatedTimestamp() {
+    try {
+      String quotedString = OBJECT_MAPPER.writeValueAsString(metadata.timestamp);
+      return quotedString.substring(1, quotedString.length() - 1);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While generating updated timestamp", e);
+    }
   }
 
   private String deviceConfigString() {
@@ -343,22 +384,25 @@ class LocalDevice {
     return Integer.toString(hash < 0 ? -hash : hash);
   }
 
-  public void writeErrors() {
+  public void writeErrors(List<Pattern> ignoreErrors) {
     File errorsFile = new File(deviceDir, DEVICE_ERRORS_JSON);
-    if (exceptionMap.isEmpty()) {
-      if (errorsFile.exists()) {
-        System.err.println("Removing " + errorsFile);
-        errorsFile.delete();
+    ErrorTree errorTree = getErrorTree(ignoreErrors);
+    if (errorTree != null) {
+      try (PrintStream printStream = new PrintStream(new FileOutputStream(errorsFile))) {
+        System.err.println("Updating " + errorsFile);
+        errorTree.write(printStream);
+      } catch (Exception e) {
+        throw new RuntimeException("While writing "+ errorsFile.getAbsolutePath(), e);
       }
-      return;
+    } else if (errorsFile.exists()) {
+      System.err.println("Removing " + errorsFile);
+      errorsFile.delete();
     }
-    System.err.println("Updating " + errorsFile);
-    try (PrintStream printStream = new PrintStream(new FileOutputStream(errorsFile))) {
-      ExceptionMap.ErrorTree errorTree = ExceptionMap.format(exceptionMap, ERROR_FORMAT_INDENT);
-      errorTree.write(printStream);
-    } catch (Exception e) {
-      throw new RuntimeException("While writing "+ errorsFile.getAbsolutePath(), e);
-    }
+  }
+
+  ErrorTree getErrorTree(List<Pattern> ignoreErrors) {
+    ErrorTree errorTree = ExceptionMap.format(exceptionMap, ERROR_FORMAT_INDENT);
+    return errorTree.purge(ignoreErrors) ? null : errorTree;
   }
 
   void writeNormalized() {
@@ -371,6 +415,7 @@ class LocalDevice {
     UdmiSchema.Metadata normalized = readNormalized();
     String writeHash = metadataHash();
     if (normalized.hash != null && normalized.hash.equals(writeHash)) {
+      metadata.timestamp = normalized.timestamp;
       return;
     }
     metadata.timestamp = new Date();
@@ -383,7 +428,7 @@ class LocalDevice {
           .setPrettyPrinter(PROPER_PRETTY_PRINTER_POLICY);
       OBJECT_MAPPER.writeValue(generator, metadata);
     } catch (Exception e) {
-      exceptionMap.put("Writing", e);
+      exceptionMap.put(EXCEPTION_WRITING, e);
     }
   }
 
@@ -409,12 +454,46 @@ class LocalDevice {
     deviceNumId = numId;
   }
 
-  public ExceptionMap getErrors() {
+  public ExceptionMap getErrorMap() {
     return exceptionMap;
   }
 
   public boolean isValid() {
     return metadata != null;
+  }
+
+  public void validateSamples() {
+    File samplesDir = new File(deviceDir, SAMPLES_DIR);
+    if (!samplesDir.exists()) {
+      return;
+    }
+    File[] samples = samplesDir.listFiles();
+    if (samples == null) {
+      return;
+    }
+    ExceptionMap samplesMap = new ExceptionMap("Sample Validation");
+    for (File sampleFile : samples) {
+      String sampleName = sampleFile.getName();
+      try (InputStream sampleStream = new FileInputStream(sampleFile)) {
+        if (!schemas.containsKey(sampleName)) {
+          throw new RuntimeException("No valid matching schema found");
+        }
+        schemas.get(sampleName).validate(new JSONObject(new JSONTokener(sampleStream)));
+      } catch (Exception e) {
+        Exception scopedException =
+            new RuntimeException("While validating sample file " + sampleName, e);
+        samplesMap.put(sampleName, scopedException);
+      }
+    }
+    samplesMap.throwIfNotEmpty();
+  }
+
+  public Set<Entry<String, ErrorTree>> getTreeChildren(List<Pattern> ignoreErrors) {
+    ErrorTree errorTree = getErrorTree(ignoreErrors);
+    if (errorTree != null && errorTree.children != null) {
+      return errorTree.children.entrySet();
+    }
+    return Set.of();
   }
 
   private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {

@@ -22,8 +22,8 @@ bin/registrar $TEST_SITE
 cat $TEST_SITE/registration_summary.json
 echo
 
-devices=$(fgrep True $TEST_SITE/registration_summary.json | wc -l)
+devices=$(fgrep 'Z"' $TEST_SITE/registration_summary.json | wc -l)
 
-echo Found $devices True devices.
+echo Found $devices clean devices.
 
 [ "$devices" == 4 ]
