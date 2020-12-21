@@ -16,10 +16,6 @@ entities involved: the _gateway device_, and the _proxied device_. Both of
 these are 'devices' in the sense that they have an entry in a cloud registry
 and have device-level UDMI data, but they have fundamentally different roles.
 
-The process of _discovery_, which is where something discovers other devices
-on the local network, is conceptually related but functionally distinct and
-separate than a gateway.
-
 ## Gateway Operation
 
 There are two modes for gateway operation: _static_ and _dynamic_. In the
@@ -63,7 +59,7 @@ network, should be indicated as part of the proxy device status block.
 ### telemetry
 
 Telemety from the gateway would primarily consist of standard
-[_logentry_](../schema/logentry.tests/logentry.json) messages, which
+[_system_](../schema/system.tests/example.json) messages, which
 provide a running comentary about gateway operation. Specificaly, if there
 is an error attaching, then there should be appropriate logging to help
 diagnose the problem.
