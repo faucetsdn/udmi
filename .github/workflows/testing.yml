@@ -37,12 +37,9 @@ jobs:
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
       - name: Install dependencies
-        run: |
-          cd udms
-          npm install
+        run: cd udms && npm install
       - name: Install angular command line
-        run: |
-          cd udms && npm install -g @angular/cli
+        run: cd udms && npm install -g @angular/cli
       - name: Running lint
         run: cd udms && ng lint
       - name: Running unit tests
