@@ -42,10 +42,10 @@ jobs:
           npm install
       - name: Install angular command line
         run: |
-          npm install -g @angular/cli
+          cd udms && npm install -g @angular/cli
       - name: Running lint
-        run: ng lint
+        run: cd udms && ng lint
       - name: Running unit tests
-        run: ng test --browsers ChromeHeadless --code-coverage=true --watch=false
+        run: cd udms && ng test --browsers ChromeHeadless --code-coverage=true --watch=false
       - name: Running e2e
-        run: ng e2e
+        run: cd udms && ng e2e
