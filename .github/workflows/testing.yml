@@ -22,3 +22,30 @@ jobs:
         run: bin/test_schema
       - name: Run registrar validation
         run: bin/test_registrar
+
+  ui:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2.3.4
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '15'
+      - name: Install Chrome
+        run: |
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+      - name: Install dependencies
+        run: |
+          cd udms
+          npm install
+      - name: Install angular command line
+        run: |
+          npm install -g @angular/cli
+      - name: Running lint
+        run: ng lint
+      - name: Running unit tests
+        run: ng test --browsers ChromeHeadless --code-coverage=true --watch=false
+      - name: Running e2e
+        run: ng e2e
