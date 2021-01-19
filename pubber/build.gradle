@@ -38,7 +38,7 @@ dependencies {
     compile 'javax.xml.bind:jaxb-api:2.3.1'
     compile 'com.sun.xml.bind:jaxb-impl:3.0.0'
     compile 'com.google.guava:guava:30.0-jre'
-    compile 'com.google.cloud:google-cloud-logging:2.0.1'
+    compile 'com.google.cloud:google-cloud-logging:2.1.2'
     compile('com.google.api-client:google-api-client:1.31.2') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
