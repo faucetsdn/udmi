@@ -50,8 +50,7 @@ for individual devices will be in their respective device directories.
 {
   "cloud_region": "us-central1",
   "site_name": "ZZ-TRI-FECTA",
-  "registry_id": "registrar_test",
-  "registrar_topic": "registrar"
+  "registry_id": "registrar_test"
 }
 <b>~/udmi$ bin/registrar test_site/</b>
 Building validator...

@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.registrar.UdmiSchema.Config;
+import com.google.daq.mqtt.registrar.UdmiSchema.GatewayConfig;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -79,7 +81,10 @@ class LocalDevice {
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
 
-  public static final String METADATA_SUBFOLDER = "metadata";
+  public static final String POINTSET_SUBFOLDER = "pointset";
+  public static final String SYSTEM_SUBFOLDER = "system";
+  public static final String GATEWAY_SUBFOLDER = "gateway";
+  public static final String LOCALNET_SUBFOLDER = "localnet";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
   public static final String INVALID_METADATA_HASH = "INVALID";
@@ -300,22 +305,27 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      UdmiSchema.Config config = new UdmiSchema.Config();
-      config.timestamp = metadata.timestamp;
-      if (isGateway()) {
-        config.gateway = new UdmiSchema.GatewayConfig();
-        config.gateway.proxy_ids = getProxyDevicesList();
-      }
-      if (metadata.pointset != null) {
-        config.pointset = getDevicePointsetConfig();
-      }
-      if (metadata.localnet != null) {
-        config.localnet = getDeviceLocalnetConfig();
-      }
+      Config config = deviceConfigObject();
       return OBJECT_MAPPER.writeValueAsString(config);
     } catch (Exception e) {
       throw new RuntimeException("While converting device config to string", e);
     }
+  }
+
+  public UdmiSchema.Config deviceConfigObject() {
+    Config config = new Config();
+    config.timestamp = metadata.timestamp;
+    if (isGateway()) {
+      config.gateway = new GatewayConfig();
+      config.gateway.proxy_ids = getProxyDevicesList();
+    }
+    if (metadata.pointset != null) {
+      config.pointset = getDevicePointsetConfig();
+    }
+    if (metadata.localnet != null) {
+      config.localnet = getDeviceLocalnetConfig();
+    }
+    return config;
   }
 
   private UdmiSchema.LocalnetConfig getDeviceLocalnetConfig() {
@@ -328,7 +338,7 @@ class LocalDevice {
     UdmiSchema.PointsetConfig pointsetConfig = new UdmiSchema.PointsetConfig();
     metadata.pointset.points.forEach((metadataKey, value) ->
         pointsetConfig.points.computeIfAbsent(metadataKey, configKey ->
-            UdmiSchema.PointConfig.fromRef(value.ref)));
+            UdmiSchema.PointConfig.fromMetadata(value)));
     return pointsetConfig;
   }
 
@@ -350,7 +360,7 @@ class LocalDevice {
       UdmiSchema.Envelope envelope = new UdmiSchema.Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
-      envelope.subFolder = METADATA_SUBFOLDER;
+      envelope.subFolder = POINTSET_SUBFOLDER;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);

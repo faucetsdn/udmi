@@ -22,7 +22,7 @@
               ]
             },
             "status": {
-              "$ref": "file:system.json#/definitions/entry"
+              "$ref": "file:common.json#/definitions/entry"
             }
           }
         }

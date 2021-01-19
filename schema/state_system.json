@@ -43,7 +43,7 @@
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:system.json#/definitions/entry"
+          "$ref": "file:common.json#/definitions/entry"
         }
       }
     }

@@ -13,6 +13,7 @@ import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.daq.mqtt.util.CloudIotConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;

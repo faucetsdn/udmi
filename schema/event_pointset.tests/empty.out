@@ -1,6 +1,6 @@
 Validating 1 schemas
-  Validating 1 files against pointset.json
-    Against input pointset.tests/empty.json
+  Validating 1 files against event_pointset.json
+    Against input event_pointset.tests/empty.json
       #: 3 schema violations found
         #: required key [points] not found
         #: required key [timestamp] not found

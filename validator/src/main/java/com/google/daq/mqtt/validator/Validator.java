@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -14,6 +14,7 @@ import com.google.daq.mqtt.registrar.UdmiSchema.Config;
 import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import com.google.daq.mqtt.util.*;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import java.util.function.BiConsumer;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaClient;
@@ -43,6 +44,8 @@ public class Validator {
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String PUBSUB_MARKER = "pubsub";
+  private static final String FILES_MARKER = "files";
+  private static final String REFLECT_MARKER = "reflect";
   private static final File OUT_BASE_FILE = new File("out");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
@@ -58,11 +61,12 @@ public class Validator {
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
-  private static final String POINTSET_TYPE = "pointset";
+  private static final String EVENT_POINTSET = "event_pointset";
   private static final String NO_SITE = "--";
   private static final String SUB_FOLDER_KEY = "subFolder";
   private static final String STATE_SUBFOLER = "state";
   private static final String DEVICE_ID_KEY = "deviceId";
+  private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -75,6 +79,7 @@ public class Validator {
   public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private Set<String> ignoredRegistries = new HashSet();
   private CloudIotManager cloudIotManager;
+  private String siteDir;
 
   public static void main(String[] args) {
     if (args.length != 5) {
@@ -89,10 +94,20 @@ public class Validator {
       if (!NO_SITE.equals(siteDir)) {
         validator.setSiteDir(siteDir);
       }
-      if (targetSpec.equals(PUBSUB_MARKER)) {
-        validator.validatePubSub(instName);
-      } else {
-        validator.validateFilesOutput(targetSpec);
+      switch(targetSpec) {
+        case PUBSUB_MARKER:
+          validator.validatePubSub(instName);
+          validator.initializeCloudIoT();
+          validator.initializeFirestoreDataSink();
+          break;
+        case FILES_MARKER:
+          validator.validateFilesOutput(instName);
+          break;
+        case REFLECT_MARKER:
+          validator.validateReflector(instName);
+          break;
+        default:
+          throw new RuntimeException("Unknown target spec " + targetSpec);
       }
     } catch (ExceptionMap | ValidationException processingException) {
       System.exit(2);
@@ -109,6 +124,7 @@ public class Validator {
   }
 
   private void setSiteDir(String siteDir) {
+    this.siteDir = siteDir;
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
     try {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudConfig);
@@ -116,12 +132,10 @@ public class Validator {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
 
-    try {
-      this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing cloud IoT for project " + projectId);
-    }
+    initializeExpectedDevices(siteDir);
+  }
 
+  private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
     if (!devicesDir.exists()) {
       System.out.println("Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
@@ -147,6 +161,20 @@ public class Validator {
     }
   }
 
+  private void initializeCloudIoT() {
+    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+    try {
+      this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
+    } catch (Exception e) {
+      throw new RuntimeException("While initializing cloud IoT for project " + projectId, e);
+    }
+  }
+
+  private void initializeFirestoreDataSink() {
+    dataSink = new FirestoreDataSink(projectId);
+    System.out.println("Results will be uploaded to " + dataSink.getViewUrl());
+  }
+
   private void setSchemaSpec(String schemaPath) {
     File schemaFile = new File(schemaPath).getAbsoluteFile();
     if (schemaFile.isFile()) {
@@ -160,7 +188,7 @@ public class Validator {
     }
   }
 
-  private void validatePubSub(String instName) {
+  private Map<String, Schema> getSchemaMap() {
     Map<String, Schema> schemaMap = new TreeMap<>();
     for (File schemaFile : makeFileList(schemaRoot)) {
       Schema schema = getSchema(schemaFile);
@@ -172,17 +200,39 @@ public class Validator {
     if (!schemaMap.containsKey(ENVELOPE_SCHEMA_ID)) {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
-    dataSink = new FirestoreDataSink(projectId);
-    System.out.println("Results will be uploaded to " + dataSink.getViewUrl());
+    return schemaMap;
+  }
+
+  private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
+    Map<String, Schema> schemaMap = getSchemaMap();
     OUT_BASE_FILE.mkdirs();
-    System.out.println("Also found in such directories as " + OUT_BASE_FILE.getAbsolutePath());
+    System.out.println("Results may be in such directories as " + OUT_BASE_FILE.getAbsolutePath());
     System.out.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
+
+    return (message, attributes) -> validateMessage(schemaMap, message, attributes);
+  }
+
+  private void validatePubSub(String instName) {
+    BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     PubSubClient client = new PubSubClient(projectId, instName);
     System.out.println("Entering pubsub message loop on " + client.getSubscriptionId());
     while(client.isActive()) {
       try {
-        client.processMessage(
-            (message, attributes) -> validateMessage(schemaMap, message, attributes));
+        client.processMessage(validator);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    System.out.println("Message loop complete");
+  }
+
+  private void validateReflector(String instName) {
+    BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
+    IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, GCP_REFLECT_KEY_PKCS8);
+    System.out.println("Entering iot core message loop on " + client.getSubscriptionId());
+    while(client.isActive()) {
+      try {
+        client.processMessage(validator);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -215,7 +265,7 @@ public class Validator {
   }
 
   private boolean validateUpdate(Map<String, Schema> schemaMap, Map<String, Object> message,
-            Map<String, String> attributes) {
+      Map<String, String> attributes) {
 
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
     if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
@@ -229,23 +279,18 @@ public class Validator {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
 
-      String subFolder = attributes.get("subFolder");
-
-      if (Strings.isNullOrEmpty(subFolder)) {
-        subFolder = UNKNOWN_SCHEMA_DEFAULT;
-      }
-
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
       }
 
+      String schemaName = makeSchemaName(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
-      if (!reportingDevice.markMessageType(subFolder)) {
+      if (!reportingDevice.markMessageType(schemaName)) {
         return false;
       }
 
       System.out.println(String.format("Processing device #%d/%d: %s/%s",
-          processedDevices.size(), expectedDevices.size(), deviceId, subFolder));
+          processedDevices.size(), expectedDevices.size(), deviceId, schemaName));
 
       if (attributes.get("wasBase64").equals("true")) {
         base64Devices.add(deviceId);
@@ -254,17 +299,17 @@ public class Validator {
       File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
       deviceDir.mkdirs();
 
-      File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, subFolder));
+      File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
       OBJECT_MAPPER.writeValue(attributesFile, attributes);
 
-      File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, subFolder));
+      File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
       OBJECT_MAPPER.writeValue(messageFile, message);
 
-      File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, subFolder));
+      File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, schemaName));
 
       try {
-        if (!schemaMap.containsKey(subFolder)) {
-          throw new IllegalArgumentException(String.format(SCHEMA_SKIP_FORMAT, subFolder, deviceId));
+        if (!schemaMap.containsKey(schemaName)) {
+          throw new IllegalArgumentException(String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
         }
       } catch (Exception e) {
         System.out.println(e.getMessage());
@@ -280,12 +325,14 @@ public class Validator {
         reportingDevice.addError(e);
       }
 
-      if (schemaMap.containsKey(subFolder)) {
+      if (schemaMap.containsKey(schemaName)) {
         try {
-          validateMessage(schemaMap.get(subFolder), message);
-          dataSink.validationResult(deviceId, subFolder, attributes, message, null);
+          validateMessage(schemaMap.get(schemaName), message);
+          if (dataSink != null) {
+            dataSink.validationResult(deviceId, schemaName, attributes, message, null);
+          }
         } catch (ExceptionMap | ValidationException e) {
-          processViolation(message, attributes, deviceId, subFolder, messageFile, errorFile, e);
+          processViolation(message, attributes, deviceId, schemaName, messageFile, errorFile, e);
           reportingDevice.addError(e);
         }
       }
@@ -297,7 +344,7 @@ public class Validator {
         updated = false;
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
-          if (POINTSET_TYPE.equals(subFolder)) {
+          if (EVENT_POINTSET.equals(schemaName)) {
             PointsetMessage pointsetMessage =
                 OBJECT_MAPPER.convertValue(message, PointsetMessage.class);
             updated = !reportingDevice.hasBeenValidated();
@@ -313,7 +360,7 @@ public class Validator {
       }
 
       if (!reportingDevice.hasError()) {
-        System.out.println(String.format("Validation complete %s/%s", deviceId, subFolder));
+        System.out.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
 
       return updated;
@@ -321,6 +368,25 @@ public class Validator {
       e.printStackTrace();
       return false;
     }
+  }
+
+  private String makeSchemaName(Map<String, String> attributes) {
+    String subFolder = attributes.get("subFolder");
+    String subType = attributes.get("subType");
+
+    if (Strings.isNullOrEmpty(subFolder)) {
+      subFolder = UNKNOWN_SCHEMA_DEFAULT;
+    }
+
+    if (Strings.isNullOrEmpty(subType)) {
+      return subFolder;
+    }
+
+    if (!subType.endsWith("s")) {
+      throw new RuntimeException("Malformed message subType " + subType);
+    }
+
+    return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
@@ -372,13 +438,19 @@ public class Validator {
       throws FileNotFoundException {
     System.out.println("Error validating " + inputFile + ": " + e.getMessage());
     ErrorTree errorTree = ExceptionMap.format(e, ERROR_FORMAT_INDENT);
-    dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
+    if (dataSink != null) {
+      dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
+    }
     try (PrintStream errorOut = new PrintStream(errorFile)) {
       errorTree.write(errorOut);
     }
   }
 
   private void sendConfigUpdate(String deviceId) {
+    if (cloudIotManager == null) {
+      System.err.println("Cloud IoT not configured, skipping config update");
+      return;
+    }
     Config config = getCurrentConfig(deviceId);
     config.timestamp = new Date();
     try {

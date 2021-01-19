@@ -1,17 +1,24 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
+import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
+import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
+import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
+import com.google.bos.iot.core.proxy.UDMI;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.daq.mqtt.registrar.UdmiSchema.PointsetConfig;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -33,13 +40,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.interning.qual.PolyInterned;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-public class Registrar {
+public class  Registrar {
 
   static final String METADATA_JSON = "metadata.json";
   static final String NORMALIZED_JSON = "metadata_norm.json";
@@ -142,12 +150,11 @@ public class Registrar {
     File cloudIotConfig = new File(siteConfig, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
-    String registrarTopic =
-        Preconditions.checkNotNull(cloudIotManager.cloudIotConfig.registrar_topic,
-            "registrar_topic not defined");
-    pubSubPusher = new PubSubPusher(projectId, registrarTopic);
+    String configTopic = cloudIotManager.cloudIotConfig.config_topic;
+    pubSubPusher = new PubSubPusher(projectId, configTopic);
     System.err.println(String.format("Working with project %s registry %s/%s",
-        cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(), cloudIotManager.getRegistryId()));
+        cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(),
+        cloudIotManager.getRegistryId()));
   }
 
   private void processDevices() {
@@ -187,7 +194,7 @@ public class Registrar {
             BigInteger numId = Preconditions.checkNotNull(device.getNumId(),
                 "missing deviceNumId for " + localName);
             localDevice.setDeviceNumId(numId.toString());
-            sendMetadataMessage(localDevice);
+            sendConfigMessages(localDevice);
           }
         } catch (Exception e) {
           System.err.println("Deferring exception: " + e.toString());
@@ -243,15 +250,29 @@ public class Registrar {
     }
   }
 
-  private void sendMetadataMessage(LocalDevice localDevice) {
-    System.err.println("Sending metadata message for " + localDevice.getDeviceId());
-    Map<String, String> attributes = new HashMap<>();
-    attributes.put("deviceId", localDevice.getDeviceId());
-    attributes.put("deviceNumId", localDevice.getDeviceNumId());
-    attributes.put("deviceRegistryId", cloudIotManager.getRegistryId());
-    attributes.put("projectId", cloudIotManager.getProjectId());
-    attributes.put("subFolder", LocalDevice.METADATA_SUBFOLDER);
-    pubSubPusher.sendMessage(attributes, localDevice.getSettings().metadata);
+  private void sendConfigMessages(LocalDevice localDevice) {
+    System.err.println("Sending config messages for " + localDevice.getDeviceId());
+
+    UdmiSchema.Config deviceConfig = localDevice.deviceConfigObject();
+    sendConfigMessage(localDevice, SYSTEM_SUBFOLDER, deviceConfig.system);
+    sendConfigMessage(localDevice, POINTSET_SUBFOLDER, deviceConfig.pointset);
+    sendConfigMessage(localDevice, GATEWAY_SUBFOLDER, deviceConfig.gateway);
+    sendConfigMessage(localDevice, LOCALNET_SUBFOLDER, deviceConfig.localnet);
+  }
+
+  private void sendConfigMessage(LocalDevice localDevice, String subFolder, Object subConfig) {
+    try {
+      Map<String, String> attributes = new HashMap<>();
+      attributes.put("deviceId", localDevice.getDeviceId());
+      attributes.put("deviceNumId", localDevice.getDeviceNumId());
+      attributes.put("deviceRegistryId", cloudIotManager.getRegistryId());
+      attributes.put("projectId", cloudIotManager.getProjectId());
+      attributes.put("subFolder", subFolder);
+      String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
+      pubSubPusher.sendMessage(attributes, messageString);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While sending config " + subFolder, e);
+    }
   }
 
   private void updateCloudIoT(LocalDevice localDevice) {
