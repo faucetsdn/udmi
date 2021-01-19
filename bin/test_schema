@@ -10,7 +10,6 @@ rm -f $errorfile
 
 build=y
 force=n
-ignoreset=.
 
 while getopts ":fn" opt; do
     case $opt in
@@ -53,7 +52,7 @@ for subset in $subsets; do
         
         error=0
         reltest=${testpath#$rootdir/}
-        (cd $rootdir; java -jar $jarfile -- $schemaname $reltest $ignoreset --) 2> $output || error=$?
+        (cd $rootdir; java -jar $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
         if [ $force == y ]; then
             diff $expected $output || echo Updating $expected && cp $output $expected
         else

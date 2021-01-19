@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<head>
+  <script src="/__/firebase/8.2.1/firebase-app.js"></script>
+  <script src="/__/firebase/8.2.1/firebase-auth.js"></script>
+  <script src="/__/firebase/8.2.1/firebase-firestore.js"></script>
+  <script src="/__/firebase/8.2.1/firebase-storage.js"></script>
+  <script src="https://cdn.firebase.com/libs/firebaseui/4.0.0/firebaseui.js"></script>
+  <script src="/__/firebase/init.js?useEmulator=true"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.0.0/firebaseui.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="deploy_version.js"></script>
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+</head>
+
+<body>
+  <div class="content">
+    <div id="description" class="udmi-text"><a class="description"></a></div>
+    <div id="device" class="hidden"></div>
+    <div id="listings">
+      <div class="registries hidden">
+        <h2>Registries</h2>
+        <div class="listing"></div>
+      </div>
+      <div class="devices hidden">
+        <h2>Devices</h2>
+        <div class="listing"></div>
+      </div>
+      <div class="users hidden">
+        <h2>Users</h2>
+        <div class="listing"></div>
+      </div>
+    </div>
+  </div>
+  <div class="udmi-text" id="status">Initializing...</div>
+  <div class="udmi-text" id="update"></div>
+  <div id="auth-body">
+    <div class="auth-main">
+      <div id="firebaseui-auth-container"></div>
+    </div>
+    <div class="auth-info">Signed in as <span id="user-name"></span>, <span id="user-email"></span>
+      <span id="sign-out" class="simple-button">Sign Out</span></div>
+  </div>
+  <div id="udmi-versions">
+    <div class="udmi-text">UDMI version <span id="udmi-version"></span></div>
+    <div class="udmi-text">LSB version <span id="lsb-version"></span></div>
+    <div class="udmi-text">SYS version <span id="sys-version"></span></div>
+  </div>
+  <div class="udmi-text">Web version <span id="deploy-version"></span></div>
+</body>
+<script>
+  if (typeof udmi_deploy_version !== 'undefined') {
+    document.getElementById('deploy-version').innerHTML = udmi_deploy_version;
+  }
+</script>

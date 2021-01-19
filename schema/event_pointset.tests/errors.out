@@ -1,6 +1,6 @@
 Validating 1 schemas
-  Validating 1 files against pointset.json
-    Against input pointset.tests/errors.json
+  Validating 1 files against event_pointset.json
+    Against input event_pointset.tests/errors.json
       #: 13 schema violations found
         #/points: 10 schema violations found
           #/points/guid: expected type: JSONObject, found: String

@@ -1,6 +1,6 @@
 Validating 1 schemas
-  Validating 1 files against system.json
-    Against input system.tests/errors.json
+  Validating 1 files against event_system.json
+    Against input event_system.tests/errors.json
       #/logentries: 5 schema violations found
         #/logentries/0: 4 schema violations found
           #/logentries/0/category: string [com.testCategory$] does not match pattern ^[a-z][._a-zA-Z]*[a-zA-Z]$

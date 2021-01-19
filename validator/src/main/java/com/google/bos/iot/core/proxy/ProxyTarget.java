@@ -4,14 +4,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
+import com.google.daq.mqtt.util.CloudIotConfig;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +24,7 @@ public class ProxyTarget {
   private static final String STATE_SUBFOLDER = "state";
 
   static final String STATE_TOPIC = "state";
+  private static final long DEVICE_REFRESH_SEC = 10 * 60;
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
   private final Map<String, String> configMap;
@@ -35,8 +33,7 @@ public class ProxyTarget {
   private final Consumer<MessageBundle> bundleOut;
   private CloudIotConfig cloudConfig;
   private CloudIotManager cloudIotManager;
-  private final Set<String> ignoredDevices = new ConcurrentSkipListSet<>();
-  private Set<String> targetDevices;
+  private Map<String, LocalDateTime> initializedTimes = new ConcurrentHashMap<>();
 
   public ProxyTarget(Map<String, String> configMap, String registryId,
       Consumer<MessageBundle> bundleOut) {
@@ -64,9 +61,6 @@ public class ProxyTarget {
         proxyConfig.dstProjectId,proxyConfig.dstCloudRegion, registryId));
 
     cloudIotManager = new CloudIotManager(PROJECT_ID, cloudConfig);
-
-    targetDevices = cloudIotManager.listDevices();
-    LOG.info("Proxying for devices "+Joiner.on(", ").join(targetDevices));
   }
 
   private ProxyConfig loadProxyConfig() {
@@ -98,21 +92,29 @@ public class ProxyTarget {
     return cloudIotConfig;
   }
 
-  private String getPublisherKey(String deviceId) {
-    return Joiner.on(":").join(proxyConfig.dstProjectId, registryId, deviceId);
+  public MessagePublisher getMqttPublisher(String deviceId) {
+    return messagePublishers.computeIfAbsent(deviceId, deviceKey -> newMqttPublisher(deviceId));
   }
 
-  public MessagePublisher getMqttPublisher(String deviceId) {
-    String publisherKey = getPublisherKey(deviceId);
-    return messagePublishers
-        .computeIfAbsent(publisherKey, deviceKey -> newMqttPublisher(deviceId));
+  public boolean hasMqttPublisher(String deviceId) {
+    return messagePublishers.containsKey(deviceId);
+  }
+
+  public void clearMqttPublisher(String deviceId) {
+    info("Publishers remove " + deviceId);
+    MessagePublisher publisher = messagePublishers.remove(deviceId);
+    if (publisher != null) {
+      publisher.close();
+    }
   }
 
   private MessagePublisher newMqttPublisher(String deviceId) {
+    info("Publishers create " + deviceId);
     Device device = cloudIotManager.fetchDevice(deviceId);
     Map<String, String> metadata = device.getMetadata();
     String keyAlgorithm = metadata.get("key_algorithm");
     byte[] keyBytes = Base64.getDecoder().decode(metadata.get("key_bytes"));
+    initializedTimes.put(deviceId, LocalDateTime.now());
     return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
         registryId, deviceId, keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
@@ -122,27 +124,37 @@ public class ProxyTarget {
     if (proxyConfig == null) {
       return;
     }
-    String deviceKey = getDeviceKey(deviceId);
     if (subFolder == null) {
-      info("Ignoring message with no subFolder for " + deviceKey);
+      info("Ignoring message with no subFolder for " + deviceId);
       return;
     }
-    if (!targetDevices.contains(deviceId)) {
-      if (ignoredDevices.add(deviceId)) {
-        info("Ignoring " + subFolder + " message for " + deviceKey);
-      }
-      return;
+    if (shouldIgnoreTarget(deviceId)) {
+        info("Ignoring " + subFolder + " message for " + deviceId);
+        return;
     }
-    info("Sending " + subFolder + " message for " + deviceKey);
-    MessagePublisher messagePublisher = getMqttPublisher(deviceId);
-    String mqttTopic = STATE_SUBFOLDER.equals(subFolder) ? STATE_TOPIC :
-        String.format(EVENTS_TOPIC_FORMAT, subFolder);
-    messagePublisher.publish(deviceId, mqttTopic, data);
-    mirrorMessage(deviceId, data, subFolder);
+    info("Sending " + subFolder + " message for " + deviceId);
+    try {
+      MessagePublisher messagePublisher = getMqttPublisher(deviceId);
+      String mqttTopic = STATE_SUBFOLDER.equals(subFolder) ? STATE_TOPIC :
+          String.format(EVENTS_TOPIC_FORMAT, subFolder);
+      messagePublisher.publish(deviceId, mqttTopic, data);
+      mirrorMessage(deviceId, data, subFolder);
+    } catch (Exception e) {
+      LOG.warn("Problem publishing device " + deviceId, e);
+      clearMqttPublisher(deviceId);
+    }
   }
 
-  private String getDeviceKey(String deviceId) {
-    return registryId + ":" + deviceId;
+  private boolean shouldIgnoreTarget(String deviceId) {
+    if (hasMqttPublisher(deviceId)) {
+      return false;
+    }
+    if (!initializedTimes.containsKey(deviceId)) {
+      return false;
+    }
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime initializedTime = initializedTimes.get(deviceId);
+    return now.isBefore(initializedTime.plusSeconds(DEVICE_REFRESH_SEC));
   }
 
   public void terminate() {
@@ -150,9 +162,10 @@ public class ProxyTarget {
     messagePublishers.clear();
   }
 
-  private void errorHandler(Throwable error) {
-    LOG.error("Publisher error", error);
-    terminate();
+  private void errorHandler(MqttPublisher publisher, Throwable error) {
+    String deviceId = publisher.getDeviceId();
+    LOG.error("Error publishing " + deviceId, error);
+    clearMqttPublisher(deviceId);
   }
 
   private void messageHandler(String topic, String message) {

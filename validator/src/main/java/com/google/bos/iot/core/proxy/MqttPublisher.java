@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -45,6 +44,8 @@ class MqttPublisher implements MessagePublisher {
   private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
+  private static final String COMMAND_TOPIC_FMT = "/devices/%s/commands/#";
+  private static final int COMMANDS_QOS = 0;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
 
@@ -53,7 +54,7 @@ class MqttPublisher implements MessagePublisher {
   private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
-  public static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
+  private static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
   private final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
 
   private final ExecutorService publisherExecutor =
@@ -69,7 +70,7 @@ class MqttPublisher implements MessagePublisher {
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
 
   private final BiConsumer<String, String> onMessage;
-  private final Consumer<Throwable> onError;
+  private final BiConsumer<MqttPublisher, Throwable> onError;
   private final String deviceId;
   private final byte[] keyBytes;
   private final String algorithm;
@@ -83,7 +84,7 @@ class MqttPublisher implements MessagePublisher {
 
   MqttPublisher(String projectId, String cloudRegion, String registryId,
       String deviceId, byte[] keyBytes, String algorithm, BiConsumer<String, String> onMessage,
-      Consumer<Throwable> onError) {
+      BiConsumer<MqttPublisher, Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
     this.projectId = projectId;
@@ -202,6 +203,7 @@ class MqttPublisher implements MessagePublisher {
       }
       mqttClient.setCallback(new MqttCallbackHandler());
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
+      mqttClient.setManualAcks(false);
 
       mqttConnectOptions = new MqttConnectOptions();
       // Note that the the Google Cloud IoT only supports MQTT 3.1.1, and Paho requires that we
@@ -210,7 +212,6 @@ class MqttPublisher implements MessagePublisher {
       mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
       mqttConnectOptions.setUserName(UNUSED_ACCOUNT_NAME);
       mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
-
       connectAndSetupMqtt();
       connectWait.release();
     } catch (Exception e) {
@@ -230,6 +231,7 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " adding subscriptions");
     subscribeToUpdates(deviceId);
     subscribeToErrors(deviceId);
+    subscribeToCommands(deviceId);
     LOG.info(deviceId + " done with setup connection");
   }
 
@@ -284,6 +286,19 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
+  private void subscribeToCommands(String deviceId) {
+    String updateTopic = String.format(COMMAND_TOPIC_FMT, deviceId);
+    try {
+      mqttClient.subscribe(updateTopic, COMMANDS_QOS);
+    } catch (MqttException e) {
+      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
+    }
+  }
+
+  public String getDeviceId() {
+    return deviceId;
+  }
+
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {
@@ -293,9 +308,9 @@ class MqttPublisher implements MessagePublisher {
      * @see MqttCallback#connectionLost(Throwable)
      */
     public void connectionLost(Throwable cause) {
-      LOG.warn(deviceId + " MQTT Connection Lost", cause);
+      LOG.warn("MQTT connection lost " + deviceId, cause);
       connectWait.release();
-      onError.accept(cause);
+      onError.accept(MqttPublisher.this, cause);
     }
 
     /**
