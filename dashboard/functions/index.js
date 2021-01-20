@@ -65,7 +65,7 @@ function sendCommand(registryId, deviceId, subFolder, message) {
     });
 }
 
-exports.device_target = functions.pubsub.topic('target').onPublish((event) => {
+exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
   const subType = attributes.subType || 'events';
   const base64 = event.data;
@@ -81,7 +81,7 @@ exports.device_target = functions.pubsub.topic('target').onPublish((event) => {
   return Promise.all(promises);
 });
 
-exports.device_state = functions.pubsub.topic('state').onPublish((event) => {
+exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
@@ -97,7 +97,7 @@ exports.device_state = functions.pubsub.topic('state').onPublish((event) => {
     if (typeof subMsg === 'object') {
       console.log('state -> target', registryId, deviceId, block);
       attributes.subFolder = block;
-      promises.push(publishPubsubMessage('target', attributes, subMsg));
+      promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
       promises.push(...new_promises);
     }
@@ -106,7 +106,7 @@ exports.device_state = functions.pubsub.topic('state').onPublish((event) => {
   return Promise.all(promises);
 });
 
-exports.device_config = functions.pubsub.topic('config').onPublish((event) => {
+exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
   const attributes = event.attributes;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
@@ -121,7 +121,7 @@ exports.device_config = functions.pubsub.topic('config').onPublish((event) => {
   attributes.subType = 'configs';
 
   const promises = recordMessage(attributes, msgObject);
-  promises.push(publishPubsubMessage('target', attributes, msgObject));
+  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   return Promise.all(promises);
 });
@@ -189,7 +189,7 @@ function consolidateConfig(registryId, deviceId) {
     });
 }
 
-exports.config_update = functions.firestore
+exports.udmi_update = functions.firestore
   .document('registries/{registryId}/devices/{deviceId}/configs/{subFolder}')
   .onWrite((change, context) => {
     return consolidateConfig(context.params.registryId, context.params.deviceId);
