@@ -18,18 +18,17 @@ import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
 public class PubSubPusher {
 
   private final Publisher publisher;
-  private final String registrar_topic;
+  private final String outTopic;
 
   {
     // Why this needs to be done there is no rhyme or reason.
     LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
   }
 
-  public PubSubPusher(String projectId, File iotConfigFile) {
+  public PubSubPusher(String projectId, String outTopic) {
     try {
-      CloudIotConfig cloudIotConfig = validate(readCloudIotConfig(iotConfigFile));
-      registrar_topic = cloudIotConfig.registrar_topic;
-      ProjectTopicName topicName = ProjectTopicName.of(projectId, registrar_topic);
+      this.outTopic = outTopic;
+      ProjectTopicName topicName = ProjectTopicName.of(projectId, outTopic);
       publisher = Publisher.newBuilder(topicName).build();
     } catch (Exception e) {
       throw new RuntimeException("While creating PubSubPublisher", e);
@@ -45,7 +44,7 @@ public class PubSubPusher {
       ApiFuture<String> publish = publisher.publish(message);
       return publish.get();
     } catch (Exception e) {
-      throw new RuntimeException("While sending to topic " + registrar_topic, e);
+      throw new RuntimeException("While sending to topic " + outTopic, e);
     }
   }
 
@@ -55,12 +54,7 @@ public class PubSubPusher {
       publisher.shutdown();
       System.err.println("Done with PubSubPusher");
     } catch (Exception e) {
-      throw new RuntimeException("While shutting down publisher" + registrar_topic, e);
+      throw new RuntimeException("While shutting down publisher" + outTopic, e);
     }
-  }
-
-  private CloudIotConfig validate(CloudIotConfig readCloudIotConfig) {
-    Preconditions.checkNotNull(readCloudIotConfig.registrar_topic, "registrar_topic not defined");
-    return readCloudIotConfig;
   }
 }

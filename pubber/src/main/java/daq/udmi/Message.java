@@ -38,6 +38,8 @@ public class Message {
   }
 
   public static class PointConfig {
+    public Object set_value;
+    public String units;
   }
 
   public static class GatewayConfig {

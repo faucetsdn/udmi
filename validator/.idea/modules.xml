@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/daq-validator.validator.iml" filepath="$PROJECT_DIR$/.idea/modules/daq-validator.validator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/docs.iml" filepath="$PROJECT_DIR$/.idea/docs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/schema.iml" filepath="$PROJECT_DIR$/.idea/schema.iml" />
     </modules>
   </component>
 </project>

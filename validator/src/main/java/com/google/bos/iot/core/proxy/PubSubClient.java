@@ -10,7 +10,10 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,20 +23,26 @@ class PubSubClient {
   private static final Logger LOG = LoggerFactory.getLogger(PubSubClient.class);
   private static final String CONNECT_ERROR_FORMAT = "While connecting to %s/%s";
 
+  private static final long MESSAGE_REPORT_INTERVAL_MS = 1000 * 60 * 10;
+
+  private final AtomicInteger messageCount = new AtomicInteger();
+  private final AtomicLong lastUpdateTime = new AtomicLong();
   private final AtomicBoolean active = new AtomicBoolean();
   private final BlockingQueue<Object> messages = new LinkedBlockingDeque<>();
 
   private final Subscriber subscriber;
+  private final String clientName;
 
   PubSubClient(String projectId, String subscriptionName) {
     try {
       ProjectSubscriptionName subName = ProjectSubscriptionName.of(projectId, subscriptionName);
+      clientName = subName.toString();
+      LOG.info("Creating subscription " + clientName);
       MessageReceiver receiver = new MessageReceiver();
       subscriber = Subscriber.newBuilder(subName, receiver).build();
       subscriber.addListener(new SubscriberListener(), MoreExecutors.directExecutor());
       subscriber.startAsync().awaitRunning();
       active.set(true);
-      LOG.info("PubSubClient on subscription " + subName);
     } catch (Exception e) {
       throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId, subscriptionName), e);
     }
@@ -43,16 +52,25 @@ class PubSubClient {
     return active.get();
   }
 
-  void processMessage(BiConsumer<String, Map<String, String>> handler) {
+  void processMessage(BiConsumer<Map<String, String>, String> handler, long pollDelayMs) {
     try {
-      Object maybeMessage = messages.take();
+      Object maybeMessage = messages.poll(pollDelayMs, TimeUnit.MILLISECONDS);
+      if (maybeMessage == null) {
+        return;
+      }
       if (maybeMessage instanceof Throwable) {
         throw new RuntimeException("PubSub Failed", (Throwable) maybeMessage);
+      }
+      long now = System.currentTimeMillis();
+      int thisCount = messageCount.incrementAndGet();
+      if (now - lastUpdateTime.get() > MESSAGE_REPORT_INTERVAL_MS) {
+        lastUpdateTime.set(now);
+        LOG.info("Processing message #" + thisCount);
       }
       PubsubMessage message = (PubsubMessage) maybeMessage;
       Map<String, String> attributes = message.getAttributesMap();
       String data = message.getData().toStringUtf8();
-      handler.accept(data, attributes);
+      handler.accept(attributes, data);
     } catch (Exception e) {
       throw new RuntimeException("While processing pubsub message from " + getSubscriptionId(), e);
     }
@@ -62,7 +80,11 @@ class PubSubClient {
     if (subscriber != null) {
       active.set(false);
       subscriber.stopAsync();
-      messages.offer(new RuntimeException("Publisher terminated"));
+      try {
+        messages.put(new RuntimeException("Publisher terminated"));
+      } catch (Exception e) {
+        LOG.error("Ignored exception stopping queue " + clientName, e);
+      }
     }
   }
 
@@ -73,7 +95,9 @@ class PubSubClient {
   private class MessageReceiver implements com.google.cloud.pubsub.v1.MessageReceiver {
     @Override
     public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-      messages.offer(message);
+      if (!messages.offer(message)) {
+        LOG.warn("Dropping message for full queue " + clientName);
+      }
       consumer.ack();
     }
   }
@@ -82,7 +106,11 @@ class PubSubClient {
     @Override
     public void failed(State from, Throwable failure) {
       active.set(false);
-      messages.offer(failure);
+      try {
+        messages.put(failure);
+      } catch (Exception e) {
+        LOG.error("Ignored exception failing queue " + clientName, e);
+      }
     }
   }
 }

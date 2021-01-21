@@ -20,8 +20,7 @@ At a high-level, the various constructs relevant to UDMI are (described in more 
 {
   "cloud_region": "us-central1",
   "site_name": "ZZ-TRI-FECTA",
-  "registry_id": "registrar_test",
-  "registrar_topic": "registrar"
+  "registry_id": "registrar_test"
 }
 ```
 
@@ -30,7 +29,6 @@ required for API calls.
 * `site_name`: The semantic name of the site, which is used for various bits of validation and
 reporting.
 * `registry_id`: The Cloud IoT Core _registry_ id for this site.
-* `registrar_topic`: PubSub topic used for registration messages (part of the _registrar_ tool).
 
 ## `devices/`
 

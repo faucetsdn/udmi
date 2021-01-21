@@ -1,12 +1,16 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -36,9 +40,12 @@ class MqttPublisher implements MessagePublisher {
 
   private static final boolean MQTT_SHOULD_RETAIN = false;
 
+  private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
   private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERROR_TOPIC_FMT = "/devices/%s/errors";
+  private static final String COMMAND_TOPIC_FMT = "/devices/%s/commands/#";
+  private static final int COMMANDS_QOS = 0;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
 
@@ -47,7 +54,7 @@ class MqttPublisher implements MessagePublisher {
   private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
-  public static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
+  private static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
   private final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
 
   private final ExecutorService publisherExecutor =
@@ -57,12 +64,13 @@ class MqttPublisher implements MessagePublisher {
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
+  private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
 
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
 
   private final BiConsumer<String, String> onMessage;
-  private final Consumer<Throwable> onError;
+  private final BiConsumer<MqttPublisher, Throwable> onError;
   private final String deviceId;
   private final byte[] keyBytes;
   private final String algorithm;
@@ -76,7 +84,7 @@ class MqttPublisher implements MessagePublisher {
 
   MqttPublisher(String projectId, String cloudRegion, String registryId,
       String deviceId, byte[] keyBytes, String algorithm, BiConsumer<String, String> onMessage,
-      Consumer<Throwable> onError) {
+      BiConsumer<MqttPublisher, Throwable> onError) {
     this.onMessage = onMessage;
     this.onError = onError;
     this.projectId = projectId;
@@ -113,6 +121,9 @@ class MqttPublisher implements MessagePublisher {
         attachedClients.add(deviceId);
         attachClient(deviceId);
       }
+      if (STATE_TOPIC.equals(topic)) {
+        delayStateUpdate(deviceId);
+      }
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
@@ -121,6 +132,25 @@ class MqttPublisher implements MessagePublisher {
     } finally {
       connectWait.release();
     }
+  }
+
+  private synchronized void delayStateUpdate(String deviceId) {
+    long now = System.currentTimeMillis();
+    long last = lastStateTime.get(deviceId);
+    long delta = now - last;
+    long delay = STATE_RATE_LIMIT_MS - delta;
+    if (delay > 0) {
+      LOG.warn("Delaying state message by " + delay);
+      try {
+        Thread.sleep(delay);
+      } catch (InterruptedException e) {
+        LOG.warn("Interrupted sleep", e);
+      }
+      now += delay;
+    } else {
+      LOG.debug("Delta for state message was " + delta);
+    }
+    lastStateTime.put(deviceId, now);
   }
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
@@ -173,6 +203,7 @@ class MqttPublisher implements MessagePublisher {
       }
       mqttClient.setCallback(new MqttCallbackHandler());
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
+      mqttClient.setManualAcks(false);
 
       mqttConnectOptions = new MqttConnectOptions();
       // Note that the the Google Cloud IoT only supports MQTT 3.1.1, and Paho requires that we
@@ -181,7 +212,6 @@ class MqttPublisher implements MessagePublisher {
       mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
       mqttConnectOptions.setUserName(UNUSED_ACCOUNT_NAME);
       mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
-
       connectAndSetupMqtt();
       connectWait.release();
     } catch (Exception e) {
@@ -201,6 +231,7 @@ class MqttPublisher implements MessagePublisher {
     LOG.info(deviceId + " adding subscriptions");
     subscribeToUpdates(deviceId);
     subscribeToErrors(deviceId);
+    subscribeToCommands(deviceId);
     LOG.info(deviceId + " done with setup connection");
   }
 
@@ -255,6 +286,19 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
+  private void subscribeToCommands(String deviceId) {
+    String updateTopic = String.format(COMMAND_TOPIC_FMT, deviceId);
+    try {
+      mqttClient.subscribe(updateTopic, COMMANDS_QOS);
+    } catch (MqttException e) {
+      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
+    }
+  }
+
+  public String getDeviceId() {
+    return deviceId;
+  }
+
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {
@@ -264,9 +308,9 @@ class MqttPublisher implements MessagePublisher {
      * @see MqttCallback#connectionLost(Throwable)
      */
     public void connectionLost(Throwable cause) {
-      LOG.warn(deviceId + " MQTT Connection Lost", cause);
+      LOG.warn("MQTT connection lost " + deviceId, cause);
       connectWait.release();
-      onError.accept(cause);
+      onError.accept(MqttPublisher.this, cause);
     }
 
     /**

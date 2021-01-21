@@ -1,14 +1,23 @@
 package com.google.daq.mqtt.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 public class ConfigUtil {
   public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
+  public static final String EXCEPTIONS_JSON = "exceptions.json";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -28,5 +37,28 @@ public class ConfigUtil {
     } catch (Exception e) {
       throw new RuntimeException("While reading cred file " + credFile.getAbsolutePath(), e);
     }
+  }
+
+  public static AllDeviceExceptions loadExceptions(File siteConfig) {
+    File exceptionsFile = new File(siteConfig, EXCEPTIONS_JSON);
+    if (!exceptionsFile.exists()) {
+      return null;
+    }
+    try {
+      AllDeviceExceptions all = OBJECT_MAPPER.readValue(exceptionsFile, AllDeviceExceptions.class);
+      all.forEach((prefix, device) ->
+          device.forEach((pattern, target) ->
+              device.patterns.add(Pattern.compile(pattern))));
+      return all;
+    } catch (Exception e) {
+      throw new RuntimeException("While reading exceptions file " + exceptionsFile.getAbsolutePath(), e);
+    }
+  }
+
+  public static class AllDeviceExceptions extends HashMap<String, DeviceExceptions> {
+  }
+
+  public static class DeviceExceptions extends HashMap<String, Object> {
+    public List<Pattern> patterns = new ArrayList<>();
   }
 }

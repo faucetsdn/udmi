@@ -42,7 +42,7 @@ public class CloudIotManager {
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
   private static final int LIST_PAGE_SIZE = 1000;
 
-  private final CloudIotConfig cloudIotConfig;
+  public final CloudIotConfig cloudIotConfig;
 
   private final String registryId;
   private final String projectId;

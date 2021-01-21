@@ -1,11 +1,17 @@
 *~
 
+gcp_reflect_key.pkcs8
 workspace.xml
 .gradle/
+.firebase/
+dashboard/functions/node_modules/
+dashboard/public/deploy_version.js
+firebase-debug.log
 /out/
 /validator/build/
 /validator/out/
 /pubber/build/
 /sites/
 /attributes.json
-
+/venv/
+/rsa_p*

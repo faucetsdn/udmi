@@ -2,11 +2,16 @@ package com.google.daq.mqtt.util;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.everit.json.schema.ValidationException;
 
 public class ExceptionMap extends RuntimeException {
@@ -78,6 +83,10 @@ public class ExceptionMap extends RuntimeException {
     return exceptions.size();
   }
 
+  public void purgeErrors(Set<String> ignoreErrors) {
+
+  }
+
   public static class ErrorTree {
     public String prefix;
     public String message;
@@ -85,6 +94,10 @@ public class ExceptionMap extends RuntimeException {
     public Map<String, ErrorTree> children = new TreeMap<>();
 
     public void write(PrintStream err) {
+      write(err, null);
+    }
+
+    public void write(PrintStream err, Set<String> ignoreSet) {
       if (message == null && children == null && child == null) {
         throw new RuntimeException("Empty ErrorTree object");
       }
@@ -104,6 +117,27 @@ public class ExceptionMap extends RuntimeException {
         children.forEach((key, value) -> value.write(err));
       }
     }
-  }
 
+    public boolean purge(List<Pattern> ignoreErrors) {
+      if (message == null) {
+        return true;
+      }
+      if (ignoreErrors == null) {
+        return (children == null || children.isEmpty()) && child == null;
+      }
+      if (ignoreErrors.stream().anyMatch(pattern -> pattern.matcher(message).find())) {
+        return true;
+      }
+      if (child != null && child.purge(ignoreErrors)) {
+        return true;
+      }
+      if (children != null) {
+        children = children.entrySet().stream()
+            .filter(entry -> !entry.getValue().purge(ignoreErrors))
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        return children.isEmpty();
+      }
+      return false;
+    }
+  }
 }

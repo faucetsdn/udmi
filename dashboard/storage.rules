@@ -1,0 +1,7 @@
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{document=**} {
+      allow read: if request.auth.uid != null;
+    }
+  }
+}
