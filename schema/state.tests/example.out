@@ -1,0 +1,8 @@
+Validating 1 schemas
+  Validating 1 files against state.json
+    Against input state.tests/example.json
+      #/pointset/points: 3 schema violations found
+        #/pointset/points/nexus_sensor: 2 schema violations found
+          #/pointset/points/nexus_sensor: extraneous key [source] is not permitted
+          #/pointset/points/nexus_sensor: extraneous key [units] is not permitted
+        #/pointset/points/return_air_temperature_sensor: extraneous key [units] is not permitted

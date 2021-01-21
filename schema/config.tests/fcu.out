@@ -1,6 +1,9 @@
 Validating 1 schemas
   Validating 1 files against config.json
     Against input config.tests/fcu.json
-      #: 2 schema violations found
-        #/pointset/points/chilled_water_valve_percentage_command: extraneous key [min_update_ms] is not permitted
+      #: 4 schema violations found
+        #/pointset/points: 3 schema violations found
+          #/pointset/points/chilled_water_valve_percentage_command: extraneous key [min_update_ms] is not permitted
+          #/pointset/points/fan_run_enable: extraneous key [fix_value] is not permitted
+          #/pointset/points/fan_run_status: extraneous key [fix_value] is not permitted
         #/system: extraneous key [max_update_ms] is not permitted

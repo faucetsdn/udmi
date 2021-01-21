@@ -4,6 +4,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "etag": {
+      "type": "string"
+    },
     "sample_limit_sec": {
       "type": "number",
       "minimum": 1,
@@ -23,7 +26,7 @@
             "ref": {
               "type": "string"
             },
-            "fix_value": {
+            "set_value": {
               "type": ["number", "string", "boolean"]
             }
           }

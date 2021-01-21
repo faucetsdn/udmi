@@ -4,21 +4,22 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "etag": {
+      "type": "string"
+    },
     "points": {
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "additionalProperties": false,
           "properties": {
-            "fault": {
-              "type": "boolean"
-            },
-            "units": {
-              "type": "string",
-            },
-            "source": {
+            "value_state": {
               "enum": [
-                "fix"
+                "applied",
+                "updating",
+                "overridden",
+                "invalid",
+                "failure"
               ]
             },
             "status": {

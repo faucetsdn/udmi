@@ -1,0 +1,4 @@
+Validating 1 schemas
+  Validating 1 files against config.json
+    Against input config.tests/rotate.json
+      #/pointset/points/return_air_temperature_sensor: extraneous key [fix_value] is not permitted
