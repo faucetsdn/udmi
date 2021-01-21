@@ -4,9 +4,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "etag": {
-      "type": "string"
-    },
     "points": {
       "additionalProperties": false,
       "patternProperties": {
@@ -15,9 +12,6 @@
           "properties": {
             "value_state": {
               "enum": [
-                "applied",
-                "updating",
-                "overridden",
                 "invalid",
                 "failure"
               ]

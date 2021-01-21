@@ -1,4 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against state.json
-    Against input state.tests/rotate.json
-      #/pointset/points/return_air_temperature_sensor: extraneous key [units] is not permitted
