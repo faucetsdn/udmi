@@ -9,7 +9,6 @@
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {
-        "fix_value": 21.1
       }
     }
   }

@@ -10,15 +10,10 @@
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "additionalProperties": false,
           "properties": {
-            "fault": {
-              "type": "boolean"
-            },
-            "units": {
-              "type": "string",
-            },
-            "source": {
+            "value_state": {
               "enum": [
-                "fix"
+                "invalid",
+                "failure"
               ]
             },
             "status": {
