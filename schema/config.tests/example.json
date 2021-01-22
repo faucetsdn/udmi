@@ -11,7 +11,7 @@
       "return_air_temperature_sensor": {
       },
       "nexus_sensor": {
-        "fix_value": 21.1
+        "ref": "ziuewwedf"
       }
     }
   }

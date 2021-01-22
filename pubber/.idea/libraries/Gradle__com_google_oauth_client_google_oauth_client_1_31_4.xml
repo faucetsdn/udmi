@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.oauth-client:google-oauth-client:1.31.4">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client/1.31.4/361d4c7ec0b8811a80048b6ba8aae1385869013e/google-oauth-client-1.31.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client/1.31.4/c7d4fd02aead540ac2d02d18554c13b99387b373/google-oauth-client-1.31.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

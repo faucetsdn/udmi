@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: io.netty:netty-codec-mqtt:4.1.22.Final">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec-mqtt/4.1.22.Final/4783e6c94526ddd83e176a10ee352d7e27cf27df/netty-codec-mqtt-4.1.22.Final.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec-mqtt/4.1.22.Final/e636f1cfe33876845619a8d90faee19481739be7/netty-codec-mqtt-4.1.22.Final-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -17,8 +17,13 @@ echo "const udmi_deploy_version = '$version';" > public/deploy_version.js
 
 firebase use $PROJECT
 
-echo firebase deploy --project $PROJECT
-firebase deploy --project $PROJECT
+only="functions:udmi_target"
+only+=",functions:udmi_state"
+only+=",functions:udmi_config"
+only+=",functions:udmi_update"
+
+echo firebase deploy --only $only
+firebase deploy --only $only
 
 echo
 echo For local hosting: firebase serve --only hosting --project $PROJECT

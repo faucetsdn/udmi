@@ -37,8 +37,6 @@ To accomplish there, there are four main steps:
      |             |               |
 ```
 
-## Source
-
 https://textart.io/sequence#
 
 ```

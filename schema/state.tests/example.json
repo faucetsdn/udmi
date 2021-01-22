@@ -20,7 +20,6 @@
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {
-        "units": "Celsius",
         "status": {
           "message": "Invalid sample time",
           "category": "device.config.validate",
@@ -29,8 +28,6 @@
         }
       },
       "nexus_sensor": {
-        "units": "Celsius",
-        "source": "fix"
       }
     }
   }

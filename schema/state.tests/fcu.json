@@ -20,7 +20,6 @@
   "pointset": {
     "points": {
       "space_temperature_sensor": {
-        "units": "Degrees-Celsius",
         "status": {
           "message": "Present value out of limits",
           "category": "com.acme.device.regulator",
@@ -44,8 +43,7 @@
           "level": 300
         }
       },
-       "chilled_water_valve_percentage_command": {
-        "units": "Percent"
+      "chilled_water_valve_percentage_command": {
       }
     }
   }

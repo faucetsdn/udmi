@@ -10,12 +10,10 @@
       "space_temperature_sensor": {
       },
       "fan_run_status": {
-        "fix_value": true
       },
       "fan_run_enable": {
-        "fix_value": false
       },
-       "chilled_water_valve_percentage_command": {
+      "chilled_water_valve_percentage_command": {
         "min_update_ms": 1000
       }
     }
