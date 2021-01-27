@@ -109,8 +109,8 @@ public class Pubber {
     deviceState.pointset = new PointsetState();
     devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", 0, 360, "deg" ));
-    addPoint(new RandomPoint("faulty_finding", 1, 1, "truth"));
+    addPoint(new RandomPoint("recalcitrant_angle", 40, 40, "deg" ));
+    addPoint(new RandomBoolean("faulty_finding", "truth"));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -223,6 +223,10 @@ public class Pubber {
       Entry report = new Entry(toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
+      if (configLatch.getCount() > 0) {
+        LOG.warn("Releasing startup latch because reported error");
+        configHandler(null);
+      }
     } else {
       Entry previous = deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
       if (previous != null) {
@@ -244,6 +248,7 @@ public class Pubber {
         actualInterval = Integer.max(MIN_REPORT_MS,
             reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
         deviceState.system.last_config = config.timestamp;
+        deviceState.system.etag = config.system == null ? null : config.system.etag;
       } else {
         actualInterval = DEFAULT_REPORT_MS;
       }

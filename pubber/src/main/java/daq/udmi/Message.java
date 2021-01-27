@@ -52,9 +52,11 @@ public class Message {
     public boolean operational;
     public Date last_config;
     public Map<String, Entry> statuses = new HashMap<>();
+    public String etag;
   }
 
   public static class SystemConfig {
+    public String etag;
     public Integer report_interval_ms;
   }
 
@@ -63,8 +65,8 @@ public class Message {
   }
 
   public static class PointState {
-    public String units;
-    public Boolean fault;
+    public String value_state;
+    public Entry status;
   }
 
   public static class Bundle {

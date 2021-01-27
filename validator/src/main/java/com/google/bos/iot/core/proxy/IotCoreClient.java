@@ -15,7 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 
-public class IotCoreClient {
+public class IotCoreClient implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -92,8 +92,7 @@ public class IotCoreClient {
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
     System.err.println("mqtt client error: " + throwable.getMessage());
-    active = false;
-    mqttPublisher.close();
+    close();
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -120,6 +119,18 @@ public class IotCoreClient {
     } catch (Exception e) {
       throw new RuntimeException("While processing message on subscription " + subscriptionId, e);
     }
+  }
+
+  @Override
+  public void publish(String deviceId, String topic, String data) {
+    String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
+    mqttPublisher.publish(siteName, reflectorTopic, data);
+  }
+
+  @Override
+  public void close() {
+    active = false;
+    mqttPublisher.close();
   }
 
   static class MessageBundle {

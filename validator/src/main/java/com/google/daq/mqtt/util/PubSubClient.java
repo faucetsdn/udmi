@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
+import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
@@ -26,7 +27,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
-public class PubSubClient {
+public class PubSubClient implements MessagePublisher {
 
   private static final String CONNECT_ERROR_FORMAT = "While connecting to project %s";
 
@@ -50,11 +51,11 @@ public class PubSubClient {
     LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
   }
 
-  public PubSubClient(String projectId, String name) {
+  public PubSubClient(String projectId, String name)  {
     try {
       this.projectId = projectId;
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, name);
-      System.out.println("Resetting and connecting to pubsub subscription " + subscriptionName);
+      System.err.println("Resetting and connecting to pubsub subscription " + subscriptionName);
       resetSubscription(subscriptionName);
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
       subscriber.startAsync().awaitRunning();
@@ -79,7 +80,7 @@ public class PubSubClient {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
       if (seconds < startTimeSec) {
-        System.out.println(String.format("Flushing outdated message from %d seconds ago",
+        System.err.println(String.format("Flushing outdated message from %d seconds ago",
             startTimeSec - seconds));
         return;
       }
@@ -108,6 +109,11 @@ public class PubSubClient {
     }
   }
 
+  @Override
+  public void publish(String deviceId, String topic, String data) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
   static class ErrorContainer extends TreeMap<String, Object> {
     ErrorContainer(Exception e, String message) {
       put("exception", e.toString());
@@ -115,7 +121,8 @@ public class PubSubClient {
     }
   }
 
-  private void stop() {
+  @Override
+  public void close() {
     if (subscriber != null) {
       active.set(false);
       subscriber.stopAsync();
@@ -137,7 +144,7 @@ public class PubSubClient {
   private void resetSubscription(ProjectSubscriptionName subscriptionName) {
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
       if (subscriptionExists(subscriptionAdminClient, subscriptionName)) {
-        System.out.println("Resetting existing subscription " + subscriptionName);
+        System.err.println("Resetting existing subscription " + subscriptionName);
         subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
         Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
       } else {

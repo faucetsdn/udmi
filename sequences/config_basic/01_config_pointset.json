@@ -1,0 +1,13 @@
+{
+  "points": {
+    "recalcitrant_angle" : {
+      "set_value": 20
+    },
+    "faulty_finding" : {
+      "set_value": true
+    },
+    "superimposition_reading" : {
+      "set_value": 10
+    }
+  }
+}

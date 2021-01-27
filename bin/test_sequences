@@ -1,0 +1,48 @@
+#!/bin/bash -e
+
+if [[ $# != 3 ]]; then
+    echo Usage: $0 [site_model] [target_project] [sequences_dir]
+    false
+fi
+
+SITE_MODEL=$1
+TARGET_PROJECT=$2
+SEQUENCES_DIR=$3
+shift 3
+
+if [[ -z $TARGET_PROJECT ]]; then
+    echo No target project defined, skipping tests.
+    exit 0
+fi
+
+PUBBER_OUT=pubber.out
+EXPECTED_SEQUENCES=1
+
+echo Writing pubber output to $PUBBER_OUT
+bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
+pubber_pid=$!
+
+while ! fgrep "Connection complete" $PUBBER_OUT; do
+    echo Waiting for pubber startup...
+    sleep 5
+done
+
+JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.Validator"
+
+sequences=`ls $SEQUENCES_DIR`
+echo Executing seqeunces $sequences
+for sequence in $sequences; do
+    echo Starting sequence $sequence at `date`
+    $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
+done
+
+seq_count=`echo $sequences | wc -w`
+if [ $seq_count != $EXPECTED_SEQUENCES ]; then
+    echo Did not find expected $EXPECTED_SEQUENCES sequences.
+    false
+fi
+
+echo Done with test sequence execution.
+
+kill $!

@@ -7,7 +7,7 @@ on:
     - cron: '0 */2 * * *'
 
 jobs:
-  unit-tests:
+  unit:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
@@ -46,3 +46,21 @@ jobs:
         run: cd udms && ng test --browsers ChromeHeadless --code-coverage=true --watch=false
       - name: Running e2e
         run: cd udms && ng e2e
+
+  udmi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: sequence tests
+        run: |
+          bin/setup_validator
+          bin/test_sequences udmi_site_model "${{ secrets.GCP_TARGET_PROJECT }}" sequences
+      - name: pubber logs
+        if: ${{ always() }}
+        run: |
+          echo Pubber output logs:
+          cat pubber.out || true
