@@ -3,24 +3,20 @@ package daq.pubber;
 import daq.udmi.Message.PointData;
 import daq.udmi.Message.PointState;
 
-public class RandomPoint implements AbstractPoint {
+public class RandomBoolean implements AbstractPoint {
 
   private final String name;
-  private final double min;
-  private final double max;
   private final PointData data = new PointData();
   private final PointState state = new PointState();
 
-  public RandomPoint(String name, double min, double max, String units) {
+  public RandomBoolean(String name, String units) {
     this.name = name;
-    this.min = min;
-    this.max = max;
     updateData();
   }
 
   @Override
   public void updateData() {
-    data.present_value = Math.round(Math.random() * (max - min) + min);
+    data.present_value = (Math.random() < 0.5);
   }
 
   @Override

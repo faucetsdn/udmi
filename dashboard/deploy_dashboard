@@ -21,6 +21,7 @@ only="functions:udmi_target"
 only+=",functions:udmi_state"
 only+=",functions:udmi_config"
 only+=",functions:udmi_update"
+only+=",functions:udmi_reflect"
 
 echo firebase deploy --only $only
 firebase deploy --only $only

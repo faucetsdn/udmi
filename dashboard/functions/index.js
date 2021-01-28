@@ -25,6 +25,8 @@ function recordMessage(attributes, message) {
   const promises = [];
   const timestamp = new Date().toJSON();
 
+  console.log('record', registryId, deviceId, subType, subFolder, typeof message, message);
+
   const reg_doc = db.collection('registries').doc(registryId);
   promises.push(reg_doc.set({
     'updated': timestamp
@@ -81,6 +83,24 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
   return Promise.all(promises);
 });
 
+exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
+  const attributes = event.attributes;
+  const base64 = event.data;
+  const msgString = Buffer.from(base64, 'base64').toString();
+  const msgObject = JSON.parse(msgString);
+
+  const parts = attributes.subFolder.split('/');
+
+  attributes.deviceRegistryId = attributes.deviceId;
+  attributes.deviceId = parts[1];
+  const subType = parts[2];
+  attributes.subFolder = parts[3];
+
+  target = 'udmi_' + subType;
+
+  return publishPubsubMessage(target, attributes, msgObject);
+});
+
 exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
   const registryId = attributes.deviceRegistryId;
@@ -95,7 +115,6 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   for (var block in msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
-      console.log('state -> target', registryId, deviceId, block);
       attributes.subFolder = block;
       promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
@@ -116,8 +135,6 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  console.log('config', registryId, deviceId, subFolder, msgObject);
-
   attributes.subType = 'configs';
 
   const promises = recordMessage(attributes, msgObject);
@@ -136,7 +153,6 @@ function update_device_config(message, attributes) {
   const msgString = JSON.stringify(message);
   const binaryData = Buffer.from(msgString);
 
-  console.log('update_config', projectId, cloudRegion, registryId, deviceId);
   const formattedName = iotClient.devicePath(
     projectId,
     cloudRegion,
@@ -144,7 +160,7 @@ function update_device_config(message, attributes) {
     deviceId
   );
 
-  console.log('request', formattedName, msgString);
+  console.log('iot request', formattedName, msgString);
 
   const request = {
     name: formattedName,
@@ -175,8 +191,7 @@ function consolidateConfig(registryId, deviceId) {
     projectId: projectId,
     cloudRegion: cloudRegion,
     deviceId: deviceId,
-    deviceRegistryId: registryId,
-    subType: 'config'
+    deviceRegistryId: registryId
   };
 
   return configs.get()
@@ -199,7 +214,7 @@ function publishPubsubMessage(topicName, attributes, data) {
   const dataBuffer = Buffer.from(JSON.stringify(data));
   var attr_copy = Object.assign({}, attributes);
 
-  console.log('publish', topicName, attributes, data);
+  console.log('publish', topicName, attributes, typeof data, data);
 
   return pubsub
     .topic(topicName)

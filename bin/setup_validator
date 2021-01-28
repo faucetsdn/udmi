@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.1
+
+(
+    git clone ${TEST_SITE_GIT%~*}
+    cd udmi_site_model
+    git checkout ${TEST_SITE_GIT#*~} 2> /dev/null
+    git log -n 1
+)
+
+validator/bin/build
+
+cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 gcp_reflect_key.pkcs8
