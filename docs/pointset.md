@@ -1,16 +1,15 @@
 # Pointset Specification
 
-A `pointset` represents a set of points reporting telemetry data. This is the most common data
-and store them in an appropriate time-series database.
+A `pointset` represents a set of points reporting telemetry data. This is the most common data, and should be stored in an appropriate time-series database.
 
 Specific `point_names` within a `pointset` should be specified in _snake_case_ and adhere to the
-data ontology for the device (stipulated and verified elsewhere).
+data ontology for the device (stipulated and verified outside of UDMI, e.g. [Digital Buildings Ontology](https://github.com/google/digitalbuildings/tree/master/ontology)).
 
 ## Metadata
 
 The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
-expected points that a device holds, along with (optionally) the expected units of those points.
+expected points that a device holds, along with, if the field is numeric, the expected units of those points.
 The general structure of a `pointset` block exists inside of a complete
 [metadata](../schema/metadata.tests/example.json) message.
 
@@ -21,7 +20,7 @@ The general structure of a `pointset` block exists inside of a complete
 
 ## Telemetry
 
-A basic `pointset` [telemetry](../schema/pointset.tests/example.json) message contains
+A basic `pointset` [telemetry](../schema/event_pointset.tests/example.json) message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
 while the `pointset` typing is applied as part of the [message envelope](envelope.md).
 
@@ -31,8 +30,7 @@ while the `pointset` typing is applied as part of the [message envelope](envelop
 
 Telemetry update messages should be sent "as needed" or according to specific requirements as
 stipulated in the `config` block. The basic `pointset` telemetry message for a device should
-contain the values for all representative points from that device, as determined by either
-device programming or the associated `config` block. Incremental updates (e.g. for COV) can
+contain the values for all representative points from that device, as determined by the associated `config` block. If no points are specified in the `config` block, the device programming determines the representative points. Incremental updates (e.g. for COV) can
 send only the specific updated points as an optimization.
 
 ## State
@@ -44,17 +42,17 @@ block with the following structure:
   * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
       * (`status`): Optional [status](status.md) information about this point.
-      * (`source`): Optional enumeration indicating the source of the points value.
+      * (`value_state`): Optional enumeration indicating the state of the points value.
 
-Valid `source` settings include:
-* _<empty>_: No `fix_value` _config_ has been specified, the source is device-native.
-* _applied_: The `fix_value` _config_ has been successfully applied.
+Valid `value_state` settings include:
+* _<missing>_: No `set_value` _config_ has been specified, the source is device-native.
+* _applied_: The `set_value` _config_ has been successfully applied.
 * _overridden_: The _config_ setting is being overridden by another source.
 * _invalid_: A problem has been identified with the _config_ setting.
-* _failure_: The _config_ is fine, but a problem has been encountered appling the setting.
+* _failure_: The _config_ is fine, but a problem has been encountered applying the setting.
 
 In all cases, the points `status` field can be used to supply more information (e.g., the
-reason for an _invalid_ or _failure_ `mode`).
+reason for an _invalid_ or _failure_ `value_state`).
 
 ## Config
 
@@ -69,13 +67,13 @@ block with the following structure:
   * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
-      * (`fix_value`): Optional setting to control the specificed device point.
+      * (`set_value`): Optional setting to control the specificed device point. See [writeback documentation](/docs/writeback.md).
       * (`cov_threshold`):  Optional threshold for triggering a COV telemetry update.
 
 The points defined in the `config.pointset.points` dictionary is the authoritative source
 indicating the representative points for the device (in both `telemetry` and `state` messages). If
 the device has additional points that are _not_ stipulated in the config they should be silently
-dropped, and if the device does not know about a stipulated point then it should report it as a
-point with an _error_ level `status` entry in its `state` block. If a `config` block is not present,
+dropped. If the device does not know about a stipulated point then it should report it as a
+point with an _error_ level `status` entry in its `state` message, and exclude it from the telemetry message. If a `config` block is not present,
 or does not contain a `pointset.points` object, then the device should determine on its own
 which points to report.
