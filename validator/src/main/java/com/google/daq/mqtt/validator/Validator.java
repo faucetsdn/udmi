@@ -120,9 +120,9 @@ public class Validator {
       }
       switch (targetSpec) {
         case PUBSUB_MARKER:
-          validator.validatePubSub(instName);
           validator.initializeCloudIoT();
           validator.initializeFirestoreDataSink();
+          validator.validatePubSub(instName);
           break;
         case FILES_MARKER:
           validator.validateFilesOutput(instName);
@@ -188,16 +188,17 @@ public class Validator {
     }
     try {
       for (String device : Objects.requireNonNull(devicesDir.list())) {
+        ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
           File metadataFile = new File(deviceDir, METADATA_JSON);
-          ReportingDevice reportingDevice = new ReportingDevice(device);
           reportingDevice.setMetadata(
               OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class));
-          expectedDevices.put(device, reportingDevice);
         } catch (Exception e) {
-          throw new RuntimeException("While loading device " + device, e);
+          System.err.printf("Error while loading device %s: %s%n", device, e);
+          reportingDevice.addError(e);
         }
+        expectedDevices.put(device, reportingDevice);
       }
       System.err.println("Loaded " + expectedDevices.size() + " expected devices");
     } catch (Exception e) {
@@ -269,7 +270,7 @@ public class Validator {
   }
 
   private void messageLoop(MessagePublisher client) {
-    System.err.println("Entering iot core message loop on "
+    System.err.println("Entering message loop on "
         + client.getSubscriptionId() + " for device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     while (client.isActive() && sendNextExpected(client)) {
@@ -473,7 +474,7 @@ public class Validator {
     }
 
     if (Strings.isNullOrEmpty(subType)) {
-      return subFolder;
+      return "event_" + subFolder;
     }
 
     if (!subType.endsWith("s")) {
