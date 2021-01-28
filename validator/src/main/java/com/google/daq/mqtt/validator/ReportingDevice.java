@@ -32,7 +32,7 @@ public class ReportingDevice {
   }
 
   public boolean hasError() {
-    return metadataDiff.errors != null && metadataDiff.errors.isEmpty();
+    return metadataDiff.errors != null && !metadataDiff.errors.isEmpty();
   }
 
   public boolean hasMetadataDiff() {
