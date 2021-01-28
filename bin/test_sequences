@@ -1,7 +1,13 @@
 #!/bin/bash -e
 
+pubber=y
+if [[ $1 == -n ]]; then
+    pubber=
+    shift
+fi
+
 if [[ $# != 3 ]]; then
-    echo Usage: $0 [site_model] [target_project] [sequences_dir]
+    echo Usage: $0 [-n] site_model target_project sequences_dir
     false
 fi
 
@@ -18,14 +24,16 @@ fi
 PUBBER_OUT=pubber.out
 EXPECTED_SEQUENCES=1
 
-echo Writing pubber output to $PUBBER_OUT
-bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
-pubber_pid=$!
+if [[ -n $pubber ]]; then
+    echo Writing pubber output to $PUBBER_OUT
+    bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
+    pubber_pid=$!
 
-while ! fgrep "Connection complete" $PUBBER_OUT; do
-    echo Waiting for pubber startup...
-    sleep 5
-done
+    while ! fgrep "Connection complete" $PUBBER_OUT; do
+        echo Waiting for pubber startup...
+        sleep 5
+    done
+fi
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.Validator"
@@ -45,4 +53,6 @@ fi
 
 echo Done with test sequence execution.
 
-kill $!
+if [[ -n $pubber_pid ]]; then
+    kill $pubber_pid
+fi
