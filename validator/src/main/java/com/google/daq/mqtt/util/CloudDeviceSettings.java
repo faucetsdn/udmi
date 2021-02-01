@@ -12,4 +12,5 @@ public class CloudDeviceSettings {
   public String keyAlgorithm;
   public byte[] keyBytes;
   public String updated;
+  public String generation;
 }

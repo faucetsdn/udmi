@@ -27,7 +27,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.time.DateTimeException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.zip.DataFormatException;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -77,6 +80,7 @@ public class  Registrar {
   private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
+  private final String generation = getGenerationString();
 
   public static void main(String[] args) {
     Registrar registrar = new Registrar();
@@ -156,6 +160,16 @@ public class  Registrar {
 
   private void processDevices() {
     processDevices(null);
+  }
+
+  private String getGenerationString() {
+    try {
+      Date generationDate = new Date();
+      String quotedString = OBJECT_MAPPER.writeValueAsString(generationDate);
+      return quotedString.substring(1, quotedString.length() - 1);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While forming generation timestamp", e);
+    }
   }
 
   private void processDevices(String[] devices) {
@@ -386,7 +400,7 @@ public class  Registrar {
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
         System.err.println("Loading local device " + deviceName);
         LocalDevice localDevice = localDevices.computeIfAbsent(deviceName,
-            keyName -> new LocalDevice(devicesDir, deviceName, schemas));
+            keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
         try {
           localDevice.loadCredential();
         } catch (Exception e) {
@@ -430,18 +444,18 @@ public class  Registrar {
     }
   }
 
-  private class Loader implements SchemaClient {
+private class Loader implements SchemaClient {
 
-    public static final String FILE_PREFIX = "file:";
+  public static final String FILE_PREFIX = "file:";
 
-    @Override
-    public InputStream get(String schema) {
-      try {
-        Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
-        return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
-      } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + schema, e);
-      }
+  @Override
+  public InputStream get(String schema) {
+    try {
+      Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
+      return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
+    } catch (Exception e) {
+      throw new RuntimeException("While loading sub-schema " + schema, e);
     }
   }
+}
 }
