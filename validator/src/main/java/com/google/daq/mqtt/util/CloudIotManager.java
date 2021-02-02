@@ -159,12 +159,8 @@ public class CloudIotManager {
         .setMetadata(metadataMap);
   }
 
-  private ImmutableList<DeviceCredential> getCredentials(CloudDeviceSettings settings) {
-    if (settings.credential != null) {
-      return ImmutableList.of(settings.credential);
-    } else {
-      return ImmutableList.of();
-    }
+  private List<DeviceCredential> getCredentials(CloudDeviceSettings settings) {
+    return settings.credentials == null ? ImmutableList.of() : settings.credentials;
   }
 
   private GatewayConfig getGatewayConfig(CloudDeviceSettings settings) {

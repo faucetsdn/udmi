@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.time.DateTimeException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.zip.DataFormatException;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -378,18 +376,18 @@ public class  Registrar {
   }
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<DeviceCredential, String> privateKeys = new HashMap<>();
+    Map<DeviceCredential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream().filter(LocalDevice::isDirectConnect).forEach(
         localDevice -> {
-          String deviceName = localDevice.getDeviceId();
           CloudDeviceSettings settings = localDevice.getSettings();
-          if (privateKeys.containsKey(settings.credential)) {
-            String previous = privateKeys.get(settings.credential);
-            RuntimeException exception = new RuntimeException(
-                String.format("Duplicate credentials found for %s & %s", previous, deviceName));
-            localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
-          } else {
-            privateKeys.put(settings.credential, deviceName);
+          String deviceName = localDevice.getDeviceId();
+          for (DeviceCredential credential : settings.credentials) {
+            String previous = usedCredentials.put(credential, deviceName);
+            if (previous != null) {
+              RuntimeException exception = new RuntimeException(
+                  String.format("Duplicate credentials found for %s & %s", previous, deviceName));
+              localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+            }
           }
         });
   }
@@ -402,7 +400,7 @@ public class  Registrar {
         LocalDevice localDevice = localDevices.computeIfAbsent(deviceName,
             keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
         try {
-          localDevice.loadCredential();
+          localDevice.loadCredentials();
         } catch (Exception e) {
           localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, e);
         }
@@ -444,18 +442,18 @@ public class  Registrar {
     }
   }
 
-private class Loader implements SchemaClient {
+  private class Loader implements SchemaClient {
 
-  public static final String FILE_PREFIX = "file:";
+    public static final String FILE_PREFIX = "file:";
 
-  @Override
-  public InputStream get(String schema) {
-    try {
-      Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
-      return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
-    } catch (Exception e) {
-      throw new RuntimeException("While loading sub-schema " + schema, e);
+    @Override
+    public InputStream get(String schema) {
+      try {
+        Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
+        return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
+      } catch (Exception e) {
+        throw new RuntimeException("While loading sub-schema " + schema, e);
+      }
     }
   }
-}
 }

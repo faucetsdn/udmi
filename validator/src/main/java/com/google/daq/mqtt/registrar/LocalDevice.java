@@ -38,6 +38,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,9 @@ class LocalDevice {
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
       RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
+  private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
+      RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM
+  );
 
   public static final String POINTSET_SUBFOLDER = "pointset";
   public static final String SYSTEM_SUBFOLDER = "system";
@@ -113,7 +117,7 @@ class LocalDevice {
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
-  private DeviceCredential deviceCredential;
+  private List<DeviceCredential> deviceCredentials;
 
   LocalDevice(File devicesDir, String deviceId, Map<String, Schema> schemas,
       String generation) {
@@ -212,31 +216,40 @@ class LocalDevice {
     return RSA_CERT_TYPE.equals(getAuthType()) ? RSA_CERT_FILE : RSA_KEY_FILE;
   }
 
-  public DeviceCredential loadCredential() {
-    deviceCredential = readCredential();
-    return deviceCredential;
-  }
-
-  public DeviceCredential readCredential() {
+  public void loadCredentials() {
     try {
       if (hasGateway() && getAuthType() != null) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
       if (!isDirectConnect()) {
-        return null;
+        return;
       }
       if (getAuthType() == null) {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
-      File deviceKeyFile = new File(deviceDir, publicKeyFile());
-      if (!deviceKeyFile.exists()) {
-        throw new RuntimeException("Missing public key file " + publicKeyFile());
+      deviceCredentials = new ArrayList<>();
+      for (String keyFile : ALL_KEY_FILES) {
+        DeviceCredential deviceCredential = getDeviceCredential(keyFile);
+        if (deviceCredential != null) {
+          deviceCredentials.add(deviceCredential);
+        }
       }
-      return CloudIotManager.makeCredentials(getAuthFileType(),
-          IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
+      int numCredentials = deviceCredentials.size();
+      if (numCredentials == 0 || numCredentials > 3) {
+        throw new RuntimeException(String.format("Found %d credentials", numCredentials));
+      }
     } catch (Exception e) {
-      throw new RuntimeException("While loading credential for local device " + deviceId, e);
+      throw new RuntimeException("While loading credentials for local device " + deviceId, e);
     }
+  }
+
+  private DeviceCredential getDeviceCredential(String keyFile) throws IOException {
+    File deviceKeyFile = new File(deviceDir, keyFile);
+    if (!deviceKeyFile.exists()) {
+      return null;
+    }
+    return CloudIotManager.makeCredentials(getAuthFileType(),
+        IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }
 
   private Set<String> keyFiles() {
@@ -282,7 +295,7 @@ class LocalDevice {
       if (metadata == null) {
         return settings;
       }
-      settings.credential = deviceCredential;
+      settings.credentials = deviceCredentials;
       settings.metadata = metadataString();
       settings.config = deviceConfigString();
       settings.updated = getUpdatedTimestamp();
