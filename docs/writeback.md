@@ -4,7 +4,7 @@ This file documents UDMI's specification for cloud to device control i.e. writeb
 
 ## Cloud Behavior
 
-To write to a point, the cloud sets two fields in the device config. First, `set_value`, which specifies the value for a given point. Second, `etag`, a value copied from the device's latest state message which uniquely represents the state. Specifically, `etag` is sent to avoid race conditions where the device's state changes in between the time the config message is sent by the cloud and the message is received by the device. 
+To write to a point, the cloud sets two fields in the device config. First, `set_value`, which specifies the value for a given point in the device's current units. Second, `etag`, a value copied from the device's latest state message which uniquely represents the state. Specifically, `etag` is sent to avoid race conditions where the device's state changes in between the time the config message is sent by the cloud and the message is received by the device. 
 
 ## Device Behavior
 
