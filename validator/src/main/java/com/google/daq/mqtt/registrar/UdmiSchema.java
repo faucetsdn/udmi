@@ -32,6 +32,7 @@ public class UdmiSchema {
 
   static class CloudMetadata {
     public String auth_type;
+    public boolean device_key;
   }
 
   public static class PointsetMetadata {
