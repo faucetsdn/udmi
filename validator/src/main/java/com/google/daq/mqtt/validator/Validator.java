@@ -278,9 +278,13 @@ public class Validator {
     System.err.println("Entering message loop on "
         + client.getSubscriptionId() + " for device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
-    sendInitializationQuery(client);
+    boolean initialized = false;
     while (client.isActive() && sendNextExpected(client)) {
       try {
+        if (!initialized) {
+          initialized = true;
+          sendInitializationQuery(client);
+        }
         client.processMessage(validator);
       } catch (Exception e) {
         e.printStackTrace();
