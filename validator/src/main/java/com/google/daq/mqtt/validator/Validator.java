@@ -82,6 +82,8 @@ public class Validator {
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String NO_SITE = "--";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
+  private static final String EMPTY_MESSAGE = "{}";
+  public static final String STATE_QUERY_TOPIC = "query/state";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -276,6 +278,7 @@ public class Validator {
     System.err.println("Entering message loop on "
         + client.getSubscriptionId() + " for device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
+    sendInitializationQuery(client);
     while (client.isActive() && sendNextExpected(client)) {
       try {
         client.processMessage(validator);
@@ -284,6 +287,11 @@ public class Validator {
       }
     }
     System.err.println("Message loop complete");
+  }
+
+  private void sendInitializationQuery(MessagePublisher client) {
+    System.err.println("Sending initialization query messages");
+    client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {
