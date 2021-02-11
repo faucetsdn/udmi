@@ -60,11 +60,14 @@ class ExpectedMessage {
     Iterator<String> fieldNames = source.fieldNames();
     while (fieldNames.hasNext()) {
       String fieldName = fieldNames.next();
+      JsonNode subSource = source.get(fieldName);
       if (!target.containsKey(fieldName)) {
+        if (subSource.isNull()) {
+          return true;
+        }
         errors.add(String.format("missing '%s'", fieldName));
         return false;
       }
-      JsonNode subSource = source.get(fieldName);
       Object againstNode = target.get(fieldName);
       final boolean matches;
       final String comparison;
