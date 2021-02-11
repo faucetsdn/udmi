@@ -7,6 +7,10 @@ import daq.udmi.Message.PointState;
 
 public abstract class BasicPoint implements AbstractPoint {
 
+  private static final String INVALID_STATE = "invalid";
+  private static final String APPLIED_STATE = "applied";
+  private static final String FAILURE_STATE = "failure";
+
   protected final String name;
   protected final PointData data = new PointData();
   private final PointState state = new PointState();
@@ -47,15 +51,19 @@ public abstract class BasicPoint implements AbstractPoint {
   public void setConfig(PointConfig config) {
     if (config.set_value == null) {
       written = false;
+      state.value_state = null;
       updateData();
     } else {
-      if (!writable) {
-        state.status = notWritableStatus();
-        dirty = true;
-      } else if (!validateValue(config.set_value)) {
+      if (!validateValue(config.set_value)) {
         state.status = invalidValueStatus();
+        state.value_state = INVALID_STATE;
+        dirty = true;
+      } else if (!writable) {
+        state.status = notWritableStatus();
+        state.value_state = FAILURE_STATE;
         dirty = true;
       } else {
+        state.value_state = APPLIED_STATE;
         written = true;
         data.present_value = config.set_value;
       }

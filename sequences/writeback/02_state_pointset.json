@@ -1,13 +1,13 @@
 {
   "points": {
     "recalcitrant_angle" : {
-      "value_state": null
+      "value_state": "invalid"
     },
     "faulty_finding" : {
       "value_state": "failure"
     },
     "superimposition_reading" : {
-      "value_state": "invalid"
+      "value_state": "applied"
     }
   }
 }

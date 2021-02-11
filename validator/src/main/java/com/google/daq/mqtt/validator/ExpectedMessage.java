@@ -21,12 +21,14 @@ class ExpectedMessage {
   private final File source;
   private final String subType;
   private final String subFolder;
+  private final String group;
 
   public ExpectedMessage(File source) {
     try {
       this.source = source;
       this.message = OBJECT_MAPPER.readTree(source);
       String[] parts = getSendParts();
+      group = parts[0];
       subType = parts[1];
       subFolder = parts[2];
     } catch (Exception e) {
@@ -61,14 +63,14 @@ class ExpectedMessage {
     while (fieldNames.hasNext()) {
       String fieldName = fieldNames.next();
       JsonNode subSource = source.get(fieldName);
+      Object againstNode = target.get(fieldName);
       if (!target.containsKey(fieldName)) {
         if (subSource.isNull()) {
           return true;
         }
-        errors.add(String.format("missing '%s'", fieldName));
+        errors.add(String.format("missing '%s' as '%s'", fieldName, subSource.asText()));
         return false;
       }
-      Object againstNode = target.get(fieldName);
       final boolean matches;
       final String comparison;
       switch (subSource.getNodeType()) {
@@ -94,11 +96,16 @@ class ExpectedMessage {
           comparison = String.format("'%s' == '%s'", subSource.asText(), againstNode);
           matches = againstNode.equals(subSource.asText());
           break;
+        case NULL:
+          comparison = "is null";
+          matches = againstNode == null;
+          break;
         default:
           throw new RuntimeException("Unsupported JSON node type " + subSource.getNodeType());
       }
       if (!matches) {
-        errors.add(String.format("expected '%s' %s", fieldName, comparison));
+        String verb = subSource.isObject() ? "from" : "expected";
+        errors.add(String.format("%s '%s' %s", verb, fieldName, comparison));
         return false;
       }
     }
@@ -132,5 +139,9 @@ class ExpectedMessage {
 
   String getName() {
     return source.getName();
+  }
+
+  public boolean isSameGroup(ExpectedMessage expectedMessage) {
+    return group.equals(expectedMessage.group);
   }
 }

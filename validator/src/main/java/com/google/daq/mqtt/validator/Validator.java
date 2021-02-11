@@ -313,9 +313,13 @@ public class Validator {
     try {
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId,
           getSchemaName(attributes));
+      if (expectedList.size() == 0) {
+        return false;
+      }
+      ExpectedMessage firstMatch = expectedList.get(0);
       for (int i = 0; i < expectedList.size(); i++) {
         ExpectedMessage expectedMessage = expectedList.get(i);
-        if (expectedMessage.isSendMessage()) {
+        if (expectedMessage.isSendMessage() || !firstMatch.isSameGroup(expectedMessage)) {
           return false;
         }
         List<String> matchErrors = expectedMessage.matches(message, attributes);
@@ -344,10 +348,16 @@ public class Validator {
     if (expectedList == null) {
       return true;
     }
-    while (!expectedList.isEmpty() && expectedList.get(0).isSendMessage()) {
-      ExpectedMessage sendingMessage = expectedList.remove(0);
+    if (expectedList.isEmpty()) {
+      return false;
+    }
+    ExpectedMessage firstMessage = expectedList.get(0);
+    List<ExpectedMessage> groupList = expectedList.stream()
+        .filter(item -> item.isSameGroup(firstMessage) && item.isSendMessage()).collect(Collectors.toList());
+    for (ExpectedMessage sendingMessage : groupList) {
       System.err.println("Sending message " + sendingMessage.getName());
       sender.publish(deviceId, sendingMessage.getSendTopic(), sendingMessage.createMessage());
+      expectedList.remove(sendingMessage);
     }
     return !expectedList.isEmpty();
   }

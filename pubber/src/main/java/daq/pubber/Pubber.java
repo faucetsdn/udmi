@@ -112,8 +112,8 @@ public class Pubber {
     deviceState.pointset = new PointsetState();
     devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", false,40, 40, "deg" ));
-    addPoint(new RandomBoolean("faulty_finding", true));
+    addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
+    addPoint(new RandomBoolean("faulty_finding", false));
     stateDirty = true;
   }
 
