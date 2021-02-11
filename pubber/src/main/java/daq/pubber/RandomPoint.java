@@ -1,9 +1,10 @@
 package daq.pubber;
 
+import daq.udmi.Message.PointConfig;
 import daq.udmi.Message.PointData;
 import daq.udmi.Message.PointState;
 
-public class RandomPoint implements AbstractPoint {
+public class RandomPoint extends BasicPoint implements AbstractPoint {
 
   private final String name;
   private final double min;
@@ -11,30 +12,23 @@ public class RandomPoint implements AbstractPoint {
   private final PointData data = new PointData();
   private final PointState state = new PointState();
 
-  public RandomPoint(String name, double min, double max, String units) {
+  public RandomPoint(String name, boolean writable, double min, double max, String units) {
+    super(name, writable);
     this.name = name;
     this.min = min;
     this.max = max;
-    updateData();
+  }
+
+  Object getValue() {
+    return Math.round(Math.random() * (max - min) + min);
   }
 
   @Override
-  public void updateData() {
-    data.present_value = Math.round(Math.random() * (max - min) + min);
-  }
-
-  @Override
-  public PointState getState() {
-    return state;
-  }
-
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  @Override
-  public PointData getData() {
-    return data;
+  protected boolean validateValue(Object set_value) {
+    if (!(set_value instanceof Double)) {
+      return false;
+    }
+    double value = (double) set_value;
+    return value >= min && value <= max;
   }
 }

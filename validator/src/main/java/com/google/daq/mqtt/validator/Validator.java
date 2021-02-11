@@ -155,8 +155,11 @@ public class Validator {
     }
     try {
       expectedList = new ArrayList<>();
-      Arrays.stream(Objects.requireNonNull(expectedDir.list()))
-          .sorted().forEach(item -> expectedList.add(loadMessage(expectedDir, item)));
+      Arrays.stream(
+          Objects.requireNonNull(expectedDir.list()))
+          .filter(item -> item.endsWith(JSON_SUFFIX))
+          .sorted()
+          .forEach(item -> expectedList.add(loadMessage(expectedDir, item)));
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading expected messages from " + expectedDir.getAbsolutePath(), e);

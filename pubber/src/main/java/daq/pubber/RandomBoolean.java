@@ -1,36 +1,17 @@
 package daq.pubber;
 
-import daq.udmi.Message.PointData;
-import daq.udmi.Message.PointState;
+public class RandomBoolean extends BasicPoint implements AbstractPoint {
 
-public class RandomBoolean implements AbstractPoint {
+  public RandomBoolean(String name, boolean writable) {
+    super(name, writable);
+  }
 
-  private final String name;
-  private final PointData data = new PointData();
-  private final PointState state = new PointState();
-
-  public RandomBoolean(String name) {
-    this.name = name;
-    updateData();
+  Object getValue() {
+    return Math.random() < 0.5;
   }
 
   @Override
-  public void updateData() {
-    data.present_value = (Math.random() < 0.5);
-  }
-
-  @Override
-  public PointState getState() {
-    return state;
-  }
-
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  @Override
-  public PointData getData() {
-    return data;
+  protected boolean validateValue(Object set_value) {
+    return set_value instanceof Boolean;
   }
 }

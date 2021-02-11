@@ -6,7 +6,9 @@ import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
 import daq.udmi.Message;
+import daq.udmi.Message.PointConfig;
 import daq.udmi.Message.Pointset;
+import daq.udmi.Message.PointsetConfig;
 import daq.udmi.Message.PointsetState;
 import daq.udmi.Message.State;
 import java.io.File;
@@ -59,6 +61,7 @@ public class Pubber {
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
   private int sendCount;
+  private boolean stateDirty;
 
   public static void main(String[] args) throws Exception {
     final Pubber pubber;
@@ -108,9 +111,10 @@ public class Pubber {
     deviceState.system.firmware.version = "v1";
     deviceState.pointset = new PointsetState();
     devicePoints.extraField = configuration.extraField;
-    addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", 40, 40, "deg" ));
-    addPoint(new RandomBoolean("faulty_finding"));
+    addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
+    addPoint(new RandomPoint("recalcitrant_angle", false,40, 40, "deg" ));
+    addPoint(new RandomBoolean("faulty_finding", true));
+    stateDirty = true;
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -142,6 +146,8 @@ public class Pubber {
       sendDeviceMessage(configuration.deviceId);
       if (sendCount % LOGGING_MOD_COUNT == 0) {
         publishLogMessage(configuration.deviceId,"Sent " + sendCount + " messages");
+      }
+      if (stateDirty) {
         publishStateMessage();
       }
       sendCount++;
@@ -152,7 +158,17 @@ public class Pubber {
   }
 
   private void updatePoints() {
-    allPoints.forEach(AbstractPoint::updateData);
+    allPoints.forEach(point -> {
+      point.updateData();
+        updateState(point);
+    });
+  }
+
+  private void updateState(AbstractPoint point) {
+    if (point.isDirty()) {
+      deviceState.pointset.points.put(point.getName(), point.getState());
+      stateDirty = true;
+    }
   }
 
   private void terminate() {
@@ -179,7 +195,7 @@ public class Pubber {
     if (devicePoints.points.put(pointName, point.getData()) != null) {
       throw new IllegalStateException("Duplicate pointName " + pointName);
     }
-    deviceState.pointset.points.put(pointName, point.getState());
+    updateState(point);
     allPoints.add(point);
   }
 
@@ -244,11 +260,9 @@ public class Pubber {
       info("Received new config " + config);
       final int actualInterval;
       if (config != null) {
-        Integer reportInterval = config.system == null ? null : config.system.report_interval_ms;
-        actualInterval = Integer.max(MIN_REPORT_MS,
-            reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
         deviceState.system.last_config = config.timestamp;
-        deviceState.system.etag = config.system == null ? null : config.system.etag;
+        actualInterval = updateSystemConfig(config.system);
+        updatePointsetConfig(config.pointset);
       } else {
         actualInterval = DEFAULT_REPORT_MS;
       }
@@ -259,6 +273,25 @@ public class Pubber {
     } catch (Exception e) {
       reportError(e);
     }
+  }
+
+  private void updatePointsetConfig(PointsetConfig pointsetConfig) {
+    allPoints.forEach(point ->
+        updatePointConfig(point, pointsetConfig.points.get(point.getName())));
+  }
+
+  private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
+    point.setConfig(pointConfig);
+    updateState(point);
+  }
+
+  private int updateSystemConfig(Message.SystemConfig configSystem) {
+    final int actualInterval;
+    Integer reportInterval = configSystem == null ? null : configSystem.report_interval_ms;
+    actualInterval = Integer.max(MIN_REPORT_MS,
+        reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
+    deviceState.system.etag = configSystem == null ? null : configSystem.etag;
+    return actualInterval;
   }
 
   private void errorHandler(GatewayError error) {
@@ -298,6 +331,7 @@ public class Pubber {
     String deviceId = configuration.deviceId;
     info("Sending state message for device " + deviceId + " at " + deviceState.timestamp);
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
+    stateDirty = false;
   }
 
   private long sleepUntil(long targetTimeMs) {
