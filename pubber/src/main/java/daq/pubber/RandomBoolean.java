@@ -9,7 +9,7 @@ public class RandomBoolean implements AbstractPoint {
   private final PointData data = new PointData();
   private final PointState state = new PointState();
 
-  public RandomBoolean(String name, String units) {
+  public RandomBoolean(String name) {
     this.name = name;
     updateData();
   }

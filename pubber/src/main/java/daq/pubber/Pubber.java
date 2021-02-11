@@ -110,7 +110,7 @@ public class Pubber {
     devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", 0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", 40, 40, "deg" ));
-    addPoint(new RandomBoolean("faulty_finding", "truth"));
+    addPoint(new RandomBoolean("faulty_finding"));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
