@@ -22,7 +22,7 @@ if [[ -z $TARGET_PROJECT ]]; then
 fi
 
 PUBBER_OUT=pubber.out
-EXPECTED_SEQUENCES=1
+EXPECTED_SEQUENCES=2
 
 if [[ -n $pubber ]]; then
     echo Writing pubber output to $PUBBER_OUT
@@ -49,7 +49,7 @@ done
 
 seq_count=`echo $sequences | wc -w`
 if [ $seq_count != $EXPECTED_SEQUENCES ]; then
-    echo Did not find expected $EXPECTED_SEQUENCES sequences.
+    echo Found $seq_count not expected $EXPECTED_SEQUENCES sequences.
     false
 fi
 
