@@ -32,7 +32,7 @@
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.12.1" level="project" />
     <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.6.2" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.12.1" level="project" />
-    <orderEntry type="library" name="Gradle: joda-time:joda-time:2.10.9" level="project" />
+    <orderEntry type="library" name="Gradle: joda-time:joda-time:2.10.10" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-log4j12:1.7.5" level="project" />
     <orderEntry type="library" name="Gradle: com.zaxxer:HikariCP:2.4.7" level="project" />

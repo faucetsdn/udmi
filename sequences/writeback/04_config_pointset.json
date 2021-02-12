@@ -3,8 +3,10 @@
     "recalcitrant_angle" : {
     },
     "faulty_finding" : {
+      "set_value": true
     },
     "superimposition_reading" : {
+      "set_value": 105
     }
   }
 }

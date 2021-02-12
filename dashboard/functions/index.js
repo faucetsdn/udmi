@@ -8,6 +8,7 @@ const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
 const REFLECT_REGISTRY = "UDMS-REFLECT";
+const DEFAULT_CLOUD_REGION = 'us-central1';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -47,7 +48,7 @@ function recordMessage(attributes, message) {
 
 function sendCommand(registryId, deviceId, subFolder, message) {
   const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  const cloudRegion = 'us-central1';
+  const cloudRegion = DEFAULT_CLOUD_REGION;
 
   const formattedName =
         iotClient.devicePath(projectId, cloudRegion, registryId, deviceId);
@@ -96,19 +97,59 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const subType = parts[2];
   attributes.subFolder = parts[3];
 
+  if (subType == 'query') {
+    return udmi_query_event(attributes, msgObject);
+  }
+
   target = 'udmi_' + subType;
 
   return publishPubsubMessage(target, attributes, msgObject);
 });
 
-exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
-  const attributes = event.attributes;
+function udmi_query_event(attributes, msgObject) {
+  if (attributes.subFolder == 'state') {
+    return udmi_query_state(attributes);
+  }
+  throw 'Unknown query type ' + attributes.subFolder;
+}
+
+function udmi_query_state(attributes) {
+  const projectId = attributes.projectId;
+  const cloudRegion = attributes.cloudRegion || DEFAULT_CLOUD_REGION;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
+
+  const formattedName = iotClient.devicePath(
+    projectId,
+    cloudRegion,
+    registryId,
+    deviceId
+  );
+
+  console.log('iot query state', formattedName)
+
+  const request = {
+    name: formattedName
+  };
+
+  return iotClient.getDevice(request).then(deviceData => {
+    const stateBinaryData = deviceData[0].state.binaryData;
+    const stateString = stateBinaryData.toString();
+    const msgObject = JSON.parse(stateString);
+    return process_state_update(attributes, msgObject);
+  });
+}
+
+exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
+  const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
+  return process_state_update(attributes, msgObject);
+});
+
+function process_state_update(attributes, msgObject) {
   let promises = [];
 
   attributes.subType = 'states';
@@ -123,7 +164,7 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   }
 
   return Promise.all(promises);
-});
+};
 
 exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
   const attributes = event.attributes;
@@ -173,7 +214,7 @@ function update_device_config(message, attributes) {
 
 function consolidateConfig(registryId, deviceId) {
   const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  const cloudRegion = 'us-central1';
+  const cloudRegion = DEFAULT_CLOUD_REGION;
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');

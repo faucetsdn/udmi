@@ -22,10 +22,11 @@ if [[ -z $TARGET_PROJECT ]]; then
 fi
 
 PUBBER_OUT=pubber.out
-EXPECTED_SEQUENCES=1
+EXPECTED_SEQUENCES=2
 
 if [[ -n $pubber ]]; then
     echo Writing pubber output to $PUBBER_OUT
+    echo bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1
     bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
     pubber_pid=$!
 
@@ -42,12 +43,13 @@ sequences=`ls $SEQUENCES_DIR`
 echo Executing seqeunces $sequences
 for sequence in $sequences; do
     echo Starting sequence $sequence at `date`
+    echo $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
     $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
 done
 
 seq_count=`echo $sequences | wc -w`
 if [ $seq_count != $EXPECTED_SEQUENCES ]; then
-    echo Did not find expected $EXPECTED_SEQUENCES sequences.
+    echo Found $seq_count not expected $EXPECTED_SEQUENCES sequences.
     false
 fi
 

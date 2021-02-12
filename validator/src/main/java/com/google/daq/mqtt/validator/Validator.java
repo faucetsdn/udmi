@@ -82,6 +82,8 @@ public class Validator {
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String NO_SITE = "--";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
+  private static final String EMPTY_MESSAGE = "{}";
+  public static final String STATE_QUERY_TOPIC = "query/state";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -155,8 +157,11 @@ public class Validator {
     }
     try {
       expectedList = new ArrayList<>();
-      Arrays.stream(Objects.requireNonNull(expectedDir.list()))
-          .sorted().forEach(item -> expectedList.add(loadMessage(expectedDir, item)));
+      Arrays.stream(
+          Objects.requireNonNull(expectedDir.list()))
+          .filter(item -> item.endsWith(JSON_SUFFIX))
+          .sorted()
+          .forEach(item -> expectedList.add(loadMessage(expectedDir, item)));
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading expected messages from " + expectedDir.getAbsolutePath(), e);
@@ -273,14 +278,24 @@ public class Validator {
     System.err.println("Entering message loop on "
         + client.getSubscriptionId() + " for device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
+    boolean initialized = false;
     while (client.isActive() && sendNextExpected(client)) {
       try {
+        if (!initialized) {
+          initialized = true;
+          sendInitializationQuery(client);
+        }
         client.processMessage(validator);
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
     System.err.println("Message loop complete");
+  }
+
+  private void sendInitializationQuery(MessagePublisher client) {
+    System.err.println("Sending initialization query messages");
+    client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {
@@ -310,9 +325,13 @@ public class Validator {
     try {
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId,
           getSchemaName(attributes));
+      if (expectedList.size() == 0) {
+        return false;
+      }
+      ExpectedMessage firstMatch = expectedList.get(0);
       for (int i = 0; i < expectedList.size(); i++) {
         ExpectedMessage expectedMessage = expectedList.get(i);
-        if (expectedMessage.isSendMessage()) {
+        if (expectedMessage.isSendMessage() || !firstMatch.isSameGroup(expectedMessage)) {
           return false;
         }
         List<String> matchErrors = expectedMessage.matches(message, attributes);
@@ -341,10 +360,16 @@ public class Validator {
     if (expectedList == null) {
       return true;
     }
-    while (!expectedList.isEmpty() && expectedList.get(0).isSendMessage()) {
-      ExpectedMessage sendingMessage = expectedList.remove(0);
+    if (expectedList.isEmpty()) {
+      return false;
+    }
+    ExpectedMessage firstMessage = expectedList.get(0);
+    List<ExpectedMessage> groupList = expectedList.stream()
+        .filter(item -> item.isSameGroup(firstMessage) && item.isSendMessage()).collect(Collectors.toList());
+    for (ExpectedMessage sendingMessage : groupList) {
       System.err.println("Sending message " + sendingMessage.getName());
       sender.publish(deviceId, sendingMessage.getSendTopic(), sendingMessage.createMessage());
+      expectedList.remove(sendingMessage);
     }
     return !expectedList.isEmpty();
   }
