@@ -296,6 +296,7 @@ public class Pubber {
     allPoints.forEach(point ->
         updatePointConfig(point, useConfig.points.get(point.getName())));
     deviceState.pointset.etag = useConfig.etag;
+    devicePoints.etag = useConfig.etag;
   }
 
   private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
