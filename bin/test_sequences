@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+device_id=AHU-1
 pubber=y
 if [[ $1 == -n ]]; then
     pubber=
@@ -26,8 +27,8 @@ EXPECTED_SEQUENCES=2
 
 if [[ -n $pubber ]]; then
     echo Writing pubber output to $PUBBER_OUT
-    echo bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1
-    bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
+    echo bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id
+    bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id > $PUBBER_OUT 2>&1 &
     pubber_pid=$!
 
     while ! fgrep "Connection complete" $PUBBER_OUT; do
@@ -39,12 +40,15 @@ fi
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.Validator"
 
+rm -rf out/devices/$device_id
+
 sequences=`ls $SEQUENCES_DIR`
 echo Executing seqeunces $sequences
 for sequence in $sequences; do
     echo Starting sequence $sequence at `date`
-    echo $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
-    $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
+    echo $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
+    $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
+    rm -rf out/devices/$device_id
 done
 
 seq_count=`echo $sequences | wc -w`
