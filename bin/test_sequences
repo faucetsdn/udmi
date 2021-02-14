@@ -47,7 +47,7 @@ echo Executing seqeunces $sequences
 for sequence in $sequences; do
     echo Starting sequence $sequence at `date`
     echo $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
-    $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
+    timeout 60s $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
     rm -rf out/devices/$device_id
 done
 
