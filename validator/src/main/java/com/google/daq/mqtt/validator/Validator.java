@@ -329,7 +329,9 @@ public class Validator {
       if (groupMessages == null) {
         return false;
       }
+      int i = 0;
       for (ExpectedMessage expectedMessage : groupMessages) {
+        i++;
         boolean typeMatch = expectedMessage.messageTypeErrors(attributes).isEmpty();
         List<String> matchErrors = expectedMessage.matches(message, attributes);
         if (matchErrors.isEmpty()) {
