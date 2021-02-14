@@ -315,39 +315,34 @@ public class Validator {
   }
 
   private void matchNextExpected(Map<String, Object> message, Map<String, String> attributes) {
-    while (checkNextMatch(message, attributes)) {
-      // Try, try again...
-    }
-  }
-
-  private boolean checkNextMatch(Map<String, Object> message,
-      Map<String, String> attributes) {
     try {
-      File errorFile = prepareDeviceOutDir(message, attributes, deviceId,
-          getSchemaName(attributes));
+      String schemaName = getSchemaName(attributes);
+      File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
       List<ExpectedMessage> groupMessages = getExpectedGroupList(false);
       if (groupMessages == null) {
-        return false;
+        return;
       }
+      System.err.printf("Matching %s at %s%n", schemaName, getTimestamp());
       int i = 0;
       for (ExpectedMessage expectedMessage : groupMessages) {
         i++;
         boolean typeMatch = expectedMessage.messageTypeErrors(attributes).isEmpty();
+        if (!typeMatch) {
+          continue;
+        }
         List<String> matchErrors = expectedMessage.matches(message, attributes);
         if (matchErrors.isEmpty()) {
           System.err.println("Successful match against " + expectedMessage.getName());
           expectedList.remove(expectedMessage);
           errorFile.delete();
-          return true;
-        }
-        matchErrors.add("against " + expectedMessage.getName());
-        matchErrors.add("at " + getTimestamp());
-        System.err.printf("Match error (%d): %s%n", i, Joiner.on(", ").join(matchErrors));
-        if (typeMatch) {
-          OBJECT_MAPPER.writeValue(errorFile, matchErrors);
+        } else {
+          matchErrors.add("against " + expectedMessage.getName());
+          System.err.printf("Match error (%d): %s%n", i, Joiner.on(", ").join(matchErrors));
+          try (PrintStream errorOut = new PrintStream(errorFile)) {
+            errorOut.print(Joiner.on("\n").join(matchErrors));
+          }
         }
       }
-      return false;
     } catch (Exception e) {
       throw new RuntimeException("While checking next match", e);
     }
@@ -427,6 +422,9 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
+        try (PrintStream errorOut = new PrintStream(errorFile)) {
+            errorOut.print(e.getMessage());
+        }
         OBJECT_MAPPER.writeValue(errorFile, e.getMessage());
         reportingDevice.addError(e);
       }
