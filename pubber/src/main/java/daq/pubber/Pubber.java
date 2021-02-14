@@ -2,6 +2,7 @@ package daq.pubber;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
@@ -31,6 +32,7 @@ public class Pubber {
 
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+      .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private static final String POINTSET_TOPIC = "events/pointset";
@@ -257,13 +259,14 @@ public class Pubber {
 
   private void configHandler(Message.Config config) {
     try {
-      info("Received new config " + config);
       final int actualInterval;
       if (config != null) {
+        info("Received new config at " + getTimestamp());
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
       } else {
+        info("Defaulting empty config at " + getTimestamp());
         actualInterval = DEFAULT_REPORT_MS;
       }
       maybeRestartExecutor(actualInterval);
@@ -275,9 +278,19 @@ public class Pubber {
     }
   }
 
+  private String getTimestamp() {
+    try {
+      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
   private void updatePointsetConfig(PointsetConfig pointsetConfig) {
+    PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     allPoints.forEach(point ->
-        updatePointConfig(point, pointsetConfig.points.get(point.getName())));
+        updatePointConfig(point, useConfig.points.get(point.getName())));
   }
 
   private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
@@ -313,13 +326,15 @@ public class Pubber {
       LOG.error("No connected clients, exiting.");
       System.exit(-2);
     }
-    info(String.format("Sending test message for %s/%s", configuration.registryId, deviceId));
+    info(String.format("Sending test message for %s/%s at %s",
+        configuration.registryId, deviceId, getTimestamp()));
     devicePoints.timestamp = new Date();
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
-    info(String.format("Sending log message for %s/%s", configuration.registryId, deviceId));
+    info(String.format("Sending log message for %s/%s at %s",
+        configuration.registryId, deviceId, getTimestamp()));
     Message.SystemEvent systemEvent = new Message.SystemEvent();
     systemEvent.logentries.add(new Entry(logMessage));
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
@@ -329,7 +344,7 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info("Sending state message for device " + deviceId + " at " + deviceState.timestamp);
+    info("Sending state message for device " + deviceId + " at " + getTimestamp());
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
   }
