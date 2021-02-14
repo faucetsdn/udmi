@@ -295,6 +295,7 @@ public class Pubber {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     allPoints.forEach(point ->
         updatePointConfig(point, useConfig.points.get(point.getName())));
+    deviceState.pointset.etag = useConfig.etag;
   }
 
   private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
@@ -307,7 +308,6 @@ public class Pubber {
     Integer reportInterval = configSystem == null ? null : configSystem.report_interval_ms;
     actualInterval = Integer.max(MIN_REPORT_MS,
         reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
-    deviceState.system.etag = configSystem == null ? null : configSystem.etag;
     return actualInterval;
   }
 

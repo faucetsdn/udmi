@@ -31,10 +31,12 @@ public class Message {
 
   public static class PointsetState {
     public Map<String, PointState> points = new HashMap<>();
+    public String etag;
   }
 
   public static class PointsetConfig {
     public Map<String, PointConfig> points = new HashMap<>();
+    public String etag;
   }
 
   public static class PointConfig {
@@ -53,11 +55,9 @@ public class Message {
     public boolean operational;
     public Date last_config;
     public Map<String, Entry> statuses = new HashMap<>();
-    public String etag;
   }
 
   public static class SystemConfig {
-    public String etag;
     public Integer report_interval_ms;
   }
 
