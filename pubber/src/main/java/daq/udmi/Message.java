@@ -49,6 +49,7 @@ public class Message {
   public static class SystemState {
     public String make_model;
     public Bundle firmware = new Bundle();
+    public String serial_no;
     public boolean operational;
     public Date last_config;
     public Map<String, Entry> statuses = new HashMap<>();

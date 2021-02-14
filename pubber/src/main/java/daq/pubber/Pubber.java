@@ -69,10 +69,10 @@ public class Pubber {
     final Pubber pubber;
     if (args.length == 1) {
       pubber = new Pubber(args[0]);
-    } else if (args.length == 3) {
-      pubber = new Pubber(args[0], args[1], args[2]);
+    } else if (args.length == 4) {
+      pubber = new Pubber(args[0], args[1], args[2], args[3]);
     } else {
-      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id }");
+      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
     pubber.startConnection();
@@ -88,11 +88,12 @@ public class Pubber {
     }
   }
 
-  public Pubber(String projectId, String sitePath, String deviceId) {
+  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
+    configuration.serialNo = serialNo;
     loadCloudConfig();
   }
 
@@ -109,6 +110,9 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    LOG.info(String.format("Starting pubber %s serial %s extra %s",
+        configuration.deviceId, configuration.serialNo, configuration.extraField));
+    deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware.version = "v1";
     deviceState.pointset = new PointsetState();

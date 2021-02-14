@@ -27,8 +27,9 @@ EXPECTED_SEQUENCES=2
 
 if [[ -n $pubber ]]; then
     echo Writing pubber output to $PUBBER_OUT
-    echo bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id
-    bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id > $PUBBER_OUT 2>&1 &
+    serial_no=sequencer-$RANDOM
+    echo bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no
+    bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no > $PUBBER_OUT 2>&1 &
     pubber_pid=$!
 
     while ! fgrep "Connection complete" $PUBBER_OUT; do
