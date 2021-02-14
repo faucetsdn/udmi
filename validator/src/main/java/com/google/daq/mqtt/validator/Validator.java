@@ -325,24 +325,25 @@ public class Validator {
     try {
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId,
           getSchemaName(attributes));
-      if (expectedList.size() == 0) {
+      List<ExpectedMessage> groupMessages = getExpectedGroupList(false);
+      if (groupMessages == null) {
         return false;
       }
-      ExpectedMessage firstMatch = expectedList.get(0);
-      for (int i = 0; i < expectedList.size(); i++) {
-        ExpectedMessage expectedMessage = expectedList.get(i);
-        if (expectedMessage.isSendMessage() || !firstMatch.isSameGroup(expectedMessage)) {
-          return false;
-        }
+      for (ExpectedMessage expectedMessage : groupMessages) {
+        boolean typeMatch = expectedMessage.messageTypeErrors(attributes).isEmpty();
         List<String> matchErrors = expectedMessage.matches(message, attributes);
         if (matchErrors.isEmpty()) {
           System.err.println("Successful match against " + expectedMessage.getName());
-          expectedList.remove(i);
+          expectedList.remove(expectedMessage);
+          errorFile.delete();
           return true;
         }
         matchErrors.add("against " + expectedMessage.getName());
+        matchErrors.add("at " + getTimestamp());
         System.err.printf("Match error (%d): %s%n", i, Joiner.on(", ").join(matchErrors));
-        OBJECT_MAPPER.writeValue(errorFile, matchErrors);
+        if (typeMatch) {
+          OBJECT_MAPPER.writeValue(errorFile, matchErrors);
+        }
       }
       return false;
     } catch (Exception e) {
@@ -360,18 +361,27 @@ public class Validator {
     if (expectedList == null) {
       return true;
     }
-    if (expectedList.isEmpty()) {
+    List<ExpectedMessage> groupList = getExpectedGroupList(true);
+    if (groupList == null) {
       return false;
     }
-    ExpectedMessage firstMessage = expectedList.get(0);
-    List<ExpectedMessage> groupList = expectedList.stream()
-        .filter(item -> item.isSameGroup(firstMessage) && item.isSendMessage()).collect(Collectors.toList());
     for (ExpectedMessage sendingMessage : groupList) {
       System.err.println("Sending message " + sendingMessage.getName());
       sender.publish(deviceId, sendingMessage.getSendTopic(), sendingMessage.createMessage());
       expectedList.remove(sendingMessage);
     }
     return !expectedList.isEmpty();
+  }
+
+  private List<ExpectedMessage> getExpectedGroupList(boolean sendMessage) {
+    if (expectedList == null || expectedList.isEmpty()) {
+      return null;
+    }
+    ExpectedMessage firstMessage = expectedList.get(0);
+    List<ExpectedMessage> groupList = expectedList.stream()
+        .filter(item -> item.isSameGroup(firstMessage) && item.isSendMessage() == sendMessage)
+        .collect(Collectors.toList());
+    return groupList;
   }
 
   private boolean validateUpdate(Map<String, Schema> schemaMap, Map<String, Object> message,
@@ -410,7 +420,8 @@ public class Validator {
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
-          throw new IllegalArgumentException(String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+          throw new IllegalArgumentException(
+              String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
@@ -467,7 +478,7 @@ public class Validator {
       }
 
       return updated;
-    } catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
       return false;
     }
@@ -475,8 +486,8 @@ public class Validator {
 
   private File prepareDeviceOutDir(Map<String, Object> message, Map<String, String> attributes,
       String deviceId, String schemaName) throws IOException {
-    File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
-    deviceDir.mkdirs();
+
+    File deviceDir = makeDeviceDir(deviceId);
 
     File messageFile = new File(deviceDir, String.format(MESSAGE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(messageFile, message);
@@ -484,10 +495,21 @@ public class Validator {
     File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
 
-    File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, schemaName));
-    errorFile.delete();
+    File errorFile = prepareErrorFile(schemaName, deviceDir);
 
     return errorFile;
+  }
+
+  private File prepareErrorFile(String schemaName, File deviceDir) {
+    File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, schemaName));
+    errorFile.delete();
+    return errorFile;
+  }
+
+  private File makeDeviceDir(String deviceId) {
+    File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
+    deviceDir.mkdirs();
+    return deviceDir;
   }
 
   private String makeSchemaName(Map<String, String> attributes) {
@@ -539,11 +561,13 @@ public class Validator {
       }
       OBJECT_MAPPER.writeValue(METADATA_REPORT_FILE, metadataReport);
     } catch (Exception e) {
-      throw new RuntimeException("While generating metadata report file " + METADATA_REPORT_FILE.getAbsolutePath(), e);
+      throw new RuntimeException(
+          "While generating metadata report file " + METADATA_REPORT_FILE.getAbsolutePath(), e);
     }
   }
 
   public static class MetadataReport {
+
     public Date updated;
     public Set<String> expectedDevices;
     public Set<String> missingDevices;
@@ -576,7 +600,8 @@ public class Validator {
 
   private void validateDeviceId(String deviceId) {
     if (!DEVICE_ID_PATTERN.matcher(deviceId).matches()) {
-      throw new ExceptionMap(String.format(DEVICE_MATCH_FORMAT, deviceId, DEVICE_ID_PATTERN.pattern()));
+      throw new ExceptionMap(
+          String.format(DEVICE_MATCH_FORMAT, deviceId, DEVICE_ID_PATTERN.pattern()));
     }
   }
 
@@ -598,7 +623,8 @@ public class Validator {
             String.format(TARGET_VALIDATION_FORMAT, targetFiles.size(), schemaFile.getName()));
         for (File targetFile : targetFiles) {
           try {
-            System.out.println("Validating " + targetFile.getName() + " against " + schemaFile.getName());
+            System.out
+                .println("Validating " + targetFile.getName() + " against " + schemaFile.getName());
             validateFile(targetFile, schema);
           } catch (Exception e) {
             validateExceptions.put(targetFile.getName(), e);
@@ -625,7 +651,8 @@ public class Validator {
   private Schema getSchema(File schemaFile) {
     try (InputStream schemaStream = new FileInputStream(schemaFile)) {
       JSONObject rawSchema = new JSONObject(new JSONTokener(schemaStream));
-      SchemaLoader loader = SchemaLoader.builder().schemaJson(rawSchema).httpClient(new RelativeClient()).build();
+      SchemaLoader loader = SchemaLoader.builder().schemaJson(rawSchema)
+          .httpClient(new RelativeClient()).build();
       return loader.load().build();
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
@@ -642,7 +669,8 @@ public class Validator {
         if (!url.startsWith(FILE_URL_PREFIX)) {
           throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
         }
-        String new_url = FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
+        String new_url =
+            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
         return (InputStream) (new URL(new_url)).getContent();
       } catch (Exception e) {
         throw new RuntimeException("While loading URL " + url, e);
@@ -690,5 +718,12 @@ public class Validator {
     }
   }
 
-
+  private String getTimestamp() {
+    try {
+      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
+  }
 }
