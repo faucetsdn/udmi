@@ -24,7 +24,9 @@ function recordMessage(attributes, message) {
   const subFolder = attributes.subFolder || 'unknown';
 
   const promises = [];
-  const timestamp = new Date().toJSON();
+
+  const timestamp = message.timestamp || new Date().toJSON();
+  message.timestamp = timestamp;
 
   const messageStr = JSON.stringify(message);
   console.log('record', registryId, deviceId, subType, subFolder, messageStr);
@@ -159,6 +161,7 @@ function process_state_update(attributes, msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
       attributes.subFolder = block;
+      subMsg.timestamp = msgObject.timestamp;
       promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
       promises.push(...new_promises);
@@ -226,8 +229,7 @@ function consolidateConfig(registryId, deviceId) {
   console.log('consolidating config for', registryId, deviceId, timestamp);
 
   const new_config = {
-    'version': '1',
-    'timestamp': timestamp
+    'version': '1'
   };
 
   const attributes = {
@@ -237,6 +239,8 @@ function consolidateConfig(registryId, deviceId) {
     deviceRegistryId: registryId
   };
 
+  const timestamps = [];
+
   return configs.get()
     .then((snapshot) => {
       snapshot.forEach(doc => {
@@ -244,7 +248,17 @@ function consolidateConfig(registryId, deviceId) {
         const docStr = JSON.stringify(docData);
         console.log('consolidating config with', registryId, deviceId, doc.id, docStr);
         new_config[doc.id] = docData;
+        if (docData.timestamp) {
+          timestamps.push(docData.timestamp);
+        }
       });
+
+      if (timestamps.length > 0) {
+        new_config['timestamp'] = timestamps.sort()[timestamps.length - 1];
+      } else {
+        new_config['timestamp'] = timestamp;
+      }
+
       return update_device_config(new_config, attributes);
     });
 }
