@@ -265,7 +265,7 @@ public class Pubber {
     try {
       final int actualInterval;
       if (config != null) {
-        info("Received new config at " + getTimestamp());
+        info(String.format("Received new config %s at %s", config.timestamp, getTimestamp()));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
@@ -283,8 +283,12 @@ public class Pubber {
   }
 
   private String getTimestamp() {
+    return isoConvert(new Date());
+  }
+
+  private String isoConvert(Date timestamp) {
     try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      String dateString = OBJECT_MAPPER.writeValueAsString(timestamp);
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
@@ -331,16 +335,16 @@ public class Pubber {
       LOG.error("No connected clients, exiting.");
       System.exit(-2);
     }
-    info(String.format("Sending test message for %s/%s at %s",
-        configuration.registryId, deviceId, getTimestamp()));
     devicePoints.timestamp = new Date();
+    info(String.format("Sending test message for %s/%s at %s",
+        configuration.registryId, deviceId, isoConvert(devicePoints.timestamp)));
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
-    info(String.format("Sending log message for %s/%s at %s",
-        configuration.registryId, deviceId, getTimestamp()));
     Message.SystemEvent systemEvent = new Message.SystemEvent();
+    info(String.format("Sending log message for %s/%s at %s",
+        configuration.registryId, deviceId, isoConvert(systemEvent.timestamp)));
     systemEvent.logentries.add(new Entry(logMessage));
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }
@@ -349,7 +353,7 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info("Sending state message for device " + deviceId + " at " + getTimestamp());
+    info(String.format("Sending state message %s", isoConvert(deviceState.timestamp)));
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
   }
