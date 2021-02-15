@@ -26,11 +26,15 @@ PUBBER_OUT=pubber.out
 EXPECTED_SEQUENCES=2
 
 if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    if [[ -n $pids ]]; then
+        echo Killing pubber pids $pids
+        kill $pids
+    fi
     echo Writing pubber output to $PUBBER_OUT
     serial_no=sequencer-$RANDOM
     echo bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no
     bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no > $PUBBER_OUT 2>&1 &
-    pubber_pid=$!
 
     while ! fgrep "Connection complete" $PUBBER_OUT; do
         echo Waiting for pubber startup...
@@ -58,8 +62,10 @@ if [ $seq_count != $EXPECTED_SEQUENCES ]; then
     false
 fi
 
-echo Done with test sequence execution.
-
-if [[ -n $pubber_pid ]]; then
-    kill $pubber_pid
+if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    echo Killing pubber pids $pids
+    kill $pids
 fi
+
+echo Done with test sequence execution.

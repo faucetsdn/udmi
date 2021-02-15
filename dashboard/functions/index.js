@@ -223,10 +223,8 @@ function consolidateConfig(registryId, deviceId) {
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');
-  const now = Date.now();
-  const timestamp = new Date(now).toJSON();
 
-  console.log('consolidating config for', registryId, deviceId, timestamp);
+  console.log('consolidating config for', registryId, deviceId);
 
   const new_config = {
     'version': '1'
@@ -247,16 +245,17 @@ function consolidateConfig(registryId, deviceId) {
         const docData = doc.data();
         const docStr = JSON.stringify(docData);
         console.log('consolidating config with', registryId, deviceId, doc.id, docStr);
-        new_config[doc.id] = docData;
         if (docData.timestamp) {
           timestamps.push(docData.timestamp);
+          docData.timestamp = undefined;
         }
+        new_config[doc.id] = docData;
       });
 
       if (timestamps.length > 0) {
         new_config['timestamp'] = timestamps.sort()[timestamps.length - 1];
       } else {
-        new_config['timestamp'] = timestamp;
+        new_config['timestamp'] = 'unknown';
       }
 
       return update_device_config(new_config, attributes);
