@@ -141,6 +141,11 @@ class ExpectedMessage {
     }
   }
 
+  @Override
+  public String toString() {
+    return source.getName();
+  }
+
   String getName() {
     return source.getName();
   }
