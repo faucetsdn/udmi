@@ -448,6 +448,7 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
+      sanitizeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
       try {
