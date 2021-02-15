@@ -143,11 +143,12 @@ class ExpectedMessage {
 
   @Override
   public String toString() {
-    return source.getName();
+    return getName();
   }
 
   String getName() {
-    return source.getName();
+    String name = source.getName();
+    return name.substring(0, name.length() - JSON_SUFFIX.length());
   }
 
   public boolean isSameGroup(ExpectedMessage expectedMessage) {

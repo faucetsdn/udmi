@@ -322,7 +322,7 @@ public class Validator {
       if (groupMessages == null) {
         return;
       }
-      System.err.printf("Matching %s %s at %s%n: %s", schemaName, message.get("timestamp"),
+      System.err.printf("Matching %s %s at %s: %s%n", schemaName, message.get("timestamp"),
           getTimestamp(), Joiner.on(" ").join(groupMessages));
       int i = 0;
       for (ExpectedMessage expectedMessage : groupMessages) {
