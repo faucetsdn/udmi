@@ -265,7 +265,8 @@ public class Pubber {
     try {
       final int actualInterval;
       if (config != null) {
-        info(String.format("Received new config %s at %s", config.timestamp, getTimestamp()));
+        info(String.format("Received new config %s at %s",
+            isoConvert(config.timestamp), getTimestamp()));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
