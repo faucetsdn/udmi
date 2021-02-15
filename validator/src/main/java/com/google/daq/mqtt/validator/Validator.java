@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -688,7 +690,9 @@ public class Validator {
       JSONObject rawSchema = new JSONObject(new JSONTokener(schemaStream));
       SchemaLoader loader = SchemaLoader.builder().schemaJson(rawSchema)
           .httpClient(new RelativeClient()).build();
-      return loader.load().build();
+      String fileName = schemaFile.getName();
+      String schemaName = fileName.substring(0, fileName.length() - JSON_SUFFIX.length());
+      return loader.load().id(schemaName).build();
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
     }
@@ -746,8 +750,11 @@ public class Validator {
   }
 
   private void validateFile(File targetFile, Schema schema) {
-    try (InputStream targetStream = new FileInputStream(targetFile)) {
-      schema.validate(new JSONObject(new JSONTokener(targetStream)));
+    try{
+      Map<String, Object> message = OBJECT_MAPPER.readValue(targetFile, Map.class);
+      sanitizeMessage(schema.getId(), message);
+      String messageStr = OBJECT_MAPPER.writeValueAsString(message);
+      schema.validate(new JSONObject(new JSONTokener(messageStr)));
     } catch (Exception e) {
       throw new RuntimeException("Against input " + targetFile, e);
     }

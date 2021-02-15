@@ -13,7 +13,7 @@
       "present_value": true
     },
     "entryway_lock": {
-      "present_value": null
+      "present_value": false
     },
     "scale_sensor": {
       "present_value": 10
