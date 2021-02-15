@@ -85,6 +85,8 @@ public class Validator {
   private static final String EMPTY_MESSAGE = "{}";
   public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
+  private static final String CONFIG_PREFIX = "config_";
+  private static final String STATE_PREFIX = "state_";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -310,22 +312,30 @@ public class Validator {
       Map<String, String> attributes) {
     attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (expectedList != null) {
-      matchNextExpected(message, attributes);
+      matchNextExpected(schemaMap, message, attributes);
     } else if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
   }
 
-  private void matchNextExpected(Map<String, Object> message, Map<String, String> attributes) {
+  private void matchNextExpected(Map<String, Schema> schemaMap,
+      Map<String, Object> message, Map<String, String> attributes) {
     try {
-      String schemaName = getSchemaName(attributes);
+      String schemaName = makeSchemaName(attributes);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
+      String timestamp = attributes.get(TIMESTAMP_ATTRIBUTE);
+
+      if (!validateSchema(schemaMap, message, schemaName, errorFile)) {
+        System.err.printf("Matching %s at %s failed schema check%n", schemaName, timestamp);
+        return;
+      }
+
       List<ExpectedMessage> groupMessages = getExpectedGroupList(false);
       if (groupMessages == null) {
         return;
       }
-      System.err.printf("Matching %s at %s: %s%n", schemaName, attributes.get(TIMESTAMP_ATTRIBUTE),
-          Joiner.on(" ").join(groupMessages));
+      System.err.printf("Matching %s at %s: %s%n",
+          schemaName, timestamp, Joiner.on(" ").join(groupMessages));
       int i = 0;
       for (ExpectedMessage expectedMessage : groupMessages) {
         i++;
@@ -351,10 +361,32 @@ public class Validator {
     }
   }
 
-  private String getSchemaName(Map<String, String> attributes) {
-    String subType = attributes.get("subType");
-    String subFolder = attributes.get("subFolder");
-    return String.format("%s_%s", subType, subFolder);
+  private boolean validateSchema(Map<String, Schema> schemaMap, Map<String, Object> message,
+      String schemaName, File errorFile) {
+    try {
+      sanitizeMessage(schemaName, message);
+      if (!schemaMap.containsKey(schemaName)) {
+        throw new ValidationException("Message schema not found: " + schemaName);
+      }
+      validateMessage(schemaMap.get(schemaName), message);
+    } catch (ValidationException e) {
+      try (PrintStream errorOut = new PrintStream(errorFile)) {
+        errorOut.println(e.getMessage());
+        if (e.getViolationCount() > 1) {
+          errorOut.println(Joiner.on("\n").join(e.getAllMessages()));
+        }
+      } catch (IOException e2) {
+        throw new RuntimeException("While writing error file " + errorFile.getAbsolutePath(), e2);
+      }
+      return false;
+    }
+    return true;
+  }
+
+  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
+    if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
+      message.remove(TIMESTAMP_ATTRIBUTE);
+    }
   }
 
   private boolean sendNextExpected(MessagePublisher sender) {
