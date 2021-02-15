@@ -26,7 +26,8 @@ function recordMessage(attributes, message) {
   const promises = [];
   const timestamp = new Date().toJSON();
 
-  console.log('record', registryId, deviceId, subType, subFolder, typeof message, message);
+  const messageStr = JSON.stringify(message);
+  console.log('record', registryId, deviceId, subType, subFolder, messageStr);
 
   const reg_doc = db.collection('registries').doc(registryId);
   promises.push(reg_doc.set({
@@ -53,9 +54,10 @@ function sendCommand(registryId, deviceId, subFolder, message) {
   const formattedName =
         iotClient.devicePath(projectId, cloudRegion, registryId, deviceId);
 
-  console.log('command', formattedName, subFolder, message);
+  const messageStr = JSON.stringify(message);
+  console.log('command', formattedName, subFolder, messageStr);
 
-  const binaryData = Buffer.from(JSON.stringify(message));
+  const binaryData = Buffer.from(messageStr);
   const request = {
     name: formattedName,
     subfolder: subFolder,
@@ -201,7 +203,7 @@ function update_device_config(message, attributes) {
     deviceId
   );
 
-  console.log('iot request', formattedName, msgString);
+  console.log('iot modify config', formattedName, msgString);
 
   const request = {
     name: formattedName,
@@ -221,7 +223,7 @@ function consolidateConfig(registryId, deviceId) {
   const now = Date.now();
   const timestamp = new Date(now).toJSON();
 
-  console.log('consolidating config for', registryId, deviceId);
+  console.log('consolidating config for', registryId, deviceId, timestamp);
 
   const new_config = {
     'version': '1',
@@ -238,8 +240,10 @@ function consolidateConfig(registryId, deviceId) {
   return configs.get()
     .then((snapshot) => {
       snapshot.forEach(doc => {
-        console.log('consolidating config with', registryId, deviceId, doc.id, doc.data());
-        new_config[doc.id] = doc.data();
+        const docData = doc.data();
+        const docStr = JSON.stringify(docData);
+        console.log('consolidating config with', registryId, deviceId, doc.id, docStr);
+        new_config[doc.id] = docData;
       });
       return update_device_config(new_config, attributes);
     });
@@ -252,10 +256,11 @@ exports.udmi_update = functions.firestore
   });
 
 function publishPubsubMessage(topicName, attributes, data) {
-  const dataBuffer = Buffer.from(JSON.stringify(data));
+  const dataStr = JSON.stringify(data);
+  const dataBuffer = Buffer.from(dataStr);
   var attr_copy = Object.assign({}, attributes);
 
-  console.log('publish', topicName, attributes, typeof data, data);
+  console.log('publish', topicName, attributes, dataStr);
 
   return pubsub
     .topic(topicName)
