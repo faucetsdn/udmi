@@ -337,15 +337,13 @@ public class Pubber {
       System.exit(-2);
     }
     devicePoints.timestamp = new Date();
-    info(String.format("Sending test message for %s/%s at %s",
-        configuration.registryId, deviceId, isoConvert(devicePoints.timestamp)));
+    info(String.format("Sending test message at %s", isoConvert(devicePoints.timestamp)));
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
     Message.SystemEvent systemEvent = new Message.SystemEvent();
-    info(String.format("Sending log message for %s/%s at %s",
-        configuration.registryId, deviceId, isoConvert(systemEvent.timestamp)));
+    info(String.format("Sending log message at %s", isoConvert(systemEvent.timestamp)));
     systemEvent.logentries.add(new Entry(logMessage));
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }

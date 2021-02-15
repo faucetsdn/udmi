@@ -84,6 +84,7 @@ public class Validator {
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   public static final String STATE_QUERY_TOPIC = "query/state";
+  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -307,6 +308,7 @@ public class Validator {
 
   private void validateMessage(Map<String, Schema> schemaMap, Map<String, Object> message,
       Map<String, String> attributes) {
+    attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (expectedList != null) {
       matchNextExpected(message, attributes);
     } else if (validateUpdate(schemaMap, message, attributes)) {
@@ -322,7 +324,7 @@ public class Validator {
       if (groupMessages == null) {
         return;
       }
-      System.err.printf("Matching %s at %s: %s%n", schemaName, getTimestamp(),
+      System.err.printf("Matching %s at %s: %s%n", schemaName, attributes.get(TIMESTAMP_ATTRIBUTE),
           Joiner.on(" ").join(groupMessages));
       int i = 0;
       for (ExpectedMessage expectedMessage : groupMessages) {
@@ -424,9 +426,8 @@ public class Validator {
       } catch (Exception e) {
         System.err.println(e.getMessage());
         try (PrintStream errorOut = new PrintStream(errorFile)) {
-            errorOut.print(e.getMessage());
+            errorOut.println(e.getMessage());
         }
-        OBJECT_MAPPER.writeValue(errorFile, e.getMessage());
         reportingDevice.addError(e);
       }
 
