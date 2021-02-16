@@ -36,8 +36,15 @@ class ExpectedMessage {
     }
   }
 
-  public List<String> matches(Map<String, Object> against,
-      Map<String, String> attributes) {
+  public List<String> matches(Map<String, Object> against, Map<String, String> attributes) {
+    List<String> errors = messageTypeErrors(attributes);
+    if (errors.isEmpty()) {
+      matches(message, against, errors);
+    }
+    return errors;
+  }
+
+  public List<String> messageTypeErrors(Map<String, String> attributes) {
     String messageSubType = getMessageSubType(attributes);
     String messageSubFolder = attributes.get("subFolder");
     List<String> errors = new ArrayList<>();
@@ -46,9 +53,6 @@ class ExpectedMessage {
     }
     if (!subFolder.equals(messageSubFolder)) {
       errors.add(String.format("expected subFolder %s == %s", subFolder, messageSubFolder));
-    }
-    if (errors.isEmpty()) {
-      matches(message, against, errors);
     }
     return errors;
   }
@@ -137,8 +141,14 @@ class ExpectedMessage {
     }
   }
 
+  @Override
+  public String toString() {
+    return getName();
+  }
+
   String getName() {
-    return source.getName();
+    String name = source.getName();
+    return name.substring(0, name.length() - JSON_SUFFIX.length());
   }
 
   public boolean isSameGroup(ExpectedMessage expectedMessage) {

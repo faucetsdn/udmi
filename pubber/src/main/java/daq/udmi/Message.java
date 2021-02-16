@@ -23,6 +23,7 @@ public class Message {
   public static class Pointset extends UdmiBase {
     public Map<String, PointData> points = new HashMap<>();
     public Object extraField;
+    public String etag;
   }
 
   public static class SystemEvent extends UdmiBase {
@@ -31,10 +32,12 @@ public class Message {
 
   public static class PointsetState {
     public Map<String, PointState> points = new HashMap<>();
+    public String etag;
   }
 
   public static class PointsetConfig {
     public Map<String, PointConfig> points = new HashMap<>();
+    public String etag;
   }
 
   public static class PointConfig {
@@ -49,14 +52,13 @@ public class Message {
   public static class SystemState {
     public String make_model;
     public Bundle firmware = new Bundle();
+    public String serial_no;
     public boolean operational;
     public Date last_config;
     public Map<String, Entry> statuses = new HashMap<>();
-    public String etag;
   }
 
   public static class SystemConfig {
-    public String etag;
     public Integer report_interval_ms;
   }
 

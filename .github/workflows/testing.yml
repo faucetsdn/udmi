@@ -59,6 +59,9 @@ jobs:
         run: |
           bin/setup_validator
           bin/test_sequences udmi_site_model "${{ secrets.GCP_TARGET_PROJECT }}" sequences
+      - name: validation logs
+        if: ${{ always() }}
+        run: more out/devices/AHU-1/*
       - name: pubber logs
         if: ${{ always() }}
         run: |

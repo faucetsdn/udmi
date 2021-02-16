@@ -49,8 +49,9 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   public void setConfig(PointConfig config) {
-    if (config.set_value == null) {
+    if (config == null || config.set_value == null) {
       written = false;
+      state.status = null;
       state.value_state = null;
       updateData();
     } else {

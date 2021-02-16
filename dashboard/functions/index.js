@@ -24,9 +24,12 @@ function recordMessage(attributes, message) {
   const subFolder = attributes.subFolder || 'unknown';
 
   const promises = [];
-  const timestamp = new Date().toJSON();
 
-  console.log('record', registryId, deviceId, subType, subFolder, typeof message, message);
+  const timestamp = message.timestamp || new Date().toJSON();
+  message.timestamp = timestamp;
+
+  const messageStr = JSON.stringify(message);
+  console.log('record', registryId, deviceId, subType, subFolder, messageStr);
 
   const reg_doc = db.collection('registries').doc(registryId);
   promises.push(reg_doc.set({
@@ -53,9 +56,10 @@ function sendCommand(registryId, deviceId, subFolder, message) {
   const formattedName =
         iotClient.devicePath(projectId, cloudRegion, registryId, deviceId);
 
-  console.log('command', formattedName, subFolder, message);
+  const messageStr = JSON.stringify(message);
+  console.log('command', formattedName, subFolder, messageStr);
 
-  const binaryData = Buffer.from(JSON.stringify(message));
+  const binaryData = Buffer.from(messageStr);
   const request = {
     name: formattedName,
     subfolder: subFolder,
@@ -157,6 +161,7 @@ function process_state_update(attributes, msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
       attributes.subFolder = block;
+      subMsg.timestamp = msgObject.timestamp;
       promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
       promises.push(...new_promises);
@@ -201,7 +206,7 @@ function update_device_config(message, attributes) {
     deviceId
   );
 
-  console.log('iot request', formattedName, msgString);
+  console.log('iot modify config', formattedName, msgString);
 
   const request = {
     name: formattedName,
@@ -218,14 +223,11 @@ function consolidateConfig(registryId, deviceId) {
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');
-  const now = Date.now();
-  const timestamp = new Date(now).toJSON();
 
   console.log('consolidating config for', registryId, deviceId);
 
   const new_config = {
-    'version': '1',
-    'timestamp': timestamp
+    'version': '1'
   };
 
   const attributes = {
@@ -235,12 +237,27 @@ function consolidateConfig(registryId, deviceId) {
     deviceRegistryId: registryId
   };
 
+  const timestamps = [];
+
   return configs.get()
     .then((snapshot) => {
       snapshot.forEach(doc => {
-        console.log('consolidating config with', registryId, deviceId, doc.id, doc.data());
-        new_config[doc.id] = doc.data();
+        const docData = doc.data();
+        const docStr = JSON.stringify(docData);
+        console.log('consolidating config with', registryId, deviceId, doc.id, docStr);
+        if (docData.timestamp) {
+          timestamps.push(docData.timestamp);
+          docData.timestamp = undefined;
+        }
+        new_config[doc.id] = docData;
       });
+
+      if (timestamps.length > 0) {
+        new_config['timestamp'] = timestamps.sort()[timestamps.length - 1];
+      } else {
+        new_config['timestamp'] = 'unknown';
+      }
+
       return update_device_config(new_config, attributes);
     });
 }
@@ -252,10 +269,11 @@ exports.udmi_update = functions.firestore
   });
 
 function publishPubsubMessage(topicName, attributes, data) {
-  const dataBuffer = Buffer.from(JSON.stringify(data));
+  const dataStr = JSON.stringify(data);
+  const dataBuffer = Buffer.from(dataStr);
   var attr_copy = Object.assign({}, attributes);
 
-  console.log('publish', topicName, attributes, typeof data, data);
+  console.log('publish', topicName, attributes, dataStr);
 
   return pubsub
     .topic(topicName)

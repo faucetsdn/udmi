@@ -7,6 +7,9 @@
     "make_model": {
       "type": "string"
     },
+    "serial_no": {
+      "type": "string"
+    },
     "auth_key": {
       "type": "object",
       "additionalProperties": false,
@@ -50,6 +53,7 @@
   },
   "required": [
     "make_model",
+    "serial_no",
     "firmware",
     "operational"
   ]

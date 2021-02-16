@@ -2,6 +2,7 @@ package daq.pubber;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
@@ -31,6 +32,7 @@ public class Pubber {
 
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+      .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private static final String POINTSET_TOPIC = "events/pointset";
@@ -40,7 +42,7 @@ public class Pubber {
   private static final String ERROR_TOPIC = "errors";
 
   private static final int MIN_REPORT_MS = 200;
-  private static final int DEFAULT_REPORT_MS = 5000;
+  private static final int DEFAULT_REPORT_MS = 10000;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
@@ -67,10 +69,10 @@ public class Pubber {
     final Pubber pubber;
     if (args.length == 1) {
       pubber = new Pubber(args[0]);
-    } else if (args.length == 3) {
-      pubber = new Pubber(args[0], args[1], args[2]);
+    } else if (args.length == 4) {
+      pubber = new Pubber(args[0], args[1], args[2], args[3]);
     } else {
-      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id }");
+      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
     pubber.startConnection();
@@ -86,11 +88,12 @@ public class Pubber {
     }
   }
 
-  public Pubber(String projectId, String sitePath, String deviceId) {
+  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
+    configuration.serialNo = serialNo;
     loadCloudConfig();
   }
 
@@ -107,6 +110,9 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    LOG.info(String.format("Starting pubber %s serial %s extra %s",
+        configuration.deviceId, configuration.serialNo, configuration.extraField));
+    deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware.version = "v1";
     deviceState.pointset = new PointsetState();
@@ -257,13 +263,15 @@ public class Pubber {
 
   private void configHandler(Message.Config config) {
     try {
-      info("Received new config " + config);
       final int actualInterval;
       if (config != null) {
+        info(String.format("Received new config %s at %s",
+            isoConvert(config.timestamp), getTimestamp()));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
       } else {
+        info("Defaulting empty config at " + getTimestamp());
         actualInterval = DEFAULT_REPORT_MS;
       }
       maybeRestartExecutor(actualInterval);
@@ -275,9 +283,25 @@ public class Pubber {
     }
   }
 
+  private String getTimestamp() {
+    return isoConvert(new Date());
+  }
+
+  private String isoConvert(Date timestamp) {
+    try {
+      String dateString = OBJECT_MAPPER.writeValueAsString(timestamp);
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
   private void updatePointsetConfig(PointsetConfig pointsetConfig) {
+    PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     allPoints.forEach(point ->
-        updatePointConfig(point, pointsetConfig.points.get(point.getName())));
+        updatePointConfig(point, useConfig.points.get(point.getName())));
+    deviceState.pointset.etag = useConfig.etag;
+    devicePoints.etag = useConfig.etag;
   }
 
   private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
@@ -290,7 +314,6 @@ public class Pubber {
     Integer reportInterval = configSystem == null ? null : configSystem.report_interval_ms;
     actualInterval = Integer.max(MIN_REPORT_MS,
         reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
-    deviceState.system.etag = configSystem == null ? null : configSystem.etag;
     return actualInterval;
   }
 
@@ -313,14 +336,14 @@ public class Pubber {
       LOG.error("No connected clients, exiting.");
       System.exit(-2);
     }
-    info(String.format("Sending test message for %s/%s", configuration.registryId, deviceId));
     devicePoints.timestamp = new Date();
+    info(String.format("Sending test message at %s", isoConvert(devicePoints.timestamp)));
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
-    info(String.format("Sending log message for %s/%s", configuration.registryId, deviceId));
     Message.SystemEvent systemEvent = new Message.SystemEvent();
+    info(String.format("Sending log message at %s", isoConvert(systemEvent.timestamp)));
     systemEvent.logentries.add(new Entry(logMessage));
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }
@@ -329,7 +352,7 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info("Sending state message for device " + deviceId + " at " + deviceState.timestamp);
+    info(String.format("Sending state message %s", isoConvert(deviceState.timestamp)));
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
   }
