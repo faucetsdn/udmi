@@ -227,8 +227,9 @@ public class Validator {
   }
 
   private void initializeFirestoreDataSink() {
-    dataSink = new FirestoreDataSink(projectId);
-    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
+    // TODO: Make this configurable somehow.
+    //    dataSink = new FirestoreDataSink(projectId);
+    //    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
   }
 
   private void setSchemaSpec(String schemaPath) {
