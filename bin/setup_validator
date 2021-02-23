@@ -9,4 +9,4 @@ TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.1
     git log -n 1
 )
 
-cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 gcp_reflect_key.pkcs8
+cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 udmi_site_model/gcp_reflect_key.pkcs8

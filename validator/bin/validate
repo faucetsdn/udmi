@@ -1,10 +1,5 @@
 #!/bin/bash -e
 
-ROOT=$(dirname $0)/../..
-cd $ROOT
-
-jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-
 if [ $# != 6 ]; then
     echo Usage: $0 [project] [schema] [target] [subscription] [sitepath] [expect]
     false
@@ -14,9 +9,14 @@ project=$1
 schema=$2
 target=$3
 subscription=$4
-sitepath=$5
+sitepath=$(realpath $5)
 expect=$6
 shift 6
+
+ROOT=$(dirname $0)/../..
+cd $ROOT
+
+jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 if [ ! -f $jarfile ]; then
     echo Building validator...
