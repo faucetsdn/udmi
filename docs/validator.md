@@ -71,3 +71,14 @@ total 24
 -rw-r--r-- 1 username primarygroup 274 Oct 14 07:48 system.json
 -rw-r--r-- 1 username primarygroup 127 Oct 14 07:48 system.out
 ```
+
+## Advanced Usage
+
+There's other options available for validation, but they aren't completely documented. The `bin/validator`
+script interally calls `validator/bin/validate` with a number of additional arguments/options. Notably,
+there is an alternative to PubSub stream validation that uses a shadow registry for GCP exchanges (easier
+authentication).
+
+```
+~/udmi/validator/bin/validate bacnet-gateway schema reflect GAT-4128276 us-mtv-918r --
+```

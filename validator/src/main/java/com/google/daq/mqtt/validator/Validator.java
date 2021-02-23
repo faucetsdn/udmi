@@ -276,7 +276,9 @@ public class Validator {
 
   private void validateReflector(String instName) {
     deviceId = instName;
-    IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, GCP_REFLECT_KEY_PKCS8);
+    String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
+    System.err.println("Loading reflector key file from " + keyFile);
+    IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
     messageLoop(client);
   }
 
