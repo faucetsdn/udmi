@@ -150,7 +150,10 @@ public class  Registrar {
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
     String configTopic = cloudIotManager.cloudIotConfig.config_topic;
-    pubSubPusher = new PubSubPusher(projectId, configTopic);
+    System.err.println("Sending updates to config topic " + configTopic);
+    if (configTopic != null) {
+      pubSubPusher = new PubSubPusher(projectId, configTopic);
+    }
     System.err.println(String.format("Working with project %s registry %s/%s",
         cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(),
         cloudIotManager.getRegistryId()));
@@ -278,7 +281,9 @@ public class  Registrar {
       attributes.put("projectId", cloudIotManager.getProjectId());
       attributes.put("subFolder", subFolder);
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
-      pubSubPusher.sendMessage(attributes, messageString);
+      if (pubSubPusher != null) {
+        pubSubPusher.sendMessage(attributes, messageString);
+      }
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While sending config " + subFolder, e);
     }
