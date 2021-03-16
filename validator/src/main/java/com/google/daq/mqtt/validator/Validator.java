@@ -436,8 +436,12 @@ public class Validator {
       return "event_" + subFolder;
     }
 
-    if (!subType.endsWith("s")) {
-      throw new RuntimeException("Malformed message subType " + subType);
+    if (subFolder.equals("update")) {
+      if (!subType.equals("config") && !subType.equals("state")) {
+        throw new RuntimeException("Unrecognized update type " + subType);
+      }
+    } else if (!subType.endsWith("s")) {
+      throw new RuntimeException("Malformed plural subType " + subType);
     }
 
     return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
