@@ -57,11 +57,11 @@ jobs:
           java-version: '11'
       - name: sequence tests
         run: |
-          bin/setup_validator
-          bin/test_sequences udmi_site_model "${{ secrets.GCP_TARGET_PROJECT }}" sequences
+          bin/setup_validator "${{ secrets.GCP_TARGET_PROJECT }}"
+          bin/test_sequences
       - name: validation logs
         if: ${{ always() }}
-        run: more out/devices/AHU-1/*
+        run: more `find out/devices/ -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |

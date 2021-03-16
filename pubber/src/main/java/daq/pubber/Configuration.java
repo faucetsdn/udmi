@@ -16,4 +16,5 @@ public class Configuration {
   public String algorithm = "RS256";
   public Object extraField;
   public String serialNo;
+  public String macAddr;
 }

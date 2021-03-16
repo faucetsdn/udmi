@@ -4,7 +4,7 @@ This file documents UDMI's specification for cloud to device control i.e. writeb
 
 ## Cloud Behavior
 
-To write to a point, the cloud sets two fields in the device config. First, `set_value`, which specifies the value for a given point in the device's current units. Second, `etag`, a value copied from the device's latest state message which uniquely represents the state. Specifically, `etag` is sent to avoid race conditions where the device's state changes in between the time the config message is sent by the cloud and the message is received by the device. 
+To write to a point, the cloud sets two fields in the device config. First, `set_value`, which specifies the value for a given point in the device's current units. Second, the `etag` value which uniquely represents the state. Specifically, `etag` is used to avoid race conditions where the device's state or telemetry changes haven't caught up with the latest specified config.
 
 ## Device Behavior
 
@@ -25,7 +25,6 @@ While the system should never abort trying to reconcile the config, after 1 minu
 * invalid -- The system failed to write the value to the point because the requested value cannot be applied to the point. This state indicates an error on the cloud side. Some examples:
   * Point is not writable
   * Requested value is out of the operating bounds of the point
-  * `etag` field in the config doesn't match the current state `etag`
 failure -- The system failed to apply the cloud value to the point because an error occurred on the device side.
 
 In the case of any of the error states (failure, invalid, overridden), the [status](/docs/status.md) field for the point should be populated to provide additional debugging information about the error.

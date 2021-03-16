@@ -110,8 +110,9 @@ public class Pubber {
   }
 
   private void initializeDevice() {
-    LOG.info(String.format("Starting pubber %s serial %s extra %s",
-        configuration.deviceId, configuration.serialNo, configuration.extraField));
+    LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
+        configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
+        configuration.gatewayId));
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware.version = "v1";
@@ -215,12 +216,12 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    System.err.println("Loading device key file from " + configuration.keyFile);
+    LOG.info("Loading device key file from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
     mqttPublisher = new MqttPublisher(configuration, this::reportError);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
-          this::configHandler, Message.Config.class);
+          this::gatewayHandler, Message.Config.class);
       mqttPublisher.registerHandler(configuration.gatewayId, ERROR_TOPIC,
           this::errorHandler, GatewayError.class);
     }
@@ -261,17 +262,22 @@ public class Pubber {
     LOG.info(msg);
   }
 
+  private void gatewayHandler(Message.Config config) {
+    info(String.format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
+  }
+
   private void configHandler(Message.Config config) {
     try {
       final int actualInterval;
       if (config != null) {
-        info(String.format("Received new config %s at %s",
-            isoConvert(config.timestamp), getTimestamp()));
+        String etag = deviceState.pointset == null ? null : deviceState.pointset.etag;
+        info(String.format("%s received new config %s %s",
+            getTimestamp(), etag, isoConvert(config.timestamp)));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
       } else {
-        info("Defaulting empty config at " + getTimestamp());
+        info(getTimestamp() + " defaulting empty config");
         actualInterval = DEFAULT_REPORT_MS;
       }
       maybeRestartExecutor(actualInterval);
@@ -311,14 +317,13 @@ public class Pubber {
 
   private int updateSystemConfig(Message.SystemConfig configSystem) {
     final int actualInterval;
-    Integer reportInterval = configSystem == null ? null : configSystem.report_interval_ms;
+    Integer reportInterval = configSystem == null ? null : configSystem.max_update_ms;
     actualInterval = Integer.max(MIN_REPORT_MS,
         reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
     return actualInterval;
   }
 
   private void errorHandler(GatewayError error) {
-    // TODO: Handle error and give up on device.
     info(String.format("%s for %s: %s", error.error_type, error.device_id, error.description));
   }
 
@@ -337,13 +342,13 @@ public class Pubber {
       System.exit(-2);
     }
     devicePoints.timestamp = new Date();
-    info(String.format("Sending test message at %s", isoConvert(devicePoints.timestamp)));
+    info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
     Message.SystemEvent systemEvent = new Message.SystemEvent();
-    info(String.format("Sending log message at %s", isoConvert(systemEvent.timestamp)));
+    info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     systemEvent.logentries.add(new Entry(logMessage));
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }
@@ -352,7 +357,7 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info(String.format("Sending state message %s", isoConvert(deviceState.timestamp)));
+    info(String.format("%s sending state message", isoConvert(deviceState.timestamp)));
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
   }

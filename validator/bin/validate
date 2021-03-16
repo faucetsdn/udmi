@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-if [ $# != 6 ]; then
-    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath] [expect]
+if [ $# != 5 ]; then
+    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
     false
 fi
 
@@ -10,8 +10,7 @@ schema=$2
 target=$3
 subscription=$4
 sitepath=$(realpath $5)
-expect=$6
-shift 6
+shift 5
 
 ROOT=$(dirname $0)/../..
 cd $ROOT
@@ -31,10 +30,10 @@ rm -rf out/
 
 echo Executing validator $schema $target...
 
-echo java -jar $jarfile $project $schema $target $subscription $sitepath $expect
+echo java -jar $jarfile $project $schema $target $subscription $sitepath
 
 error=0
-java -jar $jarfile $project $schema $target $subscription $sitepath $expect || error=$?
+java -jar $jarfile $project $schema $target $subscription $sitepath || error=$?
 
 echo Validation complete, exit $error
 exit $error

@@ -59,7 +59,8 @@ public class Message {
   }
 
   public static class SystemConfig {
-    public Integer report_interval_ms;
+    public Integer min_loglevel;
+    public Integer max_update_ms;
   }
 
   public static class PointData {
