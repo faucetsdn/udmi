@@ -38,6 +38,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -71,15 +72,22 @@ class LocalDevice {
   private static final String RSA_KEY_FILE = "RSA_PEM";
   private static final String RSA_CERT_FILE = "RSA_X509_PEM";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
+  private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
+  private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
   private static final String SAMPLES_DIR = "samples";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
-  private static final Set<String> KEY_FILES = ImmutableSet.of(RSA_PUBLIC_PEM, RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
+  private static final Set<String> RSA_PRIVATE_KEY_FILES = ImmutableSet.of(
+      RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
+      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
+  private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
+      RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM
+  );
 
   public static final String POINTSET_SUBFOLDER = "pointset";
   public static final String SYSTEM_SUBFOLDER = "system";
@@ -98,23 +106,25 @@ class LocalDevice {
   public static final String EXCEPTION_CREDENTIALS = "Credential";
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
-  private static final String SAMPLE_SUFFIX = ".json";
 
   private final String deviceId;
   private final Map<String, Schema> schemas;
   private final File deviceDir;
   private final UdmiSchema.Metadata metadata;
   private final ExceptionMap exceptionMap;
+  private final String generation;
 
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
-  private DeviceCredential deviceCredential;
+  private List<DeviceCredential> deviceCredentials;
 
-  LocalDevice(File devicesDir, String deviceId, Map<String, Schema> schemas) {
+  LocalDevice(File devicesDir, String deviceId, Map<String, Schema> schemas,
+      String generation) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
+      this.generation = generation;
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       metadata = readMetadata();
@@ -195,42 +205,67 @@ class LocalDevice {
     return metadata.cloud == null ? null : metadata.cloud.auth_type;
   }
 
+  private boolean isDeviceKeySource() {
+    if (metadata.cloud == null) {
+      return false;
+    }
+    return metadata.cloud.device_key;
+  }
+
   private String getAuthFileType() {
     return RSA_CERT_TYPE.equals(getAuthType()) ? RSA_CERT_FILE : RSA_KEY_FILE;
   }
 
-  public DeviceCredential loadCredential() {
-    deviceCredential = readCredential();
-    return deviceCredential;
-  }
-
-  public DeviceCredential readCredential() {
+  public void loadCredentials() {
     try {
       if (hasGateway() && getAuthType() != null) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
       if (!isDirectConnect()) {
-        return null;
+        return;
       }
       if (getAuthType() == null) {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
-      File deviceKeyFile = new File(deviceDir, publicKeyFile());
-      if (!deviceKeyFile.exists()) {
-        throw new RuntimeException("Missing public key file " + publicKeyFile());
+      deviceCredentials = new ArrayList<>();
+      for (String keyFile : ALL_KEY_FILES) {
+        DeviceCredential deviceCredential = getDeviceCredential(keyFile);
+        if (deviceCredential != null) {
+          deviceCredentials.add(deviceCredential);
+        }
       }
-      return CloudIotManager.makeCredentials(getAuthFileType(),
-          IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
+      int numCredentials = deviceCredentials.size();
+      if (numCredentials == 0 || numCredentials > 3) {
+        throw new RuntimeException(String.format("Found %d credentials", numCredentials));
+      }
     } catch (Exception e) {
-      throw new RuntimeException("While loading credential for local device " + deviceId, e);
+      throw new RuntimeException("While loading credentials for local device " + deviceId, e);
     }
+  }
+
+  private DeviceCredential getDeviceCredential(String keyFile) throws IOException {
+    File deviceKeyFile = new File(deviceDir, keyFile);
+    if (!deviceKeyFile.exists()) {
+      return null;
+    }
+    return CloudIotManager.makeCredentials(getAuthFileType(),
+        IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }
 
   private Set<String> keyFiles() {
     if (!isDirectConnect()) {
       return ImmutableSet.of();
     }
-    return Sets.union(Sets.union(DEVICE_FILES, KEY_FILES), Set.of(publicKeyFile()));
+    Set<String> publicKeyFile = Set.of(publicKeyFile());
+    Set<String> privateKeyFiles = privateKeyFiles();
+    return Sets.union(publicKeyFile, privateKeyFiles);
+  }
+
+  private Set<String> privateKeyFiles() {
+    if (isDeviceKeySource()) {
+      return Set.of();
+    }
+    return RSA_PRIVATE_KEY_FILES;
   }
 
   private String publicKeyFile() {
@@ -260,13 +295,14 @@ class LocalDevice {
       if (metadata == null) {
         return settings;
       }
-      settings.credential = deviceCredential;
+      settings.credentials = deviceCredentials;
       settings.metadata = metadataString();
       settings.config = deviceConfigString();
       settings.updated = getUpdatedTimestamp();
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
+      settings.generation = generation;
       return settings;
     } catch (Exception e) {
       throw new RuntimeException("While getting settings for device " + deviceId, e);

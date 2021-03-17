@@ -50,9 +50,9 @@ def publish_messages(project_id, topic_id, attributes, filename):
     topic_path = publisher.topic_path(project_id, topic_id)
 
     data = get_message(filename)
-    data = data.encode("utf-8")
+    utf_data = data.encode("utf-8")
     attr = get_attributes(attributes)
-    future = publisher.publish(topic_path, data, **attr)
+    future = publisher.publish(topic_path, utf_data, **attr)
     print(future.result())
 
 

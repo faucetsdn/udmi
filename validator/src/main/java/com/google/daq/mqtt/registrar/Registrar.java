@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,6 +78,7 @@ public class  Registrar {
   private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
+  private final String generation = getGenerationString();
 
   public static void main(String[] args) {
     Registrar registrar = new Registrar();
@@ -148,7 +150,10 @@ public class  Registrar {
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
     String configTopic = cloudIotManager.cloudIotConfig.config_topic;
-    pubSubPusher = new PubSubPusher(projectId, configTopic);
+    System.err.println("Sending updates to config topic " + configTopic);
+    if (configTopic != null) {
+      pubSubPusher = new PubSubPusher(projectId, configTopic);
+    }
     System.err.println(String.format("Working with project %s registry %s/%s",
         cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(),
         cloudIotManager.getRegistryId()));
@@ -156,6 +161,16 @@ public class  Registrar {
 
   private void processDevices() {
     processDevices(null);
+  }
+
+  private String getGenerationString() {
+    try {
+      Date generationDate = new Date();
+      String quotedString = OBJECT_MAPPER.writeValueAsString(generationDate);
+      return quotedString.substring(1, quotedString.length() - 1);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While forming generation timestamp", e);
+    }
   }
 
   private void processDevices(String[] devices) {
@@ -266,7 +281,9 @@ public class  Registrar {
       attributes.put("projectId", cloudIotManager.getProjectId());
       attributes.put("subFolder", subFolder);
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
-      pubSubPusher.sendMessage(attributes, messageString);
+      if (pubSubPusher != null) {
+        pubSubPusher.sendMessage(attributes, messageString);
+      }
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While sending config " + subFolder, e);
     }
@@ -364,18 +381,18 @@ public class  Registrar {
   }
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<DeviceCredential, String> privateKeys = new HashMap<>();
+    Map<DeviceCredential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream().filter(LocalDevice::isDirectConnect).forEach(
         localDevice -> {
-          String deviceName = localDevice.getDeviceId();
           CloudDeviceSettings settings = localDevice.getSettings();
-          if (privateKeys.containsKey(settings.credential)) {
-            String previous = privateKeys.get(settings.credential);
-            RuntimeException exception = new RuntimeException(
-                String.format("Duplicate credentials found for %s & %s", previous, deviceName));
-            localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
-          } else {
-            privateKeys.put(settings.credential, deviceName);
+          String deviceName = localDevice.getDeviceId();
+          for (DeviceCredential credential : settings.credentials) {
+            String previous = usedCredentials.put(credential, deviceName);
+            if (previous != null) {
+              RuntimeException exception = new RuntimeException(
+                  String.format("Duplicate credentials found for %s & %s", previous, deviceName));
+              localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+            }
           }
         });
   }
@@ -386,9 +403,9 @@ public class  Registrar {
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
         System.err.println("Loading local device " + deviceName);
         LocalDevice localDevice = localDevices.computeIfAbsent(deviceName,
-            keyName -> new LocalDevice(devicesDir, deviceName, schemas));
+            keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
         try {
-          localDevice.loadCredential();
+          localDevice.loadCredentials();
         } catch (Exception e) {
           localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, e);
         }

@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import daq.udmi.Message.PointConfig;
 import daq.udmi.Message.PointData;
 import daq.udmi.Message.PointState;
 
@@ -11,5 +12,9 @@ public interface AbstractPoint {
 
   void updateData();
 
+  boolean isDirty();
+
   PointState getState();
+
+  void setConfig(PointConfig config);
 }

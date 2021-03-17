@@ -142,8 +142,9 @@ public class MqttPublisher {
       MqttClient mqttClient = getConnectedClient(gatewayId);
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
-      LOG.info("Publishing attach message to topic " + topic);
+      LOG.info("Publishing attach message " + topic);
       mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), MQTT_QOS, SHOULD_RETAIN);
+      subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
     } catch (Exception e) {
       throw new RuntimeException("While binding client " + deviceId, e);

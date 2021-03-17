@@ -2,15 +2,16 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-if [ $# != 3 ]; then
-    echo $0 SITE_PATH PROJECT_ID DEVICE_ID
+if [ $# != 4 ]; then
+    echo $0 SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO
     false
 fi
 
 site_path=$1
 project_id=$2
 device_id=$3
-shift 3
+serial_no=$4
+shift 4
 
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
@@ -22,4 +23,4 @@ $ROOT_DIR/pubber/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-$ROOT_DIR/pubber/bin/run $project_id $site_path $device_id
+$ROOT_DIR/pubber/bin/run $project_id $site_path $device_id $serial_no

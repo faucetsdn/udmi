@@ -1,6 +1,8 @@
 *~
 
+udmi_site_model/
 gcp_reflect_key.pkcs8
+/pubber.out
 workspace.xml
 .gradle/
 .firebase/
@@ -10,8 +12,9 @@ firebase-debug.log
 /out/
 /validator/build/
 /validator/out/
+/validator_config.json
 /pubber/build/
 /sites/
 /attributes.json
 /venv/
-/rsa_p*
+/local/

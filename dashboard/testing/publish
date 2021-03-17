@@ -4,7 +4,7 @@ ROOT=$(dirname $0)/..
 cd $ROOT
 
 messages=undefined
-publisher="venv/bin/python testing/publisher.py bos-udmi-hub"
+publisher="venv/bin/python testing/publisher.py bos-daq-testing"
 
 if [ ! -d venv ]; then
     echo Run testing/install to setup python venv.
@@ -38,7 +38,7 @@ for file in $message_dir/*.json; do
     topic=${target%%_*}
     subpre=${target#${topic}}
     subescape=${subpre#_}
-    subfolder=$(tr - / <<< $subescape)
+    subfolder=$(tr _ / <<< $subescape)
     sed -e s:@subfolder@:$subfolder: testing/attributes.json > .attributes.json
-    $publisher $topic .attributes.json $file
+    $publisher udmi_$topic .attributes.json $file
 done

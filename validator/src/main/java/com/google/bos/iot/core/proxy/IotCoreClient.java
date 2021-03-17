@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,7 +16,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 
-public class IotCoreClient {
+public class IotCoreClient implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -35,18 +36,26 @@ public class IotCoreClient {
   private boolean active;
 
   public IotCoreClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
-    byte[] keyBytes = getFileBytes(keyFile);
-    siteName = iotConfig.registry_id;
-    this.projectId = projectId;
-    mqttPublisher = new MqttPublisher(projectId, iotConfig.cloud_region, UDMS_REFLECT,
-        siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
-    subscriptionId =
-        String.format("%s/%s/%s/%s", projectId, iotConfig.cloud_region, UDMS_REFLECT, iotConfig.registry_id);
-    active = true;
+    try {
+      byte[] keyBytes = getFileBytes(keyFile);
+      siteName = iotConfig.registry_id;
+      this.projectId = projectId;
+      mqttPublisher = new MqttPublisher(projectId, iotConfig.cloud_region, UDMS_REFLECT,
+          siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+      subscriptionId =
+          String.format("%s/%s/%s/%s", projectId, iotConfig.cloud_region, UDMS_REFLECT,
+              iotConfig.registry_id);
+      active = true;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(), e);
+    }
   }
 
   private void messageHandler(String topic, String payload) {
     final Map<String, String> attributes = new HashMap<>();
+    if (payload.length() == 0) {
+      return;
+    }
     TreeMap<String, Object> asMap;
     try {
       byte[] rawData = payload.getBytes();
@@ -92,8 +101,7 @@ public class IotCoreClient {
 
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
     System.err.println("mqtt client error: " + throwable.getMessage());
-    active = false;
-    mqttPublisher.close();
+    close();
   }
 
   private byte[] getFileBytes(String dataFile) {
@@ -120,6 +128,18 @@ public class IotCoreClient {
     } catch (Exception e) {
       throw new RuntimeException("While processing message on subscription " + subscriptionId, e);
     }
+  }
+
+  @Override
+  public void publish(String deviceId, String topic, String data) {
+    String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
+    mqttPublisher.publish(siteName, reflectorTopic, data);
+  }
+
+  @Override
+  public void close() {
+    active = false;
+    mqttPublisher.close();
   }
 
   static class MessageBundle {

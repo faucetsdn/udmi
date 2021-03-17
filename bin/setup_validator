@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.1
+
+if [[ $# != 1 ]]; then
+    echo $0 project_id
+    false
+fi
+
+site_model=udmi_site_model
+device_id=AHU-1
+serial_no=sequencer-$RANDOM
+project_id=$1
+shift
+
+if [ ! -d udmi_site_model ]; then
+    (
+        git clone ${TEST_SITE_GIT%~*}
+        cd udmi_site_model
+        git checkout ${TEST_SITE_GIT#*~} 2> /dev/null
+        git log -n 1
+    )
+fi
+
+cat <<EOF > validator_config.json
+{
+  "project_id": "$project_id",
+  "site_model": "$site_model",
+  "device_id": "$device_id",
+  "serial_no": "$serial_no",
+  "key_file": "$site_model/devices/$device_id/rsa_private.pkcs8"
+}
+EOF

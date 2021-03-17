@@ -172,6 +172,21 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
+  @Override
+  public String getSubscriptionId() {
+    return mqttClient.getClientId();
+  }
+
+  @Override
+  public boolean isActive() {
+    return mqttClient.isConnected();
+  }
+
+  @Override
+  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+    throw new IllegalStateException("Can't process message");
+  }
+
   private void attachClient(String deviceId) {
     try {
       LOG.info(this.deviceId + " attaching " + deviceId);
