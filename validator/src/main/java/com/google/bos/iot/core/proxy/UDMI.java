@@ -7,7 +7,7 @@ public class UDMI {
   static class State {
     public Number version = 1;
     public Date timestamp = new Date();
-    public SystemState system = new SystemState();
+    public SystemState system;
   }
 
   static class SystemState {

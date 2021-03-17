@@ -1,25 +1,31 @@
 #!/bin/bash -e
 
-device_id=AHU-1
+CONFIG_FILE=validator_config.json
+
 pubber=y
 if [[ $1 == -n ]]; then
     pubber=
     shift
 fi
 
-if [[ $# != 3 ]]; then
-    echo Usage: $0 [-n] site_model target_project sequences_dir
+if [[ $# != 0 ]]; then
+    echo Usage: $0 [-n]
     false
 fi
 
-SITE_MODEL=$1
-TARGET_PROJECT=$2
-SEQUENCES_DIR=$3
-shift 3
+project_id=`jq -r .project_id $CONFIG_FILE`
+site_model=`jq -r .site_model $CONFIG_FILE`
+device_id=`jq -r .device_id $CONFIG_FILE`
+serial_no=`jq -r .serial_no $CONFIG_FILE`
+echo Target project $project_id
+echo Site model $site_model
+echo Target device $device_id
+echo Device serial $serial_no
 
-if [[ -z $TARGET_PROJECT ]]; then
-    echo No target project defined, skipping tests.
-    exit 0
+awc=$(echo $project_id $site_model $device_id $serial_no | wc -w)
+if [[ $awc != 4 ]]; then
+    echo Missing configuration paramaters.
+    false
 fi
 
 PUBBER_OUT=pubber.out
@@ -32,9 +38,8 @@ if [[ -n $pubber ]]; then
         kill $pids
     fi
     echo Writing pubber output to $PUBBER_OUT
-    serial_no=sequencer-$RANDOM
-    echo bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no
-    bin/pubber $SITE_MODEL $TARGET_PROJECT $device_id $serial_no > $PUBBER_OUT 2>&1 &
+    echo bin/pubber $site_model $project_id $device_id $serial_no
+    bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
 
     while ! fgrep "Connection complete" $PUBBER_OUT; do
         echo Waiting for pubber startup...
@@ -45,24 +50,11 @@ fi
 validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.Validator"
+JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
 
 rm -rf out/devices/$device_id
-
-sequences=`ls $SEQUENCES_DIR`
-echo Executing seqeunces $sequences
-for sequence in $sequences; do
-    echo Starting sequence $sequence at `date`
-    echo $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
-    timeout 60s $JAVA_CMD bos-daq-testing schema reflect $device_id $SITE_MODEL sequences/$sequence
-    rm -rf out/devices/$device_id
-done
-
-seq_count=`echo $sequences | wc -w`
-if [ $seq_count != $EXPECTED_SEQUENCES ]; then
-    echo Found $seq_count not expected $EXPECTED_SEQUENCES sequences.
-    false
-fi
+echo $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
+timeout 120s $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
 
 if [[ -n $pubber ]]; then
     pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`

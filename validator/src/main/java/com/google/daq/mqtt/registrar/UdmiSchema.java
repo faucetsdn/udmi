@@ -65,6 +65,10 @@ public class UdmiSchema {
     public AssetMetadata asset;
   }
 
+  static class LocalnetMetadata {
+    public Map<String, LocalnetSubsystem> subsystem;
+  }
+
   static class AssetMetadata {
     public String guid;
     public String name;
@@ -75,7 +79,7 @@ public class UdmiSchema {
     public GatewayConfig gateway;
     public LocalnetConfig localnet;
     public PointsetConfig pointset;
-    public SystemConfig system;
+    public SystemConfig system = new SystemConfig();
   }
 
   static class GatewayConfig {
@@ -86,16 +90,20 @@ public class UdmiSchema {
     public Map<String, LocalnetSubsystem> subsystems = new TreeMap<>();
   }
 
-  static class PointsetConfig {
+  public static class PointsetConfig {
     public Map<String, PointConfig> points = new TreeMap<>();
+    public String etag;
   }
 
-  static class SystemConfig {
+  public static class SystemConfig {
+    public Integer min_loglevel;
+    public Integer max_update_ms;
   }
 
-  static class PointConfig {
+  public static class PointConfig {
     public String ref;
     public String units;
+    public Object set_value;
 
     static PointConfig fromMetadata(PointMetadata metadata) {
       PointConfig pointConfig = new PointConfig();
@@ -105,8 +113,46 @@ public class UdmiSchema {
     }
   }
 
-  static class LocalnetMetadata {
-    public Map<String, LocalnetSubsystem> subsystem;
+  public static class State extends UdmiBase {
+    public SystemState system;
+    public PointsetState pointset;
+  }
+
+  public static class SystemState {
+    public FirmwareState firmware;
+    public String last_config;
+    public String make_model;
+    public boolean operational;
+    public String serial_no;
+    public Map<String, Status> statuses;
+  }
+
+  public static class FirmwareState {
+    public String version;
+  }
+
+  public static class Status {
+    public String message;
+    public String category;
+    public Date timestamp;
+    public Integer level;
+  }
+
+  public static class PointsetState {
+    public Map<String, PointState> points = new TreeMap<>();
+    public String etag;
+  }
+
+  public static class PointState {
+    public String value_state;
+    public Entry status;
+  }
+
+  public static class Entry {
+    public String message;
+    public String category;
+    public Integer level;
+    public Date timestamp;
   }
 
   static class LocalnetSubsystem {

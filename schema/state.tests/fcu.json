@@ -29,16 +29,18 @@
         }
       },
       "fan_run_status": {
+        "value_state": "overridden",
         "status": {
-          "message": "Value overridden by fix_value",
+          "message": "Value overridden by set_value",
           "category": "com.acme.device.monitor",
           "timestamp": "2019-01-17T10:59:11.364Z",
           "level": 300
         }
       },
       "fan_run_enable": {
+        "value_state": "overridden",
         "status": {
-          "message": "Value overridden by fix_value",
+          "message": "Value overridden by set_value",
           "category": "com.acme.device.manager",
           "timestamp": "2019-01-17T13:14:55.364Z",
           "level": 300

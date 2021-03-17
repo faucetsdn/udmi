@@ -102,15 +102,12 @@ public class Validator {
   private final Set<String> ignoredRegistries = new HashSet();
   private CloudIotManager cloudIotManager;
   private String siteDir;
-  private File expectedDir;
-  private List<ExpectedMessage> expectedList;
   private String deviceId;
-  private int redundantCounter;
 
   public static void main(String[] args) {
-    if (args.length != 6) {
+    if (args.length != 5) {
       throw new IllegalArgumentException(
-          "Args: [project] [schema] [target] [instance] [site] [expect]");
+          "Args: [project] [schema] [target] [instance] [site]");
     }
     try {
       Validator validator = new Validator(args[0]);
@@ -118,12 +115,8 @@ public class Validator {
       String targetSpec = args[2];
       String instName = args[3];
       String siteDir = args[4];
-      String expectDir = args[5];
       if (!NO_SITE.equals(siteDir)) {
         validator.setSiteDir(siteDir);
-      }
-      if (!NO_SITE.equals(expectDir)) {
-        validator.setExpectDir(expectDir);
       }
       switch (targetSpec) {
         case PUBSUB_MARKER:
@@ -154,37 +147,10 @@ public class Validator {
     this.projectId = projectId;
   }
 
-  private void setExpectDir(String expectDir) {
-    expectedDir = new File(expectDir);
-    if (!expectedDir.isDirectory()) {
-      throw new IllegalArgumentException(
-          "Expected directory not valid: " + expectedDir.getAbsolutePath());
-    }
-    try {
-      expectedList = new ArrayList<>();
-      Arrays.stream(
-          Objects.requireNonNull(expectedDir.list()))
-          .filter(item -> item.endsWith(JSON_SUFFIX))
-          .sorted()
-          .forEach(item -> expectedList.add(loadMessage(expectedDir, item)));
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While loading expected messages from " + expectedDir.getAbsolutePath(), e);
-    }
-  }
-
-  private ExpectedMessage loadMessage(File expectedDir, String fileName) {
-    return new ExpectedMessage(new File(expectedDir, fileName));
-  }
-
   private void setSiteDir(String siteDir) {
     this.siteDir = siteDir;
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    try {
-      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudConfig);
-    } catch (Exception e) {
-      throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
-    }
+    cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudConfig);
 
     initializeExpectedDevices(siteDir);
   }
@@ -287,7 +253,7 @@ public class Validator {
         + client.getSubscriptionId() + " for device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     boolean initialized = false;
-    while (client.isActive() && sendNextExpected(client)) {
+    while (client.isActive()) {
       try {
         if (!initialized) {
           initialized = true;
@@ -316,109 +282,15 @@ public class Validator {
   private void validateMessage(Map<String, Schema> schemaMap, Map<String, Object> message,
       Map<String, String> attributes) {
     attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
-    if (expectedList != null) {
-      matchNextExpected(schemaMap, message, attributes);
-    } else if (validateUpdate(schemaMap, message, attributes)) {
+    if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
-  }
-
-  private void matchNextExpected(Map<String, Schema> schemaMap,
-      Map<String, Object> message, Map<String, String> attributes) {
-    try {
-      String schemaName = makeSchemaName(attributes);
-      File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
-      String timestamp = attributes.get(TIMESTAMP_ATTRIBUTE);
-
-      if (!validateSchema(schemaMap, message, schemaName, errorFile)) {
-        System.err.printf("Matching %s at %s failed schema check%n", schemaName, timestamp);
-        return;
-      }
-
-      List<ExpectedMessage> groupMessages = getExpectedGroupList(false);
-      if (groupMessages == null) {
-        return;
-      }
-      System.err.printf("Matching %s at %s: %s%n",
-          schemaName, timestamp, Joiner.on(" ").join(groupMessages));
-      int i = 0;
-      for (ExpectedMessage expectedMessage : groupMessages) {
-        i++;
-        boolean typeMatch = expectedMessage.messageTypeErrors(attributes).isEmpty();
-        if (!typeMatch) {
-          continue;
-        }
-        List<String> matchErrors = expectedMessage.matches(message, attributes);
-        if (matchErrors.isEmpty()) {
-          System.err.println("Successful match against " + expectedMessage.getName());
-          expectedList.remove(expectedMessage);
-          errorFile.delete();
-        } else {
-          matchErrors.add("against " + expectedMessage.getName());
-          System.err.printf("Match error (%d): %s%n", i, Joiner.on(", ").join(matchErrors));
-          try (PrintStream errorOut = new PrintStream(errorFile)) {
-            errorOut.print(Joiner.on("\n").join(matchErrors));
-          }
-        }
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While checking next match", e);
-    }
-  }
-
-  private boolean validateSchema(Map<String, Schema> schemaMap, Map<String, Object> message,
-      String schemaName, File errorFile) {
-    try {
-      sanitizeMessage(schemaName, message);
-      if (!schemaMap.containsKey(schemaName)) {
-        throw new ValidationException("Message schema not found: " + schemaName);
-      }
-      validateMessage(schemaMap.get(schemaName), message);
-    } catch (ValidationException e) {
-      try (PrintStream errorOut = new PrintStream(errorFile)) {
-        errorOut.println(e.getMessage());
-        if (e.getViolationCount() > 1) {
-          errorOut.println(Joiner.on("\n").join(e.getAllMessages()));
-        }
-      } catch (IOException e2) {
-        throw new RuntimeException("While writing error file " + errorFile.getAbsolutePath(), e2);
-      }
-      return false;
-    }
-    return true;
   }
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(TIMESTAMP_ATTRIBUTE);
     }
-  }
-
-  private boolean sendNextExpected(MessagePublisher sender) {
-    if (expectedList == null) {
-      return true;
-    }
-    List<ExpectedMessage> groupList = getExpectedGroupList(true);
-    if (groupList == null) {
-      return false;
-    }
-    for (ExpectedMessage sendingMessage : groupList) {
-      System.err.println("Sending message " + sendingMessage.getName());
-      sender.publish(deviceId, sendingMessage.getSendTopic(), sendingMessage.createMessage());
-      expectedList.remove(sendingMessage);
-    }
-    return !expectedList.isEmpty();
-  }
-
-  private List<ExpectedMessage> getExpectedGroupList(boolean sendMessage) {
-    if (expectedList == null || expectedList.isEmpty()) {
-      return null;
-    }
-    ExpectedMessage firstMessage = expectedList.get(0);
-    List<ExpectedMessage> groupList = expectedList.stream()
-        .filter(item -> item.isSameGroup(firstMessage) && item.isSendMessage() == sendMessage)
-        .collect(Collectors.toList());
-    return groupList;
   }
 
   private boolean validateUpdate(Map<String, Schema> schemaMap, Map<String, Object> message,
@@ -564,8 +436,12 @@ public class Validator {
       return "event_" + subFolder;
     }
 
-    if (!subType.endsWith("s")) {
-      throw new RuntimeException("Malformed message subType " + subType);
+    if (subFolder.equals("update")) {
+      if (!subType.equals("config") && !subType.equals("state")) {
+        throw new RuntimeException("Unrecognized update type " + subType);
+      }
+    } else if (!subType.endsWith("s")) {
+      throw new RuntimeException("Malformed plural subType " + subType);
     }
 
     return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
@@ -626,15 +502,6 @@ public class Validator {
     }
     try (PrintStream errorOut = new PrintStream(errorFile)) {
       errorTree.write(errorOut);
-    }
-  }
-
-  private Config getCurrentConfig(String deviceId) {
-    String deviceConfig = cloudIotManager.getDeviceConfig(deviceId);
-    try {
-      return OBJECT_MAPPER.readValue(deviceConfig, Config.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting previous config " + deviceId);
     }
   }
 

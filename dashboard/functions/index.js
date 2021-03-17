@@ -155,6 +155,11 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
 
 function process_state_update(attributes, msgObject) {
   let promises = [];
+  const deviceId = attributes.deviceId;
+  const registryId = attributes.deviceRegistryId;
+
+  const commandFolder = `devices/${deviceId}/update/state`;
+  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
 
   attributes.subType = 'states';
   for (var block in msgObject) {
@@ -179,6 +184,11 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const base64 = event.data;
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
+
+  if (!msgString) {
+    console.log('udmi_config abort', registryId, deviceId, subFolder, msgString);
+    return null;
+  }
   const msgObject = JSON.parse(msgString);
 
   attributes.subType = 'configs';
@@ -205,7 +215,6 @@ function update_device_config(message, attributes) {
     registryId,
     deviceId
   );
-
   console.log('iot modify config', formattedName, msgString);
 
   const request = {
@@ -213,8 +222,11 @@ function update_device_config(message, attributes) {
     versionToUpdate: version,
     binaryData: binaryData
   };
+  const commandFolder = `devices/${deviceId}/update/config`;
 
-  return iotClient.modifyCloudToDeviceConfig(request);
+  return iotClient
+    .modifyCloudToDeviceConfig(request)
+    .then(() => sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
 }
 
 function consolidateConfig(registryId, deviceId) {
