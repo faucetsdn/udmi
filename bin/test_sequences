@@ -22,6 +22,12 @@ echo Site model $site_model
 echo Target device $device_id
 echo Device serial $serial_no
 
+awc=$(echo $project_id $site_model $device_id $serial_no | wc -w)
+if [[ $awc != 4 ]]; then
+    echo Missing configuration paramaters.
+    false
+fi
+
 PUBBER_OUT=pubber.out
 EXPECTED_SEQUENCES=2
 
