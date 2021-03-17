@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "daq-haoli": {
+      "hosting": {
+        "udms": [
+          "daq-haoli"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "daq-haoli"
+  }
+}

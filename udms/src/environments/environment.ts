@@ -3,7 +3,18 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  useEmulators: true,
+  firebase: {
+    apiKey: 'AIzaSyDUYzU1MvYxVsQLaaj0FZmXaOC9Nr7ISkA',
+    authDomain: 'daq-haoli.firebaseapp.com',
+    databaseURL: 'https://daq-haoli.firebaseio.com',
+    projectId: 'daq-haoli',
+    storageBucket: 'daq-haoli.appspot.com',
+    messagingSenderId: '626087530111',
+    appId: '1:626087530111:web:1672d5b94b6ac8ba4e394a',
+    measurementId: 'G-KBL9KKY0KZ'
+  }
 };
 
 /*
