@@ -13,7 +13,6 @@ import daq.udmi.Message.Pointset;
 import daq.udmi.Message.PointsetConfig;
 import daq.udmi.Message.PointsetState;
 import daq.udmi.Message.State;
-import daq.udmi.Message.UdmiBase;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -96,8 +95,6 @@ public class Pubber {
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
-    loadCloudConfig();
-    loadDeviceMetadata();
   }
 
   private void loadDeviceMetadata() {
@@ -126,6 +123,10 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    if (configuration.sitePath != null) {
+      loadCloudConfig();
+      loadDeviceMetadata();
+    }
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
