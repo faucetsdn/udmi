@@ -7,11 +7,13 @@ import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
 import daq.udmi.Message;
+import daq.udmi.Message.Metadata;
 import daq.udmi.Message.PointConfig;
 import daq.udmi.Message.Pointset;
 import daq.udmi.Message.PointsetConfig;
 import daq.udmi.Message.PointsetState;
 import daq.udmi.Message.State;
+import daq.udmi.Message.UdmiBase;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -95,6 +97,20 @@ public class Pubber {
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     loadCloudConfig();
+    loadDeviceMetadata();
+  }
+
+  private void loadDeviceMetadata() {
+    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
+    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
+    File devicesFile = new File(new File(configuration.sitePath), "devices");
+    File deviceDir = new File(devicesFile, configuration.deviceId);
+    File deviceMetadataFile = new File(deviceDir, "metadata.json");
+    try {
+      Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+    }
   }
 
   private void loadCloudConfig() {

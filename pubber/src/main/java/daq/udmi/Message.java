@@ -80,4 +80,8 @@ public class Message {
     public Integer version = 1;
     public Date timestamp = new Date();
   }
+
+  public static class Metadata {
+
+  }
 }
