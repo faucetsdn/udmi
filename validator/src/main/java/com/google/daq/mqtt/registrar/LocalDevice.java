@@ -247,10 +247,7 @@ class LocalDevice {
   }
 
   private boolean isDeviceKeySource() {
-    if (metadata.cloud == null) {
-      return false;
-    }
-    return metadata.cloud.device_key;
+    return metadata.cloud == null ? null : Boolean.TRUE.equals(metadata.cloud.device_key);
   }
 
   private String getAuthFileType() {

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.2
+TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.3
 
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR

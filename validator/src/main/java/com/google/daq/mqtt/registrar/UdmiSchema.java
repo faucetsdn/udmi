@@ -32,7 +32,7 @@ public class UdmiSchema {
 
   static class CloudMetadata {
     public String auth_type;
-    public boolean device_key;
+    public Boolean device_key;
   }
 
   public static class PointsetMetadata {
@@ -79,7 +79,7 @@ public class UdmiSchema {
     public GatewayConfig gateway;
     public LocalnetConfig localnet;
     public PointsetConfig pointset;
-    public SystemConfig system = new SystemConfig();
+    public SystemConfig system;
   }
 
   static class GatewayConfig {
