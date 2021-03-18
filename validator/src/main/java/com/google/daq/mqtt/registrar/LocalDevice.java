@@ -82,14 +82,14 @@ class LocalDevice {
 
   private static final String ES_AUTH_TYPE = "ES256";
   private static final String ES_CERT_TYPE = "ES256_X509";
-  private static final String ES_KEY_FORMAT = "ES_PEM";
-  private static final String ES_CERT_FILE = "ES_X509_PEM";
-  private static final String ES_PUBLIC_PEM = "es_public.pem";
-  private static final String ES2_PUBLIC_PEM = "es2_public.pem";
-  private static final String ES3_PUBLIC_PEM = "es3_public.pem";
-  private static final String ES_CERT_PEM = "es_cert.pem";
-  private static final String ES_PRIVATE_PEM = "es_private.pem";
-  private static final String ES_PRIVATE_PKCS8 = "es_private.pkcs8";
+  private static final String ES_KEY_FORMAT = "ES256_PEM";
+  private static final String ES_CERT_FILE = "ES256_X509_PEM";
+  private static final String ES_PUBLIC_PEM = "ec_public.pem";
+  private static final String ES2_PUBLIC_PEM = "ec2_public.pem";
+  private static final String ES3_PUBLIC_PEM = "ec3_public.pem";
+  private static final String ES_CERT_PEM = "ec_cert.pem";
+  private static final String ES_PRIVATE_PEM = "ec_private.pem";
+  private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
 
   private static final String SAMPLES_DIR = "samples";
 
