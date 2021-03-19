@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -68,25 +69,61 @@ class LocalDevice {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .enable(SerializationFeature.INDENT_OUTPUT);
 
+  private static final String RSA_AUTH_TYPE = "RS256";
   private static final String RSA_CERT_TYPE = "RS256_X509";
-  private static final String RSA_KEY_FILE = "RSA_PEM";
-  private static final String RSA_CERT_FILE = "RSA_X509_PEM";
+  private static final String RSA_KEY_FORMAT = "RSA_PEM";
+  private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
+
+  private static final String ES_AUTH_TYPE = "ES256";
+  private static final String ES_CERT_TYPE = "ES256_X509";
+  private static final String ES_KEY_FORMAT = "ES256_PEM";
+  private static final String ES_CERT_FILE = "ES256_X509_PEM";
+  private static final String ES_PUBLIC_PEM = "ec_public.pem";
+  private static final String ES2_PUBLIC_PEM = "ec2_public.pem";
+  private static final String ES3_PUBLIC_PEM = "ec3_public.pem";
+  private static final String ES_CERT_PEM = "ec_cert.pem";
+  private static final String ES_PRIVATE_PEM = "ec_private.pem";
+  private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
+
   private static final String SAMPLES_DIR = "samples";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
   private static final Set<String> RSA_PRIVATE_KEY_FILES = ImmutableSet.of(
       RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
+  private static final Set<String> ES_PRIVATE_KEY_FILES = ImmutableSet.of(
+      ES_PRIVATE_PEM, ES_PRIVATE_PKCS8);
+  private static final Map<String, Set<String>> PRIVATE_KEY_FILES_MAP = ImmutableMap.of(
+      RSA_AUTH_TYPE, RSA_PRIVATE_KEY_FILES,
+      RSA_CERT_TYPE, RSA_PRIVATE_KEY_FILES,
+      ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
+      ES_CERT_TYPE, ES_PRIVATE_KEY_FILES
+  );
+  private static final Map<String, String> PUBLIC_KEY_FILE_MAP = ImmutableMap.of(
+      RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
+      RSA_CERT_TYPE, RSA_CERT_PEM,
+      ES_AUTH_TYPE, ES_PUBLIC_PEM,
+      ES_CERT_TYPE, ES_CERT_PEM
+  );
+
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
-      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
+      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
   private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
-      RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM
+      RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
+      ES_CERT_PEM, ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
+  );
+
+  private static final Map<String, String> AUTH_TYPE_MAP = ImmutableMap.of(
+      RSA_AUTH_TYPE, RSA_KEY_FORMAT,
+      RSA_CERT_TYPE, RSA_CERT_FORMAT,
+      ES_AUTH_TYPE, ES_KEY_FORMAT,
+      ES_CERT_TYPE, ES_CERT_FILE
   );
 
   public static final String POINTSET_SUBFOLDER = "pointset";
@@ -201,30 +238,35 @@ class LocalDevice {
     }
   }
 
+  private boolean hasAuthType() {
+    return metadata.cloud != null && metadata.cloud.auth_type != null;
+  }
+
   private String getAuthType() {
     return metadata.cloud == null ? null : metadata.cloud.auth_type;
   }
 
   private boolean isDeviceKeySource() {
-    if (metadata.cloud == null) {
-      return false;
-    }
-    return metadata.cloud.device_key;
+    return metadata.cloud == null ? null : Boolean.TRUE.equals(metadata.cloud.device_key);
   }
 
   private String getAuthFileType() {
-    return RSA_CERT_TYPE.equals(getAuthType()) ? RSA_CERT_FILE : RSA_KEY_FILE;
+    String authType = getAuthType();
+    if (!AUTH_TYPE_MAP.containsKey(authType)) {
+      throw new RuntimeException("Invalid auth type: " + authType);
+    }
+    return AUTH_TYPE_MAP.get(authType);
   }
 
   public void loadCredentials() {
     try {
-      if (hasGateway() && getAuthType() != null) {
+      if (hasGateway() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
       if (!isDirectConnect()) {
         return;
       }
-      if (getAuthType() == null) {
+      if (!hasAuthType()) {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
       deviceCredentials = new ArrayList<>();
@@ -262,14 +304,14 @@ class LocalDevice {
   }
 
   private Set<String> privateKeyFiles() {
-    if (isDeviceKeySource()) {
+    if (isDeviceKeySource() || !hasAuthType()) {
       return Set.of();
     }
-    return RSA_PRIVATE_KEY_FILES;
+    return PRIVATE_KEY_FILES_MAP.get(getAuthType());
   }
 
   private String publicKeyFile() {
-    return RSA_CERT_TYPE.equals(getAuthType()) ? RSA_CERT_PEM : RSA_PUBLIC_PEM;
+    return PUBLIC_KEY_FILE_MAP.get(getAuthType());
   }
 
   boolean isGateway() {

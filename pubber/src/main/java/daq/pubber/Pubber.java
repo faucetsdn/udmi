@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.udmi.Entry;
 import daq.udmi.Message;
+import daq.udmi.Message.Metadata;
 import daq.udmi.Message.PointConfig;
 import daq.udmi.Message.Pointset;
 import daq.udmi.Message.PointsetConfig;
@@ -47,7 +48,7 @@ public class Pubber {
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
   private static final int LOGGING_MOD_COUNT = 10;
-  public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/rsa_private.pkcs8";
+  public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -94,7 +95,23 @@ public class Pubber {
     configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
-    loadCloudConfig();
+  }
+
+  private void loadDeviceMetadata() {
+    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
+    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
+    File devicesFile = new File(new File(configuration.sitePath), "devices");
+    File deviceDir = new File(devicesFile, configuration.deviceId);
+    File deviceMetadataFile = new File(deviceDir, "metadata.json");
+    try {
+      Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      if (metadata.cloud != null) {
+        configuration.algorithm = metadata.cloud.auth_type;
+        LOG.info("Configuring with metadata key type " + configuration.algorithm);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+    }
   }
 
   private void loadCloudConfig() {
@@ -110,6 +127,10 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    if (configuration.sitePath != null) {
+      loadCloudConfig();
+      loadDeviceMetadata();
+    }
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
@@ -212,7 +233,7 @@ public class Pubber {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
-          configuration.deviceId);
+          configuration.deviceId, getDeviceKeyPrefix());
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
@@ -227,6 +248,10 @@ public class Pubber {
     }
     mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
         this::configHandler, Message.Config.class);
+  }
+
+  private String getDeviceKeyPrefix() {
+    return configuration.algorithm.startsWith("RS") ? "rs" : "ec";
   }
 
   private void connect() {

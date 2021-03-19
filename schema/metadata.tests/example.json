@@ -21,6 +21,9 @@
       "suffix": "extention11-optional"
     }
   },
+  "cloud": {
+    "auth_type": "ES256"
+  },
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {

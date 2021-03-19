@@ -1,5 +1,6 @@
 package daq.udmi;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -79,5 +80,14 @@ public class Message {
   public static class UdmiBase {
     public Integer version = 1;
     public Date timestamp = new Date();
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Metadata {
+    public CloudMetadata cloud;
+  }
+
+  public static class CloudMetadata {
+    public String auth_type;
   }
 }

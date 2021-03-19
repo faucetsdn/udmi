@@ -6,6 +6,8 @@
   "properties": {
     "auth_type": {
       "enum": [
+        "ES256",
+        "ES256_X506",
         "RS256",
         "RS256_X506"
       ]
