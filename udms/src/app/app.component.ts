@@ -18,15 +18,12 @@ export class AppComponent implements OnInit {
   constructor(private originsService: OriginsService, private auth: AuthService) { }
 
   ngOnInit(): void {
-    this.user = this.auth.getUser().pipe(map((user) => {
-      return user;
-    }));
+    this.user = this.auth.getUser();
     this.origins = this.originsService.getOrigins().pipe(map((origins) => {
       if (this.selectedOrigin || !origins.length) {
         return origins;
       }
-      this.selectedOrigin = origins[0]; // Defaults to first origin
-      this.changeOrigin(this.selectedOrigin);
+      this.changeOrigin(origins[0]); // Defaults to first origin
       return origins;
     }));
   }

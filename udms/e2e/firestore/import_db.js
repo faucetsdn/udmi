@@ -6,7 +6,9 @@ const path = require('path');
 const assert = require('assert').strict;
 
 const firebaseConfig = {
-    projectId: "daq-haoli", // Any id will work as long as UI is also connecting using the same id
+    // Any id will work as long as UI is also connecting using the same id
+    // Default projects are specified in project root/.firebasrc 
+    projectId: "bos-daq-testing", 
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();

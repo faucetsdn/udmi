@@ -7,7 +7,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "firebase emulators:exec 'node e2e/firestore/import_db.js && ng e2e'"
   },
   "private": true,
   "dependencies": {
@@ -31,6 +31,7 @@
     "@angular-devkit/build-angular": "0.1102.4",
     "@angular/cli": "11.2.4",
     "@angular/compiler-cli": "11.2.5",
+    "@firebase/rules-unit-testing": "^1.2.4",
     "@types/jasmine": "3.6.3",
     "@types/node": "12.19.16",
     "codelyzer": "6.0.1",

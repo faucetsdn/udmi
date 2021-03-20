@@ -6,14 +6,13 @@ export const environment = {
   production: false,
   useEmulators: true,
   firebase: {
-    apiKey: 'AIzaSyDUYzU1MvYxVsQLaaj0FZmXaOC9Nr7ISkA',
-    authDomain: 'daq-haoli.firebaseapp.com',
-    databaseURL: 'https://daq-haoli.firebaseio.com',
-    projectId: 'daq-haoli',
-    storageBucket: 'daq-haoli.appspot.com',
-    messagingSenderId: '626087530111',
-    appId: '1:626087530111:web:1672d5b94b6ac8ba4e394a',
-    measurementId: 'G-KBL9KKY0KZ'
+    apiKey: 'AIzaSyANL8VhKgHhD71lMNw6MUa_CRlpQs6Z0Pc',
+    authDomain: 'bos-daq-testing.firebaseapp.com',
+    databaseURL: 'https://bos-daq-testing.firebaseio.com',
+    projectId: 'bos-daq-testing',
+    storageBucket: 'bos-daq-testing.appspot.com',
+    messagingSenderId: '876218417738',
+    appId: '1:876218417738:web:8d28cdba7f56f6a9c9dcb3'
   }
 };
 

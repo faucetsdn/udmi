@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Device, DeviceSearch, DevicesService } from '../../services/devices.service';
 import { Origin, OriginsService } from '../../services/origins.service';
 

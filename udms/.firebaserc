@@ -1,14 +1,6 @@
 {
-  "targets": {
-    "daq-haoli": {
-      "hosting": {
-        "udms": [
-          "daq-haoli"
-        ]
-      }
-    }
-  },
   "projects": {
-    "default": "daq-haoli"
+    "default": "bos-daq-testing",
+    "test": "bos-daq-testing"
   }
 }

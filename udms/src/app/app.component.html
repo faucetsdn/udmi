@@ -5,8 +5,16 @@
     <span routerLink="/dashboard" class="title">{{title}}</span>
     <span class="spacer"></span>
     <span *ngIf="user | async as user">
-        <span>{{user.name}}</span>
-        <button mat-button [matMenuTriggerFor]="menu">{{selectedOrigin ? selectedOrigin.id : "Choose Origin"}}</button>
+        <button mat-button [matMenuTriggerFor]="userMenu">
+            {{user.name}}
+        </button>
+        <mat-menu #userMenu="matMenu">
+            <button mat-menu-item routerLink="/login">Sign Out</button>
+        </mat-menu>
+        <button mat-button [matMenuTriggerFor]="menu">
+            {{selectedOrigin ? selectedOrigin.id : "Choose Origin"}}
+            <mat-icon>keyboard_arrow_down</mat-icon>
+        </button>
         <mat-menu #menu="matMenu">
             <span *ngIf="origins | async as origins">
                 <button mat-menu-item *ngFor="let origin of origins"

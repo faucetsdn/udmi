@@ -8,10 +8,10 @@
     <mat-card-header>
         <mat-card-title>
             {{selectedMetric.type | titlecase}}
-            <mat-card-subtitle>
-                Updated: {{selectedMetric.metric.timestamp | date: "short"}}
-            </mat-card-subtitle>
         </mat-card-title>
+        <mat-card-subtitle>
+            Updated: {{selectedMetric.metric.timestamp | date: "short"}}
+        </mat-card-subtitle>
         <div class="close-icon">
             <mat-icon (click)="unSelectedMetric()">close</mat-icon>
         </div>
@@ -27,7 +27,6 @@
         <div *ngIf="selectedMetric.metric.changeCount !== undefined">
             Change Count: {{selectedMetric.metric.changeCount}}
         </div>
-
     </mat-card-content>
 </mat-card>
 <ng-template #noOrigin>
