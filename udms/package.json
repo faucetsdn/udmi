@@ -7,7 +7,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "firebase emulators:exec 'node e2e/firestore/import_db.js && ng e2e'"
+    "e2e": "firebase emulators:exec 'node e2e/firestore/import_db.js && ng e2e' --project bos-daq-testing"
   },
   "private": true,
   "dependencies": {
