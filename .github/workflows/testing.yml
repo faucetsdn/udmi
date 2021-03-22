@@ -39,13 +39,13 @@ jobs:
       - name: Install dependencies
         run: cd udms && npm install
       - name: Install angular command line
-        run: cd udms && npm install -g @angular/cli
+        run: cd udms && npm install -g @angular/cli firebase-tools
       - name: Running lint
         run: cd udms && ng lint
       - name: Running unit tests
         run: cd udms && ng test --browsers ChromeHeadless --code-coverage=true --watch=false
       - name: Running e2e
-        run: cd udms && ng e2e
+        run: cd udms && npm run e2e 
 
   udmi:
     runs-on: ubuntu-latest

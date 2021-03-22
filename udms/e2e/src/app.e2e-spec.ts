@@ -8,9 +8,20 @@ describe('workspace-project App', () => {
     page = new AppPage();
   });
 
-  it('should display welcome message', async () => {
+  it('should display title', async () => {
     await page.navigateTo();
-    expect(await page.getTitleText()).toEqual('udms app is running!');
+    expect(await page.getTitleText()).toEqual('UDMS');
+  });
+
+  it('should be redirected to signin page', async () => {
+    await page.navigateTo('/dashboard');
+    expect(await page.getCurrentUrl()).toEqual('login');
+  });
+
+  it('should be able to navigate to dashboard when signed in', async () => {
+    await page.signIn();
+    await page.navigateTo('/dashboard');
+    expect(await page.getCurrentUrl()).toEqual('dashboard');
   });
 
   afterEach(async () => {
