@@ -7,7 +7,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "firebase emulators:exec 'node e2e/firestore/import_db.js && ng e2e' --project bos-daq-testing"
+    "e2e": "(cd functions && npm run build); firebase emulators:exec 'node e2e/firestore/import_db.js && ng e2e' --project bos-daq-testing"
   },
   "private": true,
   "dependencies": {
@@ -36,6 +36,7 @@
     "@types/node": "12.19.16",
     "codelyzer": "6.0.1",
     "firebase-admin": "^9.5.0",
+    "firebase-functions": "^3.13.2",
     "jasmine-core": "3.6.0",
     "jasmine-spec-reporter": "6.0.0",
     "karma": "^6.2.0",
