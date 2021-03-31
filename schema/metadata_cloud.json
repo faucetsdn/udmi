@@ -7,9 +7,9 @@
     "auth_type": {
       "enum": [
         "ES256",
-        "ES256_X506",
+        "ES256_X509",
         "RS256",
-        "RS256_X506"
+        "RS256_X509"
       ]
     },
     "is_gateway": {
