@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 MODEL_DIR=udmi_site_model
-MODEL_VER=1.3
+MODEL_VER=1.4
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
 
 mkdir -p sites
