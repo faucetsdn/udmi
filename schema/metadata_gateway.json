@@ -6,7 +6,7 @@
   "properties": {
     "gateway_id": {
       "type": "string",
-      "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
+      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
     },
     "subsystem": {
       "type": "string",
@@ -16,7 +16,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
+        "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
       }
     }
   },

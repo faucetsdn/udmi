@@ -38,6 +38,6 @@
   },
   "gateway": {
     "subsystem": "bacnet",
-    "gateway_id": "GAT-123"
+    "gateway_id": "LTGW-123"
   }
 }
