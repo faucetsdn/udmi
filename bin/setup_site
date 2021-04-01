@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+MODEL_DIR=udmi_site_model
+MODEL_VER=1.3
+TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
+
+mkdir -p sites
+cd sites
+
+if [[ -d $MODEL_DIR ]]; then
+    cd $MODEL_DIR
+    git fetch
+else
+    git clone $TEST_SITE_GIT
+    cd $MODEL_DIR
+fi
+
+git checkout $MODEL_VER
+git log -n 1
