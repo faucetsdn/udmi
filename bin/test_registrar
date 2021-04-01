@@ -5,7 +5,7 @@ cd $ROOT_DIR
 
 bin/setup_site
 
-TEST_SITE=sites/udmi_site_model
+TEST_SITE=udmi_site_model
 
 bin/registrar $TEST_SITE
 
