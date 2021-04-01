@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.3
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
 
 if [[ $# != 1 ]]; then
     echo $0 project_id
@@ -13,14 +14,7 @@ serial_no=sequencer-$RANDOM
 project_id=$1
 shift
 
-if [ ! -d udmi_site_model ]; then
-    (
-        git clone ${TEST_SITE_GIT%~*}
-        cd udmi_site_model
-        git checkout ${TEST_SITE_GIT#*~} 2> /dev/null
-        git log -n 1
-    )
-fi
+bin/setup_site
 
 cat <<EOF > validator_config.json
 {

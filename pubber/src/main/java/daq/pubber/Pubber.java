@@ -251,7 +251,7 @@ public class Pubber {
   }
 
   private String getDeviceKeyPrefix() {
-    return configuration.algorithm.startsWith("RS") ? "rs" : "ec";
+    return configuration.algorithm.startsWith("RS") ? "rsa" : "ec";
   }
 
   private void connect() {

@@ -1,21 +1,11 @@
 #!/bin/bash -e
 
-TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git~1.3
-
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-TEST_SITE=sites/udmi_site_model
+bin/setup_site
 
-rm -rf $TEST_SITE
-mkdir -p sites
-(
-    cd sites
-    git clone ${TEST_SITE_GIT%~*}
-    cd udmi_site_model
-    git checkout ${TEST_SITE_GIT#*~}
-    git log -n 1
-)
+TEST_SITE=udmi_site_model
 
 bin/registrar $TEST_SITE
 
