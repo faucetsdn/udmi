@@ -30,7 +30,7 @@ public class UdmiSchema {
     public String hash;
   }
 
-  static class CloudMetadata {
+  public static class CloudMetadata {
     public String auth_type;
     public Boolean device_key;
   }
@@ -50,7 +50,7 @@ public class UdmiSchema {
     public String subsystem;
   }
 
-  static class PointMetadata {
+  public static class PointMetadata {
     public String units;
     public String ref;
   }
@@ -163,7 +163,7 @@ public class UdmiSchema {
     public Map<String, PointData> points = new TreeMap<>();
   }
 
-  static class PointData {
+  public static class PointData {
     public Object present_value;
   }
 }

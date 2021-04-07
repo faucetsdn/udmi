@@ -236,7 +236,8 @@ public class Validator {
   }
 
   private void validatePubSub(String instName) {
-    PubSubClient client = new PubSubClient(projectId, instName);
+    String registryId = cloudIotConfig.registry_id;
+    PubSubClient client = new PubSubClient(projectId, registryId, instName);
     messageLoop(client);
   }
 
