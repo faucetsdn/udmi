@@ -74,7 +74,7 @@ public class ReportingDevice {
   }
 
   private Map<String, PointMetadata> getPoints(Metadata metadata) {
-    if (metadata.pointset == null || metadata.pointset.points == null) {
+    if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
       return ImmutableMap.of();
     }
     return metadata.pointset.points;
