@@ -10,7 +10,8 @@
     "operational": true
   },
   "pointset": {
-    "etag": "2a8b718",
+    "state_etag": "2a8b718",
+    "config_etag": "2a129318",
     "points": {
       "room_temperature": {
         "value_state": "applied"

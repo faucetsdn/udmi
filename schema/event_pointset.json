@@ -4,9 +4,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "etag": {
-      "type": "string"
-    },
     "timestamp": {
       "type": "string",
       "format": "date-time"
@@ -15,6 +12,10 @@
       "enum": [
         1
       ]
+    },
+    "config_etag": {
+      "type": "string",
+      "maxLength": 32
     },
     "points": {
       "additionalProperties": false,

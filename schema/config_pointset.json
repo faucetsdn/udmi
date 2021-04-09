@@ -4,8 +4,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "etag": {
-      "type": "string"
+    "config_etag": {
+      "type": "string",
+      "maxLength": 32
+    },
+    "state_etag": {
+      "type": "string",
+      "maxLength": 32
     },
     "sample_limit_sec": {
       "type": "number",

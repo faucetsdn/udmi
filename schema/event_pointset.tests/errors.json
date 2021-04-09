@@ -6,6 +6,7 @@
   "properties": {
     "$comment": "Common error cases for target telemetry."
   },
+  "state_etag": "oh oh oh",
   "points": {
     "comment$string": "world",
     "analogValue_1": {

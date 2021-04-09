@@ -1,7 +1,7 @@
 Validating 1 schemas
   Validating 1 files against event_pointset.json
     Against input event_pointset.tests/errors.json
-      #: 13 schema violations found
+      #: 14 schema violations found
         #/points: 10 schema violations found
           #/points/guid: expected type: JSONObject, found: String
           #/points/missing_present_value: required key [present_value] not found
@@ -20,3 +20,4 @@ Validating 1 schemas
         #: extraneous key [comment$string] is not permitted
         #: extraneous key [id] is not permitted
         #: extraneous key [properties] is not permitted
+        #: extraneous key [state_etag] is not permitted
