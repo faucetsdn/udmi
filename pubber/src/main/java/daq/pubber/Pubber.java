@@ -295,9 +295,9 @@ public class Pubber {
     try {
       final int actualInterval;
       if (config != null) {
-        String etag = deviceState.pointset == null ? null : deviceState.pointset.etag;
+        String config_etag = deviceState.pointset == null ? null : deviceState.pointset.config_etag;
         info(String.format("%s received new config %s %s",
-            getTimestamp(), etag, isoConvert(config.timestamp)));
+            getTimestamp(), config_etag, isoConvert(config.timestamp)));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.system);
         updatePointsetConfig(config.pointset);
@@ -331,8 +331,8 @@ public class Pubber {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     allPoints.forEach(point ->
         updatePointConfig(point, useConfig.points.get(point.getName())));
-    deviceState.pointset.etag = useConfig.etag;
-    devicePoints.etag = useConfig.etag;
+    deviceState.pointset.config_etag = useConfig.config_etag;
+    devicePoints.config_etag = useConfig.config_etag;
   }
 
   private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
