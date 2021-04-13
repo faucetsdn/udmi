@@ -11,13 +11,19 @@ rm -f $errorfile
 build=y
 force=n
 
-while getopts ":fn" opt; do
+schemadir=schema
+datadir=$schemadir
+
+while getopts "d:fn" opt; do
     case $opt in
         f) force=y
             ;;
         n) build=n
            ;;
-        \?) echo "Usage: $0 [-f] [-n]"
+        d) 
+          datadir=${OPTARG}
+          ;;
+        \?) echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
             exit -1
             ;;
     esac
@@ -32,18 +38,17 @@ fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 
-rootdir=schema
-subsets=$(cd $rootdir; ls -d *.tests)
+subsets=$(cd $datadir; ls -d *.tests)
 for subset in $subsets; do
     if [ -z "$subset" ]; then
         echo Schema $schema has no .tests dirs.
         false
     fi
     schemaname=${subset%.tests}.json
-    testfiles=$(cd $rootdir/$subset; ls *.json)
+    testfiles=$(cd $datadir/$subset; ls *.json)
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out
-        testdir=$rootdir/$subset
+        testdir=$datadir/$subset
         testpath=$testdir/$testfile
         expected=$testdir/$outfile
         outdir=$outroot/${testdir#${schema_root}/}
@@ -51,8 +56,12 @@ for subset in $subsets; do
         output=$outdir/$outfile
         
         error=0
-        reltest=${testpath#$rootdir/}
-        (cd $rootdir; java -jar $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
+        if [[ "$datadir" == "$schemadir" ]]; then
+          reltest=${testpath#$datadir/}
+        else
+          reltest=$(realpath $testpath)
+        fi
+        (cd $schemadir; java -jar $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
         if [ $force == y ]; then
             diff $expected $output || echo Updating $expected && cp $output $expected
         else
