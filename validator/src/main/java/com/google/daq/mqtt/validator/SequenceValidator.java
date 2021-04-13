@@ -224,7 +224,7 @@ public abstract class SequenceValidator {
       System.err.println(getTimestamp() + " updated system loglevel " + deviceConfig.system.min_loglevel);
     }
     if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
-      System.err.println(getTimestamp() + " updated pointset etag " + deviceConfig.pointset.etag);
+      System.err.println(getTimestamp() + " updated pointset config_etag " + deviceConfig.pointset.config_etag);
     }
   }
 
@@ -266,22 +266,22 @@ public abstract class SequenceValidator {
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,
         state -> deviceState.pointset = state)) {
-      String etag = deviceState.pointset == null ? null : deviceState.pointset.etag;
-      System.err.printf("%s received state etag %s%n", getTimestamp(), etag);
+      String config_etag = deviceState.pointset == null ? null : deviceState.pointset.config_etag;
+      System.err.printf("%s received state config_etag %s%n", getTimestamp(), config_etag);
     }
     validSerialNo();
   }
 
   private void dumpConfigUpdate(Map<String, Object> message) {
     Config config = messageConvert(Config.class, message);
-    String etag = config.pointset == null ? null : config.pointset.etag;
-    System.err.println(getTimestamp() + " update config etag " + etag);
+    String config_etag = config.pointset == null ? null : config.pointset.config_etag;
+    System.err.println(getTimestamp() + " update config config_etag " + config_etag);
   }
 
   private void dumpStateUpdate(Map<String, Object> message) {
     State state = messageConvert(State.class, message);
-    String etag = state.pointset == null ? null : state.pointset.etag;
-    System.err.println(getTimestamp() + " update state etag " + etag);
+    String config_etag = state.pointset == null ? null : state.pointset.config_etag;
+    System.err.println(getTimestamp() + " update state config_etag " + config_etag);
   }
 
   protected boolean validSerialNo() {

@@ -92,7 +92,7 @@ public class UdmiSchema {
 
   public static class PointsetConfig {
     public Map<String, PointConfig> points = new TreeMap<>();
-    public String etag;
+    public String config_etag;
   }
 
   public static class SystemConfig {
@@ -133,6 +133,7 @@ public class UdmiSchema {
 
   public static class Status {
     public String message;
+    public String detail;
     public String category;
     public Date timestamp;
     public Integer level;
@@ -140,7 +141,7 @@ public class UdmiSchema {
 
   public static class PointsetState {
     public Map<String, PointState> points = new TreeMap<>();
-    public String etag;
+    public String config_etag;
   }
 
   public static class PointState {

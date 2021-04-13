@@ -12,6 +12,9 @@
         "RS256_X509"
       ]
     },
+    "device_key": {
+      "type": "boolean"
+    },
     "is_gateway": {
       "type": "boolean"
     }

@@ -150,11 +150,11 @@ class LocalDevice {
   private final UdmiSchema.Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
+  private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
 
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
-  private List<DeviceCredential> deviceCredentials;
 
   LocalDevice(File devicesDir, String deviceId, Map<String, Schema> schemas,
       String generation) {
@@ -260,6 +260,7 @@ class LocalDevice {
 
   public void loadCredentials() {
     try {
+      deviceCredentials.clear();
       if (hasGateway() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
@@ -269,7 +270,6 @@ class LocalDevice {
       if (!hasAuthType()) {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
-      deviceCredentials = new ArrayList<>();
       for (String keyFile : ALL_KEY_FILES) {
         DeviceCredential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
@@ -333,18 +333,21 @@ class LocalDevice {
       if (settings != null) {
         return settings;
       }
+
       settings = new CloudDeviceSettings();
+      settings.credentials = deviceCredentials;
+      settings.generation = generation;
+
       if (metadata == null) {
         return settings;
       }
-      settings.credentials = deviceCredentials;
-      settings.metadata = metadataString();
-      settings.config = deviceConfigString();
+
       settings.updated = getUpdatedTimestamp();
+      settings.metadata = metadataString();
       settings.proxyDevices = getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
-      settings.generation = generation;
+      settings.config = deviceConfigString();
       return settings;
     } catch (Exception e) {
       throw new RuntimeException("While getting settings for device " + deviceId, e);

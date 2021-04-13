@@ -31,7 +31,7 @@ public class BaselineValidator extends SequenceValidator {
     if (deviceState.pointset == null) {
       return false;
     }
-    return Objects.equals(expected, deviceState.pointset.etag);
+    return Objects.equals(expected, deviceState.pointset.config_etag);
   }
 
   private boolean valueStateIs(String pointName, String expected) {
@@ -43,7 +43,7 @@ public class BaselineValidator extends SequenceValidator {
 
   private void untilPointsetStateEtagIsUpdated() {
     String timestamp = Objects.toString(System.currentTimeMillis());
-    deviceConfig.pointset.etag = timestamp;
+    deviceConfig.pointset.config_etag = timestamp;
     updateConfig();
     untilTrue(() -> pointsetStateEtagIs(timestamp), "etag " + timestamp);
   }

@@ -24,7 +24,7 @@ public class Message {
   public static class Pointset extends UdmiBase {
     public Map<String, PointData> points = new HashMap<>();
     public Object extraField;
-    public String etag;
+    public String config_etag;
   }
 
   public static class SystemEvent extends UdmiBase {
@@ -33,12 +33,12 @@ public class Message {
 
   public static class PointsetState {
     public Map<String, PointState> points = new HashMap<>();
-    public String etag;
+    public String config_etag;
   }
 
   public static class PointsetConfig {
     public Map<String, PointConfig> points = new HashMap<>();
-    public String etag;
+    public String config_etag;
   }
 
   public static class PointConfig {
