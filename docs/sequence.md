@@ -1,5 +1,9 @@
 # UDMI Sequence Validator 
-The sequence validator 
+
+The sequence validator is a tool which is used to validate that a sequence of events are compliant with the UDMI specification 
+
+
+
 
 
 Deploy necessary cloud functions to your GCP project
