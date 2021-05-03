@@ -47,6 +47,8 @@ if [[ -n $pubber ]]; then
     done
 fi
 
+java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar org.junit.runner.JUnitCore com.google.daq.mqtt.validator.validations.BaselineValidator
+
 validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
