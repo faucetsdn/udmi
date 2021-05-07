@@ -34,7 +34,7 @@
     "@firebase/rules-unit-testing": "^1.2.4",
     "@types/jasmine": "3.6.3",
     "@types/node": "12.19.16",
-    "codelyzer": "6.0.1",
+    "codelyzer": "6.0.2",
     "firebase-admin": "^9.5.0",
     "firebase-functions": "^3.13.2",
     "jasmine-core": "3.6.0",
