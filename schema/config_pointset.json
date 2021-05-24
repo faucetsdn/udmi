@@ -4,14 +4,14 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "config_etag": {
-      "type": "string",
-      "maxLength": 32
-    },
     "state_etag": {
       "type": "string",
       "maxLength": 32
     },
+    "set_value_expiry": {
+      "type": "string",
+      "maxLength": 32
+    }
     "sample_limit_sec": {
       "type": "number",
       "minimum": 1,
