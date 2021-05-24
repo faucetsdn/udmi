@@ -10,7 +10,7 @@
     },
     "set_value_expiry": {
       "type": "string",
-      "maxLength": 32
+      "format": "date-time"
     },
     "sample_limit_sec": {
       "type": "number",
