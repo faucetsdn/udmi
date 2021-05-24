@@ -11,7 +11,7 @@
     "set_value_expiry": {
       "type": "string",
       "maxLength": 32
-    }
+    },
     "sample_limit_sec": {
       "type": "number",
       "minimum": 1,
