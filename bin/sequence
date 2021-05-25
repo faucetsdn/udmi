@@ -47,7 +47,7 @@ if [[ -n $pubber ]]; then
     echo bin/pubber $site_model $project_id $device_id $serial_no
     bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
 
-    WAITING=10
+    WAITING=20
     for i in `seq 1 $WAITING`; do
         if fgrep "Connection complete" $PUBBER_OUT; then
             break
