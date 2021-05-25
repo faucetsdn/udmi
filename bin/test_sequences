@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export VALIDATOR_CONFIG=/tmp/validator_config
+export VALIDATOR_CONFIG=/tmp/validator_config.json
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
