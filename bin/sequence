@@ -8,6 +8,7 @@ if [ $# -lt 2 -o $# -gt 3 ]; then
 fi
 
 site_model=$PWD
+cd $ROOT_DIR
 
 project_id=$1
 device_id=$2
@@ -52,7 +53,7 @@ if [[ -n $pubber ]]; then
 fi
 
 result=0
-$ROOT_DIR/bin/test_sequence || result=$?
+bin/test_sequence || result=$?
 
 if [[ -n $pubber ]]; then
     pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
