@@ -59,7 +59,7 @@ jobs:
         run: |
           bin/setup_site
           cd udmi_site_model
-          bin/sequence "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
+          ../bin/sequence "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
       - name: validation logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
