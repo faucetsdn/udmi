@@ -1,2 +1,31 @@
 #!/bin/bash -e
 
+ROOT_DIR=$(realpath $(dirname $0)/..)
+
+if [ $# -lt 3 -o $# -gt 4 ]; then
+    echo Usage: $0 PROJECT_ID DEVICE_ID [SERIAL_NO]
+    false
+fi
+
+project_id=$1
+device_id=$2
+site_model=$PWD
+shift 2
+
+if [[ -n $1 ]]; then
+    serial_no=$1
+    shift
+else
+    serial_no=sequencer-$RANDOM
+fi
+
+
+echo <<EOF > /tmp/validator_config.json
+{
+  "project_id": "$project_id",
+  "site_model": "$site_model",
+  "device_id": "$device_id",
+  "serial_no": "$serial_no",
+  "key_file": "$site_model/validator_rsa_private.pkcs8"
+}
+EOF
