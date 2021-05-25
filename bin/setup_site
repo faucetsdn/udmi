@@ -18,5 +18,5 @@ fi
 git checkout $MODEL_VER 2> /dev/null
 git log -n 1
 
-mkdir -p udmi_site_model/validator
-cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 udmi_site_model/validator/
+mkdir -p validator
+cp devices/AHU-1/rsa_private.pkcs8 validator/
