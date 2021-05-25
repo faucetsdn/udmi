@@ -58,7 +58,8 @@ public abstract class SequenceValidator {
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
-  private static final File CONFIG_FILE = new File("validator_config.json");
+  private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
+  private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
   public static final int INITIAL_MIN_LOGLEVEL = 400;
 
@@ -72,6 +73,10 @@ public abstract class SequenceValidator {
   // a singleton to avoid runtime conflicts.
   static {
     final String key_file;
+    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
+      throw new RuntimeException(VALIDATOR_CONFIG + " env not defined.");
+    }
+    final File CONFIG_FILE = new File(CONFIG_PATH);
     try {
       ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(CONFIG_FILE);
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");

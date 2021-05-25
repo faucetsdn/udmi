@@ -15,5 +15,8 @@ else
     cd $MODEL_DIR
 fi
 
-git checkout $MODEL_VER
+git checkout $MODEL_VER 2> /dev/null
 git log -n 1
+
+mkdir -p validator
+cp devices/AHU-1/rsa_private.pkcs8 validator/

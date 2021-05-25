@@ -12,7 +12,6 @@ firebase-debug.log
 /out/
 /validator/build/
 /validator/out/
-/validator_config.json
 /pubber/build/
 /sites/
 /attributes.json
