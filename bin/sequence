@@ -34,6 +34,7 @@ echo <<EOF > /tmp/validator_config.json
   "key_file": "$site_model/validator_rsa_private.pkcs8"
 }
 EOF
+cat /tmp/validator_config.json
 
 PUBBER_OUT=pubber.out
 

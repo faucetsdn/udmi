@@ -10,7 +10,8 @@ if [[ $# != 0 ]]; then
     false
 fi
 
-more $VALUDATOR_CONFIG
+echo Parsing $VALIDATOR_CONFIG:
+cat $VALIDATOR_CONFIG
 project_id=`jq -r .project_id $VALIDATOR_CONFIG`
 site_model=`jq -r .site_model $VALIDATOR_CONFIG`
 device_id=`jq -r .device_id $VALIDATOR_CONFIG`
