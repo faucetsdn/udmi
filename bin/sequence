@@ -24,8 +24,9 @@ else
     pubber=y
 fi
 
-echo Writing config to /tmp/validator_config.json
-echo <<EOF > /tmp/validator_config.json
+echo Writing config to tmp/validator_config.json
+mkdir -p tmp
+echo <<EOF > tmp/validator_config.json
 {
   "project_id": "$project_id",
   "site_model": "$site_model",
@@ -34,7 +35,7 @@ echo <<EOF > /tmp/validator_config.json
   "key_file": "$site_model/validator_rsa_private.pkcs8"
 }
 EOF
-cat /tmp/validator_config.json
+cat tmp/validator_config.json
 
 PUBBER_OUT=pubber.out
 
