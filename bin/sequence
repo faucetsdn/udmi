@@ -46,10 +46,20 @@ if [[ -n $pubber ]]; then
     echo bin/pubber $site_model $project_id $device_id $serial_no
     bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
 
-    while ! fgrep "Connection complete" $PUBBER_OUT; do
-        echo Waiting for pubber startup...
-        sleep 5
+    WAITING=10
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $PUBBER_OUT; then
+            break
+        fi
+        echo Waiting for pubber startup $i...
+        sleep 2
     done
+
+    if [[ $i == $WAITING ]]; then
+        echo pubber startup failed:
+        cat $PUBBER_OUT
+        false
+    fi
 fi
 
 result=0
