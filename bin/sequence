@@ -63,7 +63,7 @@ if [[ -n $pubber ]]; then
 fi
 
 result=0
-bin/test_sequence || result=$?
+bin/test_sequences || result=$?
 
 if [[ -n $pubber ]]; then
     pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
