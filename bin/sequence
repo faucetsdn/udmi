@@ -7,18 +7,21 @@ if [ $# -lt 3 -o $# -gt 4 ]; then
     false
 fi
 
+site_model=$PWD
+
 project_id=$1
 device_id=$2
-site_model=$PWD
 shift 2
 
 if [[ -n $1 ]]; then
     serial_no=$1
     shift
+    pubber=
 else
     serial_no=sequencer-$RANDOM
+    echo Using pubber with serial $serial_no
+    pubber=y
 fi
-
 
 echo <<EOF > /tmp/validator_config.json
 {
@@ -29,3 +32,33 @@ echo <<EOF > /tmp/validator_config.json
   "key_file": "$site_model/validator_rsa_private.pkcs8"
 }
 EOF
+
+PUBBER_OUT=pubber.out
+
+if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    if [[ -n $pids ]]; then
+        echo Killing pubber pids $pids
+        kill $pids
+    fi
+    echo Writing pubber output to $PUBBER_OUT
+    echo bin/pubber $site_model $project_id $device_id $serial_no
+    bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+
+    while ! fgrep "Connection complete" $PUBBER_OUT; do
+        echo Waiting for pubber startup...
+        sleep 5
+    done
+fi
+
+result=0
+$ROOT_DIR/bin/test_sequence || result=$?
+
+if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    echo Killing pubber pids $pids
+    kill $pids
+fi
+
+echo Test result code $result
+exit $result
