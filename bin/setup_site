@@ -15,5 +15,5 @@ else
     cd $MODEL_DIR
 fi
 
-git checkout $MODEL_VER
+git checkout $MODEL_VER 2> /dev/null
 git log -n 1

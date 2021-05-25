@@ -24,6 +24,7 @@ else
     pubber=y
 fi
 
+echo Writing config to /tmp/validator_config.json
 echo <<EOF > /tmp/validator_config.json
 {
   "project_id": "$project_id",
