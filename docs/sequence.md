@@ -13,10 +13,10 @@ validates that the composition of sequential messsages is compliant with the UDM
     *   Run `bin/keygen RS256 reflector` to create a public and private key which will be
         stored in the `reflector` directory
 3.  Add a new device to the `UDMS-REFLECT` registry with the followong configuration:
-    *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested>`
+    *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested.
     *   auth_key: Use the public key you just created from `reflector/rsa_public.pem`
-4.  Configure the sequence test by creating a file named `validator_config.json` in your UDMI
-    root directory, or update the file if it exists to correspond to the new device under test
+4.  Configure the sequence test by creating a file named `validator_config.json` in your 
+    working directory:
     ```
     {
     "project_id": "<PROJECT_ID>",

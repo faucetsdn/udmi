@@ -16,7 +16,7 @@ shift
 
 bin/setup_site
 
-cat <<EOF > validator_config.json
+cat <<EOF > /tmp/validator_config.json
 {
   "project_id": "$project_id",
   "site_model": "$site_model",

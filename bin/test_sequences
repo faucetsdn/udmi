@@ -1,6 +1,9 @@
 #!/bin/bash
 
-CONFIG_FILE=validator_config.json
+export VALIDATOR_CONFIG=/tmp/validator_config
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
 
 pubber=y
 if [[ $1 == -n ]]; then
@@ -13,10 +16,10 @@ if [[ $# != 0 ]]; then
     false
 fi
 
-project_id=`jq -r .project_id $CONFIG_FILE`
-site_model=`jq -r .site_model $CONFIG_FILE`
-device_id=`jq -r .device_id $CONFIG_FILE`
-serial_no=`jq -r .serial_no $CONFIG_FILE`
+project_id=`jq -r .project_id $VALIDATOR_CONFIG`
+site_model=`jq -r .site_model $VALIDATOR_CONFIG`
+device_id=`jq -r .device_id $VALIDATOR_CONFIG`
+serial_no=`jq -r .serial_no $VALIDATOR_CONFIG`
 echo Target project $project_id
 echo Site model $site_model
 echo Target device $device_id
@@ -53,6 +56,7 @@ JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
 
 rm -rf out/devices/$device_id
+# Relies on VALIDATOR_CONFIG environment variable.
 echo $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
 timeout 120s $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
 result=$?

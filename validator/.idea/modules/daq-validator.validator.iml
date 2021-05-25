@@ -24,7 +24,7 @@
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-core:1.94.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api:gax:1.60.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.auth:google-auth-library-oauth2-http:0.22.2" level="project" />
-    <orderEntry type="library" name="Gradle: com.google.apis:google-api-services-cloudiot:v1-rev20201110-1.31.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api-client:google-api-client:1.31.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.http-client:google-http-client-jackson2:1.38.0" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.1" level="project" />
