@@ -76,7 +76,6 @@ class UDMIBase:
         validator = get_validator(self.schema)
         validator(self.as_dict())
 
-
     @staticmethod
     def serialise_timestamp(timestamp):
         if isinstance(timestamp, str):

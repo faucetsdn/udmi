@@ -19,10 +19,5 @@ firebase-debug.log
 /venv/
 /local/
 
-/contrib/pyudmi/build/
-/contrib/pyudmi/src/udmi/schema/
-/contrib/pyudmi/dist/
-/contrib/pyudmi/pyudmi.egg-info/
-
 .DS_Store
 .idea/
