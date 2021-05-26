@@ -1,4 +1,4 @@
-# UDMI Schema
+# UDMI Schema 
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
 management and operation of physical IoT systems. This data is typically exchanged
