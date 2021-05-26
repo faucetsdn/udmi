@@ -17,3 +17,6 @@ firebase-debug.log
 /attributes.json
 /venv/
 /local/
+
+.DS_Store
+.idea/
