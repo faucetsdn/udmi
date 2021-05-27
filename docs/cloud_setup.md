@@ -1,7 +1,5 @@
 # Cloud Setup
 
-
-
 1.  Identify an existing GCP to host the system, or acquire a new one if necessary.
     *   Ensure [billing](https://cloud.google.com/billing/docs/how-to/modify-project) 
         has been enabled 
@@ -14,7 +12,6 @@
 3.  Assign PUB/SUB topics to the registry as described in the [Message Walk Guidance](message_walk.md). 
     If the topics do not exist, create them
     *   Set the default _Cloud Pub/Sub topic_ for the registry to the topic `udmi_target` 
-    *   Add an additional _Cloud Pub/Sub topic_ `udmi_config` to the subfolder `config`
     *   Set the _Device state topic_ (may be hidden under _Advanced Options_) to `udmi_state`
 4.  Install the Google Cloud SDK in order to be able to use some of the tools included, 
     such as the registrar tool

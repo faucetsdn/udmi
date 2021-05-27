@@ -17,3 +17,4 @@ firebase-debug.log
 /attributes.json
 /venv/
 /local/
+.pubber.pid
