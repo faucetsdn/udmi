@@ -1,0 +1,23 @@
+#!/bin/bash -ex
+
+JVERSION=1.1.1
+JBASENAME=jsonschema2pojo
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+rm -rf codegen gencode
+mkdir -p codegen gencode
+
+cd codegen
+GENDIR=$PWD
+
+JARVER=$JBASENAME-$JVERSION
+
+curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$JARVER.tar.gz -o $JARVER.tgz
+
+tar -xzvf $JARVER.tgz
+
+cd $ROOT_DIR/schema
+
+$GENDIR/$JARVER/bin/$JBASENAME --source . --target $ROOT_DIR/gencode/java
