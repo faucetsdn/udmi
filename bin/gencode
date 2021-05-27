@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 JVERSION=1.1.1
 JBASENAME=jsonschema2pojo
@@ -20,4 +20,7 @@ tar -xzvf $JARVER.tgz
 
 cd $ROOT_DIR/schema
 
+echo Generating code in gencode/java...
 $GENDIR/$JARVER/bin/$JBASENAME --source . --target $ROOT_DIR/gencode/java
+
+echo Done with code generation.
