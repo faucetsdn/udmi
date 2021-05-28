@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import java.util.HashMap;
 import udmi.schema.Entry;
 import udmi.schema.Config;
+import udmi.schema.Firmware;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.SystemState;
 
 public class Pubber {
 
@@ -138,10 +141,15 @@ public class Pubber {
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
+    deviceState.system = new SystemState();
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
+    deviceState.system.firmware = new Firmware();
     deviceState.system.firmware.version = "v1";
+    deviceState.system.statuses = new HashMap<>();
     deviceState.pointset = new PointsetState();
+    deviceState.pointset.points = new HashMap<>();
+    devicePoints.points = new HashMap<>();
     // devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
@@ -387,6 +395,7 @@ public class Pubber {
 
   private void publishLogMessage(String deviceId, String logMessage) {
     SystemEvent systemEvent = new SystemEvent();
+    systemEvent.timestamp = new Date();
     info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     Entry logEntry = new Entry();
     logEntry.message = logMessage;
