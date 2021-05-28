@@ -89,6 +89,7 @@ public class Validator {
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
+  public static final String CURRENT_DIRECTORY = ".";
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -213,7 +214,7 @@ public class Validator {
 
   private Map<String, Schema> getSchemaMap() {
     Map<String, Schema> schemaMap = new TreeMap<>();
-    for (File schemaFile : makeFileList(schemaRoot)) {
+    for (File schemaFile : makeFileList(CURRENT_DIRECTORY, schemaRoot)) {
       Schema schema = getSchema(schemaFile);
       String fullName = schemaFile.getName();
       String schemaName = schemaFile.getName()
@@ -513,12 +514,12 @@ public class Validator {
     }
   }
 
-  private void validateFiles(String schemaSpec, String targetSpec) {
-    List<File> schemaFiles = makeFileList(schemaSpec);
+  private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
+    List<File> schemaFiles = makeFileList(null, schemaSpec);
     if (schemaFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero schemas");
     }
-    List<File> targetFiles = makeFileList(targetSpec);
+    List<File> targetFiles = makeFileList(prefix, targetSpec);
     if (targetFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero targets");
     }
@@ -533,7 +534,7 @@ public class Validator {
           try {
             System.out
                 .println("Validating " + targetFile.getName() + " against " + schemaFile.getName());
-            validateFile(targetFile, schema);
+            validateFile(prefix, targetSpec, schema);
           } catch (Exception e) {
             validateExceptions.put(targetFile.getName(), e);
           }
@@ -548,7 +549,10 @@ public class Validator {
 
   private void validateFilesOutput(String targetSpec) {
     try {
-      validateFiles(schemaSpec, targetSpec);
+      String[] parts = targetSpec.split(":");
+      String prefix = parts.length == 1 ? null : parts[0];
+      String file = parts[parts.length -1];
+      validateFiles(schemaSpec, prefix, file);
     } catch (ExceptionMap | ValidationException processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException, ERROR_FORMAT_INDENT);
       errorTree.write(System.err);
@@ -588,22 +592,23 @@ public class Validator {
     }
   }
 
-  private List<File> makeFileList(String spec) {
-    return makeFileList(new File(spec));
+  private List<File> makeFileList(String prefix, String spec) {
+    return makeFileList(prefix, new File(spec));
   }
 
-  private List<File> makeFileList(File target) {
+  private List<File> makeFileList(String prefix, File partialTarget) {
+    File target = getFullPath(prefix, partialTarget);
     if (target.isFile()) {
       return ImmutableList.of(target);
     }
     boolean isDir = target.isDirectory();
-    String prefix = isDir ? "" : target.getName();
+    String leading = isDir ? "" : target.getName();
     File parent = isDir ? target : target.getAbsoluteFile().getParentFile();
     if (!parent.isDirectory()) {
       throw new RuntimeException("Parent directory not found " + parent.getAbsolutePath());
     }
 
-    FilenameFilter filter = (dir, file) -> file.startsWith(prefix) && file.endsWith(JSON_SUFFIX);
+    FilenameFilter filter = (dir, file) -> file.endsWith(JSON_SUFFIX);
     String[] fileNames = parent.list(filter);
 
     return Arrays.stream(fileNames).map(name -> new File(parent, name))
@@ -620,15 +625,20 @@ public class Validator {
     schema.validate(new JSONObject(new JSONTokener(stringMessage)));
   }
 
-  private void validateFile(File targetFile, Schema schema) {
-    try{
-      Map<String, Object> message = OBJECT_MAPPER.readValue(targetFile, Map.class);
+  private void validateFile(String prefix, String targetFile, Schema schema) {
+    try {
+      File fullPath = getFullPath(prefix, new File(targetFile));
+      Map<String, Object> message = OBJECT_MAPPER.readValue(fullPath, Map.class);
       sanitizeMessage(schema.getId(), message);
       String messageStr = OBJECT_MAPPER.writeValueAsString(message);
       schema.validate(new JSONObject(new JSONTokener(messageStr)));
     } catch (Exception e) {
       throw new RuntimeException("Against input " + targetFile, e);
     }
+  }
+
+  private File getFullPath(String prefix, File targetFile) {
+    return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
   }
 
   private String getTimestamp() {

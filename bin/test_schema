@@ -62,7 +62,8 @@ for subset in $subsets; do
         if [[ "$testbase" == "$schemadir" ]]; then
           reltest=${testpath#$testbase/}
         else
-          reltest=$(realpath --relative-to $schemadir $testpath)
+          reldir=$(realpath --relative-to $schemadir $testdir)
+          reltest=$reldir:$(realpath --relative-to $testdir $testpath)
         fi
         (cd $schemadir; java -jar $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
         if [ $force == y ]; then
