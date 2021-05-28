@@ -13,10 +13,6 @@
       "minimum": 1,
       "maximum": 1
     },
-    "config_etag": {
-      "type": "string",
-      "maxLength": 32
-    },
     "points": {
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, PointPointsetEvent>",

@@ -16,15 +16,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "config_etag",
     "state_etag",
     "points"
 })
 @Generated("jsonschema2pojo")
 public class PointsetState {
 
-    @JsonProperty("config_etag")
-    public java.lang.String config_etag;
     @JsonProperty("state_etag")
     public java.lang.String state_etag;
     /**
@@ -39,7 +36,6 @@ public class PointsetState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
-        result = ((result* 31)+((this.config_etag == null)? 0 :this.config_etag.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
@@ -53,7 +49,7 @@ public class PointsetState {
             return false;
         }
         PointsetState rhs = ((PointsetState) other);
-        return ((((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag)))&&((this.config_etag == rhs.config_etag)||((this.config_etag!= null)&&this.config_etag.equals(rhs.config_etag))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return (((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag)))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }
