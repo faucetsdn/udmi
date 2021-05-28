@@ -89,7 +89,7 @@ public class Validator {
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
-  public static final String CURRENT_DIRECTORY = ".";
+
   private final String projectId;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
@@ -214,7 +214,7 @@ public class Validator {
 
   private Map<String, Schema> getSchemaMap() {
     Map<String, Schema> schemaMap = new TreeMap<>();
-    for (File schemaFile : makeFileList(CURRENT_DIRECTORY, schemaRoot)) {
+    for (File schemaFile : makeFileList(null, schemaRoot)) {
       Schema schema = getSchema(schemaFile);
       String fullName = schemaFile.getName();
       String schemaName = schemaFile.getName()
