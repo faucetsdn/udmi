@@ -20,7 +20,9 @@ tar -xzvf $JARVER.tgz
 
 cd $ROOT_DIR/schema
 
+JOPTS="-d . -ds -dg -S -p udmi.schema"
+
 echo Generating code in gencode/java...
-$GENDIR/$JARVER/bin/$JBASENAME --source . --target $ROOT_DIR/gencode/java
+$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 
 echo Done with code generation.
