@@ -9,9 +9,9 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "config_etag": {
       "type": "string",

@@ -47,7 +47,7 @@ public class Pubber {
   private static final String ERROR_TOPIC = "errors";
 
   private static final int MIN_REPORT_MS = 200;
-  private static final int DEFAULT_REPORT_MS = 10000;
+  private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
@@ -57,7 +57,7 @@ public class Pubber {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   private final Configuration configuration;
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_MS);
+  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
   private final State deviceState = new State();
@@ -318,7 +318,7 @@ public class Pubber {
         updatePointsetConfig(config.pointset);
       } else {
         info(getTimestamp() + " defaulting empty config");
-        actualInterval = DEFAULT_REPORT_MS;
+        actualInterval = DEFAULT_REPORT_SEC * 1000;
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
@@ -357,9 +357,8 @@ public class Pubber {
 
   private int updateSystemConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
-    Double reportInterval = pointsetConfig == null ? null : pointsetConfig.sample_rate_sec;
-    actualInterval = Integer.max(MIN_REPORT_MS,
-        reportInterval == null ? DEFAULT_REPORT_MS : reportInterval.intValue());
+    Integer reportInterval = pointsetConfig == null ? DEFAULT_REPORT_SEC : pointsetConfig.sample_rate_sec;
+    actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
     return actualInterval;
   }
 

@@ -14,9 +14,9 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "system": {
       "$ref": "file:state_system.json#"

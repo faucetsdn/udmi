@@ -31,9 +31,9 @@ public class PointsetConfig__1 {
     @JsonProperty("set_value_expiry")
     public Date set_value_expiry;
     @JsonProperty("sample_limit_sec")
-    public Double sample_limit_sec;
+    public Integer sample_limit_sec;
     @JsonProperty("sample_rate_sec")
-    public Double sample_rate_sec;
+    public Integer sample_rate_sec;
     @JsonProperty("points")
     public HashMap<String, PointPointsetConfig> points;
 

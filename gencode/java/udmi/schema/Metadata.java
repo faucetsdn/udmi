@@ -2,14 +2,10 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import javax.annotation.processing.Generated;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -45,7 +41,7 @@ public class Metadata {
      * 
      */
     @JsonProperty("version")
-    public Metadata.Version version;
+    public Integer version;
     @JsonProperty("hash")
     public String hash;
     /**
@@ -114,45 +110,6 @@ public class Metadata {
         }
         Metadata rhs = ((Metadata) other);
         return (((((((((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
-    }
-
-    @Generated("jsonschema2pojo")
-    public enum Version {
-
-        _1("1");
-        private final String value;
-        private final static Map<String, Metadata.Version> CONSTANTS = new HashMap<String, Metadata.Version>();
-
-        static {
-            for (Metadata.Version c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Version(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static Metadata.Version fromValue(String value) {
-            Metadata.Version constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 }

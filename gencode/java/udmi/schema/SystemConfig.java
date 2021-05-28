@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemConfig {
 
     @JsonProperty("min_loglevel")
-    public Double min_loglevel;
+    public Integer min_loglevel;
     @JsonProperty("auth_key")
     public Auth_key auth_key;
 

@@ -24,7 +24,7 @@ public class PointPointsetConfig {
     @JsonProperty("ref")
     public String ref;
     @JsonProperty("set_value")
-    public Double set_value;
+    public Object set_value;
 
     @Override
     public int hashCode() {
