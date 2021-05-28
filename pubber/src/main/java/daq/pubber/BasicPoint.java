@@ -1,19 +1,16 @@
 package daq.pubber;
 
-import daq.udmi.Entry;
-import daq.udmi.Message.PointConfig;
-import daq.udmi.Message.PointData;
-import daq.udmi.Message.PointState;
+import udmi.schema.Entry;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetState;
+import udmi.schema.PointPointsetState.Value_state;
 
 public abstract class BasicPoint implements AbstractPoint {
 
-  private static final String INVALID_STATE = "invalid";
-  private static final String APPLIED_STATE = "applied";
-  private static final String FAILURE_STATE = "failure";
-
   protected final String name;
-  protected final PointData data = new PointData();
-  private final PointState state = new PointState();
+  protected final PointPointsetEvent data = new PointPointsetEvent();
+  private final PointPointsetState state = new PointPointsetState();
   private final boolean writable;
   protected boolean written;
   private boolean dirty;
@@ -33,7 +30,7 @@ public abstract class BasicPoint implements AbstractPoint {
     }
   }
 
-  public PointState getState() {
+  public PointPointsetState getState() {
     dirty = false;
     return state;
   }
@@ -44,11 +41,11 @@ public abstract class BasicPoint implements AbstractPoint {
     return name;
   }
 
-  public PointData getData() {
+  public PointPointsetEvent getData() {
     return data;
   }
 
-  public void setConfig(PointConfig config) {
+  public void setConfig(PointPointsetConfig config) {
     if (config == null || config.set_value == null) {
       written = false;
       state.status = null;
@@ -57,14 +54,14 @@ public abstract class BasicPoint implements AbstractPoint {
     } else {
       if (!validateValue(config.set_value)) {
         state.status = invalidValueStatus();
-        state.value_state = INVALID_STATE;
+        state.value_state = Value_state.INVALID;
         dirty = true;
       } else if (!writable) {
         state.status = notWritableStatus();
-        state.value_state = FAILURE_STATE;
+        state.value_state = Value_state.FAILURE;
         dirty = true;
       } else {
-        state.value_state = APPLIED_STATE;
+        state.value_state = Value_state.APPLIED;
         written = true;
         data.present_value = config.set_value;
       }
@@ -72,12 +69,16 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   private Entry invalidValueStatus() {
-    return new Entry("Written value is not valid");
+    Entry entry = new Entry();
+    entry.message = "Written value is not valid";
+    return entry;
   }
 
   protected abstract boolean validateValue(Object set_value);
 
   private Entry notWritableStatus() {
-    return new Entry("Point is not writable");
+    Entry entry = new Entry();
+    entry.message = "Point is not writable";
+    return entry;
   }
 }

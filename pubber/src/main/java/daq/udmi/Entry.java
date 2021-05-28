@@ -11,6 +11,9 @@ public class Entry {
   public Integer level = 500;
   public Date timestamp = new Date();
 
+  public Entry() {
+  }
+
   public Entry(String message) {
     this.message = message;
   }

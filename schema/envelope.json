@@ -1,5 +1,5 @@
 {
-  "title": "Message envelope schema",
+  "title": "Envelope",
   "additionalProperties": true,
   "properties": {
     "deviceId": {
