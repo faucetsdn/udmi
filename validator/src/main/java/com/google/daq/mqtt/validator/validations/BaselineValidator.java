@@ -23,7 +23,6 @@ public class BaselineValidator extends SequenceValidator {
     deviceConfig.pointset.points.put(RECALCITRANT_ANGLE, new PointConfig());
     deviceConfig.pointset.points.put(FAULTY_FINDING, new PointConfig());
     deviceConfig.pointset.points.put(SUPERIMPOSITION_READING, new PointConfig());
-    untilPointsetStateEtagIsUpdated();
     untilTrue(this::validSerialNo, "valid serial no");
   }
 
@@ -31,7 +30,7 @@ public class BaselineValidator extends SequenceValidator {
     if (deviceState.pointset == null) {
       return false;
     }
-    return Objects.equals(expected, deviceState.pointset.config_etag);
+    return Objects.equals(expected, deviceState.pointset.state_etag);
   }
 
   private boolean valueStateIs(String pointName, String expected) {
@@ -43,9 +42,19 @@ public class BaselineValidator extends SequenceValidator {
 
   private void untilPointsetStateEtagIsUpdated() {
     String timestamp = Objects.toString(System.currentTimeMillis());
-    deviceConfig.pointset.config_etag = timestamp;
+    deviceConfig.pointset.state_etag = timestamp;
     updateConfig();
     untilTrue(() -> pointsetStateEtagIs(timestamp), "etag " + timestamp);
+  }
+
+  @Test
+  public void system_last_update() {
+    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
+    String prevConfig = deviceState.system.last_config;
+    updateConfig();
+    untilTrue(() -> !prevConfig.equals(deviceState.system.last_config), "last_config " + prevConfig);
+    System.err.printf("%s last_config updated from %s to %s%n", getTimestamp(), prevConfig,
+        deviceState.system.last_config);
   }
 
   @Test

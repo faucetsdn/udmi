@@ -229,7 +229,7 @@ public abstract class SequenceValidator {
       System.err.println(getTimestamp() + " updated system loglevel " + deviceConfig.system.min_loglevel);
     }
     if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
-      System.err.println(getTimestamp() + " updated pointset config_etag " + deviceConfig.pointset.config_etag);
+      System.err.println(getTimestamp() + " updated pointset config");
     }
   }
 
@@ -271,22 +271,19 @@ public abstract class SequenceValidator {
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,
         state -> deviceState.pointset = state)) {
-      String config_etag = deviceState.pointset == null ? null : deviceState.pointset.config_etag;
-      System.err.printf("%s received state config_etag %s%n", getTimestamp(), config_etag);
+      System.err.printf("%s received state pointset%n", getTimestamp());
     }
     validSerialNo();
   }
 
   private void dumpConfigUpdate(Map<String, Object> message) {
     Config config = messageConvert(Config.class, message);
-    String config_etag = config.pointset == null ? null : config.pointset.config_etag;
-    System.err.println(getTimestamp() + " update config config_etag " + config_etag);
+    System.err.println(getTimestamp() + " update config");
   }
 
   private void dumpStateUpdate(Map<String, Object> message) {
     State state = messageConvert(State.class, message);
-    String config_etag = state.pointset == null ? null : state.pointset.config_etag;
-    System.err.println(getTimestamp() + " update state config_etag " + config_etag);
+    System.err.println(getTimestamp() + " update state");
   }
 
   protected boolean validSerialNo() {
@@ -301,10 +298,11 @@ public abstract class SequenceValidator {
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
     waitingCondition = "waiting for " + description;
-    System.err.println(getTimestamp() + " " + waitingCondition);
+    System.err.println(getTimestamp() + " start " + waitingCondition);
     while (!evaluator.get()) {
       receiveMessage();
     }
+    System.err.println(getTimestamp() + " finished " + waitingCondition);
     waitingCondition = null;
   }
 
