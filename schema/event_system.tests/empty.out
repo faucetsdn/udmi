@@ -1,6 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against event_system.json
-    Against input event_system.tests/empty.json
-      #: 2 schema violations found
-        #: required key [timestamp] not found
-        #: required key [version] not found

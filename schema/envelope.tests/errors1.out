@@ -1,9 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against envelope.json
-    Against input envelope.tests/errors1.json
-      #: 5 schema violations found
-        #/deviceId: string [fcu-1] does not match pattern ^[A-Z]{2,6}-[0-9]{1,6}$
-        #/deviceNumId: string [921302198324X] does not match pattern ^[0-9]+$
-        #/deviceRegistryId: string [test/registry] does not match pattern ^[a-zA-Z][-a-zA-Z0-9._+~%]*[a-zA-Z0-9]$
-        #: required key [projectId] not found
-        #: required key [subFolder] not found
