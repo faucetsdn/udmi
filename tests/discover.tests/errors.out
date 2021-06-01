@@ -1,0 +1,15 @@
+Validating 1 schemas
+  Validating 1 files against discover.json
+    Against input discover.tests/errors.json
+      #: 8 schema violations found
+        #/points: 4 schema violations found
+          #/points/old_properties/properties: #: 0 subschemas matched instead of one
+            #/points/old_properties/properties: properties is not a valid enum value
+          #/points/yoyo_motion_sensor/bad_property_name: #: 0 subschemas matched instead of one
+            #/points/yoyo_motion_sensor/bad_property_name: bad_property_name is not a valid enum value
+          #/points: extraneous key [bad___sensor] is not permitted
+          #/points: extraneous key [bad_entity_name_] is not permitted
+        #: extraneous key [id] is not permitted
+        #: extraneous key [properties] is not permitted
+        #: required key [local_id] not found
+        #: required key [protocol] not found

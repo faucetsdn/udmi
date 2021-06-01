@@ -1,5 +1,5 @@
 {
-  "title": "System state snippet",
+  "title": "System State",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -44,6 +44,7 @@
     "statuses": {
       "type": "object",
       "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, Entry>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:common.json#/definitions/entry"

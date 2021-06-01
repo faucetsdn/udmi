@@ -1,5 +1,5 @@
 {
-  "title": "Local network metadata snippet",
+  "title": "Localnet Metadata",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

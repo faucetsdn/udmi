@@ -1,0 +1,2035 @@
+{
+  "system": {
+    "location": {
+      "site": "UK-LON-S2"
+    },
+    "physical_tag": {
+      "asset": {
+        "name": "UK-LON-S2_LTGW-3",
+        "guid": "ifc://27UivR75r3481CVsBDvlfl"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "bw4_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw4_light_level1": {
+        "units": "Luxes"
+      },
+      "bw4_light_level2": {
+        "units": "Luxes"
+      },
+      "bw4_light_level7": {
+        "units": "Luxes"
+      },
+      "bw4_light_level8": {
+        "units": "Luxes"
+      },
+      "bw4_light_level9": {
+        "units": "Luxes"
+      },
+      "bw4_light_level3": {
+        "units": "Luxes"
+      },
+      "bw4_light_level4": {
+        "units": "Luxes"
+      },
+      "bw4_light_level5": {
+        "units": "Luxes"
+      },
+      "bw4_light_level6": {
+        "units": "Luxes"
+      },
+      "bw5_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw4_occupancy5": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw4_occupancy6": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw4_occupancy7": {
+        "units": "No-units"
+      },
+      "bw4_occupancy8": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw4_occupancy9": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw4_occupancy1": {
+        "units": "No-units"
+      },
+      "bw4_occupancy2": {
+        "units": "No-units"
+      },
+      "bw4_occupancy3": {
+        "units": "No-units"
+      },
+      "bw4_occupancy4": {
+        "units": "No-units"
+      },
+      "bw1_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw6_occupancy7": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw6_occupancy8": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw6_occupancy9": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw6_occupancy3": {
+        "units": "No-units"
+      },
+      "bw2_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw6_occupancy4": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw6_occupancy5": {
+        "units": "No-units"
+      },
+      "bw5_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw6_occupancy6": {
+        "units": "No-units"
+      },
+      "bw2_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw6_occupancy1": {
+        "units": "No-units"
+      },
+      "bw2_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw6_occupancy2": {
+        "units": "No-units"
+      },
+      "bw3_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness38": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw2_light_level1": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw2_light_level2": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw2_light_level3": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw2_light_level4": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw2_light_level5": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw6_light_level1": {
+        "units": "Luxes"
+      },
+      "bw2_light_level6": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw6_light_level2": {
+        "units": "Luxes"
+      },
+      "bw2_light_level7": {
+        "units": "Luxes"
+      },
+      "bw6_light_level3": {
+        "units": "Luxes"
+      },
+      "bw2_light_level8": {
+        "units": "Luxes"
+      },
+      "bw6_light_level4": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness38": {
+        "units": "Percent"
+      },
+      "bw6_light_level5": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw6_light_level6": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw6_light_level7": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw6_light_level8": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw6_light_level9": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness38": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw3_light_level1": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw1_occupancy1": {
+        "units": "No-units"
+      },
+      "bw1_occupancy5": {
+        "units": "No-units"
+      },
+      "bw3_light_level8": {
+        "units": "Luxes"
+      },
+      "bw1_occupancy4": {
+        "units": "No-units"
+      },
+      "bw3_light_level9": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw1_occupancy3": {
+        "units": "No-units"
+      },
+      "bw3_light_level6": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw1_occupancy2": {
+        "units": "No-units"
+      },
+      "bw3_light_level7": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw1_occupancy9": {
+        "units": "No-units"
+      },
+      "bw3_light_level4": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw1_occupancy8": {
+        "units": "No-units"
+      },
+      "bw3_light_level5": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw1_occupancy7": {
+        "units": "No-units"
+      },
+      "bw3_light_level2": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw1_occupancy6": {
+        "units": "No-units"
+      },
+      "bw3_light_level3": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw1_light_level13": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw1_light_level14": {
+        "units": "Luxes"
+      },
+      "bw1_light_level11": {
+        "units": "Luxes"
+      },
+      "bw1_light_level12": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw1_light_level15": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw1_light_level16": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness38": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw1_light_level10": {
+        "units": "Luxes"
+      },
+      "bw3_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw3_occupancy10": {
+        "units": "No-units"
+      },
+      "bw6_occupancy16": {
+        "units": "No-units"
+      },
+      "bw2_occupancy10": {
+        "units": "No-units"
+      },
+      "bw2_occupancy11": {
+        "units": "No-units"
+      },
+      "bw1_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_occupancy12": {
+        "units": "No-units"
+      },
+      "bw3_occupancy14": {
+        "units": "No-units"
+      },
+      "bw6_occupancy12": {
+        "units": "No-units"
+      },
+      "bw1_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw2_occupancy13": {
+        "units": "No-units"
+      },
+      "bw3_occupancy13": {
+        "units": "No-units"
+      },
+      "bw6_occupancy13": {
+        "units": "No-units"
+      },
+      "bw1_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_occupancy14": {
+        "units": "No-units"
+      },
+      "bw3_occupancy12": {
+        "units": "No-units"
+      },
+      "bw6_occupancy14": {
+        "units": "No-units"
+      },
+      "bw1_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw2_occupancy15": {
+        "units": "No-units"
+      },
+      "bw3_occupancy11": {
+        "units": "No-units"
+      },
+      "bw6_occupancy15": {
+        "units": "No-units"
+      },
+      "bw1_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw2_light_level9": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw2_occupancy16": {
+        "units": "No-units"
+      },
+      "bw1_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw3_occupancy16": {
+        "units": "No-units"
+      },
+      "bw6_occupancy10": {
+        "units": "No-units"
+      },
+      "bw1_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw3_occupancy15": {
+        "units": "No-units"
+      },
+      "bw6_occupancy11": {
+        "units": "No-units"
+      },
+      "bw1_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw1_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness64": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness63": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness62": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness61": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness60": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw1_light_level3": {
+        "units": "Luxes"
+      },
+      "bw1_light_level2": {
+        "units": "Luxes"
+      },
+      "bw1_light_level1": {
+        "units": "Luxes"
+      },
+      "bw1_light_level7": {
+        "units": "Luxes"
+      },
+      "bw1_light_level6": {
+        "units": "Luxes"
+      },
+      "bw1_light_level5": {
+        "units": "Luxes"
+      },
+      "bw1_light_level4": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw1_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw1_light_level9": {
+        "units": "Luxes"
+      },
+      "bw1_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw1_light_level8": {
+        "units": "Luxes"
+      },
+      "bw4_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw5_occupancy8": {
+        "units": "No-units"
+      },
+      "bw5_occupancy9": {
+        "units": "No-units"
+      },
+      "bw5_occupancy6": {
+        "units": "No-units"
+      },
+      "bw5_occupancy7": {
+        "units": "No-units"
+      },
+      "bw5_occupancy1": {
+        "units": "No-units"
+      },
+      "bw5_occupancy4": {
+        "units": "No-units"
+      },
+      "bw5_occupancy5": {
+        "units": "No-units"
+      },
+      "bw5_occupancy2": {
+        "units": "No-units"
+      },
+      "bw5_occupancy3": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_light_level15": {
+        "units": "Luxes"
+      },
+      "bw6_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw2_light_level14": {
+        "units": "Luxes"
+      },
+      "bw6_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw2_light_level16": {
+        "units": "Luxes"
+      },
+      "bw6_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw2_light_level11": {
+        "units": "Luxes"
+      },
+      "bw2_light_level10": {
+        "units": "Luxes"
+      },
+      "bw2_light_level13": {
+        "units": "Luxes"
+      },
+      "bw6_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw2_light_level12": {
+        "units": "Luxes"
+      },
+      "bw6_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness16": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness15": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness14": {
+        "units": "Percent"
+      },
+      "bw6_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness12": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness10": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw5_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw4_light_level16": {
+        "units": "Luxes"
+      },
+      "bw3_occupancy3": {
+        "units": "No-units"
+      },
+      "bw3_occupancy2": {
+        "units": "No-units"
+      },
+      "bw3_occupancy1": {
+        "units": "No-units"
+      },
+      "bw5_light_level10": {
+        "units": "Luxes"
+      },
+      "bw5_light_level11": {
+        "units": "Luxes"
+      },
+      "bw5_light_level12": {
+        "units": "Luxes"
+      },
+      "bw5_light_level13": {
+        "units": "Luxes"
+      },
+      "bw5_light_level14": {
+        "units": "Luxes"
+      },
+      "bw3_occupancy9": {
+        "units": "No-units"
+      },
+      "bw3_occupancy8": {
+        "units": "No-units"
+      },
+      "bw3_occupancy7": {
+        "units": "No-units"
+      },
+      "bw3_occupancy6": {
+        "units": "No-units"
+      },
+      "bw3_occupancy5": {
+        "units": "No-units"
+      },
+      "bw3_occupancy4": {
+        "units": "No-units"
+      },
+      "bw4_light_level12": {
+        "units": "Luxes"
+      },
+      "bw4_light_level13": {
+        "units": "Luxes"
+      },
+      "bw4_light_level14": {
+        "units": "Luxes"
+      },
+      "bw4_light_level15": {
+        "units": "Luxes"
+      },
+      "bw4_light_level10": {
+        "units": "Luxes"
+      },
+      "bw4_light_level11": {
+        "units": "Luxes"
+      },
+      "bw2_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw3_light_level10": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw6_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw3_light_level12": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw3_light_level11": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw3_light_level14": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw3_light_level13": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw3_light_level16": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw3_light_level15": {
+        "units": "Luxes"
+      },
+      "bw6_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness9": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw2_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw6_light_level13": {
+        "units": "Luxes"
+      },
+      "bw2_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw6_light_level12": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw6_light_level11": {
+        "units": "Luxes"
+      },
+      "bw3_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw6_light_level10": {
+        "units": "Luxes"
+      },
+      "bw2_occupancy2": {
+        "units": "No-units"
+      },
+      "bw2_occupancy1": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness10": {
+        "units": "Percent"
+      },
+      "bw2_occupancy8": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness13": {
+        "units": "Percent"
+      },
+      "bw2_occupancy7": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness14": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness11": {
+        "units": "Percent"
+      },
+      "bw2_occupancy9": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness12": {
+        "units": "Percent"
+      },
+      "bw2_occupancy4": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness17": {
+        "units": "Percent"
+      },
+      "bw2_occupancy3": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness18": {
+        "units": "Percent"
+      },
+      "bw2_occupancy6": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness15": {
+        "units": "Percent"
+      },
+      "bw2_occupancy5": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness16": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw2_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw5_light_level15": {
+        "units": "Luxes"
+      },
+      "bw3_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw5_light_level16": {
+        "units": "Luxes"
+      },
+      "bw3_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw3_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness38": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw4_occupancy12": {
+        "units": "No-units"
+      },
+      "bw5_occupancy14": {
+        "units": "No-units"
+      },
+      "bw4_occupancy13": {
+        "units": "No-units"
+      },
+      "bw5_occupancy13": {
+        "units": "No-units"
+      },
+      "bw6_light_level16": {
+        "units": "Luxes"
+      },
+      "bw4_occupancy10": {
+        "units": "No-units"
+      },
+      "bw5_occupancy16": {
+        "units": "No-units"
+      },
+      "bw6_light_level15": {
+        "units": "Luxes"
+      },
+      "bw4_occupancy11": {
+        "units": "No-units"
+      },
+      "bw5_occupancy15": {
+        "units": "No-units"
+      },
+      "bw6_light_level14": {
+        "units": "Luxes"
+      },
+      "bw1_occupancy14": {
+        "units": "No-units"
+      },
+      "bw1_occupancy13": {
+        "units": "No-units"
+      },
+      "bw1_occupancy16": {
+        "units": "No-units"
+      },
+      "bw1_occupancy15": {
+        "units": "No-units"
+      },
+      "bw1_occupancy10": {
+        "units": "No-units"
+      },
+      "bw1_occupancy12": {
+        "units": "No-units"
+      },
+      "bw1_occupancy11": {
+        "units": "No-units"
+      },
+      "bw3_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw4_occupancy16": {
+        "units": "No-units"
+      },
+      "bw5_occupancy10": {
+        "units": "No-units"
+      },
+      "bw3_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw3_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw4_occupancy14": {
+        "units": "No-units"
+      },
+      "bw5_occupancy12": {
+        "units": "No-units"
+      },
+      "bw3_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw4_occupancy15": {
+        "units": "No-units"
+      },
+      "bw5_occupancy11": {
+        "units": "No-units"
+      },
+      "bw4_lamp_brightness42": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness43": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness40": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness41": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness46": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness47": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness44": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness45": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness48": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness49": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness3": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness4": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness1": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness2": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness7": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness8": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness5": {
+        "units": "Percent"
+      },
+      "bw5_lamp_brightness6": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness50": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness53": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness54": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness51": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness52": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness57": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness58": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness55": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness56": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness59": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness8": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness7": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness6": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness5": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness4": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness3": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness2": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness1": {
+        "units": "Percent"
+      },
+      "bw4_group_brightness9": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness20": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness21": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness24": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness25": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness22": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness23": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness28": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness29": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness26": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness27": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness19": {
+        "units": "Percent"
+      },
+      "bw5_light_level2": {
+        "units": "Luxes"
+      },
+      "bw5_light_level3": {
+        "units": "Luxes"
+      },
+      "bw5_light_level1": {
+        "units": "Luxes"
+      },
+      "bw5_light_level6": {
+        "units": "Luxes"
+      },
+      "bw5_light_level7": {
+        "units": "Luxes"
+      },
+      "bw5_light_level4": {
+        "units": "Luxes"
+      },
+      "bw5_light_level5": {
+        "units": "Luxes"
+      },
+      "bw5_light_level8": {
+        "units": "Luxes"
+      },
+      "bw5_light_level9": {
+        "units": "Luxes"
+      },
+      "bw4_lamp_brightness31": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness32": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness30": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness35": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness36": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness33": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness34": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness39": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness37": {
+        "units": "Percent"
+      },
+      "bw4_lamp_brightness38": {
+        "units": "Percent"
+      }
+    }
+  },
+  "version": 1,
+  "timestamp": "2020-03-05T14:42:59.743Z"
+}

@@ -1,5 +1,5 @@
 {
-  "title": "Device Config Schema",
+  "title": "Config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -13,9 +13,9 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "system": {
       "$ref": "file:config_system.json#"

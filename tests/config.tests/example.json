@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "min_loglevel": 500
+  },
+  "pointset": {
+    "sample_limit_sec": 2,
+    "sample_rate_sec": 500,
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+        "ref": "ziuewwedf"
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "title": "System metadata snippet",
+  "title": "System Metadata",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
