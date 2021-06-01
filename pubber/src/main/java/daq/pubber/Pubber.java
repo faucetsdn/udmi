@@ -5,15 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
-import daq.udmi.Entry;
-import daq.udmi.Message;
-import daq.udmi.Message.Metadata;
-import daq.udmi.Message.PointConfig;
-import daq.udmi.Message.Pointset;
-import daq.udmi.Message.PointsetConfig;
-import daq.udmi.Message.PointsetState;
-import daq.udmi.Message.State;
+import java.util.HashMap;
+import udmi.schema.Entry;
+import udmi.schema.Config;
+import udmi.schema.Firmware;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemConfig;
+import udmi.schema.SystemEvent;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.SystemState;
 
 public class Pubber {
 
@@ -43,7 +50,7 @@ public class Pubber {
   private static final String ERROR_TOPIC = "errors";
 
   private static final int MIN_REPORT_MS = 200;
-  private static final int DEFAULT_REPORT_MS = 10000;
+  private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
@@ -53,11 +60,11 @@ public class Pubber {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   private final Configuration configuration;
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_MS);
+  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
   private final State deviceState = new State();
-  private final Pointset devicePoints = new Pointset();
+  private final PointsetEvent devicePoints = new PointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
 
   private MqttPublisher mqttPublisher;
@@ -106,7 +113,7 @@ public class Pubber {
     try {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
       if (metadata.cloud != null) {
-        configuration.algorithm = metadata.cloud.auth_type;
+        configuration.algorithm = metadata.cloud.auth_type.value();
         LOG.info("Configuring with metadata key type " + configuration.algorithm);
       }
     } catch (Exception e) {
@@ -134,11 +141,16 @@ public class Pubber {
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
+    deviceState.system = new SystemState();
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
+    deviceState.system.firmware = new Firmware();
     deviceState.system.firmware.version = "v1";
+    deviceState.system.statuses = new HashMap<>();
     deviceState.pointset = new PointsetState();
-    devicePoints.extraField = configuration.extraField;
+    deviceState.pointset.points = new HashMap<>();
+    devicePoints.points = new HashMap<>();
+    // devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
     addPoint(new RandomBoolean("faulty_finding", false));
@@ -242,12 +254,12 @@ public class Pubber {
     mqttPublisher = new MqttPublisher(configuration, this::reportError);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
-          this::gatewayHandler, Message.Config.class);
+          this::gatewayHandler, Config.class);
       mqttPublisher.registerHandler(configuration.gatewayId, ERROR_TOPIC,
           this::errorHandler, GatewayError.class);
     }
     mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
-        this::configHandler, Message.Config.class);
+        this::configHandler, Config.class);
   }
 
   private String getDeviceKeyPrefix() {
@@ -268,7 +280,7 @@ public class Pubber {
   private void reportError(Exception toReport) {
     if (toReport != null) {
       LOG.error("Error receiving message: " + toReport);
-      Entry report = new Entry(toReport);
+      Entry report = entryFromException(toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
       if (configLatch.getCount() > 0) {
@@ -283,27 +295,38 @@ public class Pubber {
     }
   }
 
+  private Entry entryFromException(Exception e) {
+    Entry entry = new Entry();
+    entry.message = e.toString();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    e.printStackTrace(new PrintStream(outputStream));
+    entry.detail = outputStream.toString();
+    entry.category = e.getStackTrace()[0].getClassName();
+    entry.level = 800;
+    return entry;
+  }
+
   private void info(String msg) {
     LOG.info(msg);
   }
 
-  private void gatewayHandler(Message.Config config) {
+  private void gatewayHandler(Config config) {
     info(String.format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
   }
 
-  private void configHandler(Message.Config config) {
+  private void configHandler(Config config) {
     try {
       final int actualInterval;
       if (config != null) {
-        String config_etag = deviceState.pointset == null ? null : deviceState.pointset.config_etag;
+        String state_etag = deviceState.pointset == null ? null : deviceState.pointset.state_etag;
         info(String.format("%s received new config %s %s",
-            getTimestamp(), config_etag, isoConvert(config.timestamp)));
+            getTimestamp(), state_etag, isoConvert(config.timestamp)));
         deviceState.system.last_config = config.timestamp;
-        actualInterval = updateSystemConfig(config.system);
+        actualInterval = updateSystemConfig(config.pointset);
         updatePointsetConfig(config.pointset);
       } else {
         info(getTimestamp() + " defaulting empty config");
-        actualInterval = DEFAULT_REPORT_MS;
+        actualInterval = DEFAULT_REPORT_SEC * 1000;
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
@@ -331,20 +354,19 @@ public class Pubber {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     allPoints.forEach(point ->
         updatePointConfig(point, useConfig.points.get(point.getName())));
-    deviceState.pointset.config_etag = useConfig.config_etag;
-    devicePoints.config_etag = useConfig.config_etag;
+    deviceState.pointset.state_etag = useConfig.state_etag;
   }
 
-  private void updatePointConfig(AbstractPoint point, PointConfig pointConfig) {
+  private void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     point.setConfig(pointConfig);
     updateState(point);
   }
 
-  private int updateSystemConfig(Message.SystemConfig configSystem) {
+  private int updateSystemConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
-    Integer reportInterval = configSystem == null ? null : configSystem.max_update_ms;
-    actualInterval = Integer.max(MIN_REPORT_MS,
-        reportInterval == null ? DEFAULT_REPORT_MS : reportInterval);
+    boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
+    int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
+    actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
     return actualInterval;
   }
 
@@ -372,9 +394,12 @@ public class Pubber {
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
-    Message.SystemEvent systemEvent = new Message.SystemEvent();
+    SystemEvent systemEvent = new SystemEvent();
+    systemEvent.timestamp = new Date();
     info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
-    systemEvent.logentries.add(new Entry(logMessage));
+    Entry logEntry = new Entry();
+    logEntry.message = logMessage;
+    systemEvent.logentries.add(logEntry);
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
   }
 

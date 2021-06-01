@@ -23,15 +23,7 @@ public class BaselineValidator extends SequenceValidator {
     deviceConfig.pointset.points.put(RECALCITRANT_ANGLE, new PointConfig());
     deviceConfig.pointset.points.put(FAULTY_FINDING, new PointConfig());
     deviceConfig.pointset.points.put(SUPERIMPOSITION_READING, new PointConfig());
-    untilPointsetStateEtagIsUpdated();
     untilTrue(this::validSerialNo, "valid serial no");
-  }
-
-  public boolean pointsetStateEtagIs(String expected) {
-    if (deviceState.pointset == null) {
-      return false;
-    }
-    return Objects.equals(expected, deviceState.pointset.config_etag);
   }
 
   private boolean valueStateIs(String pointName, String expected) {
@@ -41,29 +33,25 @@ public class BaselineValidator extends SequenceValidator {
     return Objects.equals(expected, deviceState.pointset.points.get(pointName).value_state);
   }
 
-  private void untilPointsetStateEtagIsUpdated() {
-    String timestamp = Objects.toString(System.currentTimeMillis());
-    deviceConfig.pointset.config_etag = timestamp;
-    updateConfig();
-    untilTrue(() -> pointsetStateEtagIs(timestamp), "etag " + timestamp);
-  }
-
   @Test
-  public void pointset_etag() {
-    untilPointsetStateEtagIsUpdated();
-    untilPointsetStateEtagIsUpdated();
+  public void system_last_update() {
+    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
+    String prevConfig = deviceState.system.last_config;
+    updateConfig();
+    untilTrue(() -> !prevConfig.equals(deviceState.system.last_config), "last_config " + prevConfig);
+    System.err.printf("%s last_config updated from %s to %s%n", getTimestamp(), prevConfig,
+        deviceState.system.last_config);
   }
 
   @Test
   public void writeback_states() {
-    untilPointsetStateEtagIsUpdated();
     untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, DEFAULT_STATE), "default value_state");
     untilTrue(() -> valueStateIs(FAULTY_FINDING, DEFAULT_STATE), "default value_state");
     untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, DEFAULT_STATE), "default value_state");
     deviceConfig.pointset.points.get(RECALCITRANT_ANGLE).set_value = 20;
     deviceConfig.pointset.points.get(FAULTY_FINDING).set_value = true;
     deviceConfig.pointset.points.get(SUPERIMPOSITION_READING).set_value = 10;
-    untilPointsetStateEtagIsUpdated();
+    updateConfig();
     untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, INVALID_STATE), "invalid value_state");
     untilTrue(() -> valueStateIs(FAULTY_FINDING, FAILURE_STATE), "failure value_state");
     untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, APPLIED_STATE), "applied value_state");
