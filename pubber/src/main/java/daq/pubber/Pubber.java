@@ -364,7 +364,8 @@ public class Pubber {
 
   private int updateSystemConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
-    Integer reportInterval = pointsetConfig == null ? DEFAULT_REPORT_SEC : pointsetConfig.sample_rate_sec;
+    boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
+    int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
     actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
     return actualInterval;
   }

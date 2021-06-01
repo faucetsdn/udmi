@@ -26,25 +26,11 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(this::validSerialNo, "valid serial no");
   }
 
-  public boolean pointsetStateEtagIs(String expected) {
-    if (deviceState.pointset == null) {
-      return false;
-    }
-    return Objects.equals(expected, deviceState.pointset.state_etag);
-  }
-
   private boolean valueStateIs(String pointName, String expected) {
     if (deviceState.pointset == null || !deviceState.pointset.points.containsKey(pointName)) {
       return false;
     }
     return Objects.equals(expected, deviceState.pointset.points.get(pointName).value_state);
-  }
-
-  private void untilPointsetStateEtagIsUpdated() {
-    String timestamp = Objects.toString(System.currentTimeMillis());
-    deviceConfig.pointset.state_etag = timestamp;
-    updateConfig();
-    untilTrue(() -> pointsetStateEtagIs(timestamp), "etag " + timestamp);
   }
 
   @Test
@@ -58,21 +44,14 @@ public class BaselineValidator extends SequenceValidator {
   }
 
   @Test
-  public void pointset_etag() {
-    untilPointsetStateEtagIsUpdated();
-    untilPointsetStateEtagIsUpdated();
-  }
-
-  @Test
   public void writeback_states() {
-    untilPointsetStateEtagIsUpdated();
     untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, DEFAULT_STATE), "default value_state");
     untilTrue(() -> valueStateIs(FAULTY_FINDING, DEFAULT_STATE), "default value_state");
     untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, DEFAULT_STATE), "default value_state");
     deviceConfig.pointset.points.get(RECALCITRANT_ANGLE).set_value = 20;
     deviceConfig.pointset.points.get(FAULTY_FINDING).set_value = true;
     deviceConfig.pointset.points.get(SUPERIMPOSITION_READING).set_value = 10;
-    untilPointsetStateEtagIsUpdated();
+    updateConfig();
     untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, INVALID_STATE), "invalid value_state");
     untilTrue(() -> valueStateIs(FAULTY_FINDING, FAILURE_STATE), "failure value_state");
     untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, APPLIED_STATE), "applied value_state");
