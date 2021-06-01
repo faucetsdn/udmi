@@ -1,0 +1,21 @@
+Validating 1 schemas
+  Validating 1 files against event_pointset.json
+    Against input event_pointset.tests/errors.json
+      #: 14 schema violations found
+        #/points: 10 schema violations found
+          #/points/guid: expected type: JSONObject, found: String
+          #/points/missing_present_value: required key [present_value] not found
+          #/points/old_properties: 2 schema violations found
+            #/points/old_properties: extraneous key [properties] is not permitted
+            #/points/old_properties: required key [present_value] not found
+          #/points/yoyo_motion_sensor: 2 schema violations found
+            #/points/yoyo_motion_sensor: extraneous key [bad_property_name] is not permitted
+            #/points/yoyo_motion_sensor: required key [present_value] not found
+          #/points: extraneous key [analogValue_1] is not permitted
+          #/points: extraneous key [bad_____sensor] is not permitted
+          #/points: extraneous key [bad_entity_name_] is not permitted
+          #/points: extraneous key [comment$string] is not permitted
+        #: extraneous key [comment$string] is not permitted
+        #: extraneous key [id] is not permitted
+        #: extraneous key [properties] is not permitted
+        #: extraneous key [state_etag] is not permitted

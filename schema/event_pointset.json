@@ -1,5 +1,5 @@
 {
-  "title": "Pointset telemetry schema",
+  "title": "Pointset Event",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -9,19 +9,16 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
-    },
-    "config_etag": {
-      "type": "string",
-      "maxLength": 32
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "points": {
       "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, PointPointsetEvent>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "#/definitions/point_property_names"
+          "$ref": "file:event_pointset_point.json"
         }
       }
     }
@@ -30,22 +27,5 @@
     "timestamp",
     "version",
     "points"
-  ],
-  "definitions": {
-    "point_property_names": {
-      "type": "object",
-      "propertyNames": {
-        "oneOf": [
-          {
-            "enum": [
-              "present_value"
-            ]
-          }
-        ]
-      },
-      "required": [
-        "present_value"
-      ]
-    }
-  }
+  ]
 }

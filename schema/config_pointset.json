@@ -1,5 +1,5 @@
 {
-  "title": "pointset config snippet",
+  "title": "Pointset Config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -13,28 +13,21 @@
       "format": "date-time"
     },
     "sample_limit_sec": {
-      "type": "number",
+      "type": "integer",
       "minimum": 1,
       "maximum": 86400
     },
     "sample_rate_sec": {
-      "type": "number",
+      "type": "integer",
       "minimum": 1,
       "maximum": 86400
     },
     "points": {
       "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, PointPointsetConfig>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "additionalProperties": false,
-          "properties": {
-            "ref": {
-              "type": "string"
-            },
-            "set_value": {
-              "type": ["number", "string", "boolean"]
-            }
-          }
+          "$ref": "file:config_pointset_point.json#"
         }
       }
     }

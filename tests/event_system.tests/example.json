@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "logentries": [
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "com.testCategory",
+      "level": 600
+    },
+    {
+      "message": "something else happened",
+      "timestamp": "2018-08-26T21:39:39.364Z",
+      "detail": "someplace, sometime",
+      "category": "com.testCategory",
+      "level": 700
+    }
+  ]
+}

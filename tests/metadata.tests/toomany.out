@@ -1,0 +1,6 @@
+Validating 1 schemas
+  Validating 1 files against metadata.json
+    Against input metadata.tests/toomany.json
+      #: 2 schema violations found
+        #/pointset/points: maximum size: [150], found: [672]
+        #/system/physical_tag/asset/name: string [UK-LON-S2_LTGW-3] does not match pattern ^[A-Z]{2,6}-[0-9]{1,6}$
