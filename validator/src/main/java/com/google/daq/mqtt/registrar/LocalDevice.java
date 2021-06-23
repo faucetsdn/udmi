@@ -104,6 +104,7 @@ class LocalDevice {
       ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
       ES_CERT_TYPE, ES_PRIVATE_KEY_FILES
   );
+
   private static final Map<String, String> PUBLIC_KEY_FILE_MAP = ImmutableMap.of(
       RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
       RSA_CERT_TYPE, RSA_CERT_PEM,
@@ -112,11 +113,16 @@ class LocalDevice {
   );
 
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
-      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
+      RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, 
+      ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR);
   private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
       RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
       ES_CERT_PEM, ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
+  );
+  private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(
+      RSA_CERT_PEM, 
+      ES_CERT_PEM
   );
 
   private static final Map<String, String> AUTH_TYPE_MAP = ImmutableMap.of(
@@ -270,7 +276,15 @@ class LocalDevice {
       if (!hasAuthType()) {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
-      for (String keyFile : ALL_KEY_FILES) {
+      String authType = getAuthType();
+      Set<String> keyFiles;
+      if (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+      {
+        keyFiles = ALL_CERT_FILES;
+      } else {
+        keyFiles = ALL_KEY_FILES;
+      }
+      for (String keyFile : keyFiles) {
         DeviceCredential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
           deviceCredentials.add(deviceCredential);
