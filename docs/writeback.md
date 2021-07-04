@@ -46,6 +46,3 @@ Here's a concrete example of the race condition this field prevents:
 
 When the device receives a config, it should check that `set_value_expiry` exists and is greater than the timestamp field in the config, sending an invalid `value_state` if not. If the `set_value_expiry` has already passed, then there’s no write to perform, and a state should be sent with a missing `value_state`.
 If the config passes these checks, then the device should 1) perform the write and 2) set a timer to trigger at the given `set_value_expiry`, overwriting any existing timer. When the timer expires, the device reverts to its operational state, and sends a state update to notify the cloud of the state change.
-
-
-

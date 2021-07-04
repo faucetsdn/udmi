@@ -1,6 +1,6 @@
 # UDMI Technology Stack
 
-The complete UDMI specificaiton (super set of the base schema), specifies a complete
+The complete UDMI specification (super set of the base schema), specifies a complete
 technology stack for compliant IoT devices.
 
 # Core Requirements
