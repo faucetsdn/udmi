@@ -75,5 +75,6 @@ The [UDMI Validator](validator.md) tool monitors a device's message stream and v
 the UDMI schema. There are a variety of configuraitons used, depending on the overall intent.
 
 ## Sequence Validator
+
 The [UDMI Sequence Validator](sequence_validator.md) tool monitors a sequence of messages from a device's 
-stream and validates that the composition of sequential messages is compliant with the UDMI Schema
+stream and validates that the composition of sequential messages is compliant with the UDMI Schema.
