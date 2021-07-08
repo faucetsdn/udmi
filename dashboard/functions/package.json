@@ -12,7 +12,7 @@
     "node": "12"
   },
   "dependencies": {
-    "@google-cloud/iot": "2.3.1",
+    "@google-cloud/iot": "2.3.4",
     "@google-cloud/pubsub": "2.15.1",
     "extend": "3.0.2",
     "firebase-admin": "9.5.0",
