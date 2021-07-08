@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "tslint": "5.20.1",
-    "typescript": "3.9.9",
+    "typescript": "3.9.10",
     "firebase-functions-test": "0.2.3"
   },
   "private": true
