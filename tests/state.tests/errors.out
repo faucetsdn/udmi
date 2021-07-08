@@ -1,7 +1,7 @@
 Validating 1 schemas
   Validating 1 files against state.json
     Against input state.tests/errors.json
-      #: 26 schema violations found
+      #: 27 schema violations found
         #/pointset/points/return_air_temperature_sensor: 10 schema violations found
           #/pointset/points/return_air_temperature_sensor/status: expected type: JSONObject, found: String
           #/pointset/points/return_air_temperature_sensor: extraneous key [cov_increment] is not permitted
@@ -13,7 +13,7 @@ Validating 1 schemas
           #/pointset/points/return_air_temperature_sensor: extraneous key [rapt] is not permitted
           #/pointset/points/return_air_temperature_sensor: extraneous key [resolution] is not permitted
           #/pointset/points/return_air_temperature_sensor: extraneous key [units] is not permitted
-        #/system: 14 schema violations found
+        #/system: 15 schema violations found
           #/system/firmware: 2 schema violations found
             #/system/firmware: extraneous key [revision] is not permitted
             #/system/firmware: required key [version] not found
@@ -27,6 +27,7 @@ Validating 1 schemas
           #/system: extraneous key [object_name] is not permitted
           #/system: extraneous key [status] is not permitted
           #/system: extraneous key [system_status] is not permitted
+          #/system: required key [last_config] not found
           #/system: required key [make_model] not found
           #/system: required key [operational] not found
           #/system: required key [serial_no] not found

@@ -55,6 +55,7 @@
   "required": [
     "make_model",
     "serial_no",
+    "last_config",
     "firmware",
     "operational"
   ]
