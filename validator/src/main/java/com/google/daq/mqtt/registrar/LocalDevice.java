@@ -111,24 +111,21 @@ class LocalDevice {
       ES_CERT_TYPE, ES_PUBLIC_PEM
   );
   private static final Map<String, String> CERT_FILE_MAP = ImmutableMap.of(
-    RSA_CERT_TYPE, RSA_CERT_PEM,
-    ES_CERT_TYPE, ES_CERT_PEM
+      RSA_CERT_TYPE, RSA_CERT_PEM,
+      ES_CERT_TYPE, ES_CERT_PEM
   );
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
-    RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
-    GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR
+      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
+      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR
   );
-
   private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
-      RSA_CERT_PEM, RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
-      ES_CERT_PEM, ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
+      RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
+      ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
   );
-
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(
       RSA_CERT_PEM,
       ES_CERT_PEM
   );
-
   private static final Map<String, String> AUTH_TYPE_MAP = ImmutableMap.of(
       RSA_AUTH_TYPE, RSA_KEY_FORMAT,
       RSA_CERT_TYPE, RSA_CERT_FORMAT,
@@ -311,28 +308,35 @@ class LocalDevice {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
-    Set<String> certFile = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ? Set.of(certFile()) : null;
-    Set<String> publicKeyFile = Set.of(publicKeyFile());
-    Set<String> privateKeyFiles = privateKeyFiles();
+    Set<String> certFile = getCertFiles();
+    Set<String> publicKeyFile = Set.of(getPublicKeyFile());
+    Set<String> privateKeyFiles = getPrivateKeyFiles();
     Set<String> rtn = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ? 
-       Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles) : 
-       Sets.union(publicKeyFile, privateKeyFiles);
+        Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles) : 
+        Sets.union(publicKeyFile, privateKeyFiles);
     return rtn;
   }
 
-  private Set<String> privateKeyFiles() {
+  private Set<String> getPrivateKeyFiles() {
     if (isDeviceKeySource() || !hasAuthType()) {
       return Set.of();
     }
     return PRIVATE_KEY_FILES_MAP.get(getAuthType());
   }
 
-  private String publicKeyFile() {
+  private String getPublicKeyFile() {
+    if (isDeviceKeySource() || !hasAuthType()) {
+      return null;
+    }
     return PUBLIC_KEY_FILE_MAP.get(getAuthType());
   }
 
-  private String certFile() {
-    return CERT_FILE_MAP.get(getAuthType());
+  private Set<String> getCertFiles() {
+    if (isDeviceKeySource() || !hasAuthType()) {
+      return Set.of();
+    }
+    String authType = getAuthType();
+    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ?  Set.of(CERT_FILE_MAP.get(getAuthType())) : Set.of();
   }
 
   boolean isGateway() {
