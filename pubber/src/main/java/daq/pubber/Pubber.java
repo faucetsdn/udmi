@@ -114,7 +114,7 @@ public class Pubber {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
       if (metadata.cloud != null) {
         configuration.algorithm = metadata.cloud.auth_type.value();
-        LOG.info("Configuring with metadata key type " + configuration.algorithm);
+        LOG.info("Configuring with key type " + configuration.algorithm);
       }
     } catch (Exception e) {
       throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);

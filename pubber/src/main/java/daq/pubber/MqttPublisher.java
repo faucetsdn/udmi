@@ -189,10 +189,8 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      char[] password = createJwt();
-      byte[] passwordBytes = new String(password).getBytes("UTF-8");
-      LOG.info("Password hash " + Hashing.sha256().hashBytes(passwordBytes).toString());
-      options.setPassword(password);
+      LOG.info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
+      options.setPassword(createJwt());
 
       mqttClient.connect(options);
 
