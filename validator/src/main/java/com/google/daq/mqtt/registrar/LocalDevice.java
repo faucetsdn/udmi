@@ -311,10 +311,9 @@ class LocalDevice {
     Set<String> certFile = getCertFiles();
     Set<String> publicKeyFile = Set.of(getPublicKeyFile());
     Set<String> privateKeyFiles = getPrivateKeyFiles();
-    Set<String> rtn = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ? 
+    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ? 
         Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles) : 
         Sets.union(publicKeyFile, privateKeyFiles);
-    return rtn;
   }
 
   private Set<String> getPrivateKeyFiles() {
