@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.RemovalNotification;
+import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -177,7 +178,7 @@ public class MqttPublisher {
       if (mqttClient.isConnected()) {
         return mqttClient;
       }
-      LOG.info("Attempting connection to " + registryId + ":" + deviceId);
+      LOG.info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
@@ -188,7 +189,10 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      options.setPassword(createJwt());
+      char[] password = createJwt();
+      byte[] passwordBytes = new String(password).getBytes("UTF-8");
+      LOG.info("Password hash " + Hashing.sha256().hashBytes(passwordBytes).toString());
+      options.setPassword(password);
 
       mqttClient.connect(options);
 
