@@ -9,6 +9,7 @@
       "patternProperties": {
         "^[a-z0-9-]+$": {
           "additionalProperties": false,
+          "type": "object",
           "properties": {
             "local_id": {
               "type": "string"

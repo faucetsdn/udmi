@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "system",
     "gateway",
     "localnet",
+    "blobset",
     "pointset"
 })
 @Generated("jsonschema2pojo")
@@ -65,6 +66,14 @@ public class Config {
     @JsonProperty("localnet")
     public LocalnetConfig localnet;
     /**
+     * Blobset Config
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("blobset")
+    public BlobsetConfig blobset;
+    /**
      * Pointset Config
      * <p>
      * 
@@ -79,6 +88,7 @@ public class Config {
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.blobset == null)? 0 :this.blobset.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
         result = ((result* 31)+((this.localnet == null)? 0 :this.localnet.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -94,7 +104,7 @@ public class Config {
             return false;
         }
         Config rhs = ((Config) other);
-        return (((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

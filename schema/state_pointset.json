@@ -13,7 +13,7 @@
       "existingJavaType": "java.util.HashMap<String, PointPointsetState>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:state_pointset_point.json"
+          "$ref": "file:state_pointset_point.json#"
         }
       }
     }

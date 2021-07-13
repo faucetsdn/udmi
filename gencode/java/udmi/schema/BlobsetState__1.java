@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Pointset State
+ * Blobset State
  * <p>
  * 
  * 
@@ -17,10 +17,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "state_etag",
-    "points"
+    "blobs"
 })
 @Generated("jsonschema2pojo")
-public class PointsetState__2 {
+public class BlobsetState__1 {
 
     @JsonProperty("state_etag")
     public java.lang.String state_etag;
@@ -29,14 +29,14 @@ public class PointsetState__2 {
      * (Required)
      * 
      */
-    @JsonProperty("points")
-    public HashMap<String, PointPointsetState> points;
+    @JsonProperty("blobs")
+    public HashMap<String, BlobBlobsetState> blobs;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.blobs == null)? 0 :this.blobs.hashCode()));
         result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
-        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
 
@@ -45,11 +45,11 @@ public class PointsetState__2 {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointsetState__2) == false) {
+        if ((other instanceof BlobsetState__1) == false) {
             return false;
         }
-        PointsetState__2 rhs = ((PointsetState__2) other);
-        return (((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag)))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        BlobsetState__1 rhs = ((BlobsetState__1) other);
+        return (((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))));
     }
 
 }

@@ -27,6 +27,12 @@ public class PointPointsetState {
 
     @JsonProperty("value_state")
     public PointPointsetState.Value_state value_state;
+    /**
+     * Entry
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("status")
     public Entry status;
 

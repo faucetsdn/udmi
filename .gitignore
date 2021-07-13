@@ -19,3 +19,4 @@ firebase-debug.log
 /venv/
 /local/
 .pubber.pid
+__pycache__/

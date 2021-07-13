@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "system",
     "gateway",
+    "blobset",
     "pointset"
 })
 @Generated("jsonschema2pojo")
@@ -57,6 +58,14 @@ public class State {
     @JsonProperty("gateway")
     public GatewayState gateway;
     /**
+     * Blobset State
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("blobset")
+    public BlobsetState blobset;
+    /**
      * Pointset State
      * <p>
      * 
@@ -68,9 +77,10 @@ public class State {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.blobset == null)? 0 :this.blobset.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -85,7 +95,7 @@ public class State {
             return false;
         }
         State rhs = ((State) other);
-        return ((((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

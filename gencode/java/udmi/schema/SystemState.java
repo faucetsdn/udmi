@@ -51,6 +51,11 @@ public class SystemState {
      */
     @JsonProperty("firmware")
     public Firmware firmware;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("last_config")
     public Date last_config;
     /**

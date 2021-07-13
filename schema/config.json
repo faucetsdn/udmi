@@ -26,6 +26,9 @@
     "localnet": {
       "$ref": "file:config_localnet.json#"
     },
+    "blobset": {
+      "$ref": "file:config_blobset.json#"
+    },
     "pointset": {
       "$ref": "file:config_pointset.json#"
     }

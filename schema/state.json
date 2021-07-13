@@ -24,6 +24,9 @@
     "gateway": {
       "$ref": "file:state_gateway.json#"
     },
+    "blobset": {
+      "$ref": "file:state_blobset.json#"
+    },
     "pointset": {
       "$ref": "file:state_pointset.json#"
     }
