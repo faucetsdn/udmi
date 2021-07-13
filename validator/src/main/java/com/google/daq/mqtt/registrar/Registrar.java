@@ -4,6 +4,7 @@ import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
+import static com.google.daq.mqtt.validator.Validator.NO_SITE;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -44,6 +45,7 @@ import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import udmi.schema.Config;
 
 public class  Registrar {
 
@@ -265,7 +267,7 @@ public class  Registrar {
   private void sendConfigMessages(LocalDevice localDevice) {
     System.err.println("Sending config messages for " + localDevice.getDeviceId());
 
-    UdmiSchema.Config deviceConfig = localDevice.deviceConfigObject();
+    Config deviceConfig = localDevice.deviceConfigObject();
     sendConfigMessage(localDevice, SYSTEM_SUBFOLDER, deviceConfig.system);
     sendConfigMessage(localDevice, POINTSET_SUBFOLDER, deviceConfig.pointset);
     sendConfigMessage(localDevice, GATEWAY_SUBFOLDER, deviceConfig.gateway);
@@ -424,6 +426,9 @@ public class  Registrar {
   }
 
   private void setProjectId(String projectId) {
+    if (NO_SITE.equals(projectId) || projectId == null) {
+      return;
+    }
     this.projectId = projectId;
     initializeCloudProject();
   }

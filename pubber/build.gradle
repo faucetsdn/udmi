@@ -21,6 +21,14 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
+sourceSets {
+    main {
+        java {
+            srcDirs '../gencode/java'
+        }
+    }
+}
+
 jar {
     manifest {
         attributes 'Main-Class': 'daq.pubber.Pubber'

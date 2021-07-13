@@ -21,12 +21,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class LocalnetConfig__1 {
 
     /**
+     * Subsystem Reference
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("subsystem")
-    public Subsystem__1 subsystem;
+    public Object subsystem;
 
     @Override
     public int hashCode() {

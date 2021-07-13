@@ -21,6 +21,14 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.9
 
+sourceSets {
+    main {
+        java {
+            srcDirs '../gencode/java'
+        }
+    }
+}
+
 jar {
     manifest {
         attributes 'Main-Class': 'com.google.daq.mqtt.validator.Validator'

@@ -1,6 +1,10 @@
 {
+  "proxy_sub_base": "debug",
+  "proxy_topic_base": "udmi",
   "proxy_SG-SIN-MBC2_target": "bos-sg-sin-mbc2",
   "proxy_SG-SIN-MBC2_region": "asia-east1",
+  "proxy_MY-KUL-ETIQA_target": "bos-my-kul-etiqa1",
+  "proxy_MY-KUL-ETIQA_region": "asia-east1",
   "proxy_ZZ-TRI-FECTA_target": "bos-daq-testing",
   "proxy_ZZ-TRI-FECTA_region": "us-central1"
 }

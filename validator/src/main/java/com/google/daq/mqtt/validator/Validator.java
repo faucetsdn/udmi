@@ -13,9 +13,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.registrar.UdmiSchema;
-import com.google.daq.mqtt.registrar.UdmiSchema.Config;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -50,6 +47,8 @@ import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import udmi.schema.Metadata;
+import udmi.schema.PointsetEvent;
 
 public class Validator {
 
@@ -82,11 +81,11 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
-  private static final String NO_SITE = "--";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
+  public static final String NO_SITE = "--";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
 
@@ -170,7 +169,7 @@ public class Validator {
           File deviceDir = new File(devicesDir, device);
           File metadataFile = new File(deviceDir, METADATA_JSON);
           reportingDevice.setMetadata(
-              OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class));
+              OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
           reportingDevice.addError(e);
@@ -373,8 +372,8 @@ public class Validator {
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
           if (EVENT_POINTSET.equals(schemaName)) {
-            PointsetMessage pointsetMessage =
-                OBJECT_MAPPER.convertValue(message, PointsetMessage.class);
+            PointsetEvent pointsetMessage =
+                OBJECT_MAPPER.convertValue(message, PointsetEvent.class);
             updated = !reportingDevice.hasBeenValidated();
             reportingDevice.validateMetadata(pointsetMessage);
           }

@@ -7,11 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
-import com.google.daq.mqtt.registrar.UdmiSchema.Config;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointsetState;
-import com.google.daq.mqtt.registrar.UdmiSchema.State;
-import com.google.daq.mqtt.registrar.UdmiSchema.SystemConfig;
-import com.google.daq.mqtt.registrar.UdmiSchema.SystemState;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -33,6 +28,11 @@ import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
+import udmi.schema.Config;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemConfig;
+import udmi.schema.SystemState;
 
 public abstract class SequenceValidator {
 
@@ -65,7 +65,6 @@ public abstract class SequenceValidator {
 
   protected Config deviceConfig;
   protected State deviceState;
-
 
   public static final String TESTS_OUT_DIR = "tests";
 
@@ -266,7 +265,7 @@ public abstract class SequenceValidator {
   private void updateState(String subFolder, Map<String, Object> message) {
     if (updateState(subFolder, "system", SystemState.class, message,
         state -> deviceState.system = state)) {
-      String last_config = deviceState.system == null ? null : deviceState.system.last_config;
+      Date last_config = deviceState.system == null ? null : deviceState.system.last_config;
       System.err.printf("%s received state last_config %s%n", getTimestamp(), last_config);
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,

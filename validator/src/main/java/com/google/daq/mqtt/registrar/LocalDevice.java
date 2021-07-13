@@ -22,8 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.daq.mqtt.registrar.UdmiSchema.Config;
-import com.google.daq.mqtt.registrar.UdmiSchema.GatewayConfig;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -41,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,6 +51,14 @@ import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import udmi.schema.Config;
+import udmi.schema.Envelope;
+import udmi.schema.GatewayConfig;
+import udmi.schema.LocalnetConfig;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointsetConfig;
 
 class LocalDevice {
 
@@ -94,6 +101,7 @@ class LocalDevice {
   private static final String SAMPLES_DIR = "samples";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
+
   private static final Set<String> RSA_PRIVATE_KEY_FILES = ImmutableSet.of(
       RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
   private static final Set<String> ES_PRIVATE_KEY_FILES = ImmutableSet.of(
@@ -104,6 +112,14 @@ class LocalDevice {
       ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
       ES_CERT_TYPE, ES_PRIVATE_KEY_FILES
   );
+
+  protected static final Map<String, String> PRIVATE_PKCS8_MAP = ImmutableMap.of(
+      RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
+      RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
+      ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
+      ES_CERT_TYPE, ES_PRIVATE_PKCS8
+  );
+
   private static final Map<String, String> PUBLIC_KEY_FILE_MAP = ImmutableMap.of(
       RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
       RSA_CERT_TYPE, RSA_CERT_PEM,
@@ -147,7 +163,7 @@ class LocalDevice {
   private final String deviceId;
   private final Map<String, Schema> schemas;
   private final File deviceDir;
-  private final UdmiSchema.Metadata metadata;
+  private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
@@ -189,11 +205,12 @@ class LocalDevice {
         throw new RuntimeException("Extra files: " + extra);
       }
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException("While validating device directory " + deviceId, e);
     }
   }
 
-  private UdmiSchema.Metadata readMetadata() {
+  private Metadata readMetadata() {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(new JSONObject(new JSONTokener(targetStream)));
@@ -203,19 +220,19 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
     try {
-      return OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class);
+      return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
     } catch (Exception mapping_exception) {
       exceptionMap.put(EXCEPTION_READING, mapping_exception);
     }
     return null;
   }
 
-  private UdmiSchema.Metadata readNormalized() {
+  private Metadata readNormalized() {
     try {
       File metadataFile = new File(deviceDir, NORMALIZED_JSON);
-      return OBJECT_MAPPER.readValue(metadataFile, UdmiSchema.Metadata.class);
+      return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
     } catch (Exception mapping_exception) {
-      return new UdmiSchema.Metadata();
+      return new Metadata();
     }
   }
 
@@ -243,11 +260,12 @@ class LocalDevice {
   }
 
   private String getAuthType() {
-    return metadata.cloud == null ? null : metadata.cloud.auth_type;
+    return metadata.cloud == null ? null : metadata.cloud.auth_type.value();
   }
 
   private boolean isDeviceKeySource() {
-    return metadata.cloud == null ? null : Boolean.TRUE.equals(metadata.cloud.device_key);
+    return metadata != null && (metadata.cloud != null && Boolean.TRUE
+        .equals(metadata.cloud.device_key));
   }
 
   private String getAuthFileType() {
@@ -298,8 +316,12 @@ class LocalDevice {
     if (!isDirectConnect()) {
       return ImmutableSet.of();
     }
-    Set<String> publicKeyFile = Set.of(publicKeyFile());
+    String keyFile = publicKeyFile();
     Set<String> privateKeyFiles = privateKeyFiles();
+    if (keyFile == null) {
+      return privateKeyFiles;
+    }
+    Set<String> publicKeyFile = Set.of(publicKeyFile());
     return Sets.union(publicKeyFile, privateKeyFiles);
   }
 
@@ -316,7 +338,7 @@ class LocalDevice {
 
   boolean isGateway() {
     return metadata != null && metadata.gateway != null &&
-        metadata.gateway.proxy_ids != null;
+        metadata.gateway.proxy_ids != null && !metadata.gateway.proxy_ids.isEmpty();
   }
 
   boolean hasGateway() {
@@ -355,7 +377,7 @@ class LocalDevice {
   }
 
   private byte[] getKeyBytes() {
-    File keyBytesFile = new File(deviceDir, RSA_PRIVATE_PKCS8);
+    File keyBytesFile = new File(deviceDir, PRIVATE_PKCS8_MAP.get(getAuthType()));
     if (!keyBytesFile.exists()) {
       return null;
     }
@@ -393,7 +415,7 @@ class LocalDevice {
     }
   }
 
-  public UdmiSchema.Config deviceConfigObject() {
+  public Config deviceConfigObject() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     if (isGateway()) {
@@ -409,18 +431,25 @@ class LocalDevice {
     return config;
   }
 
-  private UdmiSchema.LocalnetConfig getDeviceLocalnetConfig() {
-    UdmiSchema.LocalnetConfig localnetConfig = new UdmiSchema.LocalnetConfig();
-    localnetConfig.subsystems = metadata.localnet.subsystem;
+  private LocalnetConfig getDeviceLocalnetConfig() {
+    LocalnetConfig localnetConfig = new LocalnetConfig();
+    localnetConfig.subsystem = metadata.localnet.subsystem;
     return localnetConfig;
   }
 
-  private UdmiSchema.PointsetConfig getDevicePointsetConfig() {
-    UdmiSchema.PointsetConfig pointsetConfig = new UdmiSchema.PointsetConfig();
+  private PointsetConfig getDevicePointsetConfig() {
+    PointsetConfig pointsetConfig = new PointsetConfig();
+    pointsetConfig.points = new HashMap<>();
     metadata.pointset.points.forEach((metadataKey, value) ->
         pointsetConfig.points.computeIfAbsent(metadataKey, configKey ->
-            UdmiSchema.PointConfig.fromMetadata(value)));
+            ConfigFromMetadata(value)));
     return pointsetConfig;
+  }
+
+  PointPointsetConfig ConfigFromMetadata(PointPointsetMetadata metadata) {
+    PointPointsetConfig pointConfig = new PointPointsetConfig();
+    pointConfig.ref = metadata.ref;
+    return pointConfig;
   }
 
   private String metadataString() {
@@ -438,10 +467,10 @@ class LocalDevice {
   public void validateEnvelope(String registryId, String siteName) {
     checkConsistency(siteName);
     try {
-      UdmiSchema.Envelope envelope = new UdmiSchema.Envelope();
+      Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
-      envelope.subFolder = POINTSET_SUBFOLDER;
+      envelope.subFolder = Envelope.SubFolder.fromValue(POINTSET_SUBFOLDER);
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
@@ -470,7 +499,7 @@ class LocalDevice {
         String.format("system.location.site %s does not match expected %s", siteName, expectedSite));
   }
 
-  private String makeNumId(UdmiSchema.Envelope envelope) {
+  private String makeNumId(Envelope envelope) {
     int hash = Objects.hash(deviceId, envelope.deviceRegistryId, envelope.projectId);
     return Integer.toString(hash < 0 ? -hash : hash);
   }
@@ -506,7 +535,7 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
-    UdmiSchema.Metadata normalized = readNormalized();
+    Metadata normalized = readNormalized();
     String writeHash = metadataHash();
     if (normalized.hash != null && normalized.hash.equals(writeHash)) {
       metadata.timestamp = normalized.timestamp;

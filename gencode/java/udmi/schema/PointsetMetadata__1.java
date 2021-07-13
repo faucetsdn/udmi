@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +27,7 @@ public class PointsetMetadata__1 {
      * 
      */
     @JsonProperty("points")
-    public Object points;
+    public HashMap<String, PointPointsetMetadata> points;
 
     @Override
     public int hashCode() {

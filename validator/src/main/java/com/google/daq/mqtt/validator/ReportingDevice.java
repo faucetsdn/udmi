@@ -3,12 +3,11 @@ package com.google.daq.mqtt.validator;
 import com.google.common.base.Joiner;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.registrar.UdmiSchema;
-import com.google.daq.mqtt.registrar.UdmiSchema.Metadata;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointData;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointMetadata;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
 import java.util.*;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointsetEvent;
 
 public class ReportingDevice {
 
@@ -57,7 +56,7 @@ public class ReportingDevice {
     return metadataDiff;
   }
 
-  public void validateMetadata(PointsetMessage message) {
+  public void validateMetadata(PointsetEvent message) {
     Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
     Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
@@ -69,11 +68,11 @@ public class ReportingDevice {
     }
   }
 
-  private Map<String, PointData> getPoints(PointsetMessage message) {
+  private Map<String, PointPointsetEvent> getPoints(PointsetEvent message) {
     return message.points == null ? ImmutableMap.of() : message.points;
   }
 
-  private Map<String, PointMetadata> getPoints(Metadata metadata) {
+  private Map<String, PointPointsetMetadata> getPoints(Metadata metadata) {
     if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
       return ImmutableMap.of();
     }

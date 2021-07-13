@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "properties": {
     "subsystem": {
-      "type": "object",
+      "title": "Subsystem Reference",
       "patternProperties": {
         "^[a-z0-9-]+$": {
           "additionalProperties": false,

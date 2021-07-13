@@ -23,9 +23,4 @@ JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in gencode/java...
 $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 
-cd $ROOT_DIR
-echo Copying gencode to pubber...
-rm -rf pubber/src/main/java/udmi
-cp -a gencode/java/udmi pubber/src/main/java/
-
 echo Done with code generation.
