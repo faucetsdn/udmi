@@ -99,6 +99,8 @@ class LocalDevice {
   private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
 
   private static final String SAMPLES_DIR = "samples";
+  private static final String AUX_DIR = "aux";
+  private static final String OUT_DIR = "out";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
 
@@ -132,8 +134,13 @@ class LocalDevice {
   );
   private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
       RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
-      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON, SAMPLES_DIR
+      SAMPLES_DIR, AUX_DIR, OUT_DIR
   );
+
+  private static final Set<String> OUT_FILES = ImmutableSet.of(
+      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON
+  );
+
   private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
       RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
       ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
@@ -170,6 +177,7 @@ class LocalDevice {
   private final String deviceId;
   private final Map<String, Schema> schemas;
   private final File deviceDir;
+  private final File outDir;
   private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
@@ -187,6 +195,10 @@ class LocalDevice {
       this.generation = generation;
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
+      outDir = new File(deviceDir, OUT_DIR);
+      if (!outDir.exists()) {
+        outDir.mkdir();
+      }
       metadata = readMetadata();
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
@@ -198,23 +210,30 @@ class LocalDevice {
   }
 
   public void validateExpected() {
-    try {
-      String[] files = deviceDir.list();
-      Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
-      Set<String> actualFiles = ImmutableSet.copyOf(files);
-      Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
-      SetView<String> missing = Sets.difference(expectedFiles, actualFiles);
-      if (!missing.isEmpty()) {
-        throw new RuntimeException("Missing files: " + missing);
-      }
-      SetView<String> extra = Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
-      if (!extra.isEmpty()) {
-        throw new RuntimeException("Extra files: " + extra);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("While validating device directory " + deviceId, e);
+    ExceptionMap exceptionMap = new ExceptionMap(deviceDir.getPath());
+
+    String[] files = deviceDir.list();
+    Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
+    Set<String> actualFiles = ImmutableSet.copyOf(files);
+    Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
+    SetView<String> missing = Sets.difference(expectedFiles, actualFiles);
+    if (!missing.isEmpty()) {
+      exceptionMap.put("missing", new RuntimeException("Missing files: " + missing));
     }
+    SetView<String> extra = Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
+    if (!extra.isEmpty()) {
+      exceptionMap.put("extra", new RuntimeException("Extra files: " + extra));
+    }
+    String[] outFiles = outDir.list();
+    if (outFiles != null) {
+      Set<String> outSet = ImmutableSet.copyOf(outFiles);
+      Set<String> extraOut = Sets.difference(outSet, OUT_FILES);
+      if (!extraOut.isEmpty()) {
+        exceptionMap.put("out", new RuntimeException("Extra out files: " + extraOut));
+      }
+    }
+
+    exceptionMap.throwIfNotEmpty();
   }
 
   private Metadata readMetadata() {
@@ -236,7 +255,7 @@ class LocalDevice {
 
   private Metadata readNormalized() {
     try {
-      File metadataFile = new File(deviceDir, NORMALIZED_JSON);
+      File metadataFile = new File(outDir, NORMALIZED_JSON);
       return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
     } catch (Exception mapping_exception) {
       return new Metadata();
@@ -322,7 +341,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (!isDirectConnect() || !hasAuthType()) {
+    if (!isDirectConnect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -397,7 +416,14 @@ class LocalDevice {
   }
 
   private byte[] getKeyBytes() {
-    File keyBytesFile = new File(deviceDir, PRIVATE_PKCS8_MAP.get(getAuthType()));
+    if (!isDirectConnect()) {
+      return null;
+    }
+    String keyFile = PRIVATE_PKCS8_MAP.get(getAuthType());
+    if (keyFile == null) {
+      throw new RuntimeException("Invalid auth type " + getAuthType());
+    }
+    File keyBytesFile = new File(deviceDir, keyFile);
     if (!keyBytesFile.exists()) {
       return null;
     }
@@ -525,7 +551,7 @@ class LocalDevice {
   }
 
   public void writeErrors(List<Pattern> ignoreErrors) {
-    File errorsFile = new File(deviceDir, DEVICE_ERRORS_JSON);
+    File errorsFile = new File(outDir, DEVICE_ERRORS_JSON);
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
       try (PrintStream printStream = new PrintStream(new FileOutputStream(errorsFile))) {
@@ -549,7 +575,7 @@ class LocalDevice {
   }
 
   void writeNormalized() {
-    File metadataFile = new File(deviceDir, NORMALIZED_JSON);
+    File metadataFile = new File(outDir, NORMALIZED_JSON);
     if (metadata == null) {
       System.err.println("Deleting (invalid) " + metadataFile.getAbsolutePath());
       metadataFile.delete();
@@ -576,7 +602,7 @@ class LocalDevice {
   }
 
   public void writeConfigFile() {
-    File configFile = new File(deviceDir, GENERATED_CONFIG_JSON);
+    File configFile = new File(outDir, GENERATED_CONFIG_JSON);
     try (OutputStream outputStream = new FileOutputStream(configFile)) {
       outputStream.write(getSettings().config.getBytes());
     } catch (Exception e) {

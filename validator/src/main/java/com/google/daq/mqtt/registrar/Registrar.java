@@ -50,9 +50,10 @@ import udmi.schema.Config;
 public class  Registrar {
 
   static final String METADATA_JSON = "metadata.json";
+  static final String ENVELOPE_JSON = "envelope.json";
+
   static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_JSON = "errors.json";
-  static final String ENVELOPE_JSON = "envelope.json";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
 
   private static final String DEVICES_DIR = "devices";
