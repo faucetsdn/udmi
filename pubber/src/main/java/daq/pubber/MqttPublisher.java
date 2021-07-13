@@ -350,10 +350,10 @@ public class MqttPublisher {
             .setExpiration(now.plusMinutes(60).toDate())
             .setAudience(projectId);
 
-    if (algorithm.equals("RS256")) {
+    if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
       return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
-    } else if (algorithm.equals("ES256")) {
+    } else if (algorithm.equals("ES256") || algorithm.equals("ES256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
       return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
     } else {
