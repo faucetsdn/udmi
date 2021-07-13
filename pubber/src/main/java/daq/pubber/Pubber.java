@@ -56,6 +56,7 @@ public class Pubber {
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
   private static final int LOGGING_MOD_COUNT = 10;
   public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
+  private static final String OUT_DIR = "out";
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -242,6 +243,13 @@ public class Pubber {
   private void initialize() {
     initializeDevice();
 
+    File outDir = new File(OUT_DIR);
+    try {
+      outDir.mkdir();
+    } catch (Exception e) {
+      throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
+    }
+
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
@@ -316,6 +324,12 @@ public class Pubber {
 
   private void configHandler(Config config) {
     try {
+      File configOut = new File(OUT_DIR, "config.json");
+      try {
+        OBJECT_MAPPER.writeValue(configOut, config);
+      } catch (Exception e) {
+        throw new RuntimeException("While writing config " + configOut.getPath(), e);
+      }
       final int actualInterval;
       if (config != null) {
         String state_etag = deviceState.pointset == null ? null : deviceState.pointset.state_etag;
@@ -410,6 +424,13 @@ public class Pubber {
     info(String.format("%s sending state message", isoConvert(deviceState.timestamp)));
     mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
+
+    File stateOut = new File(OUT_DIR, "state.json");
+    try {
+      OBJECT_MAPPER.writeValue(stateOut, deviceState);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+    }
   }
 
   private long sleepUntil(long targetTimeMs) {

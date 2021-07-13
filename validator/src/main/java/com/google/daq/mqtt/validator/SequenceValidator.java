@@ -93,7 +93,7 @@ public abstract class SequenceValidator {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIoTConfigFile);
       registryId = checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath());
+      throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath(), e);
     }
 
     deviceOutputDir = new File("out/devices/" + deviceId);
@@ -118,6 +118,7 @@ public abstract class SequenceValidator {
   private String waitingCondition;
   private boolean check_serial;
   private String testName;
+  private String last_serial_no;
 
   @Before
   public void setUp() {
@@ -287,6 +288,10 @@ public abstract class SequenceValidator {
 
   protected boolean validSerialNo() {
     String device_serial = deviceState.system == null ? null : deviceState.system.serial_no;
+    if (!Objects.equals(device_serial, last_serial_no)) {
+      System.err.printf("%s Received serial no %s%n", getTimestamp(), device_serial);
+      last_serial_no = device_serial;
+    }
     boolean serialValid = Objects.equals(serial_no, device_serial);
     if (!serialValid && check_serial) {
       throw new IllegalStateException("Unexpected serial_no " + device_serial);
@@ -296,6 +301,7 @@ public abstract class SequenceValidator {
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
+    updateConfig();
     waitingCondition = "waiting for " + description;
     System.err.println(getTimestamp() + " start " + waitingCondition);
     while (!evaluator.get()) {
