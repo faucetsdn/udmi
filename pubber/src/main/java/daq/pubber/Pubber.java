@@ -76,7 +76,7 @@ public class Pubber {
 
   static class ExtraPointsetEvent extends PointsetEvent {
     // This extraField exists only to trigger schema parsing errors.
-    Object extraField;
+    public Object extraField;
   }
 
   public static void main(String[] args) throws Exception {
@@ -411,7 +411,7 @@ public class Pubber {
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
-    mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
+    publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
@@ -425,7 +425,7 @@ public class Pubber {
     logEntry.timestamp = new Date();
     logEntry.message = logMessage;
     systemEvent.logentries.add(logEntry);
-    mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
+    publishMessage(deviceId, SYSTEM_TOPIC, systemEvent);
   }
 
   private void publishStateMessage() {
@@ -433,12 +433,17 @@ public class Pubber {
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
     info(String.format("%s sending state message", isoConvert(deviceState.timestamp)));
-    mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
+    publishMessage(deviceId, STATE_TOPIC, deviceState);
+  }
 
-    File stateOut = new File(OUT_DIR, "state.json");
+  private void publishMessage(String deviceId, String topic, Object message) {
+    mqttPublisher.publish(deviceId, topic, message);
+
+    String fileName = topic.replace("/", "_") + ".json";
+    File stateOut = new File(OUT_DIR, fileName);
     try {
-      OBJECT_MAPPER.writeValue(stateOut, deviceState);
+      OBJECT_MAPPER.writeValue(stateOut, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
     }
