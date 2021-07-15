@@ -408,6 +408,7 @@ public class Pubber {
       LOG.error("No connected clients, exiting.");
       System.exit(-2);
     }
+    devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
     mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
@@ -415,9 +416,13 @@ public class Pubber {
 
   private void publishLogMessage(String deviceId, String logMessage) {
     SystemEvent systemEvent = new SystemEvent();
+    systemEvent.version = 1;
     systemEvent.timestamp = new Date();
     info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     Entry logEntry = new Entry();
+    logEntry.category = "pubber";
+    logEntry.level = 400;
+    logEntry.timestamp = new Date();
     logEntry.message = logMessage;
     systemEvent.logentries.add(logEntry);
     mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
