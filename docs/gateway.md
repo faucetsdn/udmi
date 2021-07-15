@@ -89,7 +89,7 @@ ID. Based on this, the gateway can communicate with the target device and proxy
 all other messages.
 
 Additionally, the gateway is responsible for proxying all other supported
-operations of the config bundle. E.g., if a _pointset_ 'force_value" parameter
+operations of the config bundle. E.g., if a _pointset_ "set_value" parameter
 is specified, the gateway would need to convert that into the local protocol
 and trigger the required functionality.
 

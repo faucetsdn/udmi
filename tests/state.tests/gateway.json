@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "make_model": "ACME Gateway v2",
+    "firmware": {
+      "version": "3.2a"
+    },
+    "serial_no": "182732142",
+    "last_config": "2018-08-26T21:49:29.364Z",
+    "operational": true,
+    "statuses": {
+      "base_system": {
+        "message": "Tickity Boo",
+        "category": "device.state.com",
+        "timestamp": "2018-08-26T21:39:30.364Z",
+        "level": 600
+      }
+    }
+  },
+  "gateway": {
+    "error_ids": [ "991", "SMS-91" ]
+  }
+}

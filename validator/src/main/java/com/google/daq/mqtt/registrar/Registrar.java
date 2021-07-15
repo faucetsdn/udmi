@@ -4,6 +4,7 @@ import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
+import static com.google.daq.mqtt.validator.Validator.NO_SITE;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -28,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,13 +45,15 @@ import org.everit.json.schema.loader.SchemaClient;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import udmi.schema.Config;
 
 public class  Registrar {
 
   static final String METADATA_JSON = "metadata.json";
+  static final String ENVELOPE_JSON = "envelope.json";
+
   static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_JSON = "errors.json";
-  static final String ENVELOPE_JSON = "envelope.json";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
 
   private static final String DEVICES_DIR = "devices";
@@ -77,6 +81,7 @@ public class  Registrar {
   private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
+  private final String generation = getGenerationString();
 
   public static void main(String[] args) {
     Registrar registrar = new Registrar();
@@ -148,7 +153,10 @@ public class  Registrar {
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
     String configTopic = cloudIotManager.cloudIotConfig.config_topic;
-    pubSubPusher = new PubSubPusher(projectId, configTopic);
+    System.err.println("Sending updates to config topic " + configTopic);
+    if (configTopic != null) {
+      pubSubPusher = new PubSubPusher(projectId, configTopic);
+    }
     System.err.println(String.format("Working with project %s registry %s/%s",
         cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(),
         cloudIotManager.getRegistryId()));
@@ -156,6 +164,16 @@ public class  Registrar {
 
   private void processDevices() {
     processDevices(null);
+  }
+
+  private String getGenerationString() {
+    try {
+      Date generationDate = new Date();
+      String quotedString = OBJECT_MAPPER.writeValueAsString(generationDate);
+      return quotedString.substring(1, quotedString.length() - 1);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("While forming generation timestamp", e);
+    }
   }
 
   private void processDevices(String[] devices) {
@@ -250,7 +268,7 @@ public class  Registrar {
   private void sendConfigMessages(LocalDevice localDevice) {
     System.err.println("Sending config messages for " + localDevice.getDeviceId());
 
-    UdmiSchema.Config deviceConfig = localDevice.deviceConfigObject();
+    Config deviceConfig = localDevice.deviceConfigObject();
     sendConfigMessage(localDevice, SYSTEM_SUBFOLDER, deviceConfig.system);
     sendConfigMessage(localDevice, POINTSET_SUBFOLDER, deviceConfig.pointset);
     sendConfigMessage(localDevice, GATEWAY_SUBFOLDER, deviceConfig.gateway);
@@ -266,7 +284,9 @@ public class  Registrar {
       attributes.put("projectId", cloudIotManager.getProjectId());
       attributes.put("subFolder", subFolder);
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
-      pubSubPusher.sendMessage(attributes, messageString);
+      if (pubSubPusher != null) {
+        pubSubPusher.sendMessage(attributes, messageString);
+      }
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While sending config " + subFolder, e);
     }
@@ -364,18 +384,18 @@ public class  Registrar {
   }
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<DeviceCredential, String> privateKeys = new HashMap<>();
+    Map<DeviceCredential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream().filter(LocalDevice::isDirectConnect).forEach(
         localDevice -> {
-          String deviceName = localDevice.getDeviceId();
           CloudDeviceSettings settings = localDevice.getSettings();
-          if (privateKeys.containsKey(settings.credential)) {
-            String previous = privateKeys.get(settings.credential);
-            RuntimeException exception = new RuntimeException(
-                String.format("Duplicate credentials found for %s & %s", previous, deviceName));
-            localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
-          } else {
-            privateKeys.put(settings.credential, deviceName);
+          String deviceName = localDevice.getDeviceId();
+          for (DeviceCredential credential : settings.credentials) {
+            String previous = usedCredentials.put(credential, deviceName);
+            if (previous != null) {
+              RuntimeException exception = new RuntimeException(
+                  String.format("Duplicate credentials found for %s & %s", previous, deviceName));
+              localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+            }
           }
         });
   }
@@ -386,9 +406,9 @@ public class  Registrar {
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
         System.err.println("Loading local device " + deviceName);
         LocalDevice localDevice = localDevices.computeIfAbsent(deviceName,
-            keyName -> new LocalDevice(devicesDir, deviceName, schemas));
+            keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
         try {
-          localDevice.loadCredential();
+          localDevice.loadCredentials();
         } catch (Exception e) {
           localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, e);
         }
@@ -407,6 +427,9 @@ public class  Registrar {
   }
 
   private void setProjectId(String projectId) {
+    if (NO_SITE.equals(projectId) || projectId == null) {
+      return;
+    }
     this.projectId = projectId;
     initializeCloudProject();
   }

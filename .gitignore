@@ -4,6 +4,7 @@ udmi_site_model/
 gcp_reflect_key.pkcs8
 /pubber.out
 workspace.xml
+codegen/
 .gradle/
 .firebase/
 dashboard/functions/node_modules/
@@ -16,4 +17,6 @@ firebase-debug.log
 /sites/
 /attributes.json
 /venv/
-/rsa_p*
+/local/
+.pubber.pid
+__pycache__/

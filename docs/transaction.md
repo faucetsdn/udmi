@@ -13,6 +13,7 @@
 * ...: Other subsystems as defined in the standard (e.g. _pointset_ or _gateway_).
 
 ## State Message
+
 * `system`:
   * `last_config`: Server-side timestamp from the last processed `config`.
   * `updating`: Boolean indicating if the system is still processing the last `config` update.

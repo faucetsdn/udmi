@@ -15,4 +15,6 @@ public class Configuration {
   public byte[] keyBytes;
   public String algorithm = "RS256";
   public Object extraField;
+  public String serialNo;
+  public String macAddr;
 }

@@ -19,6 +19,16 @@ PubSub stream validation works against a live data stream pulled from a pre-exis
 * `PROJECT_ID`: The GCP project ID to validate against.
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by a GCP project admin).
 
+This program will endlessly consume messages from the given PubSub subsubscription and validate the messages,
+writing the results in a `out/validation_report.json` summary file. For example:
+<pre>
+~/udmi$ <b>timeout 5m bin/validator  ../sites/zz-sin-fins/ udmi-testing username-debug</b>
+...
+<em>wait 5 minutes for completion</em>
+udmi$ <b>ls -l out/validation_report.json</b>
+-rw-r--r-- 1 username primarygroup 168311 Jan 28 00:32 out/validation_report.json
+</pre>
+
 ## Regression Testing
 
 The `bin/test_schema` script runs a regression suite of all schemas against all tests.
@@ -60,4 +70,15 @@ total 24
 -rw-r--r-- 1 username primarygroup 231 Oct 14 07:48 system.attr
 -rw-r--r-- 1 username primarygroup 274 Oct 14 07:48 system.json
 -rw-r--r-- 1 username primarygroup 127 Oct 14 07:48 system.out
+```
+
+## Advanced Usage
+
+There's other options available for validation, but they aren't completely documented. The `bin/validator`
+script interally calls `validator/bin/validate` with a number of additional arguments/options. Notably,
+there is an alternative to PubSub stream validation that uses a shadow registry for GCP exchanges (easier
+authentication).
+
+```
+~/udmi/validator/bin/validate bacnet-gateway schema reflect GAT-4128276 us-mtv-918r --
 ```

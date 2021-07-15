@@ -11,13 +11,22 @@ rm -f $errorfile
 build=y
 force=n
 
-while getopts ":fn" opt; do
+schemadir=schema
+testdir=tests
+
+while getopts "d:fn" opt; do
     case $opt in
-        f) force=y
+        f)
+            force=y
             ;;
-        n) build=n
-           ;;
-        \?) echo "Usage: $0 [-f] [-n]"
+        n)
+            build=n
+            ;;
+        d)
+            testdir=${OPTARG}
+            ;;
+        \?)
+            echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
             exit -1
             ;;
     esac
@@ -32,27 +41,31 @@ fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 
-rootdir=schema
-subsets=$(cd $rootdir; ls -d *.tests)
+subsets=$(cd $testdir; ls -d *.tests)
 for subset in $subsets; do
     if [ -z "$subset" ]; then
         echo Schema $schema has no .tests dirs.
         false
     fi
     schemaname=${subset%.tests}.json
-    testfiles=$(cd $rootdir/$subset; ls *.json)
+    testfiles=$(cd $testdir/$subset; ls *.json)
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out
-        testdir=$rootdir/$subset
-        testpath=$testdir/$testfile
-        expected=$testdir/$outfile
-        outdir=$outroot/${testdir#${schema_root}/}
+        testbase=$testdir/$subset
+        testpath=$testbase/$testfile
+        expected=$testbase/$outfile
+        outdir=$outroot/${testbase#${schema_root}/}
         mkdir -p $outdir
         output=$outdir/$outfile
         
         error=0
-        reltest=${testpath#$rootdir/}
-        (cd $rootdir; java -jar $jarfile -- $schemaname files $reltest -- --) 2> $output || error=$?
+        if [[ "$testbase" == "$schemadir" ]]; then
+          reltest=${testpath#$testbase/}
+        else
+          reldir=$(realpath --relative-to $schemadir $testdir)
+          reltest=$reldir:$(realpath --relative-to $testdir $testpath)
+        fi
+        (cd $schemadir; java -jar $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
         if [ $force == y ]; then
             diff $expected $output || echo Updating $expected && cp $output $expected
         else

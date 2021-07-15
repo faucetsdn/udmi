@@ -2,10 +2,12 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 
-import com.google.daq.mqtt.registrar.UdmiSchema;
-import com.google.daq.mqtt.registrar.UdmiSchema.Metadata;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointsetMessage;
+import com.google.common.collect.ImmutableMap;
 import java.util.*;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointsetEvent;
 
 public class ReportingDevice {
 
@@ -32,7 +34,7 @@ public class ReportingDevice {
   }
 
   public boolean hasError() {
-    return metadataDiff.errors != null && metadataDiff.errors.isEmpty();
+    return metadataDiff.errors != null && !metadataDiff.errors.isEmpty();
   }
 
   public boolean hasMetadataDiff() {
@@ -54,9 +56,9 @@ public class ReportingDevice {
     return metadataDiff;
   }
 
-  public void validateMetadata(PointsetMessage message) {
-    Set<String> expectedPoints = new TreeSet<>(metadata.pointset.points.keySet());
-    Set<String> deliveredPoints = new TreeSet<>(message.points.keySet());
+  public void validateMetadata(PointsetEvent message) {
+    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
+    Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
     metadataDiff.extraPoints.removeAll(expectedPoints);
     metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
@@ -64,6 +66,17 @@ public class ReportingDevice {
     if (hasMetadataDiff()) {
       throw new RuntimeException("Metadata validation failed: " + metadataMessage());
     }
+  }
+
+  private Map<String, PointPointsetEvent> getPoints(PointsetEvent message) {
+    return message.points == null ? ImmutableMap.of() : message.points;
+  }
+
+  private Map<String, PointPointsetMetadata> getPoints(Metadata metadata) {
+    if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
+      return ImmutableMap.of();
+    }
+    return metadata.pointset.points;
   }
 
   public void addError(Exception error) {

@@ -1,15 +1,20 @@
 package daq.pubber;
 
-import daq.udmi.Message.PointData;
-import daq.udmi.Message.PointState;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetState;
 
 public interface AbstractPoint {
 
   String getName();
 
-  PointData getData();
+  PointPointsetEvent getData();
 
   void updateData();
 
-  PointState getState();
+  boolean isDirty();
+
+  PointPointsetState getState();
+
+  void setConfig(PointPointsetConfig config);
 }

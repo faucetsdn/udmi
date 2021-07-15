@@ -9,10 +9,19 @@ devices and how they communicate with the cloud.
 An site model directory shows specific examples of how this would be constructed for a complete
 site. Typically, however, each site would have its own git repo (with the `cloud_iot_config.json`
 file in the repo root). For test and development, this only needs to be a on-disk directory.
+The [udmi_site_model](https://github.com/faucetsdn/udmi/blob/master/docs/site_model.md) repo
+provides an up-to-date example of what a site model might look like (actively used by some
+of the integraiton tests).
 
 At a high-level, the various constructs relevant to UDMI are (described in more detail below):
 * `cloud_iot_config.json`
 * `devices`
+
+## Registrar Tool
+
+The primary use of the site_model will be through the [registrar](registrar.md) and
+[validator](validator.md) tools. Primarily, they look for the existence of
+`device/{device_id}/metadata.json` files in the site model and process the information found there.
 
 ## `cloud_iot_config.json`
 

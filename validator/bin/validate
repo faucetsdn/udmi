@@ -1,12 +1,7 @@
 #!/bin/bash -e
 
-ROOT=$(dirname $0)/../..
-cd $ROOT
-
-jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-
-if [ $# != 6 ]; then
-    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath] [expect]
+if [ $# != 5 ]; then
+    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
     false
 fi
 
@@ -14,27 +9,31 @@ project=$1
 schema=$2
 target=$3
 subscription=$4
-sitepath=$5
-expect=$6
-shift 6
+sitepath=$(realpath $5)
+shift 5
+
+ROOT=$(dirname $0)/../..
+cd $ROOT
+
+jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 if [ ! -f $jarfile ]; then
     echo Building validator...
     validator/bin/build
 fi
 
-echo Using gcloud auth:
-gcloud config get-value account || true
+auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
+echo Application default credentials auth type ${auth_type:-unknown}
 
 echo Cleaning output directory out/
 rm -rf out/
 
 echo Executing validator $schema $target...
 
-echo java -jar $jarfile $project $schema $target $subscription $sitepath $expect
+echo java -jar $jarfile $project $schema $target $subscription $sitepath
 
 error=0
-java -jar $jarfile $project $schema $target $subscription $sitepath $expect || error=$?
+java -jar $jarfile $project $schema $target $subscription $sitepath || error=$?
 
 echo Validation complete, exit $error
 exit $error

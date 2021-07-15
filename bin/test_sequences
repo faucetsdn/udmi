@@ -1,48 +1,49 @@
-#!/bin/bash -e
+#!/bin/bash
 
-if [[ $# != 3 ]]; then
-    echo Usage: $0 [site_model] [target_project] [sequences_dir]
+export VALIDATOR_CONFIG=/tmp/validator_config.json
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+if [[ $# != 0 ]]; then
+    echo Usage: $0 [-n]
     false
 fi
 
-SITE_MODEL=$1
-TARGET_PROJECT=$2
-SEQUENCES_DIR=$3
-shift 3
+echo Parsing $VALIDATOR_CONFIG:
+cat $VALIDATOR_CONFIG
+project_id=`jq -r .project_id $VALIDATOR_CONFIG`
+site_model=`jq -r .site_model $VALIDATOR_CONFIG`
+device_id=`jq -r .device_id $VALIDATOR_CONFIG`
+serial_no=`jq -r .serial_no $VALIDATOR_CONFIG`
+echo Target project $project_id
+echo Site model $site_model
+echo Target device $device_id
+echo Device serial $serial_no
 
-if [[ -z $TARGET_PROJECT ]]; then
-    echo No target project defined, skipping tests.
-    exit 0
+awc=$(echo $project_id $site_model $device_id $serial_no | wc -w)
+if [[ $awc != 4 ]]; then
+    echo Missing configuration paramaters.
+    exit -1
 fi
 
-PUBBER_OUT=pubber.out
-EXPECTED_SEQUENCES=1
+EXPECTED_SEQUENCES=2
 
-echo Writing pubber output to $PUBBER_OUT
-bin/pubber $SITE_MODEL $TARGET_PROJECT AHU-1 > $PUBBER_OUT 2>&1 &
-pubber_pid=$!
-
-while ! fgrep "Connection complete" $PUBBER_OUT; do
-    echo Waiting for pubber startup...
-    sleep 5
-done
+validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.Validator"
+JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
 
-sequences=`ls $SEQUENCES_DIR`
-echo Executing seqeunces $sequences
-for sequence in $sequences; do
-    echo Starting sequence $sequence at `date`
-    $JAVA_CMD bos-daq-testing schema reflect AHU-1 $SITE_MODEL sequences/$sequence
-done
+rm -rf out/devices/$device_id
+# Relies on VALIDATOR_CONFIG environment variable.
+echo $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
 
-seq_count=`echo $sequences | wc -w`
-if [ $seq_count != $EXPECTED_SEQUENCES ]; then
-    echo Did not find expected $EXPECTED_SEQUENCES sequences.
-    false
+timeout 5m $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
+result=$?
+
+if [[ $result != 0 ]]; then
+    echo Sequence test exited with error code $result
+    exit $result
 fi
 
 echo Done with test sequence execution.
-
-kill $!

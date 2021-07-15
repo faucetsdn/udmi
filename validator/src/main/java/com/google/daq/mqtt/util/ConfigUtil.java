@@ -55,6 +55,14 @@ public class ConfigUtil {
     }
   }
 
+  public static ValidatorConfig readValidatorConfig(File configFile) {
+    try {
+      return OBJECT_MAPPER.readValue(configFile, ValidatorConfig.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config file "+ configFile.getAbsolutePath(), e);
+    }
+  }
+
   public static class AllDeviceExceptions extends HashMap<String, DeviceExceptions> {
   }
 

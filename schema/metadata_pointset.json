@@ -1,5 +1,5 @@
 {
-  "title": "Pointset metadata snippet",
+  "title": "Pointset Metadata",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -7,17 +7,10 @@
     "points": {
       "additionalProperties": false,
       "maxProperties": 150,
+      "existingJavaType": "java.util.HashMap<String, PointPointsetMetadata>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "additionalProperties": false,
-          "properties": {
-            "units": {
-              "$ref": "file:units.json#"
-            },
-            "ref": {
-              "type": "string"
-            }
-          }
+          "$ref": "file:metadata_pointset_point.json#"
         }
       }
     }

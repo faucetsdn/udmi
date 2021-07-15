@@ -1,6 +1,6 @@
 # UDMI Technology Stack
 
-The complete UDMI specificaiton (super set of the base schema), specifies a complete
+The complete UDMI specification (super set of the base schema), specifies a complete
 technology stack for compliant IoT devices.
 
 # Core Requirements
@@ -30,8 +30,8 @@ Any backend system (in a GCP project) should adhere to the following guidelines:
   * The _state_ and _event_ messages are published to a topic configured through the IoT Core registry.
   * If necessary, any _config_ or _command_ messages should go through a PubSub topic, and then converted to the requisite Cloud IoT
   config write using a simple cloud function.
-* To make data persistent, it can be written to a back-end database, e.g. Firestore. See the `device_telemetry` and
-  `device_state` [example cloud functions](../../firebase/functions/index.js) for details.
+* To make data persistent, it can be written to a back-end database, e.g. Firestore. See the `udmi_target` and
+  `udmi_state` [example cloud functions](../dashboard/functions/index.js) for details.
 * A similar function called `device_config` shows how PubSub can be used to update the Cloud IoT configuration.
 
 A config push can be tested with something like:
