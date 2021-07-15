@@ -15,8 +15,8 @@ shift
 project_id=$1
 shift || true
 
-echo Using gcloud auth:
-gcloud config get-value account || true
+auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json`
+echo Application default credentials auth type $auth_type
 
 export UDMI_VERSION=`cd $ROOT; git describe`
 
