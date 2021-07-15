@@ -65,7 +65,7 @@ public class Pubber {
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
   private final State deviceState = new State();
-  private final PointsetEvent devicePoints = new PointsetEvent();
+  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
 
   private MqttPublisher mqttPublisher;
@@ -73,6 +73,11 @@ public class Pubber {
   private long lastStateTimeMs;
   private int sendCount;
   private boolean stateDirty;
+
+  static class ExtraPointsetEvent extends PointsetEvent {
+    // This extraField exists only to trigger schema parsing errors.
+    public Object extraField;
+  }
 
   public static void main(String[] args) throws Exception {
     final Pubber pubber;
@@ -143,6 +148,7 @@ public class Pubber {
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
     deviceState.system = new SystemState();
+    deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware = new Firmware();
@@ -151,7 +157,7 @@ public class Pubber {
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
-    // devicePoints.extraField = configuration.extraField;
+    devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
     addPoint(new RandomBoolean("faulty_finding", false));
@@ -402,19 +408,24 @@ public class Pubber {
       LOG.error("No connected clients, exiting.");
       System.exit(-2);
     }
+    devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
-    mqttPublisher.publish(deviceId, POINTSET_TOPIC, devicePoints);
+    publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
   private void publishLogMessage(String deviceId, String logMessage) {
     SystemEvent systemEvent = new SystemEvent();
+    systemEvent.version = 1;
     systemEvent.timestamp = new Date();
     info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     Entry logEntry = new Entry();
+    logEntry.category = "pubber";
+    logEntry.level = 400;
+    logEntry.timestamp = new Date();
     logEntry.message = logMessage;
     systemEvent.logentries.add(logEntry);
-    mqttPublisher.publish(deviceId, SYSTEM_TOPIC, systemEvent);
+    publishMessage(deviceId, SYSTEM_TOPIC, systemEvent);
   }
 
   private void publishStateMessage() {
@@ -422,12 +433,17 @@ public class Pubber {
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
     info(String.format("%s sending state message", isoConvert(deviceState.timestamp)));
-    mqttPublisher.publish(deviceId, STATE_TOPIC, deviceState);
     stateDirty = false;
+    publishMessage(deviceId, STATE_TOPIC, deviceState);
+  }
 
-    File stateOut = new File(OUT_DIR, "state.json");
+  private void publishMessage(String deviceId, String topic, Object message) {
+    mqttPublisher.publish(deviceId, topic, message);
+
+    String fileName = topic.replace("/", "_") + ".json";
+    File stateOut = new File(OUT_DIR, fileName);
     try {
-      OBJECT_MAPPER.writeValue(stateOut, deviceState);
+      OBJECT_MAPPER.writeValue(stateOut, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
     }
