@@ -15,8 +15,8 @@ shift
 project_id=$1
 shift || true
 
-auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json`
-echo Application default credentials auth type $auth_type
+auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
+echo Application default credentials auth type ${auth_type:-unknown}
 
 export UDMI_VERSION=`cd $ROOT; git describe`
 
