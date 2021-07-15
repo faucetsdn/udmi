@@ -65,7 +65,7 @@ public class Pubber {
   private final CountDownLatch configLatch = new CountDownLatch(1);
 
   private final State deviceState = new State();
-  private final PointsetEvent devicePoints = new PointsetEvent();
+  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
 
   private MqttPublisher mqttPublisher;
@@ -73,6 +73,11 @@ public class Pubber {
   private long lastStateTimeMs;
   private int sendCount;
   private boolean stateDirty;
+
+  static class ExtraPointsetEvent extends PointsetEvent {
+    // This extraField exists only to trigger schema parsing errors.
+    Object extraField;
+  }
 
   public static void main(String[] args) throws Exception {
     final Pubber pubber;
@@ -143,6 +148,7 @@ public class Pubber {
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
     deviceState.system = new SystemState();
+    deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware = new Firmware();
@@ -151,7 +157,7 @@ public class Pubber {
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
-    // devicePoints.extraField = configuration.extraField;
+    devicePoints.extraField = configuration.extraField;
     addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
     addPoint(new RandomBoolean("faulty_finding", false));
