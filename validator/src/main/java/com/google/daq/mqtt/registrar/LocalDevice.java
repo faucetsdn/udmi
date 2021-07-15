@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -47,10 +49,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.ValidationException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import udmi.schema.Config;
 import udmi.schema.Envelope;
 import udmi.schema.GatewayConfig;
@@ -64,17 +62,20 @@ class LocalDevice {
 
   private static final PrettyPrinter PROPER_PRETTY_PRINTER_POLICY = new ProperPrettyPrinterPolicy();
 
-  private static final ObjectMapper OBJECT_MAPPER_RAW = new ObjectMapper()
-      .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-      .enable(Feature.ALLOW_TRAILING_COMMA)
-      .enable(Feature.STRICT_DUPLICATE_DETECTION)
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .setDateFormat(new ISO8601DateFormat())
-      .setSerializationInclusion(Include.NON_NULL);
+  private static final ObjectMapper OBJECT_MAPPER_RAW =
+      new ObjectMapper()
+          .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+          .enable(Feature.ALLOW_TRAILING_COMMA)
+          .enable(Feature.STRICT_DUPLICATE_DETECTION)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .setDateFormat(new ISO8601DateFormat())
+          .setSerializationInclusion(Include.NON_NULL);
 
-  private static final ObjectMapper OBJECT_MAPPER = OBJECT_MAPPER_RAW.copy()
-      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-      .enable(SerializationFeature.INDENT_OUTPUT);
+  private static final ObjectMapper OBJECT_MAPPER =
+      OBJECT_MAPPER_RAW
+          .copy()
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+          .enable(SerializationFeature.INDENT_OUTPUT);
 
   private static final String RSA_AUTH_TYPE = "RS256";
   private static final String RSA_CERT_TYPE = "RS256_X509";
@@ -104,57 +105,62 @@ class LocalDevice {
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
 
-  private static final Set<String> RSA_PRIVATE_KEY_FILES = ImmutableSet.of(
-      RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
-  private static final Set<String> ES_PRIVATE_KEY_FILES = ImmutableSet.of(
-      ES_PRIVATE_PEM, ES_PRIVATE_PKCS8);
-  private static final Map<String, Set<String>> PRIVATE_KEY_FILES_MAP = ImmutableMap.of(
-      RSA_AUTH_TYPE, RSA_PRIVATE_KEY_FILES,
-      RSA_CERT_TYPE, RSA_PRIVATE_KEY_FILES,
-      ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
-      ES_CERT_TYPE, ES_PRIVATE_KEY_FILES
-  );
+  private static final Set<String> RSA_PRIVATE_KEY_FILES =
+      ImmutableSet.of(RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
+  private static final Set<String> ES_PRIVATE_KEY_FILES =
+      ImmutableSet.of(ES_PRIVATE_PEM, ES_PRIVATE_PKCS8);
+  private static final Map<String, Set<String>> PRIVATE_KEY_FILES_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_PRIVATE_KEY_FILES,
+          RSA_CERT_TYPE, RSA_PRIVATE_KEY_FILES,
+          ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
+          ES_CERT_TYPE, ES_PRIVATE_KEY_FILES);
 
-  protected static final Map<String, String> PRIVATE_PKCS8_MAP = ImmutableMap.of(
-      RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
-      RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
-      ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
-      ES_CERT_TYPE, ES_PRIVATE_PKCS8
-  );
+  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
+          RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
+          ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
+          ES_CERT_TYPE, ES_PRIVATE_PKCS8);
 
-  private static final Map<String, String> PUBLIC_KEY_FILE_MAP = ImmutableMap.of(
-      RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
-      RSA_CERT_TYPE, RSA_PUBLIC_PEM,
-      ES_AUTH_TYPE, ES_PUBLIC_PEM,
-      ES_CERT_TYPE, ES_PUBLIC_PEM
-  );
-  private static final Map<String, String> CERT_FILE_MAP = ImmutableMap.of(
-      RSA_CERT_TYPE, RSA_CERT_PEM,
-      ES_CERT_TYPE, ES_CERT_PEM
-  );
-  private static final Set<String> OPTIONAL_FILES = ImmutableSet.of(
-      RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM,
-      SAMPLES_DIR, AUX_DIR, OUT_DIR
-  );
+  private static final Map<String, String> PUBLIC_KEY_FILE_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
+          RSA_CERT_TYPE, RSA_PUBLIC_PEM,
+          ES_AUTH_TYPE, ES_PUBLIC_PEM,
+          ES_CERT_TYPE, ES_PUBLIC_PEM);
+  private static final Map<String, String> CERT_FILE_MAP =
+      ImmutableMap.of(
+          RSA_CERT_TYPE, RSA_CERT_PEM,
+          ES_CERT_TYPE, ES_CERT_PEM);
+  private static final Set<String> OPTIONAL_FILES =
+      ImmutableSet.of(
+          RSA2_PUBLIC_PEM,
+          RSA3_PUBLIC_PEM,
+          ES2_PUBLIC_PEM,
+          ES3_PUBLIC_PEM,
+          SAMPLES_DIR,
+          AUX_DIR,
+          OUT_DIR);
 
-  private static final Set<String> OUT_FILES = ImmutableSet.of(
-      GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON
-  );
+  private static final Set<String> OUT_FILES =
+      ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
 
-  private static final Set<String> ALL_KEY_FILES = ImmutableSet.of(
-      RSA_PUBLIC_PEM, RSA2_PUBLIC_PEM, RSA3_PUBLIC_PEM,
-      ES_PUBLIC_PEM, ES2_PUBLIC_PEM, ES3_PUBLIC_PEM
-  );
-  private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(
-      RSA_CERT_PEM,
-      ES_CERT_PEM
-  );
-  private static final Map<String, String> AUTH_TYPE_MAP = ImmutableMap.of(
-      RSA_AUTH_TYPE, RSA_KEY_FORMAT,
-      RSA_CERT_TYPE, RSA_CERT_FORMAT,
-      ES_AUTH_TYPE, ES_KEY_FORMAT,
-      ES_CERT_TYPE, ES_CERT_FILE
-  );
+  private static final Set<String> ALL_KEY_FILES =
+      ImmutableSet.of(
+          RSA_PUBLIC_PEM,
+          RSA2_PUBLIC_PEM,
+          RSA3_PUBLIC_PEM,
+          ES_PUBLIC_PEM,
+          ES2_PUBLIC_PEM,
+          ES3_PUBLIC_PEM);
+  private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
+  private static final Map<String, String> AUTH_TYPE_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_KEY_FORMAT,
+          RSA_CERT_TYPE, RSA_CERT_FORMAT,
+          ES_AUTH_TYPE, ES_KEY_FORMAT,
+          ES_CERT_TYPE, ES_CERT_FILE);
 
   public static final String POINTSET_SUBFOLDER = "pointset";
   public static final String SYSTEM_SUBFOLDER = "system";
@@ -175,7 +181,7 @@ class LocalDevice {
   public static final String EXCEPTION_SAMPLES = "Samples";
 
   private final String deviceId;
-  private final Map<String, Schema> schemas;
+  private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
   private final File outDir;
   private final Metadata metadata;
@@ -187,8 +193,8 @@ class LocalDevice {
 
   private CloudDeviceSettings settings;
 
-  LocalDevice(File devicesDir, String deviceId, Map<String, Schema> schemas,
-      String generation) {
+  LocalDevice(
+      File devicesDir, String deviceId, Map<String, JsonSchema> schemas, String generation) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
@@ -220,7 +226,8 @@ class LocalDevice {
     if (!missing.isEmpty()) {
       exceptionMap.put("missing", new RuntimeException("Missing files: " + missing));
     }
-    SetView<String> extra = Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
+    SetView<String> extra =
+        Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
     if (!extra.isEmpty()) {
       exceptionMap.put("extra", new RuntimeException("Extra files: " + extra));
     }
@@ -239,8 +246,8 @@ class LocalDevice {
   private Metadata readMetadata() {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
-      schemas.get(METADATA_JSON).validate(new JSONObject(new JSONTokener(targetStream)));
-    } catch (ValidationException metadata_exception) {
+      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+    } catch (ProcessingException metadata_exception) {
       exceptionMap.put(EXCEPTION_VALIDATING, metadata_exception);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
@@ -290,8 +297,8 @@ class LocalDevice {
   }
 
   private boolean isDeviceKeySource() {
-    return metadata != null && (metadata.cloud != null && Boolean.TRUE
-        .equals(metadata.cloud.device_key));
+    return metadata != null
+        && (metadata.cloud != null && Boolean.TRUE.equals(metadata.cloud.device_key));
   }
 
   private String getAuthFileType() {
@@ -315,7 +322,10 @@ class LocalDevice {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
       String authType = getAuthType();
-      Set<String> keyFiles = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ? ALL_CERT_FILES : ALL_KEY_FILES;
+      Set<String> keyFiles =
+          (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+              ? ALL_CERT_FILES
+              : ALL_KEY_FILES;
       for (String keyFile : keyFiles) {
         DeviceCredential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
@@ -336,7 +346,8 @@ class LocalDevice {
     if (!deviceKeyFile.exists()) {
       return null;
     }
-    return CloudIotManager.makeCredentials(getAuthFileType(),
+    return CloudIotManager.makeCredentials(
+        getAuthFileType(),
         IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }
 
@@ -348,9 +359,9 @@ class LocalDevice {
     Set<String> certFile = getCertFiles();
     Set<String> publicKeyFile = Set.of(getPublicKeyFile());
     Set<String> privateKeyFiles = getPrivateKeyFiles();
-    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ?
-        Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles) :
-        Sets.union(publicKeyFile, privateKeyFiles);
+    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+        ? Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles)
+        : Sets.union(publicKeyFile, privateKeyFiles);
   }
 
   private Set<String> getPrivateKeyFiles() {
@@ -372,17 +383,20 @@ class LocalDevice {
       return Set.of();
     }
     String authType = getAuthType();
-    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE)) ?  Set.of(CERT_FILE_MAP.get(getAuthType())) : Set.of();
+    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+        ? Set.of(CERT_FILE_MAP.get(getAuthType()))
+        : Set.of();
   }
 
   boolean isGateway() {
-    return metadata != null && metadata.gateway != null &&
-        metadata.gateway.proxy_ids != null && !metadata.gateway.proxy_ids.isEmpty();
+    return metadata != null
+        && metadata.gateway != null
+        && metadata.gateway.proxy_ids != null
+        && !metadata.gateway.proxy_ids.isEmpty();
   }
 
   boolean hasGateway() {
-    return metadata != null && metadata.gateway != null &&
-        metadata.gateway.gateway_id != null;
+    return metadata != null && metadata.gateway != null && metadata.gateway.gateway_id != null;
   }
 
   boolean isDirectConnect() {
@@ -486,9 +500,10 @@ class LocalDevice {
   private PointsetConfig getDevicePointsetConfig() {
     PointsetConfig pointsetConfig = new PointsetConfig();
     pointsetConfig.points = new HashMap<>();
-    metadata.pointset.points.forEach((metadataKey, value) ->
-        pointsetConfig.points.computeIfAbsent(metadataKey, configKey ->
-            ConfigFromMetadata(value)));
+    metadata.pointset.points.forEach(
+        (metadataKey, value) ->
+            pointsetConfig.points.computeIfAbsent(
+                metadataKey, configKey -> ConfigFromMetadata(value)));
     return pointsetConfig;
   }
 
@@ -521,7 +536,7 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER.writeValueAsString(envelope);
-      schemas.get(ENVELOPE_JSON).validate(new JSONObject(new JSONTokener(envelopeJson)));
+      schemas.get(ENVELOPE_JSON).validate(OBJECT_MAPPER.readTree(envelopeJson));
     } catch (Exception e) {
       throw new IllegalStateException("Validating envelope " + deviceId, e);
     }
@@ -533,16 +548,23 @@ class LocalDevice {
 
   private void checkConsistency(String expectedSite) {
     String assetName = metadata.system.physical_tag.asset.name;
-    Preconditions.checkState(deviceId.equals(assetName),
-        String.format("system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
+    Preconditions.checkState(
+        deviceId.equals(assetName),
+        String.format(
+            "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
 
     String assetSite = metadata.system.physical_tag.asset.site;
-    Preconditions.checkState(expectedSite.equals(assetSite),
-        String.format("system.physical_tag.asset.site %s does not match expected %s", assetSite, expectedSite));
+    Preconditions.checkState(
+        expectedSite.equals(assetSite),
+        String.format(
+            "system.physical_tag.asset.site %s does not match expected %s",
+            assetSite, expectedSite));
 
     String siteName = metadata.system.location.site;
-    Preconditions.checkState(expectedSite.equals(siteName),
-        String.format("system.location.site %s does not match expected %s", siteName, expectedSite));
+    Preconditions.checkState(
+        expectedSite.equals(siteName),
+        String.format(
+            "system.location.site %s does not match expected %s", siteName, expectedSite));
   }
 
   private String makeNumId(Envelope envelope) {
@@ -558,7 +580,7 @@ class LocalDevice {
         System.err.println("Updating " + errorsFile);
         errorTree.write(printStream);
       } catch (Exception e) {
-        throw new RuntimeException("While writing "+ errorsFile.getAbsolutePath(), e);
+        throw new RuntimeException("While writing " + errorsFile.getAbsolutePath(), e);
       }
     } else if (errorsFile.exists()) {
       System.err.println("Removing " + errorsFile);
@@ -592,9 +614,11 @@ class LocalDevice {
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
     try (OutputStream outputStream = new FileOutputStream(metadataFile)) {
       // Super annoying, but can't set this on the global static instance.
-      JsonGenerator generator = OBJECT_MAPPER.getFactory()
-          .createGenerator(outputStream)
-          .setPrettyPrinter(PROPER_PRETTY_PRINTER_POLICY);
+      JsonGenerator generator =
+          OBJECT_MAPPER
+              .getFactory()
+              .createGenerator(outputStream)
+              .setPrettyPrinter(PROPER_PRETTY_PRINTER_POLICY);
       OBJECT_MAPPER.writeValue(generator, metadata);
     } catch (Exception e) {
       exceptionMap.put(EXCEPTION_WRITING, e);
@@ -607,7 +631,7 @@ class LocalDevice {
       outputStream.write(getSettings().config.getBytes());
     } catch (Exception e) {
       e.printStackTrace();
-      throw new RuntimeException("While writing "+ configFile.getAbsolutePath(), e);
+      throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
     }
   }
 
@@ -647,7 +671,7 @@ class LocalDevice {
         if (!schemas.containsKey(sampleName)) {
           throw new RuntimeException("No valid matching schema found");
         }
-        schemas.get(sampleName).validate(new JSONObject(new JSONTokener(sampleStream)));
+        schemas.get(sampleName).validate(OBJECT_MAPPER.readTree(sampleStream));
       } catch (Exception e) {
         Exception scopedException =
             new RuntimeException("While validating sample file " + sampleName, e);

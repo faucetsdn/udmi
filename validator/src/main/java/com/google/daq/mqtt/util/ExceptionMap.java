@@ -2,7 +2,6 @@ package com.google.daq.mqtt.util;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,7 +11,6 @@ import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.everit.json.schema.ValidationException;
 
 public class ExceptionMap extends RuntimeException {
 
@@ -58,11 +56,8 @@ public class ExceptionMap extends RuntimeException {
       if (e.getCause() != null) {
         errorTree.child = format(e.getCause(), newPrefix, indent);
       }
-      ((ExceptionMap) e).forEach(
-          (key, sub) -> errorTree.children.put(key, format(sub, newPrefix, indent)));
-    } else if (e instanceof ValidationException) {
-      ((ValidationException) e).getCausingExceptions().forEach(
-          sub -> errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent)));
+      ((ExceptionMap) e)
+          .forEach((key, sub) -> errorTree.children.put(key, format(sub, newPrefix, indent)));
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }
@@ -83,9 +78,7 @@ public class ExceptionMap extends RuntimeException {
     return exceptions.size();
   }
 
-  public void purgeErrors(Set<String> ignoreErrors) {
-
-  }
+  public void purgeErrors(Set<String> ignoreErrors) {}
 
   public static class ErrorTree {
     public String prefix;
@@ -132,9 +125,10 @@ public class ExceptionMap extends RuntimeException {
         return true;
       }
       if (children != null) {
-        children = children.entrySet().stream()
-            .filter(entry -> !entry.getValue().purge(ignoreErrors))
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        children =
+            children.entrySet().stream()
+                .filter(entry -> !entry.getValue().purge(ignoreErrors))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
         return children.isEmpty();
       }
       return false;
