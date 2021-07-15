@@ -10,7 +10,7 @@ fi
 site_model=$PWD
 cd $ROOT_DIR
 
-project_id=$1
+project_id=${1:?}
 device_id=$2
 shift 2
 
