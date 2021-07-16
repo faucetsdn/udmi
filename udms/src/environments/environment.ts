@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  useEmulators: true,
+  useEmulators: false,
   firebase: {
     apiKey: 'AIzaSyANL8VhKgHhD71lMNw6MUa_CRlpQs6Z0Pc',
     authDomain: 'bos-daq-testing.firebaseapp.com',
