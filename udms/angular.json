@@ -45,12 +45,12 @@
                 }
               ],
 	      "optimization": {
-		      "scripts": true,
-		      "styles": {
-			      "minify": false,
-			      "inlineCritical": false
-		      },
-		      "fonts": true
+		"scripts": true,
+		"styles": {
+		  "minify": false,
+		  "inlineCritical": false
+		},
+		"fonts": true
 	      },
               "outputHashing": "all",
               "sourceMap": false,

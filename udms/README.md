@@ -41,7 +41,7 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 To populate the firestore database, run `node e2e/firestore/import_db_cloud.js`.
 
-To deploy, build the project using `ng build --prod` and deploy using `firebase deploy.
+To deploy, build the project using `ng build --prod` and deploy using `firebase deploy`.
 
 # Further help
 
