@@ -9,7 +9,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 Run `npm install --include=dev` to install local dependencies. Follow [Firebase Doc](https://firebase.google.com/docs/cli) to install Firebase Cli.
 
 ## Firebase Emulator
-Run `firebase emulators:start` in a separate shell. Emulator settings(e.g. Ports) can be configured in `firebase.json` if necessary. To populate the local firestore emulator with data, run `node e2e/firestore/import_db.js`. To view local emulators' statuses, visit `http://localhost:3000/`.
+Run `firebase emulators:start` in a separate shell. Emulator settings(e.g. Ports) can be configured in `firebase.json` if necessary. To populate the local firestore emulator with data, run `node e2e/firestore/import_db_emulator.js`. To view local emulators' statuses, visit `http://localhost:3000/`.
 
 ## Development server
 
