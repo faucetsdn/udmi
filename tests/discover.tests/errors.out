@@ -1,7 +1,9 @@
 Validating 1 schemas
   Validating 1 files against discover.json
     Against input discover.tests/errors.json
-      3 schema violations found
+      5 schema violations found
         object has missing required properties (["local_id","protocol"])
         object instance has properties which are not allowed by the schema: ["bad___sensor","bad_entity_name_"]
+        object instance has properties which are not allowed by the schema: ["bad_property_name"]
         object instance has properties which are not allowed by the schema: ["id","properties"]
+        object instance has properties which are not allowed by the schema: ["properties"]

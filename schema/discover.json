@@ -37,15 +37,10 @@
   ],
   "definitions": {
     "point_property_names": {
-      "propertyNames": {
-        "oneOf": [
-          {
-            "enum": [
-              "units",
-              "present_value"
-            ]
-          }
-        ]
+      "additionalProperties": false,
+      "properties": {
+        "present_value": {},
+        "units": {}
       }
     }
   }
