@@ -28,6 +28,7 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -247,7 +248,7 @@ class LocalDevice {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
-    } catch (ProcessingException metadata_exception) {
+    } catch (ProcessingException | ValidationException metadata_exception) {
       exceptionMap.put(EXCEPTION_VALIDATING, metadata_exception);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);

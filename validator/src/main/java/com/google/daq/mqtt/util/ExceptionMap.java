@@ -58,6 +58,10 @@ public class ExceptionMap extends RuntimeException {
       }
       ((ExceptionMap) e)
           .forEach((key, sub) -> errorTree.children.put(key, format(sub, newPrefix, indent)));
+    } else if (e instanceof ValidationException) {
+      ((ValidationException) e)
+          .getCausingExceptions()
+          .forEach(sub -> errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent)));
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }

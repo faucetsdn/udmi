@@ -10,6 +10,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -39,10 +40,12 @@ public class MessageValidator {
   public List<String> validateMessage(String subFolder, String data) {
     JsonSchema schema = schemaMap.computeIfAbsent(subFolder, this::getSchema);
     try {
-      schema.validate(OBJECT_MAPPER.readTree(data));
+      schema.validate(OBJECT_MAPPER.readTree(data), true);
       return ImmutableList.of();
-    } catch (JsonProcessingException | ProcessingException e) {
-      return ImmutableList.of(e.getMessage());
+    } catch (ValidationException e) {
+      return e.getAllMessages();
+    } catch (ProcessingException | JsonProcessingException ex) {
+      return ImmutableList.of(ex.getMessage());
     }
   }
 

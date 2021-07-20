@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotCoreClient;
@@ -23,6 +24,7 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FirestoreDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -346,7 +348,7 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
         validateDeviceId(deviceId);
-      } catch (ExceptionMap | ProcessingException e) {
+      } catch (ExceptionMap | ProcessingException | ValidationException e) {
         System.err.println("Error validating attributes: " + e.getMessage());
         processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorFile, e);
         reportingDevice.addError(e);
@@ -358,7 +360,7 @@ public class Validator {
           if (dataSink != null) {
             dataSink.validationResult(deviceId, schemaName, attributes, message, null);
           }
-        } catch (ExceptionMap | ProcessingException e) {
+        } catch (ExceptionMap | ProcessingException | ValidationException e) {
           System.err.println("Error validating message: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorFile, e);
           reportingDevice.addError(e);
@@ -635,7 +637,7 @@ public class Validator {
     } catch (Exception e) {
       throw new RuntimeException("While converting to json node", e);
     }
-    schema.validate(jsonNode);
+    validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
   }
 
   private void validateFile(
@@ -644,9 +646,16 @@ public class Validator {
       File fullPath = getFullPath(prefix, new File(targetFile));
       Map<String, Object> message = OBJECT_MAPPER.readValue(fullPath, Map.class);
       sanitizeMessage(schemaName, message);
-      schema.validate(OBJECT_MAPPER.valueToTree(message));
+      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
     } catch (Exception e) {
       throw new RuntimeException("Against input " + targetFile, e);
+    }
+  }
+
+  private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
+    ProcessingReport report = schema.validate(jsonNode, true);
+    if (!report.isSuccess()) {
+      throw ValidationException.fromProcessingReport(report);
     }
   }
 
