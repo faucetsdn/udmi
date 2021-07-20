@@ -1,6 +1,6 @@
 Validating 1 schemas
   Validating 1 files against config.json
     Against input config.tests/fcu.json
-      #: 2 schema violations found
-        #/pointset/points/chilled_water_valve_percentage_command: extraneous key [min_update_ms] is not permitted
-        #/system: extraneous key [max_update_ms] is not permitted
+      2 schema violations found
+        object instance has properties which are not allowed by the schema: ["max_update_ms"]
+        object instance has properties which are not allowed by the schema: ["min_update_ms"]

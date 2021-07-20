@@ -1,18 +1,9 @@
 Validating 1 schemas
   Validating 1 files against config.json
     Against input config.tests/errors.json
-      #: 12 schema violations found
-        #/pointset: 9 schema violations found
-          #/pointset/points/return_air_temperature_sensor: 2 schema violations found
-            #/pointset/points/return_air_temperature_sensor: extraneous key [object_type] is not permitted
-            #/pointset/points/return_air_temperature_sensor: extraneous key [units] is not permitted
-          #/pointset/sample_rate_sec: expected type: Number, found: String
-          #/pointset/state_etag: expected maxLength: 32, actual: 55
-          #/pointset: extraneous key [config_etag] is not permitted
-          #/pointset: extraneous key [id] is not permitted
-          #/pointset: extraneous key [properties] is not permitted
-          #/pointset: extraneous key [timestamp] is not permitted
-          #/pointset: extraneous key [version] is not permitted
-        #: extraneous key [points] is not permitted
-        #: extraneous key [properties] is not permitted
-        #: extraneous key [type] is not permitted
+      5 schema violations found
+        instance type (string) does not match any allowed primitive type (allowed: ["integer"])
+        object instance has properties which are not allowed by the schema: ["config_etag","id","properties","timestamp","version"]
+        object instance has properties which are not allowed by the schema: ["object_type","units"]
+        object instance has properties which are not allowed by the schema: ["points","properties","type"]
+        string "2a8b71dwqhdhdddddddddddddddddddddddddddddddddddddddddd8" is too long (length: 55, maximum allowed: 32)
