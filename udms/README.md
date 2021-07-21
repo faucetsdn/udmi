@@ -9,7 +9,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 Run `npm install --include=dev` to install local dependencies. Follow [Firebase Doc](https://firebase.google.com/docs/cli) to install Firebase Cli.
 
 ## Firebase Emulator
-Run `firebase emulators:start` in a separate shell. Emulator settings(e.g. Ports) can be configured in `firebase.json` if necessary. To populate the local firestore emulator with data, run `node e2e/firestore/import_db.js`. To view local emulators' statuses, visit `http://localhost:3000/`.
+Run `firebase emulators:start` in a separate shell. Emulator settings(e.g. Ports) can be configured in `firebase.json` if necessary. To populate the local firestore emulator with data, run `node e2e/firestore/import_db_emulator.js`. To view local emulators' statuses, visit `http://localhost:3000/`.
 
 ## Development server
 
@@ -36,6 +36,12 @@ Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.
 ## Running end-to-end tests
 
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+
+## Deploying
+
+To populate the firestore database, run `node e2e/firestore/import_db_cloud.js`.
+
+To deploy, build the project using `ng build --prod` and deploy using `firebase deploy`.
 
 # Further help
 

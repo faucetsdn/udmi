@@ -1,17 +1,11 @@
-process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
-process.env.FIREBASE_AUTH_EMULATOR_HOST = "localhost:9099";
-const firebase = require("firebase-admin");
+/**
+ * @fileoverview Defines methods used to populate a firestore/emulato database
+ * from a JSON object in a file
+ */
+
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert').strict;
-
-const firebaseConfig = {
-    // Any id will work as long as UI is also connecting using the same id
-    // Default projects are specified in project root/.firebasrc 
-    projectId: "bos-daq-testing", 
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 function isDoc(data) {
     return !!data._id;
@@ -26,7 +20,7 @@ function isTimestamp(data) {
 }
 
 function isMap(data) {
-    return Object.prototype.toString.call(data) === "[object Object]"; 
+    return Object.prototype.toString.call(data) === "[object Object]";
 }
 
 function formatMap(doc) {
@@ -55,7 +49,7 @@ async function importDoc(ref, doc) {
         } else if (isCollection(value)) {
             collections.push(key);
         } else if (isMap(value)) {
-            formattedDoc[key] = formatMap(value) 
+            formattedDoc[key] = formatMap(value);
         } else {
             formattedDoc[key] = value;
         }
@@ -73,17 +67,20 @@ async function importCollection(ref, name, data) {
     });
 }
 
-async function clearDB() {
-    const query = await db.collection("origin").get();
+async function clearDB(db, db_collection) {
+    const query = await db.collection(db_collection).get();
     await Promise.all(query.docs.map((doc) => {
         return doc.ref.delete();
     }));
 }
 
-async function importDB() {
-    const dbFile = fs.readFileSync(path.resolve(__dirname, "db.json"));
+async function importDB(json_data_source, db, db_collection) {
+    const dbFile = fs.readFileSync(path.resolve(__dirname, json_data_source));
     const db_json = JSON.parse(dbFile);
-    await importCollection(db, "origin", db_json.origin);
+    await importCollection(db, db_collection, db_json[db_collection]);
 }
 
-clearDB().then(importDB);
+module.exports.importDB = importDB;
+module.exports.clearDB = clearDB;
+
+// clearDB(db_collection).then(importDB(json_data_source, db, db_collection));
