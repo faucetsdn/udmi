@@ -1,6 +1,5 @@
 package com.google.bos.iot.core.proxy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -45,7 +44,7 @@ public class MessageValidator {
       return ImmutableList.of();
     } catch (ValidationException e) {
       return e.getAllMessages();
-    } catch (IOException | ProcessingException | JsonProcessingException ex) {
+    } catch (IOException | ProcessingException ex) {
       return ImmutableList.of(ex.getMessage());
     }
   }
