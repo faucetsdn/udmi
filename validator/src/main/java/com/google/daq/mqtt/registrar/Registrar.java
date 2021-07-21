@@ -469,10 +469,8 @@ public class Registrar {
     schemaBase = new File(schemaBasePath);
     schemaName = schemaBase.getParentFile().getName();
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
-    System.out.println("schemasdfa base: " + schemaBasePath + " " + schemaName);
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());
-      System.out.println("loaded schema: " + schemaFile.getName());
     }
   }
 
