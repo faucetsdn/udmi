@@ -1,7 +1,7 @@
 {
   "title": "Gateway State",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "required": [
     "error_ids"

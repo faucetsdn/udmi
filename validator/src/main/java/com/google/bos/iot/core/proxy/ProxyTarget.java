@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.bos.iot.core.proxy.MessageValidator.RelativeClient;
 import com.google.cloud.ServiceOptions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import java.time.Duration;
