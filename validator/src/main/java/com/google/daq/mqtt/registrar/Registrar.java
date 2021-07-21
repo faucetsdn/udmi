@@ -1,3 +1,4 @@
+
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
@@ -468,8 +469,10 @@ public class Registrar {
     schemaBase = new File(schemaBasePath);
     schemaName = schemaBase.getParentFile().getName();
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
+    System.out.println("schemasdfa base: " + schemaBasePath + " " + schemaName);
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());
+      System.out.println("loaded schema: " + schemaFile.getName());
     }
   }
 
@@ -480,7 +483,7 @@ public class Registrar {
           JsonSchemaFactory.newBuilder()
               .setLoadingConfiguration(
                   LoadingConfiguration.newBuilder()
-                      .addScheme("scheme", new RelativeDownloader())
+                      .addScheme("file", new RelativeDownloader())
                       .freeze())
               .freeze()
               .getJsonSchema(OBJECT_MAPPER.readTree(schemaStream));
@@ -490,18 +493,14 @@ public class Registrar {
     }
   }
 
-  private class RelativeDownloader implements URIDownloader {
-
-    public static final String FILE_PREFIX = "file:";
+  class RelativeDownloader implements URIDownloader {
 
     @Override
     public InputStream fetch(URI source) {
-      String schema = source.getPath();
       try {
-        Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
-        return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
+        return new FileInputStream(new File(schemaBase, source.getSchemeSpecificPart()));
       } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + schema, e);
+        throw new RuntimeException("While loading sub-schema " + source, e);
       }
     }
   }
