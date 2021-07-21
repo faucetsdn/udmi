@@ -42,7 +42,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.30'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.32'
     compile 'io.jsonwebtoken:jjwt:0.9.1'
     compile 'javax.xml.bind:jaxb-api:2.3.1'
     compile 'com.sun.xml.bind:jaxb-impl:3.0.1'
