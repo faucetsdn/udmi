@@ -49,7 +49,7 @@ async function importDoc(ref, doc) {
         } else if (isCollection(value)) {
             collections.push(key);
         } else if (isMap(value)) {
-            formattedDoc[key] = formatMap(value)
+            formattedDoc[key] = formatMap(value);
         } else {
             formattedDoc[key] = value;
         }

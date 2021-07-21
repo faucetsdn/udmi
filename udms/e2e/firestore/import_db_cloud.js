@@ -9,7 +9,6 @@
 // 'gcloud auth application-default login'
 
 const firebase = require("firebase-admin");
-require("firebase/firestore");
 
 const json_data_source = "db.json"
 const db_collection = "origin"
