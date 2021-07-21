@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -44,7 +45,7 @@ public class MessageValidator {
       return ImmutableList.of();
     } catch (ValidationException e) {
       return e.getAllMessages();
-    } catch (ProcessingException | JsonProcessingException ex) {
+    } catch (IOException | ProcessingException | JsonProcessingException ex) {
       return ImmutableList.of(ex.getMessage());
     }
   }
