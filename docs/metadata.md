@@ -43,3 +43,10 @@ working examples for more specific details on what these fields look like.
   * `physical_tag`: Information used to print a physical QR code label.
 * `cloud`: Information specific to how the device communicates with the cloud.
   * `auth_type`: Key type (e.g. `RS256`) used for cloud communication.
+
+## Metadata Registration and Validation
+
+Using UDMI on a project entails not only the base device and server implementations, but also
+properly registering and validating device configuration. The [registrar](docs/registrar.md)
+tool and [validator](docs/validator.md) tool provide a means to configure and check site
+installations, respectively.

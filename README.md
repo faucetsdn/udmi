@@ -109,30 +109,3 @@ A device client implementation will typically only be aware of the _state_, _con
 one or more _telemetry_ messages (e.g. _pointset_), while all others are meant for the supporting
 infrastructure.
 
-### Metadata Registration and Validation
-
-Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](docs/registrar.md)
-tool and [validator](docs/validator.md) tool provide a means to configure and check site
-installations, respectively.
-
-### State Message
-
-* See notes below about 'State status' fields.
-* There is an implicit minimum update interval of _one second_ applied to state updates, and it
-is considered an error to update device state more often than that. If there are multiple
-_state_ updates from a device in under a second they should be coalessed into one update
-(sent after an appropriate backoff timer) and not buffered (sending multiple messages).
-* `last_config` should be the timestamp _from_ the `timestamp` field of the last successfully
-parsed `config` message (not the timestamp the message was received/processed).
-
-### Config Message
-
-* `sample_rate_sec`: Sampling rate for the system, which should proactively send an
-update (e.g. _pointset_, _logentry_, _discover_ message) at this interval.
-* `sample_limit_sec`: Minimum time between sample updates. Updates that happen faster than this time
-(e.g. due to _cov_ events) should be coalesced so that only the most recent update is sent.
-* `set_value`: Set a value to be used during diagnostics and operational use. Should
-override any operational values, but not override alarm conditions.
-* `min_loglevel`: Indicates the minimum loglevel for reporting log messages below which log entries
-should not be sent. See note below for a description of the level value.
