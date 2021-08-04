@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.ImmutableList;
@@ -40,8 +41,11 @@ public class MessageValidator {
   public List<String> validateMessage(String subFolder, String data) {
     JsonSchema schema = schemaMap.computeIfAbsent(subFolder, this::getSchema);
     try {
-      schema.validate(OBJECT_MAPPER.readTree(data), true);
-      return ImmutableList.of();
+      ProcessingReport report = schema.validate(OBJECT_MAPPER.readTree(data), true);
+      if (report.isSuccess()) {
+        return ImmutableList.of();
+      }
+      throw ValidationException.fromProcessingReport(report);
     } catch (ValidationException e) {
       return e.getAllMessages();
     } catch (IOException | ProcessingException ex) {
