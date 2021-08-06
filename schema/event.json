@@ -10,6 +10,9 @@
     },
     "pointset": {
       "$ref": "file:event_pointset.json#"
+    },
+    "discover": {
+      "$ref": "file:event_discover.json#"
     }
   }
 }

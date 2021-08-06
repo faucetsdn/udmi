@@ -13,17 +13,11 @@
         1
       ]
     },
-    "protocol": {
-      "type": "string"
-    },
-    "local_id": {
-      "type": "string"
-    },
-    "points": {
+    "families": {
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "#/definitions/point_property_names"
+          "$ref": "#/definitions/discovery_family"
         }
       }
     }
@@ -31,17 +25,23 @@
   "required": [
     "timestamp",
     "version",
-    "protocol",
-    "local_id",
-    "points"
+    "families"
   ],
   "definitions": {
-    "point_property_names": {
+    "discovery_family": {
       "additionalProperties": false,
       "properties": {
-        "present_value": {},
-        "units": {}
-      }
+        "id": {
+          "type": "string",
+          "pattern": "^[-_.:/0-9a-zA-Z]+$"
+        },
+        "group": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
     }
   }
 }
