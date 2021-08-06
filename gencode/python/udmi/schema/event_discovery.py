@@ -1,10 +1,9 @@
 """Generated class for event_discovery.json"""
+from .event_discovery_family import FaimilyDiscoveryEvent
 
 
 class Discovery:
   """Generated schema class"""
-
-
 
   def __init__(self):
     self.timestamp = None
@@ -18,7 +17,7 @@ class Discovery:
     result = Discovery()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.families = source.get('families')
+    result.families = FaimilyDiscoveryEvent.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -44,5 +43,5 @@ class Discovery:
     if self.version:
       result['version'] = self.version # 5
     if self.families:
-      result['families'] = self.families # 1
+      result['families'] = FaimilyDiscoveryEvent.expand_dict(self.families) # 2
     return result

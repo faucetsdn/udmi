@@ -8,6 +8,7 @@ from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .envelope import Envelope
+from .event_discovery_family import FaimilyDiscoveryEvent
 from .event_discovery import Discovery
 from .event import Event
 from .event_pointset import PointsetEvent

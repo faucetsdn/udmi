@@ -17,7 +17,7 @@
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "#/definitions/discovery_family"
+          "$ref": "file:event_discovery_family.json"
         }
       }
     }
@@ -26,22 +26,5 @@
     "timestamp",
     "version",
     "families"
-  ],
-  "definitions": {
-    "discovery_family": {
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[-_.:/0-9a-zA-Z]+$"
-        },
-        "group": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id"
-      ]
-    }
-  }
+  ]
 }
