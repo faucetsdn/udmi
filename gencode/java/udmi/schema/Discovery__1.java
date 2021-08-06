@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Discover
+ * Discovery
  * <p>
  * 
  * 
@@ -22,12 +22,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "protocol",
-    "local_id",
-    "points"
+    "families"
 })
 @Generated("jsonschema2pojo")
-public class Discover {
+public class Discovery__1 {
 
     /**
      * 
@@ -42,37 +40,21 @@ public class Discover {
      * 
      */
     @JsonProperty("version")
-    public Discover.Version version;
+    public Discovery__1 .Version version;
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("protocol")
-    public String protocol;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("local_id")
-    public String local_id;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("points")
-    public Object points;
+    @JsonProperty("families")
+    public Object families;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
-        result = ((result* 31)+((this.local_id == null)? 0 :this.local_id.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
-        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
 
@@ -81,11 +63,11 @@ public class Discover {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Discover) == false) {
+        if ((other instanceof Discovery__1) == false) {
             return false;
         }
-        Discover rhs = ((Discover) other);
-        return ((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.local_id == rhs.local_id)||((this.local_id!= null)&&this.local_id.equals(rhs.local_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        Discovery__1 rhs = ((Discovery__1) other);
+        return ((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
     @Generated("jsonschema2pojo")
@@ -93,10 +75,10 @@ public class Discover {
 
         _1("1");
         private final String value;
-        private final static Map<String, Discover.Version> CONSTANTS = new HashMap<String, Discover.Version>();
+        private final static Map<String, Discovery__1 .Version> CONSTANTS = new HashMap<String, Discovery__1 .Version>();
 
         static {
-            for (Discover.Version c: values()) {
+            for (Discovery__1 .Version c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
@@ -116,8 +98,8 @@ public class Discover {
         }
 
         @JsonCreator
-        public static Discover.Version fromValue(String value) {
-            Discover.Version constant = CONSTANTS.get(value);
+        public static Discovery__1 .Version fromValue(String value) {
+            Discovery__1 .Version constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

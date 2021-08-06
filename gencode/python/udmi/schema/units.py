@@ -1,7 +1,7 @@
 """Generated class for units.json"""
 
 
-class ObjectBA49D4A8:
+class Object4D93EA6E:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class ObjectBA49D4A8:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectBA49D4A8()
+    result = Object4D93EA6E()
     return result
 
   @staticmethod
@@ -20,7 +20,7 @@ class ObjectBA49D4A8:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectBA49D4A8.from_dict(source[key])
+      result[key] = Object4D93EA6E.from_dict(source[key])
     return result
 
   @staticmethod

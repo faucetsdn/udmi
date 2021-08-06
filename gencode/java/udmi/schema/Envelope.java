@@ -91,7 +91,7 @@ public class Envelope {
     public enum SubFolder {
 
         CONFIG("config"),
-        DISCOVER("discover"),
+        DISCOVERY("discovery"),
         SYSTEM("system"),
         METADATA("metadata"),
         POINTSET("pointset"),

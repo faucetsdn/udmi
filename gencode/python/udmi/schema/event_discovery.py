@@ -1,7 +1,7 @@
-"""Generated class for discover.json"""
+"""Generated class for event_discovery.json"""
 
 
-class Discover:
+class Discovery:
   """Generated schema class"""
 
 
@@ -9,20 +9,16 @@ class Discover:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.protocol = None
-    self.local_id = None
-    self.points = None
+    self.families = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Discover()
+    result = Discovery()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.protocol = source.get('protocol')
-    result.local_id = source.get('local_id')
-    result.points = source.get('points')
+    result.families = source.get('families')
     return result
 
   @staticmethod
@@ -31,7 +27,7 @@ class Discover:
       return None
     result = {}
     for key in source:
-      result[key] = Discover.from_dict(source[key])
+      result[key] = Discovery.from_dict(source[key])
     return result
 
   @staticmethod
@@ -47,10 +43,6 @@ class Discover:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.protocol:
-      result['protocol'] = self.protocol # 5
-    if self.local_id:
-      result['local_id'] = self.local_id # 5
-    if self.points:
-      result['points'] = self.points # 1
+    if self.families:
+      result['families'] = self.families # 1
     return result
