@@ -18,23 +18,23 @@ and have device-level UDMI data, but they have fundamentally different roles.
 
 ## Gateway Operation
 
-There are two modes for gateway operation: _static_ and _dynamic_. In the
-_dynamic_ mode, the gateway functionality is configured dynamically through
+There are two modes for gateway operation: _implicit_ and _explicit_. In the
+_explicit_ mode, the gateway functionality is configured dynamically through
 gateway _config_ messages, which tell it the local devices it should proxy
-for. In a _static_ gateway configuration, the gateway will be statically
-configured to proxy a set of devices, essentially ignoring any information
-in the associated _config_ block.
+for. In a _implicit_ gateway configuration, the gateway will be directly
+configured to proxy a set of devices, essentially ignoring any gateway
+information in the associated _config_ block.
 
 The general sequence of events for gateway operation is:
 1. Optional metadata specifies configuration paramaters that should be used
 at install time to properly (manually) setup the device.
-2. (_dynamic_ only) On startup, the gateway connects to the cloud and receives a configuration
-block that details which _proxy devices_ the gateway should proxy for.
+2. (_explicit_ only) On startup, the gateway connects to the cloud and receives
+a configuration block that details which _proxy devices_ the gateway should proxy for.
 4. Gateway 'attaches' (Cloud IoT terminology) to the proxied devices,
 receiving a configuration block for each proxied device. Any attach errors are
 indicated in the gateway _status_ block and sent along as a _logentry_ event.
-5. (_dynamic_ only) The proxied device's _config_ block specifies any local connection
-parameters for the proxied device, e.g. the BacNET device id.
+5. (_explicit_ only) The proxied device's _config_ block specifies any local
+connection parameters for the proxied device, e.g. the BacNET device id.
 6. The gateway proxies communication to/from the device, translating between
 native (e.g. BacNET) communications and UDMI-based messages.
 
