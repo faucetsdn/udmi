@@ -1,5 +1,5 @@
 """Generated class for event_discovery.json"""
-from .event_discovery_family import FaimilyDiscoveryEvent
+from .event_discovery_family import FamilyDiscoveryEvent
 
 
 class Discovery:
@@ -17,7 +17,7 @@ class Discovery:
     result = Discovery()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.families = FaimilyDiscoveryEvent.map_from(source.get('families'))
+    result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -43,5 +43,5 @@ class Discovery:
     if self.version:
       result['version'] = self.version # 5
     if self.families:
-      result['families'] = FaimilyDiscoveryEvent.expand_dict(self.families) # 2
+      result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
     return result

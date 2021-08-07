@@ -1,5 +1,5 @@
 {
-  "title": "Faimily Discovery Event",
+  "title": "Family Discovery Event",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Faimily Discovery Event
+ * Family Discovery Event
  * <p>
  * 
  * 
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "group"
 })
 @Generated("jsonschema2pojo")
-public class FaimilyDiscoveryEvent {
+public class FamilyDiscoveryEvent {
 
     /**
      * 
@@ -44,10 +44,10 @@ public class FaimilyDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FaimilyDiscoveryEvent) == false) {
+        if ((other instanceof FamilyDiscoveryEvent) == false) {
             return false;
         }
-        FaimilyDiscoveryEvent rhs = ((FaimilyDiscoveryEvent) other);
+        FamilyDiscoveryEvent rhs = ((FamilyDiscoveryEvent) other);
         return (((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)))&&((this.group == rhs.group)||((this.group!= null)&&this.group.equals(rhs.group))));
     }
 
