@@ -15,8 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
-    "group"
+    "present_value"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetEvent {
@@ -26,16 +25,13 @@ public class PointPointsetEvent {
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public String id;
-    @JsonProperty("group")
-    public String group;
+    @JsonProperty("present_value")
+    public Object present_value;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
-        result = ((result* 31)+((this.group == null)? 0 :this.group.hashCode()));
+        result = ((result* 31)+((this.present_value == null)? 0 :this.present_value.hashCode()));
         return result;
     }
 
@@ -48,7 +44,7 @@ public class PointPointsetEvent {
             return false;
         }
         PointPointsetEvent rhs = ((PointPointsetEvent) other);
-        return (((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)))&&((this.group == rhs.group)||((this.group!= null)&&this.group.equals(rhs.group))));
+        return ((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value)));
     }
 
 }
