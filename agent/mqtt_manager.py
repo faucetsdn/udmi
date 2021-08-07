@@ -29,6 +29,8 @@ import random
 import ssl
 import time
 from queue import Queue, Empty
+from dataclasses import dataclass, field
+from typing import AnyStr, Callable
 
 import jwt
 import paho.mqtt.client as mqtt
@@ -111,6 +113,10 @@ def on_publish(unused_client, unused_userdata, unused_mid):
     """Paho callback when a message is sent to the broker."""
     print("on_publish")
 
+def on_message(self, unused_client, unused_userdata, message):
+    """Paho callback when a message is received"""
+    print("on_message %s", message.topic)
+
 def get_client(
     project_id,
     cloud_region,
@@ -121,7 +127,7 @@ def get_client(
     ca_certs,
     mqtt_bridge_hostname,
     mqtt_bridge_port,
-    on_message,
+    callbacks
 ):
     """Create our MQTT client. The client_id is a unique string that identifies
     this device. For Google Cloud IoT Core, it must be in the format below."""
@@ -144,10 +150,10 @@ def get_client(
     # Register message callbacks. https://eclipse.org/paho/clients/python/docs/
     # describes additional callbacks that Paho supports. In this example, the
     # callbacks just print to standard out.
-    client.on_connect = on_connect
-    client.on_publish = on_publish
-    client.on_disconnect = on_disconnect
-    client.on_message = on_message
+    client.on_connect = callbacks.on_connect
+    client.on_publish = callbacks.on_publish
+    client.on_disconnect = callbacks.on_disconnect
+    client.on_message = callbacks.on_message
 
     # Connect to the Google MQTT bridge.
     client.connect(mqtt_bridge_hostname, mqtt_bridge_port)
@@ -169,15 +175,24 @@ def get_client(
     return client
 
 
+@dataclass
+class MqttCallbacks:
+    on_connect: Callable = on_connect
+    on_disconnect: Callable = on_disconnect
+    on_publish: Callable = on_publish
+    on_message: Callable = on_message
 
 
 class MqttManager:
-    
+
     def __init__(self, args, on_message):
         self.on_message = on_message
         self.device_id = args.device_id
         self.state_sent = 0
         self.queue = Queue()
+        handlers = MqttCallbacks()
+        handlers.on_message = self.mqtt_message
+
         self.client = get_client(
             args.project_id,
             args.cloud_region,
@@ -188,7 +203,7 @@ class MqttManager:
             args.ca_certs,
             args.mqtt_bridge_hostname,
             args.mqtt_bridge_port,
-            self.mqtt_message
+            handlers
         )
 
     def handle_backoff(self):
@@ -231,9 +246,24 @@ class MqttManager:
             item()
         except Empty as e:
             pass
-        
+
         self.client.loop()
         return True
+
+def demo_client(args):
+    handlers = MqttCallbacks()
+    return get_client(
+        args.project_id,
+        args.cloud_region,
+        args.registry_id,
+        args.device_id,
+        args.private_key_file,
+        args.algorithm,
+        args.ca_certs,
+        args.mqtt_bridge_hostname,
+        args.mqtt_bridge_port,
+        handlers
+    )
 
 def mqtt_device_demo(args):
     """Connects a device, sends data, and receives data."""
@@ -247,17 +277,7 @@ def mqtt_device_demo(args):
 
     jwt_iat = datetime.datetime.utcnow()
     jwt_exp_mins = args.jwt_expires_minutes
-    client = get_client(
-        args.project_id,
-        args.cloud_region,
-        args.registry_id,
-        args.device_id,
-        args.private_key_file,
-        args.algorithm,
-        args.ca_certs,
-        args.mqtt_bridge_hostname,
-        args.mqtt_bridge_port,
-    )
+    client = demo_client(args)
 
     # Publish num_messages messages to the MQTT bridge once per second.
     for i in range(1, args.num_messages + 1):
@@ -286,17 +306,8 @@ def mqtt_device_demo(args):
             jwt_iat = datetime.datetime.utcnow()
             client.loop()
             client.disconnect()
-            client = get_client(
-                args.project_id,
-                args.cloud_region,
-                args.registry_id,
-                args.device_id,
-                args.private_key_file,
-                args.algorithm,
-                args.ca_certs,
-                args.mqtt_bridge_hostname,
-                args.mqtt_bridge_port,
-            )
+            client = demo_client(args)
+
         # Publish "payload" to the MQTT topic. qos=1 means at least once
         # delivery. Cloud IoT Core also supports qos=0 for at most once
         # delivery.
