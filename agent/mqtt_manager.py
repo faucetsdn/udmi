@@ -218,7 +218,10 @@ class MqttManager:
             print("Waiting for {} before reconnecting.".format(delay))
             time.sleep(delay)
             minimum_backoff_time *= 2
-            client.connect(args.mqtt_bridge_hostname, args.mqtt_bridge_port)
+            self.client.connect(args.mqtt_bridge_hostname, args.mqtt_bridge_port)
+
+    def loop_start(self):
+        self.client.loop_start()
 
     def mqtt_message(self, unused_client, unused_userdata, message):
         """Callback when the device receives a message on a subscription."""
