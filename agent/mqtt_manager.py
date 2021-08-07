@@ -185,13 +185,10 @@ class MqttCallbacks:
 
 class MqttManager:
 
-    def __init__(self, args, on_message):
-        self.on_message = on_message
+    def __init__(self, args, handlers=MqttCallbacks()):
         self.device_id = args.device_id
         self.state_sent = 0
         self.queue = Queue()
-        handlers = MqttCallbacks()
-        handlers.on_message = self.mqtt_message
 
         self.client = get_client(
             args.project_id,
