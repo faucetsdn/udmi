@@ -173,7 +173,7 @@ def get_client(
 
 class MqttManager:
 
-    def __init__(self, args, on_message):
+    def __init__(self, args, on_message=None):
         self.on_message = on_message
         self.device_id = args.device_id
         self.state_sent = 0
@@ -234,7 +234,7 @@ class MqttManager:
             item()
         except Empty as e:
             pass
-        
+
         self.client.loop()
         return True
 
