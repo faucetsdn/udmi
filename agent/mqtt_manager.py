@@ -178,6 +178,8 @@ class MqttManager:
         self.device_id = args.device_id
         self.state_sent = 0
         self.queue = Queue()
+        self.mqtt_hostname = args.mqtt_bridge_hostname
+        self.mqtt_port = args.mqtt_bridge_port
         self.client = get_client(
             args.project_id,
             args.cloud_region,
@@ -192,6 +194,7 @@ class MqttManager:
         )
 
     def handle_backoff(self):
+        global minimum_backoff_time
         if should_backoff:
             # If backoff time is too large, give up.
             if minimum_backoff_time > MAXIMUM_BACKOFF_TIME:
@@ -203,21 +206,23 @@ class MqttManager:
             print("Waiting for {} before reconnecting.".format(delay))
             time.sleep(delay)
             minimum_backoff_time *= 2
-            self.client.connect(args.mqtt_bridge_hostname, args.mqtt_bridge_port)
+            self.client.connect(self.mqtt_hostname, self.mqtt_port)
 
     def loop_start(self):
+        print('Starting background client loop...')
         self.client.loop_start()
 
     def mqtt_message(self, unused_client, unused_userdata, message):
         """Callback when the device receives a message on a subscription."""
         payload = str(message.payload.decode("utf-8"))
         topic = message.topic.split('/')[-1]
-        self.queue.put(lambda: self.on_message(topic, json.loads(payload)))
+        print(payload)
+        self.queue.put(lambda: self.handle_message(topic, payload))
 
     def publish(self, subfolder, payload):
         self.loop()
         self.handle_backoff()
-        mqtt_topic = "/devices/{}/{}".format(self.device_id, subfolder)
+        mqtt_topic = "/devices/{}/events/{}".format(self.device_id, subfolder)
         print('publish', mqtt_topic)
         self.client.publish(mqtt_topic, payload, qos=1)
 
@@ -227,6 +232,10 @@ class MqttManager:
             time.sleep(2)
         self.publish('state', json.dumps(state))
         self.state_sent = time.time()
+
+    def handle_message(self, topic, playload):
+        if payload:
+            self.on_message(topic, json.loads(payload))
 
     def loop(self):
         try:
