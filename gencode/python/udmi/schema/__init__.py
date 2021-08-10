@@ -19,6 +19,7 @@ from .metadata_cloud import CloudMetadata
 from .metadata_gateway import GatewayMetadata
 from .metadata import Metadata
 from .metadata_localnet import LocalnetMetadata
+from .metadata_localnet_subsystem import SubsystemLocalnetMetadata
 from .metadata_pointset import PointsetMetadata
 from .metadata_pointset_point import PointPointsetMetadata
 from .metadata_system import SystemMetadata
