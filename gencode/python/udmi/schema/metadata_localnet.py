@@ -1,4 +1,5 @@
 """Generated class for metadata_localnet.json"""
+from .metadata_localnet_subsystem import SubsystemLocalnetMetadata
 
 
 class LocalnetMetadata:
@@ -12,7 +13,7 @@ class LocalnetMetadata:
     if not source:
       return None
     result = LocalnetMetadata()
-    result.subsystem = source.get('subsystem')
+    result.subsystem = SubsystemLocalnetMetadata.map_from(source.get('subsystem'))
     return result
 
   @staticmethod
@@ -34,5 +35,5 @@ class LocalnetMetadata:
   def to_dict(self):
     result = {}
     if self.subsystem:
-      result['subsystem'] = self.subsystem # 1
+      result['subsystem'] = SubsystemLocalnetMetadata.expand_dict(self.subsystem) # 2
     return result

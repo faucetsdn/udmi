@@ -29,6 +29,7 @@ public enum Units {
     VOLT_AMPERES_REACTIVE("Volt-amperes-reactive"),
     KILO_VOLT_AMPERES_REACTIVE("Kilo-volt-amperes-reactive"),
     MEGA_VOLT_AMPERES_REACTIVE("Mega-volt-amperes-reactive"),
+    VOLT_AMPERES_REACTIVE_HOURS("Volt-amperes-reactive-hours"),
     DEGREES_PHASE("Degrees-phase"),
     POWER_FACTOR("Power-factor"),
     JOULES("Joules"),

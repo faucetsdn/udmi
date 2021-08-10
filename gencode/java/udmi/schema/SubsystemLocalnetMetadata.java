@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,30 +8,30 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Localnet Metadata
+ * Subsystem Localnet Metadata
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "subsystem"
+    "local_id"
 })
 @Generated("jsonschema2pojo")
-public class LocalnetMetadata__1 {
+public class SubsystemLocalnetMetadata {
 
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("subsystem")
-    public HashMap<String, SubsystemLocalnetMetadata> subsystem;
+    @JsonProperty("local_id")
+    public String local_id;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.subsystem == null)? 0 :this.subsystem.hashCode()));
+        result = ((result* 31)+((this.local_id == null)? 0 :this.local_id.hashCode()));
         return result;
     }
 
@@ -41,11 +40,11 @@ public class LocalnetMetadata__1 {
         if (other == this) {
             return true;
         }
-        if ((other instanceof LocalnetMetadata__1) == false) {
+        if ((other instanceof SubsystemLocalnetMetadata) == false) {
             return false;
         }
-        LocalnetMetadata__1 rhs = ((LocalnetMetadata__1) other);
-        return ((this.subsystem == rhs.subsystem)||((this.subsystem!= null)&&this.subsystem.equals(rhs.subsystem)));
+        SubsystemLocalnetMetadata rhs = ((SubsystemLocalnetMetadata) other);
+        return ((this.local_id == rhs.local_id)||((this.local_id!= null)&&this.local_id.equals(rhs.local_id)));
     }
 
 }

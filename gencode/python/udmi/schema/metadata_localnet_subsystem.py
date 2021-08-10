@@ -1,17 +1,18 @@
-"""Generated class for units.json"""
+"""Generated class for metadata_localnet_subsystem.json"""
 
 
-class Object4D93EA6E:
+class SubsystemLocalnetMetadata:
   """Generated schema class"""
 
   def __init__(self):
-    pass
+    self.local_id = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object4D93EA6E()
+    result = SubsystemLocalnetMetadata()
+    result.local_id = source.get('local_id')
     return result
 
   @staticmethod
@@ -20,7 +21,7 @@ class Object4D93EA6E:
       return None
     result = {}
     for key in source:
-      result[key] = Object4D93EA6E.from_dict(source[key])
+      result[key] = SubsystemLocalnetMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -32,4 +33,6 @@ class Object4D93EA6E:
 
   def to_dict(self):
     result = {}
+    if self.local_id:
+      result['local_id'] = self.local_id # 5
     return result
