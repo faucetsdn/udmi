@@ -1,0 +1,9 @@
+Validating 1 schemas
+  Validating 1 files against event_discover.json
+    Against input event_discover.tests/errors.json
+      5 schema violations found
+        ECMA 262 regex "^[-_.:/0-9a-zA-Z]+$" does not match input string "92E*A09"
+        object has missing required properties (["id"])
+        object instance has properties which are not allowed by the schema: ["addr"]
+        object instance has properties which are not allowed by the schema: ["id","points"]
+        object instance has properties which are not allowed by the schema: ["mac-addr"]

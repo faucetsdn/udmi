@@ -2,7 +2,7 @@ import argparse
 import os
 
 from udmi.schema import Config, State, BlobBlobsetState, BlobsetState, Common
-from mqtt_manager import MqttManager
+from mqtt_manager import MqttManager, MqttCallbacks
 from git_manager import GitManager
 
 def parse_command_line_args():
@@ -92,7 +92,9 @@ def parse_command_line_args():
 class UdmiAgent:
 
     def __init__(self, args):
-        self.mqtt_manager = MqttManager(args, self.on_message)
+        callbacks = MqttCallbacks()
+        callbacks.on_message = self.on_message
+        self.mqtt_manager = MqttManager(args, callbacks)
         self.git_manager = GitManager()
         self.device_state = State()
         self.device_state.blobset = BlobsetState()

@@ -7,8 +7,10 @@ from .config_localnet import LocalnetConfig
 from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
-from .discover import Discover
 from .envelope import Envelope
+from .event_audit import Audit
+from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery import Discovery
 from .event import Event
 from .event_pointset import PointsetEvent
 from .event_pointset_point import PointPointsetEvent

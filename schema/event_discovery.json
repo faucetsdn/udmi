@@ -1,5 +1,5 @@
 {
-  "title": "Discover",
+  "title": "Discovery",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
@@ -13,17 +13,11 @@
         1
       ]
     },
-    "protocol": {
-      "type": "string"
-    },
-    "local_id": {
-      "type": "string"
-    },
-    "points": {
+    "families": {
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "#/definitions/point_property_names"
+          "$ref": "file:event_discovery_family.json"
         }
       }
     }
@@ -31,17 +25,6 @@
   "required": [
     "timestamp",
     "version",
-    "protocol",
-    "local_id",
-    "points"
-  ],
-  "definitions": {
-    "point_property_names": {
-      "additionalProperties": false,
-      "properties": {
-        "present_value": {},
-        "units": {}
-      }
-    }
-  }
+    "families"
+  ]
 }
