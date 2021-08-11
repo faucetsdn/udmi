@@ -1,0 +1,10 @@
+Validating 1 schemas
+  Validating 1 files against event_pointset.json
+    Against input event_pointset.tests/errors.json
+      8 schema violations found
+        instance type (string) does not match any allowed primitive type (allowed: ["object"])
+        object has missing required properties (["present_value"])
+        object instance has properties which are not allowed by the schema: ["analogValue_1","bad_____sensor","bad_entity_name_","comment$string"]
+        object instance has properties which are not allowed by the schema: ["bad_property_name"]
+        object instance has properties which are not allowed by the schema: ["comment$string","id","properties","state_etag"]
+        object instance has properties which are not allowed by the schema: ["properties"]

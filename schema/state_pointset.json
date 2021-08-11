@@ -1,36 +1,19 @@
 {
-  "title": "pointset state snippet",
+  "title": "Pointset State",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
-    "config_etag": {
-      "type": "string",
-      "maxLength": 32
-    },
     "state_etag": {
       "type": "string",
       "maxLength": 32
     },
     "points": {
       "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, PointPointsetState>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "additionalProperties": false,
-          "properties": {
-            "value_state": {
-              "enum": [
-                "applied",
-                "updating",
-                "overridden",
-                "invalid",
-                "failure"
-              ]
-            },
-            "status": {
-              "$ref": "file:common.json#/definitions/entry"
-            }
-          }
+          "$ref": "file:state_pointset_point.json#"
         }
       }
     }

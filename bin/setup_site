@@ -4,7 +4,7 @@ ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 MODEL_DIR=udmi_site_model
-MODEL_VER=1.4
+MODEL_VER=1.5
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
 
 if [[ -d $MODEL_DIR ]]; then
@@ -15,5 +15,8 @@ else
     cd $MODEL_DIR
 fi
 
-git checkout $MODEL_VER
+git checkout $MODEL_VER 2> /dev/null
 git log -n 1
+
+mkdir -p validator
+cp devices/AHU-1/rsa_private.pkcs8 validator/

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "make_model": "ACME Bird Trap",
+    "firmware": {
+      "version": "3.2a"
+    },
+    "serial_no": "182732142",
+    "last_config": "2018-08-26T21:38:29.364Z",
+    "operational": true
+  },
+  "pointset": {
+    "state_etag": "2a8b718",
+    "points": {
+      "room_temperature": {
+        "value_state": "applied"
+      },
+      "hallway_temperature": {
+        "value_state": "overridden"
+      },
+      "hallway_lights": {
+        "value_state": "updating"
+      },
+      "entryway_lock": {
+        "value_state": "failure",
+        "status": {
+          "message": "Failure to communicate to device",
+          "category": "state.pointset.points.config.failure",
+          "timestamp": "2018-08-26T21:39:28.364Z",
+          "level": 600
+        }
+      },
+      "scale_sensor": {
+        "value_state": "invalid",
+        "status": {
+          "message": "Point is not writable",
+          "category": "state.pointset.points.config.invalid",
+          "timestamp": "2018-08-26T21:39:28.364Z",
+          "level": 600
+        }
+      },
+      "rocket_motor": {
+      }
+    }
+  }
+}

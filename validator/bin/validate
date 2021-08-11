@@ -22,8 +22,8 @@ if [ ! -f $jarfile ]; then
     validator/bin/build
 fi
 
-echo Using gcloud auth:
-gcloud config get-value account || true
+auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
+echo Application default credentials auth type ${auth_type:-unknown}
 
 echo Cleaning output directory out/
 rm -rf out/

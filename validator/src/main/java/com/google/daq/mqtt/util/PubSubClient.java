@@ -21,8 +21,6 @@ import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import com.google.pubsub.v1.Subscription;
-import io.grpc.LoadBalancerRegistry;
-import io.grpc.internal.PickFirstLoadBalancerProvider;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -53,11 +51,6 @@ public class PubSubClient implements MessagePublisher {
 
   private final Subscriber subscriber;
   private final Publisher publisher;
-
-  {
-    // Why this needs to be done there is no rhyme or reason.
-    LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
-  }
 
   public PubSubClient(String projectId, String registryId, String name)  {
     try {

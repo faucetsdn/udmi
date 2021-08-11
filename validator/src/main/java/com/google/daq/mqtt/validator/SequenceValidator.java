@@ -7,11 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
-import com.google.daq.mqtt.registrar.UdmiSchema.Config;
-import com.google.daq.mqtt.registrar.UdmiSchema.PointsetState;
-import com.google.daq.mqtt.registrar.UdmiSchema.State;
-import com.google.daq.mqtt.registrar.UdmiSchema.SystemConfig;
-import com.google.daq.mqtt.registrar.UdmiSchema.SystemState;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -33,6 +28,11 @@ import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
+import udmi.schema.Config;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemConfig;
+import udmi.schema.SystemState;
 
 public abstract class SequenceValidator {
 
@@ -58,13 +58,13 @@ public abstract class SequenceValidator {
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
-  private static final File CONFIG_FILE = new File("validator_config.json");
+  private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
+  private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
   public static final int INITIAL_MIN_LOGLEVEL = 400;
 
   protected Config deviceConfig;
   protected State deviceState;
-
 
   public static final String TESTS_OUT_DIR = "tests";
 
@@ -72,6 +72,10 @@ public abstract class SequenceValidator {
   // a singleton to avoid runtime conflicts.
   static {
     final String key_file;
+    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
+      throw new RuntimeException(VALIDATOR_CONFIG + " env not defined.");
+    }
+    final File CONFIG_FILE = new File(CONFIG_PATH);
     try {
       ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(CONFIG_FILE);
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
@@ -89,7 +93,7 @@ public abstract class SequenceValidator {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIoTConfigFile);
       registryId = checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath());
+      throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath(), e);
     }
 
     deviceOutputDir = new File("out/devices/" + deviceId);
@@ -114,6 +118,7 @@ public abstract class SequenceValidator {
   private String waitingCondition;
   private boolean check_serial;
   private String testName;
+  private String last_serial_no;
 
   @Before
   public void setUp() {
@@ -224,7 +229,7 @@ public abstract class SequenceValidator {
       System.err.println(getTimestamp() + " updated system loglevel " + deviceConfig.system.min_loglevel);
     }
     if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
-      System.err.println(getTimestamp() + " updated pointset config_etag " + deviceConfig.pointset.config_etag);
+      System.err.println(getTimestamp() + " updated pointset config");
     }
   }
 
@@ -261,31 +266,32 @@ public abstract class SequenceValidator {
   private void updateState(String subFolder, Map<String, Object> message) {
     if (updateState(subFolder, "system", SystemState.class, message,
         state -> deviceState.system = state)) {
-      String last_config = deviceState.system == null ? null : deviceState.system.last_config;
+      Date last_config = deviceState.system == null ? null : deviceState.system.last_config;
       System.err.printf("%s received state last_config %s%n", getTimestamp(), last_config);
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,
         state -> deviceState.pointset = state)) {
-      String config_etag = deviceState.pointset == null ? null : deviceState.pointset.config_etag;
-      System.err.printf("%s received state config_etag %s%n", getTimestamp(), config_etag);
+      System.err.printf("%s received state pointset%n", getTimestamp());
     }
     validSerialNo();
   }
 
   private void dumpConfigUpdate(Map<String, Object> message) {
     Config config = messageConvert(Config.class, message);
-    String config_etag = config.pointset == null ? null : config.pointset.config_etag;
-    System.err.println(getTimestamp() + " update config config_etag " + config_etag);
+    System.err.println(getTimestamp() + " update config");
   }
 
   private void dumpStateUpdate(Map<String, Object> message) {
     State state = messageConvert(State.class, message);
-    String config_etag = state.pointset == null ? null : state.pointset.config_etag;
-    System.err.println(getTimestamp() + " update state config_etag " + config_etag);
+    System.err.println(getTimestamp() + " update state");
   }
 
   protected boolean validSerialNo() {
     String device_serial = deviceState.system == null ? null : deviceState.system.serial_no;
+    if (!Objects.equals(device_serial, last_serial_no)) {
+      System.err.printf("%s Received serial no %s%n", getTimestamp(), device_serial);
+      last_serial_no = device_serial;
+    }
     boolean serialValid = Objects.equals(serial_no, device_serial);
     if (!serialValid && check_serial) {
       throw new IllegalStateException("Unexpected serial_no " + device_serial);
@@ -295,11 +301,13 @@ public abstract class SequenceValidator {
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
+    updateConfig();
     waitingCondition = "waiting for " + description;
-    System.err.println(getTimestamp() + " " + waitingCondition);
+    System.err.println(getTimestamp() + " start " + waitingCondition);
     while (!evaluator.get()) {
       receiveMessage();
     }
+    System.err.println(getTimestamp() + " finished " + waitingCondition);
     waitingCondition = null;
   }
 

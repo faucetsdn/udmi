@@ -1,6 +1,9 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -22,14 +25,15 @@ public class IotCoreProxy {
   private static final Logger LOG = LoggerFactory.getLogger(IotCoreProxy.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private static final long POLL_DELAY_MS = 1000;
-  private static final String PROXY_SUBSCRIPTION_NAME = "udmi-proxy";
-  private static final String STATE_SUBSCRIPTION_NAME = "udmi-state";
-  private static final String CONFIG_TOPIC_NAME = "udmi-config";
-  private static final String VALIDATION_TOPIC_NAME = "udmi-validation";
+  private static final String PROXY_SUBSCRIPTION_FMT = "%s-proxy";
+  private static final String STATE_SUBSCRIPTION_FMT = "%s-state";
+  private static final String CONFIG_TOPIC_FMT = "%s-config";
+  private static final String VALIDATION_TOPIC_FMT = "%s-validation";
   private static final String STATE_SUBFOLDER = "state";
   private static final String CONFIG_SUBFOLDER = "config";
   private static final String SCHEMA_ROOT_PATH = "schema";
@@ -76,7 +80,7 @@ public class IotCoreProxy {
     try {
       this.configMap = OBJECT_MAPPER.readValue(new File(configFile), ProjectMetadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While reading config file " + configFile);
+      throw new RuntimeException("While reading config file " + configFile, e);
     }
   }
 
@@ -124,16 +128,24 @@ public class IotCoreProxy {
   }
 
   private void validateMessage(Map<String, String> attributes, String data) {
+    String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    List<String> validationErrors = messageValidator.validateMessage(subFolder, data);
-    if (!validationErrors.isEmpty()) {
-      LOG.warn(String.format("Found %d errors while validating %s:%s",
-          validationErrors.size(), attributes.get("deviceRegistryId"),
-          attributes.get("deviceId")));
+    try {
+      if (!subFolder.equals("state") && !subFolder.equals("config")) {
+        subFolder = "event_" + subFolder;
+      }
+      List<String> validationErrors = messageValidator.validateMessage(subFolder, data);
+      if (!validationErrors.isEmpty()) {
+        LOG.warn(String.format("Found %d errors while validating %s:%s",
+            validationErrors.size(), attributes.get("deviceRegistryId"),
+            attributes.get("deviceId")));
+      }
+      ValidationBundle validationBundle = new ValidationBundle();
+      validationBundle.errors = validationErrors;
+      sendValidationResult(attributes, validationBundle);
+    } catch (Exception e) {
+      throw new RuntimeException(String.format("Against type/folder %s/%S", subType, subFolder), e);
     }
-    ValidationBundle validationBundle = new ValidationBundle();
-    validationBundle.errors = validationErrors;
-    sendValidationResult(attributes, validationBundle);
   }
 
   private void sendValidationResult(Map<String, String> attributes, ValidationBundle bundle) {
@@ -173,10 +185,18 @@ public class IotCoreProxy {
   }
 
   private void initialize() {
-    proxySubscription = new PubSubClient(PROJECT_ID, PROXY_SUBSCRIPTION_NAME);
-    stateSubscription = new PubSubClient(PROJECT_ID, STATE_SUBSCRIPTION_NAME);
-    configPublisher = new PubSubPusher(PROJECT_ID, CONFIG_TOPIC_NAME);
-    validationPublisher = new PubSubPusher(PROJECT_ID, VALIDATION_TOPIC_NAME);
+    String proxySubBase = checkNotNull(configMap.get("proxy_sub_base"), "proxy_sub_base not defined");
+    String proxySubscriptionName = String.format(PROXY_SUBSCRIPTION_FMT, proxySubBase);
+    String stateSubscriptionName = String.format(STATE_SUBSCRIPTION_FMT, proxySubBase);
+    proxySubscription = new PubSubClient(PROJECT_ID, proxySubscriptionName);
+    stateSubscription = new PubSubClient(PROJECT_ID, stateSubscriptionName);
+
+    String proxyTopicBase = checkNotNull(configMap.get("proxy_topic_base"), "proxy_topic_base not defined");
+    String configTopicName = String.format(CONFIG_TOPIC_FMT, proxyTopicBase);
+    String validationTopicName = String.format(VALIDATION_TOPIC_FMT, proxyTopicBase);
+    configPublisher = new PubSubPusher(PROJECT_ID, configTopicName);
+    validationPublisher = new PubSubPusher(PROJECT_ID, validationTopicName);
+
     messageValidator = new MessageValidator(SCHEMA_ROOT_PATH);
   }
 

@@ -1,9 +1,11 @@
+
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
+import static com.google.daq.mqtt.validator.Validator.NO_SITE;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -11,6 +13,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
+import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Joiner;
@@ -27,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,28 +46,26 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.loader.SchemaClient;
-import org.everit.json.schema.loader.SchemaLoader;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import udmi.schema.Config;
 
-public class  Registrar {
+public class Registrar {
 
   static final String METADATA_JSON = "metadata.json";
+  static final String ENVELOPE_JSON = "envelope.json";
+
   static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_JSON = "errors.json";
-  static final String ENVELOPE_JSON = "envelope.json";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
 
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .enable(SerializationFeature.INDENT_OUTPUT)
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .setDateFormat(new ISO8601DateFormat())
-      .setSerializationInclusion(Include.NON_NULL);
+  private static final ObjectMapper OBJECT_MAPPER =
+      new ObjectMapper()
+          .enable(SerializationFeature.INDENT_OUTPUT)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .setDateFormat(new ISO8601DateFormat())
+          .setSerializationInclusion(Include.NON_NULL);
   public static final String SCHEMA_BASE_PATH = "schema";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
@@ -70,7 +75,7 @@ public class  Registrar {
 
   private CloudIotManager cloudIotManager;
   private File siteConfig;
-  private final Map<String, Schema> schemas = new HashMap<>();
+  private final Map<String, JsonSchema> schemas = new HashMap<>();
   private File schemaBase;
   private String schemaName;
   private PubSubPusher pubSubPusher;
@@ -91,7 +96,7 @@ public class  Registrar {
       if (args.length > 2) {
         registrar.setProjectId(args[2]);
       }
-      if(args.length > 3) {
+      if (args.length > 3) {
         String[] devices = new String[args.length - 3];
         System.arraycopy(args, 3, devices, 0, args.length - 3);
         registrar.processDevices(devices);
@@ -115,23 +120,36 @@ public class  Registrar {
   private void writeErrors() throws Exception {
     Map<String, Map<String, String>> errorSummary = new TreeMap<>();
     DeviceExceptionManager dem = new DeviceExceptionManager(siteConfig);
-    localDevices.values().forEach(device -> device.writeErrors(dem.forDevice(device.getDeviceId())));
-    localDevices.values().forEach(device -> {
-      Set<Entry<String, ErrorTree>> entries = device.getTreeChildren(dem.forDevice(device.getDeviceId()));
-      entries.stream().forEach(error -> errorSummary
-          .computeIfAbsent(error.getKey(), cat -> new TreeMap<>())
-          .put(device.getDeviceId(), error.getValue().message));
-      if (entries.isEmpty()) {
-        errorSummary.computeIfAbsent("Clean", cat -> new TreeMap<>())
-            .put(device.getDeviceId(), device.getSettings().updated);
-      }
-    });
+    localDevices
+        .values()
+        .forEach(device -> device.writeErrors(dem.forDevice(device.getDeviceId())));
+    localDevices
+        .values()
+        .forEach(
+            device -> {
+              Set<Entry<String, ErrorTree>> entries =
+                  device.getTreeChildren(dem.forDevice(device.getDeviceId()));
+              entries.stream()
+                  .forEach(
+                      error ->
+                          errorSummary
+                              .computeIfAbsent(error.getKey(), cat -> new TreeMap<>())
+                              .put(device.getDeviceId(), error.getValue().message));
+              if (entries.isEmpty()) {
+                errorSummary
+                    .computeIfAbsent("Clean", cat -> new TreeMap<>())
+                    .put(device.getDeviceId(), device.getSettings().updated);
+              }
+            });
     if (blockErrors != null && !blockErrors.isEmpty()) {
-      errorSummary.put("Block", blockErrors.stream().collect(Collectors.toMap(
-          Map.Entry::getKey, entry -> entry.getValue().toString())));
+      errorSummary.put(
+          "Block",
+          blockErrors.stream()
+              .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
     }
     System.err.println("\nSummary:");
-    errorSummary.forEach((key, value) -> System.err.println("  Device " + key + ": " + value.size()));
+    errorSummary.forEach(
+        (key, value) -> System.err.println("  Device " + key + ": " + value.size()));
     System.err.println("Out of " + localDevices.size() + " total.");
     String version = Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
     errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, version));
@@ -154,9 +172,12 @@ public class  Registrar {
     if (configTopic != null) {
       pubSubPusher = new PubSubPusher(projectId, configTopic);
     }
-    System.err.println(String.format("Working with project %s registry %s/%s",
-        cloudIotManager.getProjectId(), cloudIotManager.getCloudRegion(),
-        cloudIotManager.getRegistryId()));
+    System.err.println(
+        String.format(
+            "Working with project %s registry %s/%s",
+            cloudIotManager.getProjectId(),
+            cloudIotManager.getCloudRegion(),
+            cloudIotManager.getRegistryId()));
   }
 
   private void processDevices() {
@@ -187,7 +208,8 @@ public class  Registrar {
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
         if (!unknowns.isEmpty()) {
-          throw new RuntimeException("Unknown specified devices: " + Joiner.on(", ").join(unknowns));
+          throw new RuntimeException(
+              "Unknown specified devices: " + Joiner.on(", ").join(unknowns));
         }
       }
       for (String localName : localDevices.keySet()) {
@@ -201,10 +223,11 @@ public class  Registrar {
           localDevice.writeConfigFile();
           if ((deviceSet == null || deviceSet.contains(localName)) && !localOnly()) {
             updateCloudIoT(localDevice);
-            Device device = Preconditions.checkNotNull(fetchDevice(localName),
-                "missing device " + localName);
-            BigInteger numId = Preconditions.checkNotNull(device.getNumId(),
-                "missing deviceNumId for " + localName);
+            Device device =
+                Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
+            BigInteger numId =
+                Preconditions.checkNotNull(
+                    device.getNumId(), "missing deviceNumId for " + localName);
             localDevice.setDeviceNumId(numId.toString());
             sendConfigMessages(localDevice);
           }
@@ -265,7 +288,7 @@ public class  Registrar {
   private void sendConfigMessages(LocalDevice localDevice) {
     System.err.println("Sending config messages for " + localDevice.getDeviceId());
 
-    UdmiSchema.Config deviceConfig = localDevice.deviceConfigObject();
+    Config deviceConfig = localDevice.deviceConfigObject();
     sendConfigMessage(localDevice, SYSTEM_SUBFOLDER, deviceConfig.system);
     sendConfigMessage(localDevice, POINTSET_SUBFOLDER, deviceConfig.pointset);
     sendConfigMessage(localDevice, GATEWAY_SUBFOLDER, deviceConfig.gateway);
@@ -300,22 +323,24 @@ public class  Registrar {
     }
   }
 
-  private void bindGatewayDevices(Map<String, LocalDevice> localDevices,
-      Set<String> deviceSet) {
+  private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     localDevices.values().stream()
         .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
-        .forEach(localDevice -> localDevice.getSettings().proxyDevices.stream()
-            .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
-            .forEach(proxyDeviceId -> {
-              try {
-                String gatewayId = localDevice.getDeviceId();
-                System.err.println("Binding " + proxyDeviceId + " to gateway " + gatewayId);
-                cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-              } catch (Exception e) {
-                throw new RuntimeException("While binding device " + proxyDeviceId, e);
-              }
-            })
-        );
+        .forEach(
+            localDevice ->
+                localDevice.getSettings().proxyDevices.stream()
+                    .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
+                    .forEach(
+                        proxyDeviceId -> {
+                          try {
+                            String gatewayId = localDevice.getDeviceId();
+                            System.err.println(
+                                "Binding " + proxyDeviceId + " to gateway " + gatewayId);
+                            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+                          } catch (Exception e) {
+                            throw new RuntimeException("While binding device " + proxyDeviceId, e);
+                          }
+                        }));
   }
 
   private void shutdown() {
@@ -338,7 +363,7 @@ public class  Registrar {
     return projectId == null;
   }
 
-  private Map<String,LocalDevice> loadLocalDevices() {
+  private Map<String, LocalDevice> loadLocalDevices() {
     File devicesDir = new File(siteConfig, DEVICES_DIR);
     String[] devices = devicesDir.list();
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
@@ -382,19 +407,23 @@ public class  Registrar {
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
     Map<DeviceCredential, String> usedCredentials = new HashMap<>();
-    localDevices.values().stream().filter(LocalDevice::isDirectConnect).forEach(
-        localDevice -> {
-          CloudDeviceSettings settings = localDevice.getSettings();
-          String deviceName = localDevice.getDeviceId();
-          for (DeviceCredential credential : settings.credentials) {
-            String previous = usedCredentials.put(credential, deviceName);
-            if (previous != null) {
-              RuntimeException exception = new RuntimeException(
-                  String.format("Duplicate credentials found for %s & %s", previous, deviceName));
-              localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
-            }
-          }
-        });
+    localDevices.values().stream()
+        .filter(LocalDevice::isDirectConnect)
+        .forEach(
+            localDevice -> {
+              CloudDeviceSettings settings = localDevice.getSettings();
+              String deviceName = localDevice.getDeviceId();
+              for (DeviceCredential credential : settings.credentials) {
+                String previous = usedCredentials.put(credential, deviceName);
+                if (previous != null) {
+                  RuntimeException exception =
+                      new RuntimeException(
+                          String.format(
+                              "Duplicate credentials found for %s & %s", previous, deviceName));
+                  localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+                }
+              }
+            });
   }
 
   private Map<String, LocalDevice> loadDevices(File devicesDir, String[] devices) {
@@ -402,8 +431,10 @@ public class  Registrar {
     for (String deviceName : devices) {
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
         System.err.println("Loading local device " + deviceName);
-        LocalDevice localDevice = localDevices.computeIfAbsent(deviceName,
-            keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
+        LocalDevice localDevice =
+            localDevices.computeIfAbsent(
+                deviceName,
+                keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -411,11 +442,14 @@ public class  Registrar {
         }
         if (cloudIotManager != null) {
           try {
-            localDevice
-                .validateEnvelope(cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
+            localDevice.validateEnvelope(
+                cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
           } catch (Exception e) {
-            localDevice.getErrorMap()
-                .put(LocalDevice.EXCEPTION_ENVELOPE, new RuntimeException("While validating envelope", e));
+            localDevice
+                .getErrorMap()
+                .put(
+                    LocalDevice.EXCEPTION_ENVELOPE,
+                    new RuntimeException("While validating envelope", e));
           }
         }
       }
@@ -424,6 +458,9 @@ public class  Registrar {
   }
 
   private void setProjectId(String projectId) {
+    if (NO_SITE.equals(projectId) || projectId == null) {
+      return;
+    }
     this.projectId = projectId;
     initializeCloudProject();
   }
@@ -440,24 +477,28 @@ public class  Registrar {
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = new FileInputStream(schemaFile)) {
-      JSONObject rawSchema = new JSONObject(new JSONTokener(schemaStream));
-      schemas.put(key, SchemaLoader.load(rawSchema, new Loader()));
+      JsonSchema schema =
+          JsonSchemaFactory.newBuilder()
+              .setLoadingConfiguration(
+                  LoadingConfiguration.newBuilder()
+                      .addScheme("file", new RelativeDownloader())
+                      .freeze())
+              .freeze()
+              .getJsonSchema(OBJECT_MAPPER.readTree(schemaStream));
+      schemas.put(key, schema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
     }
   }
 
-  private class Loader implements SchemaClient {
-
-    public static final String FILE_PREFIX = "file:";
+  class RelativeDownloader implements URIDownloader {
 
     @Override
-    public InputStream get(String schema) {
+    public InputStream fetch(URI source) {
       try {
-        Preconditions.checkArgument(schema.startsWith(FILE_PREFIX));
-        return new FileInputStream(new File(schemaBase, schema.substring(FILE_PREFIX.length())));
+        return new FileInputStream(new File(schemaBase, source.getSchemeSpecificPart()));
       } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + schema, e);
+        throw new RuntimeException("While loading sub-schema " + source, e);
       }
     }
   }

@@ -1,0 +1,18 @@
+{
+  "title": "Family Discovery Event",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[-_.:/0-9a-zA-Z]+$"
+    },
+    "group": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id"
+  ]
+}

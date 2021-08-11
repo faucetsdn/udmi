@@ -1,7 +1,7 @@
 {
-  "title": "System event schema",
+  "title": "System Event",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
     "timestamp": {
@@ -9,9 +9,9 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "logentries": {
       "type": "array",

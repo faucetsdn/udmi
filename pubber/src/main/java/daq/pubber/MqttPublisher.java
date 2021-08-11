@@ -1,12 +1,14 @@
 package daq.pubber;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.RemovalNotification;
+import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -37,6 +39,7 @@ public class MqttPublisher {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -175,7 +178,7 @@ public class MqttPublisher {
       if (mqttClient.isConnected()) {
         return mqttClient;
       }
-      LOG.info("Attempting connection to " + registryId + ":" + deviceId);
+      LOG.info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
@@ -186,6 +189,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
+      LOG.info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
       options.setPassword(createJwt());
 
       mqttClient.connect(options);
@@ -346,10 +350,10 @@ public class MqttPublisher {
             .setExpiration(now.plusMinutes(60).toDate())
             .setAudience(projectId);
 
-    if (algorithm.equals("RS256")) {
+    if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
       return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
-    } else if (algorithm.equals("ES256")) {
+    } else if (algorithm.equals("ES256") || algorithm.equals("ES256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
       return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
     } else {

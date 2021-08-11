@@ -1,5 +1,5 @@
 {
-  "title": "Message envelope schema",
+  "title": "Envelope",
   "additionalProperties": true,
   "properties": {
     "deviceId": {
@@ -21,7 +21,7 @@
     "subFolder": {
       "enum": [
         "config",
-        "discover",
+        "discovery",
         "system",
         "metadata",
         "pointset",

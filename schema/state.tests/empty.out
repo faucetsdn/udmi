@@ -1,7 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against state.json
-    Against input state.tests/empty.json
-      #: 3 schema violations found
-        #: required key [system] not found
-        #: required key [timestamp] not found
-        #: required key [version] not found

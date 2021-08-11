@@ -1,9 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against envelope.json
-    Against input envelope.tests/empty.json
-      #: 5 schema violations found
-        #: required key [deviceId] not found
-        #: required key [deviceNumId] not found
-        #: required key [deviceRegistryId] not found
-        #: required key [projectId] not found
-        #: required key [subFolder] not found

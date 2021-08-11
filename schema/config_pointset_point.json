@@ -1,0 +1,13 @@
+{
+  "title": "Point Pointset Config",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "ref": {
+      "type": "string"
+    },
+    "set_value": {
+    }
+  }
+}

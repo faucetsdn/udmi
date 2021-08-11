@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+bin/gencode_java
+bin/gencode_python gencode/python schema/*.json

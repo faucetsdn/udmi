@@ -1,22 +1,21 @@
 #!/bin/bash
 
-CONFIG_FILE=validator_config.json
+export VALIDATOR_CONFIG=/tmp/validator_config.json
 
-pubber=y
-if [[ $1 == -n ]]; then
-    pubber=
-    shift
-fi
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
 
 if [[ $# != 0 ]]; then
     echo Usage: $0 [-n]
     false
 fi
 
-project_id=`jq -r .project_id $CONFIG_FILE`
-site_model=`jq -r .site_model $CONFIG_FILE`
-device_id=`jq -r .device_id $CONFIG_FILE`
-serial_no=`jq -r .serial_no $CONFIG_FILE`
+echo Parsing $VALIDATOR_CONFIG:
+cat $VALIDATOR_CONFIG
+project_id=`jq -r .project_id $VALIDATOR_CONFIG`
+site_model=`jq -r .site_model $VALIDATOR_CONFIG`
+device_id=`jq -r .device_id $VALIDATOR_CONFIG`
+serial_no=`jq -r .serial_no $VALIDATOR_CONFIG`
 echo Target project $project_id
 echo Site model $site_model
 echo Target device $device_id
@@ -28,24 +27,7 @@ if [[ $awc != 4 ]]; then
     exit -1
 fi
 
-PUBBER_OUT=pubber.out
 EXPECTED_SEQUENCES=2
-
-if [[ -n $pubber ]]; then
-    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-    if [[ -n $pids ]]; then
-        echo Killing pubber pids $pids
-        kill $pids
-    fi
-    echo Writing pubber output to $PUBBER_OUT
-    echo bin/pubber $site_model $project_id $device_id $serial_no
-    bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
-
-    while ! fgrep "Connection complete" $PUBBER_OUT; do
-        echo Waiting for pubber startup...
-        sleep 5
-    done
-fi
 
 validator/bin/build
 
@@ -53,19 +35,15 @@ JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
 
 rm -rf out/devices/$device_id
+# Relies on VALIDATOR_CONFIG environment variable.
 echo $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
-timeout 120s $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
+
+timeout 5m $JAVA_CMD com.google.daq.mqtt.validator.validations.BaselineValidator
 result=$?
 
 if [[ $result != 0 ]]; then
     echo Sequence test exited with error code $result
     exit $result
-fi
-
-if [[ -n $pubber ]]; then
-    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-    echo Killing pubber pids $pids
-    kill $pids
 fi
 
 echo Done with test sequence execution.

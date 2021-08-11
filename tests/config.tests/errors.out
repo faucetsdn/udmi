@@ -1,0 +1,9 @@
+Validating 1 schemas
+  Validating 1 files against config.json
+    Against input config.tests/errors.json
+      5 schema violations found
+        instance type (string) does not match any allowed primitive type (allowed: ["integer"])
+        object instance has properties which are not allowed by the schema: ["config_etag","id","properties","timestamp","version"]
+        object instance has properties which are not allowed by the schema: ["object_type","units"]
+        object instance has properties which are not allowed by the schema: ["points","properties","type"]
+        string "2a8b71dwqhdhdddddddddddddddddddddddddddddddddddddddddd8" is too long (length: 55, maximum allowed: 32)

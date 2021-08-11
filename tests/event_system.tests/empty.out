@@ -1,0 +1,5 @@
+Validating 1 schemas
+  Validating 1 files against event_system.json
+    Against input event_system.tests/empty.json
+      1 schema violations found
+        object has missing required properties (["timestamp","version"])

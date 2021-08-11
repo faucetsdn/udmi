@@ -134,7 +134,7 @@ public class CloudIotManager {
           .devices()
           .modifyCloudToDeviceConfig(devicePath, req).execute();
     } catch (Exception e) {
-      throw new RuntimeException("While setting device config for " + deviceId);
+      throw new RuntimeException("While setting device config for " + deviceId, e);
     }
   }
 }

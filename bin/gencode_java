@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+JVERSION=1.1.1
+JBASENAME=jsonschema2pojo
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+rm -rf codegen gencode
+mkdir -p codegen gencode
+
+cd codegen
+GENDIR=$PWD
+
+JARVER=$JBASENAME-$JVERSION
+
+curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$JARVER.tar.gz -o $JARVER.tgz
+
+tar -xzvf $JARVER.tgz
+
+cd $ROOT_DIR/schema
+JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
+echo Generating code in gencode/java...
+$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
+
+echo Done with code generation.

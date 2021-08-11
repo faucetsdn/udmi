@@ -36,7 +36,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
 public class CloudIotManager {
 
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
-  private static final String UDMI_METADATA = "udmi_metadata";
+  public static final String UDMI_METADATA = "udmi_metadata";
   private static final String UDMI_GENERATION = "udmi_generation";
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
@@ -147,7 +147,10 @@ public class CloudIotManager {
     metadataMap.put(UDMI_METADATA, settings.metadata);
     metadataMap.put(UDMI_UPDATED, settings.updated);
     metadataMap.put(UDMI_GENERATION, settings.generation);
-    if (settings.keyBytes != null) {
+    if (settings.keyBytes == null) {
+      metadataMap.remove(KEY_BYTES_KEY);
+      metadataMap.remove(KEY_ALGORITHM_KEY);
+    } else {
       String keyBase64 = Base64.getEncoder().encodeToString(settings.keyBytes);
       metadataMap.put(KEY_BYTES_KEY, keyBase64);
       metadataMap.put(KEY_ALGORITHM_KEY, settings.keyAlgorithm);

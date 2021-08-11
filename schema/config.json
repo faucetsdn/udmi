@@ -1,7 +1,7 @@
 {
-  "title": "Device Config Schema",
+  "title": "Config",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "required": [
     "timestamp",
@@ -13,9 +13,9 @@
       "format": "date-time"
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
     },
     "system": {
       "$ref": "file:config_system.json#"
@@ -25,6 +25,9 @@
     },
     "localnet": {
       "$ref": "file:config_localnet.json#"
+    },
+    "blobset": {
+      "$ref": "file:config_blobset.json#"
     },
     "pointset": {
       "$ref": "file:config_pointset.json#"

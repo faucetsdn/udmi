@@ -1,7 +1,7 @@
 {
-  "title": "System state snippet",
+  "title": "System State",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
     "make_model": {
@@ -44,6 +44,7 @@
     "statuses": {
       "type": "object",
       "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, Entry>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:common.json#/definitions/entry"
@@ -54,6 +55,7 @@
   "required": [
     "make_model",
     "serial_no",
+    "last_config",
     "firmware",
     "operational"
   ]

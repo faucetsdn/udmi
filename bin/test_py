@@ -1,0 +1,15 @@
+#!venv/bin/python3
+
+import json
+
+from udmi.schema import *
+
+for base in [ Config, Metadata, State ]:
+    path = base.__name__.lower()
+    example = 'tests/%s.tests/example.json' % path
+    print('Processing %s' % example)
+    with open(example) as fd:
+        input = json.load(fd)
+        output = base.from_dict(input).to_dict()
+        assert input == output, 'input/output mismatch\n%s\n%s' % (input, output)
+

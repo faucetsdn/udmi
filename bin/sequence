@@ -1,0 +1,78 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+
+if [ $# -lt 2 -o $# -gt 3 ]; then
+    echo Usage: $0 PROJECT_ID DEVICE_ID [SERIAL_NO]
+    false
+fi
+
+site_model=$PWD
+cd $ROOT_DIR
+
+project_id=${1:?}
+device_id=$2
+shift 2
+
+if [[ -n $1 ]]; then
+    serial_no=$1
+    shift
+    pubber=
+else
+    serial_no=sequencer-$RANDOM
+    echo Using pubber with serial $serial_no
+    pubber=y
+fi
+
+echo Writing config to /tmp/validator_config.json:
+cat <<EOF > /tmp/validator_config.json
+{
+  "project_id": "$project_id",
+  "site_model": "$site_model",
+  "device_id": "$device_id",
+  "serial_no": "$serial_no",
+  "key_file": "$site_model/validator/rsa_private.pkcs8"
+}
+EOF
+
+cat /tmp/validator_config.json
+
+PUBBER_OUT=pubber.out
+
+if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    if [[ -n $pids ]]; then
+        echo Killing pubber pids $pids
+        kill $pids
+    fi
+    echo Writing pubber output to $PUBBER_OUT
+    echo bin/pubber $site_model $project_id $device_id $serial_no
+    bin/pubber $site_model $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+
+    WAITING=30
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $PUBBER_OUT; then
+            break
+        fi
+        echo Waiting for pubber startup $i...
+        sleep 2
+    done
+
+    if [[ $i == $WAITING ]]; then
+        echo pubber startup failed:
+        cat $PUBBER_OUT
+        false
+    fi
+fi
+
+result=0
+bin/test_sequences || result=$?
+
+if [[ -n $pubber ]]; then
+    pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+    echo Killing pubber pids $pids
+    kill $pids
+fi
+
+echo Test result code $result
+exit $result

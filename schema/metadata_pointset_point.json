@@ -1,0 +1,14 @@
+{
+  "title": "Point Pointset Metadata",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "units": {
+      "$ref": "file:units.json#"
+    },
+    "ref": {
+      "type": "string"
+    }
+  }
+}

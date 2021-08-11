@@ -6,8 +6,6 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-import io.grpc.LoadBalancerRegistry;
-import io.grpc.internal.PickFirstLoadBalancerProvider;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -19,11 +17,6 @@ public class PubSubPusher {
 
   private final Publisher publisher;
   private final String outTopic;
-
-  {
-    // Why this needs to be done there is no rhyme or reason.
-    LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
-  }
 
   public PubSubPusher(String projectId, String outTopic) {
     try {
