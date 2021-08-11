@@ -233,7 +233,7 @@ class MqttManager:
         self.publish('state', json.dumps(state))
         self.state_sent = time.time()
 
-    def handle_message(self, topic, playload):
+    def handle_message(self, topic, payload):
         if payload:
             self.on_message(topic, json.loads(payload))
 
