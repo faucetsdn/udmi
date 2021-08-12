@@ -80,7 +80,7 @@ communication channel. There are a number of subsystems that make up the core UD
 * Core [_system_](docs/system.md) messages about the base device itself.
 * Device [_pointset_](docs/pointset.md) for device telemetry organized by points.
 * Optional [_gateway_](docs/gateway.md) functionality for proxying device/MQTT connections.
-* Local [_discover_](docs/discover.md) for discovering device and network capabilities.
+* Local [_discover_](docs/discovery.md) for discovering device and network capabilities.
 
 ## Schema Structure
 

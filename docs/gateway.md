@@ -59,7 +59,7 @@ network, should be indicated as part of the proxy device status block.
 ### telemetry
 
 Telemety from the gateway would primarily consist of standard
-[_system_](../tests/system.tests/example.json) messages, which
+[_system_](../tests/event.tests/example.json) messages, which
 provide a running comentary about gateway operation. Specificaly, if there
 is an error attaching, then there should be appropriate logging to help
 diagnose the problem.
@@ -105,7 +105,7 @@ into the appropriate UDMI message.
 
 Telemetry is handled similarly, with the gateway responsible for proxying data
 from local devices through to UDMI. In many cases, this would be translating
-specific device points into a [_pointset_ message](../tests/pointset.tests/example.json).
+specific device points into a [_pointset_ message](../tests/event_pointset.tests/example.json).
 
 ### metadata
 
