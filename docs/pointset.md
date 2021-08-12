@@ -11,7 +11,7 @@ The `metadata.pointset` subblock represents the abstract system expectation for 
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
 expected points that a device holds, along with, if the field is numeric, the expected units of those points.
 The general structure of a `pointset` block exists inside of a complete
-[metadata](../schema/metadata.tests/example.json) message.
+[metadata](../tests/metadata.tests/example.json) message.
 
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.
@@ -20,7 +20,7 @@ The general structure of a `pointset` block exists inside of a complete
 
 ## Telemetry
 
-A basic `pointset` [telemetry](../schema/event_pointset.tests/example.json) message contains
+A basic `pointset` [telemetry](../tests/event_pointset.tests/example.json) message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
 while the `pointset` typing is applied as part of the [message envelope](envelope.md).
 
@@ -35,7 +35,7 @@ send only the specific updated points as an optimization.
 
 ## State
 
-The [state](../schema/state.tests/example.json) message from a device contains a `pointset`
+The [state](../tests/state.tests/example.json) message from a device contains a `pointset`
 block with the following structure:
 
 * `pointset`: Top level block designator.
@@ -56,7 +56,7 @@ reason for an _invalid_ or _failure_ `value_state`).
 
 ## Config
 
-The [config](../schema/config.tests/example.json) message for a device contains a `pointset`
+The [config](../tests/config.tests/example.json) message for a device contains a `pointset`
 block with the following structure:
 
 * `pointset`: Top level block designator.
