@@ -8,5 +8,5 @@ block that controlls a device's intended behavior.
 
 It is composed of specific sub-entries for each sub-system { _system_, _pointset_, _gateway_, etc... }.
 
-This [working example](../schema/config.tests/example.json) shows how a typical `config` message
+This [working example](../tests/config.tests/example.json) shows how a typical `config` message
 is constructed.
