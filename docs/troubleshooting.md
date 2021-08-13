@@ -28,5 +28,3 @@ identify the problem.
   validator, the subscription should be to the udmi_target topic
 - Check the Pub/sub subscription to check messages are being sent to the cloud 
 - Check the payload is as expected
-
-
