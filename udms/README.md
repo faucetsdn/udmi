@@ -43,6 +43,8 @@ To populate the firestore database, run `node e2e/firestore/import_db_cloud.js`.
 
 To deploy, build the project using `ng build --prod` and deploy using `firebase deploy`.
 
+Project is currently hosted at https://bos-daq-testing.web.app
+
 # Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
