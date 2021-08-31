@@ -40,7 +40,7 @@ native (e.g. BacNET) communications and UDMI-based messages.
 
 ### config
 
-The [gateway config block](../schema/config.tests/gateway.json)
+The [gateway config block](../tests/config.tests/gateway.json)
 simply specifies the list of target proxy devices.
 On a config update, the gateway is responsible for handling any change in
 this list (added or removed devices). The details of proxied devices are
@@ -50,7 +50,7 @@ size in cases where there are a large number of devices.
 ### state
 
 Any attach errors, e.g. the gateway can not successfully attach to the target
-device, should be reported in the [gateway state](../schema/state.tests/gateway.json)
+device, should be reported in the [gateway state](../tests/state.tests/gateway.json)
 and a _logentry_ message used to detail the
 nature of the problem. If the gateway can attach successfully, any other
 errors, e.g. the inability to communicate with the device over the local
@@ -59,14 +59,14 @@ network, should be indicated as part of the proxy device status block.
 ### telemetry
 
 Telemety from the gateway would primarily consist of standard
-[_system_](../schema/system.tests/example.json) messages, which
+[_system_](../tests/event.tests/example.json) messages, which
 provide a running comentary about gateway operation. Specificaly, if there
 is an error attaching, then there should be appropriate logging to help
 diagnose the problem.
 
 ### metadata
 
-The gateway [metadata block](../schema/metadata.tests/gateway.json) specifies
+The gateway [metadata block](../tests/metadata.tests/gateway.json) specifies
 any information necessary either for the
 initial (manual) configuration of the device or ongoing validation of
 operation. E.g., if a gateway device has a unique MAC address used for
@@ -81,7 +81,7 @@ cloud connection.
 
 ### config
 
-[Proxy device config blocks](../schema/config.tests/proxy.json) contain a special
+[Proxy device config blocks](../tests/config.tests/proxy.json) contain a special
 _localnet_ section that
 specifies information required by the gateway to contact the local device.
 E.g., the fact that a device is 'BacNET' and also the device's BacNET object
@@ -105,11 +105,11 @@ into the appropriate UDMI message.
 
 Telemetry is handled similarly, with the gateway responsible for proxying data
 from local devices through to UDMI. In many cases, this would be translating
-specific device points into a [_pointset_ message](../schema/pointset.tests/example.json).
+specific device points into a [_pointset_ message](../tests/event_pointset.tests/example.json).
 
 ### metadata
 
-A [proxy device metadata section](../schema/metadata.tests/proxy.json) describes
+A [proxy device metadata section](../tests/metadata.tests/proxy.json) describes
 _localnet_ with the presence of the
 device on a local network. This can/should be used for initial programming
 and configuration of the device, or to validate proper device configuration.
