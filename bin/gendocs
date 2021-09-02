@@ -1,0 +1,33 @@
+#!/bin/bash 
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+OUTPUT_DIR=docs/schema
+
+# Make a copy of the schema files into a tmp folder
+rm -rf tmp/schema
+mkdir -p tmp/schema
+cp -r schema tmp
+
+# Remove file: prefix from references so document generator works
+find tmp/schema -type f -exec sed -i '' 's/file://' {} \;
+
+schemas="state event config metadata envelope"
+
+for schema in $schemas; do
+    python3 bin/gendocs.py $schema $ROOT_DIR $OUTPUT_DIR
+done
+
+#Cleanup tmp files
+rm -rf tmp/schema
+
+# Create index page with links to different schemas
+rm $OUTPUT_DIR/index.html
+cp etc/schema_index_template.html $OUTPUT_DIR/index.html
+
+for schema in $schemas; do
+    sed -i '' "s/<!--SCHEMALINK-->/\
+              <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
+              $OUTPUT_DIR/index.html
+done
