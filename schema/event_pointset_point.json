@@ -5,6 +5,8 @@
   "additionalProperties": false,
   "properties": {
     "present_value": {
+      "description": "The specific point data reading",
+      "examples": [24.1, true, 4]
     }
   },
   "required": [

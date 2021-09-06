@@ -8,6 +8,8 @@
       "type": "string"
     },
     "set_value": {
+      "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
+      "examples": [22.4]
     }
   }
 }

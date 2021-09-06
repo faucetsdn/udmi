@@ -5,19 +5,23 @@
   "additionalProperties": false,
   "properties": {
     "gateway_id": {
+      "description": "Present in devices which are proxied by a gateway, this identifies the device ID of the gateway the device is bound to",
       "type": "string",
-      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+      "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$",
+      "examples": ["GAT-100"]
     },
     "subsystem": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$"
     },
     "proxy_ids": {
+      "description": "Present in devices which are IoT gateways, this is an array of all the device IDs which are bound to the device",
       "type": "array",
       "items": {
         "type": "string",
         "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
-      }
+      },
+      "examples": [["AHU-22"]]
     }
   },
   "oneOf": [

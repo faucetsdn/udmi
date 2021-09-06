@@ -8,11 +8,13 @@
   ],
   "properties": {
     "proxy_ids": {
+      "description": "An array of all the device IDs which are bound to the device",
       "type": "array",
       "items": {
         "type": "string",
         "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
-      }
+      },
+      "examples": [["AHU-22"]]
     }
   }
 }

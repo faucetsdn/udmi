@@ -9,10 +9,13 @@
   ],
   "properties": {
     "timestamp": {
+      "description": "Timestamp the configuration was generated in Zulu time",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
+      "description": "Major version of the UDMI schema",
       "type": "integer",
       "minimum": 1,
       "maximum": 1

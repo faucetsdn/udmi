@@ -8,7 +8,9 @@
       "$ref": "file:units.json#"
     },
     "ref": {
-      "type": "string"
+      "description": "A local network reference for a point, e.g. BACnet address or Modbus register",
+      "type": "string",
+      "examples": ["AI3.Present_Value", "400070"]
     }
   }
 }

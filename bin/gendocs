@@ -5,6 +5,9 @@ cd $ROOT_DIR
 
 OUTPUT_DIR=docs/schema
 
+#Delete existing HTML files
+rm -rf OUTPUT_DIR
+
 # Make a copy of the schema files into a tmp folder
 rm -rf tmp/schema
 mkdir -p tmp/schema
@@ -13,14 +16,18 @@ cp -r schema tmp
 # Remove file: prefix from references so document generator works
 find tmp/schema -type f -exec sed -i '' 's/file://' {} \;
 
-schemas="state event config metadata envelope"
+schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
     python3 bin/gendocs.py $schema $ROOT_DIR $OUTPUT_DIR
 done
 
-#Cleanup tmp files
 rm -rf tmp/schema
+
+# Convert github doc links to relative links
+RELATIVE_LINK="..\/"
+ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
+find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
 
 # Create index page with links to different schemas
 rm $OUTPUT_DIR/index.html
