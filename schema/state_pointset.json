@@ -2,7 +2,7 @@
   "title": "Pointset State",
   "description": "A set of points reporting telemetry data.",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "state_etag": {

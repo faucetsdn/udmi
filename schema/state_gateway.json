@@ -2,7 +2,7 @@
   "title": "Gateway State",
   "description": "Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "required": [
     "error_ids"
