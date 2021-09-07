@@ -1,14 +1,25 @@
-#!/bin/bash 
+#!/bin/bash -e
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
 OUTPUT_DIR=docs/schema
+SCHEMA_FILES=`ls schema/*.json`
 
-#Delete existing HTML files
+if [ "$1" == check ]; then
+    mkdir -p tmp/schema
+    sha1sum $SCHEMA_FILES > tmp/schema/schema.hash
+    diff tmp/schema/schema.hash $OUTPUT_DIR/schema.hash
+    echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
+    git diff --exit-code $OUTPUT_DIR/schema.hash
+    exit 0
+fi
+
 rm -rf OUTPUT_DIR
 
-# Make a copy of the schema files into a tmp folder
+sha1sum $SCHEMA_FILES > $OUTPUT_DIR/schema.hash
+
+# Make a copy of the schema files into a tmp folder for any fixes to work with generator
 rm -rf tmp/schema
 mkdir -p tmp/schema
 cp -r schema tmp
@@ -24,13 +35,12 @@ done
 
 rm -rf tmp/schema
 
-# Convert github doc links to relative links
+# Convert github doc links to relative links for hosted/downloaded docs 
 RELATIVE_LINK="..\/"
 ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
 find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
 
 # Create index page with links to different schemas
-rm $OUTPUT_DIR/index.html
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
 for schema in $schemas; do

@@ -1,5 +1,6 @@
 {
   "title": "Gateway State",
+  "description": "Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,

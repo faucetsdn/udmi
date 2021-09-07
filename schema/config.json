@@ -1,5 +1,6 @@
 {
   "title": "Config",
+  "description": "The config block controls a device's intended behavior. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/config.md>",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
@@ -9,7 +10,7 @@
   ],
   "properties": {
     "timestamp": {
-      "description": "Timestamp the configuration was generated in Zulu time",
+      "description": "RFC 3339 timestamp the configuration was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]

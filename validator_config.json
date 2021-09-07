@@ -1,0 +1,7 @@
+{
+  "project_id": "udmi-nes",
+  "site_model": "udmi_site_model",
+  "device_id": "AHU-1",
+  "serial_no": "sequencer-3861",
+  "key_file": "udmi_site_model/devices/AHU-1/rsa_private.pkcs8"
+}

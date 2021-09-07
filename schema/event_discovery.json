@@ -1,5 +1,6 @@
 {
   "title": "Discovery",
+  "description": "Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
