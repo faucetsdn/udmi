@@ -3,42 +3,45 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-OUTPUT_DIR=docs/schema
-SCHEMA_FILES=`ls schema/*.json`
+OUTPUT_DIR=$ROOT_DIR/gencode/docs
+TMP_DIR=$ROOT_DIR/tmp/schema
+
+schema_files=`ls schema/*.json`
 
 if [ "$1" == check ]; then
-    mkdir -p tmp/schema
-    sha1sum $SCHEMA_FILES > tmp/schema/schema.hash
-    diff tmp/schema/schema.hash $OUTPUT_DIR/schema.hash
+    mkdir -p $TMP_DIR
+    sha1sum $schema_files > $TMP_DIR/schema.hash
+    diff $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
     echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
     git diff --exit-code $OUTPUT_DIR/schema.hash
     exit 0
 fi
 
-rm -rf OUTPUT_DIR
+rm -rf $OUTPUT_DIR
+mkdir -p $OUTPUT_DIR
 
-sha1sum $SCHEMA_FILES > $OUTPUT_DIR/schema.hash
+sha1sum $schema_files > $OUTPUT_DIR/schema.hash
 
-# Make a copy of the schema files into a tmp folder for any fixes to work with generator
-rm -rf tmp/schema
-mkdir -p tmp/schema
-cp -r schema tmp
+# Make a copy of the schema files into a tmp folder for any pre generator fixes
+rm -rf $TMP_DIR
+mkdir -p $TMP_DIR
+cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works
-find tmp/schema -type f -exec sed -i '' 's/file://' {} \;
+find $TMP_DIR -type f -exec sed -i '' 's/file://' {} \;
 
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
-    python3 bin/gendocs.py $schema $ROOT_DIR $OUTPUT_DIR
+    python3 bin/gendocs.py $schema $TMP_DIR $OUTPUT_DIR
 done
 
-rm -rf tmp/schema
+rm -rf $TMP_DIR
 
 # Convert github doc links to relative links for hosted/downloaded docs 
-RELATIVE_LINK="..\/"
-ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
-find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
+#RELATIVE_LINK="..\/"
+#find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
+#ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
 
 # Create index page with links to different schemas
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
