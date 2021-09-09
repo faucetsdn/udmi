@@ -1,18 +1,20 @@
 {
   "title": "Gateway Config",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "required": [
     "proxy_ids"
   ],
   "properties": {
     "proxy_ids": {
+      "description": "An array of all the device IDs which are bound to the device",
       "type": "array",
       "items": {
         "type": "string",
         "pattern": "^[A-Z]{3}-[1-9][0-9]{0,2}$"
-      }
+      },
+      "examples": [["AHU-22"]]
     }
   }
 }

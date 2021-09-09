@@ -1,19 +1,24 @@
 {
   "title": "Pointset Event",
+  "description": "A set of points reporting telemetry data",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "timestamp": {
+      "description": " RFC 3339 timestamp the telemetry event was generated",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
+      "description": "Major version of the UDMI schema",
       "type": "integer",
       "minimum": 1,
       "maximum": 1
     },
     "points": {
+      "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, PointPointsetEvent>",
       "patternProperties": {

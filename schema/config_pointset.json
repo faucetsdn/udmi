@@ -1,7 +1,7 @@
 {
   "title": "Pointset Config",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "state_etag": {
@@ -9,20 +9,24 @@
       "maxLength": 32
     },
     "set_value_expiry": {
+      "description": "An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>",
       "type": "string",
       "format": "date-time"
     },
     "sample_limit_sec": {
+      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.",
       "type": "integer",
       "minimum": 1,
       "maximum": 86400
     },
     "sample_rate_sec": {
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this.",
       "type": "integer",
       "minimum": 1,
       "maximum": 86400
     },
     "points": {
+      "description": "The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, PointPointsetConfig>",
       "patternProperties": {
