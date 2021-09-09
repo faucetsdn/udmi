@@ -48,6 +48,6 @@ cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
 for schema in $schemas; do
     sed -i '' "s/<!--SCHEMALINK-->/\
-              <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
-              $OUTPUT_DIR/index.html
+        <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
+        $OUTPUT_DIR/index.html
 done
