@@ -233,7 +233,7 @@ public class Registrar {
           }
         } catch (Exception e) {
           System.err.println("Deferring exception: " + e.toString());
-          localDevice.getErrorMap().put(LocalDevice.EXCEPTION_REGISTERING, e);
+          localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
         }
       }
       if (!localOnly()) {
@@ -380,7 +380,7 @@ public class Registrar {
       try {
         device.validateSamples();
       } catch (Exception e) {
-        device.getErrorMap().put(LocalDevice.EXCEPTION_SAMPLES, e);
+        device.captureError(LocalDevice.EXCEPTION_SAMPLES, e);
       }
     }
   }
@@ -390,7 +390,7 @@ public class Registrar {
       try {
         device.validateExpected();
       } catch (Exception e) {
-        device.getErrorMap().put(LocalDevice.EXCEPTION_FILES, e);
+        device.captureError(LocalDevice.EXCEPTION_FILES, e);
       }
     }
   }
@@ -420,7 +420,7 @@ public class Registrar {
                       new RuntimeException(
                           String.format(
                               "Duplicate credentials found for %s & %s", previous, deviceName));
-                  localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+                  localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, exception);
                 }
               }
             });
@@ -438,17 +438,14 @@ public class Registrar {
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
-          localDevice.getErrorMap().put(LocalDevice.EXCEPTION_CREDENTIALS, e);
+          localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
         }
         if (cloudIotManager != null) {
           try {
             localDevice.validateEnvelope(
                 cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
           } catch (Exception e) {
-            localDevice
-                .getErrorMap()
-                .put(
-                    LocalDevice.EXCEPTION_ENVELOPE,
+            localDevice.captureError(LocalDevice.EXCEPTION_ENVELOPE,
                     new RuntimeException("While validating envelope", e));
           }
         }
