@@ -17,6 +17,10 @@ if [ "$1" == check ]; then
     exit 0
 fi
 
+if [ -d venv ]; then
+    source venv/bin/activate
+fi
+
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
@@ -28,7 +32,7 @@ mkdir -p $TMP_DIR
 cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works
-find $TMP_DIR -type f -exec sed -i '' 's/file://' {} \;
+find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
@@ -40,14 +44,14 @@ rm -rf $TMP_DIR
 
 # Convert github doc links to relative links for hosted/downloaded docs 
 #RELATIVE_LINK="..\/"
-#find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
+#find $OUTPUT_DIR -type f -exec sed -i "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
 #ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
 
 # Create index page with links to different schemas
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
 for schema in $schemas; do
-    sed -i '' "s/<!--SCHEMALINK-->/\
+    sed -i "s/<!--SCHEMALINK-->/\
         <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
         $OUTPUT_DIR/index.html
 done
