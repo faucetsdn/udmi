@@ -9,13 +9,12 @@ TMP_DIR=$ROOT_DIR/tmp/schema
 schema_files=`ls schema/*.json`
 
 mkdir -p $TMP_DIR
-sha1sum $schema_files | sort -k 2 > $TMP_DIR/schema.hash
+sha1sum $schema_files > $TMP_DIR/schema.hash
 
 if [ "$1" == check ]; then
     more $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash | cat
     diff $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
     echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
-    git diff --exit-code $OUTPUT_DIR/schema.hash
     exit 0
 fi
 
