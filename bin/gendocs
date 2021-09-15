@@ -6,7 +6,7 @@ cd $ROOT_DIR
 OUTPUT_DIR=$ROOT_DIR/gencode/docs
 TMP_DIR=$ROOT_DIR/tmp/schema
 
-schema_files=`ls schema/*.json`
+schema_files=`ls schema/*.json | sort`
 
 if [ "$1" == check ]; then
     mkdir -p $TMP_DIR
