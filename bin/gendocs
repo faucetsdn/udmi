@@ -11,6 +11,7 @@ schema_files=`ls schema/*.json`
 if [ "$1" == check ]; then
     mkdir -p $TMP_DIR
     sha1sum $schema_files > $TMP_DIR/schema.hash
+    more $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash | cat
     diff $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
     echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
     git diff --exit-code $OUTPUT_DIR/schema.hash
@@ -24,7 +25,7 @@ fi
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
-sha1sum $schema_files| sort  > $OUTPUT_DIR/schema.hash
+sha1sum $schema_files > $OUTPUT_DIR/schema.hash
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
 rm -rf $TMP_DIR
