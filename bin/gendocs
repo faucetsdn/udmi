@@ -6,7 +6,7 @@ cd $ROOT_DIR
 OUTPUT_DIR=$ROOT_DIR/gencode/docs
 TMP_DIR=$ROOT_DIR/tmp/schema
 
-schema_files=`ls schema/*.json | sort`
+schema_files=`ls schema/*.json`
 
 if [ "$1" == check ]; then
     mkdir -p $TMP_DIR
@@ -24,7 +24,7 @@ fi
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
-sha1sum $schema_files > $OUTPUT_DIR/schema.hash
+sha1sum $schema_files| sort  > $OUTPUT_DIR/schema.hash
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
 rm -rf $TMP_DIR
