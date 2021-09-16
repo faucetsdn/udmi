@@ -1,14 +1,18 @@
 {
   "title": "System State",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "make_model": {
-      "type": "string"
+      "description": "The make and model of the physical device",
+      "type": "string",
+      "examples": ["Delta Controls O3-DIN-SRC", "Arup Gateway"]
     },
     "serial_no": {
-      "type": "string"
+      "description": "The serial number of the physical device",
+      "type": "string",
+      "examples": ["A1B2C3D4", "00001"]
     },
     "auth_key": {
       "type": "object",
@@ -23,10 +27,12 @@
       ]
     },
     "firmware": {
+      "description": "Information about the physical device firmware",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "version": {
+          "description": "Version of the local firmware",
           "type": "string"
         }
       },
@@ -35,13 +41,17 @@
       ]
     },
     "last_config": {
+      "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "operational": {
+      "$comment": "whatis",
       "type": "boolean"
     },
     "statuses": {
+      "description": "A map of 'sticky' conditions that are keyed on a value that can be used to manage updates by a particular (device dependent) subsystem.",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, Entry>",

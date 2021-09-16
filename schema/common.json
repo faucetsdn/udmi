@@ -1,6 +1,6 @@
 {
   "title": "Common",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "entry": {
       "title": "Entry",
@@ -8,25 +8,35 @@
       "additionalProperties": false,
       "properties": {
         "message": {
-          "type": "string"
+          "description": "A one-line representation of the triggering condition.",
+          "type": "string",
+          "examples": ["Point is not writable"]
         },
         "detail": {
+          "description": "An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.",
           "type": "string"
         },
         "category": {
+          "description": "A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.",
           "type": "string",
-          "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$"
+          "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$",
+          "examples": ["state.pointset.points.config.invalid"]
         },
         "timestamp": {
+          "description": "Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "examples": ["2018-08-26T21:39:28.364Z"]
+
         },
         "level": {
           "$comment": "https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity",
+          "description": "The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).",
           "type": "integer",
           "multipleOf": 1,
           "minimum": 100,
-          "maximum": 800
+          "maximum": 800,
+          "examples": [600]
         }
       },
       "required": [
