@@ -8,19 +8,24 @@ TMP_DIR=$ROOT_DIR/tmp/schema
 
 schema_files=`ls schema/*.json`
 
+mkdir -p $TMP_DIR
+sha1sum $schema_files | sort > $TMP_DIR/schema.hash
+
 if [ "$1" == check ]; then
-    mkdir -p $TMP_DIR
-    sha1sum $schema_files > $TMP_DIR/schema.hash
+    more $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash | cat
     diff $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
     echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
-    git diff --exit-code $OUTPUT_DIR/schema.hash
     exit 0
+fi
+
+if [ -d venv ]; then
+    source venv/bin/activate
 fi
 
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
-sha1sum $schema_files > $OUTPUT_DIR/schema.hash
+cp $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
 rm -rf $TMP_DIR
@@ -28,7 +33,7 @@ mkdir -p $TMP_DIR
 cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works
-find $TMP_DIR -type f -exec sed -i '' 's/file://' {} \;
+find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
@@ -40,14 +45,14 @@ rm -rf $TMP_DIR
 
 # Convert github doc links to relative links for hosted/downloaded docs 
 #RELATIVE_LINK="..\/"
-#find $OUTPUT_DIR -type f -exec sed -i '' "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
+#find $OUTPUT_DIR -type f -exec sed -i "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
 #ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
 
 # Create index page with links to different schemas
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
 for schema in $schemas; do
-    sed -i '' "s/<!--SCHEMALINK-->/\
+    sed -i "s/<!--SCHEMALINK-->/\
         <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
         $OUTPUT_DIR/index.html
 done

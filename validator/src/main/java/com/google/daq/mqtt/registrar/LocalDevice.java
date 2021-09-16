@@ -32,10 +32,12 @@ import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -103,6 +105,7 @@ class LocalDevice {
   private static final String SAMPLES_DIR = "samples";
   private static final String AUX_DIR = "aux";
   private static final String OUT_DIR = "out";
+  private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
 
@@ -203,13 +206,19 @@ class LocalDevice {
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
-      if (!outDir.exists()) {
-        outDir.mkdir();
-      }
+      prepareOutDir();
       metadata = readMetadata();
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
+  }
+
+  private void prepareOutDir() {
+    if (!outDir.exists()) {
+      outDir.mkdir();
+    }
+    File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
+    exceptionLog.delete();
   }
 
   static boolean deviceExists(File devicesDir, String deviceName) {
@@ -358,11 +367,12 @@ class LocalDevice {
     }
     String authType = getAuthType();
     Set<String> certFile = getCertFiles();
-    Set<String> publicKeyFile = Set.of(getPublicKeyFile());
+    String keyFile = getPublicKeyFile();
+    Set<String> publicKeyFiles = keyFile != null ? Set.of(keyFile) : Set.of();
     Set<String> privateKeyFiles = getPrivateKeyFiles();
     return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
-        ? Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles)
-        : Sets.union(publicKeyFile, privateKeyFiles);
+        ? Sets.union(Sets.union(publicKeyFiles, certFile), privateKeyFiles)
+        : Sets.union(publicKeyFiles, privateKeyFiles);
   }
 
   private Set<String> getPrivateKeyFiles() {
@@ -648,8 +658,18 @@ class LocalDevice {
     deviceNumId = numId;
   }
 
-  public ExceptionMap getErrorMap() {
-    return exceptionMap;
+  public void captureError(String exceptionType, Exception exception) {
+    exceptionMap.put(exceptionType, exception);
+    File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
+    try {
+      try (FileWriter fileWriter = new FileWriter(exceptionLog, true);
+           PrintWriter printWriter = new PrintWriter(fileWriter)) {
+        printWriter.println(exceptionType);
+        exception.printStackTrace(printWriter);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Writing exception log file " + exceptionLog.getAbsolutePath(), e);
+    }
   }
 
   public boolean isValid() {
