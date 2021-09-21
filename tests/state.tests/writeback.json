@@ -25,7 +25,7 @@
       "entryway_lock": {
         "value_state": "failure",
         "status": {
-          "message": "Failure to communicate to device",
+          "message": "Failure to confirm point",
           "category": "state.pointset.points.config.failure",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 600

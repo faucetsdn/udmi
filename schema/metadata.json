@@ -42,6 +42,9 @@
     "localnet": {
       "$ref": "file:metadata_localnet.json#"
     },
+    "testing": {
+      "$ref": "file:metadata_testing.json#"
+    },
     "pointset": {
       "$ref": "file:metadata_pointset.json#"
     }

@@ -10,6 +10,7 @@ import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
+import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -29,6 +30,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
+import udmi.schema.Metadata;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -41,6 +43,7 @@ public abstract class SequenceValidator {
 
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
+  private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -49,12 +52,14 @@ public abstract class SequenceValidator {
       .setSerializationInclusion(Include.NON_NULL);
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
+  public static final String RESULT_SKIP = "skip";
 
   private static final String projectId;
   private static final String deviceId;
   private static final String siteModel;
   private static final String registryId;
   private static final String serial_no;
+  protected static final Metadata deviceMetadata;
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
@@ -96,6 +101,8 @@ public abstract class SequenceValidator {
       throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath(), e);
     }
 
+    deviceMetadata = readDeviceMetadata();
+
     deviceOutputDir = new File("out/devices/" + deviceId);
     try {
       deviceOutputDir.mkdirs();
@@ -111,6 +118,16 @@ public abstract class SequenceValidator {
 
     System.err.printf("Validating device %s serial %s%n", deviceId, serial_no);
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
+  }
+
+  private static Metadata readDeviceMetadata() {
+    File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
+      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
+    }
   }
 
   private final Map<String, String> sentConfig = new HashMap<>();
@@ -155,13 +172,19 @@ public abstract class SequenceValidator {
     @Override
     protected void failed(Throwable e, Description description) {
       final String message;
+      final String type;
       if (e instanceof TestTimedOutException) {
         message = "timeout " + waitingCondition;
+        type = RESULT_FAIL;
+      } else if (e instanceof SkipTest) {
+        message = e.getMessage();
+        type = RESULT_SKIP;
       } else {
         message = e.getMessage();
+        type = RESULT_FAIL;
       }
       System.err.println(getTimestamp() + " failed " + message);
-      recordResult(RESULT_FAIL, description.getMethodName(), message);
+      recordResult(type, description.getMethodName(), message);
     }
   };
 

@@ -1,0 +1,13 @@
+{
+  "title": "Target Testing Metadata",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "target_point": {
+      "type": "string"
+    },
+    "target_value": {
+    }
+  }
+}

@@ -23,6 +23,8 @@ from .metadata_localnet_subsystem import SubsystemLocalnetMetadata
 from .metadata_pointset import PointsetMetadata
 from .metadata_pointset_point import PointPointsetMetadata
 from .metadata_system import SystemMetadata
+from .metadata_testing import TestingMetadata
+from .metadata_testing_target import TargetTestingMetadata
 from .properties import Properties
 from .state_blobset_blob import BlobBlobsetState
 from .state_blobset import BlobsetState

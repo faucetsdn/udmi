@@ -521,6 +521,9 @@ class LocalDevice {
   PointPointsetConfig ConfigFromMetadata(PointPointsetMetadata metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.ref = metadata.ref;
+    if (Boolean.TRUE.equals(metadata.writeable)) {
+      pointConfig.set_value = metadata.baseline_value;
+    }
     return pointConfig;
   }
 

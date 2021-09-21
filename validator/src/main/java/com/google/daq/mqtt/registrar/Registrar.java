@@ -72,12 +72,12 @@ public class Registrar {
   public static final String VERSION_MAIN_KEY = "main";
   private static final String SCHEMA_SUFFIX = ".json";
   public static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
+  private static final String SCHEMA_NAME = "UDMI";
 
   private CloudIotManager cloudIotManager;
   private File siteConfig;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private File schemaBase;
-  private String schemaName;
   private PubSubPusher pubSubPusher;
   private Map<String, LocalDevice> localDevices;
   private File summaryFile;
@@ -157,7 +157,7 @@ public class Registrar {
   }
 
   private void setSiteConfigPath(String siteConfigPath) {
-    Preconditions.checkNotNull(schemaName, "schemaName not set yet");
+    Preconditions.checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteConfig = new File(siteConfigPath);
     summaryFile = new File(siteConfig, REGISTRATION_SUMMARY_JSON);
     summaryFile.delete();
@@ -166,7 +166,7 @@ public class Registrar {
   private void initializeCloudProject() {
     File cloudIotConfig = new File(siteConfig, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
-    cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, schemaName);
+    cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, SCHEMA_NAME);
     String configTopic = cloudIotManager.cloudIotConfig.config_topic;
     System.err.println("Sending updates to config topic " + configTopic);
     if (configTopic != null) {
@@ -464,7 +464,6 @@ public class Registrar {
 
   private void setSchemaBase(String schemaBasePath) {
     schemaBase = new File(schemaBasePath);
-    schemaName = schemaBase.getParentFile().getName();
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());

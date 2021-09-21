@@ -9,6 +9,17 @@
       "description": "Expected unit configuration for the point.",
       "$ref": "file:units.json#"
     },
+    "writeable": {
+      "type": "boolean"
+    },
+    "baseline_value": {
+    },
+    "baseline_tolerance": {
+      "type": "number"
+    },
+    "baseline_state": {
+      "type": "string"
+    },
     "ref": {
       "description": "A local network reference for a point, e.g. BACnet address or Modbus register",
       "type": "string",

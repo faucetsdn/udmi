@@ -9,6 +9,7 @@ import org.junit.Test;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
+import udmi.schema.TargetTestingMetadata;
 
 public class BaselineValidator extends SequenceValidator {
 
@@ -54,16 +55,36 @@ public class BaselineValidator extends SequenceValidator {
 
   @Test
   public void writeback_states() {
-    untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, DEFAULT_STATE), "default value_state");
-    untilTrue(() -> valueStateIs(FAULTY_FINDING, DEFAULT_STATE), "default value_state");
-    untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, DEFAULT_STATE), "default value_state");
-    deviceConfig.pointset.points.get(RECALCITRANT_ANGLE).set_value = 20;
-    deviceConfig.pointset.points.get(FAULTY_FINDING).set_value = true;
-    deviceConfig.pointset.points.get(SUPERIMPOSITION_READING).set_value = 10;
+    TargetTestingMetadata invalidTarget = getTarget("invalid");
+    TargetTestingMetadata failureTarget = getTarget("failure");
+    TargetTestingMetadata appliedTarget = getTarget("applied");
+
+    String invalidPoint = invalidTarget.target_point;
+    String failurePoint = failureTarget.target_point;
+    String appliedPoint = appliedTarget.target_point;
+    untilTrue(() -> valueStateIs(invalidPoint, DEFAULT_STATE), expectedValueState(invalidPoint, "default (null)"));
+    untilTrue(() -> valueStateIs(failurePoint, DEFAULT_STATE), expectedValueState(failurePoint, "default (null)"));
+    untilTrue(() -> valueStateIs(appliedPoint, DEFAULT_STATE), expectedValueState(appliedPoint,"default (null)"));
+    deviceConfig.pointset.points.get(invalidPoint).set_value = invalidTarget.target_value;
+    deviceConfig.pointset.points.get(failurePoint).set_value = failureTarget.target_value;
+    deviceConfig.pointset.points.get(appliedPoint).set_value = appliedTarget.target_value;
     updateConfig();
-    untilTrue(() -> valueStateIs(RECALCITRANT_ANGLE, INVALID_STATE), "invalid value_state");
-    untilTrue(() -> valueStateIs(FAULTY_FINDING, FAILURE_STATE), "failure value_state");
-    untilTrue(() -> valueStateIs(SUPERIMPOSITION_READING, APPLIED_STATE), "applied value_state");
+    untilTrue(() -> valueStateIs(invalidPoint, INVALID_STATE), expectedValueState(invalidPoint,"invalid"));
+    untilTrue(() -> valueStateIs(failurePoint, FAILURE_STATE), expectedValueState(invalidPoint,"failure"));
+    untilTrue(() -> valueStateIs(appliedPoint, APPLIED_STATE), expectedValueState(invalidPoint,"applied"));
+  }
+
+  private String expectedValueState(String pointName, String expectedValue) {
+    return String.format("point %s to have value_state %s", pointName, expectedValue);
+  }
+
+  private TargetTestingMetadata getTarget(String target) {
+    if (deviceMetadata.testing == null ||
+        deviceMetadata.testing.targets == null ||
+        !deviceMetadata.testing.targets.containsKey(target)) {
+      throw new SkipTest(String.format("Missing '%s' target specification", target));
+    }
+    return deviceMetadata.testing.targets.get(target);
   }
 
 }
