@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
+TEST_LOG=/tmp/test_log.txt
 
 if [ $# -lt 2 -o $# -gt 3 ]; then
     echo Usage: $0 PROJECT_ID DEVICE_ID [SERIAL_NO]
@@ -65,8 +66,7 @@ if [[ -n $pubber ]]; then
     fi
 fi
 
-result=0
-bin/test_sequences || result=$?
+bin/test_sequences | tee $TEST_LOG
 
 if [[ -n $pubber ]]; then
     pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -74,5 +74,4 @@ if [[ -n $pubber ]]; then
     kill $pids
 fi
 
-echo Test result code $result
-exit $result
+fgrep RESULT $TEST_LOG
