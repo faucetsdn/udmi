@@ -66,7 +66,7 @@ if [[ -n $pubber ]]; then
     fi
 fi
 
-bin/test_sequences | tee $TEST_LOG
+bin/test_sequences 2>&1 | tee $TEST_LOG
 
 if [[ -n $pubber ]]; then
     pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -74,4 +74,5 @@ if [[ -n $pubber ]]; then
     kill $pids
 fi
 
-fgrep RESULT $TEST_LOG
+echo
+fgrep 'RESULT ' $TEST_LOG

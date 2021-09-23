@@ -1,0 +1,2 @@
+RESULT skip writeback_states Missing 'invalid' target specification
+RESULT pass system_last_update Sequence completed
