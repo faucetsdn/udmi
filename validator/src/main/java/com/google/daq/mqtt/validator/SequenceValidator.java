@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -44,6 +45,7 @@ public abstract class SequenceValidator {
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
+  private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -60,6 +62,7 @@ public abstract class SequenceValidator {
   private static final String registryId;
   private static final String serial_no;
   protected static final Metadata deviceMetadata;
+  protected static final Config generatedConfig;
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
@@ -102,6 +105,7 @@ public abstract class SequenceValidator {
     }
 
     deviceMetadata = readDeviceMetadata();
+    generatedConfig = readGeneratedConfig();
 
     deviceOutputDir = new File("out/devices/" + deviceId);
     try {
@@ -130,6 +134,19 @@ public abstract class SequenceValidator {
     }
   }
 
+  private static Config readGeneratedConfig() {
+    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading generated config file " + deviceConfigFile.getPath());
+      Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
+      Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
+      config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
+    }
+  }
+
   private final Map<String, String> sentConfig = new HashMap<>();
   private final Map<String, String> receivedState = new HashMap<>();
   private String waitingCondition;
@@ -139,15 +156,19 @@ public abstract class SequenceValidator {
 
   @Before
   public void setUp() {
-    deviceConfig = new Config();
+    deviceConfig = readGeneratedConfig();
     deviceState = new State();
     sentConfig.clear();
     receivedState.clear();
     waitingCondition = null;
     check_serial = false;
-    updateConfig();
-    // Do this after the initial config update to force a change.
-    deviceConfig.system = new SystemConfig();
+
+    if (deviceConfig.system.min_loglevel != null &&
+        deviceConfig.system.min_loglevel == INITIAL_MIN_LOGLEVEL) {
+      // If necessary, force a config update by making sure at least one field changes!
+      deviceConfig.system.min_loglevel = null;
+      updateConfig();
+    }
     deviceConfig.system.min_loglevel = INITIAL_MIN_LOGLEVEL;
     queryState();
   }
@@ -227,6 +248,10 @@ public abstract class SequenceValidator {
 
   @After
   public void tearDown() {
+    // Restore the config to a canonical state.
+    deviceConfig = readGeneratedConfig();
+    updateConfig();
+
     deviceConfig = null;
     deviceState = null;
   }

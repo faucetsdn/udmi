@@ -4,6 +4,7 @@ import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetConfig;
@@ -20,8 +21,8 @@ public class BaselineValidator extends SequenceValidator {
 
   @Before
   public void makePoints() {
-    deviceConfig.pointset = new PointsetConfig();
-    deviceConfig.pointset.points = new HashMap<>();
+    deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
+    deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points).orElse(new HashMap<>());
     try {
       TargetTestingMetadata invalidTarget = getTarget(INVALID_STATE);
       TargetTestingMetadata failureTarget = getTarget(FAILURE_STATE);
