@@ -59,6 +59,7 @@ jobs:
         with:
           java-version: '11'
       - name: sequence tests
+        if: ${{ secrets.GCP_TARGET_PROJECT }}
         run: |
           bin/test_sequencer "${{ secrets.GCP_TARGET_PROJECT }}"
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
