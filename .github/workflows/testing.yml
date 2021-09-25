@@ -63,7 +63,7 @@ jobs:
           bin/clone_model
           bin/test_sequencer udmi_site_model "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
-          diff /tmp/results.txt ../etc/sequence.out
+          diff /tmp/results.txt etc/sequence.out
       - name: validation logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
