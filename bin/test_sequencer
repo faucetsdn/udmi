@@ -1,14 +1,18 @@
 #!/bin/bash -e
 
-if [ $# -lt 3 -o $# -gt 4 ]; then
-    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 PROJECT_ID
     false
 fi
+project_id=$1
+shift
 
-site_path=$(realpath $1)
-project_id=$2
-device_id=$3
-shift 3
+bin/clone_model
+site_path=udmi_site_model
+device_id=AHU-1
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no

@@ -3,7 +3,7 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-bin/setup_site
+bin/clone_model
 
 TEST_SITE=udmi_site_model
 
