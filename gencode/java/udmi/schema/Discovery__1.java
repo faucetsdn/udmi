@@ -8,6 +8,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -15,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Discovery
  * <p>
- * 
+ * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,18 +29,20 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class Discovery__1 {
 
     /**
-     * 
+     * RFC 3339 timestamp the discover telemetry event was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 timestamp the discover telemetry event was generated")
     public Date timestamp;
     /**
-     * 
+     * Major version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
+    @JsonPropertyDescription("Major version of the UDMI schema")
     public Discovery__1 .Version version;
     /**
      * 
@@ -70,6 +73,11 @@ public class Discovery__1 {
         return ((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
+
+    /**
+     * Major version of the UDMI schema
+     * 
+     */
     @Generated("jsonschema2pojo")
     public enum Version {
 

@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -27,18 +28,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class State {
 
     /**
-     * 
+     * RFC 3339 Timestamp the state payload was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 Timestamp the state payload was generated")
     public Date timestamp;
     /**
-     * 
+     * Major version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
+    @JsonPropertyDescription("Major version of the UDMI schema")
     public Integer version;
     /**
      * System State
@@ -52,10 +55,11 @@ public class State {
     /**
      * Gateway State
      * <p>
-     * 
+     * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>
      * 
      */
     @JsonProperty("gateway")
+    @JsonPropertyDescription("Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>")
     public GatewayState gateway;
     /**
      * Blobset State
@@ -68,10 +72,11 @@ public class State {
     /**
      * Pointset State
      * <p>
-     * 
+     * A set of points reporting telemetry data.
      * 
      */
     @JsonProperty("pointset")
+    @JsonPropertyDescription("A set of points reporting telemetry data.")
     public PointsetState pointset;
 
     @Override

@@ -13,6 +13,7 @@ class Metadata:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.description = None
     self.hash = None
     self.cloud = None
     self.system = None
@@ -28,6 +29,7 @@ class Metadata:
     result = Metadata()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.description = source.get('description')
     result.hash = source.get('hash')
     result.cloud = CloudMetadata.from_dict(source.get('cloud'))
     result.system = SystemMetadata.from_dict(source.get('system'))
@@ -59,6 +61,8 @@ class Metadata:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.description:
+      result['description'] = self.description # 5
     if self.hash:
       result['hash'] = self.hash # 5
     if self.cloud:

@@ -60,9 +60,8 @@ jobs:
           java-version: '11'
       - name: sequence tests
         run: |
-          bin/setup_site
-          cd udmi_site_model
-          ../bin/sequence "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
+          bin/clone_model
+          bin/test_sequencer udmi_site_model "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
           diff /tmp/results.txt ../etc/sequence.out
       - name: validation logs

@@ -5,13 +5,14 @@ import java.util.Date;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Config
  * <p>
- * 
+ * The config block controls a device's intended behavior. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/config.md>
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,18 +29,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Config {
 
     /**
-     * 
+     * RFC 3339 timestamp the configuration was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
     public Date timestamp;
     /**
-     * 
+     * Major version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
+    @JsonPropertyDescription("Major version of the UDMI schema")
     public Integer version;
     /**
      * System Config

@@ -4,8 +4,14 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+
+/**
+ * Information about the physical device firmware
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "version"
@@ -14,11 +20,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Firmware {
 
     /**
-     * 
+     * Version of the local firmware
      * (Required)
      * 
      */
     @JsonProperty("version")
+    @JsonPropertyDescription("Version of the local firmware")
     public String version;
 
     @Override

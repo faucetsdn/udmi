@@ -6,13 +6,14 @@ import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Gateway Metadata
  * <p>
- * 
+ * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,11 +25,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class GatewayMetadata__1 {
 
+    /**
+     * Present in devices which are proxied by a gateway, this identifies the device ID of the gateway the device is bound to
+     * 
+     */
     @JsonProperty("gateway_id")
+    @JsonPropertyDescription("Present in devices which are proxied by a gateway, this identifies the device ID of the gateway the device is bound to")
     public String gateway_id;
     @JsonProperty("subsystem")
     public String subsystem;
+    /**
+     * Present in devices which are IoT gateways, this is an array of all the device IDs which are bound to the device
+     * 
+     */
     @JsonProperty("proxy_ids")
+    @JsonPropertyDescription("Present in devices which are IoT gateways, this is an array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
 
     @Override

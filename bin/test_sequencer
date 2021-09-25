@@ -1,0 +1,47 @@
+#!/bin/bash -e
+
+if [ $# -lt 3 -o $# -gt 4 ]; then
+    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID
+    false
+fi
+
+site_path=$(realpath $1)
+project_id=$2
+device_id=$3
+shift 3
+
+serial_no=sequencer-$RANDOM
+echo Using pubber with serial $serial_no
+
+PUBBER_OUT=pubber.out
+
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+if [[ -n $pids ]]; then
+    echo Killing pubber pids $pids
+    kill $pids
+fi
+
+echo Writing pubber output to $PUBBER_OUT
+echo bin/pubber $site_path $project_id $device_id $serial_no
+bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+
+WAITING=30
+for i in `seq 1 $WAITING`; do
+    if fgrep "Connection complete" $PUBBER_OUT; then
+        break
+    fi
+    echo Waiting for pubber startup $((WAITING - i))...
+    sleep 2
+done
+
+if [[ $i == $WAITING ]]; then
+    echo pubber startup failed:
+    cat $PUBBER_OUT
+    false
+fi
+
+bin/sequencer $site_path $project_id $device_id $serial_no
+
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+echo Killing pubber pids $pids
+kill $pids

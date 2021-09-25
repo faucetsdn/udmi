@@ -42,7 +42,7 @@ class ObjectD947FD57:
     return result
 
 
-class Object2080CEC9:
+class Object93E74AA6:
   """Generated schema class"""
 
   def __init__(self):
@@ -54,7 +54,7 @@ class Object2080CEC9:
   def from_dict(source):
     if not source:
       return None
-    result = Object2080CEC9()
+    result = Object93E74AA6()
     result.site = source.get('site')
     result.section = source.get('section')
     result.position = ObjectD947FD57.from_dict(source.get('position'))
@@ -66,7 +66,7 @@ class Object2080CEC9:
       return None
     result = {}
     for key in source:
-      result[key] = Object2080CEC9.from_dict(source[key])
+      result[key] = Object93E74AA6.from_dict(source[key])
     return result
 
   @staticmethod
@@ -132,7 +132,7 @@ class ObjectA9E984A3:
     return result
 
 
-class ObjectCD67D55C:
+class Object45E20BB3:
   """Generated schema class"""
 
   def __init__(self):
@@ -142,7 +142,7 @@ class ObjectCD67D55C:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectCD67D55C()
+    result = Object45E20BB3()
     result.asset = ObjectA9E984A3.from_dict(source.get('asset'))
     return result
 
@@ -152,7 +152,7 @@ class ObjectCD67D55C:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectCD67D55C.from_dict(source[key])
+      result[key] = Object45E20BB3.from_dict(source[key])
     return result
 
   @staticmethod
@@ -219,8 +219,8 @@ class SystemMetadata:
     if not source:
       return None
     result = SystemMetadata()
-    result.location = Object2080CEC9.from_dict(source.get('location'))
-    result.physical_tag = ObjectCD67D55C.from_dict(source.get('physical_tag'))
+    result.location = Object93E74AA6.from_dict(source.get('location'))
+    result.physical_tag = Object45E20BB3.from_dict(source.get('physical_tag'))
     result.aux = ObjectCA9644FB.from_dict(source.get('aux'))
     return result
 

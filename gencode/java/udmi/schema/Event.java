@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -33,18 +34,20 @@ public class Event {
     /**
      * Pointset Event
      * <p>
-     * 
+     * A set of points reporting telemetry data
      * 
      */
     @JsonProperty("pointset")
+    @JsonPropertyDescription("A set of points reporting telemetry data")
     public PointsetEvent pointset;
     /**
      * Discovery
      * <p>
-     * 
+     * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>
      * 
      */
     @JsonProperty("discovery")
+    @JsonPropertyDescription("Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>")
     public Discovery discovery;
 
     @Override

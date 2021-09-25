@@ -38,7 +38,7 @@ class Object2F750027:
     return result
 
 
-class ObjectCB1AE98E:
+class ObjectBF5DA4FA:
   """Generated schema class"""
 
   def __init__(self):
@@ -48,7 +48,7 @@ class ObjectCB1AE98E:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectCB1AE98E()
+    result = ObjectBF5DA4FA()
     result.version = source.get('version')
     return result
 
@@ -58,7 +58,7 @@ class ObjectCB1AE98E:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectCB1AE98E.from_dict(source[key])
+      result[key] = ObjectBF5DA4FA.from_dict(source[key])
     return result
 
   @staticmethod
@@ -96,7 +96,7 @@ class SystemState:
     result.make_model = source.get('make_model')
     result.serial_no = source.get('serial_no')
     result.auth_key = Object2F750027.from_dict(source.get('auth_key'))
-    result.firmware = ObjectCB1AE98E.from_dict(source.get('firmware'))
+    result.firmware = ObjectBF5DA4FA.from_dict(source.get('firmware'))
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
     result.statuses = Entry.map_from(source.get('statuses'))

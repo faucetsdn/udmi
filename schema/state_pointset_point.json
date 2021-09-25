@@ -5,6 +5,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "units": {
+      "description": "If specified, indicates a programmed point unit. If empty, means unspecified or matches configured point.",
+      "type": "string"
+    },
     "value_state": {
       "description": "Optional enumeration indicating the state of the points value. Valid `value_state` settings include:\n* _<missing>_: No `set_value` _config_ has been specified, the source is device-native.\n* _applied_: The `set_value` _config_ has been successfully applied.\n* _overridden_: The _config_ setting is being overridden by another source.\n* _invalid_: A problem has been identified with the _config_ setting.\n* _failure_: The _config_ is fine, but a problem has been encountered applying the setting.\nWhen the value state indicates an error state, an assosciated status entry should be included",
       "enum": [

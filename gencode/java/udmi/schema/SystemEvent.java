@@ -7,6 +7,7 @@ import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -26,18 +27,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemEvent {
 
     /**
-     * 
+     * RFC 3339 timestamp the event payload was generated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 timestamp the event payload was generated")
     public Date timestamp;
     /**
-     * 
+     * Major version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
+    @JsonPropertyDescription("Major version of the UDMI schema")
     public Integer version;
     @JsonProperty("logentries")
     public List<Entry> logentries = new ArrayList<Entry>();
