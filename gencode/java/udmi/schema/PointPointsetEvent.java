@@ -4,13 +4,14 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Point Pointset Event
  * <p>
- * 
+ * Object representation for for a single point
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,11 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class PointPointsetEvent {
 
     /**
-     * 
+     * The specific point data reading
      * (Required)
      * 
      */
     @JsonProperty("present_value")
+    @JsonPropertyDescription("The specific point data reading")
     public Object present_value;
 
     @Override

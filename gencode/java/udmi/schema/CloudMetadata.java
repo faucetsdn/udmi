@@ -7,6 +7,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -14,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Cloud Metadata
  * <p>
- * 
+ * Information specific to how the device communicates with the cloud.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,15 +28,21 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class CloudMetadata {
 
     /**
-     * 
+     * The key type used for cloud communication.
      * (Required)
      * 
      */
     @JsonProperty("auth_type")
+    @JsonPropertyDescription("The key type used for cloud communication.")
     public CloudMetadata.Auth_type auth_type;
     @JsonProperty("device_key")
     public Boolean device_key;
+    /**
+     * If the device functions as an IoT Gateway, proxying for other devices using a single logical connection
+     * 
+     */
     @JsonProperty("is_gateway")
+    @JsonPropertyDescription("If the device functions as an IoT Gateway, proxying for other devices using a single logical connection")
     public Boolean is_gateway;
 
     @Override
@@ -59,6 +66,11 @@ public class CloudMetadata {
         return ((((this.is_gateway == rhs.is_gateway)||((this.is_gateway!= null)&&this.is_gateway.equals(rhs.is_gateway)))&&((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type))))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))));
     }
 
+
+    /**
+     * The key type used for cloud communication.
+     * 
+     */
     @Generated("jsonschema2pojo")
     public enum Auth_type {
 

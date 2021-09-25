@@ -4,8 +4,14 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+
+/**
+ * Properties the expected physical location of the device.
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "site",
@@ -16,11 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Location {
 
     /**
-     * 
+     * The site name according to the site model in which a device is installed in
      * (Required)
      * 
      */
     @JsonProperty("site")
+    @JsonPropertyDescription("The site name according to the site model in which a device is installed in")
     public String site;
     @JsonProperty("section")
     public String section;

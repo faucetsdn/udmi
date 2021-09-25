@@ -7,7 +7,7 @@
   "properties": {
     "units": {
       "description": "Expected unit configuration for the point.",
-      "$ref": "file:units.json#"
+      "type": "string"
     },
     "writeable": {
       "type": "boolean"

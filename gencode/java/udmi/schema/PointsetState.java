@@ -5,13 +5,14 @@ import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Pointset State
  * <p>
- * 
+ * A set of points reporting telemetry data.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,14 +23,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class PointsetState {
 
+    /**
+     * An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>
+     * 
+     */
     @JsonProperty("state_etag")
+    @JsonPropertyDescription("An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>")
     public java.lang.String state_etag;
     /**
-     * 
+     * Collection of point names, defining the representative point set for this device.
      * (Required)
      * 
      */
     @JsonProperty("points")
+    @JsonPropertyDescription("Collection of point names, defining the representative point set for this device.")
     public HashMap<String, PointPointsetState> points;
 
     @Override

@@ -4,13 +4,14 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * System Metadata
  * <p>
- * 
+ * High-level sytem informaiton about the device.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,18 +24,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemMetadata {
 
     /**
-     * 
+     * Properties the expected physical location of the device.
      * (Required)
      * 
      */
     @JsonProperty("location")
+    @JsonPropertyDescription("Properties the expected physical location of the device.")
     public Location location;
     /**
-     * 
+     * Information used to print a physical QR code label.
      * (Required)
      * 
      */
     @JsonProperty("physical_tag")
+    @JsonPropertyDescription("Information used to print a physical QR code label.")
     public Physical_tag physical_tag;
     @JsonProperty("aux")
     public Aux aux;

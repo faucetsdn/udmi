@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -21,7 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class SystemConfig__1 {
 
+    /**
+     * The minimum loglevel for reporting log messages below which log entries should not be sent.
+     * 
+     */
     @JsonProperty("min_loglevel")
+    @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent.")
     public Integer min_loglevel;
     @JsonProperty("auth_key")
     public Auth_key__1 auth_key;

@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -23,11 +24,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class GatewayConfig__1 {
 
     /**
-     * 
+     * An array of all the device IDs which are bound to the device
      * (Required)
      * 
      */
     @JsonProperty("proxy_ids")
+    @JsonPropertyDescription("An array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
 
     @Override

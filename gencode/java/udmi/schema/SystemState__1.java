@@ -6,6 +6,7 @@ import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -29,43 +30,52 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemState__1 {
 
     /**
-     * 
+     * The make and model of the physical device
      * (Required)
      * 
      */
     @JsonProperty("make_model")
+    @JsonPropertyDescription("The make and model of the physical device")
     public java.lang.String make_model;
     /**
-     * 
+     * The serial number of the physical device
      * (Required)
      * 
      */
     @JsonProperty("serial_no")
+    @JsonPropertyDescription("The serial number of the physical device")
     public java.lang.String serial_no;
     @JsonProperty("auth_key")
     public Auth_key__3 auth_key;
     /**
-     * 
+     * Information about the physical device firmware
      * (Required)
      * 
      */
     @JsonProperty("firmware")
+    @JsonPropertyDescription("Information about the physical device firmware")
     public Firmware__1 firmware;
     /**
-     * 
+     * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).
      * (Required)
      * 
      */
     @JsonProperty("last_config")
+    @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).")
     public Date last_config;
     /**
-     * 
+     * whatis
      * (Required)
      * 
      */
     @JsonProperty("operational")
     public Boolean operational;
+    /**
+     * A map of 'sticky' conditions that are keyed on a value that can be used to manage updates by a particular (device dependent) subsystem.
+     * 
+     */
     @JsonProperty("statuses")
+    @JsonPropertyDescription("A map of 'sticky' conditions that are keyed on a value that can be used to manage updates by a particular (device dependent) subsystem.")
     public HashMap<String, Entry> statuses;
 
     @Override

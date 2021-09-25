@@ -59,12 +59,13 @@ jobs:
         with:
           java-version: '11'
       - name: sequence tests
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          bin/setup_site
-          cd udmi_site_model
-          ../bin/sequence "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
+          bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
-          diff /tmp/results.txt ../etc/sequence.out
+          diff /tmp/results.txt etc/sequence.out
       - name: validation logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
