@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
+import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -26,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
@@ -76,6 +78,8 @@ public abstract class SequenceValidator {
 
   public static final String TESTS_OUT_DIR = "tests";
 
+  public static final String SERIAL_NO_MISSING = "//";
+
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
   static {
@@ -89,7 +93,8 @@ public abstract class SequenceValidator {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
-      serial_no = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      serial_no = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       throw new RuntimeException("While loading " + CONFIG_FILE, e);
@@ -150,7 +155,7 @@ public abstract class SequenceValidator {
   private final Map<String, String> sentConfig = new HashMap<>();
   private final Map<String, String> receivedState = new HashMap<>();
   private String waitingCondition;
-  private boolean check_serial;
+  private boolean confirm_serial;
   private String testName;
   private String last_serial_no;
 
@@ -161,7 +166,7 @@ public abstract class SequenceValidator {
     sentConfig.clear();
     receivedState.clear();
     waitingCondition = null;
-    check_serial = false;
+    confirm_serial = false;
 
     if (deviceConfig.system.min_loglevel != null &&
         deviceConfig.system.min_loglevel == INITIAL_MIN_LOGLEVEL) {
@@ -171,6 +176,11 @@ public abstract class SequenceValidator {
     }
     deviceConfig.system.min_loglevel = INITIAL_MIN_LOGLEVEL;
     queryState();
+  }
+
+  @Test
+  public void valid_serial_no() {
+    Preconditions.checkNotNull(serial_no, "no test serial_no provided");
   }
 
   @Rule
@@ -201,6 +211,9 @@ public abstract class SequenceValidator {
         message = e.getMessage();
         type = RESULT_SKIP;
       } else {
+        while (e.getCause() != null) {
+          e = e.getCause();
+        }
         message = e.getMessage();
         type = RESULT_FAIL;
       }
@@ -341,18 +354,27 @@ public abstract class SequenceValidator {
       last_serial_no = device_serial;
     }
     boolean serialValid = Objects.equals(serial_no, device_serial);
-    if (!serialValid && check_serial) {
+    if (!serialValid && confirm_serial) {
       throw new IllegalStateException("Unexpected serial_no " + device_serial);
     }
-    check_serial = serialValid;
+    confirm_serial = serialValid;
     return serialValid;
+  }
+
+  private boolean caughtAsFalse(Supplier<Boolean> evaluator) {
+    try {
+      return evaluator.get();
+    } catch (Exception e) {
+      System.err.println(getTimestamp() + " Suppressing exception: " + e.toString());
+      return false;
+    }
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
     System.err.println(getTimestamp() + " start " + waitingCondition);
-    while (!evaluator.get()) {
+    while (!caughtAsFalse(evaluator)) {
       receiveMessage();
     }
     System.err.println(getTimestamp() + " finished " + waitingCondition);

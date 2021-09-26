@@ -53,7 +53,7 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     Date prevConfig = deviceState.system.last_config;
     updateConfig();
-    untilTrue(() -> !prevConfig.equals(deviceState.system.last_config), "last_config " + prevConfig);
+    untilTrue(() -> !prevConfig.equals(deviceState.system.last_config), "state last_config match");
     System.err.printf("%s last_config updated from %s to %s%n", getTimestamp(), prevConfig,
         deviceState.system.last_config);
   }

@@ -7,7 +7,6 @@
 4e316a61bf169d000474c8787a40b40ebee17eee  schema/config_gateway.json
 5586b408ff7a59210c2c6a3a1f883583b30dae4e  schema/event_system.json
 5b497358a2253e8d72cf3ca5d8af2740e86149e0  schema/properties.json
-5df53504219c90a3cc89c9e2129afe6d6c91ab58  schema/config_pointset_point.json
 68e22a220aa6e2a8d30e68f0155134a000344e24  schema/state_blobset.json
 6ce954ba12235ce4ea1e342045c9f6a64211375b  schema/event_discovery.json
 76f0a73a81c19a913125ba8113383b94730aabf1  schema/metadata_pointset.json
@@ -32,4 +31,5 @@ e5ab83b6e18a5dc0673e43e9f5acd1d5b13636a7  schema/state_blobset_blob.json
 e725fac71ca69ee42362e215fef0e49ef081dd98  schema/envelope.json
 e9151e7c87ac1e880a1312cc7e49b435be6cbd0a  schema/config_blobset_blob.json
 ec5e11c52c11edc9d3398859cfa89f4e740fe6fb  schema/metadata_cloud.json
+f5131b46190addaa12af44117406e47e577c1d94  schema/config_pointset_point.json
 f7b02ad613c0c3816728ad2d3237158ac9a6472e  schema/state_gateway.json
