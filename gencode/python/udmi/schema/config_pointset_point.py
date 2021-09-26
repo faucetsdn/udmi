@@ -6,6 +6,7 @@ class PointPointsetConfig:
 
   def __init__(self):
     self.ref = None
+    self.units = None
     self.set_value = None
 
   @staticmethod
@@ -14,6 +15,7 @@ class PointPointsetConfig:
       return None
     result = PointPointsetConfig()
     result.ref = source.get('ref')
+    result.units = source.get('units')
     result.set_value = source.get('set_value')
     return result
 
@@ -37,6 +39,8 @@ class PointPointsetConfig:
     result = {}
     if self.ref:
       result['ref'] = self.ref # 5
+    if self.units:
+      result['units'] = self.units # 5
     if self.set_value:
       result['set_value'] = self.set_value # 5
     return result
