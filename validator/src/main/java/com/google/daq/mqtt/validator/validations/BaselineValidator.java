@@ -24,16 +24,20 @@ public class BaselineValidator extends SequenceValidator {
     deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
     deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points).orElse(new HashMap<>());
     try {
-      TargetTestingMetadata invalidTarget = getTarget(INVALID_STATE);
-      TargetTestingMetadata failureTarget = getTarget(FAILURE_STATE);
-      TargetTestingMetadata appliedTarget = getTarget(APPLIED_STATE);
-      deviceConfig.pointset.points.put(invalidTarget.target_point, new PointPointsetConfig());
-      deviceConfig.pointset.points.put(failureTarget.target_point, new PointPointsetConfig());
-      deviceConfig.pointset.points.put(appliedTarget.target_point, new PointPointsetConfig());
+      ensurePointConfig(INVALID_STATE);
+      ensurePointConfig(FAILURE_STATE);
+      ensurePointConfig(APPLIED_STATE);
     } catch (SkipTest skipTest) {
       System.err.println("Not setting config points: " + skipTest.getMessage());
     }
     untilTrue(this::validSerialNo, "valid serial no");
+  }
+
+  private void ensurePointConfig(String target) {
+    String target_point = getTarget(target).target_point;
+    if (!deviceConfig.pointset.points.containsKey(target_point)) {
+      deviceConfig.pointset.points.put(target_point, new PointPointsetConfig());
+    }
   }
 
   private boolean valueStateIs(String pointName, String expected) {

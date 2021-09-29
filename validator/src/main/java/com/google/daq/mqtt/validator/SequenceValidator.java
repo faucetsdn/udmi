@@ -292,6 +292,9 @@ public abstract class SequenceValidator {
     if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
       System.err.println(getTimestamp() + " updated pointset config");
     }
+    updateConfig("gateway", deviceConfig.gateway);
+    updateConfig("localnet", deviceConfig.localnet);
+    updateConfig("blobset", deviceConfig.blobset);
   }
 
   private <T> T messageConvert(Class<T> target, Map<String, Object> message) {
