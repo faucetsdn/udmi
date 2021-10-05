@@ -1,9 +1,9 @@
 0514d620dd98474fc42a2e19f08b2bc985285a99  schema/state.json
 246e3172bae2de567f54e54089773c25d02171d5  schema/metadata.json
 2701c5a05dd612d32b60d185948c80edaf7318b6  schema/config_localnet.json
-28e5fb6ebe6e4824934161d5b5e20ca7881133c0  schema/metadata_system.json
 2af1ef06afc81e2e6d0286afceb66a5dcbea999a  schema/config_blobset.json
 37306e05d217806c0f49a2640bccfa71765eac9e  schema/metadata_testing_target.json
+4c17cfcfd554b3e84187e8ca78506f692a662960  schema/metadata_system.json
 4e316a61bf169d000474c8787a40b40ebee17eee  schema/config_gateway.json
 5586b408ff7a59210c2c6a3a1f883583b30dae4e  schema/event_system.json
 5b497358a2253e8d72cf3ca5d8af2740e86149e0  schema/properties.json
