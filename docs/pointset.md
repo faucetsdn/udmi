@@ -27,11 +27,19 @@ while the `pointset` typing is applied as part of the [message envelope](envelop
 * `points`: Collection of point names.
   * _{`point_name`}_: Point name.
     * `present_value`: The specific point data reading.
+* `partial_update`: Optional indicator if this is an incremental update (not all points included).
 
 Telemetry update messages should be sent "as needed" or according to specific requirements as
 stipulated in the `config` block. The basic `pointset` telemetry message for a device should
-contain the values for all representative points from that device, as determined by the associated `config` block. If no points are specified in the `config` block, the device programming determines the representative points. Incremental updates (e.g. for COV) can
-send only the specific updated points as an optimization.
+contain the values for all representative points from that device, as determined by the associated
+`config` block. If no points are specified in the `config` block, the device programming determines
+the representative points.
+
+Incremental updates (e.g. for COV) can send only the specific updated points as an optimization,
+while setting the top-level `partial_update` [field to `true`](../tests/event_pointset.tests/partial.json).
+These messages may be indiscriminately dropped by the backend systems, so a periodic full-update
+must still be sent (as per `sample_rate_sec` below). Sending an incomplete update without this
+flag is considered a validation error.
 
 ## State
 
