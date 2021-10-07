@@ -85,3 +85,6 @@ dropped. If the device does not know about a stipulated point then it should rep
 point with an _error_ level `status` entry in its `state` message, and exclude it from the telemetry message. If a `config` block is not present,
 or does not contain a `pointset.points` object, then the device should determine on its own
 which points to report.
+
+If `sample_rate_sec` is not defined (or zero), then the system is expected to send an update at least every
+600 seconds (default value). A negative value would mean "don't send updates."
