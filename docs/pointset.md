@@ -38,8 +38,8 @@ the representative points.
 Incremental updates (e.g. for COV) can send only the specific updated points as an optimization,
 while setting the top-level `partial_update` [field to `true`](../tests/event_pointset.tests/partial.json).
 These messages may be indiscriminately dropped by the backend systems, so a periodic full-update
-must still be sent (as per `sample_rate_sec` below). Sending a partial update, where all fields are not
-included, without this flag is considered a validation error.
+must still be sent (as per `sample_rate_sec` below). Sending an update where all expected points are not
+included, without this flag, is considered a validation error.
 
 ## State
 
