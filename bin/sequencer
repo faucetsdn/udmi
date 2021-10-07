@@ -38,3 +38,5 @@ bin/loop_sequences 2>&1 | tee $TEST_LOG
 
 echo
 fgrep 'RESULT ' $TEST_LOG
+
+echo SUMMARY `fgrep 'RESULT ' $TEST_LOG | awk '{print $3, $2}' | sort | awk '{print $2}'`
