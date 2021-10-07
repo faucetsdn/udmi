@@ -18,7 +18,7 @@
       "maximum": 1
     },
     "partial_update": {
-      "description": "Indicates if this is a partial update (all expected points not included)",
+      "description": "Indicates if this is a partial update (only some points may be included)",
       "type": "boolean"
     },
     "points": {
