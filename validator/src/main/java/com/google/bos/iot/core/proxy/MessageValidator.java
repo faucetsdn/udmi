@@ -63,7 +63,7 @@ public class MessageValidator {
       return JsonSchemaFactory.newBuilder()
           .setLoadingConfiguration(
               LoadingConfiguration.newBuilder()
-                  .addScheme("scheme", new RelativeDownloader())
+                  .addScheme("file", new RelativeDownloader())
                   .freeze())
           .freeze()
           .getJsonSchema(rawSchema);
@@ -77,7 +77,7 @@ public class MessageValidator {
 
     @Override
     public InputStream fetch(URI source) {
-      String url = source.getPath();
+      String url = source.toString();
       try {
         if (!url.startsWith(FILE_URL_PREFIX)) {
           throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
