@@ -383,7 +383,7 @@ class LocalDevice {
   }
 
   private String getPublicKeyFile() {
-    if (isDeviceKeySource() || !hasAuthType()) {
+    if (!hasAuthType()) {
       return null;
     }
     return PUBLIC_KEY_FILE_MAP.get(getAuthType());
