@@ -10,6 +10,7 @@ class PointPointsetMetadata:
     self.baseline_value = None
     self.baseline_tolerance = None
     self.baseline_state = None
+    self.cov_increment = None
     self.ref = None
 
   @staticmethod
@@ -22,6 +23,7 @@ class PointPointsetMetadata:
     result.baseline_value = source.get('baseline_value')
     result.baseline_tolerance = source.get('baseline_tolerance')
     result.baseline_state = source.get('baseline_state')
+    result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
     return result
 
@@ -53,6 +55,8 @@ class PointPointsetMetadata:
       result['baseline_tolerance'] = self.baseline_tolerance # 5
     if self.baseline_state:
       result['baseline_state'] = self.baseline_state # 5
+    if self.cov_increment:
+      result['cov_increment'] = self.cov_increment # 5
     if self.ref:
       result['ref'] = self.ref # 5
     return result
