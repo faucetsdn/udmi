@@ -76,15 +76,15 @@ block with the following structure:
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
       * (`set_value`): Optional setting to control the specificed device point. See [writeback documentation](/docs/writeback.md).
-      * (`cov_threshold`):  Optional threshold for triggering a COV telemetry update.
+      * (`cov_threshold`): Optional threshold for triggering a COV telemetry update.
 
 The points defined in the `config.pointset.points` dictionary is the authoritative source
 indicating the representative points for the device (in both `telemetry` and `state` messages). If
 the device has additional points that are _not_ stipulated in the config they should be silently
 dropped. If the device does not know about a stipulated point then it should report it as a
-point with an _error_ level `status` entry in its `state` message, and exclude it from the telemetry message. If a `config` block is not present,
-or does not contain a `pointset.points` object, then the device should determine on its own
-which points to report.
+point with an _error_ level `status` entry in its `state` message, and exclude it from the telemetry message.
+If a `config` block is not present, or does not contain a `pointset.points` object,
+then the device should determine on its own which points to report.
 
 If `sample_rate_sec` is not defined (or zero), then the system is expected to send an update at least every
-600 seconds (default value). A negative value would mean "don't send updates."
+300 seconds (5 minutes as a default value). A negative value would mean "don't send updates."
