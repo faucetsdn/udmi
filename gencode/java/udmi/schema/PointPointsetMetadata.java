@@ -21,19 +21,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "baseline_value",
     "baseline_tolerance",
     "baseline_state",
+    "cov_increment",
     "ref"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetMetadata {
 
     /**
-     * Expected unit configuration for the point.
+     * Expected unit configuration for the point
      * 
      */
     @JsonProperty("units")
-    @JsonPropertyDescription("Expected unit configuration for the point.")
+    @JsonPropertyDescription("Expected unit configuration for the point")
     public String units;
+    /**
+     * Indicates if this point is writable (else read-only)
+     * 
+     */
     @JsonProperty("writeable")
+    @JsonPropertyDescription("Indicates if this point is writable (else read-only)")
     public Boolean writeable;
     @JsonProperty("baseline_value")
     public Object baseline_value;
@@ -41,6 +47,13 @@ public class PointPointsetMetadata {
     public Double baseline_tolerance;
     @JsonProperty("baseline_state")
     public String baseline_state;
+    /**
+     * Triggering threshold for partial cov update publishing
+     * 
+     */
+    @JsonProperty("cov_increment")
+    @JsonPropertyDescription("Triggering threshold for partial cov update publishing")
+    public Double cov_increment;
     /**
      * A local network reference for a point, e.g. BACnet address or Modbus register
      * 
@@ -58,6 +71,7 @@ public class PointPointsetMetadata {
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.writeable == null)? 0 :this.writeable.hashCode()));
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
+        result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         return result;
     }
 
@@ -70,7 +84,7 @@ public class PointPointsetMetadata {
             return false;
         }
         PointPointsetMetadata rhs = ((PointPointsetMetadata) other);
-        return (((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.writeable == rhs.writeable)||((this.writeable!= null)&&this.writeable.equals(rhs.writeable))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))));
+        return ((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.writeable == rhs.writeable)||((this.writeable!= null)&&this.writeable.equals(rhs.writeable))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
     }
 
 }
