@@ -62,7 +62,7 @@ public abstract class SequenceValidator {
   private static final String deviceId;
   private static final String siteModel;
   private static final String registryId;
-  private static final String serial_no;
+  protected static final String serial_no;
   protected static final Metadata deviceMetadata;
   protected static final Config generatedConfig;
   private static final File deviceOutputDir;
@@ -331,7 +331,7 @@ public abstract class SequenceValidator {
     if (updateState(subFolder, "system", SystemState.class, message,
         state -> deviceState.system = state)) {
       Date last_config = deviceState.system == null ? null : deviceState.system.last_config;
-      System.err.printf("%s received state last_config %s%n", getTimestamp(), last_config);
+      System.err.printf("%s received state last_config %s%n", getTimestamp(), getTimestamp(last_config));
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,
         state -> deviceState.pointset = state)) {
@@ -384,13 +384,17 @@ public abstract class SequenceValidator {
     waitingCondition = null;
   }
 
-  protected String getTimestamp() {
+  protected String getTimestamp(Date date) {
     try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      String dateString = OBJECT_MAPPER.writeValueAsString(date);
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
     }
+  }
+
+  protected String getTimestamp() {
+    return getTimestamp(new Date());
   }
 
   private void receiveMessage() {

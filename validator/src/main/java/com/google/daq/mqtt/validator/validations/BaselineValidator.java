@@ -18,6 +18,7 @@ public class BaselineValidator extends SequenceValidator {
   public static final String FAILURE_STATE = "failure";
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
+  private Date prevConfig;
 
   @Before
   public void makePoints() {
@@ -30,7 +31,7 @@ public class BaselineValidator extends SequenceValidator {
     } catch (SkipTest skipTest) {
       System.err.println("Not setting config points: " + skipTest.getMessage());
     }
-    untilTrue(this::validSerialNo, "valid serial no");
+    untilTrue(this::validSerialNo, "valid serial no " + serial_no);
   }
 
   private void ensurePointConfig(String target) {
@@ -55,11 +56,21 @@ public class BaselineValidator extends SequenceValidator {
   @Test
   public void system_last_update() {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
-    Date prevConfig = deviceState.system.last_config;
+    prevConfig = deviceState.system.last_config;
+    System.err.printf("%s previous last_config was %s%n", getTimestamp(), getTimestamp(prevConfig));
     updateConfig();
-    untilTrue(() -> !prevConfig.equals(deviceState.system.last_config), "state last_config match");
-    System.err.printf("%s last_config updated from %s to %s%n", getTimestamp(), prevConfig,
-        deviceState.system.last_config);
+    Date expectedConfig = deviceConfig.timestamp;
+    System.err.printf("%s expected last_config is %s%n", getTimestamp(), getTimestamp(expectedConfig));
+    untilTrue(() -> {
+      Date newConfig = deviceState.system.last_config;
+      if (!newConfig.equals(prevConfig)) {
+        System.err
+            .printf("%s received new last_config %s%n", getTimestamp(), getTimestamp(newConfig));
+        prevConfig = newConfig;
+      }
+      return !expectedConfig.equals(newConfig);
+    }, "state last_config match");
+    System.err.printf("%s last_config update match %s%n", getTimestamp(), getTimestamp(expectedConfig));
   }
 
   @Test
