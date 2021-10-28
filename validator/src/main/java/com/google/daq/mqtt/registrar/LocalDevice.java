@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -50,6 +49,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
@@ -232,19 +233,19 @@ class LocalDevice {
     Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
     Set<String> actualFiles = ImmutableSet.copyOf(files);
     Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
-    SetView<String> missing = Sets.difference(expectedFiles, actualFiles);
+    SortedSet<String> missing = new TreeSet<>(Sets.difference(expectedFiles, actualFiles));
     if (!missing.isEmpty()) {
       exceptionMap.put("missing", new RuntimeException("Missing files: " + missing));
     }
-    SetView<String> extra =
-        Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
+    SortedSet<String> extra = new TreeSet<>(
+        Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES));
     if (!extra.isEmpty()) {
       exceptionMap.put("extra", new RuntimeException("Extra files: " + extra));
     }
     String[] outFiles = outDir.list();
     if (outFiles != null) {
       Set<String> outSet = ImmutableSet.copyOf(outFiles);
-      Set<String> extraOut = Sets.difference(outSet, OUT_FILES);
+      SortedSet<String> extraOut = new TreeSet<>(Sets.difference(outSet, OUT_FILES));
       if (!extraOut.isEmpty()) {
         exceptionMap.put("out", new RuntimeException("Extra out files: " + extraOut));
       }
