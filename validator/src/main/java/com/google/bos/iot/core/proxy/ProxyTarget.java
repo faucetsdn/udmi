@@ -138,9 +138,12 @@ public class ProxyTarget {
 
   private MessagePublisher newMqttPublisher(String deviceId) {
     initializedTimes.put(deviceId, LocalDateTime.now());
-    info("Publishers create " + deviceId);
     Device device = cloudIotManager.fetchDevice(deviceId);
     Map<String, String> metadata = device.getMetadata();
+    if (metadata == null || !metadata.containsKey("key_algorithm")) {
+      return null;
+    }
+    info("Publishers create " + deviceId);
     String keyAlgorithm = metadata.get("key_algorithm");
     String key_bytes = metadata.get("key_bytes");
     byte[] keyBytes = Base64.getDecoder().decode(key_bytes);
@@ -161,34 +164,38 @@ public class ProxyTarget {
     try {
       Device device = cloudIotManager.fetchDevice(deviceId);
       Map<String, String> metadata = device.getMetadata();
+      if (metadata == null) {
+        return new Metadata();
+      }
       String udmi_metadata = metadata.get(UDMI_METADATA);
       if (udmi_metadata == null) {
         return new Metadata();
       }
       return OBJECT_MAPPER.readValue(udmi_metadata, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading device udmi metadata" + deviceId, e);
+      throw new RuntimeException("While loading device udmi metadata for " + deviceId, e);
     }
   }
 
-  public void publish(String deviceId, String subFolder, String data) {
+  public boolean publish(String deviceId, String subFolder, String data) {
     if (proxyConfig == null) {
-      return;
+      return false;
     }
-    if (subFolder == null) {
+    if (subFolder == null || "".equals(subFolder)) {
       info("Ignoring message with no subFolder for " + deviceId);
-      return;
+      return false;
     }
     if (shouldIgnoreTarget(deviceId)) {
         info("Ignoring " + subFolder + " message for " + deviceId);
-        return;
+        return false;
     }
-    info("Sending " + subFolder + " message for " + deviceId);
     try {
       MessagePublisher messagePublisher = getMqttPublisher(deviceId);
       if (messagePublisher == null) {
-        return;
+        info("Ignoring publisher for " + deviceId);
+        return false;
       }
+      info("Sending " + subFolder + " message for " + deviceId);
       String mqttTopic = STATE_SUBFOLDER.equals(subFolder) ? STATE_TOPIC :
           String.format(EVENTS_TOPIC_FORMAT, subFolder);
       messagePublisher.publish(deviceId, mqttTopic, data);
@@ -196,7 +203,9 @@ public class ProxyTarget {
     } catch (Exception e) {
       LOG.error("Problem publishing device " + deviceId, e);
       clearMqttPublisher(deviceId);
+      return false;
     }
+    return true;
   }
 
   private boolean shouldIgnoreTarget(String deviceId) {

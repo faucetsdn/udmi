@@ -130,6 +130,9 @@ public class IotCoreProxy {
   private void validateMessage(Map<String, String> attributes, String data) {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
+    if (subType == null) {
+      return;
+    }
     try {
       if (!subFolder.equals("state") && !subFolder.equals("config")) {
         subFolder = "event_" + subFolder;
