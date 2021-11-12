@@ -187,6 +187,7 @@ class LocalDevice {
 
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
+  private final File siteDir;
   private final File deviceDir;
   private final File outDir;
   private final Metadata metadata;
@@ -199,11 +200,13 @@ class LocalDevice {
   private CloudDeviceSettings settings;
 
   LocalDevice(
-      File devicesDir, String deviceId, Map<String, JsonSchema> schemas, String generation) {
+      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+      String generation) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
+      this.siteDir = siteDir;
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -227,7 +230,8 @@ class LocalDevice {
   }
 
   public void validateExpected() {
-    ExceptionMap exceptionMap = new ExceptionMap(deviceDir.getPath());
+    Path relativized = siteDir.toPath().relativize(deviceDir.toPath());
+    ExceptionMap exceptionMap = new ExceptionMap(relativized.toString());
 
     String[] files = deviceDir.list();
     Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
@@ -558,28 +562,40 @@ class LocalDevice {
   }
 
   private String fakeProjectId() {
-    return metadata.system.location.site.toLowerCase();
+    if (metadata != null && metadata.system != null && metadata.system.location != null
+        && metadata.system.location.site != null) {
+      return metadata.system.location.site.toLowerCase();
+    } else {
+      return "unknown";
+    }
   }
 
   private void checkConsistency(String expectedSite) {
-    String assetName = metadata.system.physical_tag.asset.name;
-    Preconditions.checkState(
-        deviceId.equals(assetName),
-        String.format(
-            "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
+    if (metadata == null || metadata.system == null) {
+      return;
+    }
+    if (metadata.system.physical_tag != null) {
+      String assetName = metadata.system.physical_tag.asset.name;
+      Preconditions.checkState(
+          deviceId.equals(assetName),
+          String.format(
+              "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
 
-    String assetSite = metadata.system.physical_tag.asset.site;
-    Preconditions.checkState(
-        expectedSite.equals(assetSite),
-        String.format(
-            "system.physical_tag.asset.site %s does not match expected %s",
-            assetSite, expectedSite));
+      String assetSite = metadata.system.physical_tag.asset.site;
+      Preconditions.checkState(
+          expectedSite.equals(assetSite),
+          String.format(
+              "system.physical_tag.asset.site %s does not match expected %s",
+              assetSite, expectedSite));
+    }
 
-    String siteName = metadata.system.location.site;
-    Preconditions.checkState(
-        expectedSite.equals(siteName),
-        String.format(
-            "system.location.site %s does not match expected %s", siteName, expectedSite));
+    if (metadata.system.location != null) {
+      String siteName = metadata.system.location.site;
+      Preconditions.checkState(
+          expectedSite.equals(siteName),
+          String.format(
+              "system.location.site %s does not match expected %s", siteName, expectedSite));
+    }
   }
 
   private String makeNumId(Envelope envelope) {
