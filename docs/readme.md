@@ -1,4 +1,4 @@
-# UDMI specification and documentation
+# UDMI specification and tools
 
 ## UDMI specification
 
@@ -15,6 +15,10 @@
 * UDMI transactions
   * Telemetry events
   * Config writeback
+
+## UDMI implementation guide
+
+* UDMI compliance
 
 ## UDMI tools
 
