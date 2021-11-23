@@ -13,14 +13,16 @@ technology stack for compliant IoT devices.
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
 * Passes the [DAQ Validation Tool](validator.md) for all requirements.
 
-# MQTT Topic Table
+# MQTT Topic Suffix Table
 
-| Type     | Category | subFolder |                MQTT Topic              |  Schema File  |
-|----------|----------|-----------|----------------------------------------|---------------|
-| state    | state    | _n/a_     | `/devices/{device_id}/state`           | state.json    |
-| config   | config   | _n/a_     | `/devices/{device_id}/config`          | config.json   |
-| pointset | event    | pointset  | `/devices/{device_id}/events/pointset` | pointset.json |
-| system   | event    | system    | `/devices/{device_id}/events/system`   | system.json   |
+| Type     | Category | subFolder | MQTT Topic Suffix   | Schema File   |
+| -------- | -------- | --------- | ------------------- | ------------- |
+| state    | state    | _n/a_     | `#/state`           | state.json    |
+| config   | config   | _n/a_     | `#/config`          | config.json   |
+| pointset | event    | pointset  | `#/events/pointset` | pointset.json |
+| system   | event    | system    | `#/events/system`   | system.json   |
+
+For GCP implementations the full topic would be `/devices/{device_id}/{suffix}`
 
 # Backend Systems
 
