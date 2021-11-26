@@ -5,13 +5,14 @@ import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Pointset Metadata
  * <p>
- * 
+ * Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,11 +23,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class PointsetMetadata {
 
     /**
-     * 
+     * Information about a specific point name of the device.
      * (Required)
      * 
      */
     @JsonProperty("points")
+    @JsonPropertyDescription("Information about a specific point name of the device.")
     public HashMap<String, PointPointsetMetadata> points;
 
     @Override

@@ -1,23 +1,15 @@
 {
   "title": "Localnet Metadata",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "subsystem": {
-      "title": "Subsystem Reference",
-      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, SubsystemLocalnetMetadata>",
       "patternProperties": {
         "^[a-z0-9-]+$": {
-          "additionalProperties": false,
-          "properties": {
-            "local_id": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "local_id"
-          ]
+          "$ref": "file:metadata_localnet_subsystem.json"
         }
       }
     }

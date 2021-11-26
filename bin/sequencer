@@ -1,0 +1,42 @@
+#!/bin/bash -e
+#
+# Command line wrapper to create a config file, and pass off
+# to sequence looper for complete sequence run.
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+TEST_LOG=/tmp/test_log.txt
+
+if [ $# -lt 3 -o $# -gt 4 ]; then
+    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO]
+    false
+fi
+
+site_path=$(realpath $1)
+project_id=$2
+device_id=$3
+shift 3
+
+serial_no=${1:-//}
+
+cd $ROOT_DIR
+
+echo Writing config to /tmp/validator_config.json:
+cat <<EOF > /tmp/validator_config.json
+{
+  "project_id": "$project_id",
+  "site_model": "$site_path",
+  "device_id": "$device_id",
+  "serial_no": "$serial_no",
+  "key_file": "$site_path/validator/rsa_private.pkcs8"
+}
+EOF
+
+cat /tmp/validator_config.json
+
+bin/loop_sequences 2>&1 | tee $TEST_LOG
+
+echo
+fgrep 'RESULT ' $TEST_LOG
+
+echo SUMMARY `fgrep 'RESULT ' $TEST_LOG | awk '{print $3, $2}' | sort | awk '{print $2}'`

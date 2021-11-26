@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,14 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class LocalnetMetadata__1 {
 
     /**
-     * Subsystem Reference
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("subsystem")
-    public SubsystemReference__1 subsystem;
+    public HashMap<String, SubsystemLocalnetMetadata> subsystem;
 
     @Override
     public int hashCode() {

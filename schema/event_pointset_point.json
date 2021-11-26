@@ -1,10 +1,13 @@
 {
   "title": "Point Pointset Event",
+  "description": "Object representation for for a single point",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "present_value": {
+      "description": "The specific point data reading",
+      "examples": [24.1, true, 4]
     }
   },
   "required": [

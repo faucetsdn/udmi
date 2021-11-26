@@ -35,6 +35,13 @@ The `bin/test_schema` script runs a regression suite of all schemas against all 
 This must pass before any PR can be approved. If there is any failure, a bunch of diagnostic
 information will be included about what exactly went wrong.
 
+## Project Exceptions
+
+In cases where there's an issue that should be excluded form being an error in the validator
+output, it can be marked as an _exception_ by including an [exceptions.json](exceptions.json)
+file in the appropriate site directory. For given entity type prefixes (`AHU-`) a set of
+reg-ex matches can be used to exclude specific error cases.
+
 ## Error Output
 
 If there is an error validating a particular device, a warning/error message will be shown

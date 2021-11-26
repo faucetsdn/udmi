@@ -1,6 +1,7 @@
 """Generated class for event.json"""
 from .event_system import SystemEvent
 from .event_pointset import PointsetEvent
+from .event_discovery import Discovery
 
 
 class Event:
@@ -9,6 +10,7 @@ class Event:
   def __init__(self):
     self.system = None
     self.pointset = None
+    self.discovery = None
 
   @staticmethod
   def from_dict(source):
@@ -17,6 +19,7 @@ class Event:
     result = Event()
     result.system = SystemEvent.from_dict(source.get('system'))
     result.pointset = PointsetEvent.from_dict(source.get('pointset'))
+    result.discovery = Discovery.from_dict(source.get('discovery'))
     return result
 
   @staticmethod
@@ -41,4 +44,6 @@ class Event:
       result['system'] = self.system.to_dict() # 4
     if self.pointset:
       result['pointset'] = self.pointset.to_dict() # 4
+    if self.discovery:
+      result['discovery'] = self.discovery.to_dict() # 4
     return result

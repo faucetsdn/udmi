@@ -1,13 +1,19 @@
 {
   "title": "Point Pointset Config",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "ref": {
       "type": "string"
     },
+    "units": {
+      "description": "If specified, indicates the units the device should report the data in.",
+      "type": "string"
+    },
     "set_value": {
+      "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
+      "examples": [22.4]
     }
   }
 }

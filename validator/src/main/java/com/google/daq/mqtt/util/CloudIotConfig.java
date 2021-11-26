@@ -5,4 +5,5 @@ public class CloudIotConfig {
   public String cloud_region;
   public String site_name;
   public String config_topic;
+  public boolean block_unknown;
 }

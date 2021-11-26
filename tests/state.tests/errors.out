@@ -7,7 +7,7 @@ Validating 1 schemas
         object has missing required properties (["category","message"])
         object has missing required properties (["last_config","make_model","operational","serial_no"])
         object has missing required properties (["version"])
-        object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution","units"]
+        object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
         object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","status","system_status"]
         object instance has properties which are not allowed by the schema: ["id","status"]
         object instance has properties which are not allowed by the schema: ["revision"]

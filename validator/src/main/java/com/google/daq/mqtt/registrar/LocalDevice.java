@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -32,10 +31,12 @@ import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,6 +49,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
@@ -103,6 +106,7 @@ class LocalDevice {
   private static final String SAMPLES_DIR = "samples";
   private static final String AUX_DIR = "aux";
   private static final String OUT_DIR = "out";
+  private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
 
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
 
@@ -183,6 +187,7 @@ class LocalDevice {
 
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
+  private final File siteDir;
   private final File deviceDir;
   private final File outDir;
   private final Metadata metadata;
@@ -195,21 +200,29 @@ class LocalDevice {
   private CloudDeviceSettings settings;
 
   LocalDevice(
-      File devicesDir, String deviceId, Map<String, JsonSchema> schemas, String generation) {
+      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+      String generation) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
+      this.siteDir = siteDir;
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
-      if (!outDir.exists()) {
-        outDir.mkdir();
-      }
+      prepareOutDir();
       metadata = readMetadata();
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
+  }
+
+  private void prepareOutDir() {
+    if (!outDir.exists()) {
+      outDir.mkdir();
+    }
+    File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
+    exceptionLog.delete();
   }
 
   static boolean deviceExists(File devicesDir, String deviceName) {
@@ -217,25 +230,26 @@ class LocalDevice {
   }
 
   public void validateExpected() {
-    ExceptionMap exceptionMap = new ExceptionMap(deviceDir.getPath());
+    Path relativized = siteDir.toPath().relativize(deviceDir.toPath());
+    ExceptionMap exceptionMap = new ExceptionMap(relativized.toString());
 
     String[] files = deviceDir.list();
     Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
     Set<String> actualFiles = ImmutableSet.copyOf(files);
     Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
-    SetView<String> missing = Sets.difference(expectedFiles, actualFiles);
+    SortedSet<String> missing = new TreeSet<>(Sets.difference(expectedFiles, actualFiles));
     if (!missing.isEmpty()) {
       exceptionMap.put("missing", new RuntimeException("Missing files: " + missing));
     }
-    SetView<String> extra =
-        Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES);
+    SortedSet<String> extra = new TreeSet<>(
+        Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES));
     if (!extra.isEmpty()) {
       exceptionMap.put("extra", new RuntimeException("Extra files: " + extra));
     }
     String[] outFiles = outDir.list();
     if (outFiles != null) {
       Set<String> outSet = ImmutableSet.copyOf(outFiles);
-      Set<String> extraOut = Sets.difference(outSet, OUT_FILES);
+      SortedSet<String> extraOut = new TreeSet<>(Sets.difference(outSet, OUT_FILES));
       if (!extraOut.isEmpty()) {
         exceptionMap.put("out", new RuntimeException("Extra out files: " + extraOut));
       }
@@ -358,11 +372,12 @@ class LocalDevice {
     }
     String authType = getAuthType();
     Set<String> certFile = getCertFiles();
-    Set<String> publicKeyFile = Set.of(getPublicKeyFile());
+    String keyFile = getPublicKeyFile();
+    Set<String> publicKeyFiles = keyFile != null ? Set.of(keyFile) : Set.of();
     Set<String> privateKeyFiles = getPrivateKeyFiles();
     return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
-        ? Sets.union(Sets.union(publicKeyFile, certFile), privateKeyFiles)
-        : Sets.union(publicKeyFile, privateKeyFiles);
+        ? Sets.union(Sets.union(publicKeyFiles, certFile), privateKeyFiles)
+        : Sets.union(publicKeyFiles, privateKeyFiles);
   }
 
   private Set<String> getPrivateKeyFiles() {
@@ -373,7 +388,7 @@ class LocalDevice {
   }
 
   private String getPublicKeyFile() {
-    if (isDeviceKeySource() || !hasAuthType()) {
+    if (!hasAuthType()) {
       return null;
     }
     return PUBLIC_KEY_FILE_MAP.get(getAuthType());
@@ -511,6 +526,9 @@ class LocalDevice {
   PointPointsetConfig ConfigFromMetadata(PointPointsetMetadata metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.ref = metadata.ref;
+    if (Boolean.TRUE.equals(metadata.writeable)) {
+      pointConfig.set_value = metadata.baseline_value;
+    }
     return pointConfig;
   }
 
@@ -544,28 +562,40 @@ class LocalDevice {
   }
 
   private String fakeProjectId() {
-    return metadata.system.location.site.toLowerCase();
+    if (metadata != null && metadata.system != null && metadata.system.location != null
+        && metadata.system.location.site != null) {
+      return metadata.system.location.site.toLowerCase();
+    } else {
+      return "unknown";
+    }
   }
 
   private void checkConsistency(String expectedSite) {
-    String assetName = metadata.system.physical_tag.asset.name;
-    Preconditions.checkState(
-        deviceId.equals(assetName),
-        String.format(
-            "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
+    if (metadata == null || metadata.system == null) {
+      return;
+    }
+    if (metadata.system.physical_tag != null) {
+      String assetName = metadata.system.physical_tag.asset.name;
+      Preconditions.checkState(
+          deviceId.equals(assetName),
+          String.format(
+              "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
 
-    String assetSite = metadata.system.physical_tag.asset.site;
-    Preconditions.checkState(
-        expectedSite.equals(assetSite),
-        String.format(
-            "system.physical_tag.asset.site %s does not match expected %s",
-            assetSite, expectedSite));
+      String assetSite = metadata.system.physical_tag.asset.site;
+      Preconditions.checkState(
+          expectedSite.equals(assetSite),
+          String.format(
+              "system.physical_tag.asset.site %s does not match expected %s",
+              assetSite, expectedSite));
+    }
 
-    String siteName = metadata.system.location.site;
-    Preconditions.checkState(
-        expectedSite.equals(siteName),
-        String.format(
-            "system.location.site %s does not match expected %s", siteName, expectedSite));
+    if (metadata.system.location != null) {
+      String siteName = metadata.system.location.site;
+      Preconditions.checkState(
+          expectedSite.equals(siteName),
+          String.format(
+              "system.location.site %s does not match expected %s", siteName, expectedSite));
+    }
   }
 
   private String makeNumId(Envelope envelope) {
@@ -648,8 +678,18 @@ class LocalDevice {
     deviceNumId = numId;
   }
 
-  public ExceptionMap getErrorMap() {
-    return exceptionMap;
+  public void captureError(String exceptionType, Exception exception) {
+    exceptionMap.put(exceptionType, exception);
+    File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
+    try {
+      try (FileWriter fileWriter = new FileWriter(exceptionLog, true);
+           PrintWriter printWriter = new PrintWriter(fileWriter)) {
+        printWriter.println(exceptionType);
+        exception.printStackTrace(printWriter);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Writing exception log file " + exceptionLog.getAbsolutePath(), e);
+    }
   }
 
   public boolean isValid() {

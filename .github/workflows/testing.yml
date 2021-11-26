@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 13 * * *'
 
 jobs:
   unit:
@@ -34,8 +34,11 @@ jobs:
           node-version: '15'
       - name: Install Chrome
         run: |
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          # Sometimes the unstable version is desirable to match versions with ChromeDriver
+          #sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+          #sudo apt-get remove google-chrome-stable
+          #sudo apt-get update && sudo apt-get install google-chrome-unstable
+          google-chrome --version
       - name: Install dependencies
         run: cd udms && npm install
       - name: Install angular command line
@@ -56,10 +59,13 @@ jobs:
         with:
           java-version: '11'
       - name: sequence tests
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          bin/setup_site
-          cd udmi_site_model
-          ../bin/sequence "${{ secrets.GCP_TARGET_PROJECT }}" AHU-1
+          bin/test_sequencer $GCP_TARGET_PROJECT
+          fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
+          diff /tmp/results.txt etc/sequence.out
       - name: validation logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
@@ -68,3 +74,11 @@ jobs:
         run: |
           echo Pubber output logs:
           cat pubber.out || true
+  
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - name: schema docs
+        run: bin/gendocs check

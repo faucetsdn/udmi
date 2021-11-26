@@ -6,6 +6,7 @@ class PointPointsetState:
   """Generated schema class"""
 
   def __init__(self):
+    self.units = None
     self.value_state = None
     self.status = None
 
@@ -14,6 +15,7 @@ class PointPointsetState:
     if not source:
       return None
     result = PointPointsetState()
+    result.units = source.get('units')
     result.value_state = source.get('value_state')
     result.status = Entry.from_dict(source.get('status'))
     return result
@@ -36,6 +38,8 @@ class PointPointsetState:
 
   def to_dict(self):
     result = {}
+    if self.units:
+      result['units'] = self.units # 5
     if self.value_state:
       result['value_state'] = self.value_state # 5
     if self.status:

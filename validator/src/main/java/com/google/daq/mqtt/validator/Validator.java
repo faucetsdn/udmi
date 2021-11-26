@@ -578,7 +578,7 @@ public class Validator {
       return JsonSchemaFactory.newBuilder()
           .setLoadingConfiguration(
               LoadingConfiguration.newBuilder()
-                  .addScheme("scheme", new RelativeDownloader())
+                  .addScheme("file", new RelativeDownloader())
                   .freeze())
           .freeze()
           .getJsonSchema(OBJECT_MAPPER.readTree(schemaStream));
@@ -592,7 +592,7 @@ public class Validator {
 
     @Override
     public InputStream fetch(URI source) {
-      String url = source.getPath();
+      String url = source.toString();
       try {
         if (!url.startsWith(FILE_URL_PREFIX)) {
           throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
@@ -631,13 +631,11 @@ public class Validator {
   }
 
   private void validateMessage(JsonSchema schema, Object message) throws ProcessingException {
-    final JsonNode jsonNode;
     try {
-      jsonNode = OBJECT_MAPPER.valueToTree(message);
+      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
     } catch (Exception e) {
       throw new RuntimeException("While converting to json node", e);
     }
-    validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
   }
 
   private void validateFile(

@@ -1,18 +1,22 @@
 {
   "title": "Pointset State",
+  "description": "A set of points reporting telemetry data.",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "state_etag": {
+      "description": "An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>",
       "type": "string",
       "maxLength": 32
     },
     "points": {
+      "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, PointPointsetState>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "description": "Object representation for for a single point",
           "$ref": "file:state_pointset_point.json#"
         }
       }

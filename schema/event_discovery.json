@@ -1,0 +1,34 @@
+{
+  "title": "Discovery",
+  "description": "Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the discover telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Major version of the UDMI schema",
+      "enum": [
+        1
+      ]
+    },
+    "families": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:event_discovery_family.json"
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "families"
+  ]
+}

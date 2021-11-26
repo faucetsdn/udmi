@@ -6,6 +6,7 @@ import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -28,13 +29,33 @@ public class PointsetConfig {
 
     @JsonProperty("state_etag")
     public java.lang.String state_etag;
+    /**
+     * An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>
+     * 
+     */
     @JsonProperty("set_value_expiry")
+    @JsonPropertyDescription("An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>")
     public Date set_value_expiry;
+    /**
+     * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
+     * 
+     */
     @JsonProperty("sample_limit_sec")
+    @JsonPropertyDescription("Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.")
     public Integer sample_limit_sec;
+    /**
+     * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this.
+     * 
+     */
     @JsonProperty("sample_rate_sec")
+    @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this.")
     public Integer sample_rate_sec;
+    /**
+     * The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>
+     * 
+     */
     @JsonProperty("points")
+    @JsonPropertyDescription("The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>")
     public HashMap<String, PointPointsetConfig> points;
 
     @Override

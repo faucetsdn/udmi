@@ -3,6 +3,7 @@ from .metadata_cloud import CloudMetadata
 from .metadata_system import SystemMetadata
 from .metadata_gateway import GatewayMetadata
 from .metadata_localnet import LocalnetMetadata
+from .metadata_testing import TestingMetadata
 from .metadata_pointset import PointsetMetadata
 
 
@@ -12,11 +13,13 @@ class Metadata:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.description = None
     self.hash = None
     self.cloud = None
     self.system = None
     self.gateway = None
     self.localnet = None
+    self.testing = None
     self.pointset = None
 
   @staticmethod
@@ -26,11 +29,13 @@ class Metadata:
     result = Metadata()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.description = source.get('description')
     result.hash = source.get('hash')
     result.cloud = CloudMetadata.from_dict(source.get('cloud'))
     result.system = SystemMetadata.from_dict(source.get('system'))
     result.gateway = GatewayMetadata.from_dict(source.get('gateway'))
     result.localnet = LocalnetMetadata.from_dict(source.get('localnet'))
+    result.testing = TestingMetadata.from_dict(source.get('testing'))
     result.pointset = PointsetMetadata.from_dict(source.get('pointset'))
     return result
 
@@ -56,6 +61,8 @@ class Metadata:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.description:
+      result['description'] = self.description # 5
     if self.hash:
       result['hash'] = self.hash # 5
     if self.cloud:
@@ -66,6 +73,8 @@ class Metadata:
       result['gateway'] = self.gateway.to_dict() # 4
     if self.localnet:
       result['localnet'] = self.localnet.to_dict() # 4
+    if self.testing:
+      result['testing'] = self.testing.to_dict() # 4
     if self.pointset:
       result['pointset'] = self.pointset.to_dict() # 4
     return result

@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Envelope
  * <p>
- * 
+ * The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/envelope.md>
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -91,7 +91,7 @@ public class Envelope {
     public enum SubFolder {
 
         CONFIG("config"),
-        DISCOVER("discover"),
+        DISCOVERY("discovery"),
         SYSTEM("system"),
         METADATA("metadata"),
         POINTSET("pointset"),

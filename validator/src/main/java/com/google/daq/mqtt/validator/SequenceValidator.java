@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
+import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
+import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -17,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -24,11 +27,13 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
+import udmi.schema.Metadata;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -41,6 +46,8 @@ public abstract class SequenceValidator {
 
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
+  private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
+  private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -49,12 +56,15 @@ public abstract class SequenceValidator {
       .setSerializationInclusion(Include.NON_NULL);
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
+  public static final String RESULT_SKIP = "skip";
 
   private static final String projectId;
   private static final String deviceId;
   private static final String siteModel;
   private static final String registryId;
-  private static final String serial_no;
+  protected static final String serial_no;
+  protected static final Metadata deviceMetadata;
+  protected static final Config generatedConfig;
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
@@ -67,6 +77,8 @@ public abstract class SequenceValidator {
   protected State deviceState;
 
   public static final String TESTS_OUT_DIR = "tests";
+
+  public static final String SERIAL_NO_MISSING = "//";
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -81,7 +93,8 @@ public abstract class SequenceValidator {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
-      serial_no = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      serial_no = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       throw new RuntimeException("While loading " + CONFIG_FILE, e);
@@ -95,6 +108,9 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath(), e);
     }
+
+    deviceMetadata = readDeviceMetadata();
+    generatedConfig = readGeneratedConfig();
 
     deviceOutputDir = new File("out/devices/" + deviceId);
     try {
@@ -113,26 +129,58 @@ public abstract class SequenceValidator {
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
   }
 
+  private static Metadata readDeviceMetadata() {
+    File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
+      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static Config readGeneratedConfig() {
+    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading generated config file " + deviceConfigFile.getPath());
+      Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
+      Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
+      config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
+    }
+  }
+
   private final Map<String, String> sentConfig = new HashMap<>();
   private final Map<String, String> receivedState = new HashMap<>();
   private String waitingCondition;
-  private boolean check_serial;
+  private boolean confirm_serial;
   private String testName;
   private String last_serial_no;
 
   @Before
   public void setUp() {
-    deviceConfig = new Config();
+    deviceConfig = readGeneratedConfig();
     deviceState = new State();
     sentConfig.clear();
     receivedState.clear();
     waitingCondition = null;
-    check_serial = false;
-    updateConfig();
-    // Do this after the initial config update to force a change.
-    deviceConfig.system = new SystemConfig();
+    confirm_serial = false;
+
+    if (deviceConfig.system.min_loglevel != null &&
+        deviceConfig.system.min_loglevel == INITIAL_MIN_LOGLEVEL) {
+      // If necessary, force a config update by making sure at least one field changes!
+      deviceConfig.system.min_loglevel = null;
+      updateConfig();
+    }
     deviceConfig.system.min_loglevel = INITIAL_MIN_LOGLEVEL;
     queryState();
+  }
+
+  @Test
+  public void valid_serial_no() {
+    Preconditions.checkNotNull(serial_no, "no test serial_no provided");
   }
 
   @Rule
@@ -155,13 +203,22 @@ public abstract class SequenceValidator {
     @Override
     protected void failed(Throwable e, Description description) {
       final String message;
+      final String type;
       if (e instanceof TestTimedOutException) {
         message = "timeout " + waitingCondition;
-      } else {
+        type = RESULT_FAIL;
+      } else if (e instanceof SkipTest) {
         message = e.getMessage();
+        type = RESULT_SKIP;
+      } else {
+        while (e.getCause() != null) {
+          e = e.getCause();
+        }
+        message = e.getMessage();
+        type = RESULT_FAIL;
       }
       System.err.println(getTimestamp() + " failed " + message);
-      recordResult(RESULT_FAIL, description.getMethodName(), message);
+      recordResult(type, description.getMethodName(), message);
     }
   };
 
@@ -204,6 +261,10 @@ public abstract class SequenceValidator {
 
   @After
   public void tearDown() {
+    // Restore the config to a canonical state.
+    deviceConfig = readGeneratedConfig();
+    updateConfig();
+
     deviceConfig = null;
     deviceState = null;
   }
@@ -231,6 +292,9 @@ public abstract class SequenceValidator {
     if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
       System.err.println(getTimestamp() + " updated pointset config");
     }
+    updateConfig("gateway", deviceConfig.gateway);
+    updateConfig("localnet", deviceConfig.localnet);
+    updateConfig("blobset", deviceConfig.blobset);
   }
 
   private <T> T messageConvert(Class<T> target, Map<String, Object> message) {
@@ -267,7 +331,7 @@ public abstract class SequenceValidator {
     if (updateState(subFolder, "system", SystemState.class, message,
         state -> deviceState.system = state)) {
       Date last_config = deviceState.system == null ? null : deviceState.system.last_config;
-      System.err.printf("%s received state last_config %s%n", getTimestamp(), last_config);
+      System.err.printf("%s received state last_config %s%n", getTimestamp(), getTimestamp(last_config));
     }
     if (updateState(subFolder, "pointset", PointsetState.class, message,
         state -> deviceState.pointset = state)) {
@@ -293,31 +357,44 @@ public abstract class SequenceValidator {
       last_serial_no = device_serial;
     }
     boolean serialValid = Objects.equals(serial_no, device_serial);
-    if (!serialValid && check_serial) {
+    if (!serialValid && confirm_serial) {
       throw new IllegalStateException("Unexpected serial_no " + device_serial);
     }
-    check_serial = serialValid;
+    confirm_serial = serialValid;
     return serialValid;
+  }
+
+  private boolean caughtAsFalse(Supplier<Boolean> evaluator) {
+    try {
+      return evaluator.get();
+    } catch (Exception e) {
+      System.err.println(getTimestamp() + " Suppressing exception: " + e.toString());
+      return false;
+    }
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
     System.err.println(getTimestamp() + " start " + waitingCondition);
-    while (!evaluator.get()) {
+    while (!caughtAsFalse(evaluator)) {
       receiveMessage();
     }
     System.err.println(getTimestamp() + " finished " + waitingCondition);
     waitingCondition = null;
   }
 
-  protected String getTimestamp() {
+  protected String getTimestamp(Date date) {
     try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      String dateString = OBJECT_MAPPER.writeValueAsString(date);
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
     }
+  }
+
+  protected String getTimestamp() {
+    return getTimestamp(new Date());
   }
 
   private void receiveMessage() {
