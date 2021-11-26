@@ -1,5 +1,6 @@
 {
   "title": "Localnet Config",
+  "description": "Used to describe device local fieldbus network parameters, to be used for mapping UDMI datapoints to local point references",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -10,8 +11,12 @@
         "^[a-z0-9-]+$": {
           "additionalProperties": false,
           "type": "object",
+          "description": "The type of fieldbus network",
+          "examples": ["bacnet", "modbus"],
           "properties": {
             "local_id": {
+              "description": "The address of a device on the local fieldbus network",
+              "examples": ["4148893"],
               "type": "string"
             }
           },

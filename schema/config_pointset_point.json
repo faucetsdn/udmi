@@ -5,7 +5,9 @@
   "additionalProperties": false,
   "properties": {
     "ref": {
-      "type": "string"
+      "type": "string",
+      "description": "Local reference for the point used for mapping data points to their respective UDMI datapoint name. For example, it could be the internal point name or a BACnet object reference",
+      "examples": ["AI1106.Present_Value"]
     },
     "units": {
       "description": "If specified, indicates the units the device should report the data in.",
