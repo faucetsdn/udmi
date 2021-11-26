@@ -30,7 +30,6 @@ Various adjectives qualify the different flavors of a "device" found in a buildi
 
 #### Connectivity
 How data is moved around on-prem
-
 -   *Passive*: The device has only passive components (thermistor, dry contact)
 -   *Analog*: The device uses an analog connection (1-10V, 4-20mA etc)
 -   *Serial*: The device does not have an IP address, rather uses a wired serial connection.
