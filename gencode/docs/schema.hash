@@ -18,6 +18,7 @@
 90ba67e6f487cdb47b2b92cf663186a200a0a829  schema/event_discovery_family.json
 920d82f3da7788f45ba6cf018beecd4076666b91  schema/state_pointset.json
 9dc5bb26e95f1110b42710d378f9be06a110a1d6  schema/metadata_testing.json
+a6276fbf52dc80e67bd9ab656b08d643621e177e  schema/metadata_pointset_point.json
 ac6e9424c5d367dbb7101a4160c7847321968457  schema/config_system.json
 b00bb8e5305001df21c8c4f7d24ec42e23580d96  schema/event_pointset.json
 b585cbe86e7e702a3535d5bd85dd8cc9b2f165ce  schema/state_pointset_point.json
@@ -25,7 +26,6 @@ b9542e4aecd1e21943702993612bba35b5ce7efe  schema/state_system.json
 c8c82c16099231d81bda86e0cb6a47bc0e607d1e  schema/event.json
 d3ce94976a6c3f23fee2c41e2347101cf7e36c01  schema/config.json
 daaa5b31ad385c27024cc915412e0f27d5102306  schema/event_pointset_point.json
-dfa6a46ab38cd05dcf32c76efd26d0901ce39d98  schema/metadata_pointset_point.json
 e11e038b06c5778a5050c6a1bcf4f8b6e6fd8b89  schema/metadata_localnet.json
 e5ab83b6e18a5dc0673e43e9f5acd1d5b13636a7  schema/state_blobset_blob.json
 e725fac71ca69ee42362e215fef0e49ef081dd98  schema/envelope.json

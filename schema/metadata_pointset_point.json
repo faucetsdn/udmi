@@ -6,10 +6,11 @@
   "additionalProperties": false,
   "properties": {
     "units": {
-      "description": "Expected unit configuration for the point.",
+      "description": "Expected unit configuration for the point",
       "type": "string"
     },
     "writeable": {
+      "description": "Indicates if this point is writable (else read-only)",
       "type": "boolean"
     },
     "baseline_value": {
@@ -19,6 +20,11 @@
     },
     "baseline_state": {
       "type": "string"
+    },
+    "cov_increment": {
+      "description": "Triggering threshold for partial cov update publishing",
+      "examples": [1.2],
+      "type": "number"
     },
     "ref": {
       "description": "A local network reference for a point, e.g. BACnet address or Modbus register",

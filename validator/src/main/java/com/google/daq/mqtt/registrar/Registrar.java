@@ -75,7 +75,7 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
 
   private CloudIotManager cloudIotManager;
-  private File siteConfig;
+  private File siteDir;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private File schemaBase;
   private PubSubPusher pubSubPusher;
@@ -92,7 +92,7 @@ public class Registrar {
         throw new IllegalArgumentException("Args: tool_root site_dir [project_id] [devices...]");
       }
       registrar.setSchemaBase(new File(args[0], SCHEMA_BASE_PATH).getPath());
-      registrar.setSiteConfigPath(args[1]);
+      registrar.setSitePath(args[1]);
       if (args.length > 2) {
         registrar.setProjectId(args[2]);
       }
@@ -119,7 +119,7 @@ public class Registrar {
 
   private void writeErrors() throws Exception {
     Map<String, Map<String, String>> errorSummary = new TreeMap<>();
-    DeviceExceptionManager dem = new DeviceExceptionManager(siteConfig);
+    DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
     localDevices
         .values()
         .forEach(device -> device.writeErrors(dem.forDevice(device.getDeviceId())));
@@ -156,15 +156,15 @@ public class Registrar {
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
   }
 
-  private void setSiteConfigPath(String siteConfigPath) {
+  private void setSitePath(String sitePath) {
     Preconditions.checkNotNull(SCHEMA_NAME, "schemaName not set yet");
-    siteConfig = new File(siteConfigPath);
-    summaryFile = new File(siteConfig, REGISTRATION_SUMMARY_JSON);
+    siteDir = new File(sitePath);
+    summaryFile = new File(siteDir, REGISTRATION_SUMMARY_JSON);
     summaryFile.delete();
   }
 
   private void initializeCloudProject() {
-    File cloudIotConfig = new File(siteConfig, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
+    File cloudIotConfig = new File(siteDir, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, SCHEMA_NAME);
     String configTopic = cloudIotManager.cloudIotConfig.config_topic;
@@ -266,6 +266,9 @@ public class Registrar {
 
   private ExceptionMap blockExtraDevices(Set<String> extraDevices) {
     ExceptionMap exceptionMap = new ExceptionMap("Block devices errors");
+    if (!cloudIotManager.cloudIotConfig.block_unknown) {
+      return exceptionMap;
+    }
     for (String extraName : extraDevices) {
       try {
         System.err.println("Blocking extra device " + extraName);
@@ -364,10 +367,10 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadLocalDevices() {
-    File devicesDir = new File(siteConfig, DEVICES_DIR);
+    File devicesDir = new File(siteDir, DEVICES_DIR);
     String[] devices = devicesDir.list();
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
-    Map<String, LocalDevice> localDevices = loadDevices(devicesDir, devices);
+    Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
     validateExpected(localDevices);
@@ -426,7 +429,8 @@ public class Registrar {
             });
   }
 
-  private Map<String, LocalDevice> loadDevices(File devicesDir, String[] devices) {
+  private Map<String, LocalDevice> loadDevices(File siteDir, File devicesDir,
+      String[] devices) {
     HashMap<String, LocalDevice> localDevices = new HashMap<>();
     for (String deviceName : devices) {
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
@@ -434,7 +438,7 @@ public class Registrar {
         LocalDevice localDevice =
             localDevices.computeIfAbsent(
                 deviceName,
-                keyName -> new LocalDevice(devicesDir, deviceName, schemas, generation));
+                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
