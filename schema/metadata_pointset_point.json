@@ -14,16 +14,27 @@
       "type": "boolean"
     },
     "baseline_value": {
+      "definition": "Used for telemetry validation in a lab environment. Represents the expected baseline point value",
+      "examples": [22]
     },
     "baseline_tolerance": {
-      "type": "number"
+      "type": "number",
+      "definition": "Used for telemetry validation in a lab environment. Maximum deviation from `baseline_vaue` acceptable to consider a point's present vale as expected ",
+      "examples": [2]
     },
     "baseline_state": {
-      "type": "string"
+      "definition": "Used for writeable point testing in a lab environment. Expected state when `baseline_value` is set as the `set_value` in the config message",
+      "enum": [
+        "applied",
+        "updating",
+        "overridden",
+        "invalid",
+        "failure"
+      ]
     },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
-      "examples": [1.2],
+      "examples": [1],
       "type": "number"
     },
     "ref": {
