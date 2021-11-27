@@ -35,20 +35,8 @@
             "z": {
               "description": "The `z` (height) coordinate of the device location in a project specific coordinate system",
               "type": "number"
-            },
-            "lat": {
-              "description": "The `latitude` coordinate of the device location",
-              "type": "number"
-            },
-            "long": {
-              "description": "The `longitude` coordinate of the device location",
-              "type": "number"
             }
-          },
-          "required": [
-            "x",
-            "y"
-          ]
+          }
         }
       },
       "required": [
