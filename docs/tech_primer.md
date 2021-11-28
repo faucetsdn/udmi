@@ -94,7 +94,8 @@ How data is semantically represented
 qualifies device types as meeting a baseline connectivity and security
 requirement by performing a series of predefined tests against a device.
 Qualification can be automated using the [DAQ tool](https://github.com/faucetsdn/daq/). 
-The output of qualification is a report ([example report](https://github.com/faucetsdn/daq/))
+The output of DAQ is a report. 
+[example report](https://github.com/faucetsdn/daq/blob/master/docs/device_report.md))
 
 ### Required Actions
 
@@ -123,7 +124,7 @@ The output of qualification is a report ([example report](https://github.com/fau
 ## Device Management
 
 All devices which are _smart ready_ are required to support
-[UDMI](../readme.md). For guidance on what compliance with the UDMI schema
+[UDMI](../../README.md). For guidance on what compliance with the UDMI schema
 means, refer to [compliance documentation](compliance.md). In addition, the
 workflow provisioning of the devices onto the *cloud* should follow the [UDMI
 workflow](workflow.md). This involves setting up a [site model](site_model.md)
