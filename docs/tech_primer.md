@@ -13,10 +13,10 @@ used.
 There are different levels of "digital maturity" for different buildings. Each
 one has a slightly different scope in terms of what it means to be "complete."
 For the most part, this document addresses the scope of a Smart Ready building:
--   *Legacy*: It works, but does not meet requirements or guidelines.
--   *Compliant*: Meets basic security and networking requirements.
--   *Smart Ready*: On-prem integrated with the cloud using UDMI & DBO.
--   *Digital Building*: Completely integrated with back-end services.
+-   **Legacy**: It works, but does not meet requirements or guidelines.
+-   **Compliant**: Meets basic security and networking requirements.
+-   **Smart Ready**: On-prem integrated with the cloud using UDMI & DBO.
+-   **Digital Building**: Completely integrated with back-end services.
 
 ## Device
 
@@ -30,26 +30,26 @@ Various adjectives qualify the different flavors of a "device" found in a buildi
 
 How data is moved around on-prem
 
--   *Passive*: The device has only passive components (thermistor, dry contact)
--   *Analog*: The device uses an analog connection (1-10V, 4-20mA etc)
--   *Serial*: The device does not have an IP address, rather uses a wired serial connection.
--   *Networked*: The device has its own IP address and presence on the wired or wireless IP network.
--   *Bridge connected*: The device is on an isolated wired or wireless network behind a gateway device that is networked. 
+-   **Passive**: The device has only passive components (thermistor, dry contact)
+-   **Analog**: The device uses an analog connection (1-10V, 4-20mA etc)
+-   **Serial**: The device does not have an IP address, rather uses a wired serial connection.
+-   **Networked**: The device has its own IP address and presence on the wired or wireless IP network.
+-   **Bridge connected**: The device is on an isolated wired or wireless network behind a gateway device that is networked. 
 
 ### Ingestion
 
 How data gets up into the cloud
 
--   *Direct*: Maintains an authenticated connection directly to Cloud IoT Core.
+-   **Direct**: Maintains an authenticated connection directly to Cloud IoT Core.
     -   Must be networked
     -   Has a unique private auth key
--   *Gateway*: A direct device that manages data for other proxied devices.
+-   **Gateway**: A direct device that manages data for other proxied devices.
     -   Bind & attach of proxied devices
     -   Encapsulation anti-pattern
--   *Proxied*: A device that is not direct and is managed through a gateway.
+-   **Proxied**: A device that is not direct and is managed through a gateway.
     -   Proxied networked devices, e.g. BACnet/IP
     -   Proxied non-networked devices, e.g. RS485, DALI
--  * Cloud-Cloud*: A device is managed by a third party who provides a cloud connector
+-  **Cloud-Cloud**: A device is managed by a third party who provides a cloud connector
     -   Approved third party managed service
     -   UDMI virtual device server connects to third party cloud API
 
@@ -57,18 +57,18 @@ How data gets up into the cloud
 
 How data is semantically represented
 
--   *Reporting*: Has an entry in Cloud IoT Core and reports telemetry data.
+-   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
     -   Reporting connected devices
     -   Reporting proxied devices
--   *Logical*: Has a semantic representation in the site building config.
--   *Virtual*: Logical-but-not-reporting.
+-   **Logical**: Has a semantic representation in the site building config.
+-   **Virtual**: Logical-but-not-reporting.
 
 ## Information Sources
 
--   *Qualification Summary* - One for each type of networked device
--   *Digital Building Device Register* - Comprehensive list of all devices on a project
--   *Site Model* - Any ingestion device (direct, gateway, or proxy)
--   *Building Config* - Does omit networked devices that don't report
+-   **Qualification Summary** - One for each type of networked device
+-   **Digital Building Device Register** - Comprehensive list of all devices on a project
+-   **Site Model** - Any ingestion device (direct, gateway, or proxy)
+-   **Building Config** - Does omit networked devices that don't report
 
 ## Cloud IoT Core Definitions
 
