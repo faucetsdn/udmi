@@ -44,11 +44,11 @@ public class PointsetConfig {
     @JsonPropertyDescription("Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.")
     public Integer sample_limit_sec;
     /**
-     * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this.
+     * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.
      * 
      */
     @JsonProperty("sample_rate_sec")
-    @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this.")
+    @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.")
     public Integer sample_rate_sec;
     /**
      * The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>

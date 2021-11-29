@@ -19,6 +19,9 @@ else
     fi
 fi
 
+echo Proxy $ATTRIBUTES_FILE:
+cat $ATTRIBUTES_FILE
+
 java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar \
      com.google.bos.iot.core.proxy.IotCoreProxy \
      $ATTRIBUTES_FILE
