@@ -360,7 +360,7 @@ public class Validator {
           if (dataSink != null) {
             dataSink.validationResult(deviceId, schemaName, attributes, message, null);
           }
-        } catch (ExceptionMap | ProcessingException | ValidationException e) {
+        } catch (Exception e) {
           System.err.println("Error validating message: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorFile, e);
           reportingDevice.addError(e);
