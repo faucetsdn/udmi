@@ -34,7 +34,7 @@ How data is moved around on-prem
 -   **Analog**: The device uses an analog connection (1-10V, 4-20mA etc)
 -   **Serial**: The device does not have an IP address, rather uses a wired serial connection.
 -   **Networked**: The device has its own IP address and presence on the wired or wireless IP network.
--   **Bridge connected**: The device is on an isolated wired or wireless network behind a gateway device that is networked. 
+-   **Bridged**: The device is on an isolated wired or wireless network behind a gateway device that is networked. 
 
 ### Ingestion
 
@@ -97,7 +97,7 @@ Qualification can be automated using the [DAQ tool](https://github.com/faucetsdn
 The output of DAQ is a report. 
 [example report](https://github.com/faucetsdn/daq/blob/master/docs/device_report.md))
 
-### Required Actions
+### Prerequisites
 
 * Devices must be officially qualified for use on the project.
 
@@ -105,17 +105,9 @@ The output of DAQ is a report.
 
 * Device qualification configuration and reports for the device available.
 
-## System Testing
-
-### Required Actions
-* Data flow diagrams and Interoperability Matrix provided
-
-### Validation
-* Interoperability validated against qualified device configurations.
-
 ## Managed Network 
 
-### Required Actions
+### Prerequisites
 * All devices appropriately registered for network, and asset information provided
 
 ### Verification
@@ -133,7 +125,7 @@ which is a logical representation of the devices and comprises
 [registering devices and validating the site model](registrar.md) 
 and [validating MQTT messages from a device](validator.md)
 
-### Required Actions
+### Prerequisites
 
 * [site model](site_model.md)  provided and all devices registered into GCP
 * devices are setup in a qualified configuration
@@ -142,12 +134,12 @@ and [validating MQTT messages from a device](validator.md)
 
 * [registrar](registrar.md) and [device telemetry validations](validator.md) are clean
 
-## Digital Buildings
+## Digital Buildings Ontology
 
 Points and device naming is required to abide by 
 [Digital Buildings Ontology (DBO)](https://github.com/google/digitalbuildings)
 
-### Required Actions
+### Prerequisites
 
 * [Building Config](https://github.com/google/digitalbuildings/blob/master/ontology/docs/building_config.md) file provided for site
 
