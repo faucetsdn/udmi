@@ -1,6 +1,6 @@
 # Metadata Description File
 
-A device's `metadata.json` is a description about the device - a specification
+A device's `metadata.json` is a description about the device: a specification
 about how the device should be configured and expectations about what the device
 should be doing. It is used to provide the basic information for registering
 devices in a IoT Core registry, generation of other template files (e.g.

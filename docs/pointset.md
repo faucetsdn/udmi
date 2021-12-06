@@ -7,7 +7,7 @@ data ontology for the device (stipulated and verified outside of UDMI, e.g. [Dig
 
 ## Metadata
 
-The `metadata.pointset` subblock the represents the abstract system expectation for what the device
+The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
 expected points that a device holds, along with, if the field is numeric, the expected units of those points.
 The general structure of a `pointset` block exists inside of a complete
