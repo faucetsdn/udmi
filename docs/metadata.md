@@ -1,10 +1,11 @@
 # Metadata Description File
 
-A device's `metadata.json` file provides the source template for what the
-device is _supposed_ to be. It is used to provide the basic information for
-registering devices in a IoT Core registry, generation of other template
-files (e.g. _config_ block) associated with the device, and as a means for
-runtime validation of what the device is actually sending.
+A device's `metadata.json` is a description about the device - a specification
+about how the device should be configured and expectations about what the device
+should be doing. It is used to provide the basic information for registering
+devices in a IoT Core registry, generation of other template files (e.g.
+_config_ block) associated with the device, and as a means for runtime
+validation of what the device is actually sending.
 
 The `metadata.json` files are stored in a `devices/{device_id}` directory
 with an expected 1:1 mapping between device directory and device entry
