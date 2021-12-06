@@ -10,7 +10,6 @@
   * state.json
   * event.json
   * config.json
-  * discover.json
 * UDMI site model
 * UDMI transactions
   * Telemetry events
@@ -35,7 +34,7 @@
   * genkeys
   * pubber
   * validator
-  * sequence
+  * sequenceR
   * pagent
   * provision
 
