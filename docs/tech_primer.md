@@ -30,7 +30,6 @@ Various adjectives qualify the different flavors of a "device" found in a buildi
 
 How data is moved around on-prem
 
--   **Passive**: The device has only passive components (thermistor, dry contact)
 -   **Analog**: The device uses an analog connection (1-10V, 4-20mA etc)
 -   **Serial**: The device does not have an IP address, rather uses a wired serial connection.
 -   **Networked**: The device has its own IP address and presence on the wired or wireless IP network.
@@ -47,15 +46,13 @@ How data gets up into the cloud
     -   Bind & attach of proxied devices
     -   Encapsulation anti-pattern
 -   **Proxied**: A device that is not direct and is managed through a gateway.
-    -   Proxied networked devices, e.g. BACnet/IP
-    -   Proxied non-networked devices, e.g. RS485, DALI
--  **Cloud-Cloud**: A device is managed by a third party who provides a cloud connector
+-   **Cloud-Cloud**: A device is managed by a third party who provides a cloud connector
     -   Approved third party managed service
     -   UDMI virtual device server connects to third party cloud API
 
 ### Representation
 
-How data is semantically represented
+How are devices are in the 
 
 -   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
     -   Reporting connected devices
@@ -93,13 +90,11 @@ How data is semantically represented
 [Device qualification](https://github.com/faucetsdn/daq/blob/master/docs/qualification.md)
 qualifies device types as meeting a baseline connectivity and security
 requirement by performing a series of predefined tests against a device.
-Qualification can be automated using the [DAQ tool](https://github.com/faucetsdn/daq/). 
-The output of DAQ is a report. 
-[example report](https://github.com/faucetsdn/daq/blob/master/docs/device_report.md))
 
 ### Prerequisites
 
-* Devices must be officially qualified for use on the project.
+* Devices are available for qualification
+* [DAQ tool](https://github.com/faucetsdn/daq/) set up for use 
 
 ### Verification
 
@@ -108,7 +103,7 @@ The output of DAQ is a report.
 ## Managed Network 
 
 ### Prerequisites
-* All devices appropriately registered for network, and asset information provided
+* Digital building registry is provided 
 
 ### Verification
 * ATA validates on-network configuration
@@ -127,7 +122,7 @@ and [validating MQTT messages from a device](validator.md)
 
 ### Prerequisites
 
-* [site model](site_model.md)  provided and all devices registered into GCP
+* [site model](site_model.md) provided and all devices registered into GCP
 * devices are setup in a qualified configuration
 
 ### Verification
