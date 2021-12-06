@@ -49,7 +49,7 @@ How data gets up into the cloud
 
 ### Representation
 
-How devices are semantically represented within different information sources
+How devices are represented within different information sources
 
 -   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
     -   Reporting connected devices
