@@ -2,5 +2,6 @@
   "proxy_sub_base": "debug",
   "proxy_topic_base": "udmi",
   "proxy_st-atmosphere_target": "essential-keep-197822",
+  "proxy_st-atmosphere_registry": "st-atmo-sphere",
   "proxy_st-atmosphere_region": "us-central1"
 }

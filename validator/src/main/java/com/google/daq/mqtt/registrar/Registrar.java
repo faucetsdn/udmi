@@ -138,7 +138,7 @@ public class Registrar {
               if (entries.isEmpty()) {
                 errorSummary
                     .computeIfAbsent("Clean", cat -> new TreeMap<>())
-                    .put(device.getDeviceId(), device.getSettings().updated);
+                    .put(device.getDeviceId(), device.getNormalizedTimestamp());
               }
             });
     if (blockErrors != null && !blockErrors.isEmpty()) {
