@@ -257,6 +257,7 @@ class MqttPublisher implements MessagePublisher {
     LOG.debug(deviceId + " remaining until refresh " + remaining);
     if (remaining < 0 && mqttClient.isConnected()) {
       try {
+        LOG.info(deviceId + " handling token refresh");
         mqttClient.disconnect();
         long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
         LOG.info(deviceId + " disconnect took " + disconnectTime);

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "properties": {
     "min_loglevel": {
-      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent.",
+      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.",
       "type": "integer",
       "minimum": 100,
       "maximum": 800
