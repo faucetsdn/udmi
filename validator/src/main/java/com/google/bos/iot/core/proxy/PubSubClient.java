@@ -37,7 +37,7 @@ class PubSubClient {
     try {
       ProjectSubscriptionName subName = ProjectSubscriptionName.of(projectId, subscriptionName);
       clientName = subName.toString();
-      LOG.info("Creating subscription " + clientName);
+      LOG.info("Subscribing to " + clientName);
       MessageReceiver receiver = new MessageReceiver();
       subscriber = Subscriber.newBuilder(subName, receiver).build();
       subscriber.addListener(new SubscriberListener(), MoreExecutors.directExecutor());

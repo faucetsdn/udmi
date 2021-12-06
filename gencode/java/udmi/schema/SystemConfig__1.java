@@ -23,11 +23,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemConfig__1 {
 
     /**
-     * The minimum loglevel for reporting log messages below which log entries should not be sent.
+     * The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.
      * 
      */
     @JsonProperty("min_loglevel")
-    @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent.")
+    @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.")
     public Integer min_loglevel;
     @JsonProperty("auth_key")
     public Auth_key__1 auth_key;

@@ -141,6 +141,7 @@ public class ProxyTarget {
     Device device = cloudIotManager.fetchDevice(deviceId);
     Map<String, String> metadata = device.getMetadata();
     if (metadata == null || !metadata.containsKey("key_algorithm")) {
+      info("Missing metadata.key_algorithm for " + deviceId);
       return null;
     }
     info("Publishers create " + deviceId);
@@ -192,7 +193,6 @@ public class ProxyTarget {
     try {
       MessagePublisher messagePublisher = getMqttPublisher(deviceId);
       if (messagePublisher == null) {
-        info("Ignoring publisher for " + deviceId);
         return false;
       }
       info("Sending " + subFolder + " message for " + deviceId);
@@ -201,7 +201,7 @@ public class ProxyTarget {
       messagePublisher.publish(deviceId, mqttTopic, data);
       mirrorMessage(deviceId, data, subFolder);
     } catch (Exception e) {
-      LOG.error("Problem publishing device " + deviceId, e);
+      LOG.error("Problem publishing " + subFolder + " for " + deviceId, e);
       clearMqttPublisher(deviceId);
       return false;
     }
