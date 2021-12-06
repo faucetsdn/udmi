@@ -46,13 +46,10 @@ How data gets up into the cloud
     -   Bind & attach of proxied devices
     -   Encapsulation anti-pattern
 -   **Proxied**: A device that is not direct and is managed through a gateway.
--   **Cloud-Cloud**: A device is managed by a third party who provides a cloud connector
-    -   Approved third party managed service
-    -   UDMI virtual device server connects to third party cloud API
 
 ### Representation
 
-How are devices are in the 
+How devices are semantically represented
 
 -   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
     -   Reporting connected devices
@@ -112,13 +109,7 @@ requirement by performing a series of predefined tests against a device.
 
 All devices which are _smart ready_ are required to support
 [UDMI](../../README.md). For guidance on what compliance with the UDMI schema
-means, refer to [compliance documentation](compliance.md). In addition, the
-workflow provisioning of the devices onto the *cloud* should follow the [UDMI
-workflow](workflow.md). This involves setting up a [site model](site_model.md)
-which is a logical representation of the devices and comprises
-[metadata](metadata.md). Tools are provided for 
-[registering devices and validating the site model](registrar.md) 
-and [validating MQTT messages from a device](validator.md)
+means, refer to [compliance documentation](compliance.md)
 
 ### Prerequisites
 
