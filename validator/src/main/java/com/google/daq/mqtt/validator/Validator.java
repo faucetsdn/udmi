@@ -361,7 +361,7 @@ public class Validator {
             dataSink.validationResult(deviceId, schemaName, attributes, message, null);
           }
         } catch (Exception e) {
-          System.err.println("Error validating message: " + e.getMessage());
+          System.err.println("Error validating schema: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorFile, e);
           reportingDevice.addError(e);
         }
@@ -381,8 +381,8 @@ public class Validator {
             reportingDevice.validateMetadata(pointsetMessage);
           }
         } catch (Exception e) {
-          e.printStackTrace();
-          OBJECT_MAPPER.writeValue(errorFile, e.getMessage());
+          System.err.println("Error validating contents: " + e.getMessage());
+          processViolation(message, attributes, deviceId, schemaName, errorFile, e);
           reportingDevice.addError(e);
         }
       } else if (extraDevices.add(deviceId)) {
@@ -634,7 +634,7 @@ public class Validator {
     try {
       validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
     } catch (Exception e) {
-      throw new RuntimeException("While converting to json node", e);
+      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
     }
   }
 
