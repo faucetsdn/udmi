@@ -149,7 +149,7 @@ public class Validator {
   private void setSiteDir(String siteDir) {
     this.siteDir = siteDir;
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudConfig);
+    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig), projectId);
 
     initializeExpectedDevices(siteDir);
   }

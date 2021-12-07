@@ -64,7 +64,7 @@ public class CloudIotManager {
     initializeCloudIoT();
   }
 
-  private static CloudIotConfig validate(CloudIotConfig cloudIotConfig, String projectId) {
+  public static CloudIotConfig validate(CloudIotConfig cloudIotConfig, String projectId) {
     if (projectId.equals(cloudIotConfig.alt_project)) {
       System.err.printf("Using alt_registry %s for alt_project %s\n",
           cloudIotConfig.alt_registry, cloudIotConfig.alt_project);
