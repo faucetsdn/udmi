@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "properties": {
     "state_etag": {
-      "description": "An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>",
+      "description": "An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <https://github.com/faucetsdn/udmi/blob/master/docs/specification/transactions/writeback.md>",
       "type": "string",
       "maxLength": 32
     },
