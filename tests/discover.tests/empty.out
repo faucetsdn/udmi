@@ -1,0 +1,9 @@
+Validating 1 schemas
+  Validating 1 files against discover.json
+    Against input discover.tests/empty.json
+      #: 5 schema violations found
+        #: required key [local_id] not found
+        #: required key [points] not found
+        #: required key [protocol] not found
+        #: required key [timestamp] not found
+        #: required key [version] not found

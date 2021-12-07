@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "id": "sneakyCASE",
+  "properties": {
+    "$comment": "Common error cases for target telemetry."
+  },
+  "points": {
+    "bad_entity_name_": {
+      "present_value": 21.30108642578125
+    },
+    "yoyo_motion_sensor": {
+      "bad_property_name": true
+    },
+    "bad___sensor": {
+      "present_value": 21.30108642578125
+    },
+    "missing_present_value": {
+    },
+    "old_properties": {
+      "properties": {
+        "present_value": true
+      }
+    },
+    "magic_voice_recognizer": {
+      "present_value": {
+        "present_value": true
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "title": "Metadata",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "required": [ 
+    "timestamp",
+    "version",
+    "system"
+  ],
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the metadata was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Major version of the UDMI schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "description": {
+      "description": "Generic human-readable text describing the device",
+      "type": "string"
+    },
+    "hash": {
+      "description": "Automatically generated field that contains the hash of file contents.",
+      "type": "string",
+      "pattern": "^[0-9a-z]{8}$"
+    },
+    "cloud": {
+      "$ref": "file:metadata_cloud.json#"
+    },
+    "system": {
+      "$ref": "file:metadata_system.json#"
+    },
+    "gateway": {
+      "$ref": "file:metadata_gateway.json#"
+    },
+    "localnet": {
+      "$ref": "file:metadata_localnet.json#"
+    },
+    "testing": {
+      "$ref": "file:metadata_testing.json#"
+    },
+    "pointset": {
+      "$ref": "file:metadata_pointset.json#"
+    }
+  }
+}

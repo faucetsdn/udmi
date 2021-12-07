@@ -1,0 +1,72 @@
+{
+  "title": "System State",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "make_model": {
+      "description": "The make and model of the physical device",
+      "type": "string",
+      "examples": ["Delta Controls O3-DIN-SRC", "Arup Gateway"]
+    },
+    "serial_no": {
+      "description": "The serial number of the physical device",
+      "type": "string",
+      "examples": ["A1B2C3D4", "00001"]
+    },
+    "auth_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "private_hash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "private_hash"
+      ]
+    },
+    "firmware": {
+      "description": "Information about the physical device firmware",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "description": "Version of the local firmware",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ]
+    },
+    "last_config": {
+      "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "operational": {
+      "$comment": "whatis",
+      "type": "boolean"
+    },
+    "statuses": {
+      "description": "A map of 'sticky' conditions that are keyed on a value that can be used to manage updates by a particular (device dependent) subsystem.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, Entry>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:common.json#/definitions/entry"
+        }
+      }
+    }
+  },
+  "required": [
+    "make_model",
+    "serial_no",
+    "last_config",
+    "firmware",
+    "operational"
+  ]
+}
