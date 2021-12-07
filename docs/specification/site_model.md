@@ -19,8 +19,8 @@ At a high-level, the various constructs relevant to UDMI are (described in more 
 
 ## Registrar Tool
 
-The primary use of the site_model will be through the [registrar](registrar.md) and
-[validator](validator.md) tools. Primarily, they look for the existence of
+The primary use of the site_model will be through the [registrar](../tools/applications/registrar.md) and
+[validator](../tools/applications/validator.md) tools. Primarily, they look for the existence of
 `device/{device_id}/metadata.json` files in the site model and process the information found there.
 
 ## `cloud_iot_config.json`

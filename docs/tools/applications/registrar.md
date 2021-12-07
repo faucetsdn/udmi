@@ -4,9 +4,9 @@ The `registrar` is a utility program that registers and updates devices in Cloud
 Running `bin/registrar` will validate local metadata and (optionally) register devices
 in a cloud project.
 
-See the [setup docs](setup.md) for common setup required for running this tool.
+See the [setup docs](../setup.md) for common setup required for running this tool.
 
-The [site model](site_model.md) documentation covers the basic structure of the
+The [site model](../../specification/site_model.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
 source control as a site-specific repo.
 

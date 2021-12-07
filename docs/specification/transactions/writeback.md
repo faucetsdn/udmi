@@ -1,6 +1,6 @@
 # Writeback
 
-This file documents UDMI's specification for cloud to device control i.e. writeback. At a high level, the cloud controls a device by writing to the [pointset block](/docs/pointset.md) in the device [config](/docs/config.md). After receiving the config, the device updates its state to reflect the status of the writeback attempt e.g. success, failure, etc.
+This file documents UDMI's specification for cloud to device control i.e. writeback. At a high level, the cloud controls a device by writing to the [pointset block](../messaging/pointset.md) in the device [config](../messaging/config.md). After receiving the config, the device updates its state to reflect the status of the writeback attempt e.g. success, failure, etc.
 
 ## Cloud Behavior
 

@@ -11,7 +11,7 @@ technology stack for compliant IoT devices.
   * Connected to a specific Cloud IoT Registry designated for each site-specific project.
 * Utilizes the MQTT Topic table listed below.
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
-* Passes the [DAQ Validation Tool](validator.md) for all requirements.
+* Passes the [DAQ Validation Tool](../tools/applications/validator.md) for all requirements.
 
 # MQTT Topic Suffix Table
 
@@ -33,7 +33,7 @@ Any backend system (in a GCP project) should adhere to the following guidelines:
   * If necessary, any _config_ or _command_ messages should go through a PubSub topic, and then converted to the requisite Cloud IoT
   config write using a simple cloud function.
 * To make data persistent, it can be written to a back-end database, e.g. Firestore. See the `udmi_target` and
-  `udmi_state` [example cloud functions](../dashboard/functions/index.js) for details.
+  `udmi_state` [example cloud functions](../../dashboard/functions/index.js) for details.
 * A similar function called `device_config` shows how PubSub can be used to update the Cloud IoT configuration.
 
 A config push can be tested with something like:
