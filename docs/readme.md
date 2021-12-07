@@ -3,21 +3,22 @@
 ## UDMI specification
 
 * UDMI definition
-* [Technology stack](tech_stack.md)
-* Message types
-  * metadata.json
-  * envelope.json
-  * state.json
-  * event.json
-  * config.json
-* UDMI site model
-* UDMI transactions
+* [Technology stack](./specification/tech_stack.md)
+* Messages
+  * [envelope](./specification/messaging/envelope.md)
+  * [state](./specification/messaging/state.md)
+  * [event](./specification/messaging/event.md)
+  * [config](./specification/messaging/config.md)
+* [UDMI site model](./specification/site_model.md)
+* [UDMI transactions](./specification/transactions/)
   * Telemetry events
-  * Config writeback
+  * [Config writeback](./specification/transactions/writeback.md)
+* [metadata](./specification/metadata.md))
 
-## UDMI implementation guide
+## UDMI guides
 
-* UDMI compliance
+* [UDMI compliance](./guides/compliance.md)
+* [Troubleshooting](./guides/troubleshooting.md)
 
 ## UDMI tools
 
@@ -28,15 +29,16 @@
     * Java UDMI library
     * Python UDMI library
 
-* UDMI applications
-  * registrar
-  * keygen 
+* [UDMI applications](./tools/applications)
+  * [registrar](./tools/applications/registrar.md)
+  * [keygen](./tools/applications/keygen.md)
   * genkeys
-  * pubber
-  * validator
-  * sequenceR
-  * pagent
+  * [pubber](./tools/applications/pubber.md)
+  * [validator](./tools/applications/validator.md)
+  * [sequencer](./tools/applications/sequencer.md)
+  * [pagent](./tools/applications/pagent.md)
   * provision
 
-* UDMI dashboard
-  * GCP cloud setup
+* Cloud
+  * [GCP cloud setup](./tools/cloud/cloud_setup.md)
+  * [Dashboard setup](./tools/cloud/dashboard.md)
