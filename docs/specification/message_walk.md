@@ -76,5 +76,5 @@ the UDMI schema. There are a variety of configuraitons used, depending on the ov
 
 ## Sequence Validator
 
-The [UDMI Sequence Validator](../tools/applications/sequence.md) tool monitors a sequence of messages from a device's 
+The [UDMI Sequence Validator](../tools/applications/sequencer.md) tool monitors a sequence of messages from a device's 
 stream and validates that the composition of sequential messages is compliant with the UDMI Schema.
