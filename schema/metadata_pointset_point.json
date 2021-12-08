@@ -14,20 +14,31 @@
       "type": "boolean"
     },
     "baseline_value": {
+      "definition": "Represents the expected baseline value of the point",
+      "examples": [22]
     },
     "baseline_tolerance": {
-      "type": "number"
+      "type": "number",
+      "definition": "Maximum deviation from `baseline_value`",
+      "examples": [2]
     },
     "baseline_state": {
-      "type": "string"
+      "definition": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
+      "enum": [
+        "applied",
+        "updating",
+        "overridden",
+        "invalid",
+        "failure"
+      ]
     },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
-      "examples": [1.2],
+      "examples": [1],  
       "type": "number"
     },
     "ref": {
-      "description": "A local network reference for a point, e.g. BACnet address or Modbus register",
+      "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "type": "string",
       "examples": ["AI3.Present_Value", "400070"]
     }

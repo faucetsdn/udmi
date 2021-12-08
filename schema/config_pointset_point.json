@@ -5,7 +5,9 @@
   "additionalProperties": false,
   "properties": {
     "ref": {
-      "type": "string"
+      "type": "string",
+      "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
+      "examples": ["AI1106.Present_Value"]
     },
     "units": {
       "description": "If specified, indicates the units the device should report the data in.",
