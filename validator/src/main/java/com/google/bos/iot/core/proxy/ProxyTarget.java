@@ -12,8 +12,6 @@ import com.google.cloud.ServiceOptions;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.temporal.TemporalAmount;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +19,6 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvent;
 
 public class ProxyTarget {
 
@@ -45,7 +42,7 @@ public class ProxyTarget {
 
   private final Map<String, MessagePublisher> messagePublishers = new ConcurrentHashMap<>();
   private final Map<String, String> configMap;
-  private final String registryId;
+  private final String srcRegistryId;
   private final ProxyConfig proxyConfig;
   private final Consumer<MessageBundle> bundleOut;
   private CloudIotConfig cloudConfig;
@@ -57,15 +54,15 @@ public class ProxyTarget {
   public ProxyTarget(Map<String, String> configMap, String registryId,
       Consumer<MessageBundle> bundleOut) {
     info("Creating new proxy target for " + registryId);
+    this.srcRegistryId = registryId;
     this.configMap = configMap;
-    this.registryId = registryId;
     this.bundleOut = bundleOut;
-    proxyConfig = loadProxyConfig();
+    proxyConfig = loadProxyConfig(registryId);
     if (proxyConfig == null) {
       info("Ignoring unknown proxy target " + registryId);
       return;
     }
-    cloudConfig = loadCloudConfig();
+    cloudConfig = loadCloudConfig(registryId);
     initialize();
     info("Created proxy target instance for registry " + registryId);
   }
@@ -77,15 +74,16 @@ public class ProxyTarget {
     checkNotNull(proxyConfig.dstCloudRegion,"proxy config dstCloudRegion not defined");
 
     LOG.info(String.format("Pushing to Cloud IoT registry %s/%s/%s",
-        proxyConfig.dstProjectId,proxyConfig.dstCloudRegion, registryId));
+        proxyConfig.dstProjectId,proxyConfig.dstCloudRegion, proxyConfig.dstRegistryId));
 
     cloudIotManager = new CloudIotManager(PROJECT_ID, cloudConfig);
   }
 
-  private ProxyConfig loadProxyConfig() {
-    String keyPrefix = getKeyPrefix();
+  private ProxyConfig loadProxyConfig(String srcRegistryId) {
+    String keyPrefix = getKeyPrefix(srcRegistryId);
     String regionKey = keyPrefix + "region";
     String targetKey = keyPrefix + "target";
+    String registryKey = keyPrefix + "registry";
     if (!configMap.containsKey(targetKey)) {
       LOG.warn("Proxy target key not found: " + targetKey);
       return null;
@@ -96,17 +94,18 @@ public class ProxyTarget {
     }
     ProxyConfig proxyConfig = new ProxyConfig();
     proxyConfig.dstProjectId = configMap.get(targetKey);
+    proxyConfig.dstRegistryId = configMap.getOrDefault(registryKey, srcRegistryId);
     proxyConfig.dstCloudRegion = configMap.get(regionKey);
     return proxyConfig;
   }
 
-  private String getKeyPrefix() {
-    return String.format("proxy_%s_", registryId);
+  private String getKeyPrefix(String srcRegistryId) {
+    return String.format("proxy_%s_", srcRegistryId);
   }
 
-  private CloudIotConfig loadCloudConfig() {
+  private CloudIotConfig loadCloudConfig(String srcRegistryId) {
     CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = registryId;
+    cloudIotConfig.registry_id = srcRegistryId;
     cloudIotConfig.cloud_region = proxyConfig.dstCloudRegion;
     return cloudIotConfig;
   }
@@ -149,7 +148,7 @@ public class ProxyTarget {
     String key_bytes = metadata.get("key_bytes");
     byte[] keyBytes = Base64.getDecoder().decode(key_bytes);
     return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
-        registryId, deviceId, keyBytes, keyAlgorithm,
+        proxyConfig.dstRegistryId, deviceId, keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
   }
 
@@ -241,7 +240,7 @@ public class ProxyTarget {
             .computeIfAbsent(deviceId, id -> LocalDateTime.now().minusMinutes(1));
         long deltaMs = Duration.between(configTime, LocalDateTime.now()).toMillis();
         info(String
-            .format("Updating device config for %s/%s after %dms", registryId, deviceId, deltaMs));
+            .format("Updating device config for %s/%s after %dms", srcRegistryId, deviceId, deltaMs));
         if (deltaMs < CONFIG_UPDATE_LIMIT_MS) {
           Thread.sleep(CONFIG_UPDATE_LIMIT_MS - deltaMs);
         }
@@ -256,7 +255,7 @@ public class ProxyTarget {
 
   private void mirrorMessage(String deviceId, String message, String subFolder) {
     MessageBundle bundle = new MessageBundle(message);
-    bundle.attributes.put("deviceRegistryId", registryId);
+    bundle.attributes.put("deviceRegistryId", srcRegistryId);
     bundle.attributes.put("deviceId", deviceId);
     bundle.attributes.put("subFolder", subFolder);
     bundleOut.accept(bundle);

@@ -58,13 +58,20 @@ public class CloudIotManager {
   public CloudIotManager(String projectId, File iotConfigFile, String schemaName) {
     this.projectId = projectId;
     this.schemaName = schemaName;
-    cloudIotConfig = validate(readCloudIotConfig(iotConfigFile));
+    cloudIotConfig = validate(readCloudIotConfig(iotConfigFile), projectId);
     registryId = cloudIotConfig.registry_id;
     cloudRegion = cloudIotConfig.cloud_region;
     initializeCloudIoT();
   }
 
-  private static CloudIotConfig validate(CloudIotConfig cloudIotConfig) {
+  public static CloudIotConfig validate(CloudIotConfig cloudIotConfig, String projectId) {
+    if (projectId.equals(cloudIotConfig.alt_project)) {
+      System.err.printf("Using alt_registry %s for alt_project %s\n",
+          cloudIotConfig.alt_registry, cloudIotConfig.alt_project);
+      cloudIotConfig.alt_project = null;
+      cloudIotConfig.registry_id = cloudIotConfig.alt_registry;
+      cloudIotConfig.alt_registry = null;
+    }
     Preconditions.checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
     Preconditions.checkNotNull(cloudIotConfig.cloud_region, "cloud_region not defined");
     Preconditions.checkNotNull(cloudIotConfig.site_name, "site_name not defined");

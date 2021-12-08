@@ -56,6 +56,8 @@ public class IotCoreProxy {
       if (args.length != 1) {
         throw new IllegalArgumentException("Usage: [config_file]");
       }
+      File configFile = new File(args[0]);
+      LOG.info("Loading config from " + configFile.getAbsolutePath());
       IotCoreProxy iotCoreProxy = new IotCoreProxy(args[0]);
       try {
         iotCoreProxy.initialize();

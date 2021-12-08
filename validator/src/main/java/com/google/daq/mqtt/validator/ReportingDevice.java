@@ -61,8 +61,12 @@ public class ReportingDevice {
     Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
     metadataDiff.extraPoints.removeAll(expectedPoints);
-    metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
-    metadataDiff.missingPoints.removeAll(deliveredPoints);
+    if (message.partial_update != null && message.partial_update) {
+      metadataDiff.missingPoints = null;
+    } else {
+      metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
+      metadataDiff.missingPoints.removeAll(deliveredPoints);
+    }
     if (hasMetadataDiff()) {
       throw new RuntimeException("Metadata validation failed: " + metadataMessage());
     }

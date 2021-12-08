@@ -474,8 +474,12 @@ class LocalDevice {
   }
 
   private String getUpdatedTimestamp() {
+    return getTimestampString(metadata.timestamp);
+  }
+
+  private String getTimestampString(Date timestamp) {
     try {
-      String quotedString = OBJECT_MAPPER.writeValueAsString(metadata.timestamp);
+      String quotedString = OBJECT_MAPPER.writeValueAsString(timestamp);
       return quotedString.substring(1, quotedString.length() - 1);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While generating updated timestamp", e);
@@ -625,6 +629,10 @@ class LocalDevice {
     }
     ErrorTree errorTree = ExceptionMap.format(exceptionMap, ERROR_FORMAT_INDENT);
     return errorTree.purge(ignoreErrors) ? null : errorTree;
+  }
+
+  String getNormalizedTimestamp() {
+    return getTimestampString(metadata.timestamp);
   }
 
   void writeNormalized() {
