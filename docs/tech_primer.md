@@ -20,20 +20,27 @@ For the most part, this document addresses the scope of a Smart Ready building:
 
 ## Device
 
-Hardware that exists in the building that can change state in a way that can be machine communicated. A potentiometer or a flow switch is a device if it is monitored by a digital system. A commissioning valve or damper with no communication is not a device. 
+Hardware that exists in the building that can change state in a way that can be
+machine communicated. A potentiometer or a flow switch is a device if it is
+monitored by a digital system. A commissioning valve or damper with no
+communication is not a device. 
 
 ## Devices Classification
 
-Various adjectives qualify the different flavors of a "device" found in a building. More than one can apply, and each has a specific technical meaning/definition (i.e. they are not subjective).
+Various adjectives qualify the different flavors of a "device" found in a
+building. More than one can apply, and each has a specific technical
+meaning/definition (i.e. they are not subjective).
 
 ### Connectivity
 
 How data is moved around on-prem
 
--   **Analog**: The device uses an analog connection (1-10V, 4-20mA etc)
--   **Serial**: The device does not have an IP address, rather uses a wired serial connection.
--   **Networked**: The device has its own IP address and presence on the wired or wireless IP network.
--   **Bridged**: The device is on an isolated wired or wireless network behind a gateway device that is networked. 
+-   **Serial**: The device does not have an IP address, rather uses a wired
+    serial connection.
+-   **Networked**: The device has its own IP address and presence on the wired
+    or wireless IP network.
+-   **Bridged**: The device is on an isolated wired or wireless network behind a
+    gateway device that is networked. 
 
 ### Ingestion
 
@@ -46,10 +53,12 @@ How data gets up into the cloud
     -   Bind & attach of proxied devices
     -   Encapsulation anti-pattern
 -   **Proxied**: A device that is not direct and is managed through a gateway.
+-   **External**: A device (on-prem or off-prem) consumes data from an external
+    source and publishes it to Cloud IoT core
 
 ### Representation
 
-How devices are represented within different information sources
+Device relationships and how they are modeled
 
 -   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
     -   Reporting connected devices
