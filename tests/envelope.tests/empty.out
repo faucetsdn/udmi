@@ -2,4 +2,4 @@ Validating 1 schemas
   Validating 1 files against envelope.json
     Against input envelope.tests/empty.json
       1 schema violations found
-        object has missing required properties (["deviceId","deviceNumId","deviceRegistryId","projectId","subFolder"])
+        object has missing required properties (["deviceId","projectId","subFolder"])

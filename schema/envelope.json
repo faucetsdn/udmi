@@ -1,6 +1,6 @@
 {
   "title": "Envelope",
-  "description": "The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/envelope.md>",
+  "description": "The UDMI `envelope` defines source that is delivered along with a message. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/envelope.md>",
   "additionalProperties": true,
   "properties": {
     "deviceId": {
@@ -28,12 +28,17 @@
         "pointset",
         "state"
       ]
+    },
+    "subType": {
+      "enum": [
+        "event",
+        "config",
+        "state"
+      ]
     }
   },
   "required": [
     "projectId",
-    "deviceRegistryId",
-    "deviceNumId",
     "deviceId",
     "subFolder"
   ]
