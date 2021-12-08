@@ -28,6 +28,26 @@
         "pointset",
         "state"
       ]
+    },
+    "event": {
+      "system": {
+        "$ref": "file:event_system.json"
+      },
+      "gateway": {
+        "$ref": "file:event_gateway.json"
+      },
+      "blobset": {
+        "$ref": "file:event_blobset.json"
+      },
+      "pointset": {
+        "$ref": "file:event_pointset.json"
+      }
+    },
+    "state": {
+      "$ref": "file:state.json"
+    },
+    "config": {
+      "$ref": "file:config.json"
     }
   },
   "required": [
