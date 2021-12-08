@@ -25,16 +25,18 @@
           "additionalProperties": false,
           "properties": {
             "x": {
+              "description": "The `x` coordinate of the device location in a project specific coordinate system",
               "type": "number"
             },
             "y": {
+              "description": "The `y` coordinate of the device location in a project specific coordinate system",
+              "type": "number"
+            },
+            "z": {
+              "description": "The `z` (height) coordinate of the device location in a project specific coordinate system",
               "type": "number"
             }
-          },
-          "required": [
-            "x",
-            "y"
-          ]
+          }
         }
       },
       "required": [
