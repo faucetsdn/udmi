@@ -6,7 +6,8 @@ from json_schema_for_humans.generation_configuration import GenerationConfigurat
 config = GenerationConfiguration(copy_css=True, 
                                  expand_buttons=True,
                                  minify=False,
-                                 link_to_reused_ref=False)
+                                 link_to_reused_ref=False,
+                                 footer_show_time=False)
 
 schema = sys.argv[1]
 source_dir = sys.argv[2]
