@@ -3,6 +3,18 @@
   "description": "The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/envelope.md>",
   "additionalProperties": true,
   "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Major version of the UDMI schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
     "deviceId": {
       "type": "string",
       "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
