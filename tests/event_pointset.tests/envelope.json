@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "envelope": {
+    "projectId": "daq-test-suite",
+    "deviceRegistryId": "test_registry",
+    "deviceNumId": "921302198324",
+    "deviceId": "FCU-2",
+    "subFolder": "pointset"
+  },
+  "points": {
+    "reading_value": {
+      "present_value": 21.30108642578125
+    },
+    "nexus_sensor": {
+      "present_value": 21.1
+    },
+    "yoyo_motion_sensor": {
+      "present_value": true
+    },
+    "enum_value": {
+      "present_value": "hello"
+    }
+  }
+}
