@@ -29,7 +29,7 @@
     * Java UDMI library
     * Python UDMI library
 
-* [UDMI applications](./tols)
+* [UDMI applications](./tools)
   * [registrar](./tools/registrar.md)
   * [keygen](./tools/keygen.md)
   * genkeys
@@ -40,5 +40,5 @@
   * provision
 
 * Cloud
-  * [GCP cloud setup](.//cloud/gcp/cloud_setup.md)
-  * [Dashboard setup](.//cloud/gcp/dashboard.md)
+  * [GCP cloud setup](./cloud/gcp/cloud_setup.md)
+  * [Dashboard setup](./cloud/gcp/dashboard.md)

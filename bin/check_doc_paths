@@ -2,6 +2,7 @@ ROOT_DIR=$(dirname $0)
 rm -f .doc_path_fail
 exit_code=0
 # Scan markdown links 
+echo "checking for broken links in docs and schema"
 for folder in "docs schema"; do
     find $folder -type d | while read -r doc_path; do
     # loop through folders
