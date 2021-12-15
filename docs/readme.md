@@ -29,7 +29,7 @@
     * Java UDMI library
     * Python UDMI library
 
-* [UDMI applications](./tools)
+* [UDMI applications](./tols)
   * [registrar](./tools/registrar.md)
   * [keygen](./tools/keygen.md)
   * genkeys
