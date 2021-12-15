@@ -46,7 +46,7 @@ working examples for more specific details on what these fields look like.
 
 ## Metadata Registration and Validation
 
-Using UDMI on a project entails not only the base device and server implementations, but also
+Using UDMI on a project entails not only the base device implementations, but also
 properly registering and validating device configuration. The [registrar](../tools/registrar.md)
 tool and [validator](../tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
