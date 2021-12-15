@@ -1,15 +1,22 @@
 {
   "title": "Testing Metadata",
+  "description": "Testing targets are used",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
     "targets": {
-      "additionalProperties": false,
-      "maxProperties": 150,
-      "existingJavaType": "java.util.HashMap<String, TargetTestingMetadata>",
-      "patternProperties": {
-        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+      "properties": {
+        "INVALID_STATE": {
+          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `invalid`",
+          "$ref": "file:metadata_testing_target.json#"
+        },
+        "FAILURE_STATE": {
+          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `failure`",
+          "$ref": "file:metadata_testing_target.json#"
+        },
+        "APPLIED_STATE":{
+          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing.  When `target_value` is applied to the `set_value` in the config block, the state of the point should be `applied`",
           "$ref": "file:metadata_testing_target.json#"
         }
       }

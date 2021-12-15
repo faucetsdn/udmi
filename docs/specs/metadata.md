@@ -1,10 +1,11 @@
 # Metadata Description File
 
-A device's `metadata.json` file provides the source template for what the
-device is _supposed_ to be. It is used to provide the basic information for
-registering devices in a IoT Core registry, generation of other template
-files (e.g. _config_ block) associated with the device, and as a means for
-runtime validation of what the device is actually sending.
+A device's `metadata.json` is a description about the device: a specification
+about how the device should be configured and expectations about what the device
+should be doing. It is used to provide the basic information for registering
+devices in a IoT Core registry, generation of other template files (e.g.
+_config_ block) associated with the device, and as a means for runtime
+validation of what the device is actually sending.
 
 The `metadata.json` files are stored in a `devices/{device_id}` directory
 with an expected 1:1 mapping between device directory and device entry
@@ -28,6 +29,7 @@ The various tools will generate some output files in the same `devices/` directo
 
 ## Metadata Structure
 
+<<<<<<< HEAD:docs/specs/metadata.md
 The structure of the metadata file is validated by the various tools,
 and roughly corresponds to the following structure. See the various
 working examples for more specific details on what these fields look like.
@@ -50,3 +52,6 @@ Using UDMI on a project entails not only the base device implementations, but al
 properly registering and validating device configuration. The [registrar](../tools/registrar.md)
 tool and [validator](../tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
+=======
+The structure of the metadata file is shown in the [metadata schema](https://faucetsdn.github.io/udmi/gencode/docs/metadata.html)
+>>>>>>> dd92c1c9c1c6a12579b233ac370df95cfa05fff5:docs/metadata.md

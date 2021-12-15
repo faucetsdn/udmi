@@ -8,6 +8,7 @@
       "type": "string"
     },
     "target_value": {
+      "description": "Value specified in the appropriate config block as the set_value field for the point `target_point`"
     }
   }
 }
