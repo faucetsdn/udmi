@@ -3,7 +3,7 @@
 The UDMI sequence validator tool monitors a sequence of messages from a device's stream and
 validates that the composition of sequential messsages is compliant with the UDMI Schema
 
-1.  Ensure you have [deployed the necessary cloud functions](../cloud/dashboard.md) to your GCP project
+1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/dashboard.md) to your GCP project
 2.  Add a new GCP IoT Core registry with a registry ID of `UDMS-REFLECT`.
     *   Use `udmi_reflect` as the default PUB/SUB topic for this registry.
     *   This serves as a _reflector_ of the MAIN IoT registry combining all messages

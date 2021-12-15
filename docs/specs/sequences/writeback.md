@@ -1,6 +1,6 @@
 # Writeback
 
-This file documents UDMI's specification for cloud to device control i.e. writeback. At a high level, the cloud controls a device by writing to the [pointset block](../messaging/pointset.md) in the device [config](../messaging/config.md). After receiving the config, the device updates its state to reflect the status of the writeback attempt e.g. success, failure, etc.
+This file documents UDMI's specification for cloud to device control i.e. writeback. At a high level, the cloud controls a device by writing to the [pointset block](../messages/pointset.md) in the device [config](../../messages/config.md). After receiving the config, the device updates its state to reflect the status of the writeback attempt e.g. success, failure, etc.
 
 ## Cloud Behavior
 
@@ -28,7 +28,7 @@ While the system should never abort trying to reconcile the config, after 1 minu
   * The `state_etag` on the device doesn't match the `state_etag` from the incoming config
 * failure -- The system failed to apply the cloud value to the point because an error occurred on the device side.
 
-In the case of any of the error states (failure, invalid, overridden), the [status](/docs/status.md) field for the point should be populated to provide additional debugging information about the error.
+In the case of any of the error states (failure, invalid, overridden), the [status](../../messages/status.md) field for the point should be populated to provide additional debugging information about the error.
 
 ## State Etag Example
 

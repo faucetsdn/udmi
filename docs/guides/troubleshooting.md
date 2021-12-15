@@ -6,7 +6,7 @@ with the tool itself. These give some direction on how to resolve it
 (e.g. missing parameters, missing components, authentication errors).
 
 Authentication errors are frequently encountered when the user authenticated
-onto the gcloud SDK does not have [sufficient permissions](../tools/cloud/cloud_setup.md) 
+onto the gcloud SDK does not have [sufficient permissions](..//cloud/gcp/cloud_setup.md) 
 or the wrong GCP project is set.
 
 If no error message is given, but there are no results or the expected results
@@ -23,9 +23,9 @@ identify the problem.
   been sent or config messages received
 - Enable debug logging for the device on IoT Core and check the Stackdriver log
   for any errors
-- Ensure the [cloud functions have been deployed](../tools/cloud/dashboard.md), the cloud functions
-  are running with a service account with [sufficient permissions](../tools/cloud/cloud_setup.md)  
-  and the [Pub/Sub subscriptions are configured](../tools/cloud/cloud_setup.md). For use with the 
+- Ensure the [cloud functions have been deployed](..//cloud/gcp/dashboard.md), the cloud functions
+  are running with a service account with [sufficient permissions](..//cloud/gcp/cloud_setup.md)  
+  and the [Pub/Sub subscriptions are configured](..//cloud/gcp/cloud_setup.md). For use with the 
   validator, the subscription should be to the udmi_target topic. 
 - Check the Pub/sub subscription to check messages are being sent to the cloud 
 - Check the payload is as expected

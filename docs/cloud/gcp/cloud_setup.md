@@ -9,7 +9,7 @@
     *   Search for IoT Core in the GCP Console
     *   Click `Enable`
     *   Click to create a new Registry
-3.  Assign PUB/SUB topics to the registry as described in the [Message Walk Guidance](../../specification/message_walk.md). 
+3.  Assign PUB/SUB topics to the registry as described in the [Message Walk Guidance](../../specs/message_walk.md). 
     If the topics do not exist, create them
     *   Set the default _Cloud Pub/Sub topic_ for the registry to the topic `udmi_target` 
     *   Set the _Device state topic_ (may be hidden under _Advanced Options_) to `udmi_state`

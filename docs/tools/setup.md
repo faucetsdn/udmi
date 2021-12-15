@@ -19,8 +19,8 @@ to be installed on your development system if it's not already there.
 ## Cloud Prerequisites
 
 To use the included functions, you will be required to install the Google Cloud SDK
-and Firebase CLI. The [cloud setup guidance](./cloud/cloud_setup.md) and 
-[dashboad setup gudiance](./cloud/dashboard.md) provide additional 
+and Firebase CLI. The [cloud setup guidance](../cloud/gcp/cloud_setup.md) and 
+[dashboad setup gudiance](../cloud/gcp/dashboard.md) provide additional 
 guidance their installation.
 
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required

@@ -1,0 +1,63 @@
+ROOT_DIR=$(dirname $0)
+rm -f .doc_path_fail
+exit_code=0
+# Scan markdown links 
+for folder in "docs schema"; do
+    find $folder -type d | while read -r doc_path; do
+    # loop through folders
+        find $doc_path -maxdepth 1 -type f | while read -r file_path; do
+        # loop through each file in a folder
+            file_clean=1
+
+            # Markdown links
+            grep -o -p "\[.*\]\(([^\)]*)\)"  $file_path \
+                | sed -n "s/^.*\((.*)\)/\1/p" \
+                | tr -d '()' \
+                | while read -r link; do
+                    if [[ $link != http* ]]; then
+                        # ignore http and append doc path to the link
+                        link2="$doc_path/$link"
+                    fi
+
+                    if [[ ! -f $link2 && -n $link2 ]]; then
+                        if [[ ! -d $link2 ]]; then
+                        # make sure not a directory
+                            if [[ "$file_clean" -eq 1 ]]; then
+                                # only print 
+                                echo $file_path
+                            fi
+                            file_clean=0
+                            echo -- $link
+                            touch .doc_path_fail
+                        fi
+                    fi
+                done
+
+            # URLS 
+            grep -o "<https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/.*>" $file_path \
+                | sed -n "s/^<https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/\(.*\)>/\1/p" \
+                | while read -r link; do
+                    if [[ ! -f $link ]]; then
+                        if [[ ! -d $link ]]; then
+                        # make sure not a directory
+                            if [[ "$file_clean" -eq 1 ]]; then
+                                # only print 
+                                echo $file_path 
+                            fi
+                            file_clean=0
+                            echo -- $link
+                            touch .doc_path_fail
+                        fi
+                    fi
+                done
+        done
+    done
+done
+
+if [[ -f .doc_path_fail ]]; then
+    exit_code=1
+    rm -f .doc_path_fail
+fi
+
+echo Exiting $exit_code
+exit $exit_code

@@ -59,7 +59,7 @@ network, should be indicated as part of the proxy device status block.
 ### telemetry
 
 Telemety from the gateway would primarily consist of standard
-[_system_](../../tests/event.tests/example.json) messages, which
+[_system_](../../tests/event_pointset.tests/example.json) messages, which
 provide a running comentary about gateway operation. Specificaly, if there
 is an error attaching, then there should be appropriate logging to help
 diagnose the problem.
@@ -81,7 +81,7 @@ cloud connection.
 
 ### config
 
-[Proxy device config blocks](../..tests/config.tests/proxy.json) contain a special
+[Proxy device config blocks](../../tests/config.tests/proxy.json) contain a special
 _localnet_ section that
 specifies information required by the gateway to contact the local device.
 E.g., the fact that a device is 'BacNET' and also the device's BacNET object

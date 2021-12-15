@@ -11,7 +11,7 @@ technology stack for compliant IoT devices.
   * Connected to a specific Cloud IoT Registry designated for each site-specific project.
 * Utilizes the MQTT Topic table listed below.
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
-* Passes the [DAQ Validation Tool](../tools/applications/validator.md) for all requirements.
+* Passes the [DAQ Validation Tool](../tools/validator.md) for all requirements.
 
 # MQTT Topic Suffix Table
 

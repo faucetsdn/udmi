@@ -11,7 +11,7 @@ The `metadata.pointset` subblock represents the abstract system expectation for 
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
 expected points that a device holds, along with, if the field is numeric, the expected units of those points.
 The general structure of a `pointset` block exists inside of a complete
-[metadata](../../../tests/metadata.tests/example.json) message.
+[metadata](../../tests/metadata.tests/example.json) message.
 
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.
@@ -20,7 +20,7 @@ The general structure of a `pointset` block exists inside of a complete
 
 ## Telemetry
 
-A basic `pointset` [telemetry](../../../tests/event_pointset.tests/example.json) message contains
+A basic `pointset` [telemetry](../../tests/event_pointset.tests/example.json) message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
 while the `pointset` typing is applied as part of the [message envelope](envelope.md).
 
@@ -36,14 +36,14 @@ contain the values for all representative points from that device, as determined
 the representative points.
 
 Incremental updates (e.g. for COV) can send only the specific updated points as an optimization,
-while setting the top-level `partial_update` [field to `true`](../../../tests/event_pointset.tests/partial.json).
+while setting the top-level `partial_update` [field to `true`](../../tests/event_pointset.tests/partial.json).
 These messages may be indiscriminately dropped by the backend systems, so a periodic full-update
 must still be sent (as per `sample_rate_sec` below). Sending an update where all expected points are not
 included, without this flag, is considered a validation error.
 
 ## State
 
-The [state](../../../tests/state.tests/example.json) message from a device contains a `pointset`
+The [state](../../tests/state.tests/example.json) message from a device contains a `pointset`
 block with the following structure:
 
 * `pointset`: Top level block designator.
@@ -64,7 +64,7 @@ reason for an _invalid_ or _failure_ `value_state`).
 
 ## Config
 
-The [config](../tests/config.tests/example.json) message for a device contains a `pointset`
+The [config](../../tests/config.tests/example.json) message for a device contains a `pointset`
 block with the following structure:
 
 * `pointset`: Top level block designator.
@@ -75,7 +75,7 @@ block with the following structure:
   * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
-      * (`set_value`): Optional setting to control the specificed device point. See [writeback documentation](../transactions/writeback.md).
+      * (`set_value`): Optional setting to control the specificed device point. See [writeback documentation](../specs/sequences/writeback.md).
       * (`cov_threshold`): Optional threshold for triggering a COV telemetry update.
 
 The points defined in the `config.pointset.points` dictionary is the authoritative source
