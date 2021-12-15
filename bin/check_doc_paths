@@ -10,7 +10,7 @@ for folder in "docs schema"; do
             file_clean=1
 
             # Markdown links
-            grep -o -p "\[.*\]\(([^\)]*)\)"  $file_path \
+            grep -o "\[.*\]\(([^\)]*)\)"  $file_path \
                 | sed -n "s/^.*\((.*)\)/\1/p" \
                 | tr -d '()' \
                 | while read -r link; do
