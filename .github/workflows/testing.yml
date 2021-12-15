@@ -81,6 +81,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: schema docs
-        run: | 
-          bin/gendocs check
+        run: |
+          bin/gendocs check;
           bin/docs_path  
