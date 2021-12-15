@@ -18,17 +18,10 @@ For the most part, this document addresses the scope of a Smart Ready building:
 -   **Smart Ready**: On-prem integrated with the cloud using UDMI & DBO.
 -   **Digital Building**: Completely integrated with back-end services.
 
-## Device
-
-Hardware that exists in the building that can change state in a way that can be
-machine communicated. A potentiometer or a flow switch is a device if it is
-monitored by a digital system. A commissioning valve or damper with no
-communication is not a device. 
-
 ## Devices Classification
 
-Various adjectives qualify the different flavors of a "device" found in a
-building. More than one can apply, and each has a specific technical
+Various adjectives qualify the different flavors of a "device" present in the
+system. More than one can apply, and each has a specific technical
 meaning/definition (i.e. they are not subjective).
 
 ### Connectivity
@@ -54,7 +47,7 @@ How data gets up into the cloud
     -   Encapsulation anti-pattern
 -   **Proxied**: A device that is not direct and is managed through a gateway.
 -   **External**: A device (on-prem or off-prem) consumes data from an external
-    source and publishes it to Cloud IoT core
+    source
 
 ### Representation
 
