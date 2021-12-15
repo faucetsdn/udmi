@@ -15,7 +15,7 @@ See the [setup docs](setup.md) for common setup required for running this tool.
 
 PubSub stream validation works against a live data stream pulled from a pre-existing subscription.
 `bin/validator` takes three arguments:
-* `SITE_PATH`: A [site model](site_model.md) definition directory.
+* `SITE_PATH`: A [site model](../specs/site_model.md) definition directory.
 * `PROJECT_ID`: The GCP project ID to validate against.
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by a GCP project admin).
 
@@ -44,10 +44,11 @@ reg-ex matches can be used to exclude specific error cases.
 
 ## Error Output
 
-If there is an error validating a particular device, a warning/error message will be shown
-on the console and diagnostic files will be saved in `{udmi_root}/out/devices/{device_id}/`.
-A typical error could be a mismatch between the points published by the device
-and what was expected from it, as defined in the device's [metadata.json](metadata.md) file.
+If there is an error validating a particular device, a warning/error message
+will be shown on the console and diagnostic files will be saved in
+`{udmi_root}/out/devices/{device_id}/`. A typical error could be a mismatch
+between the points published by the device and what was expected from it, as
+defined in the device's [metadata.json](../specs/metadata.md) file.
 Example run showing a device publishing points not in its metadata:
 
 ```
