@@ -19,8 +19,8 @@ to be installed on your development system if it's not already there.
 ## Cloud Prerequisites
 
 To use the included functions, you will be required to install the Google Cloud SDK
-and Firebase CLI. The [cloud setup guidance](cloud_setup.md) and 
-[dashboad setup gudiance](dashboard.md) provide additional 
+and Firebase CLI. The [cloud setup guidance](../cloud/gcp/cloud_setup.md) and 
+[dashboad setup gudiance](../cloud/gcp/dashboard.md) provide additional 
 guidance their installation.
 
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required
@@ -34,6 +34,6 @@ this can be used with end-user credentials (`gcloud auth login`) or with a
 service account (`gcloud auth activate-service-account`).
 
 ## UDMI Site Model Workflow
-The [recommended workflow](docs/workflow.md) for UDMI covers using the _registrar_ and
+The [recommended workflow](../guides/workflow.md) for UDMI covers using the _registrar_ and
 _validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool
 is instrumental in setting up and testing the system independent of actual device setup.
