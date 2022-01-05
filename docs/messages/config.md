@@ -1,15 +1,42 @@
-# Config block
+[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./)
+/ [Config](#)
 
-(This is a somewhat temporary placeholder until better documentation can be written.)
+# Config
 
-The UDMI config block species the
+**Schema Definition:** [config.json](../../schema/config.json)
+ ([_🧬View_](../../gencode/docs/config.html))
+
+The UDMI config block specifies the
 [Cloud IoT Core Config](https://cloud.google.com/iot/docs/how-tos/config/configuring-devices)
-block that controlls a device's intended behavior.
+block that controls a device's intended behavior.
+
+Unless a config message has an [expiry](../specs/sequences/writeback.md#value-expiration), the latest
+config message is always considered present.
 
 It is composed of specific sub-entries for each sub-system { _system_, _pointset_, _gateway_, etc... }.
 
-This [working example](../../tests/config.tests/example.json) shows how a typical `config` message
-is constructed.
+An example `config` message is below 
+
+```json
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "min_loglevel": 500
+  },
+  "pointset": {
+    "sample_limit_sec": 2,
+    "sample_rate_sec": 500,
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+        "ref": "ziuewwedf"
+      }
+    }
+  }
+}
+```
 
 ## Config Message
 

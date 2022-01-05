@@ -1,3 +1,6 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./)
+/ [Keygen](#)
+
 # Auth Key Generator
 
 The `bin/keygen` script will generate an RSA or ES key for a single device. The `bin/genkeys` script

@@ -1,3 +1,6 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./)
+/ [Setup](#)
+
 # UDMI Tools Setup
 
 ## Baseline Requirements
@@ -20,7 +23,7 @@ to be installed on your development system if it's not already there.
 
 To use the included functions, you will be required to install the Google Cloud SDK
 and Firebase CLI. The [cloud setup guidance](../cloud/gcp/cloud_setup.md) and 
-[dashboad setup gudiance](../cloud/gcp/dashboard.md) provide additional 
+[dashboard setup guidance](../cloud/gcp/dashboard.md) provide additional 
 guidance their installation.
 
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required

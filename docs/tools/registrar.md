@@ -1,3 +1,6 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./)
+/ [Registrar](#)
+
 # Registrar Overview
 
 The `registrar` is a utility program that registers and updates devices in Cloud IoT.

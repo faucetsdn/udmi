@@ -14,14 +14,15 @@
         
     
     <title>State</title>
-</head>
-<body onload="anchorOnLoad();" id="root"><h1>State</h1><div class="text-right">
+<script src="extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>State</h1><div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
     <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
- <span class="badge badge-info no-additional">No Additional Properties</span>
+<span class="description"><p><a href="../../docs/messages/state.md">State</a> message, defined by [<code>state.json</code>]</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
             
@@ -122,7 +123,8 @@
             />
         </svg>
     <a href="#system" onclick="anchorLink('system')">system</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p><a href="../../docs/messages/system.md">Read more</a></p>
+</span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
             
@@ -898,7 +900,7 @@
             />
         </svg>
     <a href="#gateway" onclick="anchorLink('gateway')">gateway</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Read more: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/specs/gateway.md">https://github.com/faucetsdn/udmi/blob/master/docs/specs/gateway.md</a></p>
+<span class="description"><p><a href="../../docs/specs/gateway.md">Read more</a></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1674,7 +1676,7 @@
             />
         </svg>
     <a href="#pointset_state_etag" onclick="anchorLink('pointset_state_etag')">state_etag</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. Additional information on implementation: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/specs/sequences/writeback.md">https://github.com/faucetsdn/udmi/blob/master/docs/specs/sequences/writeback.md</a></p>
+<span class="description"><p>An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. <a href="../../docs/specs/sequences/writeback.md">Additional information on implementation</a></p>
 </span>
             
 

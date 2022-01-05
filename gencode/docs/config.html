@@ -14,14 +14,14 @@
         
     
     <title>Config</title>
-</head>
-<body onload="anchorOnLoad();" id="root"><h1>Config</h1><div class="text-right">
+<script src="extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>Config</h1><div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
     <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>The config block controls a device's intended behavior. Read more: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/messages/config.md">https://github.com/faucetsdn/udmi/blob/master/docs/messages/config.md</a></p>
+<span class="description"><p>The config block controls a device's intended behavior. <a href="../../docs/messages/config.md">Read more</a></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
@@ -123,7 +123,8 @@
             />
         </svg>
     <a href="#system" onclick="anchorLink('system')">system</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p><a href="../../docs/messages/system.md">Read more</a></p>
+</span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
             
@@ -286,7 +287,8 @@
             />
         </svg>
     <a href="#gateway" onclick="anchorLink('gateway')">gateway</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p>Configuration for gateways. Only required for devices which are acting as [gateways}(../../docs/specs/gateway.md)</p>
+</span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
             
@@ -836,7 +838,8 @@
             />
         </svg>
     <a href="#pointset" onclick="anchorLink('pointset')">pointset</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p><a href="../../docs/messages/pointset.md#config">Read more</a></p>
+</span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
             
@@ -874,7 +877,8 @@
             />
         </svg>
     <a href="#pointset_state_etag" onclick="anchorLink('pointset_state_etag')">state_etag</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-
+<span class="description"><p>The <code>state_etag</code> of the last <em>state</em> message sent by the device. <a href="../../docs/specs/sequences/writeback.md">Read more</a></p>
+</span>
             
 
             
@@ -914,7 +918,7 @@
             />
         </svg>
     <a href="#pointset_set_value_expiry" onclick="anchorLink('pointset_set_value_expiry')">set_value_expiry</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/specs/sequences/writeback.md">https://github.com/faucetsdn/udmi/blob/master/docs/specs/sequences/writeback.md</a></p>
+<span class="description"><p>An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. <a href="../../docs/specs/sequences/writeback.md">Read more</a></p>
 </span>
             
 
@@ -1037,7 +1041,7 @@
             />
         </svg>
     <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both <code>telemetry</code> and <code>state</code> messages). Read more: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/messages/pointset.md">https://github.com/faucetsdn/udmi/blob/master/docs/messages/pointset.md</a></p>
+<span class="description"><p>The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both <code>telemetry</code> and <code>state</code> messages). <a href="../../docs/messages/pointset.md">Read more</a></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
             
 

@@ -43,11 +43,6 @@ done
 
 rm -rf $TMP_DIR
 
-# Convert github doc links to relative links for hosted/downloaded docs 
-#RELATIVE_LINK="..\/"
-#find $OUTPUT_DIR -type f -exec sed -i "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
-#ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
-
 # Create index page with links to different schemas
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
@@ -56,3 +51,16 @@ for schema in $schemas; do
         <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
         $OUTPUT_DIR/index.html
 done
+
+# Add navbar
+navbar=$(cat etc/schema_navbar.html)
+navbar=$(printf '%q ' $navbar)
+find $OUTPUT_DIR -type f -exec sed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
+
+# Add dynamic documentation link rewriting
+cp etc/extras.js $OUTPUT_DIR/extras.js
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"extras.js\" ></script></head>;" {} \;
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
+    <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;

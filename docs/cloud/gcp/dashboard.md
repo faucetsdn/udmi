@@ -1,3 +1,6 @@
+[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [**GCP**](./)
+/ [Dashboard](#)
+
 # UDMI Dashboard
 
 The UDMI dashboard is a very simple dashboard that can be used to view and browse 

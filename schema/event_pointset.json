@@ -1,6 +1,6 @@
 {
   "title": "Pointset Event",
-  "description": "A set of points reporting telemetry data",
+  "description": "A set of points reporting telemetry data. [Read more](../../docs/messages/pointset.md)",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

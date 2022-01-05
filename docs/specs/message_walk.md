@@ -1,3 +1,6 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
+/ [Message Walk](#)
+
 # Illustrative Message Walk
 
 This document details a high-level overview of the path a message takes as it works its way
@@ -21,8 +24,8 @@ otherwise it indicates a problem with the real/actual device.
 
 [IoT Core](https://cloud.google.com/iot/docs/) is the externally-facing endpoint for on-prem devices.
 It organizes a particular device into a {&nbsp;_project_, _registry_&nbsp;} grouping. The important
-configuraiton parameters for a given _registry_ are the _Default telemetry_ and _Device state_ topic
-types, which should be set to _udmi\_target_ and _udmi\_state_, respectivly.
+configuration parameters for a given _registry_ are the _Default telemetry_ and _Device state_ topic
+types, which should be set to _udmi\_target_ and _udmi\_state_, respectively.
 
 ## PubSub Topics
 
@@ -72,7 +75,7 @@ using `dashboard/deploy_dashboard`.
 ## Validator
 
 The [UDMI Validator](../tools/validator.md) tool monitors a device's message stream and validates messages that it sees against
-the UDMI schema. There are a variety of configuraitons used, depending on the overall intent.
+the UDMI schema. There are a variety of configurations used, depending on the overall intent.
 
 ## Sequence Validator
 

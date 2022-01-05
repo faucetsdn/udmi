@@ -14,16 +14,16 @@
       "type": "boolean"
     },
     "baseline_value": {
-      "definition": "Represents the expected baseline value of the point",
+      "description": "Represents the expected baseline value of the point",
       "examples": [22]
     },
     "baseline_tolerance": {
       "type": "number",
-      "definition": "Maximum deviation from `baseline_value`",
+      "description": "Maximum deviation from `baseline_value`",
       "examples": [2]
     },
     "baseline_state": {
-      "definition": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
+      "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
       "enum": [
         "applied",
         "updating",
