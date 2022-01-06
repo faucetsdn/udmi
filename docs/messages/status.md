@@ -24,3 +24,17 @@ different than the top-level `timestamp` field (which is when the log was sent).
 * The status `level` should conform to the numerical
 [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity)
 levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).
+
+
+## Log Severity Levels
+
+| Level | Label | Description |
+|---|---|---|
+| 100 | DEBUG | Debug or trace information. |
+| 200 | INFO | Routine information, such as ongoing status or performance. |
+| 300 | NOTICE | Normal but significant events, such as start up, shut down, or a configuration change. |
+| 400 | WARNING | Warning events might cause problems. |
+| 500 | ERROR | Error events are likely to cause problems. |
+| 600 | CRITICAL | Critical events cause more severe problems or outages. |
+| 700 | ALERT | A person must take an action immediately. |
+| 800 | EMERGENCY | One or more systems are unusable. |
