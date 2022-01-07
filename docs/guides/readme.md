@@ -2,7 +2,6 @@
 
 # Guides
   
-- [Example](example_messaging.md) - Described example of a basic messaging UDMI implementation
 - [Development](development.md) - Information on contribution to the UDMI specification
 - [Troubleshooting](troubleshooting.md) - Troubleshooting steps to help diagnose validator
   unexpected results

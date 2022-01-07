@@ -31,7 +31,6 @@ The following documents give a high level overview of UDMI:
 - [Tech Primer](./tech_primer.md)
 - [Technology stack](./specs/tech_stack.md)
 - [UDMI compliance](./specs/compliance.md)
-- [Messaging Example](./guides/example_messaging.md)
 - [Validation Workflow](./guides/workflow.md)
 
 ## Use Cases
