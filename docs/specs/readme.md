@@ -12,6 +12,6 @@
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
 - [Proxy](proxy.md)
-- [Sequences](sequences/) (e.g. as _writeback_ and _state_) 
+- [Sequences](sequences/) (for example _writeback_ and _state_ sequences) 
 - [Site Model](site_model.md)
 - [Tech Stack](tech_stack.md)

@@ -2,7 +2,7 @@
 
 # Smart-Ready Building Technical Primer
 
-This document provides  primer for smart-ready building assembly, to essentially
+This document provides primer for smart-ready building assembly, to essentially
 answer the question *"What does Smart Ready mean?"* and *"How do we know it to be
 true?"* Specifically, it addresses the delta between a traditional site and
 smart-ready sites: places where new bleeding edge building technology is being
@@ -20,7 +20,7 @@ For the most part, this document addresses the scope of a Smart Ready building:
 -   **Smart Ready**: On-prem integrated with the cloud using UDMI & DBO.
 -   **Digital Building**: Completely integrated with back-end services.
 
-## Devices Classification
+## Device Classification
 
 Various adjectives qualify the different flavors of a "device" present in the
 system. More than one can apply, and each has a specific technical
@@ -31,7 +31,7 @@ meaning/definition (i.e. they are not subjective).
 How data is moved around on-prem
 
 -   **Serial**: The device does not have an IP address, rather uses a wired
-    serial connection.
+    serial connection to an IoT gateway
 -   **Networked**: The device has its own IP address and presence on the wired
     or wireless IP network.
 -   **Bridged**: The device is on an isolated wired or wireless network behind a

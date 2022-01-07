@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
-/ [Message Walk](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Message Walk](#)
 
 # Illustrative Message Walk
 

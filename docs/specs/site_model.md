@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
-/ [Site Model](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Site Model](#)
 
 # Project Site Model
 

@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./)
-/ [Sequencer](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Sequencer](#)
 
 # Sequence Validator Setup
 

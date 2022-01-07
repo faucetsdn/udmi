@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
-/ [Gateway](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Gateway](#)
 
 # Device Gateway
 

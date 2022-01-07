@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./)
-/ [Config](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./) / [Config](#)
 
 # Config
 

@@ -1,6 +1,6 @@
 {
   "title": "System Config",
-  "description": "[Read more](../../docs/messages/system.md)",
+  "description": "[System Config Documentation](../../docs/messages/system.md#config)",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

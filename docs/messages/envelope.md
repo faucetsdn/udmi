@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./)
-/ [Envelope](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./) / [Envelope](#)
 
 # UDMI Envelope
 

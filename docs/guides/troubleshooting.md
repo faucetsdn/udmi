@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Guides**](./)
-/ [Troubleshooting](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Guides**](./) / [Troubleshooting](#)
 
 # Troubleshooting
 
@@ -33,7 +32,7 @@ identify the problem.
 - Check the Pub/sub subscription to check messages are being sent to the cloud 
 - Check the payload is as expected
 
-## Common Errors
+### Common Errors
 ```
 Caused by: java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
 ```

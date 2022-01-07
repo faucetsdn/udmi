@@ -1,11 +1,10 @@
-[**UDMI**](../../) / [**Docs**](../)
-/ [Guides](#)
+[**UDMI**](../../) / [**Docs**](../) / [Guides](#)
 
 # Guides
   
 - [Example](example_messaging.md) - Described example of a basic messaging UDMI implementation
 - [Development](development.md) - Information on contribution to the UDMI specification
-- [Troubleshooting Validator](troubleshooting.md) - Troubleshooting steps to help diagnose validator
+- [Troubleshooting](troubleshooting.md) - Troubleshooting steps to help diagnose validator
   unexpected results
 - [UDMI Workflow](workflow.md) - Suggested workflow for cloud side registration of UDMI devices
 

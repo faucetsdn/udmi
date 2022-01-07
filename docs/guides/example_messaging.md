@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Guides**](./)
-/ [Example](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Guides**](./) / [Example](#)
 
 # UDMI example
 

@@ -58,9 +58,9 @@ navbar=$(printf '%q ' $navbar)
 find $OUTPUT_DIR -type f -exec sed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
 
 # Add dynamic documentation link rewriting
-cp etc/extras.js $OUTPUT_DIR/extras.js
+cp etc/schema_extras.js $OUTPUT_DIR/schema_extras.js
 
-find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"extras.js\" ></script></head>;" {} \;
+find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.js\" ></script></head>;" {} \;
 
 find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
     <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;

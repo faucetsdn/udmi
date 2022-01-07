@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
-/ [Proxy](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Proxy](#)
 
 # UDMI Proxy
 

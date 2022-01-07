@@ -1,5 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./)
-/ [Compliance](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Compliance](#)
 
 # UDMI Compliance
 

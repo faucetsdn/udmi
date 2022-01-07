@@ -1,5 +1,4 @@
-[**UDMI**](../../../) / [**Docs**](../../) / [**Specs**](../) / [**Sequences**](./) 
-/ [Writeback](#)
+[**UDMI**](../../../) / [**Docs**](../../) / [**Specs**](../) / [**Sequences**](./) / [Writeback](#)
 
 # Writeback
 
@@ -20,7 +19,7 @@ space -2
 
 ## Cloud Behavior
 
-To write to a point, the cloud sets three fields in the device config.
+To write to a point, the cloud sets three fields in the device config:
 * `set_value`, which specifies the value for a given point in the device's current units. 
 * [`state_etag`](#state-etag) value which uniquely represents the state. Specifically, `state_etag` is used to avoid race conditions where the incoming config is based off an obsolete state.
 * [`set_value_expiry`](#value-expiration), which contains the RFC 3339 timestamp at which all `set_value` values expire.
@@ -28,7 +27,7 @@ To write to a point, the cloud sets three fields in the device config.
 ## Device Behavior
 
 After receiving the config message, the device attempts to write the value to the point. Depending
-on the status of the write, the device should populate the `value_state` as described below.
+on the status of the write, the device should populate the `value_state`
 
 ### State and `value_state` 
 
@@ -36,7 +35,7 @@ The `value_state` field is an enumeration within a state message representing
 the status of a point's writeback attempt.
 
 Possible states for `value_state`:
-*  \<missing/ -- The `value_state` field is missing from this point. This means one of two things:
+*  \<missing\> -- The `value_state` field is missing from this point. This means one of two things:
       * The device is sending telemetry specified by the device as per normal operation. This is the more likely case.
       * The point’s config does not follow the UDMI spec for writeback. E.g. instead of specifying `set_value`, the config misspelled as , which isn’t a valid field in UDMI, and is ignored by the device.
 * applied -- The cloud value is applied to the device point. The point should now be reporting as telemetry the value defined in the device’s config.
@@ -53,11 +52,13 @@ In the case of any of the error states (failure, invalid, overridden), the [stat
 
 ## State Etag
 
-The `state_etag` field is meant to prevent a race condition where the device could apply a config change based off an obsolete device state. 
-
-The `state_etag` is a hash value of point units, config set values echo and value_states in the points block. The state_etag must be updated to reflect any updates in the pointset block. The specific calculation of `state_etag` is left up to implementation, but the value should be a unique must of the state's pointset.
-
-The state_etag should be included by state and config. When the device receives a new config with a valid state_etag, regardless of update success or failure. 
+The `state_etag` field is meant to prevent a race condition where the device could apply a config
+change based off an obsolete device state. The `state_etag` is a hash value of point units, config
+set values echo and value_states in the points block. The `state_etag` must be updated to reflect
+any updates in the pointset block. The specific calculation of `state_etag` is left up to
+implementation, but the value should be a unique hash of the state's pointset. The `state_etag`
+should be included by state and config. When the device receives a new config with a valid
+`state_etag`, regardless of update success or failure. 
 
 ![Basic writeback sequence diagram](images/writeback-etag-example.png)
 
