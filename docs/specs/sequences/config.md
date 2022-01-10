@@ -2,7 +2,7 @@
 
 # Config & State Sequence
 
-* The `state` and `config` messages work together to represent a transactional state between the cloud and device.
+* The [`state`](../../messages/state.md) and [`config`](../../messages/config.md) messages work together to represent a transactional state between the cloud and device.
 * When any `config` is received, a `state` update should be generated with a corresponding last_update.
 * The state message should be sent within 5 seconds
   * If additional processing is required, then the `updating` flag should be set `true`.
@@ -16,68 +16,7 @@
 
 ![State and config](images/state.png)
 
-## Config Message
-
-- [Definition](../../messages/config.md)
-- [🧬Schema](../../../gencode/docs/config.html)
-
-Example:
-```JSON
-{
-  "version": 1,
-  "timestamp": "2018-08-26T21:49:29.364Z",
-  "system": {
-    "min_loglevel": 500
-  },
-  "pointset": {
-    "sample_limit_sec": 2,
-    "sample_rate_sec": 500,
-    "points": {
-      "return_air_temperature_sensor": {
-      }
-    }
-  }
-}
-```
-
-## State Message
-
-- [Definition](../../messages/state.md)
-- [Schema](../../../gencode/docs/config.html)
-
-Example:
-```json
-{
-  "version": 1,
-  "timestamp": "2018-08-26T21:49:30.364Z",
-  "system": {
-    "make_model": "ACME Bird Trap",
-    "firmware": {
-      "version": "3.2a"
-    },
-    "serial_no": "182732142",
-    "last_config": "2018-08-26T21:49:29.364Z",  // Matches the timestamp of the config message
-    "operational": true,
-    "statuses": {
-      "base_system": {
-        "message": "Tickity Boo",
-        "category": "device.state.com",
-        "timestamp": "2018-08-26T21:39:30.364Z",
-        "level": 600
-      }
-    }
-  },
-  "pointset": {
-    "points": {
-      "return_air_temperature_sensor": {
-      }
-    }
-  }
-}
-
-```
-
-
+Generated using <https://sequencediagram.org>
 ```
 participant Device
 participant Broker
@@ -89,3 +28,16 @@ Device->Broker: **STATE**
 [->Device:Change
 Device->Broker: **STATE**
 ```
+
+## Config Message
+
+* `timestamp`: Server-side timestamp of when the config was generated.
+* `system`: Subsystem for system-level information.
+* ...: Other subsystems as defined in the standard (e.g. _pointset_ or _gateway_).
+
+## State Message
+
+* `system`:
+  * `last_config`: Server-side timestamp from the last processed `config`.
+  * `updating`: Boolean indicating if the system is still processing the last `config` update.
+  

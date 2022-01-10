@@ -14,28 +14,8 @@ config message is always considered present.
 
 It is composed of specific sub-entries for each sub-system { _system_, _pointset_, _gateway_, etc... }.
 
-An example `config` message is below 
-
-```json
-{
-  "version": 1,
-  "timestamp": "2018-08-26T21:39:29.364Z",
-  "system": {
-    "min_loglevel": 500
-  },
-  "pointset": {
-    "sample_limit_sec": 2,
-    "sample_rate_sec": 500,
-    "points": {
-      "return_air_temperature_sensor": {
-      },
-      "nexus_sensor": {
-        "ref": "ziuewwedf"
-      }
-    }
-  }
-}
-```
+This [working example](../../tests/config.tests/example.json) shows how a typical `config` message
+is constructed.
 
 ## Config Message
 

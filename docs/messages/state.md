@@ -13,42 +13,5 @@ _state_ updates from a device in under a second they should be coalesced into on
 parsed `config` message (not the timestamp the message was received/processed).
 * The state message are sent as a part of [sequences](../specs/sequences/)
 
-## Example
-
-```json
-{
-  "version": 1,
-  "timestamp": "2018-08-26T21:39:29.364Z",
-  "system": {
-    "make_model": "ACME Bird Trap",
-    "firmware": {
-      "version": "3.2a"
-    },
-    "serial_no": "182732142",
-    "last_config": "2018-08-26T21:49:29.364Z",
-    "operational": true,
-    "statuses": {
-      "base_system": {
-        "message": "Tickity Boo",
-        "category": "device.state.com",
-        "timestamp": "2018-08-26T21:39:30.364Z",
-        "level": 600
-      }
-    }
-  },
-  "pointset": {
-    "points": {
-      "return_air_temperature_sensor": {
-        "status": {
-          "message": "Invalid sample time",
-          "category": "device.config.validate",
-          "timestamp": "2018-08-26T21:39:28.364Z",
-          "level": 800
-        }
-      },
-      "nexus_sensor": {
-      }
-    }
-  }
-}
-```
+This [working example](../../tests/state.tests/example.json) shows how a typical `state` message
+is constructed.

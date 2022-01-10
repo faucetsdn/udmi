@@ -13,15 +13,7 @@ follow the same structure.
   happen, e.g. “connection failed”.
 
 ## Example
-```json
-{
-...
-"statuses": {
-      "base_system": {
-        "message": "Tickity Boo",
-        "category": "device.state.com",
-        "timestamp": "2018-08-26T21:39:30.364Z",
-        "level": 600
-      }
-}
-```
+
+The working examples below demonstrate `status` and `logentries` fields in different message types:
+- `state`(../../tests/state.tests/example.json)
+- `event_system`(../../tests/event_system.tests/example.json)

@@ -11,7 +11,6 @@ data ontology for the device (stipulated and verified outside of UDMI, e.g. [Dig
 
 
 Pointset is represented in four locations
-- [Description](#DESCRIPTION)
 - [Metadata](#metadata)
 - [Telemetry](#telemetry)
 - [State](#state)
@@ -19,31 +18,9 @@ Pointset is represented in four locations
 
 ## Metadata
 
-**Schema Definition:** [metadata_pointset.json](../../schema/metadata_pointset.json)
+- **Schema Definition:** [metadata_pointset.json](../../schema/metadata_pointset.json)
  ([_🧬View_](../../gencode/docs/metadata.html#pointset))
-
-Example:
-
-```json
-{
-  ...
-  "pointset": {
-    "points": {
-      "return_air_temperature_sensor": {
-        "units": "Degrees-Celsius",
-        "baseline_value": 20,
-        "baseline_tolerance": 2
-      },
-      "room_setpoint": {
-        "writeable": true,
-        "units": "Degrees-Celsius",
-        "baseline_value": 20,
-        "baseline_state": "applied"
-      }
-    }
-  }
-}
-```
+- [Working `metadata` Example](../../tests/metadata.tests/example.json)
 
 The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
@@ -58,8 +35,9 @@ metadata message
 
 ## Telemetry
 
-**Schema Definition:** [event_pointset.json](../../schema/event_pointset.json)
+- **Schema Definition:** [event_pointset.json](../../schema/event_pointset.json)
  ([_🧬View_](../../gencode/docs/event_pointset.html#points))
+- [Working `event_pointset` Example](../../tests/event_pointset.tests/example.json)
 
 A basic `pointset` telemetry message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
@@ -85,33 +63,11 @@ messages may be indiscriminately dropped by the backend systems, so a periodic f
 still be sent (as per `sample_rate_sec` below). Sending an update where all expected points are not
 included, without this flag, is considered a validation error.
 
-### Example
-
-```json
-{
-  ...
-  "points": {
-    "reading_value": {
-      "present_value": 21.30108642578125
-    },
-    "nexus_sensor": {
-      "present_value": 21.1
-    },
-    "yoyo_motion_sensor": {
-      "present_value": true
-    },
-    "enum_value": {
-      "present_value": "hello"
-    }
-  },
-  "partial_update": false
-}
-```
-
 ## State
 
-**Schema Definition:** [state_pointset.json](../../schema/state_pointset.json)
+- **Schema Definition:** [state_pointset.json](../../schema/state_pointset.json)
  ([_🧬View interactive_](../../gencode/docs/state.html#pointset))
+- [Working `state` Example](../../tests/state.tests/example.json)
 
 The [state](state.md) message from a device contains a `pointset` block with the following
 structure:
@@ -121,35 +77,15 @@ structure:
     * _{`point_name`}_: Point name.
       * (`status`): Optional [status](status.md) information about this point.
       * (`value_state`): Optional enumeration indicating the 
-        [state of the points value.](../specs/sequences/writeback.md#state-and-value_state)
+        [state of the points value.](../specs/sequences/writeback.md#value_state)
 
 In all cases, the points `status` field can be used to supply more information (e.g., the
 reason for an _invalid_ or _failure_ `value_state`).
 
-### Example 
-```json
-{
-  ...
-  "pointset": {
-    "points": {
-      "return_air_temperature_sensor": {
-        "status": {
-          "message": "Invalid sample time",
-          "category": "device.config.validate",
-          "timestamp": "2018-08-26T21:39:28.364Z",
-          "level": 800
-        }
-      },
-      "nexus_sensor": {
-      }
-    }
-  }
-}
-```
-
 ## Config
 
-[🧬Schema](../../gencode/docs/config.html#pointset)
+- [🧬Schema](../../gencode/docs/config.html#pointset)
+- [Working `config` Example](../../tests/config.tests/writeback.json)
 
 The [config](config.md) message for a device contains a `pointset`
 block with the following structure:e
@@ -175,22 +111,3 @@ then the device should determine on its own which points to report.
 
 If `sample_rate_sec` is not defined (or zero), then the system is expected to send an update at least every
 300 seconds (5 minutes as a default value). A negative value would mean "don't send updates."
-
-### Example 
-
-```json
-{
-  ...
-  "pointset": {
-    "sample_limit_sec": 2,
-    "sample_rate_sec": 500,
-    "points": {
-      "return_air_temperature_sensor": {
-      },
-      "nexus_sensor": {
-        "ref": "ziuewwedf"
-      }
-    }
-  }
-}
-```

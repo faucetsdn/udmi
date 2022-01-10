@@ -29,7 +29,7 @@ To write to a point, the cloud sets three fields in the device config:
 After receiving the config message, the device attempts to write the value to the point. Depending
 on the status of the write, the device should populate the `value_state`
 
-### State and `value_state` 
+### `value_state` 
 
 The `value_state` field is an enumeration within a state message representing
 the status of a point's writeback attempt.
@@ -50,7 +50,7 @@ While the system should never abort trying to reconcile the config, after 1 minu
 
 In the case of any of the error states (failure, invalid, overridden), the [status](../../messages/status.md) field for the point should be populated to provide additional debugging information about the error.
 
-## State Etag
+### `state_etag`
 
 The `state_etag` field is meant to prevent a race condition where the device could apply a config
 change based off an obsolete device state. The `state_etag` is a hash value of point units, config
@@ -63,7 +63,7 @@ should be included by state and config. When the device receives a new config wi
 ![Basic writeback sequence diagram](images/writeback-etag-example.png)
 
 
-### Example
+#### Example
 
 An example of how the `state_etag` works and the race condition this field prevents:
 1) The device is in state A. For example, it specifies units Fahrenheit for some writable point P.
@@ -73,7 +73,7 @@ An example of how the `state_etag` works and the race condition this field preve
 
 `state_etag` prevents this race condition by ensuring that the device state doesn't change between when the config was sent and received. i.e. in the previous example, the cloud's config update would include a `state_etag` uniquely representing state A. Upon receiving the update, the device would detect that the current `state_etag` (uniquely representing state B) is not the same as the one in the config, and therefore set the `value_state` as invalid.
 
-## Value Expiration
+### Value Expiration
 
 When the device receives a config, it should check that `set_value_expiry` exists and is greater than the timestamp field in the config, sending an invalid `value_state` if not. 
 

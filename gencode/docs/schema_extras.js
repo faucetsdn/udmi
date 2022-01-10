@@ -1,5 +1,5 @@
 /**
- *  Dynamically remove  `.md` extension from links when schema browser is viewed
+ *  Dynamically remove `.md` extension from links when schema browser is viewed
  *  on a hosted source. This is targeted at Github pages, which only shows the
  *  rendered MD files when the `.md` extension is omitted (otherwise raw file is
  *  presented). A dynamic rewrite ensures all the links in the schema files are
@@ -8,7 +8,7 @@
 function removedHostedMDExtensions(){
     const docsRegex = '^(https.*).md(#.*)?$';
     if (window.location.href.match("https://")) {
-        links = document.getElementsByTagName("a");
+        var links = document.getElementsByTagName("a");
         for (var link of links){
             var match = link.href.match(docsRegex)
             if(match) {
