@@ -6,6 +6,7 @@ This file documents UDMI's specification for cloud to device control i.e. writeb
 
 ![Basic writeback sequence diagram](images/writeback-basic.png)
 
+Generated using <https://sequencediagram.org>
 ```
 participant Device
 participant Broker
@@ -15,7 +16,6 @@ note left of Device: point `subject`\n set to X
 Device->Broker: STATE MESSAGE\npointset.points.subject.value_state = applied
 space -2
 ```
-
 
 ## Cloud Behavior
 
@@ -84,4 +84,3 @@ If the config passes these checks, then the device should
 2) set a timer to trigger at the given `set_value_expiry`, overwriting any existing timer. 
 
 When the timer expires, the device reverts to its operational state, and sends a state update to notify the cloud of the state change.
-
