@@ -1,0 +1,15 @@
+resources:
+- ./config_map.yaml
+- ./daemon_set.yaml
+- ./deployment.yaml
+- ./service.yaml
+- ./hpa.yaml
+
+generatorOptions:
+  labels:
+    config: daq
+
+configMapGenerator:
+- name: daq-configmap
+  files:
+  - dts-cluster.yaml
