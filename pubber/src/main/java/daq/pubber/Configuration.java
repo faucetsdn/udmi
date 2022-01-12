@@ -11,7 +11,6 @@ public class Configuration {
   public String gatewayId;
   public String deviceId;
   public String sitePath;
-  public String subscription;
   public String keyFile = "local/rsa_private.pkcs8";
   public byte[] keyBytes;
   public String algorithm = "RS256";

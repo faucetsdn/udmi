@@ -71,6 +71,7 @@ public class Pubber {
   private long lastStateTimeMs;
   private int sendCount;
   private boolean stateDirty;
+  private PubSubClient pubSubClient;
 
   static class ExtraPointsetEvent extends PointsetEvent {
     // This extraField exists only to trigger schema parsing errors.
@@ -104,7 +105,7 @@ public class Pubber {
     configuration = new Configuration();
     configuration.projectId = projectId;
     if (PUBSUB_SITE.equals(sitePath)) {
-      configuration.subscription = deviceId;
+      pubSubClient = new PubSubClient(projectId, deviceId);
     } else {
       configuration.sitePath = sitePath;
       configuration.deviceId = deviceId;
@@ -145,7 +146,7 @@ public class Pubber {
     if (configuration.sitePath != null) {
       loadCloudConfig();
       loadDeviceMetadata();
-    } else if (configuration.subscription != null) {
+    } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
@@ -169,7 +170,8 @@ public class Pubber {
   }
 
   private void pullDeviceMessage() {
-    P
+    String message = pubSubClient.pull();
+    System.err.println(message);
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
