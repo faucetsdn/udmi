@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dts
+  name: pubber-pool
 spec:
   selector:
     matchLabels:
-      app: hello
-  replicas: 2
+      app: pubber
+  replicas: 10
   strategy:
     rollingUpdate:
       maxSurge: 50%
@@ -15,23 +15,14 @@ spec:
   template:
     metadata:
       labels:
-        app: hello
+        app: pubber
     spec:
       containers:
-      - name: hello
-        image: "us.gcr.io/dts-scale-testing/dts:644695b351e3"
+      - name: pubber
+        image: "us.gcr.io/bos-udmi-hub/pubber:latest"
         imagePullPolicy: Always
         resources:
           requests:
             memory: 100Mi
             cpu: 120m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - name: daq-config
-          mountPath: /daq-config
-      volumes:
-      - name: daq-config
-        configMap:
-          name: daq-configmap
 

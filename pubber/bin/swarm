@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo No GCP_PROJECT defined, trying to auto-detect...
+    GCP_PROJECT=$(curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+    echo Running inside GCP project $GCP_PROJECT
+fi
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+
+java -Dorg.slf4j.simpleLogger.showThreadName=false \
+     -jar $ROOT_DIR/build/libs/pubber-1.0-SNAPSHOT-all.jar \
+     $@

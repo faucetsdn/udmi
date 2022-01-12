@@ -11,8 +11,4 @@ COPY bin/ bin/
 
 COPY build/libs build/libs/
 
-COPY cluster/cloud_iot_config.json .
-
-ENV PROJECT
-
-ENTRYPOINT ["bin/run", "$PROJECT", ".", "pubber-control", "1234"]
+ENTRYPOINT ["bin/swarm"]

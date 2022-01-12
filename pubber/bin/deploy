@@ -1,0 +1,11 @@
+#!/bin/bash -ex
+
+docker build . -f cluster/Dockerfile.pubber -t udmi/pubber
+
+docker tag udmi/pubber:latest us.gcr.io/bos-udmi-hub/pubber:latest
+
+docker push us.gcr.io/bos-udmi-hub/pubber:latest
+
+kubectl scale deploy pubber-pool --replicas=0
+
+kubectl scale deploy pubber-pool --replicas=10
