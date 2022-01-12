@@ -8,6 +8,8 @@ import com.google.pubsub.v1.PullRequest;
 import com.google.pubsub.v1.PullResponse;
 import com.google.pubsub.v1.ReceivedMessage;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PubSubClient {
 
@@ -18,7 +20,7 @@ public class PubSubClient {
 
   public PubSubClient(String projectId, String subscriptionId) {
     subscriptionName = ProjectSubscriptionName.format(projectId, subscriptionId);
-    LOG.info("Using PubSub subscription " = subscriptionName);
+    LOG.info("Using PubSub subscription " + subscriptionName);
     try {
       SubscriberStubSettings subscriberStubSettings =
           SubscriberStubSettings.newBuilder()

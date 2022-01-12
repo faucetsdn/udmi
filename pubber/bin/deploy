@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+bin/build
+
 docker build . -f cluster/Dockerfile.pubber -t udmi/pubber
 
 docker tag udmi/pubber:latest us.gcr.io/bos-udmi-hub/pubber:latest

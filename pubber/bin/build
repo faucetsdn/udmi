@@ -9,5 +9,3 @@ rm -rf build
 
 ./gradlew build
 ./gradlew shadow
-
-docker build -t udmi/pubber -f cluster/Dockerfile.pubber .
