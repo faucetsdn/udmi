@@ -12,7 +12,7 @@ look like. Specifically, it holds information used by other tools to do things r
 
 ## Pubber
 
-[Pubber](pubber.md) is a reference device that can pretend to be any device as listed in the UDMI site
+[Pubber](../tools/pubber.md) is a reference device that can pretend to be any device as listed in the UDMI site
 model. It's important for system testing to isolate the setup from anything external. Usually,
 if Pubber doesn't work then there's something wrong with the code or GCP configuration,
 otherwise it indicates a problem with the real/actual device.
@@ -45,7 +45,7 @@ attention to.
 ## Cloud Functions
 
 The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) handle the ingest traffic
-from a device. The [source code](../dashboard/functions/) for these functions can be published
+from a device. The [source code](../../dashboard/functions/) for these functions can be published
 to the cloud project by the `dashboard/deploy_dashboard` command (see below).
 
 * __udmi\_target__: Processes incoming device _event_ messages and writes them to the designated
@@ -62,19 +62,19 @@ the monolithic device-level _config_ block.
 
 ## Dashboard
 
-The [UDMI front-end dashboard](dashboard.md) is a very simple dashboard that can be used to view and
+The [UDMI front-end dashboard](..//cloud/gcp/dashboard.md) is a very simple dashboard that can be used to view and
 browse device-specific data.
 It is meant only as an example reference design and not a production-worthy system. It is hosted as a
 [Firebase](https://firebase.google.com/docs) project, that provides for authentication and hosting
-management. The [front-end code](../dashboard/public/) can be deployed (along with the functions)
+management. The [front-end code](../../dashboard/public/) can be deployed (along with the functions)
 using `dashboard/deploy_dashboard`.
 
 ## Validator
 
-The [UDMI Validator](validator.md) tool monitors a device's message stream and validates messages that it sees against
+The [UDMI Validator](../tools/validator.md) tool monitors a device's message stream and validates messages that it sees against
 the UDMI schema. There are a variety of configuraitons used, depending on the overall intent.
 
 ## Sequence Validator
 
-The [UDMI Sequence Validator](sequence.md) tool monitors a sequence of messages from a device's 
+The [UDMI Sequence Validator](../tools/sequencer.md) tool monitors a sequence of messages from a device's 
 stream and validates that the composition of sequential messages is compliant with the UDMI Schema.

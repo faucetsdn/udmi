@@ -5,7 +5,7 @@ device-specific data. Deploying the dashboard will deploy additional cloud funct
 including:
 *    Functions to show how data can be made more persistent, by  being written to a 
      back-end database, e.g. Firestore. See the `udmi_target` and `udmi_state` 
-     [example cloud functions](../dashboard/functions/index.js) for details.
+     [example cloud functions](../../../dashboard/functions/index.js) for details.
 *    A function called `device_config` shows how PubSub can be used to update the Cloud IoT configuration.
 
 ## Setting Up the UDMI Dashboard

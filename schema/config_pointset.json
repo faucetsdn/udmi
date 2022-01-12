@@ -9,7 +9,7 @@
       "maxLength": 32
     },
     "set_value_expiry": {
-      "description": "An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>",
+      "description": "An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/specs/sequences/writeback.md>",
       "type": "string",
       "format": "date-time"
     },
@@ -26,7 +26,7 @@
       "maximum": 86400
     },
     "points": {
-      "description": "The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>",
+      "description": "The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/messages/pointset.md>",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, PointPointsetConfig>",
       "patternProperties": {

@@ -6,7 +6,7 @@ in a cloud project.
 
 See the [setup docs](setup.md) for common setup required for running this tool.
 
-The [site model](site_model.md) documentation covers the basic structure of the
+The [site model](../specs/site_model.md) documentation covers the basic structure of the
 site-specific configuration. Ideally, this directory would be placed under
 source control as a site-specific repo.
 
@@ -23,7 +23,7 @@ these can be safely committed to source control as they are deterministic.
 
 ## Device Metadata & Keys
 
-The expected model of a device is defined by a [device metadata](metadata.md) file,
+The expected model of a device is defined by a [device metadata](../specs/metadata.md) file,
 along with a public key for that device (required for communication with the cloud).
 Devices (that aren't proxied by a gateway) that do not auto-generate a public key
 can use the [bin/keygen](keygen.md) utility to create a proper public/private key pair.
