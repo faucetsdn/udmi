@@ -1,8 +1,8 @@
-package org.slf4j;
+package daq.pubber;
 
 public class LoggerFactory {
 
   public static Logger getLogger(Class<?> clazz) {
-    return null;
+    return new Logger();
   }
 }

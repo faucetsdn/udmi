@@ -1,8 +1,10 @@
-package org.slf4j;
+package daq.pubber;
 
 public class Logger {
 
-  public void error(String fatal_error_during_execution, Exception e) {
+  public void error(String message, Exception e) {
+    System.err.println(message);
+    e.printStackTrace();
   }
 
   public void error(String forcing_termination) {

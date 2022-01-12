@@ -15,7 +15,6 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
-import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,8 +31,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import udmi.schema.SystemState;
 
 public class Pubber {
@@ -57,6 +54,7 @@ public class Pubber {
   private static final int LOGGING_MOD_COUNT = 10;
   public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
+  private static final String PUBSUB_SITE = "PubSub";
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -105,8 +103,12 @@ public class Pubber {
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
-    configuration.sitePath = sitePath;
-    configuration.deviceId = deviceId;
+    if (PUBSUB_SITE.equals(sitePath)) {
+      configuration.subscription = deviceId;
+    } else {
+      configuration.sitePath = sitePath;
+      configuration.deviceId = deviceId;
+    }
     configuration.serialNo = serialNo;
   }
 
@@ -143,6 +145,8 @@ public class Pubber {
     if (configuration.sitePath != null) {
       loadCloudConfig();
       loadDeviceMetadata();
+    } else if (configuration.subscription != null) {
+      pullDeviceMessage();
     }
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
@@ -162,6 +166,10 @@ public class Pubber {
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
     addPoint(new RandomBoolean("faulty_finding", false));
     stateDirty = true;
+  }
+
+  private void pullDeviceMessage() {
+    P
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
