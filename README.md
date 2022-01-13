@@ -1,6 +1,6 @@
 # UDMI 
 
-**Documentation** - [docs/](docs/)
+**Documentation** - [docs/](https://faucetsdn.github.io/udmi/docs)
 
 **Schema** - [schema/](https://github.com/faucetsdn/udmi/tree/master/schema)
  ([_🧬Interactive viewer_](gencode/docs/))
@@ -86,10 +86,10 @@ very large structures or high-bandwidth streams.
 UDMI provides a means to multiplex multiple functional subsystems through the same shared
 communication channel. There are a number of subsystems that make up the core UDMI spec:
 
-* Core [_system_](docs/system.md) messages about the base device itself.
-* Device [_pointset_](docs/pointset.md) for device telemetry organized by points.
-* Optional [_gateway_](docs/gateway.md) functionality for proxying device/MQTT connections.
-* Local [_discover_](docs/discovery.md) for discovering device and network capabilities.
+* Core [_system_](docs/messages/system.md) messages about the base device itself.
+* Device [_pointset_](docs/messages/pointset.md) for device telemetry organized by points.
+* Optional [_gateway_](docs/specs/gateway.md) functionality for proxying device/MQTT connections.
+* Local [_discover_](docs/specs/discovery.md) for discovering device and network capabilities.
 
 ## Schema Structure
 
@@ -123,8 +123,8 @@ An interactive view of the schema is available on [https://faucetsdn.github.io/u
 ### Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](docs/registrar.md)
-tool and [validator](docs/validator.md) tool provide a means to configure and check site
+properly registering and validating device configuration. The [registrar](docs/tools/registrar.md)
+tool and [validator](docs/tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
 
 ### State Message
