@@ -34,7 +34,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,22 +86,19 @@ public class Registrar {
   private final String generation = getGenerationString();
 
   public static void main(String[] args) {
+    ArrayList<String> argList = new ArrayList<>(List.of(args));
     Registrar registrar = new Registrar();
     try {
-      if (args.length < 2) {
-        throw new IllegalArgumentException("Args: tool_root site_dir [project_id] [devices...]");
+      boolean processAllDevices = processArgs(argList, registrar);
+
+      if (registrar.schemaBase == null) {
+        registrar.setToolRoot(null);
       }
-      registrar.setSchemaBase(new File(args[0], SCHEMA_BASE_PATH).getPath());
-      registrar.setSitePath(args[1]);
-      if (args.length > 2) {
-        registrar.setProjectId(args[2]);
-      }
-      if (args.length > 3) {
-        String[] devices = new String[args.length - 3];
-        System.arraycopy(args, 3, devices, 0, args.length - 3);
-        registrar.processDevices(devices);
-      } else {
+
+      if (processAllDevices) {
         registrar.processDevices();
+      } else {
+        registrar.processDevices(argList);
       }
 
       registrar.writeErrors();
@@ -115,6 +112,32 @@ public class Registrar {
       System.exit(-1);
     }
     System.exit(0);
+  }
+
+  private static boolean processArgs(List<String> argList, Registrar registrar) {
+    while (argList.size() > 0) {
+      String option = argList.remove(0);
+      switch (option) {
+        case "-r":
+          registrar.setToolRoot(argList.remove(0));
+          break;
+        case "-p":
+          registrar.setProjectId(argList.remove(0));
+          break;
+        case "-s":
+          registrar.setSitePath(argList.remove(0));
+          break;
+        case "--":
+          return false;
+        default:
+          if (option.startsWith("-")) {
+            throw new RuntimeException("Unknown cmdline option " + option);
+          }
+          argList.add(0, option);
+          return false;
+      }
+    }
+    return true;
   }
 
   private void writeErrors() throws Exception {
@@ -194,7 +217,7 @@ public class Registrar {
     }
   }
 
-  private void processDevices(String[] devices) {
+  private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
     try {
       final Set<String> extraDevices;
@@ -246,11 +269,11 @@ public class Registrar {
     }
   }
 
-  private Set<String> calculateDevices(String[] devices) {
+  private Set<String> calculateDevices(List<String> devices) {
     if (devices == null) {
       return null;
     }
-    return Arrays.stream(devices).map(this::deviceNameFromPath).collect(Collectors.toSet());
+    return devices.stream().map(this::deviceNameFromPath).collect(Collectors.toSet());
   }
 
   private String deviceNameFromPath(String device) {
@@ -367,7 +390,11 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadLocalDevices() {
+    Preconditions.checkNotNull(siteDir, "site directory");
     File devicesDir = new File(siteDir, DEVICES_DIR);
+    if (!devicesDir.isDirectory()) {
+      throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
+    }
     String[] devices = devicesDir.list();
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
     Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
@@ -466,11 +493,14 @@ public class Registrar {
     initializeCloudProject();
   }
 
-  private void setSchemaBase(String schemaBasePath) {
-    schemaBase = new File(schemaBasePath);
+  private void setToolRoot(String toolRoot) {
+    schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
       loadSchema(schemaFile.getName());
+    }
+    if (schemas.isEmpty()) {
+      throw new RuntimeException("No schemas successfully loaded from " + schemaBase.getAbsolutePath());
     }
   }
 

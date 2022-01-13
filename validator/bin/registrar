@@ -4,6 +4,7 @@ ROOT=$(dirname $0)/../..
 
 jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.registrar.Registrar
+project_opt=
 
 if [ -z "$1" ]; then
     echo Usage: $0 site_dir [project_id] [devices...]
@@ -26,9 +27,13 @@ echo Using cloud project $project_id
 echo Using site config dir $site_dir
 echo Using devices $*
 
+if [[ -n "$project_id" ]]; then
+    project_opt="-p $project_id"
+fi
+
 error=0
-echo java -cp $jarfile $mainclass $ROOT $site_dir $project_id $*
-java -cp $jarfile $mainclass $ROOT $site_dir $project_id $* || error=$?
+echo java -cp $jarfile $mainclass -r $ROOT -s $site_dir $project_opt $*
+java -cp $jarfile $mainclass -r $ROOT -s $site_dir $project_opt $* || error=$?
 
 echo Registrar complete, exit $error
 exit $error
