@@ -1,8 +1,8 @@
 #!/bin/bash -e
-
+#
 # Automatic document generation, validation and helpers
 #
-# bin/gendocs ...
+# bin/gendocs [cmd]
 # 
 # <unspecified> (default)
 #   Generate HTML documentation from JSON schema. Stored in gencode/docs
@@ -10,8 +10,8 @@
 # check
 #   Compares the hashes from the last time gendocs was run 
 #
-# feature_bucket [input_file] [output_file]
-#   Takes a tab delimited text file containing the list of feeature buckets
+# gen_bucket [input_file] [output_file]
+#   Takes a tab delimited text file containing the list of feature buckets
 #   as copied from Google Sheets and convert into an MD list
 #
 
@@ -33,7 +33,7 @@ if [ "$1" == check ]; then
     exit 0
 fi
 
-if [ "$1" == feature_buckets ]; then
+if [ "$1" == gen_bucket ]; then
     shift 1
 
     input_file=$1
