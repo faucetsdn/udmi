@@ -81,4 +81,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: schema docs
-        run: bin/gendocs check
+        if: always()
+        run: bin/gendocs check_schema
+      - name: schema links
+        if: always()
+        run: bin/gendocs check_links
