@@ -1,3 +1,5 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Pagent](#)
+
 # Pagent Provisioning Agent
 
 `pagent` provides a simple tool for automatic cloud provisioning of devices. Typically,

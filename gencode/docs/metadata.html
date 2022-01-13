@@ -14,14 +14,14 @@
         
     
     <title>Metadata</title>
-</head>
-<body onload="anchorOnLoad();" id="root"><h1>Metadata</h1><div class="text-right">
+<script src="schema_extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>Metadata</h1><div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
     <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p><a href="https://github.com/faucetsdn/udmi/blob/master/docs/metadata.md">Metadata</a> is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing.</p>
+<span class="description"><p><a href="../../docs/metadata.md">Metadata</a> is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by <code>metadata.json</code></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
@@ -353,7 +353,7 @@
             />
         </svg>
     <a href="#system" onclick="anchorLink('system')">system</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>High-level sytem informaiton about the device.</p>
+<span class="description"><p>High-level system information about the device. <a href="../../docs/messages/system.md">System Metadata Documentation</a></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1078,7 +1078,7 @@
             />
         </svg>
     <a href="#gateway" onclick="anchorLink('gateway')">gateway</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Read more: <a href="https://github.com/faucetsdn/udmi/blob/master/docs/specs/gateway.md">https://github.com/faucetsdn/udmi/blob/master/docs/specs/gateway.md</a></p>
+<span class="description"><p><a href="../../docs/specs/gateway.md">Gateway Documentation</a></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span><div class="one-of-value" id="gateway_oneOf"><h2 class="handle">
@@ -1646,7 +1646,7 @@
             />
         </svg>
     <a href="#testing_targets_INVALID_STATE" onclick="anchorLink('testing_targets_INVALID_STATE')">INVALID_STATE</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>For <a href="https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md">writeback</a> testing. When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>invalid</code></p>
+<span class="description"><p>For <a href="../../docs/specs/sequences/writeback.md">writeback</a> testing. When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>invalid</code></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1805,7 +1805,7 @@
             />
         </svg>
     <a href="#testing_targets_FAILURE_STATE" onclick="anchorLink('testing_targets_FAILURE_STATE')">FAILURE_STATE</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>For <a href="https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md">writeback</a> testing. When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>failure</code></p>
+<span class="description"><p>For <a href="../../docs/specs/sequences/writeback.md">writeback</a> testing. When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>failure</code></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1964,7 +1964,7 @@
             />
         </svg>
     <a href="#testing_targets_APPLIED_STATE" onclick="anchorLink('testing_targets_APPLIED_STATE')">APPLIED_STATE</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>For <a href="https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md">writeback</a> testing.  When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>applied</code></p>
+<span class="description"><p>For <a href="../../docs/specs/sequences/writeback.md">writeback</a> testing.  When <code>target_value</code> is applied to the <code>set_value</code> in the config block, the state of the point should be <code>applied</code></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -2368,7 +2368,8 @@
             />
         </svg>
     <a href="#pointset_points_pattern1_baseline_value" onclick="anchorLink('pointset_points_pattern1_baseline_value')">baseline_value</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p>Represents the expected baseline value of the point</p>
+</span>
             
 
             
@@ -2426,7 +2427,8 @@
             />
         </svg>
     <a href="#pointset_points_pattern1_baseline_tolerance" onclick="anchorLink('pointset_points_pattern1_baseline_tolerance')">baseline_tolerance</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
-
+<span class="description"><p>Maximum deviation from <code>baseline_value</code></p>
+</span>
             
 
             
@@ -2484,7 +2486,8 @@
             />
         </svg>
     <a href="#pointset_points_pattern1_baseline_state" onclick="anchorLink('pointset_points_pattern1_baseline_state')">baseline_state</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
-<div class="enum-value" id="pointset_points_pattern1_baseline_state_enum">
+<span class="description"><p>Expected state when <code>baseline_value</code> is set as the <code>set_value</code> for this point the config message</p>
+</span><div class="enum-value" id="pointset_points_pattern1_baseline_state_enum">
                 <h4>Must be one of:</h4>
                 <ul class="list-group"><li class="list-group-item enum-item">"applied"</li><li class="list-group-item enum-item">"updating"</li><li class="list-group-item enum-item">"overridden"</li><li class="list-group-item enum-item">"invalid"</li><li class="list-group-item enum-item">"failure"</li></ul>
                 </div>

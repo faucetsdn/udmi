@@ -1,5 +1,6 @@
 {
   "title": "System State",
+  "description": "[System State Documentation](../../docs/messages/system.md#state)",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

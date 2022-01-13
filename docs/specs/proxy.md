@@ -1,3 +1,5 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Proxy](#)
+
 # UDMI Proxy
 
 The _UDMI Proxy_ is a cloud-based capability to proxy UDMI/MQTT exchanges through an
@@ -25,7 +27,7 @@ devices over to a proxied connection. This is considered the _dev_ setup below, 
 comparison to the _proxy_ setup, which is required for a complete install.
 
 Internally, the Proxy project needs special setup and operation, but that is beyond
-the scope of this document, and doesn't directly effect the device or target project
+the scope of this document, and doesn't directly affect the device or target project
 setups.
 
 ## Sequence Diagram

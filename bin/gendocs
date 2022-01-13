@@ -1,4 +1,19 @@
 #!/bin/bash -e
+#
+# Automatic document generation, validation and helpers
+#
+# bin/gendocs [cmd]
+# 
+# <unspecified> (default)
+#   Generate HTML documentation from JSON schema. Stored in gencode/docs
+#
+# check
+#   Compares the hashes from the last time gendocs was run 
+#
+# gen_bucket [input_file] [output_file]
+#   Takes a tab delimited text file containing the list of feature buckets
+#   as copied from Google Sheets and convert into an MD list
+#
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
@@ -17,6 +32,33 @@ if [ "$1" == check ]; then
     echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
     exit 0
 fi
+
+if [ "$1" == gen_bucket ]; then
+    shift 1
+
+    input_file=$1
+    output_file=$2
+    tmp_file=$output_file.tmp
+    
+    rm -f $tmp_file
+    cp $input_file $tmp_file
+
+    # Blank Lines
+    sed -E -i '/^\s*$/d' $tmp_file
+    # Top level headings
+    sed -E -i 's;^([a-zA-Z0-9 .\-_\/]+)\t+$;*\t**\1**;g' $tmp_file
+    # Subheadings
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
+    # List Items
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t`\2` - \3;g' $tmp_file
+    # Convert tabs to spaces (comply with style guide)
+    expand -t 4 $tmp_file > $output_file
+    
+    rm $tmp_file
+    exit 0
+fi
+
+# Generate schema documentation (default)
 
 if [ -d venv ]; then
     source venv/bin/activate
@@ -43,11 +85,6 @@ done
 
 rm -rf $TMP_DIR
 
-# Convert github doc links to relative links for hosted/downloaded docs 
-#RELATIVE_LINK="..\/"
-#find $OUTPUT_DIR -type f -exec sed -i "s/$ABSOLUTE_LINK/$RELATIVE_LINK/" {} \;
-#ABSOLUTE_LINK="https:\/\/github.com\/faucetsdn\/udmi\/blob\/master\/docs\/"
-
 # Create index page with links to different schemas
 cp etc/schema_index_template.html $OUTPUT_DIR/index.html
 
@@ -56,3 +93,16 @@ for schema in $schemas; do
         <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
         $OUTPUT_DIR/index.html
 done
+
+# Add navbar
+navbar=$(cat etc/schema_navbar.html)
+navbar=$(printf '%q ' $navbar)
+find $OUTPUT_DIR -type f -exec sed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
+
+# Add dynamic documentation link rewriting
+cp etc/schema_extras.js $OUTPUT_DIR/schema_extras.js
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.js\" ></script></head>;" {} \;
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
+    <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;

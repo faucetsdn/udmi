@@ -1,6 +1,6 @@
 {
   "title": "Gateway Metadata",
-  "description": "Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/specs/gateway.md>",
+  "description": "[Gateway Documentation](../../docs/specs/gateway.md)",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

@@ -8,15 +8,15 @@
     "targets": {
       "properties": {
         "INVALID_STATE": {
-          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `invalid`",
+          "description": "For [writeback](../../docs/specs/sequences/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `invalid`",
           "$ref": "file:metadata_testing_target.json#"
         },
         "FAILURE_STATE": {
-          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `failure`",
+          "description": "For [writeback](../../docs/specs/sequences/writeback.md) testing. When `target_value` is applied to the `set_value` in the config block, the state of the point should be `failure`",
           "$ref": "file:metadata_testing_target.json#"
         },
         "APPLIED_STATE":{
-          "description": "For [writeback](https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md) testing.  When `target_value` is applied to the `set_value` in the config block, the state of the point should be `applied`",
+          "description": "For [writeback](../../docs/specs/sequences/writeback.md) testing.  When `target_value` is applied to the `set_value` in the config block, the state of the point should be `applied`",
           "$ref": "file:metadata_testing_target.json#"
         }
       }

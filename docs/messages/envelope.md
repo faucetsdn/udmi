@@ -1,4 +1,8 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Messages**](./) / [Envelope](#)
+
 # UDMI Envelope
+
+**Schema Definition:** [config.json](../../schema/envelope.json)
 
 The UDMI `envelope` is not a message itself, per se, but the attributes and other information that
 is delivered along with a message. There is no direct awareness of it at the device level: it is

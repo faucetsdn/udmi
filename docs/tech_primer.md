@@ -1,6 +1,8 @@
+[**UDMI**](../) / [**Docs**](./) / [Tech Primer](#)
+
 # Smart-Ready Building Technical Primer
 
-This document provides  primer for smart-ready building assembly, to essentially
+This document provides primer for smart-ready building assembly, to essentially
 answer the question *"What does Smart Ready mean?"* and *"How do we know it to be
 true?"* Specifically, it addresses the delta between a traditional site and
 smart-ready sites: places where new bleeding edge building technology is being
@@ -18,7 +20,7 @@ For the most part, this document addresses the scope of a Smart Ready building:
 -   **Smart Ready**: On-prem integrated with the cloud using UDMI & DBO.
 -   **Digital Building**: Completely integrated with back-end services.
 
-## Devices Classification
+## Device Classification
 
 Various adjectives qualify the different flavors of a "device" present in the
 system. More than one can apply, and each has a specific technical
@@ -28,16 +30,14 @@ meaning/definition (i.e. they are not subjective).
 
 How data is moved around on-prem
 
--   **Serial**: The device does not have an IP address, rather uses a wired
-    serial connection.
--   **Networked**: The device has its own IP address and presence on the wired
-    or wireless IP network.
--   **Bridged**: The device is on an isolated wired or wireless network behind a
-    gateway device that is networked. 
+-   **Networked**: The device has its own unique IP address on the managed network
+-   **Shadowed**: Does not have a managed IP address, for example:
+    -  The device connects using a wired serial connection to an IoT gateway
+    -  The device is on a shadowed IP network
 
 ### Ingestion
 
-How data gets up into the cloud
+How data gets up into the cloud.
 
 -   **Direct**: Maintains an authenticated connection directly to Cloud IoT Core.
     -   Must be networked
@@ -49,13 +49,14 @@ How data gets up into the cloud
 -   **External**: A device (on-prem or off-prem) consumes data from an external
     source
 
+Each **Direct**, **Gateway**, and **Proxied** device has a unique Device entry in a 
+Cloud IoT Core register
+
 ### Representation
 
 Device relationships and how they are modeled
 
 -   **Reporting**: Has an entry in Cloud IoT Core and reports telemetry data.
-    -   Reporting connected devices
-    -   Reporting proxied devices
 -   **Logical**: Has a semantic representation in the site building config.
 -   **Virtual**: Logical-but-not-reporting.
 
@@ -110,17 +111,17 @@ requirement by performing a series of predefined tests against a device.
 ## Device Management
 
 All devices which are _smart ready_ are required to support
-[UDMI](../../README.md). For guidance on what compliance with the UDMI schema
-means, refer to [compliance documentation](compliance.md)
+[UDMI](../README.md). For guidance on what compliance with the UDMI schema
+means, refer to [compliance documentation](specs/compliance.md)
 
 ### Prerequisites
 
-* [site model](site_model.md) provided and all devices registered into GCP
+* [site model](specs/site_model.md) provided and all devices registered into GCP
 * devices are setup in a qualified configuration
 
 ### Verification
 
-* [registrar](registrar.md) and [device telemetry validations](validator.md) are clean
+* [registrar](tools/registrar.md) and [device telemetry validations](tools/validator.md) are clean
 
 ## Digital Buildings Ontology
 
