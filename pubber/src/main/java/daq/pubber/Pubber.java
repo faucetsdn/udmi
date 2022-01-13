@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import java.util.Base64;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,12 +124,16 @@ public class Pubber {
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-      if (metadata.cloud != null) {
-        configuration.algorithm = metadata.cloud.auth_type.value();
-        LOG.info("Configuring with key type " + configuration.algorithm);
-      }
+      processDeviceMetadata(metadata);
     } catch (Exception e) {
       throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void processDeviceMetadata(Metadata metadata) {
+    if (metadata.cloud != null) {
+      configuration.algorithm = metadata.cloud.auth_type.value();
+      LOG.info("Configuring with key type " + configuration.algorithm);
     }
   }
 
@@ -136,12 +141,15 @@ public class Pubber {
     Preconditions.checkState(configuration.sitePath != null, "sitePath not defined in configuration");
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
-      CloudIotConfig cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
-      configuration.registryId = cloudIotConfig.registry_id;
-      configuration.cloudRegion = cloudIotConfig.cloud_region;
+      processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
+  }
+
+  private void processCloudConfig(CloudIotConfig cloudIotConfig) {
+    configuration.registryId = cloudIotConfig.registry_id;
+    configuration.cloudRegion = cloudIotConfig.cloud_region;
   }
 
   private void initializeDevice() {
@@ -172,8 +180,22 @@ public class Pubber {
   }
 
   private void pullDeviceMessage() {
-    String message = pubSubClient.pull();
-    System.err.println(message);
+    while(true) {
+      try {
+        LOG.info("Waiting for swarm configuration");
+        processSwarmConfig(OBJECT_MAPPER.readValue(pubSubClient.pull(), SwarmMessage.class));
+        return;
+      } catch (Exception e) {
+        LOG.error("Error pulling swarm message", e);
+      }
+    }
+  }
+
+  private void processSwarmConfig(SwarmMessage swarm) {
+    configuration.deviceId = Preconditions.checkNotNull(swarm.device_id);
+    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64));
+    processCloudConfig(Preconditions.checkNotNull(swarm.cloud_iot_config));
+    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -274,9 +296,7 @@ public class Pubber {
           configuration.deviceId, getDeviceKeyPrefix());
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
-    Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    LOG.info("Loading device key file from " + configuration.keyFile);
-    configuration.keyBytes = getFileBytes(configuration.keyFile);
+    ensureKeyBytes();
     mqttPublisher = new MqttPublisher(configuration, this::reportError);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -286,6 +306,15 @@ public class Pubber {
     }
     mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
         this::configHandler, Config.class);
+  }
+
+  private void ensureKeyBytes() {
+    if (configuration.keyBytes != null) {
+      return;
+    }
+    Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
+    LOG.info("Loading device key bytes from " + configuration.keyFile);
+    configuration.keyBytes = getFileBytes(configuration.keyFile);
   }
 
   private String getDeviceKeyPrefix() {

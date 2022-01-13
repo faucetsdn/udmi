@@ -2,7 +2,6 @@
 
 udmi_site_model/
 gcp_reflect_key.pkcs8
-/pubber.out
 workspace.xml
 codegen/
 .gradle/
@@ -14,6 +13,7 @@ firebase-debug.log
 /validator/build/
 /validator/out/
 /pubber/build/
+/pubber/out/
 /sites/
 /attributes.json
 /venv/

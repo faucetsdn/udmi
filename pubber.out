@@ -1,0 +1,20 @@
+Building pubber...
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Running tools version 1.3.11-15-g23f0f619
+INFO daq.pubber.Pubber - Configuring with key type RS256
+INFO daq.pubber.Pubber - Starting pubber AHU-1, serial sequencer-19135, mac null, extra null, gateway null
+INFO daq.pubber.Pubber - Loading device key file from udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+INFO daq.pubber.MqttPublisher - Creating new mqtt client for projects/bos-daq-testing/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.MqttPublisher - Attempting connection to projects/bos-daq-testing/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.MqttPublisher - Password hash 38269d117e7d818bd1cb47274e6eaf1a788cf36f96a83430e595d2e560e570f9
+INFO daq.pubber.Pubber - 2021-09-25T15:57:41Z received new config null 2021-09-25T15:53:21Z
+INFO daq.pubber.Pubber - Starting executor with send message delay 10000
+INFO daq.pubber.Pubber - 2021-09-25T15:57:41Z sending state message
+INFO daq.pubber.Pubber - Connection complete.
+INFO daq.pubber.Pubber - synchronized start config result true
+INFO daq.pubber.Pubber - Done with main
+INFO daq.pubber.Pubber - 2021-09-25T15:57:51Z sending test message
+INFO daq.pubber.Pubber - 2021-09-25T15:57:51Z sending log message
+INFO daq.pubber.Pubber - 2021-09-25T15:57:57Z received new config null 2021-09-25T15:57:56Z
+INFO daq.pubber.Pubber - 2021-09-25T15:57:57Z sending state message

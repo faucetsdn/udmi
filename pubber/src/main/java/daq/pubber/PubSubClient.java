@@ -47,7 +47,6 @@ public class PubSubClient {
             .build();
 
     List<ReceivedMessage> messages;
-    LOG.info("Waiting for messages");
     do {
       PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
       messages = pullResponse.getReceivedMessagesList();
