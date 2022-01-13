@@ -48,7 +48,7 @@ def check_links(file_path):
 
                 # Links are relative to the file they were found in 
                 resolved_path = os.path.realpath(os.path.join(dir_name, link_path))
-                
+
                 if not os.path.exists(resolved_path):
                     failing_links.append(link)
     
@@ -61,7 +61,6 @@ if __name__ == "__main__":
     for check_path in check_paths:
         file_paths = glob.glob(check_path, recursive=True)
         for file_path in file_paths:
-            print(file_path)
             invalid_links = check_links(file_path)
             if invalid_links:
                 for invalid_link in invalid_links:
