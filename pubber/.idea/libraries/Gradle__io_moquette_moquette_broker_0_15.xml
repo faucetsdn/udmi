@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: io.moquette:moquette-broker:0.15">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.moquette/moquette-broker/0.15/e8d3ccb89b584a28c88a583cdb0dc86d64349034/moquette-broker-0.15.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.moquette/moquette-broker/0.15/eefed867b4267125789a9d6a824f7eb07d00769a/moquette-broker-0.15-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
