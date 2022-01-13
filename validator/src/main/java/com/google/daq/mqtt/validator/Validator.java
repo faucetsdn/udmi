@@ -25,12 +25,17 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FirestoreDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
@@ -331,6 +336,9 @@ public class Validator {
 
       sanitizeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
+      errorFile.delete();
+      ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+      PrintStream errorOut = new PrintStream(errorStream);
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
@@ -339,18 +347,16 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
-        try (PrintStream errorOut = new PrintStream(errorFile)) {
-          errorOut.println(e.getMessage());
-        }
+        errorOut.println(e.getMessage());
         reportingDevice.addError(e);
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
         validateDeviceId(deviceId);
-      } catch (ExceptionMap | ProcessingException | ValidationException e) {
+      } catch (Exception e) {
         System.err.println("Error validating attributes: " + e.getMessage());
-        processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorFile, e);
+        processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorOut, e);
         reportingDevice.addError(e);
       }
 
@@ -362,7 +368,7 @@ public class Validator {
           }
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
-          processViolation(message, attributes, deviceId, schemaName, errorFile, e);
+          processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
         }
       }
@@ -371,7 +377,6 @@ public class Validator {
 
       if (expectedDevices.isEmpty()) {
         // No devices configured, so don't check metadata.
-        updated = false;
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
           if (EVENT_POINTSET.equals(schemaName)) {
@@ -382,11 +387,19 @@ public class Validator {
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          processViolation(message, attributes, deviceId, schemaName, errorFile, e);
+          processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
         }
       } else if (extraDevices.add(deviceId)) {
         updated = true;
+      }
+
+      errorOut.flush();
+      if (errorStream.size() > 0) {
+        System.err.println("Writing errors to " + errorFile.getAbsolutePath());
+        try (OutputStream output = new FileOutputStream(errorFile)) {
+          output.write(errorStream.toByteArray());
+        }
       }
 
       if (!reportingDevice.hasError()) {
@@ -506,16 +519,13 @@ public class Validator {
       Map<String, String> attributes,
       String deviceId,
       String schemaId,
-      File errorFile,
-      Exception e)
-      throws FileNotFoundException {
+      PrintStream errorOut,
+      Exception e) {
     ErrorTree errorTree = ExceptionMap.format(e, ERROR_FORMAT_INDENT);
     if (dataSink != null) {
       dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
     }
-    try (PrintStream errorOut = new PrintStream(errorFile)) {
-      errorTree.write(errorOut);
-    }
+    errorTree.write(errorOut);
   }
 
   private void validateDeviceId(String deviceId) {
