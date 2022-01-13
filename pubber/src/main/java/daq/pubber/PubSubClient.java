@@ -7,9 +7,12 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PullRequest;
 import com.google.pubsub.v1.PullResponse;
 import com.google.pubsub.v1.ReceivedMessage;
+import io.grpc.LoadBalancerRegistry;
+import io.grpc.internal.PickFirstLoadBalancerProvider;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.bp.Duration;
 
 public class PubSubClient {
 
@@ -22,15 +25,15 @@ public class PubSubClient {
     subscriptionName = ProjectSubscriptionName.format(projectId, subscriptionId);
     LOG.info("Using PubSub subscription " + subscriptionName);
     try {
-      SubscriberStubSettings subscriberStubSettings =
-          SubscriberStubSettings.newBuilder()
-              .setTransportChannelProvider(
-                  SubscriberStubSettings.defaultGrpcTransportProviderBuilder()
-                      .setMaxInboundMessageSize(20 * 1024 * 1024) // 20MB (maximum message size).
-                      .build())
-              .build();
+      SubscriberStubSettings.Builder subSettingsBuilder =
+          SubscriberStubSettings.newBuilder();
+      subSettingsBuilder
+          .pullSettings()
+          .setSimpleTimeoutNoRetries(Duration.ofDays(1))
+          .build();
+      SubscriberStubSettings build = subSettingsBuilder.build();
+      subscriber = GrpcSubscriberStub.create(build);
 
-      subscriber = GrpcSubscriberStub.create(subscriberStubSettings);
     } catch (Exception e) {
       throw new RuntimeException("While connecting to subscription " + subscriptionName, e);
     }
@@ -43,8 +46,13 @@ public class PubSubClient {
             .setSubscription(subscriptionName)
             .build();
 
-    PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
-    List<ReceivedMessage> messages = pullResponse.getReceivedMessagesList();
+    List<ReceivedMessage> messages;
+    LOG.info("Waiting for messages");
+    do {
+      PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
+      messages = pullResponse.getReceivedMessagesList();
+    } while(messages.size() == 0);
+
     if (messages.size() != 1) {
       throw new RuntimeException("Did not receive singular message");
     }
@@ -58,6 +66,6 @@ public class PubSubClient {
 
     subscriber.acknowledgeCallable().call(acknowledgeRequest);
 
-    return message.getMessage().toString();
+    return message.getMessage().getData().toStringUtf8();
   }
 }

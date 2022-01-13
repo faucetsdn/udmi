@@ -35,6 +35,10 @@ jar {
     }
 }
 
+shadowJar {
+    mergeServiceFiles()
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
