@@ -64,7 +64,6 @@ fi
 
 
 if [ "$1" == check_links ]; then
-
     if [ -d venv ]; then
         source venv/bin/activate
     fi
@@ -77,8 +76,6 @@ if [ "$1" == check_links ]; then
 
     exit 0
 fi 
-
-
 
 
 # Generate schema documentation (default)
