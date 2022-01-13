@@ -111,17 +111,17 @@ requirement by performing a series of predefined tests against a device.
 ## Device Management
 
 All devices which are _smart ready_ are required to support
-[UDMI](../../README.md). For guidance on what compliance with the UDMI schema
-means, refer to [compliance documentation](compliance.md)
+[UDMI](../README.md). For guidance on what compliance with the UDMI schema
+means, refer to [compliance documentation](specs/compliance.md)
 
 ### Prerequisites
 
-* [site model](site_model.md) provided and all devices registered into GCP
+* [site model](specs/site_model.md) provided and all devices registered into GCP
 * devices are setup in a qualified configuration
 
 ### Verification
 
-* [registrar](registrar.md) and [device telemetry validations](validator.md) are clean
+* [registrar](tools/registrar.md) and [device telemetry validations](tools/validator.md) are clean
 
 ## Digital Buildings Ontology
 
