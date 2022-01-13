@@ -44,7 +44,7 @@ native (e.g. BacNET) communications and UDMI-based messages.
 
 ### config
 
-[_Gateway Config Full Example_](udmi/tests/config.tests/gateway.json)
+[_Gateway Config Full Example_](../../tests/config.tests/gateway.json)
 
 The [🧬gateway block](../../gencode/docs/config.html#gateway) in the [config](../messages/config.md)
 simply specifies the list of target proxy devices. On a config update, the gateway is responsible
@@ -113,7 +113,7 @@ message.
 
 ### telemetry
 
-[Telemetry](../messages/telemetry.md) is handled similarly, with the gateway responsible for
+[Telemetry](../messages/pointset.md#telemetry) is handled similarly, with the gateway responsible for
 proxying data from local devices through to UDMI. In many cases, this would be translating specific
 device points into a [_pointset_ message](../../tests/event_pointset.tests/example.json).
 

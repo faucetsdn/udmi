@@ -1,6 +1,6 @@
 {
   "title": "Gateway Config",
-  "description": "Configuration for gateways. Only required for devices which are acting as [gateways](../../docs/specs/gateway.md)",
+  "description": "Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
