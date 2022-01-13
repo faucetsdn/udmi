@@ -23,6 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.daq.mqtt.registrar.SwarmMessage.Attributes;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -35,6 +36,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,17 +75,20 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   public static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
+  public static final String SWARM_SUBFOLDER = "swarm";
 
   private CloudIotManager cloudIotManager;
   private File siteDir;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private File schemaBase;
-  private PubSubPusher pubSubPusher;
+  private PubSubPusher configPusher;
+  private PubSubPusher feedPusher;
   private Map<String, LocalDevice> localDevices;
   private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
   private final String generation = getGenerationString();
+  private boolean updateCloudIoT;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -127,6 +132,15 @@ public class Registrar {
         case "-s":
           registrar.setSitePath(argList.remove(0));
           break;
+        case "-c":
+          registrar.setConfigTopic(argList.remove(0));
+          break;
+        case "-f":
+          registrar.setFeedTopic(argList.remove(0));
+          break;
+        case "-u":
+          registrar.setUpdateFlag(true);
+          break;
         case "--":
           return false;
         default:
@@ -138,6 +152,20 @@ public class Registrar {
       }
     }
     return true;
+  }
+
+  private void setUpdateFlag(boolean update) {
+    updateCloudIoT = update;
+  }
+
+  private void setFeedTopic(String feedTopic) {
+    System.err.println("Sending device feed to topic " + feedTopic);
+    feedPusher = new PubSubPusher(projectId, feedTopic);
+  }
+
+  private void setConfigTopic(String configTopic) {
+    System.err.println("Sending updates to config topic " + configTopic);
+    configPusher = new PubSubPusher(projectId, configTopic);
   }
 
   private void writeErrors() throws Exception {
@@ -190,11 +218,6 @@ public class Registrar {
     File cloudIotConfig = new File(siteDir, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
     System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
     cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, SCHEMA_NAME);
-    String configTopic = cloudIotManager.cloudIotConfig.config_topic;
-    System.err.println("Sending updates to config topic " + configTopic);
-    if (configTopic != null) {
-      pubSubPusher = new PubSubPusher(projectId, configTopic);
-    }
     System.err.println(
         String.format(
             "Working with project %s registry %s/%s",
@@ -222,11 +245,11 @@ public class Registrar {
     try {
       final Set<String> extraDevices;
       localDevices = loadLocalDevices();
-      if (localOnly()) {
-        extraDevices = new HashSet<>();
-      } else {
+      if (updateCloudIoT) {
         List<Device> cloudDevices = fetchDeviceList();
         extraDevices = cloudDevices.stream().map(Device::getId).collect(toSet());
+      } else {
+        extraDevices = new HashSet<>();
       }
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
@@ -244,29 +267,66 @@ public class Registrar {
         extraDevices.remove(localName);
         try {
           localDevice.writeConfigFile();
-          if ((deviceSet == null || deviceSet.contains(localName)) && !localOnly()) {
-            updateCloudIoT(localDevice);
-            Device device =
-                Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
-            BigInteger numId =
-                Preconditions.checkNotNull(
-                    device.getNumId(), "missing deviceNumId for " + localName);
-            localDevice.setDeviceNumId(numId.toString());
+          if ((deviceSet == null || deviceSet.contains(localName))) {
+            updateCloudIoT(localName, localDevice);
             sendConfigMessages(localDevice);
+            sendFeedMessage(localDevice);
           }
         } catch (Exception e) {
           System.err.println("Deferring exception: " + e.toString());
           localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
         }
       }
-      if (!localOnly()) {
+      if (updateCloudIoT) {
         bindGatewayDevices(localDevices, deviceSet);
         blockErrors = blockExtraDevices(extraDevices);
       }
-      System.err.println(String.format("Processed %d devices", localDevices.size()));
+      System.err.printf("Processed %d devices%n", localDevices.size());
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private void sendFeedMessage(LocalDevice localDevice) {
+    if (feedPusher == null) {
+      return;
+    }
+
+    if (!localDevice.isDirectConnect()) {
+      System.err.println("Skipping feed message for proxy device " + localDevice.getDeviceId());
+      return;
+    }
+
+    System.err.println("Sending feed message for " + localDevice.getDeviceId());
+
+    try {
+      Map<String, String> attributes = new HashMap<>();
+      attributes.put("subFolder", SWARM_SUBFOLDER);
+      attributes.put("deviceId", localDevice.getDeviceId());
+      attributes.put("deviceRegistryId", cloudIotManager.cloudIotConfig.registry_id);
+      attributes.put("deviceRegistryLocation", cloudIotManager.cloudIotConfig.cloud_region);
+      SwarmMessage swarmMessage = new SwarmMessage();
+      swarmMessage.key_base64 = Base64.getEncoder().encodeToString(localDevice.getKeyBytes());
+      swarmMessage.device_metadata = localDevice.getMetadata();
+      String swarmString = OBJECT_MAPPER.writeValueAsString(swarmMessage);
+      feedPusher.sendMessage(attributes, swarmString);
+    } catch (Exception e) {
+      throw new RuntimeException("While sending swarm feed message", e);
+    }
+  }
+
+  private void updateCloudIoT(String localName, LocalDevice localDevice) {
+    if (!updateCloudIoT) {
+      return;
+    }
+
+    updateCloudIoT(localDevice);
+    Device device =
+        Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
+    BigInteger numId =
+        Preconditions.checkNotNull(
+            device.getNumId(), "missing deviceNumId for " + localName);
+    localDevice.setDeviceNumId(numId.toString());
   }
 
   private Set<String> calculateDevices(List<String> devices) {
@@ -312,6 +372,9 @@ public class Registrar {
   }
 
   private void sendConfigMessages(LocalDevice localDevice) {
+    if (configPusher == null) {
+      return;
+    }
     System.err.println("Sending config messages for " + localDevice.getDeviceId());
 
     Config deviceConfig = localDevice.deviceConfigObject();
@@ -330,9 +393,7 @@ public class Registrar {
       attributes.put("projectId", cloudIotManager.getProjectId());
       attributes.put("subFolder", subFolder);
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
-      if (pubSubPusher != null) {
-        pubSubPusher.sendMessage(attributes, messageString);
-      }
+      configPusher.sendMessage(attributes, messageString);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While sending config " + subFolder, e);
     }
@@ -370,23 +431,22 @@ public class Registrar {
   }
 
   private void shutdown() {
-    if (pubSubPusher != null) {
-      pubSubPusher.shutdown();
+    if (configPusher != null) {
+      configPusher.shutdown();
+    }
+    if (feedPusher != null) {
+      feedPusher.shutdown();
     }
   }
 
   private List<Device> fetchDeviceList() {
-    if (localOnly()) {
-      System.err.println("Skipping remote registry fetch");
-      return ImmutableList.of();
-    } else {
+    if (updateCloudIoT) {
       System.err.println("Fetching remote registry " + cloudIotManager.getRegistryPath());
       return cloudIotManager.fetchDeviceList();
+    } else {
+      System.err.println("Skipping remote registry fetch");
+      return ImmutableList.of();
     }
-  }
-
-  private boolean localOnly() {
-    return projectId == null;
   }
 
   private Map<String, LocalDevice> loadLocalDevices() {

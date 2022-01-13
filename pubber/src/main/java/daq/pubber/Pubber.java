@@ -5,27 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
-import java.util.Base64;
-import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import udmi.schema.Entry;
-import udmi.schema.Config;
-import udmi.schema.Firmware;
-import udmi.schema.Metadata;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointsetConfig;
-import udmi.schema.PointsetEvent;
-import udmi.schema.PointsetState;
-import udmi.schema.State;
-import udmi.schema.SystemEvent;
+import daq.pubber.PubSubClient.Bundle;
+import daq.pubber.SwarmMessage.Attributes;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -34,6 +24,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import udmi.schema.Config;
+import udmi.schema.Entry;
+import udmi.schema.Firmware;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
 public class Pubber {
@@ -58,6 +60,7 @@ public class Pubber {
   public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
+  public static final String SWARM_SUBFOLDER = "swarm";
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -68,6 +71,7 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private boolean verbose = true;
 
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -109,6 +113,7 @@ public class Pubber {
     configuration.projectId = projectId;
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(projectId, deviceId);
+      verbose = false;
     } else {
       configuration.sitePath = sitePath;
       configuration.deviceId = deviceId;
@@ -183,7 +188,18 @@ public class Pubber {
     while(true) {
       try {
         LOG.info("Waiting for swarm configuration");
-        processSwarmConfig(OBJECT_MAPPER.readValue(pubSubClient.pull(), SwarmMessage.class));
+        SwarmMessage.Attributes attributes = new Attributes();
+        Bundle pull = pubSubClient.pull();
+        attributes.subFolder = pull.attributes.get("subFolder");
+        if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
+          LOG.error("Ignoring message with subFolder " + attributes.subFolder);
+          continue;
+        }
+        attributes.deviceId = pull.attributes.get("deviceId");
+        attributes.deviceRegistryId = pull.attributes.get("deviceRegistryId");
+        attributes.deviceRegistryLocation = pull.attributes.get("deviceRegistryLocation");
+        SwarmMessage swarm = OBJECT_MAPPER.readValue(pull.body, SwarmMessage.class);
+        processSwarmConfig(swarm, attributes);
         return;
       } catch (Exception e) {
         LOG.error("Error pulling swarm message", e);
@@ -191,11 +207,18 @@ public class Pubber {
     }
   }
 
-  private void processSwarmConfig(SwarmMessage swarm) {
-    configuration.deviceId = Preconditions.checkNotNull(swarm.device_id);
-    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64));
-    processCloudConfig(Preconditions.checkNotNull(swarm.cloud_iot_config));
-    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata));
+  private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
+    configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
+    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
+    processCloudConfig(makeCloudIoTConfig(attributes));
+    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
+  }
+
+  private CloudIotConfig makeCloudIoTConfig(Attributes attributes) {
+    CloudIotConfig cloudIotConfig = new CloudIotConfig();
+    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId, "deviceRegistryId");
+    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation, "deviceRegistryLocation");
+    return cloudIotConfig;
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -241,7 +264,7 @@ public class Pubber {
   private void updatePoints() {
     allPoints.forEach(point -> {
       point.updateData();
-        updateState(point);
+      updateState(point);
     });
   }
 
@@ -451,7 +474,9 @@ public class Pubber {
     }
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
-    info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
+    if (verbose) {
+      info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
+    }
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
@@ -459,7 +484,9 @@ public class Pubber {
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
-    info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+    if (verbose) {
+      info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+    }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = 400;

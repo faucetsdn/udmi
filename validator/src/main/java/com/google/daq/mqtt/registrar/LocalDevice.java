@@ -445,7 +445,7 @@ class LocalDevice {
     }
   }
 
-  private byte[] getKeyBytes() {
+  public byte[] getKeyBytes() {
     if (!isDirectConnect()) {
       return null;
     }
@@ -736,6 +736,10 @@ class LocalDevice {
       return errorTree.children.entrySet();
     }
     return Set.of();
+  }
+
+  public Metadata getMetadata() {
+    return metadata;
   }
 
   private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {

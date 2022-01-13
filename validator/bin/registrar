@@ -28,7 +28,7 @@ echo Using site config dir $site_dir
 echo Using devices $*
 
 if [[ -n "$project_id" ]]; then
-    project_opt="-p $project_id"
+    project_opt="-u -p $project_id"
 fi
 
 error=0

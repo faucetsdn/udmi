@@ -7,9 +7,8 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PullRequest;
 import com.google.pubsub.v1.PullResponse;
 import com.google.pubsub.v1.ReceivedMessage;
-import io.grpc.LoadBalancerRegistry;
-import io.grpc.internal.PickFirstLoadBalancerProvider;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
@@ -39,7 +38,7 @@ public class PubSubClient {
     }
   }
 
-  public String pull() {
+  public Bundle pull() {
     PullRequest pullRequest =
         PullRequest.newBuilder()
             .setMaxMessages(1)
@@ -65,6 +64,14 @@ public class PubSubClient {
 
     subscriber.acknowledgeCallable().call(acknowledgeRequest);
 
-    return message.getMessage().getData().toStringUtf8();
+    Bundle bundle = new Bundle();
+    bundle.body = message.getMessage().getData().toStringUtf8();
+    bundle.attributes = message.getMessage().getAttributesMap();
+    return bundle;
+  }
+
+  static class Bundle {
+    String body;
+    Map<String, String> attributes;
   }
 }

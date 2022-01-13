@@ -20,6 +20,8 @@ public class PubSubPusher {
 
   public PubSubPusher(String projectId, String outTopic) {
     try {
+      Preconditions.checkNotNull(projectId, "PubSub projectId");
+      Preconditions.checkNotNull(outTopic, "PubSub publish topic");
       this.outTopic = outTopic;
       ProjectTopicName topicName = ProjectTopicName.of(projectId, outTopic);
       publisher = Publisher.newBuilder(topicName).build();
