@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: pubber
-  replicas: 1000
+  replicas: 500
   strategy:
     rollingUpdate:
       maxSurge: 50%
@@ -23,8 +23,8 @@ spec:
         imagePullPolicy: Always
         env:
           - name: PUBBER_INSTANCES
-            value: "10"
+            value: "20"
         resources:
           requests:
-            memory: 200Mi
+            memory: 300Mi
             cpu: 10m
