@@ -11,4 +11,4 @@ COPY bin/ bin/
 
 COPY build/libs build/libs/
 
-ENTRYPOINT ["bin/swarm"]
+ENTRYPOINT ["bin/puller"]

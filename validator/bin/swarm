@@ -1,0 +1,35 @@
+#!/bin/bash -ex
+
+ROOT=$(dirname $0)/../..
+
+jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+mainclass=com.google.daq.mqtt.registrar.Registrar
+
+if [[ -z $3 ]]; then
+    echo Usage: $0 site_dir project_id pubsub_topic [devices...]
+    false
+fi
+
+site_dir=$1
+project_id=$2
+pubsub_topic=$3
+shift 3
+
+auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
+echo Application default credentials auth type ${auth_type:-unknown}
+
+export UDMI_VERSION=`cd $ROOT; git describe`
+
+echo Using tool version $UDMI_VERSION
+echo Using tool root $ROOT
+echo Using cloud project $project_id
+echo Using site config dir $site_dir
+echo Using pubsub topic $pubsub_topic
+echo Using devices $*
+
+error=0
+echo java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $*
+java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $pubsub_topic $* || error=$?
+
+echo Swarming complete, exit $error
+exit $error

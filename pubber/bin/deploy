@@ -2,11 +2,14 @@
 
 bin/build
 
+project_id=$(gcloud config get-value project)
+echo Using GCP project $project_id
+
 docker build . -f cluster/Dockerfile.pubber -t udmi/pubber
 
-docker tag udmi/pubber:latest us.gcr.io/bos-udmi-hub/pubber:latest
+docker tag udmi/pubber:latest us.gcr.io/${project_id}/pubber:latest
 
-docker push us.gcr.io/bos-udmi-hub/pubber:latest
+docker push us.gcr.io/${project_id}/pubber:latest
 
 kubectl scale deploy pubber-pool --replicas=0
 
