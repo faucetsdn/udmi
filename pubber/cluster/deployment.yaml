@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: pubber
-  replicas: 10
+  replicas: 1000
   strategy:
     rollingUpdate:
       maxSurge: 50%
@@ -21,6 +21,9 @@ spec:
       - name: pubber
         image: "us.gcr.io/bos-udmi-hub/pubber:latest"
         imagePullPolicy: Always
+        env:
+          - name: PUBBER_INSTANCES
+            value: "10"
         resources:
           requests:
             memory: 200Mi

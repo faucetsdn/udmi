@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-INSTANCES=10
+INSTANCES=${PUBBER_INSTANCES:-5}
+echo Running $INSTANCES pubber instances.
 
 if [[ -z $GCP_PROJECT ]]; then
     echo Checking GCP metadata...
@@ -19,7 +20,6 @@ if [[ -z $GCP_PROJECT ]]; then
 fi
 
 echo Using GCP project $GCP_PROJECT
-echo Running $INSTANCES
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
