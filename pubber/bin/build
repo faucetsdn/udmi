@@ -3,7 +3,7 @@
 rundir=$(dirname $0)
 cd $rundir/..
 
-echo Building pubber from $pwd
+echo Building pubber from $PWD
 
 rm -rf build
 

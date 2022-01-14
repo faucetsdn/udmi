@@ -45,6 +45,8 @@ public class Pubber {
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
+  private static final String HOSTNAME = System.getenv("HOSTNAME");
+
   private static final String POINTSET_TOPIC = "events/pointset";
   private static final String SYSTEM_TOPIC = "events/system";
   private static final String STATE_TOPIC = "state";
@@ -86,6 +88,16 @@ public class Pubber {
   }
 
   public static void main(String[] args) throws Exception {
+    boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
+    if (swarm) {
+      swarmPubber(args);
+    } else {
+      singularPubber(args);
+    }
+    LOG.info("Done with main");
+  }
+
+  private static void singularPubber(String[] args) throws InterruptedException {
     final Pubber pubber;
     if (args.length == 1) {
       pubber = new Pubber(args[0]);
@@ -96,7 +108,26 @@ public class Pubber {
     }
     pubber.initialize();
     pubber.startConnection();
-    LOG.info("Done with main");
+  }
+
+  private static void swarmPubber(String[] args) throws InterruptedException {
+    if (args.length != 4) {
+      throw new IllegalArgumentException("Usage: { project_id PubSub pubsub_subscription instance_count }");
+    }
+    int instances = Integer.parseInt(args[3]);
+    LOG.info(String.format("Starting %d pubber instances", instances));
+    for (int instance = 0; instance < instances; instance++) {
+      String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
+      LOG.info("Starting pubber instance " + serialNo);
+      try {
+        Pubber pubber = new Pubber(args[0], args[1], args[2], serialNo);
+        pubber.initialize();
+        pubber.startConnection();
+      } catch (Exception e) {
+        LOG.error("Exception starting instance", e);
+      }
+    }
+    LOG.info(String.format("Started all %d pubber instances", instances));
   }
 
   public Pubber(String configPath) {

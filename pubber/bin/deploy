@@ -1,16 +1,21 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 bin/build
-
 project_id=$(gcloud config get-value project)
 echo Using GCP project $project_id
 
+TAG=us.gcr.io/${project_id}/pubber:latest
+
 docker build . -f cluster/Dockerfile.pubber -t udmi/pubber
 
-docker tag udmi/pubber:latest us.gcr.io/${project_id}/pubber:latest
+echo Pushing image tag $TAG
+docker tag udmi/pubber:latest $TAG
+docker push $TAG
 
-docker push us.gcr.io/${project_id}/pubber:latest
-
+echo Clearing existing deployment...
 kubectl scale deploy pubber-pool --replicas=0
 
+sleep 10 # Short sleep to make sure 0 case is accepted.
+
+echo Creating instance replicas...
 kubectl scale deploy pubber-pool --replicas=10
