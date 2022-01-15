@@ -6,7 +6,6 @@ import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
 import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
 import static com.google.daq.mqtt.validator.Validator.NO_SITE;
-import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,9 +20,8 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.daq.mqtt.registrar.SwarmMessage.Attributes;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -35,6 +33,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -89,6 +89,8 @@ public class Registrar {
   private String projectId;
   private final String generation = getGenerationString();
   private boolean updateCloudIoT;
+  private Duration idleLimit;
+  private Set<String> cloudDevices;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -141,6 +143,9 @@ public class Registrar {
         case "-u":
           registrar.setUpdateFlag(true);
           break;
+        case "-l":
+          registrar.setIdleLimit(argList.remove(0));
+          break;
         case "--":
           return false;
         default:
@@ -152,6 +157,11 @@ public class Registrar {
       }
     }
     return true;
+  }
+
+  private void setIdleLimit(String option) {
+    idleLimit = Duration.parse("PT" + option);
+    System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
   }
 
   private void setUpdateFlag(boolean update) {
@@ -242,15 +252,12 @@ public class Registrar {
 
   private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
+    int processedDeviceCount = 0;
     try {
-      final Set<String> extraDevices;
       localDevices = loadLocalDevices();
-      if (updateCloudIoT) {
-        List<Device> cloudDevices = fetchDeviceList();
-        extraDevices = cloudDevices.stream().map(Device::getId).collect(toSet());
-      } else {
-        extraDevices = new HashSet<>();
-      }
+      cloudDevices = fetchCloudDevices();
+      Set<String> extraDevices = new HashSet<>(cloudDevices);
+
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
         if (!unknowns.isEmpty()) {
@@ -265,7 +272,12 @@ public class Registrar {
           continue;
         }
         extraDevices.remove(localName);
+        if (shouldLimitDevice(localDevice)) {
+          System.err.println("Skipping active device " + localDevice.getDeviceId());
+          continue;
+        }
         try {
+          processedDeviceCount++;
           localDevice.writeConfigFile();
           if ((deviceSet == null || deviceSet.contains(localName))) {
             updateCloudIoT(localName, localDevice);
@@ -281,9 +293,21 @@ public class Registrar {
         bindGatewayDevices(localDevices, deviceSet);
         blockErrors = blockExtraDevices(extraDevices);
       }
-      System.err.printf("Processed %d devices%n", localDevices.size());
+      System.err.printf("Processed %d devices (out of %d)%n", processedDeviceCount, localDevices.size());
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
+    }
+  }
+
+  private boolean shouldLimitDevice(LocalDevice localDevice) {
+    try {
+      Device device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
+      if (device == null || device.getLastEventTime() == null) {
+        return false;
+      }
+      return Instant.now().minus(idleLimit).isBefore(Instant.parse(device.getLastEventTime()));
+    } catch (Exception e) {
+      throw new RuntimeException("While checking device limit " + localDevice.getDeviceId(), e);
     }
   }
 
@@ -439,13 +463,16 @@ public class Registrar {
     }
   }
 
-  private List<Device> fetchDeviceList() {
-    if (updateCloudIoT) {
-      System.err.println("Fetching remote registry " + cloudIotManager.getRegistryPath());
-      return cloudIotManager.fetchDeviceList();
+  private Set<String> fetchCloudDevices() {
+    boolean requiresCloud = updateCloudIoT || (idleLimit != null);
+    if (requiresCloud) {
+      Set<String> devices = cloudIotManager.fetchDeviceList();
+      System.err.printf("Fetched %d devices from cloud registry %s%n",
+          devices.size(), cloudIotManager.getRegistryPath());
+      return devices;
     } else {
       System.err.println("Skipping remote registry fetch");
-      return ImmutableList.of();
+      return ImmutableSet.of();
     }
   }
 

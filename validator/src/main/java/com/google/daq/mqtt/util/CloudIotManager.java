@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -18,17 +20,16 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -215,7 +216,7 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  public List<Device> fetchDeviceList() {
+  public Set<String> fetchDeviceList() {
     Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
     try {
       List<Device> devices = cloudIotRegistries
@@ -225,12 +226,12 @@ public class CloudIotManager {
           .execute()
           .getDevices();
       if (devices == null) {
-        return new ArrayList<>();
+        return ImmutableSet.of();
       }
       if (devices.size() == LIST_PAGE_SIZE) {
         throw new RuntimeException("Returned exact page size, likely not fetched all devices");
       }
-      return devices;
+      return devices.stream().map(Device::getId).collect(Collectors.toSet());
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for registry " + registryId, e);
     }
