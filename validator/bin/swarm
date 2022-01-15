@@ -29,7 +29,7 @@ echo Using devices $*
 
 error=0
 echo java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $*
-java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $pubsub_topic $* || error=$?
+java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $pubsub_topic -l 10m $* || error=$?
 
 echo Swarming complete, exit $error
 exit $error

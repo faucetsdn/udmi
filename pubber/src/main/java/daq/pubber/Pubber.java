@@ -24,6 +24,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Config;
@@ -81,6 +83,7 @@ public class Pubber {
   private int sendCount;
   private boolean stateDirty;
   private PubSubClient pubSubClient;
+  private Consumer<String> onDone;
 
   static class ExtraPointsetEvent extends PointsetEvent {
     // This extraField exists only to trigger schema parsing errors.
@@ -107,27 +110,38 @@ public class Pubber {
       throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
-    pubber.startConnection();
+    pubber.startConnection(null);
   }
 
   private static void swarmPubber(String[] args) throws InterruptedException {
     if (args.length != 4) {
       throw new IllegalArgumentException("Usage: { project_id PubSub pubsub_subscription instance_count }");
     }
+    String projectId = args[0];
+    String siteName = args[1];
+    String feedName = args[2];
     int instances = Integer.parseInt(args[3]);
     LOG.info(String.format("Starting %d pubber instances", instances));
     for (int instance = 0; instance < instances; instance++) {
       String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
-      LOG.info("Starting pubber instance " + serialNo);
-      try {
-        Pubber pubber = new Pubber(args[0], args[1], args[2], serialNo);
-        pubber.initialize();
-        pubber.startConnection();
-      } catch (Exception e) {
-        LOG.error("Exception starting instance", e);
-      }
+      startFeedListener(projectId, siteName, feedName, serialNo);
     }
     LOG.info(String.format("Started all %d pubber instances", instances));
+  }
+
+  private static void startFeedListener(String projectId, String siteName, String feedName, String serialNo) {
+    try {
+      LOG.info("Starting feed listener " + serialNo);
+      Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
+      pubber.initialize();
+      pubber.startConnection(deviceId -> {
+        LOG.error("Connection terminated, restarting listener");
+        startFeedListener(projectId, siteName, feedName, serialNo);
+      });
+    } catch (Exception e) {
+      LOG.error("Exception starting instance " + serialNo, e);
+      startFeedListener(projectId, siteName, feedName, serialNo);
+    }
   }
 
   public Pubber(String configPath) {
@@ -142,14 +156,14 @@ public class Pubber {
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
+    configuration.deviceId = deviceId;
+    configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(projectId, deviceId);
       verbose = false;
     } else {
       configuration.sitePath = sitePath;
-      configuration.deviceId = deviceId;
     }
-    configuration.serialNo = serialNo;
   }
 
   private void loadDeviceMetadata() {
@@ -316,7 +330,8 @@ public class Pubber {
     }
   }
 
-  private void startConnection() throws InterruptedException {
+  private void startConnection(Consumer<String> onDone) throws InterruptedException {
+    this.onDone = onDone;
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
     LOG.info("synchronized start config result " + result);
@@ -381,8 +396,6 @@ public class Pubber {
       LOG.info("Connection complete.");
     } catch (Exception e) {
       LOG.error("Connection error", e);
-      LOG.error("Forcing termination");
-      System.exit(-1);
     }
   }
 
@@ -395,6 +408,9 @@ public class Pubber {
       if (configLatch.getCount() > 0) {
         LOG.warn("Releasing startup latch because reported error");
         configHandler(null);
+      }
+      if (onDone != null && toReport instanceof ConnectionClosedException) {
+        onDone.accept(configuration.deviceId);
       }
     } else {
       Entry previous = deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);

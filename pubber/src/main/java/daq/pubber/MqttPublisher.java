@@ -10,6 +10,7 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
@@ -275,6 +276,7 @@ public class MqttPublisher {
      */
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT Connection Lost", cause);
+      onError.accept(new ConnectionClosedException());
     }
 
     /**

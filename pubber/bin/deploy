@@ -1,21 +1,23 @@
 #!/bin/bash -e
 
+INSTANCES=10
+
 bin/build
 project_id=$(gcloud config get-value project)
 echo Using GCP project $project_id
 
+echo Clearing existing deployment...
+kubectl scale deploy pubber-pool --replicas=0
+
 TAG=us.gcr.io/${project_id}/pubber:latest
 
+echo Building docker image...
 docker build . -f cluster/Dockerfile.pubber -t udmi/pubber
 
 echo Pushing image tag $TAG
 docker tag udmi/pubber:latest $TAG
 docker push $TAG
 
-echo Clearing existing deployment...
-kubectl scale deploy pubber-pool --replicas=0
-
-sleep 10 # Short sleep to make sure 0 case is accepted.
-
-echo Creating instance replicas...
-kubectl scale deploy pubber-pool --replicas=10
+echo Restarting with $INSTANCES replicats...
+echo kubectl scale deploy pubber-pool --replicas=$INSTANCES
+kubectl scale deploy pubber-pool --replicas=$INSTANCES
