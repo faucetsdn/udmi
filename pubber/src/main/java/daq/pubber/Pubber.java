@@ -516,8 +516,9 @@ public class Pubber {
 
   private void sendDeviceMessage(String deviceId) {
     if (mqttPublisher.clientCount() == 0) {
-      LOG.error("No connected clients, exiting.");
-      System.exit(-2);
+      LOG.error("No connected clients, exiting " + configuration.serialNo);
+      cancelExecutor();
+      return;
     }
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();

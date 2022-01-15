@@ -26,5 +26,5 @@ spec:
             value: "20"
         resources:
           requests:
-            memory: 300Mi
-            cpu: 30m
+            memory: 250Mi
+            cpu: 10m
