@@ -47,6 +47,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
 
@@ -76,6 +78,8 @@ public class Registrar {
   public static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
   public static final String SWARM_SUBFOLDER = "swarm";
+
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   private CloudIotManager cloudIotManager;
   private File siteDir;

@@ -10,6 +10,7 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.time.Instant;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -56,10 +57,12 @@ public class MqttPublisher {
   private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
+  private static final int TOKEN_EXPIRY_MINUTES = 60;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
+  private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
 
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -174,9 +177,6 @@ public class MqttPublisher {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
       MqttClient mqttClient = newMqttClient(deviceId);
-      if (mqttClient.isConnected()) {
-        return mqttClient;
-      }
       LOG.info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
@@ -190,6 +190,7 @@ public class MqttPublisher {
 
       LOG.info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
       options.setPassword(createJwt());
+      reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
       mqttClient.connect(options);
 
@@ -310,8 +311,23 @@ public class MqttPublisher {
   private void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     LOG.debug("Sending message to " + mqttTopic);
+    checkAuthentication(deviceId);
     getConnectedClient(deviceId).publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
+  }
+
+  private void checkAuthentication(String deviceId) {
+    if (Instant.now().isBefore(reauthTimes.get(deviceId))) {
+      return;
+    }
+    LOG.warn("Authentication retry time reached for " + deviceId);
+    MqttClient client = mqttClients.remove(deviceId);
+    try {
+      client.disconnect();
+      client.close();
+    } catch (Exception e) {
+      throw new RuntimeException("While trying to reconnect mqtt client", e);
+    }
   }
 
   private MqttClient getConnectedClient(String deviceId) {
@@ -347,7 +363,7 @@ public class MqttPublisher {
     JwtBuilder jwtBuilder =
         Jwts.builder()
             .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMinutes(60).toDate())
+            .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
             .setAudience(projectId);
 
     if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {

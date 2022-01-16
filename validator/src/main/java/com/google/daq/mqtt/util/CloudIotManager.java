@@ -14,18 +14,19 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
+import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -218,20 +219,22 @@ public class CloudIotManager {
 
   public Set<String> fetchDeviceList() {
     Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
+    Set<Device> allDevices = new HashSet<>();
+    String nextPageToken = null;
     try {
-      List<Device> devices = cloudIotRegistries
-          .devices()
-          .list(getRegistryPath())
-          .setPageSize(LIST_PAGE_SIZE)
-          .execute()
-          .getDevices();
-      if (devices == null) {
-        return ImmutableSet.of();
-      }
-      if (devices.size() == LIST_PAGE_SIZE) {
-        throw new RuntimeException("Returned exact page size, likely not fetched all devices");
-      }
-      return devices.stream().map(Device::getId).collect(Collectors.toSet());
+      do {
+        ListDevicesResponse response1 = cloudIotRegistries
+            .devices()
+            .list(getRegistryPath())
+            .setPageToken(nextPageToken)
+            .setPageSize(LIST_PAGE_SIZE)
+            .execute();
+        ListDevicesResponse response = response1;
+        allDevices.addAll(response.getDevices());
+        System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());
+        nextPageToken = response.getNextPageToken();
+      } while (nextPageToken != null);
+      return allDevices.stream().map(Device::getId).collect(Collectors.toSet());
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for registry " + registryId, e);
     }
