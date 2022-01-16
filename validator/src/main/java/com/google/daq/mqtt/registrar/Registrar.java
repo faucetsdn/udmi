@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,8 +46,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
 
@@ -73,13 +74,13 @@ public class Registrar {
   public static final String SCHEMA_BASE_PATH = "schema";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
-  public static final String VERSION_MAIN_KEY = "main";
+  private static final String VERSION_MAIN_KEY = "main";
   private static final String SCHEMA_SUFFIX = ".json";
-  public static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
+  private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
-  public static final String SWARM_SUBFOLDER = "swarm";
-
-  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private static final String SWARM_SUBFOLDER = "swarm";
+  private static final long PROCESSING_TIMEOUT_MIN = 60;
+  public static final int RUNNER_THREADS = 50;
 
   private CloudIotManager cloudIotManager;
   private File siteDir;
@@ -256,11 +257,10 @@ public class Registrar {
 
   private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
-    int processedDeviceCount = 0;
+    AtomicInteger processedDeviceCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices();
       cloudDevices = fetchCloudDevices();
-      Set<String> extraDevices = new HashSet<>(cloudDevices);
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
@@ -269,37 +269,49 @@ public class Registrar {
               "Unknown specified devices: " + Joiner.on(", ").join(unknowns));
         }
       }
+
+      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       for (String localName : localDevices.keySet()) {
-        LocalDevice localDevice = localDevices.get(localName);
-        if (!localDevice.isValid()) {
-          System.err.println("Skipping (invalid) " + localName);
-          continue;
-        }
-        extraDevices.remove(localName);
-        if (shouldLimitDevice(localDevice)) {
-          System.err.println("Skipping active device " + localDevice.getDeviceId());
-          continue;
-        }
-        try {
-          processedDeviceCount++;
-          localDevice.writeConfigFile();
-          if ((deviceSet == null || deviceSet.contains(localName))) {
-            updateCloudIoT(localName, localDevice);
-            sendConfigMessages(localDevice);
-            sendFeedMessage(localDevice);
-          }
-        } catch (Exception e) {
-          System.err.println("Deferring exception: " + e.toString());
-          localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
-        }
+        executor.execute(() -> {
+          processLocalDevice(localName, processedDeviceCount);
+        });
       }
+      executor.shutdown();
+      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+
       if (updateCloudIoT) {
         bindGatewayDevices(localDevices, deviceSet);
+        Set<String> extraDevices = cloudDevices == null ? ImmutableSet.of()
+            : Sets.difference(cloudDevices, localDevices.keySet());
         blockErrors = blockExtraDevices(extraDevices);
       }
-      System.err.printf("Processed %d devices (out of %d)%n", processedDeviceCount, localDevices.size());
+      System.err.printf("Processed %d devices (out of %d)%n", processedDeviceCount.get(), localDevices.size());
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
+    }
+  }
+
+  private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {
+    LocalDevice localDevice = localDevices.get(localName);
+    if (!localDevice.isValid()) {
+      System.err.println("Skipping (invalid) " + localName);
+      return;
+    }
+    if (shouldLimitDevice(localDevice)) {
+      System.err.println("Skipping active device " + localDevice.getDeviceId());
+      return;
+    }
+    processedDeviceCount.incrementAndGet();
+    try {
+      localDevice.writeConfigFile();
+      if ((cloudDevices == null || cloudDevices.contains(localName))) {
+        updateCloudIoT(localName, localDevice);
+        sendConfigMessages(localDevice);
+        sendFeedMessage(localDevice);
+      }
+    } catch (Exception e) {
+      System.err.println("Deferring exception: " + e.toString());
+      localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
   }
 
@@ -476,7 +488,7 @@ public class Registrar {
       return devices;
     } else {
       System.err.println("Skipping remote registry fetch");
-      return ImmutableSet.of();
+      return null;
     }
   }
 

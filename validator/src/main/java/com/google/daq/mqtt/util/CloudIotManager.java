@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +55,7 @@ public class CloudIotManager {
   private CloudIot cloudIotService;
   private String projectPath;
   private CloudIot.Projects.Locations.Registries cloudIotRegistries;
-  private Map<String, Device> deviceMap = new HashMap<>();
+  private Map<String, Device> deviceMap = new ConcurrentHashMap<>();
   private String schemaName;
 
   public CloudIotManager(String projectId, File iotConfigFile, String schemaName) {
