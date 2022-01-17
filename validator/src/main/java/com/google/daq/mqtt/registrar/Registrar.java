@@ -176,6 +176,10 @@ public class Registrar {
   private void setFeedTopic(String feedTopic) {
     System.err.println("Sending device feed to topic " + feedTopic);
     feedPusher = new PubSubPusher(projectId, feedTopic);
+    System.err.println("Checking subscription for existing messages...");
+    if (!feedPusher.isEmpty()) {
+      throw new RuntimeException("Feed is not empty, do you have enough pullers?");
+    }
   }
 
   private void setConfigTopic(String configTopic) {
@@ -270,6 +274,7 @@ public class Registrar {
         }
       }
 
+      System.err.printf("Processing %d device records...", localDevices.size());
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       for (String localName : localDevices.keySet()) {
         executor.execute(() -> {
@@ -298,7 +303,7 @@ public class Registrar {
       return;
     }
     if (shouldLimitDevice(localDevice)) {
-      System.err.println("Skipping active device " + localDevice.getDeviceId());
+      // System.err.println("Skipping active device " + localDevice.getDeviceId());
       return;
     }
     processedDeviceCount.incrementAndGet();

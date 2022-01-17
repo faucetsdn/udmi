@@ -308,7 +308,7 @@ public class MqttPublisher {
     }
   }
 
-  private void sendMessage(String deviceId, String mqttTopic,
+  private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     LOG.debug("Sending message to " + mqttTopic);
     checkAuthentication(deviceId);
@@ -321,6 +321,7 @@ public class MqttPublisher {
       return;
     }
     LOG.warn("Authentication retry time reached for " + deviceId);
+    reauthTimes.remove(deviceId);
     MqttClient client = mqttClients.remove(deviceId);
     try {
       client.disconnect();
