@@ -261,7 +261,7 @@ public class Registrar {
 
   private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
-    AtomicInteger processedDeviceCount = new AtomicInteger();
+    AtomicInteger updatedCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices();
       cloudDevices = fetchCloudDevices();
@@ -274,11 +274,11 @@ public class Registrar {
         }
       }
 
-      System.err.printf("Processing %d device records...", localDevices.size());
+      System.err.printf("Processing %d device records...%n", localDevices.size());
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       for (String localName : localDevices.keySet()) {
         executor.execute(() -> {
-          processLocalDevice(localName, processedDeviceCount);
+          processLocalDevice(localName, updatedCount);
         });
       }
       executor.shutdown();
@@ -290,7 +290,11 @@ public class Registrar {
             : Sets.difference(cloudDevices, localDevices.keySet());
         blockErrors = blockExtraDevices(extraDevices);
       }
-      System.err.printf("Processed %d devices (out of %d)%n", processedDeviceCount.get(), localDevices.size());
+      System.err.printf("Updated %d devices (out of %d)%n", updatedCount.get(), localDevices.size());
+      if (cloudDevices != null) {
+        Set<String> unknownDevices = Sets.difference(localDevices.keySet(), cloudDevices);
+        System.err.printf("Skipped %d not-in-cloud devices.%n", unknownDevices.size());
+      }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
@@ -315,7 +319,7 @@ public class Registrar {
         sendFeedMessage(localDevice);
       }
     } catch (Exception e) {
-      System.err.println("Deferring exception: " + e.toString());
+      System.err.println("Deferring exception: " + e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
     }
   }
@@ -332,14 +336,14 @@ public class Registrar {
     }
   }
 
-  private void sendFeedMessage(LocalDevice localDevice) {
+  private boolean sendFeedMessage(LocalDevice localDevice) {
     if (feedPusher == null) {
-      return;
+      return false;
     }
 
     if (!localDevice.isDirectConnect()) {
       System.err.println("Skipping feed message for proxy device " + localDevice.getDeviceId());
-      return;
+      return false;
     }
 
     System.err.println("Sending feed message for " + localDevice.getDeviceId());
@@ -358,6 +362,7 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While sending swarm feed message", e);
     }
+    return true;
   }
 
   private void updateCloudIoT(String localName, LocalDevice localDevice) {

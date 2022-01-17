@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.rpc.DeadlineExceededException;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.stub.GrpcSubscriberStub;
 import com.google.cloud.pubsub.v1.stub.SubscriberStubSettings;
@@ -67,13 +68,13 @@ public class PubSubPusher {
   public boolean isEmpty() {
     String subscriptionName = ProjectSubscriptionName.format(projectId, outTopic);
     System.err.println("Using PubSub subscription " + subscriptionName);
-    GrpcSubscriberStub subscriber;
+    final GrpcSubscriberStub subscriber;
     try {
       SubscriberStubSettings.Builder subSettingsBuilder =
           SubscriberStubSettings.newBuilder();
       subSettingsBuilder
           .pullSettings()
-          .setSimpleTimeoutNoRetries(Duration.ofDays(1))
+          .setSimpleTimeoutNoRetries(Duration.ofSeconds(5))
           .build();
       SubscriberStubSettings build = subSettingsBuilder.build();
       subscriber = GrpcSubscriberStub.create(build);
@@ -81,17 +82,20 @@ public class PubSubPusher {
       throw new RuntimeException("While connecting to subscription " + subscriptionName, e);
     }
 
-    PullRequest pullRequest =
-        PullRequest.newBuilder()
-            .setMaxMessages(1)
-            .setSubscription(subscriptionName)
-            .build();
+    try {
+      PullRequest pullRequest =
+          PullRequest.newBuilder()
+              .setMaxMessages(1)
+              .setSubscription(subscriptionName)
+              .build();
 
-    PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
-    List<ReceivedMessage> messages = pullResponse.getReceivedMessagesList();
-
-    subscriber.shutdown();
-
-    return messages.isEmpty();
+      PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
+      return pullResponse.getReceivedMessagesList().isEmpty();
+    } catch (DeadlineExceededException e) {
+      // If there is nothing there the request will timeout, so equivalent to empty.
+      return true;
+    } finally {
+      subscriber.shutdown();
+    }
   }
 }
