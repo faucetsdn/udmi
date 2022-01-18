@@ -327,7 +327,7 @@ public class Registrar {
   private boolean shouldLimitDevice(LocalDevice localDevice) {
     try {
       Device device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
-      if (device == null || device.getLastEventTime() == null) {
+      if (device == null || device.getLastEventTime() == null || idleLimit == null) {
         return false;
       }
       return Instant.now().minus(idleLimit).isBefore(Instant.parse(device.getLastEventTime()));
