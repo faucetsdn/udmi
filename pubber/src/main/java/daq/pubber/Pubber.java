@@ -110,7 +110,10 @@ public class Pubber {
       throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
-    pubber.startConnection(null);
+    pubber.startConnection(deviceId -> {
+      LOG.info("Connection closed/finished " + deviceId);
+      pubber.terminate();
+    });
   }
 
   private static void swarmPubber(String[] args) throws InterruptedException {
@@ -135,6 +138,7 @@ public class Pubber {
       Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
       pubber.initialize();
       pubber.startConnection(deviceId -> {
+        pubber.terminate();
         LOG.error("Connection terminated, restarting listener");
         startFeedListener(projectId, siteName, feedName, serialNo);
       });
@@ -325,6 +329,7 @@ public class Pubber {
       info("Terminating");
       mqttPublisher.close();
       cancelExecutor();
+      executor.shutdown();
     } catch (Exception e) {
       info("Error terminating: " + e.getMessage());
     }
@@ -515,11 +520,6 @@ public class Pubber {
   }
 
   private void sendDeviceMessage(String deviceId) {
-    if (mqttPublisher.clientCount() == 0) {
-      LOG.error("No connected clients, exiting " + configuration.serialNo);
-      cancelExecutor();
-      return;
-    }
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     if (verbose) {
@@ -554,6 +554,10 @@ public class Pubber {
   }
 
   private void publishMessage(String deviceId, String topic, Object message) {
+    if (mqttPublisher == null) {
+      LOG.warn("Ignoring publish message b/c connection is shutdown");
+      return;
+    }
     mqttPublisher.publish(deviceId, topic, message);
 
     String fileName = topic.replace("/", "_") + ".json";

@@ -21,7 +21,6 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -85,6 +84,9 @@ public class MqttPublisher {
 
   void publish(String deviceId, String topic, Object data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
+    if (publisherExecutor.isShutdown()) {
+      return;
+    }
     LOG.debug("Publishing in background " + registryId + "/" + deviceId);
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
   }
@@ -98,17 +100,20 @@ public class MqttPublisher {
       errorCounter.incrementAndGet();
       LOG.warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
-        closeDeviceClient(deviceId);
+        closeMqttClient(deviceId);
       } else {
         close();
       }
     }
   }
 
-  private void closeDeviceClient(String deviceId) {
+  private void closeMqttClient(String deviceId) {
     MqttClient removed = mqttClients.remove(deviceId);
     if (removed != null) {
       try {
+        if (removed.isConnected()) {
+          removed.disconnect();
+        }
         removed.close();
       } catch (Exception e) {
         LOG.error("Error closing MQTT client: " + e.toString());
@@ -117,9 +122,14 @@ public class MqttPublisher {
   }
 
   void close() {
-    Set<String> clients = mqttClients.keySet();
-    for (String client : clients) {
-      closeDeviceClient(client);
+    try {
+      publisherExecutor.shutdown();
+      if (!publisherExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
+        throw new RuntimeException("Could not terminate executor");
+      }
+      mqttClients.keySet().forEach(this::closeMqttClient);
+    } catch (Exception e) {
+      throw new RuntimeException("While closing publisher");
     }
   }
 
