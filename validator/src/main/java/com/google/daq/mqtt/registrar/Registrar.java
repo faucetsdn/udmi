@@ -313,10 +313,12 @@ public class Registrar {
     processedDeviceCount.incrementAndGet();
     try {
       localDevice.writeConfigFile();
-      if ((cloudDevices == null || cloudDevices.contains(localName))) {
+      if (cloudDevices != null) {
         updateCloudIoT(localName, localDevice);
         sendConfigMessages(localDevice);
-        sendFeedMessage(localDevice);
+        if (cloudDevices.contains(localName)) {
+          sendFeedMessage(localDevice);
+        }
       }
     } catch (Exception e) {
       System.err.println("Deferring exception: " + e);
