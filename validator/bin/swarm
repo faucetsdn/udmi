@@ -2,20 +2,29 @@
 
 ROOT=$(dirname $0)/../..
 
-$ROOT/validator/bin/build
+LISTEN_PORT=${PORT:-8080}
+
+env
 
 jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-mainclass=com.google.daq.mqtt.registrar.Registrar
+mainclass=com.google.daq.mqtt.registrar.WebServer
 
-if [[ -z $3 ]]; then
-    echo Usage: $0 site_dir project_id pubsub_topic [devices...]
-    false
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo Checking GCP metadata...
+    GCP_PROJECT=$(curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" \
+                       -H "Metadata-Flavor: Google" 2>/dev/null) || true
 fi
 
-site_dir=$1
-project_id=$2
-pubsub_topic=$3
-shift 3
+if [[ -z $GCP_PROJECT ]]; then
+    echo Checking gcloud config...
+    GCP_PROJECT=$(gcloud config get-value project) || true
+fi
+
+if [[ -z $GCP_PROJECT ]]; then
+    echo Could not determine GCP_PROJECT.
+    false
+fi
 
 auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
 echo Application default credentials auth type ${auth_type:-unknown}
@@ -24,14 +33,12 @@ export UDMI_VERSION=`cd $ROOT; git describe`
 
 echo Using tool version $UDMI_VERSION
 echo Using tool root $ROOT
-echo Using cloud project $project_id
-echo Using site config dir $site_dir
-echo Using pubsub topic $pubsub_topic
-echo Using devices $*
+echo Using cloud project $GCP_PROJECT
+echo Using port $LISTEN_PORT
 
 error=0
-echo java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $*
-java -cp $jarfile $mainclass -r $ROOT -s $site_dir -p $project_id -f $pubsub_topic -l 10m $* || error=$?
+echo java -cp $jarfile $mainclass $LISTEN_PORT $GCP_PROJECT || error=$?
+java -cp $jarfile $mainclass $LISTEN_PORT $GCP_PROJECT || error=$?
 
 echo Swarming complete, exit $error
 exit $error

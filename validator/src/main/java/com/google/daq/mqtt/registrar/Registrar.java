@@ -118,12 +118,11 @@ public class Registrar {
     } catch (ExceptionMap em) {
       ErrorTree errorTree = ExceptionMap.format(em, ERROR_FORMAT_INDENT);
       errorTree.write(System.err);
-      System.exit(2);
+      throw new RuntimeException("mapped exceptions");
     } catch (Exception ex) {
       ex.printStackTrace();
-      System.exit(-1);
+      throw new RuntimeException("main exception", ex);
     }
-    System.exit(0);
   }
 
   private static boolean processArgs(List<String> argList, Registrar registrar) {
@@ -262,6 +261,7 @@ public class Registrar {
   private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
     AtomicInteger updatedCount = new AtomicInteger();
+    AtomicInteger processedCount = new AtomicInteger();
     try {
       localDevices = loadLocalDevices();
       cloudDevices = fetchCloudDevices();
@@ -274,15 +274,19 @@ public class Registrar {
         }
       }
 
-      System.err.printf("Processing %d device records...%n", localDevices.size());
       ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
       for (String localName : localDevices.keySet()) {
         executor.execute(() -> {
+          int count = processedCount.incrementAndGet();
+          if (count % 500 == 0) {
+            System.err.printf("Processed %d device records...%n", count);
+          }
           processLocalDevice(localName, updatedCount);
         });
       }
       executor.shutdown();
       executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+      System.err.printf("Finished processing %d device records...%n", processedCount.get());
 
       if (updateCloudIoT) {
         bindGatewayDevices(localDevices, deviceSet);
@@ -574,9 +578,15 @@ public class Registrar {
   private Map<String, LocalDevice> loadDevices(File siteDir, File devicesDir,
       String[] devices) {
     HashMap<String, LocalDevice> localDevices = new HashMap<>();
+    AtomicInteger loaded = new AtomicInteger(0);
     for (String deviceName : devices) {
+      int count = loaded.incrementAndGet();
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
-        System.err.println("Loading local device " + deviceName);
+        if (devices.length < 100) {
+          System.err.println("Loading local device " + deviceName);
+        } else if (count % 500 == 0) {
+          System.err.printf("Loaded %d devices...%n", count);
+        }
         LocalDevice localDevice =
             localDevices.computeIfAbsent(
                 deviceName,
@@ -597,6 +607,7 @@ public class Registrar {
         }
       }
     }
+    System.err.printf("Finished loading %d local devices.%n", loaded.get());
     return localDevices;
   }
 
