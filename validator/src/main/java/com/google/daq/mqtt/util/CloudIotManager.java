@@ -224,14 +224,14 @@ public class CloudIotManager {
     String nextPageToken = null;
     try {
       do {
-        ListDevicesResponse response1 = cloudIotRegistries
+        ListDevicesResponse response = cloudIotRegistries
             .devices()
             .list(getRegistryPath())
             .setPageToken(nextPageToken)
             .setPageSize(LIST_PAGE_SIZE)
             .execute();
-        ListDevicesResponse response = response1;
-        allDevices.addAll(response.getDevices());
+        List<Device> devices = response.getDevices();
+        allDevices.addAll(devices == null ? ImmutableList.of() : devices);
         System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());
         nextPageToken = response.getNextPageToken();
       } while (nextPageToken != null);
