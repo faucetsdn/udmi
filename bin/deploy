@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+rundir=$(dirname $0)
+cd $rundir/..
+
+INSTANCES=10
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 project_id
+    false
+fi
+
+project_id=$1
+shift
+
+echo Using GCP project $project_id
+
+echo Clearing existing deployment...
+
+for base in pubber validator; do
+    $base/bin/build
+    echo Building $base docker image...
+    docker build . -f $base/etc/Dockerfile.$base -t udmi/$base
+    TAG=us.gcr.io/${project_id}/$base:latest
+    echo Pushing image tag $TAG
+    docker tag udmi/$base:latest $TAG
+    docker push $TAG
+done
+
+echo Images uploaded, rescale deployment to restart:
+echo kubectl scale deploy pubber-pool --replicas=0
+echo kubectl scale deploy pubber-pool --replicas=$INSTANCES

@@ -4,8 +4,6 @@ ROOT=$(dirname $0)/../..
 
 LISTEN_PORT=${PORT:-8080}
 
-env
-
 jarfile=$ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.registrar.WebServer
 

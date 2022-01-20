@@ -1,0 +1,14 @@
+# Image name: udmi/pubber
+#
+# Docker container for scaled pubber instances.
+#
+
+FROM adoptopenjdk/openjdk11:latest
+
+WORKDIR /root/pubber
+
+COPY pubber/bin/ bin/
+
+COPY pubber/build/libs build/libs/
+
+ENTRYPOINT ["bin/puller"]
