@@ -499,6 +499,7 @@ class LocalDevice {
   public Config deviceConfigObject() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
+    config.version = 1;
     if (isGateway()) {
       config.gateway = new GatewayConfig();
       config.gateway.proxy_ids = getProxyDevicesList();
