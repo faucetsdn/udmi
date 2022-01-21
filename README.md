@@ -1,4 +1,13 @@
-# UDMI Schema 
+# UDMI 
+
+**Documentation** - [docs/](https://faucetsdn.github.io/udmi/docs)
+
+**Schema** - [schema/](https://github.com/faucetsdn/udmi/tree/master/schema)
+ ([_🧬Interactive viewer_](gencode/docs/))
+
+**Mailing list & discussion** - [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss)
+
+---
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
 management and operation of physical IoT systems. This data is typically exchanged
@@ -13,14 +22,14 @@ By design, this schema is intended to be:
 * <b>I</b>nterface: Define an interface specification, rather than a client-library or
 RPC mechanism.
 
-See the associated [UDMI Tech Stack](docs/tech_stack.md) for details about transport mechanism
+See the associated [UDMI Tech Stack](docs/specs/tech_stack.md) for details about transport mechanism
 outside of the core schema definition. Nominally meant for use with
-[Googe's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
+[Google's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
 of data or hosting setup.
 
 ## Recommended Workflow
 
-The [recommended workflow](docs/workflow.md) for UDMI covers using the _registrar_ and
+The [recommended workflow](docs/guides/workflow.md) for UDMI covers using the _registrar_ and
 _validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool
 is instrumental in setting up and testing the system independent of actual device setup.
 
@@ -34,7 +43,7 @@ manual operation (aren't automated), and increase the security exposure of the s
 
 UDMI is intended to support a few primary use-cases:
 * _Telemetry Ingestion_: Ingest device data points in a standardized format.
-* [_Gateway Proxy_](docs/gateway.md): Proxy data/connection for non-UDMI devices,
+* [_Gateway Proxy_](docs/specs/gateway.md): Proxy data/connection for non-UDMI devices,
 allowing adaptation to legacy systems.
 * _On-Prem Actuation_: Ability to effect on-prem device behavior.
 * _Device Testability_: e.g. Trigger a fake alarm to test reporting mechanisms.
@@ -77,10 +86,10 @@ very large structures or high-bandwidth streams.
 UDMI provides a means to multiplex multiple functional subsystems through the same shared
 communication channel. There are a number of subsystems that make up the core UDMI spec:
 
-* Core [_system_](docs/system.md) messages about the base device itself.
-* Device [_pointset_](docs/pointset.md) for device telemetry organized by points.
-* Optional [_gateway_](docs/gateway.md) functionality for proxying device/MQTT connections.
-* Local [_discover_](docs/discovery.md) for discovering device and network capabilities.
+* Core [_system_](docs/messages/system.md) messages about the base device itself.
+* Device [_pointset_](docs/messages/pointset.md) for device telemetry organized by points.
+* Optional [_gateway_](docs/specs/gateway.md) functionality for proxying device/MQTT connections.
+* Local [_discover_](docs/specs/discovery.md) for discovering device and network capabilities.
 
 ## Schema Structure
 
@@ -114,8 +123,8 @@ An interactive view of the schema is available on [https://faucetsdn.github.io/u
 ### Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](docs/registrar.md)
-tool and [validator](docs/validator.md) tool provide a means to configure and check site
+properly registering and validating device configuration. The [registrar](docs/tools/registrar.md)
+tool and [validator](docs/tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
 
 ### State Message
