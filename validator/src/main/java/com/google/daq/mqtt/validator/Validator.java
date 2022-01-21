@@ -75,9 +75,6 @@ public class Validator {
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String ERROR_FILE_FORMAT = "%s.out";
-  private static final Pattern DEVICE_ID_PATTERN =
-      Pattern.compile("^([a-z][_a-z0-9-]*[a-z0-9]|[A-Z][_A-Z0-9-]*[A-Z0-9])$");
-  private static final String DEVICE_MATCH_FORMAT = "DeviceId %s must match pattern %s";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String METADATA_JSON = "metadata.json";
@@ -353,7 +350,6 @@ public class Validator {
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
-        validateDeviceId(deviceId);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e.getMessage());
         processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorOut, e);
@@ -526,13 +522,6 @@ public class Validator {
       dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
     }
     errorTree.write(errorOut);
-  }
-
-  private void validateDeviceId(String deviceId) {
-    if (!DEVICE_ID_PATTERN.matcher(deviceId).matches()) {
-      throw new ExceptionMap(
-          String.format(DEVICE_MATCH_FORMAT, deviceId, DEVICE_ID_PATTERN.pattern()));
-    }
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {

@@ -5,25 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.CloudIotConfig;
-import java.util.HashMap;
-import udmi.schema.Entry;
-import udmi.schema.Config;
-import udmi.schema.Firmware;
-import udmi.schema.Metadata;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointsetConfig;
-import udmi.schema.PointsetEvent;
-import udmi.schema.PointsetState;
-import udmi.schema.State;
-import udmi.schema.SystemConfig;
-import udmi.schema.SystemEvent;
+import daq.pubber.PubSubClient.Bundle;
+import daq.pubber.SwarmMessage.Attributes;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -32,8 +24,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Config;
+import udmi.schema.Entry;
+import udmi.schema.Firmware;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
 public class Pubber {
@@ -42,6 +46,8 @@ public class Pubber {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+  private static final String HOSTNAME = System.getenv("HOSTNAME");
 
   private static final String POINTSET_TOPIC = "events/pointset";
   private static final String SYSTEM_TOPIC = "events/system";
@@ -57,6 +63,8 @@ public class Pubber {
   private static final int LOGGING_MOD_COUNT = 10;
   public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
+  private static final String PUBSUB_SITE = "PubSub";
+  public static final String SWARM_SUBFOLDER = "swarm";
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -67,12 +75,15 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private boolean verbose = true;
 
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
   private int sendCount;
   private boolean stateDirty;
+  private PubSubClient pubSubClient;
+  private Consumer<String> onDone;
 
   static class ExtraPointsetEvent extends PointsetEvent {
     // This extraField exists only to trigger schema parsing errors.
@@ -80,6 +91,16 @@ public class Pubber {
   }
 
   public static void main(String[] args) throws Exception {
+    boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
+    if (swarm) {
+      swarmPubber(args);
+    } else {
+      singularPubber(args);
+    }
+    LOG.info("Done with main");
+  }
+
+  private static void singularPubber(String[] args) throws InterruptedException {
     final Pubber pubber;
     if (args.length == 1) {
       pubber = new Pubber(args[0]);
@@ -89,8 +110,42 @@ public class Pubber {
       throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
-    pubber.startConnection();
-    LOG.info("Done with main");
+    pubber.startConnection(deviceId -> {
+      LOG.info("Connection closed/finished " + deviceId);
+      pubber.terminate();
+    });
+  }
+
+  private static void swarmPubber(String[] args) throws InterruptedException {
+    if (args.length != 4) {
+      throw new IllegalArgumentException("Usage: { project_id PubSub pubsub_subscription instance_count }");
+    }
+    String projectId = args[0];
+    String siteName = args[1];
+    String feedName = args[2];
+    int instances = Integer.parseInt(args[3]);
+    LOG.info(String.format("Starting %d pubber instances", instances));
+    for (int instance = 0; instance < instances; instance++) {
+      String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
+      startFeedListener(projectId, siteName, feedName, serialNo);
+    }
+    LOG.info(String.format("Started all %d pubber instances", instances));
+  }
+
+  private static void startFeedListener(String projectId, String siteName, String feedName, String serialNo) {
+    try {
+      LOG.info("Starting feed listener " + serialNo);
+      Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
+      pubber.initialize();
+      pubber.startConnection(deviceId -> {
+        pubber.terminate();
+        LOG.error("Connection terminated, restarting listener");
+        startFeedListener(projectId, siteName, feedName, serialNo);
+      });
+    } catch (Exception e) {
+      LOG.error("Exception starting instance " + serialNo, e);
+      startFeedListener(projectId, siteName, feedName, serialNo);
+    }
   }
 
   public Pubber(String configPath) {
@@ -105,9 +160,14 @@ public class Pubber {
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
-    configuration.sitePath = sitePath;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
+    if (PUBSUB_SITE.equals(sitePath)) {
+      pubSubClient = new PubSubClient(projectId, deviceId);
+      verbose = false;
+    } else {
+      configuration.sitePath = sitePath;
+    }
   }
 
   private void loadDeviceMetadata() {
@@ -118,12 +178,16 @@ public class Pubber {
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-      if (metadata.cloud != null) {
-        configuration.algorithm = metadata.cloud.auth_type.value();
-        LOG.info("Configuring with key type " + configuration.algorithm);
-      }
+      processDeviceMetadata(metadata);
     } catch (Exception e) {
       throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void processDeviceMetadata(Metadata metadata) {
+    if (metadata.cloud != null) {
+      configuration.algorithm = metadata.cloud.auth_type.value();
+      LOG.info("Configuring with key type " + configuration.algorithm);
     }
   }
 
@@ -131,18 +195,23 @@ public class Pubber {
     Preconditions.checkState(configuration.sitePath != null, "sitePath not defined in configuration");
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
-      CloudIotConfig cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
-      configuration.registryId = cloudIotConfig.registry_id;
-      configuration.cloudRegion = cloudIotConfig.cloud_region;
+      processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
+  }
+
+  private void processCloudConfig(CloudIotConfig cloudIotConfig) {
+    configuration.registryId = cloudIotConfig.registry_id;
+    configuration.cloudRegion = cloudIotConfig.cloud_region;
   }
 
   private void initializeDevice() {
     if (configuration.sitePath != null) {
       loadCloudConfig();
       loadDeviceMetadata();
+    } else if (pubSubClient != null) {
+      pullDeviceMessage();
     }
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
@@ -162,6 +231,43 @@ public class Pubber {
     addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
     addPoint(new RandomBoolean("faulty_finding", false));
     stateDirty = true;
+  }
+
+  private void pullDeviceMessage() {
+    while(true) {
+      try {
+        LOG.info("Waiting for swarm configuration");
+        SwarmMessage.Attributes attributes = new Attributes();
+        Bundle pull = pubSubClient.pull();
+        attributes.subFolder = pull.attributes.get("subFolder");
+        if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
+          LOG.error("Ignoring message with subFolder " + attributes.subFolder);
+          continue;
+        }
+        attributes.deviceId = pull.attributes.get("deviceId");
+        attributes.deviceRegistryId = pull.attributes.get("deviceRegistryId");
+        attributes.deviceRegistryLocation = pull.attributes.get("deviceRegistryLocation");
+        SwarmMessage swarm = OBJECT_MAPPER.readValue(pull.body, SwarmMessage.class);
+        processSwarmConfig(swarm, attributes);
+        return;
+      } catch (Exception e) {
+        LOG.error("Error pulling swarm message", e);
+      }
+    }
+  }
+
+  private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
+    configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
+    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
+    processCloudConfig(makeCloudIoTConfig(attributes));
+    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
+  }
+
+  private CloudIotConfig makeCloudIoTConfig(Attributes attributes) {
+    CloudIotConfig cloudIotConfig = new CloudIotConfig();
+    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId, "deviceRegistryId");
+    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation, "deviceRegistryLocation");
+    return cloudIotConfig;
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -207,7 +313,7 @@ public class Pubber {
   private void updatePoints() {
     allPoints.forEach(point -> {
       point.updateData();
-        updateState(point);
+      updateState(point);
     });
   }
 
@@ -223,12 +329,14 @@ public class Pubber {
       info("Terminating");
       mqttPublisher.close();
       cancelExecutor();
+      executor.shutdown();
     } catch (Exception e) {
       info("Error terminating: " + e.getMessage());
     }
   }
 
-  private void startConnection() throws InterruptedException {
+  private void startConnection(Consumer<String> onDone) throws InterruptedException {
+    this.onDone = onDone;
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
     LOG.info("synchronized start config result " + result);
@@ -262,9 +370,7 @@ public class Pubber {
           configuration.deviceId, getDeviceKeyPrefix());
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
-    Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    LOG.info("Loading device key file from " + configuration.keyFile);
-    configuration.keyBytes = getFileBytes(configuration.keyFile);
+    ensureKeyBytes();
     mqttPublisher = new MqttPublisher(configuration, this::reportError);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -274,6 +380,15 @@ public class Pubber {
     }
     mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
         this::configHandler, Config.class);
+  }
+
+  private void ensureKeyBytes() {
+    if (configuration.keyBytes != null) {
+      return;
+    }
+    Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
+    LOG.info("Loading device key bytes from " + configuration.keyFile);
+    configuration.keyBytes = getFileBytes(configuration.keyFile);
   }
 
   private String getDeviceKeyPrefix() {
@@ -286,8 +401,6 @@ public class Pubber {
       LOG.info("Connection complete.");
     } catch (Exception e) {
       LOG.error("Connection error", e);
-      LOG.error("Forcing termination");
-      System.exit(-1);
     }
   }
 
@@ -300,6 +413,9 @@ public class Pubber {
       if (configLatch.getCount() > 0) {
         LOG.warn("Releasing startup latch because reported error");
         configHandler(null);
+      }
+      if (onDone != null && toReport instanceof ConnectionClosedException) {
+        onDone.accept(configuration.deviceId);
       }
     } else {
       Entry previous = deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
@@ -404,13 +520,11 @@ public class Pubber {
   }
 
   private void sendDeviceMessage(String deviceId) {
-    if (mqttPublisher.clientCount() == 0) {
-      LOG.error("No connected clients, exiting.");
-      System.exit(-2);
-    }
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
-    info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
+    if (verbose) {
+      info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
+    }
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
@@ -418,7 +532,9 @@ public class Pubber {
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
-    info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+    if (verbose) {
+      info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+    }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = 400;
@@ -438,6 +554,10 @@ public class Pubber {
   }
 
   private void publishMessage(String deviceId, String topic, Object message) {
+    if (mqttPublisher == null) {
+      LOG.warn("Ignoring publish message b/c connection is shutdown");
+      return;
+    }
     mqttPublisher.publish(deviceId, topic, message);
 
     String fileName = topic.replace("/", "_") + ".json";

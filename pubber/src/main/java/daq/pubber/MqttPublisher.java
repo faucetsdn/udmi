@@ -6,27 +6,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.time.Instant;
+import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -57,10 +56,12 @@ public class MqttPublisher {
   private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
+  private static final int TOKEN_EXPIRY_MINUTES = 60;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
+  private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
 
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -83,6 +84,9 @@ public class MqttPublisher {
 
   void publish(String deviceId, String topic, Object data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
+    if (publisherExecutor.isShutdown()) {
+      return;
+    }
     LOG.debug("Publishing in background " + registryId + "/" + deviceId);
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
   }
@@ -96,17 +100,20 @@ public class MqttPublisher {
       errorCounter.incrementAndGet();
       LOG.warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
-        closeDeviceClient(deviceId);
+        closeMqttClient(deviceId);
       } else {
         close();
       }
     }
   }
 
-  private void closeDeviceClient(String deviceId) {
+  private void closeMqttClient(String deviceId) {
     MqttClient removed = mqttClients.remove(deviceId);
     if (removed != null) {
       try {
+        if (removed.isConnected()) {
+          removed.disconnect();
+        }
         removed.close();
       } catch (Exception e) {
         LOG.error("Error closing MQTT client: " + e.toString());
@@ -115,9 +122,14 @@ public class MqttPublisher {
   }
 
   void close() {
-    Set<String> clients = mqttClients.keySet();
-    for (String client : clients) {
-      closeDeviceClient(client);
+    try {
+      publisherExecutor.shutdown();
+      if (!publisherExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
+        throw new RuntimeException("Could not terminate executor");
+      }
+      mqttClients.keySet().forEach(this::closeMqttClient);
+    } catch (Exception e) {
+      throw new RuntimeException("While closing publisher");
     }
   }
 
@@ -175,9 +187,6 @@ public class MqttPublisher {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
       MqttClient mqttClient = newMqttClient(deviceId);
-      if (mqttClient.isConnected()) {
-        return mqttClient;
-      }
       LOG.info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
@@ -191,6 +200,7 @@ public class MqttPublisher {
 
       LOG.info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
       options.setPassword(createJwt());
+      reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
       mqttClient.connect(options);
 
@@ -277,6 +287,7 @@ public class MqttPublisher {
      */
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT Connection Lost", cause);
+      onError.accept(new ConnectionClosedException());
     }
 
     /**
@@ -307,11 +318,27 @@ public class MqttPublisher {
     }
   }
 
-  private void sendMessage(String deviceId, String mqttTopic,
+  private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     LOG.debug("Sending message to " + mqttTopic);
+    checkAuthentication(deviceId);
     getConnectedClient(deviceId).publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
+  }
+
+  private void checkAuthentication(String deviceId) {
+    if (Instant.now().isBefore(reauthTimes.get(deviceId))) {
+      return;
+    }
+    LOG.warn("Authentication retry time reached for " + deviceId);
+    reauthTimes.remove(deviceId);
+    MqttClient client = mqttClients.remove(deviceId);
+    try {
+      client.disconnect();
+      client.close();
+    } catch (Exception e) {
+      throw new RuntimeException("While trying to reconnect mqtt client", e);
+    }
   }
 
   private MqttClient getConnectedClient(String deviceId) {
@@ -347,7 +374,7 @@ public class MqttPublisher {
     JwtBuilder jwtBuilder =
         Jwts.builder()
             .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMinutes(60).toDate())
+            .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
             .setAudience(projectId);
 
     if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {

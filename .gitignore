@@ -12,10 +12,10 @@ firebase-debug.log
 /out/
 /validator/build/
 /validator/out/
-/validator/.idea/libraries
+/validator/.idea/libraries/
 /pubber/build/
 /pubber/out/
-/pubber/.idea/libraries
+/pubber/.idea/libraries/
 /sites/
 /attributes.json
 /venv/
