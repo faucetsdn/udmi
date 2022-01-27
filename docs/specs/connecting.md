@@ -9,10 +9,10 @@ On-prem             Cloud
  [D2]---|       |---[D2]
         \---*---/
 ```
-* D_x_
+* _Dx_:
   * **On-prem**:
   * **Cloud**:
-* * Connectivity
+* _\*_:_Connectivity_
   * **Network**
   * **Transport**
 
