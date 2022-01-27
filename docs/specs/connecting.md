@@ -12,7 +12,7 @@ On-prem             Cloud
 * _Dx_:
   * **On-prem**:
   * **Cloud**:
-* _\*_:_Connectivity_
+* _\*_: _Prem-to-Cloud Connectivity_
   * **Network**
   * **Transport**
 
