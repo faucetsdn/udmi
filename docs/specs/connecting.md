@@ -9,10 +9,10 @@ On-prem             Cloud
  [D2]---|       |---[D2]
         \---*---/
 ```
-* _Dx_:
+* _Devices_ (`D1` and `D2` in the diagram)
   * **On-prem**:
   * **Cloud**:
-* _\*_: _Prem-to-Cloud Connectivity_
+* _Prem-to-Cloud Connectivity_ (ascii `*` in the diagram)
   * **Network**
   * **Transport**
 
