@@ -1,6 +1,16 @@
 # Connecting Devices to Cloud
 
+There's a number of different ways that an IoT device can be connected to the
+cloud. The "right" choice will depend on the specific devices and overall
+system architecture. This document describes the major models available in the
+UDMI world.
+
 ## Abstract Framing
+
+Abstractly, the goal is to connect on-prem devces with their cloud-based
+representations. In between there's various bits of _stuff_ that facilitate
+that connection.
+
 ```
 On-prem             Cloud
         /---*---\
@@ -10,11 +20,11 @@ On-prem             Cloud
         \---*---/
 ```
 * _Devices_ (`D1` and `D2` in the diagram)
-  * **On-prem**:
-  * **Cloud**:
+  * **On-prem**: The physical device that's sitting in the building
+  * **Cloud**: The logical cloud representation of that device
 * _Prem-to-Cloud Connectivity_ (ascii `*` in the diagram)
-  * **Network**: Basic IP network connectivity.
-  * **Transport**: Typically MQTT & GCP IoT Core, but could be something else.
+  * **Network**: Basic IP network connectivity, but could be whatever works
+  * **Transport**: Typically MQTT & GCP IoT Core, but could be something else
 
 ## Connection Models
 
