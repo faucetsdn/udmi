@@ -70,14 +70,14 @@ On-prem              Cloud
  [D2]-/           \--[D2]
 ```
 
-### Gateway (Singleton)
+### Gateway (singleton)
 
 The degenerate case of a singleton (only one device) system could stil use
 a _gateway_ construct; however, this is ultimately less elegant since there is extra
 configuration and overhead required. In this case, the _adapter_ model
 is preferred as it's overall more clean (but a _gateway_ would still be functionally
 correct). Many devices can be configured to be either an _adapter_ or a _gateway_,
-so it might be the same hardware but different setup.
+so it might be the same hardware but different software setup.
 
 ```
 On-prem              Cloud
@@ -85,16 +85,16 @@ On-prem              Cloud
  [D1]--[G1]-*-[G1]---[D1]
 ```
 
-### Aggregator
+### Aggregator (anti-pattern)
 
 The _aggregator_ model is essentially a "poor-man's gateway" in that it has the same
 on-prem architecture but is treated differently in the cloud. In this case, all the
-data points from all the devices are aggregated together into one payload, using special
+data points from all the devices are aggregated together into one payload, using
 point-name encodings to differentiate points on the receiving end. The fundamental problem
 with this architecture is that it will not be able to support some back-end UDMI features
 that rely on devices being mapped as logical entities on the cloud end. This case is
-sometimes (unfortunately) required by limitations in implementations, but is not considered
-UDMI compliant.
+sometimes (unfortunately) required by limitations in some implementations, but is not
+considered UDMI compliant.
 
 ```
 On-prem              Cloud
