@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SwarmMessage.Attributes;
@@ -17,6 +18,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -33,6 +35,7 @@ import udmi.schema.Entry;
 import udmi.schema.Firmware;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetMetadata;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -65,6 +68,7 @@ public class Pubber {
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
   public static final String SWARM_SUBFOLDER = "swarm";
+  private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -189,6 +193,22 @@ public class Pubber {
       configuration.algorithm = metadata.cloud.auth_type.value();
       LOG.info("Configuring with key type " + configuration.algorithm);
     }
+
+    if (metadata.pointset != null) {
+      metadata.pointset.points.forEach((name, point) -> addPoint(makePoint(name, point)));
+    }
+  }
+
+  private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
+    boolean writeable = point.writeable != null && point.writeable;
+    if (BOOLEAN_UNITS.contains(point.units)) {
+      return new RandomBoolean(name, writeable);
+    } else {
+      double baseline_value = Double.parseDouble((String) point.baseline_value);
+      int min = (int) (baseline_value - point.baseline_tolerance);
+      int max = (int) (baseline_value + point.baseline_tolerance);
+      return new RandomPoint(name, writeable, min, max, point.units);
+    }
   }
 
   private void loadCloudConfig() {
@@ -227,9 +247,6 @@ public class Pubber {
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
     devicePoints.extraField = configuration.extraField;
-    addPoint(new RandomPoint("superimposition_reading", true,0, 100, "Celsius"));
-    addPoint(new RandomPoint("recalcitrant_angle", true,40, 40, "deg" ));
-    addPoint(new RandomBoolean("faulty_finding", false));
     stateDirty = true;
   }
 
