@@ -5,6 +5,7 @@
 
 - [UDMI Compliance](compliance.md)
 - [Discovery and Enumeration](discovery.md)
+- [Connection Models](connecting.md)
 - [Gateways](gateway.md)
 - [Messages](../messages/)
 - [Message Walk](message_walk.md)
