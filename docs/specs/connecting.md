@@ -44,7 +44,7 @@ general gold-standard since it minimizes the overall number of system components
 
 ```
 On-prem       Cloud
-  
+
  [D1]----*----[D1]
 
  [D2]----*----[D2]
@@ -60,7 +60,7 @@ of the connection between `D1` and `D1'` (it could be IP, RS485, or even
 
 ```
 On-prem          Cloud
-  
+
  [D1][D1']--*----[D1]
 
  [D2][D2']--*----[D2]
@@ -76,7 +76,7 @@ but is transparent for end-to-end operation of the system.
 
 ```
 On-prem              Cloud
-  
+
  [D1]-\           /--[D1]
        [G1]-*-[G1]
  [D2]-/           \--[D2]
@@ -93,7 +93,7 @@ so it might be the same hardware but different software setup.
 
 ```
 On-prem              Cloud
-  
+
  [D1]--[G1]-*-[G1]---[D1]
 ```
 
@@ -110,7 +110,7 @@ considered UDMI compliant.
 
 ```
 On-prem              Cloud
-  
+
  [D1]-\
        [A1]----------[A1]
  [D2]-/
