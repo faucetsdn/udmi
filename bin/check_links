@@ -42,9 +42,12 @@ def check_links(file_path):
 
     with open(file_path, 'r') as f:
         file_data = f.read()
-        first_line = file_data.partition('\n')[0]
-        if file_path.endswith('.md') and not re.match('^\[\*\*UDMI.*\(\#\)$', first_line):
-            failing_links.append((file_path, 'header', first_line))
+        if file_path.endswith('.md'):
+            file_lines = file_data.split('\n', 2)
+            if not re.match('^\[\*\*UDMI.*\]\(\#\)$', file_lines[0]):
+                failing_links.append((file_path, 'header', file_lines[0]))
+            if file_lines[1]:
+                failing_links.append((file_path, 'missing blank', ''))
         links = re.findall(r'\[.*\]\(([^\)]*)\)', file_data)
         for link in links:
             if not re.match('https?://', link):
