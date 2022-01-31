@@ -1,3 +1,5 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Connecting](#)
+
 # Connecting Devices to Cloud
 
 There's a number of different ways that an IoT device can be connected to the
