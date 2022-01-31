@@ -44,6 +44,7 @@ def check_links(file_path):
         file_data = f.read()
         if file_path.endswith('.md'):
             file_lines = file_data.split('\n', 2)
+            # TODO: Make this more comprehensive and check actual path.
             if not re.match('^\[\*\*UDMI.*\]\(\#\)$', file_lines[0]):
                 failing_links.append((file_path, 'header', file_lines[0]))
             if file_lines[1]:
