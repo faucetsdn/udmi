@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.PubSubClient.Bundle;
@@ -18,7 +19,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -64,11 +65,17 @@ public class Pubber {
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
   private static final int LOGGING_MOD_COUNT = 10;
-  public static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
+  private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
-  public static final String SWARM_SUBFOLDER = "swarm";
+  private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
+  private static final double DEFAULT_BASELINE_VALUE = 50;
+  private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
+      "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
+      "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
+      "superimposition_reading", makePointPointsetMetadaa(false)
+  );
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -88,6 +95,20 @@ public class Pubber {
   private boolean stateDirty;
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
+
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
+    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+    pointMetadata.writeable = writeable;
+    pointMetadata.baseline_value = value;
+    pointMetadata.baseline_tolerance = tolerance;
+    pointMetadata.units = units;
+    return pointMetadata;
+  }
+
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+    return pointMetadata;
+  }
 
   static class ExtraPointsetEvent extends PointsetEvent {
     // This extraField exists only to trigger schema parsing errors.
@@ -194,9 +215,9 @@ public class Pubber {
       LOG.info("Configuring with key type " + configuration.algorithm);
     }
 
-    if (metadata.pointset != null) {
-      metadata.pointset.points.forEach((name, point) -> addPoint(makePoint(name, point)));
-    }
+    Map<String, PointPointsetMetadata> points =
+        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+    points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
@@ -204,11 +225,25 @@ public class Pubber {
     if (BOOLEAN_UNITS.contains(point.units)) {
       return new RandomBoolean(name, writeable);
     } else {
-      double baseline_value = Double.parseDouble((String) point.baseline_value);
-      int min = (int) (baseline_value - point.baseline_tolerance);
-      int max = (int) (baseline_value + point.baseline_tolerance);
+      double baseline_value = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
+      double baseline_tolerance = convertValue(point.baseline_tolerance, baseline_value);
+      double min = baseline_value - baseline_tolerance;
+      double max = baseline_value + baseline_tolerance;
       return new RandomPoint(name, writeable, min, max, point.units);
     }
+  }
+
+  private double convertValue(Object baseline_value, double defaultBaselineValue) {
+    if (baseline_value == null) {
+      return defaultBaselineValue;
+    }
+    if (baseline_value instanceof Double) {
+      return (double) baseline_value;
+    }
+    if (baseline_value instanceof Integer) {
+      return (double) (int) baseline_value;
+    }
+    throw new RuntimeException("Unknown value type " + baseline_value.getClass());
   }
 
   private void loadCloudConfig() {
@@ -227,26 +262,30 @@ public class Pubber {
   }
 
   private void initializeDevice() {
+    deviceState.system = new SystemState();
+    deviceState.system.statuses = new HashMap<>();
+    deviceState.pointset = new PointsetState();
+    deviceState.pointset.points = new HashMap<>();
+    devicePoints.points = new HashMap<>();
+
     if (configuration.sitePath != null) {
       loadCloudConfig();
       loadDeviceMetadata();
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
+
     LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
-    deviceState.system = new SystemState();
+
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.make_model = "DAQ_pubber";
     deviceState.system.firmware = new Firmware();
     deviceState.system.firmware.version = "v1";
-    deviceState.system.statuses = new HashMap<>();
-    deviceState.pointset = new PointsetState();
-    deviceState.pointset.points = new HashMap<>();
-    devicePoints.points = new HashMap<>();
     devicePoints.extraField = configuration.extraField;
+
     stateDirty = true;
   }
 
