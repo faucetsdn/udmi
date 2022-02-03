@@ -8,18 +8,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "suffix"
+    "implicit"
 })
 @Generated("jsonschema2pojo")
-public class Aux__1 {
+public class Enumeration {
 
-    @JsonProperty("suffix")
-    public String suffix;
+    @JsonProperty("implicit")
+    public Boolean implicit;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.suffix == null)? 0 :this.suffix.hashCode()));
+        result = ((result* 31)+((this.implicit == null)? 0 :this.implicit.hashCode()));
         return result;
     }
 
@@ -28,11 +28,11 @@ public class Aux__1 {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Aux__1) == false) {
+        if ((other instanceof Enumeration) == false) {
             return false;
         }
-        Aux__1 rhs = ((Aux__1) other);
-        return ((this.suffix == rhs.suffix)||((this.suffix!= null)&&this.suffix.equals(rhs.suffix)));
+        Enumeration rhs = ((Enumeration) other);
+        return ((this.implicit == rhs.implicit)||((this.implicit!= null)&&this.implicit.equals(rhs.implicit)));
     }
 
 }

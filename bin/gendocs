@@ -68,7 +68,7 @@ if [ "$1" == check_links ]; then
         source venv/bin/activate
     fi
 
-    python3 bin/check_links.py > check_links.out
+    bin/check_links > check_links.out
     if [ -s check_links.out ]; then
         cat check_links.out
         exit 1
@@ -104,6 +104,7 @@ find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
+    echo == Processing $schema.json
     python3 bin/gendocs.py $schema $TMP_DIR $OUTPUT_DIR
 done
 

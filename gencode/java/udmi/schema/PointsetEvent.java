@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Pointset Event
  * <p>
- * A set of points reporting telemetry data
+ * A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

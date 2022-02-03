@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * System Metadata
  * <p>
- * High-level sytem informaiton about the device.
+ * High-level system information about the device. [System Metadata Documentation](../docs/messages/system.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

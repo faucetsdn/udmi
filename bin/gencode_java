@@ -9,6 +9,7 @@ cd $ROOT_DIR
 rm -rf codegen gencode
 mkdir -p codegen gencode
 
+OUTDIR=$ROOT_DIR/gencode/java
 cd codegen
 GENDIR=$PWD
 
@@ -20,7 +21,10 @@ tar -xzvf $JARVER.tgz
 
 cd $ROOT_DIR/schema
 JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
-echo Generating code in gencode/java...
-$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
+echo Generating code in $OUTDIR
+$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $OUTDIR
+
+echo Cleaning up __ classes...
+find $OUTDIR -name \*__\*.java | xargs rm
 
 echo Done with code generation.

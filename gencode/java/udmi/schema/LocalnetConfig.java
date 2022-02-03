@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Localnet Config
  * <p>
- * 
+ * Used to describe device local network parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

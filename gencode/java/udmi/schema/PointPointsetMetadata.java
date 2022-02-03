@@ -1,11 +1,15 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -41,12 +45,27 @@ public class PointPointsetMetadata {
     @JsonProperty("writeable")
     @JsonPropertyDescription("Indicates if this point is writable (else read-only)")
     public Boolean writeable;
+    /**
+     * Represents the expected baseline value of the point
+     * 
+     */
     @JsonProperty("baseline_value")
+    @JsonPropertyDescription("Represents the expected baseline value of the point")
     public Object baseline_value;
+    /**
+     * Maximum deviation from `baseline_value`
+     * 
+     */
     @JsonProperty("baseline_tolerance")
+    @JsonPropertyDescription("Maximum deviation from `baseline_value`")
     public Double baseline_tolerance;
+    /**
+     * Expected state when `baseline_value` is set as the `set_value` for this point the config message
+     * 
+     */
     @JsonProperty("baseline_state")
-    public String baseline_state;
+    @JsonPropertyDescription("Expected state when `baseline_value` is set as the `set_value` for this point the config message")
+    public PointPointsetMetadata.Baseline_state baseline_state;
     /**
      * Triggering threshold for partial cov update publishing
      * 
@@ -55,11 +74,11 @@ public class PointPointsetMetadata {
     @JsonPropertyDescription("Triggering threshold for partial cov update publishing")
     public Double cov_increment;
     /**
-     * A local network reference for a point, e.g. BACnet address or Modbus register
+     * Mapping for the point to an internal resource (e.g. BACnet object reference)
      * 
      */
     @JsonProperty("ref")
-    @JsonPropertyDescription("A local network reference for a point, e.g. BACnet address or Modbus register")
+    @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public String ref;
 
     @Override
@@ -85,6 +104,54 @@ public class PointPointsetMetadata {
         }
         PointPointsetMetadata rhs = ((PointPointsetMetadata) other);
         return ((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.writeable == rhs.writeable)||((this.writeable!= null)&&this.writeable.equals(rhs.writeable))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
+    }
+
+
+    /**
+     * Expected state when `baseline_value` is set as the `set_value` for this point the config message
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum Baseline_state {
+
+        APPLIED("applied"),
+        UPDATING("updating"),
+        OVERRIDDEN("overridden"),
+        INVALID("invalid"),
+        FAILURE("failure");
+        private final String value;
+        private final static Map<String, PointPointsetMetadata.Baseline_state> CONSTANTS = new HashMap<String, PointPointsetMetadata.Baseline_state>();
+
+        static {
+            for (PointPointsetMetadata.Baseline_state c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Baseline_state(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static PointPointsetMetadata.Baseline_state fromValue(String value) {
+            PointPointsetMetadata.Baseline_state constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

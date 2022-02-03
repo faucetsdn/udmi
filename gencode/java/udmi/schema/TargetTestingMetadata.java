@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -23,7 +24,12 @@ public class TargetTestingMetadata {
 
     @JsonProperty("target_point")
     public String target_point;
+    /**
+     * Value specified in the appropriate config block as the set_value field for the point `target_point`
+     * 
+     */
     @JsonProperty("target_value")
+    @JsonPropertyDescription("Value specified in the appropriate config block as the set_value field for the point `target_point`")
     public Object target_value;
 
     @Override
