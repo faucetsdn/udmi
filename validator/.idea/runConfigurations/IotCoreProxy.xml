@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="IotCoreProxy" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="com.google.bos.iot.core.proxy.IotCoreProxy" />
+    <module name="daq-validator.validator" />
+    <option name="PROGRAM_PARAMETERS" value="proxy/attributes.json" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.google.bos.iot.core.proxy.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
