@@ -1,4 +1,14 @@
 #!/bin/bash -e
 
+
+if [[ $1 == check ]]; then
+    echo Chekcing gencode hash...
+    find gencode/ -type f | xargs cat | sha256sum > /tmp/gencode.hash
+    diff /tmp/gencode.hash .gencode_hash.txt
+    exit 0
+fi
+
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
+
+find gencode/ -type f | xargs cat | sha256sum > .gencode_hash.txt

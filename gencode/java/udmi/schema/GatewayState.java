@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Gateway State
  * <p>
- * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>
+ * [Gateway Documentation](../docs/specs/gateway.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

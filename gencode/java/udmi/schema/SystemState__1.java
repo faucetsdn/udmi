@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * System State
  * <p>
- * 
+ * [System State Documentation](../docs/messages/system.md#state)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -64,7 +64,7 @@ public class SystemState__1 {
     @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).")
     public Date last_config;
     /**
-     * whatis
+     * 
      * (Required)
      * 
      */

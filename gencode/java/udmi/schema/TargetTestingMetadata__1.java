@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "target_value"
 })
 @Generated("jsonschema2pojo")
-public class TargetTestingMetadata {
+public class TargetTestingMetadata__1 {
 
     @JsonProperty("target_point")
     public String target_point;
@@ -45,10 +45,10 @@ public class TargetTestingMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof TargetTestingMetadata) == false) {
+        if ((other instanceof TargetTestingMetadata__1) == false) {
             return false;
         }
-        TargetTestingMetadata rhs = ((TargetTestingMetadata) other);
+        TargetTestingMetadata__1 rhs = ((TargetTestingMetadata__1) other);
         return (((this.target_point == rhs.target_point)||((this.target_point!= null)&&this.target_point.equals(rhs.target_point)))&&((this.target_value == rhs.target_value)||((this.target_value!= null)&&this.target_value.equals(rhs.target_value))));
     }
 

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * System Config
  * <p>
- * 
+ * [System Config Documentation](../docs/messages/system.md#config)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

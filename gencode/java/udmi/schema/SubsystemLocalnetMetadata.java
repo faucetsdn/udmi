@@ -4,13 +4,14 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Subsystem Localnet Metadata
  * <p>
- * 
+ * The type of network
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,11 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SubsystemLocalnetMetadata {
 
     /**
-     * 
+     * The address of a device on the local network
      * (Required)
      * 
      */
     @JsonProperty("local_id")
+    @JsonPropertyDescription("The address of a device on the local network")
     public String local_id;
 
     @Override

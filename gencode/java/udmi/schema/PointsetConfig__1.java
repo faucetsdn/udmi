@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Pointset Config
  * <p>
- * 
+ * [Pointset Config Documentation](../docs/messages/pointset.md#config)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,14 +27,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class PointsetConfig__1 {
 
+    /**
+     * The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)
+     * 
+     */
     @JsonProperty("state_etag")
+    @JsonPropertyDescription("The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public java.lang.String state_etag;
     /**
-     * An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>
+     * An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. [Writeback documentation](../docs/specs/sequences/writeback.md)
      * 
      */
     @JsonProperty("set_value_expiry")
-    @JsonPropertyDescription("An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/writeback.md>")
+    @JsonPropertyDescription("An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public Date set_value_expiry;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
@@ -51,11 +56,11 @@ public class PointsetConfig__1 {
     @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.")
     public Integer sample_rate_sec;
     /**
-     * The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>
+     * The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). [Pointset doumentation](../docs/messages/pointset.md)
      * 
      */
     @JsonProperty("points")
-    @JsonPropertyDescription("The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/pointset.md>")
+    @JsonPropertyDescription("The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). [Pointset doumentation](../docs/messages/pointset.md)")
     public HashMap<String, PointPointsetConfig> points;
 
     @Override
