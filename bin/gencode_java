@@ -24,6 +24,6 @@ echo Generating code in gencode/java...
 $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 
 cd $ROOT_DIR
-find gencode/java -type f
+find gencode/java -type f | sort
 
 echo Done with java code generation.
