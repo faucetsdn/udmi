@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-find gencode/ -type f | sort
+# Fix sort order difference on different platforms.
+export LC_ALL=C
 
 if [[ $1 == check ]]; then
     echo Checking gencode hash...
