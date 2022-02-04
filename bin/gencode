@@ -10,5 +10,6 @@ fi
 
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
+bin/gencode_docs
 
 find gencode/ -type f | xargs cat | sha256sum > .gencode_hash.txt
