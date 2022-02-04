@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Swarmer" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.registrar.Registrar" />
+    <module name="daq-validator.validator" />
+    <option name="PROGRAM_PARAMETERS" value="-s ../sites/sg-sin-mbc2 -p bos-udmi-hub -f swarm-feed -l 10m" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.google.daq.mqtt.registrar.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

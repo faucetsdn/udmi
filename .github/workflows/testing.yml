@@ -58,6 +58,10 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11'
+      - name: gencode check
+        run: |
+          bin/setup_base
+          bin/gencode check
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -83,7 +87,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: schema docs
         if: always()
-        run: bin/gendocs check_schema
+        run: bin/gencode_docs check_schema
       - name: schema links
         if: always()
-        run: bin/gendocs check_links
+        run: bin/gencode_docs check_links
