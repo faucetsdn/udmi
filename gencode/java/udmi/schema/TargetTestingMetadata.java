@@ -22,14 +22,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class TargetTestingMetadata {
 
+    /**
+     * Point name used for testing
+     * 
+     */
     @JsonProperty("target_point")
+    @JsonPropertyDescription("Point name used for testing")
     public String target_point;
     /**
-     * Value specified in the appropriate config block as the set_value field for the point `target_point`
+     * Value used for testing
      * 
      */
     @JsonProperty("target_value")
-    @JsonPropertyDescription("Value specified in the appropriate config block as the set_value field for the point `target_point`")
+    @JsonPropertyDescription("Value used for testing")
     public Object target_value;
 
     @Override
