@@ -23,4 +23,7 @@ JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in gencode/java...
 $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 
+cd $ROOT_DIR
+find gencode/java -type f
+
 echo Done with code generation.
