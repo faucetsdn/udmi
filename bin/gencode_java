@@ -19,6 +19,9 @@ curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$J
 tar -xzvf $JARVER.tgz
 
 cd $ROOT_DIR/schema
+
+find . -name \*~ | xargs -r rm
+
 JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in gencode/java...
 $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
