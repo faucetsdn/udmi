@@ -59,7 +59,9 @@ jobs:
         with:
           java-version: '11'
       - name: gencode check
-        run: bin/gencode check
+        run: |
+          bin/setup_base
+          bin/gencode check
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
