@@ -58,12 +58,13 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11'
+      - name: gencode check
+        run: bin/gencode check
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          bin/gencode check
           bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
           diff /tmp/results.txt etc/sequence.out
