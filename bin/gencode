@@ -4,7 +4,10 @@
 if [[ $1 == check ]]; then
     echo Chekcing gencode hash...
     find gencode/ -type f | xargs cat | sha256sum > /tmp/gencode.hash
-    diff /tmp/gencode.hash .gencode_hash.txt
+    if ! diff /tmp/gencode.hash .gencode_hash.txt; then
+        find gencode/ -type f | xargs sha256sum
+        false
+    fi
     exit 0
 fi
 
