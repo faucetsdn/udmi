@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+find gencode/ -type f | sort
+
 if [[ $1 == check ]]; then
     echo Checking gencode hash...
     files=`find gencode/ -type f | sort`
