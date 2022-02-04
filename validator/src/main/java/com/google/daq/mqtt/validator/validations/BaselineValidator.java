@@ -23,7 +23,8 @@ public class BaselineValidator extends SequenceValidator {
   @Before
   public void makePoints() {
     deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
-    deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points).orElse(new HashMap<>());
+    deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points)
+        .orElse(new HashMap<>());
     try {
       ensurePointConfig(INVALID_STATE);
       ensurePointConfig(FAILURE_STATE);
@@ -60,7 +61,8 @@ public class BaselineValidator extends SequenceValidator {
     System.err.printf("%s previous last_config was %s%n", getTimestamp(), getTimestamp(prevConfig));
     updateConfig();
     Date expectedConfig = deviceConfig.timestamp;
-    System.err.printf("%s expected last_config is %s%n", getTimestamp(), getTimestamp(expectedConfig));
+    System.err.printf("%s expected last_config is %s%n", getTimestamp(),
+        getTimestamp(expectedConfig));
     untilTrue(() -> {
       Date newConfig = deviceState.system.last_config;
       if (!newConfig.equals(prevConfig)) {
@@ -70,7 +72,8 @@ public class BaselineValidator extends SequenceValidator {
       }
       return !expectedConfig.equals(newConfig);
     }, "state last_config match");
-    System.err.printf("%s last_config update match %s%n", getTimestamp(), getTimestamp(expectedConfig));
+    System.err.printf("%s last_config update match %s%n", getTimestamp(),
+        getTimestamp(expectedConfig));
   }
 
   @Test
@@ -82,16 +85,22 @@ public class BaselineValidator extends SequenceValidator {
     String invalidPoint = invalidTarget.target_point;
     String failurePoint = failureTarget.target_point;
     String appliedPoint = appliedTarget.target_point;
-    untilTrue(() -> valueStateIs(invalidPoint, DEFAULT_STATE), expectedValueState(invalidPoint, DEFAULT_STATE));
-    untilTrue(() -> valueStateIs(failurePoint, DEFAULT_STATE), expectedValueState(failurePoint, DEFAULT_STATE));
-    untilTrue(() -> valueStateIs(appliedPoint, DEFAULT_STATE), expectedValueState(appliedPoint, DEFAULT_STATE));
+    untilTrue(() -> valueStateIs(invalidPoint, DEFAULT_STATE),
+        expectedValueState(invalidPoint, DEFAULT_STATE));
+    untilTrue(() -> valueStateIs(failurePoint, DEFAULT_STATE),
+        expectedValueState(failurePoint, DEFAULT_STATE));
+    untilTrue(() -> valueStateIs(appliedPoint, DEFAULT_STATE),
+        expectedValueState(appliedPoint, DEFAULT_STATE));
     deviceConfig.pointset.points.get(invalidPoint).set_value = invalidTarget.target_value;
     deviceConfig.pointset.points.get(failurePoint).set_value = failureTarget.target_value;
     deviceConfig.pointset.points.get(appliedPoint).set_value = appliedTarget.target_value;
     updateConfig();
-    untilTrue(() -> valueStateIs(invalidPoint, INVALID_STATE), expectedValueState(invalidPoint,INVALID_STATE));
-    untilTrue(() -> valueStateIs(failurePoint, FAILURE_STATE), expectedValueState(invalidPoint,FAILURE_STATE));
-    untilTrue(() -> valueStateIs(appliedPoint, APPLIED_STATE), expectedValueState(invalidPoint,APPLIED_STATE));
+    untilTrue(() -> valueStateIs(invalidPoint, INVALID_STATE),
+        expectedValueState(invalidPoint, INVALID_STATE));
+    untilTrue(() -> valueStateIs(failurePoint, FAILURE_STATE),
+        expectedValueState(invalidPoint, FAILURE_STATE));
+    untilTrue(() -> valueStateIs(appliedPoint, APPLIED_STATE),
+        expectedValueState(invalidPoint, APPLIED_STATE));
   }
 
   private String expectedValueState(String pointName, String expectedValue) {
@@ -107,10 +116,12 @@ public class BaselineValidator extends SequenceValidator {
     }
     TargetTestingMetadata testingMetadata = deviceMetadata.testing.targets.get(target);
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
-      System.err.println(getTimestamp() + " No metadata pointset points defined, I hope you know what you're doing");
+      System.err.println(getTimestamp()
+          + " No metadata pointset points defined, I hope you know what you're doing");
     } else if (!deviceMetadata.pointset.points.containsKey(testingMetadata.target_point)) {
-      throw new RuntimeException(String.format("Testing target %s point '%s' not defined in pointset metadata",
-          target, testingMetadata.target_point));
+      throw new RuntimeException(
+          String.format("Testing target %s point '%s' not defined in pointset metadata",
+              target, testingMetadata.target_point));
     }
     return testingMetadata;
   }
