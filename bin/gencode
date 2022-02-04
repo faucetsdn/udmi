@@ -1,14 +1,10 @@
 #!/bin/bash -e
 
-files=`find gencode/ -type f | sort`
-
 if [[ $1 == check ]]; then
-    echo Chekcing gencode hash...
-    cat $files | sha256sum > /tmp/gencode.hash
-    if ! diff /tmp/gencode.hash .gencode_hash.txt; then
-        sha256sum $files
-        false
-    fi
+    echo Checking gencode hash...
+    files=`find gencode/ -type f | sort`
+    sha256sum $files > /tmp/gencode.hash
+    diff /tmp/gencode.hash .gencode_hash.txt
     exit 0
 fi
 
@@ -16,4 +12,6 @@ bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
 
-cat $files | sha256sum > .gencode_hash.txt
+echo Updating gencode hash...
+files=`find gencode/ -type f | sort`
+sha256sum $files > .gencode_hash.txt
