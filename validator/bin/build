@@ -1,12 +1,20 @@
 #!/bin/bash -e
 
+if [[ $1 == check ]]; then
+    check=check
+    shift
+fi
+
 ROOT=$(dirname $0)/..
 
 export JAVA_HOME=$JAVA_HOME_11_X64
 
 cd $ROOT
+
+echo Building validataor in $PWD
+
 rm -rf build
-./gradlew shadow
+./gradlew shadow $check
 
 ls -l build/libs/validator-1.0-SNAPSHOT-all.jar
 

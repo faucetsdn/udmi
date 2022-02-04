@@ -104,6 +104,7 @@ find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
+    echo == Processing $schema.json
     python3 bin/gendocs.py $schema $TMP_DIR $OUTPUT_DIR
 done
 

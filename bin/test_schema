@@ -57,7 +57,17 @@ for subset in $subsets; do
         outdir=$outroot/${testbase#${schema_root}/}
         mkdir -p $outdir
         output=$outdir/$outfile
-        
+
+        if [[ ! -f $expected ]]; then
+            echo Missing expected reference file $expected
+            if [ $force == y ]; then
+                touch $expected
+            else
+                echo '    ' touch $expected | tee -a $errorfile
+                continue
+            fi
+        fi
+
         error=0
         if [[ "$testbase" == "$schemadir" ]]; then
           reltest=${testpath#$testbase/}
