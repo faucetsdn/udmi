@@ -101,11 +101,11 @@ public class Metadata {
     /**
      * Testing Metadata
      * <p>
-     * Testing targets are used
+     * Testing target parameters
      * 
      */
     @JsonProperty("testing")
-    @JsonPropertyDescription("Testing targets are used")
+    @JsonPropertyDescription("Testing target parameters")
     public TestingMetadata testing;
     /**
      * Pointset Metadata

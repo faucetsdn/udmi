@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Testing Metadata
  * <p>
- * Testing targets are used
+ * Testing target parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -26,7 +27,7 @@ public class TestingMetadata {
      * 
      */
     @JsonProperty("targets")
-    public Targets targets;
+    public HashMap<String, TargetTestingMetadata> targets;
 
     @Override
     public int hashCode() {

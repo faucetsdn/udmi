@@ -1,4 +1,5 @@
 """Generated class for metadata_testing.json"""
+from .metadata_testing_target import TargetTestingMetadata
 
 
 class TestingMetadata:
@@ -12,7 +13,7 @@ class TestingMetadata:
     if not source:
       return None
     result = TestingMetadata()
-    result.targets = source.get('targets')
+    result.targets = TargetTestingMetadata.map_from(source.get('targets'))
     return result
 
   @staticmethod
@@ -34,5 +35,5 @@ class TestingMetadata:
   def to_dict(self):
     result = {}
     if self.targets:
-      result['targets'] = self.targets # 5
+      result['targets'] = TargetTestingMetadata.expand_dict(self.targets) # 2
     return result
