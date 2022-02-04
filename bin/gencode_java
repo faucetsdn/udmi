@@ -26,4 +26,4 @@ $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 cd $ROOT_DIR
 find gencode/java -type f
 
-echo Done with code generation.
+echo Done with java code generation.
