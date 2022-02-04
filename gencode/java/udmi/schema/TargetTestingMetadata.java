@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -21,9 +22,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class TargetTestingMetadata {
 
+    /**
+     * Point name used for testing
+     * 
+     */
     @JsonProperty("target_point")
+    @JsonPropertyDescription("Point name used for testing")
     public String target_point;
+    /**
+     * Value used for testing
+     * 
+     */
     @JsonProperty("target_value")
+    @JsonPropertyDescription("Value used for testing")
     public Object target_value;
 
     @Override

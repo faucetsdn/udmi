@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * System Event
  * <p>
- * 
+ * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -15,18 +15,6 @@
       "type": "string",
       "examples": ["A1B2C3D4", "00001"]
     },
-    "auth_key": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "private_hash": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "private_hash"
-      ]
-    },
     "firmware": {
       "description": "Information about the physical device firmware",
       "type": "object",

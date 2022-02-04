@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * State
  * <p>
- * 
+ * [State](../docs/messages/state.md) message, defined by [`state.json`]
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -46,20 +46,21 @@ public class State {
     /**
      * System State
      * <p>
-     * 
+     * [System State Documentation](../docs/messages/system.md#state)
      * (Required)
      * 
      */
     @JsonProperty("system")
+    @JsonPropertyDescription("[System State Documentation](../docs/messages/system.md#state)")
     public SystemState system;
     /**
      * Gateway State
      * <p>
-     * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>
+     * [Gateway Documentation](../docs/specs/gateway.md)
      * 
      */
     @JsonProperty("gateway")
-    @JsonPropertyDescription("Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>")
+    @JsonPropertyDescription("[Gateway Documentation](../docs/specs/gateway.md)")
     public GatewayState gateway;
     /**
      * Blobset State

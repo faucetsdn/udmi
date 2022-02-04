@@ -35,7 +35,12 @@ public class CloudMetadata__1 {
     @JsonProperty("auth_type")
     @JsonPropertyDescription("The key type used for cloud communication.")
     public CloudMetadata__1 .Auth_type auth_type;
+    /**
+     * Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway
+     * 
+     */
     @JsonProperty("device_key")
+    @JsonPropertyDescription("Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway")
     public Boolean device_key;
     /**
      * If the device functions as an IoT Gateway, proxying for other devices using a single logical connection

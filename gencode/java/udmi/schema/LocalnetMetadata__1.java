@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Localnet Metadata
  * <p>
- * 
+ * Used to describe device local network parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
