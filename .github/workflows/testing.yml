@@ -75,15 +75,3 @@ jobs:
         run: |
           echo Pubber output logs:
           cat pubber.out || true
-  
-  docs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - name: schema docs
-        if: always()
-        run: bin/gencode_docs check_schema
-      - name: schema links
-        if: always()
-        run: bin/gencode_docs check_links
