@@ -64,7 +64,6 @@ jobs:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          bin/gencode
           bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
           diff /tmp/results.txt etc/sequence.out
@@ -76,15 +75,3 @@ jobs:
         run: |
           echo Pubber output logs:
           cat pubber.out || true
-  
-  docs:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - name: schema docs
-        if: always()
-        run: bin/gencode_docs check_schema
-      - name: schema links
-        if: always()
-        run: bin/gencode_docs check_links

@@ -13,6 +13,9 @@ if [[ $1 == check ]]; then
     echo Checking gencode hash...
     sha256sum $files > /tmp/gencode.hash
     diff /tmp/gencode.hash .gencode_hash.txt
+    echo Checking gencode docs...
+    bin/gencode_docs check_schema
+    bin/gencode_docs check_links
 else
     echo Updating gencode hash...
     files=`find gencode/ -type f | sort`
