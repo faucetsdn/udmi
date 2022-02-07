@@ -1,0 +1,15 @@
+# GCP Settings
+gcp_project_id   = "GCP-PROJECT-ID" # CHANGE ME
+gcp_project_name   = "GCP-PROJECT-NAME" # CHANGE ME
+gcp_region    = "us-central1" # CHANGE ME
+gcp_auth_file = "./auth/credentials.json"
+
+# Storage Buckets
+tf-state-bucket-name   = "udmi-terraform-state-bucket"
+tf-state-storage-class = "STANDARD"
+
+# Access
+udmi_access_group = "group:group@example.com" # CHANGE ME
+
+# Log level
+log_level = "DEBUG" # CHANGE ME
