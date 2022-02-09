@@ -1,8 +1,10 @@
 resource "google_pubsub_topic" "site_pubsub_event_topic" {
+  project = var.gcp_project
   name = "${lower(var.site_name)}"
 }
 
 resource "google_pubsub_subscription" "site_pubsub_event_subscription" {
+  project = var.gcp_project
   name  = "${lower(var.site_name)}-subscription"
   topic = "projects/${var.gcp_project}/topics/${lower(var.site_name)}"
 
@@ -23,7 +25,9 @@ resource "google_pubsub_subscription" "site_pubsub_event_subscription" {
 }
 
 resource "google_pubsub_subscription_iam_binding" "site_pubsub_event_subscription_subscriber" {
+  project = var.gcp_project
   subscription = "${lower(var.site_name)}-subscription"
   role         = "roles/pubsub.subscriber"
   members = [var.site_group]
+  depends_on = [google_pubsub_subscription.site_pubsub_event_subscription]
 }
