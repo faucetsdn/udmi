@@ -19,35 +19,25 @@ TODO: create a gcloud based shell script to automatically does all activities li
 ## Getting started
 
 To get started, copy the `terraform.tfvars.template` file to `terraform.tfvars`
+and the `udmi-site.tf.template` file to `udmi-site.tf`:
 
 ```
 cp terraform.tfvars.template terraform.tfvars
-```
-
-and edit it according to the project settings.
-
-Also copy the `udmi-site.tf.template` file to `udmi-site.tf` 
-
-```
 cp udmi-site.tf.template udmi-site.tf
 ```
 
-and edit it according to the UDMI site you need to create and group permissions you want to attribute to it.
+Edit them according to the project settings and according to the UDMI site you need to create and group permissions you want to attribute to it.
 
-The next step is to initialize the required terraform backend, provider and modules:
+The next steps are to initialize the required terraform backend, provider and modules and 
+to import the project and the bucket previously created to the terraform state:
 
 ```
 terraform init
-```
-
-It is then necessary to import the project and the bucket previously created to the terraform state:
-
-```
-terraform import google_project.udmi-project GCP-PROJECT-NAME
+terraform import google_project.udmi-project ${GCP_PROJECT_NAME}
 terraform import google_storage_bucket.tf-bucket udmi-terraform-state-bucket
 ```
 
-where GCP-PROJECT-NAME is the name of the GCP project created in the pre-requisite step 2.
+where ${GCP_PROJECT_NAME} is the name of the GCP project created in the pre-requisite step 2.
 
 The next step is to check that the planned tasks are correct:
 
