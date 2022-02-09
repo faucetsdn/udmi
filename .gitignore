@@ -23,9 +23,9 @@ firebase-debug.log
 .pubber.pid
 __pycache__/
 
-cloud/terraform.tfvars
-cloud/udmi-sites.tf
-cloud/auth/credentials.json
-cloud/.terraform*
+cloud/gcp/terraform.tfvars
+cloud/gcp/udmi-sites.tf
+cloud/gcp/auth/credentials.json
+cloud/gcp/.terraform*
 
 
