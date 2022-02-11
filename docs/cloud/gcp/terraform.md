@@ -14,7 +14,7 @@ There are some pre-requisites that need to be satisfied in order to use this ter
 2. An [existing project on GCP](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 3. A Standard type storage bucket setup with the name `udmi-terraform-state-bucket`
 4. [Create a service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) for terraform with Owner role
-5. [Generate a JSON key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for the terraform service account, download it and store it in the [`udmi/cloud/auth`](./auth) folder with the name `credentials.json`
+5. [Generate a JSON key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for the terraform service account, download it and store it in the [`udmi/cloud/auth`](../../../cloud/gcp/auth) folder with the name `credentials.json`
 
 TODO: create a gcloud based shell script to automatically does all activities listed above.
 
