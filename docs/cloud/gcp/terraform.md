@@ -1,3 +1,5 @@
+[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [**GCP**](./) / [Terraform](#)
+
 # UDMI terraform configuration files
 
 The files in the [`cloud`](../../cloud) folder enable the creation of Cloud infrastructure to support the UDMI device-to-cloud data pipeline.
