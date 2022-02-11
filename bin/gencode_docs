@@ -7,9 +7,6 @@
 # <unspecified> (default)
 #   Generate HTML documentation from JSON schema. Stored in gencode/docs
 #
-# check_schema
-#   Compares the hashes from the last time gendocs was run 
-#
 # check_links
 #   Checks that all inline markdown links in all markdownfiles and within the 
 #   schema are valid
@@ -26,16 +23,6 @@ OUTPUT_DIR=$ROOT_DIR/gencode/docs
 TMP_DIR=$ROOT_DIR/tmp/schema
 
 schema_files=`ls schema/*.json`
-
-mkdir -p $TMP_DIR
-sha1sum $schema_files | sort > $TMP_DIR/schema.hash
-
-if [ "$1" == check_schema ]; then
-    more $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash | cat
-    diff $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
-    echo Schema hashes in $OUTPUT_DIR/schema.hash are up-to-date.
-    exit 0
-fi
 
 if [ "$1" == gen_bucket ]; then
     shift 1
@@ -68,7 +55,7 @@ if [ "$1" == check_links ]; then
         source venv/bin/activate
     fi
 
-    python3 bin/check_links.py > check_links.out
+    bin/check_links > check_links.out
     if [ -s check_links.out ]; then
         cat check_links.out
         exit 1
@@ -87,8 +74,6 @@ fi
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
-cp $TMP_DIR/schema.hash $OUTPUT_DIR/schema.hash
-
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
 rm -rf $TMP_DIR
 mkdir -p $TMP_DIR
@@ -104,6 +89,7 @@ find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
+    echo == Processing $schema.json
     python3 bin/gendocs.py $schema $TMP_DIR $OUTPUT_DIR
 done
 

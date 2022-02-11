@@ -1,4 +1,4 @@
-[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [GCP](./)
+[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [GCP](#)
 
 # GCP
 
@@ -6,3 +6,4 @@
 -   [Dashboards & Infrastructure Setup](dashboard.md) - Infrastructure (cloud functions) 
     and dashboard
 -   [UDMI terraform configuration files](../../../cloud/gcp/readme.md ) - This configuration can be used to automate the creation of UDMI related infrastructure on GCP
+

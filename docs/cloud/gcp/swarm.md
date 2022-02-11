@@ -1,3 +1,5 @@
+[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [**GCP**](./) / [Swarm](#)
+
 # UDMI Swarm Pubber Cluster
 
 * PubSub topic/subscription (e.g. swarm-feed)

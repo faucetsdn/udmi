@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Metadata
  * <p>
- * 
+ * [Metadata](../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -73,37 +73,39 @@ public class Metadata {
     /**
      * System Metadata
      * <p>
-     * High-level sytem informaiton about the device.
+     * High-level system information about the device. [System Metadata Documentation](../docs/messages/system.md)
      * (Required)
      * 
      */
     @JsonProperty("system")
-    @JsonPropertyDescription("High-level sytem informaiton about the device.")
+    @JsonPropertyDescription("High-level system information about the device. [System Metadata Documentation](../docs/messages/system.md)")
     public SystemMetadata system;
     /**
      * Gateway Metadata
      * <p>
-     * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>
+     * [Gateway Documentation](../docs/specs/gateway.md)
      * 
      */
     @JsonProperty("gateway")
-    @JsonPropertyDescription("Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/gateway.md>")
+    @JsonPropertyDescription("[Gateway Documentation](../docs/specs/gateway.md)")
     public GatewayMetadata gateway;
     /**
      * Localnet Metadata
      * <p>
-     * 
+     * Used to describe device local network parameters
      * 
      */
     @JsonProperty("localnet")
+    @JsonPropertyDescription("Used to describe device local network parameters")
     public LocalnetMetadata localnet;
     /**
      * Testing Metadata
      * <p>
-     * 
+     * Testing target parameters
      * 
      */
     @JsonProperty("testing")
+    @JsonPropertyDescription("Testing target parameters")
     public TestingMetadata testing;
     /**
      * Pointset Metadata

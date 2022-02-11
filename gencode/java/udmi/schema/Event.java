@@ -26,28 +26,29 @@ public class Event {
     /**
      * System Event
      * <p>
-     * 
+     * Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
      * 
      */
     @JsonProperty("system")
+    @JsonPropertyDescription("Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)")
     public SystemEvent system;
     /**
      * Pointset Event
      * <p>
-     * A set of points reporting telemetry data
+     * A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)
      * 
      */
     @JsonProperty("pointset")
-    @JsonPropertyDescription("A set of points reporting telemetry data")
+    @JsonPropertyDescription("A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)")
     public PointsetEvent pointset;
     /**
      * Discovery
      * <p>
-     * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>
+     * [Discovery Documentation](../docs/specs/discovery.md)
      * 
      */
     @JsonProperty("discovery")
-    @JsonPropertyDescription("Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>")
+    @JsonPropertyDescription("[Discovery Documentation](../docs/specs/discovery.md)")
     public Discovery discovery;
 
     @Override
