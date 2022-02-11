@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Discovery
  * <p>
- * Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/discovery.md>
+ * [Discovery Documentation](../docs/specs/discovery.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

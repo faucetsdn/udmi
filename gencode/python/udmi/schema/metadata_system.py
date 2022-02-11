@@ -1,20 +1,22 @@
 """Generated class for metadata_system.json"""
 
 
-class ObjectD947FD57:
+class Object2CCE4FC0:
   """Generated schema class"""
 
   def __init__(self):
     self.x = None
     self.y = None
+    self.z = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = ObjectD947FD57()
+    result = Object2CCE4FC0()
     result.x = source.get('x')
     result.y = source.get('y')
+    result.z = source.get('z')
     return result
 
   @staticmethod
@@ -23,7 +25,7 @@ class ObjectD947FD57:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectD947FD57.from_dict(source[key])
+      result[key] = Object2CCE4FC0.from_dict(source[key])
     return result
 
   @staticmethod
@@ -39,10 +41,12 @@ class ObjectD947FD57:
       result['x'] = self.x # 5
     if self.y:
       result['y'] = self.y # 5
+    if self.z:
+      result['z'] = self.z # 5
     return result
 
 
-class Object93E74AA6:
+class Object683EF6A1:
   """Generated schema class"""
 
   def __init__(self):
@@ -54,10 +58,10 @@ class Object93E74AA6:
   def from_dict(source):
     if not source:
       return None
-    result = Object93E74AA6()
+    result = Object683EF6A1()
     result.site = source.get('site')
     result.section = source.get('section')
-    result.position = ObjectD947FD57.from_dict(source.get('position'))
+    result.position = Object2CCE4FC0.from_dict(source.get('position'))
     return result
 
   @staticmethod
@@ -66,7 +70,7 @@ class Object93E74AA6:
       return None
     result = {}
     for key in source:
-      result[key] = Object93E74AA6.from_dict(source[key])
+      result[key] = Object683EF6A1.from_dict(source[key])
     return result
 
   @staticmethod
@@ -219,7 +223,7 @@ class SystemMetadata:
     if not source:
       return None
     result = SystemMetadata()
-    result.location = Object93E74AA6.from_dict(source.get('location'))
+    result.location = Object683EF6A1.from_dict(source.get('location'))
     result.physical_tag = Object45E20BB3.from_dict(source.get('physical_tag'))
     result.aux = ObjectCA9644FB.from_dict(source.get('aux'))
     return result

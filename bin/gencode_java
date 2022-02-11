@@ -9,6 +9,7 @@ cd $ROOT_DIR
 rm -rf codegen gencode
 mkdir -p codegen gencode
 
+OUTDIR=$ROOT_DIR/gencode/java
 cd codegen
 GENDIR=$PWD
 
@@ -19,8 +20,17 @@ curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$J
 tar -xzvf $JARVER.tgz
 
 cd $ROOT_DIR/schema
-JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
-echo Generating code in gencode/java...
-$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $ROOT_DIR/gencode/java
 
-echo Done with code generation.
+find . -name \*~ | xargs -r rm
+
+JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
+echo Generating code in $OUTDIR
+$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $OUTDIR
+
+echo Cleaning up __ classes...
+find $OUTDIR -name \*__\*.java | xargs rm
+
+cd $ROOT_DIR
+find gencode/java -type f | sort
+
+echo Done with java code generation.

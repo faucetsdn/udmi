@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Config
  * <p>
- * The config block controls a device's intended behavior. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/config.md>
+ * The config block controls a device's intended behavior. [Config Documentation](../docs/messages/config.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -47,26 +47,29 @@ public class Config {
     /**
      * System Config
      * <p>
-     * 
+     * [System Config Documentation](../docs/messages/system.md#config)
      * 
      */
     @JsonProperty("system")
+    @JsonPropertyDescription("[System Config Documentation](../docs/messages/system.md#config)")
     public SystemConfig system;
     /**
      * Gateway Config
      * <p>
-     * 
+     * Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)
      * 
      */
     @JsonProperty("gateway")
+    @JsonPropertyDescription("Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)")
     public GatewayConfig gateway;
     /**
      * Localnet Config
      * <p>
-     * 
+     * Used to describe device local network parameters
      * 
      */
     @JsonProperty("localnet")
+    @JsonPropertyDescription("Used to describe device local network parameters")
     public LocalnetConfig localnet;
     /**
      * Blobset Config
@@ -79,10 +82,11 @@ public class Config {
     /**
      * Pointset Config
      * <p>
-     * 
+     * [Pointset Config Documentation](../docs/messages/pointset.md#config)
      * 
      */
     @JsonProperty("pointset")
+    @JsonPropertyDescription("[Pointset Config Documentation](../docs/messages/pointset.md#config)")
     public PointsetConfig pointset;
 
     @Override

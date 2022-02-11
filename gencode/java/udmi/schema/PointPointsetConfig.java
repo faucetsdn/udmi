@@ -23,7 +23,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class PointPointsetConfig {
 
+    /**
+     * Mapping for the point to an internal resource (e.g. BACnet object reference)
+     * 
+     */
     @JsonProperty("ref")
+    @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public String ref;
     /**
      * If specified, indicates the units the device should report the data in.

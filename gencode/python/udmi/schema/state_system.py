@@ -1,43 +1,6 @@
 """Generated class for state_system.json"""
 
 
-class Object2F750027:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.private_hash = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object2F750027()
-    result.private_hash = source.get('private_hash')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object2F750027.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.private_hash:
-      result['private_hash'] = self.private_hash # 5
-    return result
-
-
 class ObjectBF5DA4FA:
   """Generated schema class"""
 
@@ -82,7 +45,6 @@ class SystemState:
   def __init__(self):
     self.make_model = None
     self.serial_no = None
-    self.auth_key = None
     self.firmware = None
     self.last_config = None
     self.operational = None
@@ -95,7 +57,6 @@ class SystemState:
     result = SystemState()
     result.make_model = source.get('make_model')
     result.serial_no = source.get('serial_no')
-    result.auth_key = Object2F750027.from_dict(source.get('auth_key'))
     result.firmware = ObjectBF5DA4FA.from_dict(source.get('firmware'))
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
@@ -124,8 +85,6 @@ class SystemState:
       result['make_model'] = self.make_model # 5
     if self.serial_no:
       result['serial_no'] = self.serial_no # 5
-    if self.auth_key:
-      result['auth_key'] = self.auth_key.to_dict() # 4
     if self.firmware:
       result['firmware'] = self.firmware.to_dict() # 4
     if self.last_config:

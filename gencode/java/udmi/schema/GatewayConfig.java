@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Gateway Config
  * <p>
- * 
+ * Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
