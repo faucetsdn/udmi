@@ -1,6 +1,7 @@
 resource "google_cloudiot_registry" "site_cloudiot_registry" {
     name = var.site_name
     region = var.site_region
+    project = var.gcp_project
     event_notification_configs {
         pubsub_topic_name = "projects/${var.gcp_project}/topics/udmi_target"
         subfolder_matches = ""
