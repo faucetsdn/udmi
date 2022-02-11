@@ -16,6 +16,8 @@ There are some pre-requisites that need to be satisfied in order to use this ter
 
 TODO: create a gcloud based shell script to automatically does all activities listed above.
 
+TODO: add cloud functions generation via terraform configuration.
+
 ## Getting started
 
 To get started, copy the `terraform.tfvars.template` file to `terraform.tfvars`
