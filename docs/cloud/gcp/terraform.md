@@ -38,6 +38,7 @@ Edit them according to the project settings and according to the UDMI site you n
 * TODO: Seems easier to just need to change the setting to point at the service account key, rather than moving the key to a specific place.
 * TODO: Service account key location is set in multiple palces
 * TODO: Storage bucket name is defined in multiple locations (also `main.tf`)
+* TODO: Figure out why [other tutorial](https://g3doc.corp.google.com/company/gfw/support/cloud/products/anthos/anthos-bare-metal/lab.md?cl=head) doesn't need cloud storage bucket?
 
 Set ${GCP_PROJECT_NAME} to name of the GCP project created in the pre-requisite step 2.
 
