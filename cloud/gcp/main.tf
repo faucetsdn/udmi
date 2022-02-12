@@ -20,7 +20,7 @@ terraform {
   backend "gcs" {
     bucket      = "iotd-udmi-dev-terraform"
     prefix      = "udmi"
-    credentials = "./auth/credentials2.json"
+    credentials = "./auth/credentials.json"
   }
 }
 
