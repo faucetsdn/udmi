@@ -36,6 +36,8 @@ Edit them according to the project settings and according to the UDMI site you n
 * TODO: Clarify what "group permissions" are?  No idea what to put there.
 * TODO: Clarify what to change the log level to?
 * TODO: Seems easier to just need to change the setting to point at the service account key, rather than moving the key to a specific place.
+* TODO: Service account key location is set in multiple palces
+* TODO: Storage bucket name is defined in multiple locations (also `main.tf`)
 
 Set ${GCP_PROJECT_NAME} to name of the GCP project created in the pre-requisite step 2.
 
@@ -48,11 +50,19 @@ terraform import google_project.udmi-project ${GCP_PROJECT_NAME}
 terraform import google_storage_bucket.tf-bucket udmi-terraform-state-bucket
 ```
 
+* TODO: Change name of storage bucket to correct version
+* TODO: Enable _Cloud Resource Manager API_ (click on the link in the error message)
+* TODO: Enable _Cloud Source Repositories API_
+* TODO: Enable _Cloud Pub/Sub API_
+* TODO: Enable _Cloud IoT API_
+
 The next step is to check that the planned tasks are correct:
 
 ```
 terraform plan
 ```
+
+* TODO: What am I supposed to do with this information?  Do I need to run 'plan'?
 
 The plan will show all the resources to be created. To execute the plan use the apply command:
 
@@ -60,3 +70,12 @@ The plan will show all the resources to be created. To execute the plan use the 
 terraform apply
 ```
 
+* TODO: Encounters a bunch of errors, likely because the 'groups' thing is not set correctly but I don't really know what to set it to.
+
+```
+│ Error: error creating project iotd-udmi-dev (iotd-udmi-dev): googleapi: Error 403: Service accounts cannot create projects without a parent., forbidden. If you received a 403 error, make sure you have the `roles/resourcemanager.projectCreator` permission
+
+│ Error: Request `Create IAM Members roles/cloudiot.viewer group:group@example.com for project "iotd-udmi-dev"` returned error: Batch request and retried single request "Create IAM Members roles/cloudiot.viewer group:group@example.com for project \"iotd-udmi-dev\"" both failed. Final error: Error applying IAM policy for project "iotd-udmi-dev": Error setting IAM policy for project "iotd-udmi-dev": googleapi: Error 400: Group group@example.com does not exist., badRequest
+
+│ Error: Error applying IAM policy for pubsub subscription "projects/iotd-udmi-dev/subscriptions/udmi_reflect-subscription": Error setting IAM policy for pubsub subscription "projects/iotd-udmi-dev/subscriptions/udmi_reflect-subscription": googleapi: Error 400: Group group@example.com does not exist., badRequest
+```
