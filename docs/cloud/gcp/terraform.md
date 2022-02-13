@@ -32,13 +32,18 @@ cp terraform.tfvars.template terraform.tfvars
 cp udmi-site.tf.template udmi-site.tf
 ```
 
-Edit them according to the project settings and according to the UDMI site you need to create and group permissions you want to attribute to it.
-* TODO: Clarify what "group permissions" are?  No idea what to put there.
+Edit them according to the project settings and according to the UDMI site you need to create a group permissions you want to attribute to it.
+* TODO: Add example group, e.g. "group:iotd-core@google.com"
 * TODO: Clarify what to change the log level to?
+* TODO: Create script to fill in templates with values (@@ markers)
 * TODO: Seems easier to just need to change the setting to point at the service account key, rather than moving the key to a specific place.
 * TODO: Service account key location is set in multiple palces
 * TODO: Storage bucket name is defined in multiple locations (also `main.tf`)
-* TODO: Figure out why [other tutorial](https://g3doc.corp.google.com/company/gfw/support/cloud/products/anthos/anthos-bare-metal/lab.md?cl=head) doesn't need cloud storage bucket?
+* TODO: Figure out why [other tutorial](https://g3doc.corp.google.com/company/gfw/support/cloud/products/anthos/anthos-bare-metal/lab.md?cl=head)
+    doesn't need cloud storage bucket?
+* TODO: Split into project creation (topics, registries) and site creation (assuming site is already setup)
+* TODO: Why is it trying to create a new _project_?
+* TODO: UDMS-REFLECT registry needs site project device created... ?
 
 Set ${GCP_PROJECT_NAME} to name of the GCP project created in the pre-requisite step 2.
 
