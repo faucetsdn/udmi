@@ -5,6 +5,7 @@ CRED_FILE=auth/credentials.json
 echo export GCP_PROJECT_NAME=${GCP_PROJECT_NAME:?}
 echo export GCP_PROJECT_ID=${GCP_PROJECT_ID:?}
 echo export GCP_PROJECT_REGION=${GCP_PROJECT_REGION:?}
+echo export GCP_PROJECT_GROUP=${GCP_PROJECT_GROUP:?}
 echo export UDMI_SITE_NAME=${UDMI_SITE_NAME:?}
 echo export UDMI_SITE_REGION=${UDMI_SITE_REGION:?}
 echo export UDMI_SITE_GROUP=${UDMI_SITE_GROUP:?}
@@ -29,4 +30,4 @@ sed -E < terraform.tfvars.template > terraform.tfvars \
     -e "s/@GCP_PROJECT_NAME@/${GCP_PROJECT_NAME}/g" \
     -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" \
     -e "s/@GCP_PROJECT_REGION@/${GCP_PROJECT_REGION}/" \
-    -e "s/@UDMI_SITE_GROUP@/${UDMI_SITE_GROUP}/"
+    -e "s/@GCP_PROJECT_GROUP@/${GCP_RPOJECT_GROUP}/"

@@ -9,7 +9,7 @@ tf-state-bucket-name   = "@GCP_PROJECT_NAME@-terraform"
 tf-state-storage-class = "STANDARD"
 
 # Access
-udmi_access_group = "group:@UDMI_SITE_GROUP@"
+gcp_access_group = "group:@GCP_PROJECT_GROUP@"
 
 # Log level
 log_level = "DEBUG"
