@@ -9,13 +9,18 @@ chunks. Specficialy, the subblock _state_/_config_ are a limited form of the ove
 device _state_/_config_, and only expose the relevant pieces.
 
 For each subblock, there's a few typical message exchanges:
-* Telemetry (from device): Streaming telemetry. This is essentially a raw feed from the device itself.
+* Telemetry (from device): Streaming telemetry. This is essentially a raw feed from the device itself,
+  and will always be segmented by subblock (e.g. for a
+  [pointset event](../../tests/event_pointset.tests/example.json)). Streaming telemetry
+  is sent device-to-cloud.
 * State (from device): Device state for this subblock. Unlike a
   [comprehensive device state message](../../tests/state.tests/example.json)
-  this message contains information _only_ for a single subblock.
+  this message contains information _only_ for a single subblock. Used for reporting any 'sticky'
+  state from a device, sent device-to-cloud.
 * Config (for device): Device config for this subblock. Unlike a
   [comprehensive device config message](../../tests/config.tests/example.json)
-  this message contains information _only_ for a single subblock.
+  this message contains information _only_ for a single subblock. Used for writing configuration
+  changes to a device, sent cloud-to-device.
 
 In all cases, the _Subblock API_ messages encode the relevant subblock ID { pointset, discovery, ... }
 in the [message envelope's](../../tests/envelope.tests/example.json) _subFolder_ field.
