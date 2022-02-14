@@ -18,15 +18,8 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket      = "udmi-terraform-state-bucket"
+    bucket      = "@GCP_PROJECT_ID@-terraform"
     prefix      = "udmi"
     credentials = "./auth/credentials.json"
   }
 }
-
-
-
-
-
-
-
