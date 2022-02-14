@@ -53,6 +53,7 @@ connectivity options to achieve the same functionality e.g. using [gateways](../
 
 Metadata file saved as a `FCU-001/metadata.json` within the [site model](../specs/site_model.md). 
 
+<!--example:metadata/example_hvac_min.json-->
 ```json
 {
   "version": 1,
@@ -60,7 +61,7 @@ Metadata file saved as a `FCU-001/metadata.json` within the [site model](../spec
   "system": {
     "location": {
       "site": "US-SFO-XYY",
-      "section": "NW-2F",
+      "section": "NW-2F"
     },
     "physical_tag": {
       "asset": {
@@ -76,20 +77,20 @@ Metadata file saved as a `FCU-001/metadata.json` within the [site model](../spec
   "pointset": {
     "points": {
       "cooling_valve_percentage_command": {
-        "units": "Percent",
+        "units": "Percent"
       },
       "supply_air_temperature_sensor": {
-        "units": "Degrees-Celsius",
+        "units": "Degrees-Celsius"
       },
       "return_air_temperature_sensor": {
-        "units": "Degrees-Celsius",
+        "units": "Degrees-Celsius"
       },
       "fan_speed_percentage_command": {
-        "units": "Percent",
+        "units": "Percent"
       },
       "zone_air_temperature_setpoint": {
         "writeable": true,
-        "units": "Degrees-Celsius",
+        "units": "Degrees-Celsius"
       }
     }
   }
@@ -108,7 +109,7 @@ descriptive fields. It is suggested these are filled in where available.
 #### (1) Initial Configuration
 
 Using the registrar tool, a configuration message is sent to the device based on metadata file
-
+<!--example:config/example_hvac_min_1.json-->
 ```json
 {
   "version": 1,
@@ -139,7 +140,7 @@ Using the registrar tool, a configuration message is sent to the device based on
 
 After receiving a config message, the device sends a [state](../messages/state.md) message as
 defined by [config and state sequence](../specs/sequences/config.md)
-
+<!--example:state/example_hvac_min_1.json-->
 ```json
 {
   "version": 1,
@@ -180,27 +181,27 @@ The telemetry will send data at an interval according to the `sample_limit_sec` 
 In this example with the following parameters:
 * `sample_rate_sec`: 15
 * `sample_limit_sec`: 60
-The telemetry will be nominally sent every 60 seconds
-
+The telemetry will be nominally sent every 15 seconds
+<!--example:event_pointset/example_hvac_min_1.json-->
 ```json
 {
   "version": 1,
   "timestamp": "2021-12-21T13:00:02.053Z",
   "points": {
     "cooling_valve_percentage_command": {
-        "present_value": 50
+      "present_value": 50
     },
     "supply_air_temperature_sensor": {
-        "present_value": 22.3
+      "present_value": 22.3
     },
     "return_air_temperature_sensor": {
-        "present_value": 26.1
+      "present_value": 26.1
     },
     "fan_speed_percentage_command": {
-        "present_value": 50
+      "present_value": 50
     },
     "zone_air_temperature_setpoint": {
-        "present_value": 26.0
+      "present_value": 26.0
     }
   }
 }
@@ -218,7 +219,7 @@ into the telemetry where appropriate.
 
 The temperature setpoint `zone_air_temperature_setpoint` is updated from the cloud by applying a
 `set_value` to the point in the [pointset](../messages/pointset.md)
-
+<!--example:config/example_hvac_min_2.json-->
 ```json
 {
   "version": 1,
@@ -256,7 +257,7 @@ If the [writeback](../specs/sequences/writeback.md) was successfully applied, th
 The `last_config` matches the value of the last config message received as described in the [state
 and config sequences](../specs/sequences/config.md) 
 
-
+<!--example:state/example_hvac_min_2.json-->
 ```json
 {
   "version": 1,
@@ -292,32 +293,32 @@ and config sequences](../specs/sequences/config.md)
 
 The device continues to send the telemetry within the sample interval. The telemetry reflects the
 values set by the cloud
-
+<!--example:event_pointset/example_hvac_min_2.json-->
 ```json
 {
   "version": 1,
   "timestamp": "2021-12-21T13:00:03.053Z",
   "points": {
     "cooling_valve_percentage_command": {
-        "present_value": 100 // Example of system reaction to the cloud writeback command represented in the telemetry, e.g. cooling valve has been opened up to increase cooling capacity
+      "present_value": 100 // Example of system reaction to the cloud writeback command represented in the telemetry, e.g. cooling valve has been opened up to increase cooling capacity
     },
     "supply_air_temperature_sensor": {
-        "present_value": 17.1
+      "present_value": 17.1
     },
     "return_air_temperature_sensor": {
-        "present_value": 25.9
+      "present_value": 25.9
     },
     "fan_speed_percentage_command": {
-        "present_value": 100
+      "present_value": 100
     },
     "zone_air_temperature_setpoint": {
-        "present_value": 18.0 // The setpoint has been updated in the system
+      "present_value": 18.0 // The setpoint has been updated in the system
     }
   }
 }
 ```
 
-
+Generated using <https://sequencediagram.org>
 ```
 participant Device
 participant Broker

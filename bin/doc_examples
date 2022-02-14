@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import glob
+import re
+import sys
+import argparse
+
+REGEX_NORMALIZE = r'(?s)(<!--example:\w+\/\w+.json-->\n)(```json.*?```)'
+REGEX_INCLUDE = r'<!--example:(\w+)\/(\w+).json-->\n'
+
+
+def parse_command_line_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('check', nargs='?', default=False,
+                        help='Check in-line examples match examples in tests directory')
+
+    return parser.parse_args()
+
+
+def read_example_file(match):
+    """     
+    Used as re.sub callback to read example from a file
+
+    Arguments
+        match   match object
+
+    Returns
+        json from example file appended to original expression
+    """
+    expression = match.group(0)
+    schema = match.group(1)
+    file = match.group(2)
+
+    include_path = f'tests/{schema}.tests/{file}.json'
+
+    with open(include_path, 'r') as f:
+        return(f'{expression}```json\n{f.read().rstrip()}\n```')
+
+
+def replace_examples(file_contents):
+    """ Replaces examples within a string
+    
+    Arguments
+        file_contents   string to replace in (contents of documentation file)
+
+    Returns
+        string contents of file
+    """
+    normalized_file = re.sub(REGEX_NORMALIZE, '\g<1>', file_contents)
+    return re.sub(REGEX_INCLUDE, read_example_file, normalized_file)
+
+
+if __name__ == "__main__":
+
+    file_paths = glob.glob('docs/guides/**.md', recursive=True)
+    
+    args = parse_command_line_args()
+    example_diffs = []
+
+    for file_path in file_paths:
+
+        with open(file_path, 'r') as f:
+            file_contents = f.read()
+        
+        updated_file_contents = replace_examples(file_contents)
+
+        if updated_file_contents != file_contents:
+            if args.check:
+                example_diffs.append(file_path)
+                #TODO identify additionally which blocks are different
+            else:
+                with open(file_path, 'w') as f:
+                    f.write(updated_file_contents)
+
+    if args.check:
+        if example_diffs:
+            print('Examples do not match source in following files, run bin/doc_examples')
+            for diff in example_diffs:
+                print(f'** {diff}')
+            sys.exit(1)
+
+        print('In-line documentation examples up to date')
+        

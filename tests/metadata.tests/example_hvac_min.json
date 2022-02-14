@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "location": {
+      "site": "US-SFO-XYY",
+      "section": "NW-2F"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "site": "US-SFO-XYY",
+        "name": "FCU-001"
+      }
+    }
+  },
+  "cloud": {
+    "auth_type": "ES256"
+  },
+  "pointset": {
+    "points": {
+      "cooling_valve_percentage_command": {
+        "units": "Percent"
+      },
+      "supply_air_temperature_sensor": {
+        "units": "Degrees-Celsius"
+      },
+      "return_air_temperature_sensor": {
+        "units": "Degrees-Celsius"
+      },
+      "fan_speed_percentage_command": {
+        "units": "Percent"
+      },
+      "zone_air_temperature_setpoint": {
+        "writeable": true,
+        "units": "Degrees-Celsius"
+      }
+    }
+  }
+}

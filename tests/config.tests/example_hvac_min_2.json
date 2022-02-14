@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "timestamp": "2021-12-21T13:00:21.413Z",
+  "system": {
+    "min_loglevel": 600
+  },
+  "pointset": {
+    "sample_limit_sec": 2,
+    "sample_rate_sec": 500,
+    "points": {
+      "cooling_valve_percentage_command": {
+      },
+      "supply_air_temperature_sensor": {
+      },
+      "return_air_temperature_sensor": {
+      },
+      "fan_speed_percentage_command": {
+      },
+      "zone_air_temperature_setpoint": {
+        "set_value": 18.0 // Update this point to 18.0
+      }
+    }
+  }
+}

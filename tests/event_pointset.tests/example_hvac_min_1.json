@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "timestamp": "2021-12-21T13:00:02.053Z",
+  "points": {
+    "cooling_valve_percentage_command": {
+      "present_value": 50
+    },
+    "supply_air_temperature_sensor": {
+      "present_value": 22.3
+    },
+    "return_air_temperature_sensor": {
+      "present_value": 26.1
+    },
+    "fan_speed_percentage_command": {
+      "present_value": 50
+    },
+    "zone_air_temperature_setpoint": {
+      "present_value": 26.0
+    }
+  }
+}

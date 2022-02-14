@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "timestamp": "2021-12-21T13:00:03.053Z",
+  "points": {
+    "cooling_valve_percentage_command": {
+      "present_value": 100 // Example of system reaction to the cloud writeback command represented in the telemetry, e.g. cooling valve has been opened up to increase cooling capacity
+    },
+    "supply_air_temperature_sensor": {
+      "present_value": 17.1
+    },
+    "return_air_temperature_sensor": {
+      "present_value": 25.9
+    },
+    "fan_speed_percentage_command": {
+      "present_value": 100
+    },
+    "zone_air_temperature_setpoint": {
+      "present_value": 18.0 // The setpoint has been updated in the system
+    }
+  }
+}

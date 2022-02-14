@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "timestamp": "2021-12-21T13:00:00.131Z",
+  "system": {
+    "min_loglevel": 600
+  },
+  "pointset": {
+    "sample_limit_sec": 15,
+    "sample_rate_sec": 60,
+    "points": {
+      "cooling_valve_percentage_command": {
+      },
+      "supply_air_temperature_sensor": {
+      },
+      "return_air_temperature_sensor": {
+      },
+      "fan_speed_percentage_command": {
+      },
+      "zone_air_temperature_setpoint": {
+      }
+    }
+  }
+}
