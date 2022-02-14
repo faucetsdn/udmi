@@ -12,6 +12,7 @@
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
 - [Proxy](proxy.md)
-- [Sequences](sequences/) (for example _writeback_ and _state_ sequences) 
+- [Sequences](sequences/) (device-to-cloud API)
+- [Subblocks](subblocks.md) (core-to-apps API)
 - [Site Model](site_model.md)
 - [Tech Stack](tech_stack.md)
