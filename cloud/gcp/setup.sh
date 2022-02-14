@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
-echo Using GCP_PROJECT_NAME ${GCP_PROJECT_NAME:?}
-echo Using GCP_PROJECT_ID ${GCP_PROJECT_ID:?}
-echo Using GCP_PROJECT_REGION ${GCP_PROJECT_REGION:?}
-echo Using UDMI_SITE_NAME ${UDMI_SITE_NAME:?}
-echo Using UDMI_SITE_REGION ${UDMI_SITE_REGION:?}
-echo Using UDMI_SITE_GROUP ${UDMI_SITE_GROUP:?}
+echo export GCP_PROJECT_NAME=${GCP_PROJECT_NAME:?}
+echo export GCP_PROJECT_ID=${GCP_PROJECT_ID:?}
+echo export GCP_PROJECT_REGION=${GCP_PROJECT_REGION:?}
+echo export UDMI_SITE_NAME=${UDMI_SITE_NAME:?}
+echo export UDMI_SITE_REGION=${UDMI_SITE_REGION:?}
+echo export UDMI_SITE_GROUP=${UDMI_SITE_GROUP:?}
 
 sed -E < main.tf.template > main.tf \
     -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
