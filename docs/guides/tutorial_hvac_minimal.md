@@ -54,7 +54,7 @@ connectivity options to achieve the same functionality e.g. using [gateways](../
 
 Metadata file saved as a `FCU-001/metadata.json` within the [site model](../specs/site_model.md). 
 
-<!--example:metadata/example_hvac_min.json-->
+<!--example:metadata/tutorial_hvac_min.json-->
 ```json
 {
   "version": 1,
@@ -110,7 +110,7 @@ descriptive fields. It is suggested these are filled in where available.
 #### (1) Initial Configuration
 
 Using the registrar tool, a configuration message is sent to the device based on metadata file
-<!--example:config/example_hvac_min_1.json-->
+<!--example:config/tutorial_hvac_min_1.json-->
 ```json
 {
   "version": 1,
@@ -141,7 +141,7 @@ Using the registrar tool, a configuration message is sent to the device based on
 
 After receiving a config message, the device sends a [state](../messages/state.md) message as
 defined by [config and state sequence](../specs/sequences/config.md)
-<!--example:state/example_hvac_min_1.json-->
+<!--example:state/tutorial_hvac_min_1.json-->
 ```json
 {
   "version": 1,
@@ -183,7 +183,7 @@ In this example with the following parameters:
 * `sample_rate_sec`: 15
 * `sample_limit_sec`: 60
 The telemetry will be nominally sent every 15 seconds
-<!--example:event_pointset/example_hvac_min_1.json-->
+<!--example:event_pointset/tutorial_hvac_min_1.json-->
 ```json
 {
   "version": 1,
@@ -220,7 +220,7 @@ into the telemetry where appropriate.
 
 The temperature setpoint `zone_air_temperature_setpoint` is updated from the cloud by applying a
 `set_value` to the point in the [pointset](../messages/pointset.md)
-<!--example:config/example_hvac_min_2.json-->
+<!--example:config/tutorial_hvac_min_2.json-->
 ```json
 {
   "version": 1,
@@ -258,7 +258,7 @@ If the [writeback](../specs/sequences/writeback.md) was successfully applied, th
 The `last_config` matches the value of the last config message received as described in the [state
 and config sequences](../specs/sequences/config.md) 
 
-<!--example:state/example_hvac_min_2.json-->
+<!--example:state/tutorial_hvac_min_2.json-->
 ```json
 {
   "version": 1,
@@ -294,7 +294,7 @@ and config sequences](../specs/sequences/config.md)
 
 The device continues to send the telemetry within the sample interval. The telemetry reflects the
 values set by the cloud
-<!--example:event_pointset/example_hvac_min_2.json-->
+<!--example:event_pointset/tutorial_hvac_min_2.json-->
 ```json
 {
   "version": 1,
