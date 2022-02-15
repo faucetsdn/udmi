@@ -75,3 +75,13 @@ jobs:
         run: |
           echo Pubber output logs:
           cat pubber.out || true
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup config
+        env:
+          TERRAFORM_CONFIG: ${{ secrets.TERRAFORM_CONFIG }}
+        run: |
+          base64 -d <<< $TERRAFORM_CONFIG > config.sh
+          cat config.sh
