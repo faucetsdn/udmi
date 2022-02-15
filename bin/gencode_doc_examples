@@ -5,7 +5,10 @@ import re
 import sys
 import argparse
 
-REGEX_NORMALIZE = r'(?s)(<!--example:\w+\/\w+.json-->\n)(```json.*?```)'
+from datetime import datetime
+
+
+REGEX_NORMALIZE = r'(?s)(<!--example:\w+\/\w+.json-->\n)(```.*?```)'
 REGEX_INCLUDE = r'<!--example:(\w+)\/(\w+).json-->\n'
 
 
@@ -34,8 +37,12 @@ def read_example_file(match):
 
     include_path = f'tests/{schema}.tests/{file}.json'
 
-    with open(include_path, 'r') as f:
-        return(f'{expression}```json\n{f.read().rstrip()}\n```')
+    try:
+        with open(include_path, 'r') as f:
+            return(f'{expression}```json\n{f.read().rstrip()}\n```')
+    except FileNotFoundError:
+            # Append time so file not found errors so there's always a diff
+            return(f'{expression}```\nFILE NOT FOUND ({datetime.now()})\n```')
 
 
 def include_examples(file_contents):
@@ -45,7 +52,7 @@ def include_examples(file_contents):
         file_contents   string to replace in (contents of documentation file)
 
     Returns
-        string contents of file
+        string contents of file 
     """
     normalized_file = re.sub(REGEX_NORMALIZE, '\g<1>', file_contents)
     return re.sub(REGEX_INCLUDE, read_example_file, normalized_file)
@@ -68,7 +75,7 @@ def diff_examples(original, updated):
 
     for match_original, match_updated in zip(matches_original, matches_updated):
         if match_original[1] != match_updated[1]:
-            diffs.append(match_original[0])
+            diffs.append(match_original[0].rstrip())
 
     return diffs    
 
@@ -76,7 +83,7 @@ def diff_examples(original, updated):
 if __name__ == "__main__":
 
     file_paths = glob.glob('docs/**/*.md', recursive=True)
-    
+
     args = parse_command_line_args()
     example_diffs = {}
 
