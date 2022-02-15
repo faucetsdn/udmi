@@ -19,7 +19,6 @@ public class BaselineValidator extends SequenceValidator {
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
   private Date prevConfig;
-  private boolean brokenConfig;
 
   @Before
   public void makePoints() {
@@ -78,7 +77,7 @@ public class BaselineValidator extends SequenceValidator {
   }
 
   @Test
-  public void bad_config_json() {
+  public void broken_config() {
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
@@ -93,6 +92,25 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
     untilTrue(() -> deviceState.system.operational, "system operational");
+  }
+
+  @Test
+  public void extra_config() {
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
+    prevConfig = deviceState.system.last_config;
+    extraField = "Flabberguilstadt";
+    updateConfig();
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses has config");
+    untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
+    prevConfig = deviceState.system.last_config;
+    extraField = null;
+    updateConfig();
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
+    untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated again");
   }
 
   @Test

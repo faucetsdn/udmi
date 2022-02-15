@@ -3,6 +3,7 @@ package com.google.daq.mqtt.validator;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -52,6 +53,7 @@ public abstract class SequenceValidator {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(Include.NON_NULL);
   public static final String RESULT_FAIL = "fail";
@@ -72,6 +74,8 @@ public abstract class SequenceValidator {
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
   public static final int INITIAL_MIN_LOGLEVEL = 400;
+  protected String extraField;
+  protected Boolean brokenConfig;
 
   protected Config deviceConfig;
   protected State deviceState;
@@ -286,11 +290,24 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
-    updateConfig("system", deviceConfig.system);
+    updateConfig("system", augmentConfig(deviceConfig.system));
     updateConfig("pointset", deviceConfig.pointset);
     updateConfig("gateway", deviceConfig.gateway);
     updateConfig("localnet", deviceConfig.localnet);
     updateConfig("blobset", deviceConfig.blobset);
+  }
+
+  private AugmentedSystemConfig augmentConfig(SystemConfig system) {
+    try {
+      String conversionString = OBJECT_MAPPER.writeValueAsString(system);
+      AugmentedSystemConfig augmentedConfig = OBJECT_MAPPER.readValue(conversionString,
+          AugmentedSystemConfig.class);
+      augmentedConfig.extraField = extraField;
+      augmentedConfig.brokenConfig = brokenConfig;
+      return augmentedConfig;
+    } catch (Exception e) {
+      throw new RuntimeException("While augmenting system config", e);
+    }
   }
 
   private <T> T messageConvert(Class<T> target, Map<String, Object> message) {
