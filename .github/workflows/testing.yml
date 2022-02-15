@@ -84,14 +84,17 @@ jobs:
       - name: Setup config
         env:
           TERRAFORM_CONFIG: ${{ secrets.TERRAFORM_CONFIG }}
+        if: "${{ env.TERRAFORM_CONFIG != '' }}"
         run: |
           base64 -d <<< "$TERRAFORM_CONFIG" > config.sh
           cat config.sh | fgrep -v _CREDS=
       - name: Setup terraform
+        if: "test -f config.sh"
         run: |
           source config.sh
           cloud/gcp/bin/setup
       - name: Init terraform
+        if: "test -f config.sh"
         run: |
           source config.sh
           cloud/gcp/bin/init
