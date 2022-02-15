@@ -91,3 +91,7 @@ jobs:
         run: |
           source config.sh
           cloud/gcp/bin/setup
+      - name: Init terraform
+        run: |
+          source config.sh
+          cloud/gcp/bin/init

@@ -8,6 +8,7 @@ CONFIG_FILE=config.out
 if [[ -f $CRED_FILE ]]; then
     echo Cowardly refusing to overwrite existing $CRED_FILE
 else
+    echo Writing creds to $CRED_FILE
     base64 -d <<< "${GCP_PROJECT_CREDS:?}" > $CRED_FILE
 fi
 
@@ -23,7 +24,7 @@ export UDMI_SITE_GROUP=${UDMI_SITE_GROUP:?}
 EOF
 
 echo Config saved to $CONFIG_FILE
-sha256sum $CONFIG_FILE
+sha256sum $CONFIG_FILE $CRED_FILE
 cat $CONFIG_FILE | fgrep -v _CREDS=
 
 echo Creating main.tf
