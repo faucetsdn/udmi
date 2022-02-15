@@ -39,11 +39,17 @@ The system has the following physical points, represented as analogue inputs/out
 - `return_air_temperature_sensor`
 - `fan_speed_percentage_command`
 
-The system additionally comprises the following virtual points
+The system additionally comprises the following virtual/software points. 
 - `zone_air_temperature_setpoint`
 
-These points have been named according to [Digital Buildings Ontology (DBO)](../tech_primer.md) at
-the controller. Conversely it is also possible and valid to represent each component as a [logical
+UDMI is agnostic of the source (e.g. physical or software) of a data point. 
+
+In this example, the points have been named according to [Digital Buildings Ontology
+(DBO)](../tech_primer.md) at the controller. It is not a requirement for a device which supports
+UDMI to name it's points according to DBO as this is a project or system requirement, however the
+device must be capable of changing the point names in the UDMI payloads.
+
+Conversely it is also possible and valid to represent each component as a [logical
 device](../tech_primer.md) subject to project requirements
 
 In practice the system may comprise additional components and points not shown in this limited
@@ -139,8 +145,12 @@ Using the registrar tool, a configuration message is sent to the device based on
 
 #### (2) State
 
-After receiving a config message, the device sends a [state](../messages/state.md) message as
-defined by [config and state sequence](../specs/sequences/config.md)
+The device sends a state a significant change in the device's state. This includes receiving a new
+config message, but can additionally include a system configuration change, external change, BMS
+update, etc.
+
+In this instance, the device sends a [state](../messages/state.md) message after receiving a config
+message as defined by [config and state sequence](../specs/sequences/config.md)
 <!--example:state/tutorial_hvac_min_1.json-->
 ```json
 {
