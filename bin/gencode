@@ -11,7 +11,6 @@ fi
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
-bin/gencode_doc_examples
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...
@@ -29,5 +28,7 @@ else
     files=`find gencode/ -type f | sort`
     sha256sum $files > .gencode_hash.txt
 fi
+
+bin/gencode_doc_examples
 
 echo Done with gencode $*

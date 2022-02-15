@@ -75,8 +75,8 @@ def diff_examples(original, updated):
 
 if __name__ == "__main__":
 
-    file_paths = glob.glob('docs/guides/**.md', recursive=True)
-    
+    file_paths = glob.glob('docs/**/*.md', recursive=True)
+    g
     args = parse_command_line_args()
     example_diffs = {}
 
