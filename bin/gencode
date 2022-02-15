@@ -11,10 +11,14 @@ fi
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
+bin/gencode_doc_examples
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...
     bin/gencode_docs check_links
+
+    echo Checking inline examples
+    bin/gencode_doc_examples check
 
     echo Checking gencode hash...
     files=`find gencode/ -type f | sort`

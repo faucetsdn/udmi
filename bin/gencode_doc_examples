@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+
+import glob
+import re
+import sys
+import argparse
+
+REGEX_NORMALIZE = r'(?s)(<!--example:\w+\/\w+.json-->\n)(```json.*?```)'
+REGEX_INCLUDE = r'<!--example:(\w+)\/(\w+).json-->\n'
+
+
+def parse_command_line_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('check', nargs='?', default=False,
+                        help='Check in-line examples match examples in tests directory')
+
+    return parser.parse_args()
+
+
+def read_example_file(match):
+    """     
+    Used as re.sub callback to read example from a file
+
+    Arguments
+        match   match object
+
+    Returns
+        json from example file appended to original expression
+    """
+    expression = match.group(0)
+    schema = match.group(1)
+    file = match.group(2)
+
+    include_path = f'tests/{schema}.tests/{file}.json'
+
+    with open(include_path, 'r') as f:
+        return(f'{expression}```json\n{f.read().rstrip()}\n```')
+
+
+def include_examples(file_contents):
+    """ Replaces examples within a string
+    
+    Arguments
+        file_contents   string to replace in (contents of documentation file)
+
+    Returns
+        string contents of file
+    """
+    normalized_file = re.sub(REGEX_NORMALIZE, '\g<1>', file_contents)
+    return re.sub(REGEX_INCLUDE, read_example_file, normalized_file)
+
+
+def diff_examples(original, updated):
+    """ Identifies the 
+    
+    Arguments:
+        original    string file contents of document 
+        updated     string in memory contents of updated file
+
+    Returns:
+        list    list of files which had been updated
+    """
+    diffs = []
+
+    matches_original = re.findall(REGEX_NORMALIZE, original)
+    matches_updated = re.findall(REGEX_NORMALIZE, updated)
+
+    for match_original, match_updated in zip(matches_original, matches_updated):
+        if match_original[1] != match_updated[1]:
+            diffs.append(match_original[0])
+
+    return diffs    
+
+
+if __name__ == "__main__":
+
+    file_paths = glob.glob('docs/guides/**.md', recursive=True)
+    
+    args = parse_command_line_args()
+    example_diffs = {}
+
+    for file_path in file_paths:
+
+        with open(file_path, 'r') as f:
+            file_contents = f.read()
+        
+        updated_file_contents = include_examples(file_contents)
+
+        if updated_file_contents != file_contents:
+            if args.check:
+                example_diffs[file_path] = diff_examples(file_contents, updated_file_contents)
+                
+            else:
+                with open(file_path, 'w') as f:
+                    f.write(updated_file_contents)
+
+    if args.check:
+        if example_diffs:
+            print('Examples do not match source in following files, run bin/gendocs_examples')
+            for file, diffs in example_diffs.items():
+                print(f'{file}')
+                for diff in diffs:
+                    print(f'** {diff}')
+
+            sys.exit(1)
+
+        print('Documentation in line examples match source examples')
+        
