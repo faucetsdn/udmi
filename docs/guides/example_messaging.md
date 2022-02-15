@@ -176,7 +176,7 @@ defined by [config and state sequence](../specs/sequences/config.md)
 #### (3) Telemetry (Pointset Event)
 
 The telemetry will send data at an interval according to the `sample_limit_sec` and
-`sample_rate_sec` from the [config](config.md) message.
+`sample_rate_sec` from the [config](../messages/config.md) message.
 
 In this example with the following parameters:
 * `sample_rate_sec`: 15
