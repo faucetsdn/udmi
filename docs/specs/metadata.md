@@ -1,3 +1,5 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Metadata](#)
+
 # Metadata Description File
 
 A device's `metadata.json` is a description about the device: a specification
@@ -29,22 +31,7 @@ The various tools will generate some output files in the same `devices/` directo
 
 ## Metadata Structure
 
-<<<<<<< HEAD:docs/specs/metadata.md
-The structure of the metadata file is validated by the various tools,
-and roughly corresponds to the following structure. See the various
-working examples for more specific details on what these fields look like.
-
-* `version`: UDMI version, currently always 1.
-* `timestamp`: Timestamp that the metadata file was last updated.
-* `hash`: Automatically generated field that contains the hash of file contents.
-* `pointset`: Information pertaining to the points defined for the device.
-  * `points/{point_name}`: Information about a specific point name of the device.
-    * `units`: Expected unit configuration for the point.
-* `system`: High-level sytem informaiton about the device.
-  * `location`: Properties the expected physical location of the device.
-  * `physical_tag`: Information used to print a physical QR code label.
-* `cloud`: Information specific to how the device communicates with the cloud.
-  * `auth_type`: Key type (e.g. `RS256`) used for cloud communication.
+The structure of the metadata file is shown in the [🧬metadata schema](../../gencode/docs/metadata.html)
 
 ## Metadata Registration and Validation
 
@@ -52,6 +39,8 @@ Using UDMI on a project entails not only the base device implementations, but al
 properly registering and validating device configuration. The [registrar](../tools/registrar.md)
 tool and [validator](../tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
-=======
-The structure of the metadata file is shown in the [metadata schema](https://faucetsdn.github.io/udmi/gencode/docs/metadata.html)
->>>>>>> dd92c1c9c1c6a12579b233ac370df95cfa05fff5:docs/metadata.md
+
+## Example
+
+This [working example](../../tests/metadata.tests/example.json) shows how a typical `metadata` file
+is constructed.

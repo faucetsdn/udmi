@@ -1,0 +1,18 @@
+# Image name: udmi/pubber
+#
+# Docker container for scaled pubber instances.
+#
+
+FROM adoptopenjdk/openjdk11:latest
+
+WORKDIR /root/
+
+COPY validator/bin validator/bin/
+
+COPY schema/ schema/
+
+COPY sites/ sites/
+
+COPY validator/build/libs validator/build/libs/
+
+ENTRYPOINT ["validator/bin/swarm"]

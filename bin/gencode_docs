@@ -1,0 +1,118 @@
+#!/bin/bash -e
+#
+# Automatic document generation, validation and helpers
+#
+# bin/gendocs [cmd]
+# 
+# <unspecified> (default)
+#   Generate HTML documentation from JSON schema. Stored in gencode/docs
+#
+# check_links
+#   Checks that all inline markdown links in all markdownfiles and within the 
+#   schema are valid
+#
+# gen_bucket [input_file] [output_file]
+#   Takes a tab delimited text file containing the list of feature buckets
+#   as copied from Google Sheets and convert into an MD list
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+OUTPUT_DIR=$ROOT_DIR/gencode/docs
+TMP_DIR=$ROOT_DIR/tmp/schema
+
+schema_files=`ls schema/*.json`
+
+if [ "$1" == gen_bucket ]; then
+    shift 1
+
+    input_file=$1
+    output_file=$2
+    tmp_file=$output_file.tmp
+    
+    rm -f $tmp_file
+    cp $input_file $tmp_file
+
+    # Blank Lines
+    sed -E -i '/^\s*$/d' $tmp_file
+    # Top level headings
+    sed -E -i 's;^([a-zA-Z0-9 .\-_\/]+)\t+$;*\t**\1**;g' $tmp_file
+    # Subheadings
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
+    # List Items
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t`\2` - \3;g' $tmp_file
+    # Convert tabs to spaces (comply with style guide)
+    expand -t 4 $tmp_file > $output_file
+    
+    rm $tmp_file
+    exit 0
+fi
+
+
+if [ "$1" == check_links ]; then
+    if [ -d venv ]; then
+        source venv/bin/activate
+    fi
+
+    bin/check_links > check_links.out
+    if [ -s check_links.out ]; then
+        cat check_links.out
+        exit 1
+    fi
+
+    exit 0
+fi 
+
+
+# Generate schema documentation (default)
+
+if [ -d venv ]; then
+    source venv/bin/activate
+fi
+
+rm -rf $OUTPUT_DIR
+mkdir -p $OUTPUT_DIR
+
+# Make a copy of the schema files into a tmp folder for any pre generator fixes
+rm -rf $TMP_DIR
+mkdir -p $TMP_DIR
+cp -r schema/. $TMP_DIR
+
+# Remove file: prefix from references so document generator works
+find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
+
+# Redirect links to internal documentation for the hosted as the output folder 
+# is one level down
+find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
+
+schemas="state event_system event_pointset event_discovery config metadata envelope"
+
+for schema in $schemas; do
+    echo == Processing $schema.json
+    python3 bin/gendocs.py $schema $TMP_DIR $OUTPUT_DIR
+done
+
+rm -rf $TMP_DIR
+
+# Create index page with links to different schemas
+cp etc/schema_index_template.html $OUTPUT_DIR/index.html
+
+for schema in $schemas; do
+    sed -i "s/<!--SCHEMALINK-->/\
+        <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
+        $OUTPUT_DIR/index.html
+done
+
+# Add navbar
+navbar=$(cat etc/schema_navbar.html)
+navbar=$(printf '%q ' $navbar)
+find $OUTPUT_DIR -type f -exec sed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
+
+# Add dynamic documentation link rewriting
+cp etc/schema_extras.js $OUTPUT_DIR/schema_extras.js
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.js\" ></script></head>;" {} \;
+
+find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
+    <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;

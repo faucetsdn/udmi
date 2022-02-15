@@ -13,7 +13,7 @@ buildscript {
 plugins {
     id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'java'
-    id 'maven'
+    id 'checkstyle'
 }
 
 group 'daq-pubber'
@@ -29,35 +29,49 @@ sourceSets {
     }
 }
 
+checkstyle {
+    ignoreFailures = false
+    maxWarnings = 80
+}
+checkstyleMain.source = 'src/main/java'
+
 jar {
     manifest {
         attributes 'Main-Class': 'daq.pubber.Pubber'
     }
 }
 
+shadowJar {
+    mergeServiceFiles()
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
-    jcenter()
+    maven { url 'https://mvnrepository.com' }
 }
 
+
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.30'
-    compile 'io.jsonwebtoken:jjwt:0.9.1'
-    compile 'javax.xml.bind:jaxb-api:2.3.1'
-    compile 'com.sun.xml.bind:jaxb-impl:3.0.1'
-    compile 'com.google.guava:guava:30.1.1-jre'
-    compile 'com.google.cloud:google-cloud-logging:2.3.2'
-    compile('com.google.api-client:google-api-client:1.31.2') {
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'com.sun.xml.bind:jaxb-impl:3.0.1'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'com.google.cloud:google-cloud-logging:2.3.2'
+    implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
+    implementation('com.google.api-client:google-api-client:1.31.2') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.12.4'
-    compile('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.4'
+    implementation('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
-    compile 'joda-time:joda-time:2.10.10'
-    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    compile 'io.moquette:moquette-broker:0.13'
-    testCompile group: 'junit', name: 'junit', version: '4.13.2'
-    testCompile 'org.mockito:mockito-core:3.11.2'
+    implementation 'joda-time:joda-time:2.10.10'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation('io.moquette:moquette-broker:0.15') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
+    implementation 'org.slf4j:slf4j-simple:1.7.30'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation 'org.mockito:mockito-core:3.11.2'
 }

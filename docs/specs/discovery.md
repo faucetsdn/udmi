@@ -1,10 +1,12 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Discovery](#)
+
 # Discovery and Enumeration
 
 There's two related processes that are used to extract the
-'as built' state of a system, detailing the physical actualitities
+'as built' state of a system, detailing the physical actualities
 of a physical system:
 
-* _discovery_ referes to the process of determining what devices
+* _discovery_ refers to the process of determining what devices
 exist, and any correlation between address families. This is
 essentially extrinsic to a device itself.
 

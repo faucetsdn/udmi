@@ -1,11 +1,18 @@
 #!/bin/bash -e
 
+if [[ $1 == check ]]; then
+    check=check
+    shift
+fi
+
 rundir=$(dirname $0)
 cd $rundir/..
 
-echo Running in $PWD
+echo Building pubber in $PWD
 
 rm -rf build
+./gradlew shadow $check
 
-./gradlew build
-./gradlew shadow
+ls -l build/libs/pubber-1.0-SNAPSHOT-all.jar
+
+echo Done with pubber build

@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -12,23 +14,24 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
+import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -52,7 +55,7 @@ public class CloudIotManager {
   private CloudIot cloudIotService;
   private String projectPath;
   private CloudIot.Projects.Locations.Registries cloudIotRegistries;
-  private Map<String, Device> deviceMap = new HashMap<>();
+  private Map<String, Device> deviceMap = new ConcurrentHashMap<>();
   private String schemaName;
 
   public CloudIotManager(String projectId, File iotConfigFile, String schemaName) {
@@ -215,22 +218,24 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  public List<Device> fetchDeviceList() {
+  public Set<String> fetchDeviceList() {
     Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
+    Set<Device> allDevices = new HashSet<>();
+    String nextPageToken = null;
     try {
-      List<Device> devices = cloudIotRegistries
-          .devices()
-          .list(getRegistryPath())
-          .setPageSize(LIST_PAGE_SIZE)
-          .execute()
-          .getDevices();
-      if (devices == null) {
-        return new ArrayList<>();
-      }
-      if (devices.size() == LIST_PAGE_SIZE) {
-        throw new RuntimeException("Returned exact page size, likely not fetched all devices");
-      }
-      return devices;
+      do {
+        ListDevicesResponse response = cloudIotRegistries
+            .devices()
+            .list(getRegistryPath())
+            .setPageToken(nextPageToken)
+            .setPageSize(LIST_PAGE_SIZE)
+            .execute();
+        List<Device> devices = response.getDevices();
+        allDevices.addAll(devices == null ? ImmutableList.of() : devices);
+        System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());
+        nextPageToken = response.getNextPageToken();
+      } while (nextPageToken != null);
+      return allDevices.stream().map(Device::getId).collect(Collectors.toSet());
     } catch (Exception e) {
       throw new RuntimeException("While listing devices for registry " + registryId, e);
     }

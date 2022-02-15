@@ -2,7 +2,6 @@
 
 udmi_site_model/
 gcp_reflect_key.pkcs8
-/pubber.out
 workspace.xml
 codegen/
 .gradle/
@@ -13,10 +12,19 @@ firebase-debug.log
 /out/
 /validator/build/
 /validator/out/
+/validator/.idea/libraries/
 /pubber/build/
+/pubber/out/
+/pubber/.idea/libraries/
 /sites/
 /attributes.json
 /venv/
 /local/
 .pubber.pid
 __pycache__/
+
+cloud/gcp/terraform.tfvars
+cloud/gcp/udmi-sites.tf
+cloud/gcp/main.tf
+cloud/gcp/auth/credentials.json
+cloud/gcp/.terraform*

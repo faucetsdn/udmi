@@ -1,4 +1,29 @@
 #!/bin/bash -e
 
+# Fix sort order difference on different platforms.
+export LC_ALL=C
+
+if [[ $1 == check ]]; then
+    check=check
+    shift
+fi
+
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
+bin/gencode_docs
+
+if [[ -n $check ]]; then
+    echo Checking gencode docs links...
+    bin/gencode_docs check_links
+
+    echo Checking gencode hash...
+    files=`find gencode/ -type f | sort`
+    sha256sum $files > /tmp/gencode.hash
+    diff /tmp/gencode.hash .gencode_hash.txt
+else
+    echo Updating gencode hash...
+    files=`find gencode/ -type f | sort`
+    sha256sum $files > .gencode_hash.txt
+fi
+
+echo Done with gencode $*

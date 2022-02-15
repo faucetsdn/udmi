@@ -1,6 +1,6 @@
 {
   "title": "Envelope",
-  "description": "The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. Read more: <https://github.com/faucetsdn/udmi/blob/master/docs/messages/envelope.md>",
+  "description": "The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. [Message Envelope Documentation](../docs/messages/envelope.md)",
   "additionalProperties": true,
   "properties": {
     "deviceId": {

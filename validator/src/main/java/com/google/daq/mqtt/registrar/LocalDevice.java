@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Preconditions;
@@ -445,7 +446,7 @@ class LocalDevice {
     }
   }
 
-  private byte[] getKeyBytes() {
+  public byte[] getKeyBytes() {
     if (!isDirectConnect()) {
       return null;
     }
@@ -498,6 +499,7 @@ class LocalDevice {
   public Config deviceConfigObject() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
+    config.version = 1;
     if (isGateway()) {
       config.gateway = new GatewayConfig();
       config.gateway.proxy_ids = getProxyDevicesList();
@@ -549,7 +551,6 @@ class LocalDevice {
   }
 
   public void validateEnvelope(String registryId, String siteName) {
-    checkConsistency(siteName);
     try {
       Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
@@ -559,10 +560,17 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER.writeValueAsString(envelope);
-      schemas.get(ENVELOPE_JSON).validate(OBJECT_MAPPER.readTree(envelopeJson));
+      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON).validate(OBJECT_MAPPER.readTree(envelopeJson));
+      if (!processingReport.isSuccess()) {
+        processingReport.forEach(action -> {
+          throw new RuntimeException("against schema", action.asException());
+        });
+      }
     } catch (Exception e) {
       throw new IllegalStateException("Validating envelope " + deviceId, e);
     }
+
+    checkConsistency(siteName);
   }
 
   private String fakeProjectId() {
@@ -736,6 +744,10 @@ class LocalDevice {
       return errorTree.children.entrySet();
     }
     return Set.of();
+  }
+
+  public Metadata getMetadata() {
+    return metadata;
   }
 
   private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {
