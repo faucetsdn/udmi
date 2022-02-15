@@ -90,11 +90,7 @@ jobs:
           cat config.sh | fgrep -v _CREDS=
       - name: Setup terraform
         if: "test -f config.sh"
-        run: |
-          source config.sh
-          cloud/gcp/bin/setup
+        run: test -f config.sh && source config.sh && cloud/gcp/bin/setup
       - name: Init terraform
         if: "test -f config.sh"
-        run: |
-          source config.sh
-          cloud/gcp/bin/init
+        run: test -f config.sh && source config.sh && cloud/gcp/bin/init
