@@ -89,8 +89,6 @@ jobs:
           base64 -d <<< "$TERRAFORM_CONFIG" > config.sh
           cat config.sh | fgrep -v _CREDS=
       - name: Setup terraform
-        if: "test -f config.sh"
         run: test -f config.sh && source config.sh && cloud/gcp/bin/setup
       - name: Init terraform
-        if: "test -f config.sh"
         run: test -f config.sh && source config.sh && cloud/gcp/bin/init
