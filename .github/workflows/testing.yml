@@ -83,5 +83,9 @@ jobs:
         env:
           TERRAFORM_CONFIG: ${{ secrets.TERRAFORM_CONFIG }}
         run: |
-          base64 -d <<< $TERRAFORM_CONFIG > config.sh
-          cat config.sh
+          base64 -d <<< "$TERRAFORM_CONFIG" > config.sh
+          cat config.sh | fgrep -v _CREDS=
+      - name: Setup terraform
+        run: |
+          source config.sh
+          cloud/gcp/bin/setup

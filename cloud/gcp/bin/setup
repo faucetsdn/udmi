@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+cd $(realpath $(dirname $0)/..)
+
 CRED_FILE=auth/credentials.json
 CONFIG_FILE=config.out
 
@@ -22,6 +24,7 @@ EOF
 
 echo Config saved to $CONFIG_FILE
 sha256sum $CONFIG_FILE
+cat $CONFIG_FILE | fgrep -v _CREDS=
 
 echo Creating main.tf
 sed -E < main.tf.template > main.tf \
