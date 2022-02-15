@@ -190,7 +190,7 @@ The telemetry will be nominally sent every 15 seconds
   "points": {
     "cooling_valve_percentage_command": {
       "present_value": 50
-    },
+    },s
     "supply_air_temperature_sensor": {
       "present_value": 22.3
     },
