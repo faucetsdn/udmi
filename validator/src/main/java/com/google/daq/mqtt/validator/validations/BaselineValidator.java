@@ -19,6 +19,7 @@ public class BaselineValidator extends SequenceValidator {
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
   private Date prevConfig;
+  private boolean brokenConfig;
 
   @Before
   public void makePoints() {
@@ -74,6 +75,24 @@ public class BaselineValidator extends SequenceValidator {
     }, "state last_config match");
     System.err.printf("%s last_config update match %s%n", getTimestamp(),
         getTimestamp(expectedConfig));
+  }
+
+  @Test
+  public void bad_config_json() {
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    prevConfig = deviceState.system.last_config;
+    brokenConfig = true;
+    updateConfig();
+    untilTrue(() -> deviceState.system.statuses.containsKey("config"), "statuses has config");
+    untilTrue(() -> deviceState.system.last_config.equals(prevConfig), "last_config unchanged");
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    brokenConfig = false;
+    updateConfig();
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
+    untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
+    untilTrue(() -> deviceState.system.operational, "system operational");
   }
 
   @Test

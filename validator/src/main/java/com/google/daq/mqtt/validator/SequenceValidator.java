@@ -286,12 +286,8 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
-    if (updateConfig("system", deviceConfig.system) && deviceConfig.system != null) {
-      System.err.println(getTimestamp() + " updated system loglevel " + deviceConfig.system.min_loglevel);
-    }
-    if (updateConfig("pointset", deviceConfig.pointset) && deviceConfig.pointset != null) {
-      System.err.println(getTimestamp() + " updated pointset config");
-    }
+    updateConfig("system", deviceConfig.system);
+    updateConfig("pointset", deviceConfig.pointset);
     updateConfig("gateway", deviceConfig.gateway);
     updateConfig("localnet", deviceConfig.localnet);
     updateConfig("blobset", deviceConfig.blobset);
@@ -328,15 +324,8 @@ public abstract class SequenceValidator {
   }
 
   private void updateState(String subFolder, Map<String, Object> message) {
-    if (updateState(subFolder, "system", SystemState.class, message,
-        state -> deviceState.system = state)) {
-      Date last_config = deviceState.system == null ? null : deviceState.system.last_config;
-      System.err.printf("%s received state last_config %s%n", getTimestamp(), getTimestamp(last_config));
-    }
-    if (updateState(subFolder, "pointset", PointsetState.class, message,
-        state -> deviceState.pointset = state)) {
-      System.err.printf("%s received state pointset%n", getTimestamp());
-    }
+    updateState(subFolder, "system", SystemState.class, message, state -> deviceState.system = state);
+    updateState(subFolder, "pointset", PointsetState.class, message, state -> deviceState.pointset = state);
     validSerialNo();
   }
 
