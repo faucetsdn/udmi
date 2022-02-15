@@ -88,4 +88,6 @@ jobs:
       - name: Setup terraform
         run: |
           source config.sh
+          ls -l cloud/gcp
+          ls -l cloud/gcp/bin
           cloud/gcp/bin/setup
