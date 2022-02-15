@@ -79,6 +79,8 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v2.3.4
       - name: Setup config
         env:
           TERRAFORM_CONFIG: ${{ secrets.TERRAFORM_CONFIG }}
@@ -88,6 +90,4 @@ jobs:
       - name: Setup terraform
         run: |
           source config.sh
-          ls -l cloud/gcp
-          ls -l cloud/gcp/bin
           cloud/gcp/bin/setup
