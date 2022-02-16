@@ -96,21 +96,21 @@ public class BaselineValidator extends SequenceValidator {
 
   @Test
   public void extra_config() {
+    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
-    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
     updateConfig();
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses has config");
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     prevConfig = deviceState.system.last_config;
     extraField = null;
     updateConfig();
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated again");
+    untilTrue(() -> deviceState.system.operational, "system operational");
+    untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
   }
 
   @Test
