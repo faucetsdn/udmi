@@ -1,11 +1,8 @@
 module "UK-LON-TEST" {
-  source      = "./modules/terraform-google-bos-site"
+  source      = "./modules/terraform-google-udmi-site"
   gcp_project = var.gcp_project
-  site_name   = "UK-LON-TEST"
+  site_name   = "ZZ-TRI-FECTA"
   site_region = "europe-west1"
-  site_group  = "group:bos-corpops-testing-users-group@google.com"
+  site_group  = "group:group@example.com"
   log_level   = "DEBUG"
-  tags = {
-    Environment = "dev"
-  }
 }
