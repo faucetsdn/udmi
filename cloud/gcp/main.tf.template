@@ -3,10 +3,15 @@
 resource "google_project" "udmi-project" {
   project_id = var.gcp_project_id
   name       = var.gcp_project_name
+  billing_account = "@GCP_PROJECT_BILLING@"
 
   lifecycle {
     # Stop any terraform plan which would destroy this GCP project.
     prevent_destroy = true
+  }
+
+  provisioner "local-exec" {
+    command = "sleep 10"
   }
 }
 

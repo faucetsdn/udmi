@@ -22,13 +22,6 @@ variable "gcp_auth_file" {
   description = "GCP authentication file"
 }
 
-# GCP flaky control
-variable "gcp_flakiness_sleep" {
-  type        = number
-  description = "GCP provisioning sleep to control flakiness"
-  default     = 2
-}
-
 variable "tf-state-bucket-name" {
   type        = string
   description = "The name of the Google Storage Bucket to create to store the Terraform state"

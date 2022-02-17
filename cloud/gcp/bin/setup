@@ -18,6 +18,7 @@ export GCP_PROJECT_ID=${GCP_PROJECT_ID:?}
 export GCP_PROJECT_REGION=${GCP_PROJECT_REGION:?}
 export GCP_PROJECT_GROUP=${GCP_PROJECT_GROUP:?}
 export GCP_PROJECT_CREDS="`base64 -w 0 $CRED_FILE`"
+export GCP_PROJECT_BILLING=${GCP_PROJECT_BILLING:?}
 export UDMI_SITE_NAME=${UDMI_SITE_NAME:?}
 export UDMI_SITE_REGION=${UDMI_SITE_REGION:?}
 export UDMI_SITE_GROUP=${UDMI_SITE_GROUP:?}
@@ -29,7 +30,8 @@ cat $CONFIG_FILE | fgrep -v _CREDS=
 
 echo Creating main.tf
 sed -E < main.tf.template > main.tf \
-    -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
+    -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" \
+    -e "s/@GCP_PROJECT_BILLING@/${GCP_PROJECT_BILLING}/"
 
 echo Creating udmi-sites.tf
 sed -E < udmi-sites.tf.template > udmi-sites.tf \
