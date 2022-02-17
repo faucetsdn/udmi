@@ -31,12 +31,10 @@
         },
         "level": {
           "$comment": "https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity",
-          "description": "The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).",
-          "type": "integer",
-          "multipleOf": 1,
-          "minimum": 100,
-          "maximum": 800,
-          "examples": [600]
+          "description": "The `level` indicates the severity of the status/log entry",
+          "type": "string",
+          "enum": [ "ERROR", "WARNING", "INFO", "DEBUG" ],
+          "examples": ["INFO"]
         }
       },
       "required": [

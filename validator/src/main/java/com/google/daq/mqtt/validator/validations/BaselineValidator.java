@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Entry;
+import udmi.schema.Entry.Level;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
@@ -90,7 +91,7 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.statuses.containsKey("config"), "statuses has config");
     Entry configStatus = deviceState.system.statuses.get("config");
     assertEquals(configStatus.category, "base.config.parse");
-    assertEquals(configStatus.level, ERROR_LEVEL);
+    assertEquals(configStatus.level, Level.ERROR);
     untilTrue(() -> deviceState.system.last_config.equals(prevConfig), "last_config unchanged");
     untilTrue(() -> deviceState.system.operational, "system operational");
     extraField = null;

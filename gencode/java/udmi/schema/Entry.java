@@ -2,11 +2,15 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -58,13 +62,13 @@ public class Entry {
     @JsonPropertyDescription("Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.")
     public Date timestamp;
     /**
-     * The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
+     * The `level` indicates the severity of the status/log entry https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
      * (Required)
      * 
      */
     @JsonProperty("level")
-    @JsonPropertyDescription("The status `level` should conform to the numerical [Stackdriver LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity) levels. The `DEFAULT` value of 0 is not allowed (lowest value is 100, maximum 800).")
-    public Integer level;
+    @JsonPropertyDescription("The `level` indicates the severity of the status/log entry")
+    public Entry.Level level;
 
     @Override
     public int hashCode() {
@@ -87,6 +91,53 @@ public class Entry {
         }
         Entry rhs = ((Entry) other);
         return ((((((this.detail == rhs.detail)||((this.detail!= null)&&this.detail.equals(rhs.detail)))&&((this.message == rhs.message)||((this.message!= null)&&this.message.equals(rhs.message))))&&((this.category == rhs.category)||((this.category!= null)&&this.category.equals(rhs.category))))&&((this.level == rhs.level)||((this.level!= null)&&this.level.equals(rhs.level))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+    }
+
+
+    /**
+     * The `level` indicates the severity of the status/log entry https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum Level {
+
+        ERROR("ERROR"),
+        WARNING("WARNING"),
+        INFO("INFO"),
+        DEBUG("DEBUG");
+        private final String value;
+        private final static Map<String, Entry.Level> CONSTANTS = new HashMap<String, Entry.Level>();
+
+        static {
+            for (Entry.Level c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Level(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static Entry.Level fromValue(String value) {
+            Entry.Level constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

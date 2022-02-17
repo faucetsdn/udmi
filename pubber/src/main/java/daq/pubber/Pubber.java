@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Config;
 import udmi.schema.Entry;
+import udmi.schema.Entry.Level;
 import udmi.schema.Firmware;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
@@ -71,7 +72,8 @@ public class Pubber {
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
-  public static final String CONFIG_PARSE_CATEGORY = "base.config.parse";
+  private static final String CONFIG_PARSE_CATEGORY = "base.config.parse";
+  private static final String CONFIG_PARSE_MESSAGE = "Could not parse device configuration";
   private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
@@ -464,7 +466,7 @@ public class Pubber {
   private void reportConfigParseError(Exception toReport) {
     if (toReport != null) {
       LOG.error("Error receiving message: " + toReport);
-      Entry report = entryFromException(CONFIG_PARSE_CATEGORY, toReport);
+      Entry report = entryFromException(CONFIG_PARSE_CATEGORY, CONFIG_PARSE_MESSAGE, toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
       if (configLatch.getCount() > 0) {
@@ -479,14 +481,12 @@ public class Pubber {
     }
   }
 
-  private Entry entryFromException(String category, Exception e) {
+  private Entry entryFromException(String category, String message, Exception e) {
     Entry entry = new Entry();
-    entry.message = e.toString();
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    e.printStackTrace(new PrintStream(outputStream));
-    entry.detail = outputStream.toString();
     entry.category = category;
-    entry.level = 800;
+    entry.message = message;
+    entry.detail = e.toString();
+    entry.level = Level.ERROR;
     return entry;
   }
 
@@ -591,7 +591,7 @@ public class Pubber {
     }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
-    logEntry.level = 400;
+    logEntry.level = Level.INFO;
     logEntry.timestamp = new Date();
     logEntry.message = logMessage;
     systemEvent.logentries.add(logEntry);
