@@ -1,6 +1,7 @@
 module "ZZ-TRI-FECTA" {
   source      = "./modules/terraform-google-udmi-site"
   gcp_project = var.gcp_project_name
+  gcp_project = var.gcp_region
   site_name   = "@UDMI_SITE_NAME@"
   site_region = "@UDMI_SITE_REGION@"
   site_group  = "group:@UDMI_SITE_GROUP@"
