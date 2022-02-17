@@ -17,6 +17,7 @@ Add one or more Terraform configuration files for the UDMI sites with the follow
 module "ZZ-TRI-FECTA" {
   source      = "./modules/terraform-google-udmi-site"
   gcp_project = var.gcp_project_name
+  gcp_region  = var.gcp_region
   site_name   = "ZZ-TRI-FECTA"
   site_region = "europe-west1"
   site_group  = "group:group@example.com"

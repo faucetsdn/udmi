@@ -32,7 +32,7 @@ resource "google_project_iam_member" "site_cloudiot_provisioner" {
 
 resource "google_cloudiot_device" "site_udmi_reflector_device" {
   name     = var.site_name
-  registry = "projects/${var.gcp_project}/locations/${var.site_region}/registries/UDMS-REFLECT"
+  registry = "projects/${var.gcp_project}/locations/${var.gcp_region}/registries/UDMS-REFLECT"
 
   # TODO: add credentials
   # credentials {
