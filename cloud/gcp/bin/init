@@ -4,7 +4,14 @@ cd $(realpath $(dirname $0)/..)
 
 echo Initializing terraform for project ${GCP_PROJECT_NAME}
 
-terraform init
+for file in main.tf udmi-sites.tf terraform.tfvars; do
+    if [[ ! -f $file ]]; then
+        echo Configuration file $file does not exist, did you run bin/setup?
+        false
+    fi
+done
+
+terraform init $*
 
 terraform import google_project.udmi-project ${GCP_PROJECT_NAME:?}
 

@@ -27,6 +27,6 @@ cloud/gcp/terraform.tfvars
 cloud/gcp/udmi-sites.tf
 cloud/gcp/main.tf
 cloud/gcp/auth/credentials.json
-cloud/gcp/.terraform*
+cloud/gcp/.terraform/
+cloud/gcp/.terraform.lock.hcl
 cloud/gcp/config.out
-
