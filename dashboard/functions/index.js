@@ -7,8 +7,9 @@ const admin = require('firebase-admin');
 const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
-const REFLECT_REGISTRY = "UDMS-REFLECT";
+const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const DEFAULT_CLOUD_REGION = 'us-central1';
+const UDMI_VERSION = '1';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -17,16 +18,21 @@ const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
 });
 
-function recordMessage(attributes, message) {
+function currentTimestamp() {
+  return new Date().toJSON();
+}
+
+function recordMessage(attributes, rawMessage) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subType = attributes.subType || 'events';
   const subFolder = attributes.subFolder || 'unknown';
-
+  const message = rawMessage || {};
+  const timestamp = message.timestamp || currentTimestamp();
   const promises = [];
 
-  const timestamp = message.timestamp || new Date().toJSON();
   message.timestamp = timestamp;
+  message.version = message.version || UDMI_VERSION;
 
   const messageStr = JSON.stringify(message);
   console.log('record', registryId, deviceId, subType, subFolder, messageStr);
@@ -159,8 +165,9 @@ function process_state_update(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
 
   const commandFolder = `devices/${deviceId}/update/state`;
+  console.log('TAPTAP', attributes, msgObject)
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
-
+  
   attributes.subType = 'states';
   for (var block in msgObject) {
     let subMsg = msgObject[block];
@@ -206,7 +213,13 @@ function update_device_config(message, attributes) {
   const deviceId = attributes.deviceId;
   const version = 0;
 
-  const msgString = JSON.stringify(message);
+  const extraField = message.system && message.system.extra_field;
+  const normalJson = extraField !== 'break_json';
+  if (!normalJson) {
+    console.log('breaking json for test');
+  }
+  const msgString = normalJson ? JSON.stringify(message) :
+        '{ config broken because extra_field == ' + message.extra_field;
   const binaryData = Buffer.from(msgString);
 
   const formattedName = iotClient.devicePath(

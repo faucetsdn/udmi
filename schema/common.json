@@ -20,7 +20,7 @@
           "description": "A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.",
           "type": "string",
           "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$",
-          "examples": ["state.pointset.points.config.invalid"]
+          "examples": ["pointset.points.config.invalid"]
         },
         "timestamp": {
           "description": "Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.",

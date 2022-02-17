@@ -42,6 +42,7 @@ import udmi.schema.SystemState;
 
 public abstract class SequenceValidator {
 
+  protected static final Integer ERROR_LEVEL = 800;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/state";
 
@@ -75,7 +76,6 @@ public abstract class SequenceValidator {
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
   public static final int INITIAL_MIN_LOGLEVEL = 400;
   protected String extraField;
-  protected Boolean brokenConfig;
 
   protected Config deviceConfig;
   protected State deviceState;
@@ -303,7 +303,6 @@ public abstract class SequenceValidator {
       AugmentedSystemConfig augmentedConfig = OBJECT_MAPPER.readValue(conversionString,
           AugmentedSystemConfig.class);
       augmentedConfig.extraField = extraField;
-      augmentedConfig.brokenConfig = brokenConfig;
       return augmentedConfig;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting system config", e);

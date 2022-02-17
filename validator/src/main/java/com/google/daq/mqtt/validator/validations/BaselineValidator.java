@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator.validations;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
 import java.util.HashMap;
@@ -7,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
+import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
@@ -82,12 +85,15 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     prevConfig = deviceState.system.last_config;
-    brokenConfig = true;
+    extraField = "break_json";
     updateConfig();
     untilTrue(() -> deviceState.system.statuses.containsKey("config"), "statuses has config");
+    Entry configStatus = deviceState.system.statuses.get("config");
+    assertEquals(configStatus.category, "base.config.parse");
+    assertEquals(configStatus.level, ERROR_LEVEL);
     untilTrue(() -> deviceState.system.last_config.equals(prevConfig), "last_config unchanged");
     untilTrue(() -> deviceState.system.operational, "system operational");
-    brokenConfig = false;
+    extraField = null;
     updateConfig();
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");

@@ -11,11 +11,4 @@ public class AugmentedSystemConfig extends SystemConfig {
   @JsonProperty("extra_field")
   @JsonPropertyDescription("Extra field in config block")
   public String extraField;
-
-  /**
-   * Indicates to generate a non-parsable config (in the backend)
-   */
-  @JsonProperty("broken_config")
-  @JsonPropertyDescription("Flag indicating this should generate a broken config block")
-  public Boolean brokenConfig;
 }

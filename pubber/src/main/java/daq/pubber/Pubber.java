@@ -63,7 +63,7 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String CONFIG_ERROR_STATUS_KEY = "config_error";
+  private static final String CONFIG_ERROR_STATUS_KEY = "config";
   private static final int LOGGING_MOD_COUNT = 10;
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
@@ -71,6 +71,7 @@ public class Pubber {
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
+  public static final String CONFIG_PARSE_CATEGORY = "base.config.parse";
   private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
@@ -427,7 +428,7 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    mqttPublisher = new MqttPublisher(configuration, this::reportError);
+    mqttPublisher = new MqttPublisher(configuration, this::reportConfigParseError);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
           this::gatewayHandler, Config.class);
@@ -460,10 +461,10 @@ public class Pubber {
     }
   }
 
-  private void reportError(Exception toReport) {
+  private void reportConfigParseError(Exception toReport) {
     if (toReport != null) {
       LOG.error("Error receiving message: " + toReport);
-      Entry report = entryFromException(toReport);
+      Entry report = entryFromException(CONFIG_PARSE_CATEGORY, toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
       if (configLatch.getCount() > 0) {
@@ -474,20 +475,17 @@ public class Pubber {
         onDone.accept(configuration.deviceId);
       }
     } else {
-      Entry previous = deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
-      if (previous != null) {
-        publishStateMessage();
-      }
+      deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
     }
   }
 
-  private Entry entryFromException(Exception e) {
+  private Entry entryFromException(String category, Exception e) {
     Entry entry = new Entry();
     entry.message = e.toString();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     e.printStackTrace(new PrintStream(outputStream));
     entry.detail = outputStream.toString();
-    entry.category = e.getStackTrace()[0].getClassName();
+    entry.category = category;
     entry.level = 800;
     return entry;
   }
@@ -522,10 +520,10 @@ public class Pubber {
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
+      reportConfigParseError(null);
       publishStateMessage();
-      reportError(null);
     } catch (Exception e) {
-      reportError(e);
+      reportConfigParseError(e);
     }
   }
 

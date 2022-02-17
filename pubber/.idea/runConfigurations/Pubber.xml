@@ -2,7 +2,7 @@
   <configuration default="false" name="Pubber" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="daq.pubber.Pubber" />
     <module name="pubber" />
-    <option name="PROGRAM_PARAMETERS" value="bos-udmi-hub udmi_site_model AHU-1 54332" />
+    <option name="PROGRAM_PARAMETERS" value="bos-udmi-hub udmi_site_model AHU-1 54335" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>
