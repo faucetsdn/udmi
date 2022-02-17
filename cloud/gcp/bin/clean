@@ -1,5 +1,0 @@
-#!/bin/bash -e
-
-echo Cleaning existing state...
-
-terraform state rm `terraform state list`

@@ -12,7 +12,3 @@ for file in main.tf udmi-sites.tf terraform.tfvars; do
 done
 
 terraform init $*
-
-terraform import google_project.udmi-project ${GCP_PROJECT_NAME:?}
-
-terraform import google_storage_bucket.tf-bucket ${GCP_PROJECT_NAME}-terraform
