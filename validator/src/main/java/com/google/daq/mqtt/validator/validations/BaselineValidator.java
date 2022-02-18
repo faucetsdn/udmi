@@ -22,6 +22,10 @@ public class BaselineValidator extends SequenceValidator {
   public static final String FAILURE_STATE = "failure";
   public static final String APPLIED_STATE = "applied";
   public static final String DEFAULT_STATE = null;
+  public static final String BASE_CONFIG_RECEIVE = "base.config.receive";
+  public static final String BASE_CONFIG_PARSE = "base.config.parse";
+  public static final String BASE_CONFIG_APPLY = "base.config.apply";
+  public static final String SYSTEM_SUBLOCK = "system";
   private Date prevConfig;
 
   @Before
@@ -63,10 +67,13 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     prevConfig = deviceState.system.last_config;
     System.err.printf("%s previous last_config was %s%n", getTimestamp(), getTimestamp(prevConfig));
+    clearLogs(SYSTEM_SUBLOCK);
     updateConfig();
     Date expectedConfig = deviceConfig.timestamp;
     System.err.printf("%s expected last_config is %s%n", getTimestamp(),
         getTimestamp(expectedConfig));
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(BASE_CONFIG_PARSE, Level.INFO);
     untilTrue(() -> {
       Date newConfig = deviceState.system.last_config;
       if (!newConfig.equals(prevConfig)) {
@@ -76,6 +83,7 @@ public class BaselineValidator extends SequenceValidator {
       }
       return !expectedConfig.equals(newConfig);
     }, "state last_config match");
+    hasNotLogged(BASE_CONFIG_APPLY, Level.INFO);
     System.err.printf("%s last_config update match %s%n", getTimestamp(),
         getTimestamp(expectedConfig));
   }
@@ -85,20 +93,27 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    clearLogs();
     prevConfig = deviceState.system.last_config;
     extraField = "break_json";
     updateConfig();
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> deviceState.system.statuses.containsKey("config"), "statuses has config");
     Entry configStatus = deviceState.system.statuses.get("config");
-    assertEquals(configStatus.category, "base.config.parse");
+    assertEquals(configStatus.category, BASE_CONFIG_PARSE);
     assertEquals(configStatus.level, Level.ERROR);
     untilTrue(() -> deviceState.system.last_config.equals(prevConfig), "last_config unchanged");
     untilTrue(() -> deviceState.system.operational, "system operational");
+    hasLogged(BASE_CONFIG_PARSE, Level.ERROR);
+    hasNotLogged(BASE_CONFIG_APPLY, Level.INFO);
     extraField = null;
     updateConfig();
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses not config");
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
     untilTrue(() -> deviceState.system.operational, "system operational");
+    hasLogged(BASE_CONFIG_PARSE, Level.INFO);
+    hasLogged(BASE_CONFIG_APPLY, Level.INFO);
   }
 
   @Test
@@ -106,18 +121,25 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    clearLogs();
     prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
     updateConfig();
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    hasLogged(BASE_CONFIG_PARSE, Level.INFO);
+    hasLogged(BASE_CONFIG_APPLY, Level.INFO);
     prevConfig = deviceState.system.last_config;
     extraField = null;
     updateConfig();
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated again");
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
+    hasLogged(BASE_CONFIG_PARSE, Level.INFO);
+    hasLogged(BASE_CONFIG_APPLY, Level.INFO);
   }
 
   @Test

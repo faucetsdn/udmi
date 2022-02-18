@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -16,8 +17,10 @@ import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,10 +37,14 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
+import udmi.schema.Entry;
+import udmi.schema.Entry.Level;
 import udmi.schema.Metadata;
+import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
+import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
 public abstract class SequenceValidator {
@@ -75,14 +82,13 @@ public abstract class SequenceValidator {
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
   public static final int INITIAL_MIN_LOGLEVEL = 400;
-  protected String extraField;
-
-  protected Config deviceConfig;
-  protected State deviceState;
-
   public static final String TESTS_OUT_DIR = "tests";
-
   public static final String SERIAL_NO_MISSING = "//";
+
+  private static final Map<String, Class<?>> expectedEvents = ImmutableMap.of(
+      "system", SystemEvent.class,
+      "pointset", PointsetEvent.class
+  );
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -156,8 +162,12 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected String extraField;
+  protected Config deviceConfig;
+  protected State deviceState;
   private final Map<String, String> sentConfig = new HashMap<>();
   private final Map<String, String> receivedState = new HashMap<>();
+  private Map<String, List<Object>> receivedEvents = new HashMap<>();
   private String waitingCondition;
   private boolean confirm_serial;
   private String testName;
@@ -169,6 +179,7 @@ public abstract class SequenceValidator {
     deviceState = new State();
     sentConfig.clear();
     receivedState.clear();
+    receivedEvents.clear();
     waitingCondition = null;
     confirm_serial = false;
 
@@ -326,6 +337,7 @@ public abstract class SequenceValidator {
         return false;
       }
       String timestamp = (String) message.remove("timestamp");
+      String version = (String) message.remove("timestamp");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
@@ -378,6 +390,18 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected void clearLogs() {
+    receivedEvents.remove(SYSTEM_SUBBLOCK);
+  }
+
+  protected void hasLogged(String category, Level category) {
+
+  }
+
+  protected void hasNotLogged(String category, Level category) {
+
+  }
+
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
@@ -412,14 +436,26 @@ public abstract class SequenceValidator {
       }
       recordMessage(message, attributes);
       String subType = attributes.get("subType");
+      String subFolder = attributes.get("subFolder");
       if ("states".equals(subType)) {
-        updateState(attributes.get("subFolder"), message);
+        updateState(subFolder, message);
       } else if ("config".equals(subType)) {
         dumpConfigUpdate(message);
       } else if ("state".equals(subType)) {
         dumpStateUpdate(message);
+      } else if ("event".equals(subType)) {
+        addEventMessage(subFolder, message);
       }
     });
+  }
+
+  private void addEventMessage(String subFolder, Map<String, Object> message) {
+    receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message))
+  }
+
+  private <T> T convertTo(Map<String, Object> message, Class<T> entryClass) {
+    String messageString = OBJECT_MAPPER.writeValueAsString(message);
+    return OBJECT_MAPPER.readValue(messageString, entryClass);
   }
 
 }
