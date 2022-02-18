@@ -9,9 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SwarmMessage.Attributes;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -215,7 +213,7 @@ public class Pubber {
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
       configuration.algorithm = metadata.cloud.auth_type.value();
-      LOG.info("Configuring with key type " + configuration.algorithm);
+      info("Configuring with key type " + configuration.algorithm);
     }
 
     Map<String, PointPointsetMetadata> points =
@@ -278,7 +276,7 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
 
@@ -295,12 +293,12 @@ public class Pubber {
   private void pullDeviceMessage() {
     while(true) {
       try {
-        LOG.info("Waiting for swarm configuration");
+        info("Waiting for swarm configuration");
         SwarmMessage.Attributes attributes = new Attributes();
         Bundle pull = pubSubClient.pull();
         attributes.subFolder = pull.attributes.get("subFolder");
         if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
-          LOG.error("Ignoring message with subFolder " + attributes.subFolder);
+          error("Ignoring message with subFolder " + attributes.subFolder);
           continue;
         }
         attributes.deviceId = pull.attributes.get("deviceId");
@@ -310,7 +308,7 @@ public class Pubber {
         processSwarmConfig(swarm, attributes);
         return;
       } catch (Exception e) {
-        LOG.error("Error pulling swarm message", e);
+        error("Error pulling swarm message", e);
       }
     }
   }
@@ -340,7 +338,7 @@ public class Pubber {
   private synchronized void startExecutor() {
     Preconditions.checkState(scheduledFuture == null);
     int delay = messageDelayMs.get();
-    LOG.info("Starting executor with send message delay " + delay);
+    info("Starting executor with send message delay " + delay);
     scheduledFuture = executor
         .scheduleAtFixedRate(this::sendMessages, delay, delay, TimeUnit.MILLISECONDS);
   }
@@ -357,14 +355,14 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage(configuration.deviceId);
       if (sendCount % LOGGING_MOD_COUNT == 0) {
-        publishLogMessage(configuration.deviceId,"Sent " + sendCount + " messages");
+        publishLogMessage("Sent " + sendCount + " messages");
       }
       if (stateDirty) {
         publishStateMessage();
       }
       sendCount++;
     } catch (Exception e) {
-      LOG.error("Fatal error during execution", e);
+      error("Fatal error during execution", e);
       terminate();
     }
   }
@@ -398,7 +396,7 @@ public class Pubber {
     this.onDone = onDone;
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-    LOG.info("synchronized start config result " + result);
+    info("synchronized start config result " + result);
     if (!result) {
       mqttPublisher.close();
     }
@@ -446,7 +444,7 @@ public class Pubber {
       return;
     }
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    LOG.info("Loading device key bytes from " + configuration.keyFile);
+    info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
   }
 
@@ -457,20 +455,20 @@ public class Pubber {
   private void connect() {
     try {
       mqttPublisher.connect(configuration.deviceId);
-      LOG.info("Connection complete.");
+      info("Connection complete.");
     } catch (Exception e) {
-      LOG.error("Connection error", e);
+      error("Connection error", e);
     }
   }
 
   private void reportConfigParseError(Exception toReport) {
     if (toReport != null) {
-      LOG.error("Error receiving message: " + toReport);
+      error("Error receiving message: " + toReport);
       Entry report = entryFromException(CONFIG_PARSE_CATEGORY, CONFIG_PARSE_MESSAGE, toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
       if (configLatch.getCount() > 0) {
-        LOG.warn("Releasing startup latch because reported error");
+        warn("Releasing startup latch because reported error");
         configHandler(null);
       }
       if (onDone != null && toReport instanceof ConnectionClosedException) {
@@ -488,10 +486,6 @@ public class Pubber {
     entry.detail = e.toString();
     entry.level = Level.ERROR;
     return entry;
-  }
-
-  private void info(String msg) {
-    LOG.info(msg);
   }
 
   private void gatewayHandler(Config config) {
@@ -582,20 +576,24 @@ public class Pubber {
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
-  private void publishLogMessage(String deviceId, String logMessage) {
+  private void publishLogMessage(String logMessage) {
+    publishLogMessage(logMessage, Level.INFO);
+  }
+
+  private void publishLogMessage(String logMessage, Level level) {
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
     if (verbose) {
-      info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+      LOG.info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
-    logEntry.level = Level.INFO;
+    logEntry.level = level;
     logEntry.timestamp = new Date();
     logEntry.message = logMessage;
     systemEvent.logentries.add(logEntry);
-    publishMessage(deviceId, SYSTEM_TOPIC, systemEvent);
+    publishMessage(configuration.deviceId, SYSTEM_TOPIC, systemEvent);
   }
 
   private void publishStateMessage() {
@@ -634,5 +632,29 @@ public class Pubber {
     } catch (Exception e) {
       throw new RuntimeException("While sleeping for " + delay, e);
     }
+  }
+
+  private void cloudLog(String message, Level level) {
+    publishLogMessage(message, level);
+  }
+
+  private void info(String message) {
+    LOG.info(message);
+    cloudLog(message, Level.INFO);
+  }
+
+  private void warn(String message) {
+    LOG.warn(message);
+    cloudLog(message, Level.WARNING);
+  }
+
+  private void error(String message) {
+    LOG.error(message);
+    cloudLog(message, Level.ERROR);
+  }
+
+  private void error(String message, Exception e) {
+    String longMessage = message + ": " + e.getMessage();
+    LOG.error(longMessage, Level.ERROR);
   }
 }
