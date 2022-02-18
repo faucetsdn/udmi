@@ -8,22 +8,22 @@
       "additionalProperties": false,
       "properties": {
         "message": {
-          "description": "A one-line representation of the triggering condition.",
+          "description": "A human-readable one-line description of the entry",
           "type": "string",
           "examples": ["Point is not writable"]
         },
         "detail": {
-          "description": "An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.",
+          "description": "An optional extensive entry which can include more detail, e.g. a complete program stack-trace",
           "type": "string"
         },
         "category": {
-          "description": "A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.",
+          "description": "A device-specific representation of the category an entry pertains to",
           "type": "string",
           "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$",
-          "examples": ["pointset.points.config.invalid"]
+          "examples": ["pointset.points.config"]
         },
         "timestamp": {
-          "description": "Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.",
+          "description": "Timestamp the condition was triggered, or most recently updated"
           "type": "string",
           "format": "date-time",
           "examples": ["2018-08-26T21:39:28.364Z"]

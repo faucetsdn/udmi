@@ -25,7 +25,6 @@ public class BaselineValidator extends SequenceValidator {
   public static final String BASE_CONFIG_RECEIVE = "base.config.receive";
   public static final String BASE_CONFIG_PARSE = "base.config.parse";
   public static final String BASE_CONFIG_APPLY = "base.config.apply";
-  public static final String SYSTEM_SUBLOCK = "system";
   private Date prevConfig;
 
   @Before
@@ -67,7 +66,7 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     prevConfig = deviceState.system.last_config;
     System.err.printf("%s previous last_config was %s%n", getTimestamp(), getTimestamp(prevConfig));
-    clearLogs(SYSTEM_SUBLOCK);
+    clearLogs();
     updateConfig();
     Date expectedConfig = deviceConfig.timestamp;
     System.err.printf("%s expected last_config is %s%n", getTimestamp(),

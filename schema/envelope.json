@@ -21,12 +21,20 @@
     },
     "subFolder": {
       "enum": [
-        "config",
         "discovery",
         "system",
+        "gateway",
+        "localnet",
         "metadata",
         "pointset",
-        "state"
+        "blobset"
+      ]
+    },
+    "subType": {
+      "enum": [
+        "event",
+        "state",
+        "config"
       ]
     }
   },
@@ -35,6 +43,7 @@
     "deviceRegistryId",
     "deviceNumId",
     "deviceId",
-    "subFolder"
+    "subFolder",
+    "subType"
   ]
 }

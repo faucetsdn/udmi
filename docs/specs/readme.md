@@ -16,4 +16,3 @@
 - [Site Model](site_model.md)
 - [Tech Stack](tech_stack.md)
 - [Log/Status Entries](entries.md)
-- [Error Categories](categories.md)

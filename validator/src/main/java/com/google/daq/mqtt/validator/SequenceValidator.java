@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -39,6 +41,8 @@ import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.Entry.Level;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -85,9 +89,9 @@ public abstract class SequenceValidator {
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
 
-  private static final Map<String, Class<?>> expectedEvents = ImmutableMap.of(
-      "system", SystemEvent.class,
-      "pointset", PointsetEvent.class
+  private static final Map<SubFolder, Class<?>> expectedEvents = ImmutableMap.of(
+      SubFolder.SYSTEM, SystemEvent.class,
+      SubFolder.POINTSET, PointsetEvent.class
   );
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -165,9 +169,9 @@ public abstract class SequenceValidator {
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
-  private final Map<String, String> sentConfig = new HashMap<>();
-  private final Map<String, String> receivedState = new HashMap<>();
-  private Map<String, List<Object>> receivedEvents = new HashMap<>();
+  private final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private final Map<SubFolder, String> receivedState = new HashMap<>();
+  private Map<SubFolder, Queue<Object>> receivedEvents = new HashMap<>();
   private String waitingCondition;
   private boolean confirm_serial;
   private String testName;
@@ -284,7 +288,7 @@ public abstract class SequenceValidator {
     deviceState = null;
   }
 
-  private boolean updateConfig(String subBlock, Object data) {
+  private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
@@ -301,11 +305,11 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
-    updateConfig("system", augmentConfig(deviceConfig.system));
-    updateConfig("pointset", deviceConfig.pointset);
-    updateConfig("gateway", deviceConfig.gateway);
-    updateConfig("localnet", deviceConfig.localnet);
-    updateConfig("blobset", deviceConfig.blobset);
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
+    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
+    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
+    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
   }
 
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
@@ -330,7 +334,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private <T> boolean updateState(String subFolder, String expected, Class<T> target,
+  private <T> boolean updateState(SubFolder subFolder, SubFolder expected, Class<T> target,
       Map<String, Object> message, Consumer<T> handler) {
     try {
       if (!expected.equals(subFolder)) {
@@ -351,9 +355,9 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void updateState(String subFolder, Map<String, Object> message) {
-    updateState(subFolder, "system", SystemState.class, message, state -> deviceState.system = state);
-    updateState(subFolder, "pointset", PointsetState.class, message, state -> deviceState.pointset = state);
+  private void updateState(SubFolder subFolder, Map<String, Object> message) {
+    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
+    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
     validSerialNo();
   }
 
@@ -391,14 +395,25 @@ public abstract class SequenceValidator {
   }
 
   protected void clearLogs() {
-    receivedEvents.remove(SYSTEM_SUBBLOCK);
+    receivedEvents.remove(SubFolder.SYSTEM);
   }
 
-  protected void hasLogged(String category, Level category) {
+  protected void hasLogged(String category, Level level) {
+    checkReceived(SubFolder.SYSTEM, event -> {
 
+    })
   }
 
-  protected void hasNotLogged(String category, Level category) {
+  private <T> void checkReceived(SubFolder system, Consumer<T> consumer) {
+    if (!receivedEvents.containsKey(system)) {
+      return;
+    }
+    Class<?> expected = expectedEvents.get(system);
+    receivedEvents.get(system).forEach();
+    if (ex)
+  }
+
+  protected void hasNotLogged(String category, Level level) {
 
   }
 
@@ -435,27 +450,40 @@ public abstract class SequenceValidator {
         return;
       }
       recordMessage(message, attributes);
-      String subType = attributes.get("subType");
-      String subFolder = attributes.get("subFolder");
-      if ("states".equals(subType)) {
+      SubFolder subFolder = SubFolder.fromValue(attributes.get("subFolder"));
+      String subTypeRaw = attributes.get("subType");
+
+      if ("states".equals(subTypeRaw)) {
         updateState(subFolder, message);
-      } else if ("config".equals(subType)) {
-        dumpConfigUpdate(message);
-      } else if ("state".equals(subType)) {
-        dumpStateUpdate(message);
-      } else if ("event".equals(subType)) {
-        addEventMessage(subFolder, message);
+        return;
+      }
+
+      SubType subType = SubType.fromValue(subTypeRaw);
+      switch (subType) {
+        case CONFIG:
+          dumpConfigUpdate(message);
+          break;
+        case STATE:
+          dumpStateUpdate(message);
+          break;
+        case EVENT:
+          addEventMessage(subFolder, message);
+          break;
       }
     });
   }
 
-  private void addEventMessage(String subFolder, Map<String, Object> message) {
-    receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message))
+  private void addEventMessage(SubFolder subFolder, Map<String, Object> message) {
+    receivedEvents.computeIfAbsent(subFolder, key -> new LinkedBlockingQueue<>()).add(message);
   }
 
   private <T> T convertTo(Map<String, Object> message, Class<T> entryClass) {
-    String messageString = OBJECT_MAPPER.writeValueAsString(message);
-    return OBJECT_MAPPER.readValue(messageString, entryClass);
+    try {
+      String messageString = OBJECT_MAPPER.writeValueAsString(message);
+      return OBJECT_MAPPER.readValue(messageString, entryClass);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + entryClass.getName());
+    }
   }
 
 }
