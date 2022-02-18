@@ -212,7 +212,7 @@ public class Pubber {
   private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
       configuration.algorithm = metadata.cloud.auth_type.value();
-      LOG.info("Configuring with key type " + configuration.algorithm);
+      info("Configuring with key type " + configuration.algorithm);
     }
 
     Map<String, PointPointsetMetadata> points =
@@ -275,7 +275,7 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    LOG.info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
         configuration.gatewayId));
 
@@ -292,12 +292,12 @@ public class Pubber {
   private void pullDeviceMessage() {
     while(true) {
       try {
-        LOG.info("Waiting for swarm configuration");
+        info("Waiting for swarm configuration");
         SwarmMessage.Attributes attributes = new Attributes();
         Bundle pull = pubSubClient.pull();
         attributes.subFolder = pull.attributes.get("subFolder");
         if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
-          LOG.error("Ignoring message with subFolder " + attributes.subFolder);
+          error("Ignoring message with subFolder " + attributes.subFolder);
           continue;
         }
         attributes.deviceId = pull.attributes.get("deviceId");
@@ -307,7 +307,7 @@ public class Pubber {
         processSwarmConfig(swarm, attributes);
         return;
       } catch (Exception e) {
-        LOG.error("Error pulling swarm message", e);
+        error("Error pulling swarm message", e);
       }
     }
   }
@@ -337,7 +337,7 @@ public class Pubber {
   private synchronized void startExecutor() {
     Preconditions.checkState(scheduledFuture == null);
     int delay = messageDelayMs.get();
-    LOG.info("Starting executor with send message delay " + delay);
+    info("Starting executor with send message delay " + delay);
     scheduledFuture = executor
         .scheduleAtFixedRate(this::sendMessages, delay, delay, TimeUnit.MILLISECONDS);
   }
@@ -361,7 +361,7 @@ public class Pubber {
       }
       sendCount++;
     } catch (Exception e) {
-      LOG.error("Fatal error during execution", e);
+      error("Fatal error during execution", e);
       terminate();
     }
   }
@@ -395,7 +395,7 @@ public class Pubber {
     this.onDone = onDone;
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-    LOG.info("synchronized start config result " + result);
+    info("synchronized start config result " + result);
     if (!result) {
       mqttPublisher.close();
     }
@@ -443,7 +443,7 @@ public class Pubber {
       return;
     }
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
-    LOG.info("Loading device key bytes from " + configuration.keyFile);
+    info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
   }
 
@@ -454,20 +454,20 @@ public class Pubber {
   private void connect() {
     try {
       mqttPublisher.connect(configuration.deviceId);
-      LOG.info("Connection complete.");
+      info("Connection complete.");
     } catch (Exception e) {
-      LOG.error("Connection error", e);
+      error("Connection error", e);
     }
   }
 
   private void reportError(Exception toReport) {
     if (toReport != null) {
-      LOG.error("Error receiving message: " + toReport);
+      error("Error receiving message: " + toReport);
       Entry report = entryFromException(toReport);
       deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
       publishStateMessage();
       if (configLatch.getCount() > 0) {
-        LOG.warn("Releasing startup latch because reported error");
+        warn("Releasing startup latch because reported error");
         configHandler(null);
       }
       if (onDone != null && toReport instanceof ConnectionClosedException) {
@@ -490,10 +490,6 @@ public class Pubber {
     entry.category = e.getStackTrace()[0].getClassName();
     entry.level = 800;
     return entry;
-  }
-
-  private void info(String msg) {
-    LOG.info(msg);
   }
 
   private void gatewayHandler(Config config) {
@@ -611,7 +607,7 @@ public class Pubber {
 
   private void publishMessage(String deviceId, String topic, Object message) {
     if (mqttPublisher == null) {
-      LOG.warn("Ignoring publish message b/c connection is shutdown");
+      warn("Ignoring publish message b/c connection is shutdown");
       return;
     }
     mqttPublisher.publish(deviceId, topic, message);
@@ -636,5 +632,21 @@ public class Pubber {
     } catch (Exception e) {
       throw new RuntimeException("While sleeping for " + delay, e);
     }
+  }
+
+  private void info(String message) {
+    LOG.info(message);
+  }
+
+  private void warn(String message) {
+    LOG.warn(message);
+  }
+
+  private void error(String message) {
+    LOG.error(message);
+  }
+
+  private void error(String message, Exception e) {
+    LOG.error(message, e);
   }
 }
