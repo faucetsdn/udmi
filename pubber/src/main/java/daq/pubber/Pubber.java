@@ -87,7 +87,9 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
-  private boolean verbose = true;
+  private int deviceMessageCount = -1;
+  private int logMessageCount = -1;
+  private final int MESSAGE_REPORT_INTERVAL = 100;
 
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -191,7 +193,6 @@ public class Pubber {
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(projectId, deviceId);
-      verbose = false;
     } else {
       configuration.sitePath = sitePath;
     }
@@ -355,9 +356,6 @@ public class Pubber {
     try {
       updatePoints();
       sendDeviceMessage(configuration.deviceId);
-      if (sendCount % LOGGING_MOD_COUNT == 0) {
-        publishLogMessage("Sent " + sendCount + " messages");
-      }
       if (stateDirty) {
         publishStateMessage();
       }
@@ -503,9 +501,7 @@ public class Pubber {
       }
       final int actualInterval;
       if (config != null) {
-        String state_etag = deviceState.pointset == null ? null : deviceState.pointset.state_etag;
-        info(String.format("%s received new config %s %s",
-            getTimestamp(), state_etag, isoConvert(config.timestamp)));
+        info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
         deviceState.system.last_config = config.timestamp;
         actualInterval = updateSystemConfig(config.pointset);
         updatePointsetConfig(config.pointset);
@@ -571,22 +567,18 @@ public class Pubber {
   private void sendDeviceMessage(String deviceId) {
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
-    if (verbose) {
-      info(String.format("%s sending test message", isoConvert(devicePoints.timestamp)));
+    if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
+      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp), deviceMessageCount));
     }
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
-  }
-
-  private void publishLogMessage(String logMessage) {
-    publishLogMessage(logMessage, Level.INFO);
   }
 
   private void publishLogMessage(String logMessage, Level level) {
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
-    if (verbose) {
-      info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+    if ((++logMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
+      info(String.format("%s sending log message #%d", getTimestamp(), logMessageCount));
     }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
@@ -601,14 +593,14 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info(String.format("%s sending state message", isoConvert(deviceState.timestamp)));
+    info(String.format("%s update state %s", getTimestamp(), isoConvert(deviceState.timestamp)));
     stateDirty = false;
     publishMessage(deviceId, STATE_TOPIC, deviceState);
   }
 
   private void publishMessage(String deviceId, String topic, Object message) {
     if (mqttPublisher == null) {
-      LOG.warn("Ignoring publish message b/c connection is shutdown");
+      warn("Ignoring publish message b/c connection is shutdown");
       return;
     }
     mqttPublisher.publish(deviceId, topic, message);
@@ -636,7 +628,7 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
-    if (publishingLog) {
+    if (publishingLog || mqttPublisher == null) {
       return;
     }
     try {
