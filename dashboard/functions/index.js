@@ -10,6 +10,9 @@ const pubsub = new PubSub();
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const DEFAULT_CLOUD_REGION = 'us-central1';
 const UDMI_VERSION = '1';
+const EVENT_TYPE = 'event';
+const CONFIG_TYPE = 'config';
+const STATE_TYPE = 'state';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -25,16 +28,18 @@ function currentTimestamp() {
 function recordMessage(attributes, rawMessage) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const subType = attributes.subType || 'events';
+  const subType = attributes.subType || EVENT_TYPE;
   const subFolder = attributes.subFolder || 'unknown';
   const message = rawMessage || {};
   const timestamp = message.timestamp || currentTimestamp();
   const promises = [];
+  const collectionType = subType + 's';
 
   message.timestamp = timestamp;
   message.version = message.version || UDMI_VERSION;
 
   const messageStr = JSON.stringify(message);
+
   console.log('record', registryId, deviceId, subType, subFolder, messageStr);
 
   const reg_doc = db.collection('registries').doc(registryId);
@@ -45,11 +50,10 @@ function recordMessage(attributes, rawMessage) {
   promises.push(dev_doc.set({
     'updated': timestamp
   }, { merge: true }));
-  const config_doc = dev_doc.collection(subType).doc(subFolder);
+  const config_doc = dev_doc.collection(collectionType).doc(subFolder);
   promises.push(config_doc.set(message));
 
-  const commandFolder = `devices/${deviceId}/${subFolder}/${subType}`;
-
+  const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
 
   return promises;
@@ -80,12 +84,12 @@ function sendCommand(registryId, deviceId, subFolder, message) {
 
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
-  const subType = attributes.subType || 'events';
+  const subType = attributes.subType || EVENT_TYPE;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  if (subType != 'events') {
+  if (subType != EVENT_TYPE) {
     return null;
   }
 
@@ -164,11 +168,11 @@ function process_state_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/update/state`;
-  console.log('TAPTAP', attributes, msgObject)
+  const commandFolder = `devices/${deviceId}/update/states`;
+
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
   
-  attributes.subType = 'states';
+  attributes.subType = STATE_TYPE;
   for (var block in msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
@@ -198,7 +202,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   }
   const msgObject = JSON.parse(msgString);
 
-  attributes.subType = 'configs';
+  attributes.subType = CONFIG_TYPE;
 
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
@@ -235,7 +239,7 @@ function update_device_config(message, attributes) {
     versionToUpdate: version,
     binaryData: binaryData
   };
-  const commandFolder = `devices/${deviceId}/update/config`;
+  const commandFolder = `devices/${deviceId}/update/configs`;
 
   return iotClient
     .modifyCloudToDeviceConfig(request)

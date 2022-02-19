@@ -32,7 +32,8 @@
     },
     "subType": {
       "enum": [
-        "events",
+        "event",
+        "command",
         "state",
         "config"
       ]

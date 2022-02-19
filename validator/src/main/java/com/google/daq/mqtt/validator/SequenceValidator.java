@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -93,6 +95,8 @@ public abstract class SequenceValidator {
       SubFolder.SYSTEM, SystemEvent.class,
       SubFolder.POINTSET, PointsetEvent.class
   );
+  private static final Set<String> IGNORE_SUBFOLDERS = ImmutableSet.of("configs");
+  private static final Set<String> IGNORE_SUBTYPES = ImmutableSet.of("update");
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -253,7 +257,7 @@ public abstract class SequenceValidator {
 
   private void recordMessage(Map<String, Object> message, Map<String, String> attributes) {
     String messageBase = String
-        .format("%s_%s", attributes.get("subFolder"), attributes.get("subType"));
+        .format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
     System.err.println(getTimestamp() + " received " + messageBase);
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
@@ -293,7 +297,7 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
-        System.err.printf("%s sending %s_%s%n", getTimestamp(), subBlock, "config");
+        System.err.printf("%s sending %s_%s%n", getTimestamp(), "config", subBlock);
         sentConfig.put(subBlock, messageData);
         String topic = "config/" + subBlock;
         client.publish(deviceId, topic, messageData);
@@ -359,16 +363,6 @@ public abstract class SequenceValidator {
     updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
     updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
     validSerialNo();
-  }
-
-  private void dumpConfigUpdate(Map<String, Object> message) {
-    Config config = messageConvert(Config.class, message);
-    System.err.println(getTimestamp() + " update config");
-  }
-
-  private void dumpStateUpdate(Map<String, Object> message) {
-    State state = messageConvert(State.class, message);
-    System.err.println(getTimestamp() + " update state");
   }
 
   protected boolean validSerialNo() {
@@ -457,28 +451,22 @@ public abstract class SequenceValidator {
       }
       recordMessage(message, attributes);
       String subFolderRaw = attributes.get("subFolder");
-      if ("update".equals(subFolderRaw)) {
-        return;
-      }
-      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
       String subTypeRaw = attributes.get("subType");
 
-      if ("states".equals(subTypeRaw)) {
-        updateState(subFolder, message);
-        return;
-      } else if ("configs".equals(subTypeRaw)) {
+      if (IGNORE_SUBFOLDERS.contains(subFolderRaw) ||
+          IGNORE_SUBTYPES.contains(subTypeRaw)) {
         return;
       }
 
+      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
       SubType subType = SubType.fromValue(subTypeRaw);
       switch (subType) {
         case CONFIG:
-          dumpConfigUpdate(message);
           break;
         case STATE:
-          dumpStateUpdate(message);
+          updateState(subFolder, message);
           break;
-        case EVENTS:
+        case EVENT:
           addEventMessage(subFolder, message);
           break;
       }

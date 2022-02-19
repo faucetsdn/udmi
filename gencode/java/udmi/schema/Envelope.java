@@ -144,7 +144,8 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubType {
 
-        EVENTS("events"),
+        EVENT("event"),
+        COMMAND("command"),
         STATE("state"),
         CONFIG("config");
         private final String value;
