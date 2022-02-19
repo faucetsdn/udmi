@@ -96,6 +96,7 @@ public class Pubber {
   private boolean stateDirty;
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
+  private boolean publishingLog;
 
   private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
@@ -585,7 +586,7 @@ public class Pubber {
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
     if (verbose) {
-      LOG.info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
+      info(String.format("%s sending log message", isoConvert(systemEvent.timestamp)));
     }
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
@@ -635,7 +636,15 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
-    publishLogMessage(message, level);
+    if (publishingLog) {
+      return;
+    }
+    try {
+      publishingLog = true;
+      publishLogMessage(message, level);
+    } finally {
+      publishingLog = false;
+    }
   }
 
   private void info(String message) {
@@ -654,7 +663,8 @@ public class Pubber {
   }
 
   private void error(String message, Exception e) {
+    LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
-    LOG.error(longMessage, Level.ERROR);
+    cloudLog(longMessage, Level.ERROR);
   }
 }

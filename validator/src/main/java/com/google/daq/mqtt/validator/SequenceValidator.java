@@ -171,7 +171,7 @@ public abstract class SequenceValidator {
   protected State deviceState;
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
-  private Map<SubFolder, Queue<Object>> receivedEvents = new HashMap<>();
+  private Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private String waitingCondition;
   private boolean confirm_serial;
   private String testName;
@@ -394,23 +394,29 @@ public abstract class SequenceValidator {
     }
   }
 
-  protected void clearLogs() {
-    receivedEvents.remove(SubFolder.SYSTEM);
+  protected List<Map<String, Object>> clearLogs() {
+    return receivedEvents.remove(SubFolder.SYSTEM);
   }
 
   protected void hasLogged(String category, Level level) {
-    checkReceived(SubFolder.SYSTEM, event -> {
-
-    })
-  }
-
-  private <T> void checkReceived(SubFolder system, Consumer<T> consumer) {
-    if (!receivedEvents.containsKey(system)) {
-      return;
-    }
-    Class<?> expected = expectedEvents.get(system);
-    receivedEvents.get(system).forEach();
-    if (ex)
+    untilTrue(() -> {
+      List<Map<String, Object>> messages = clearLogs();
+      if (messages == null) {
+        return true;
+      }
+      for (Map<String, Object> message : messages) {
+        SystemEvent systemEvent = convertTo(message, SystemEvent.class);
+        if (systemEvent.logentries == null) {
+          continue;
+        }
+        for (Entry logEntry : systemEvent.logentries) {
+          if (category.equals(logEntry.category) && level.equals(logEntry.level)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }, "waiting for log message " + category + " level " + level);
   }
 
   protected void hasNotLogged(String category, Level level) {
@@ -450,11 +456,17 @@ public abstract class SequenceValidator {
         return;
       }
       recordMessage(message, attributes);
-      SubFolder subFolder = SubFolder.fromValue(attributes.get("subFolder"));
+      String subFolderRaw = attributes.get("subFolder");
+      if ("update".equals(subFolderRaw)) {
+        return;
+      }
+      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
       String subTypeRaw = attributes.get("subType");
 
       if ("states".equals(subTypeRaw)) {
         updateState(subFolder, message);
+        return;
+      } else if ("configs".equals(subTypeRaw)) {
         return;
       }
 
@@ -466,7 +478,7 @@ public abstract class SequenceValidator {
         case STATE:
           dumpStateUpdate(message);
           break;
-        case EVENT:
+        case EVENTS:
           addEventMessage(subFolder, message);
           break;
       }
@@ -474,7 +486,7 @@ public abstract class SequenceValidator {
   }
 
   private void addEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    receivedEvents.computeIfAbsent(subFolder, key -> new LinkedBlockingQueue<>()).add(message);
+    receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
   }
 
   private <T> T convertTo(Map<String, Object> message, Class<T> entryClass) {

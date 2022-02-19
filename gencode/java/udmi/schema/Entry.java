@@ -31,35 +31,35 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class Entry {
 
     /**
-     * A one-line representation of the triggering condition.
+     * A human-readable one-line description of the entry
      * (Required)
      * 
      */
     @JsonProperty("message")
-    @JsonPropertyDescription("A one-line representation of the triggering condition.")
+    @JsonPropertyDescription("A human-readable one-line description of the entry")
     public String message;
     /**
-     * An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.
+     * An optional extensive entry which can include more detail, e.g. a complete program stack-trace
      * 
      */
     @JsonProperty("detail")
-    @JsonPropertyDescription("An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.")
+    @JsonPropertyDescription("An optional extensive entry which can include more detail, e.g. a complete program stack-trace")
     public String detail;
     /**
-     * A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.
+     * A device-specific representation of the category an entry pertains to
      * (Required)
      * 
      */
     @JsonProperty("category")
-    @JsonPropertyDescription("A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.")
+    @JsonPropertyDescription("A device-specific representation of the category an entry pertains to")
     public String category;
     /**
-     * Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.
+     * Timestamp the condition was triggered, or most recently updated
      * (Required)
      * 
      */
     @JsonProperty("timestamp")
-    @JsonPropertyDescription("Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message `timestamp` if the condition is not checked often or is sticky until it's cleared.")
+    @JsonPropertyDescription("Timestamp the condition was triggered, or most recently updated")
     public Date timestamp;
     /**
      * The `level` indicates the severity of the status/log entry https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
