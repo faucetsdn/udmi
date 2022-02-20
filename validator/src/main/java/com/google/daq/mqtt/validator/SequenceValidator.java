@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
@@ -25,9 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -87,7 +83,7 @@ public abstract class SequenceValidator {
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
-  public static final int INITIAL_MIN_LOGLEVEL = 400;
+  public static final Integer INITIAL_MIN_LOGLEVEL = 400;
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
 
@@ -95,8 +91,12 @@ public abstract class SequenceValidator {
       SubFolder.SYSTEM, SystemEvent.class,
       SubFolder.POINTSET, PointsetEvent.class
   );
-  private static final Set<String> IGNORE_SUBFOLDERS = ImmutableSet.of("configs");
-  private static final Set<String> IGNORE_SUBTYPES = ImmutableSet.of("update");
+
+  public static final String UPDATE_SUBTYPE = "update";
+  private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
+      "configs", Config.class,
+      "states", State.class
+  );
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -175,7 +175,8 @@ public abstract class SequenceValidator {
   protected State deviceState;
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
-  private Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
+  private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
+  private final Map<String, Object> receivedUpdates = new HashMap<>();
   private String waitingCondition;
   private boolean confirm_serial;
   private String testName;
@@ -184,21 +185,28 @@ public abstract class SequenceValidator {
   @Before
   public void setUp() {
     deviceConfig = readGeneratedConfig();
-    deviceState = new State();
+    deviceState = null;
     sentConfig.clear();
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = null;
     confirm_serial = false;
 
-    if (deviceConfig.system.min_loglevel != null &&
-        deviceConfig.system.min_loglevel == INITIAL_MIN_LOGLEVEL) {
-      // If necessary, force a config update by making sure at least one field changes!
-      deviceConfig.system.min_loglevel = null;
-      updateConfig();
-    }
-    deviceConfig.system.min_loglevel = INITIAL_MIN_LOGLEVEL;
+    // Force a config update sequence.
+    deviceConfig.system.min_loglevel = null;
+    syncConfig();
+
+    // TODO: min_loglevel should be a string, not an integer
+    deviceConfig.system.min_loglevel = 800;
+    syncConfig();
+
     queryState();
+    untilTrue(() -> deviceState != null, "device state update");
+  }
+
+  protected void syncConfig() {
+    updateConfig();
+    untilTrue(this::configUpdateComplete, "device config update");
   }
 
   @Test
@@ -351,6 +359,9 @@ public abstract class SequenceValidator {
       if (updated) {
         System.err.printf("%s updating %s state%n", getTimestamp(), subFolder);
         T state = OBJECT_MAPPER.readValue(messageString, target);
+        if (deviceState == null) {
+          deviceState = new State();
+        }
         handler.accept(state);
       }
       return updated;
@@ -383,7 +394,8 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      System.err.println(getTimestamp() + " Suppressing exception: " + e.toString());
+      System.err.println(getTimestamp() + " Suppressing exception: " + e);
+      e.printStackTrace();
       return false;
     }
   }
@@ -396,7 +408,7 @@ public abstract class SequenceValidator {
     untilTrue(() -> {
       List<Map<String, Object>> messages = clearLogs();
       if (messages == null) {
-        return true;
+        return false;
       }
       for (Map<String, Object> message : messages) {
         SystemEvent systemEvent = convertTo(message, SystemEvent.class);
@@ -404,6 +416,7 @@ public abstract class SequenceValidator {
           continue;
         }
         for (Entry logEntry : systemEvent.logentries) {
+          System.err.println(getTimestamp() + " " + logEntry.level + " " + logEntry.category);
           if (category.equals(logEntry.category) && level.equals(logEntry.level)) {
             return true;
           }
@@ -414,7 +427,7 @@ public abstract class SequenceValidator {
   }
 
   protected void hasNotLogged(String category, Level level) {
-
+    System.err.println("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
@@ -453,31 +466,39 @@ public abstract class SequenceValidator {
       String subFolderRaw = attributes.get("subFolder");
       String subTypeRaw = attributes.get("subType");
 
-      if (IGNORE_SUBFOLDERS.contains(subFolderRaw) ||
-          IGNORE_SUBTYPES.contains(subTypeRaw)) {
-        return;
-      }
-
-      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
-      SubType subType = SubType.fromValue(subTypeRaw);
-      switch (subType) {
-        case CONFIG:
-          break;
-        case STATE:
-          updateState(subFolder, message);
-          break;
-        case EVENT:
-          addEventMessage(subFolder, message);
-          break;
+      if (UPDATE_SUBTYPE.equals(subTypeRaw)) {
+        handleReflectorUpdate(subFolderRaw, message);
+      } else {
+        handleDeviceUpdate(message, subFolderRaw, subTypeRaw);
       }
     });
+  }
+
+  private void handleDeviceUpdate(Map<String, Object> message, String subFolderRaw, String subTypeRaw) {
+    SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
+    SubType subType = SubType.fromValue(subTypeRaw);
+    switch (subType) {
+      case CONFIG:
+        break;
+      case STATE:
+        updateState(subFolder, message);
+        break;
+      case EVENT:
+        addEventMessage(subFolder, message);
+        break;
+    }
+  }
+
+  private void handleReflectorUpdate(String subFolderRaw, Map<String, Object> message) {
+    System.err.println(getTimestamp() + " updated " + subFolderRaw + " " + message.get("timestamp"));
+    receivedUpdates.put(subFolderRaw, convertTo(message, expectedUpdates.get(subFolderRaw)));
   }
 
   private void addEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
   }
 
-  private <T> T convertTo(Map<String, Object> message, Class<T> entryClass) {
+  private <T> T convertTo(Object message, Class<T> entryClass) {
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       return OBJECT_MAPPER.readValue(messageString, entryClass);
@@ -486,4 +507,12 @@ public abstract class SequenceValidator {
     }
   }
 
+  private boolean configUpdateComplete() {
+    Config receivedConfig = (Config) receivedUpdates.get("configs");
+    if (receivedConfig != null) {
+      deviceConfig.timestamp = receivedConfig.timestamp;
+      deviceConfig.version = receivedConfig.version;
+    }
+    return deviceConfig.equals(receivedConfig);
+  }
 }

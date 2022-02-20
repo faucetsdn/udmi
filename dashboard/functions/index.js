@@ -25,22 +25,21 @@ function currentTimestamp() {
   return new Date().toJSON();
 }
 
-function recordMessage(attributes, rawMessage) {
+function recordMessage(attributes, message) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subType = attributes.subType || EVENT_TYPE;
   const subFolder = attributes.subFolder || 'unknown';
-  const message = rawMessage || {};
-  const timestamp = message.timestamp || currentTimestamp();
+  const timestamp = (message && message.timestamp) || currentTimestamp();
   const promises = [];
   const collectionType = subType + 's';
 
-  message.timestamp = timestamp;
-  message.version = message.version || UDMI_VERSION;
+  if (message) {
+    message.timestamp = timestamp;
+    message.version = message.version || UDMI_VERSION;
+  }
 
-  const messageStr = JSON.stringify(message);
-
-  console.log('record', registryId, deviceId, subType, subFolder, messageStr);
+  console.log('record', registryId, deviceId, subType, subFolder, message);
 
   const reg_doc = db.collection('registries').doc(registryId);
   promises.push(reg_doc.set({
@@ -51,7 +50,11 @@ function recordMessage(attributes, rawMessage) {
     'updated': timestamp
   }, { merge: true }));
   const config_doc = dev_doc.collection(collectionType).doc(subFolder);
-  promises.push(config_doc.set(message));
+  if (message) {
+    promises.push(config_doc.set(message));
+  } else {
+    promises.push(config_doc.delete());
+  }
 
   const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
@@ -196,8 +199,9 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
 
+  console.log('udmi_config', registryId, deviceId, subFolder, msgString);
   if (!msgString) {
-    console.log('udmi_config abort', registryId, deviceId, subFolder, msgString);
+    console.warn('udmi_config abort', registryId, deviceId, subFolder, msgString);
     return null;
   }
   const msgObject = JSON.parse(msgString);
@@ -223,7 +227,7 @@ function update_device_config(message, attributes) {
     console.log('breaking json for test');
   }
   const msgString = normalJson ? JSON.stringify(message) :
-        '{ config broken because extra_field == ' + message.extra_field;
+        '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
 
   const formattedName = iotClient.devicePath(
