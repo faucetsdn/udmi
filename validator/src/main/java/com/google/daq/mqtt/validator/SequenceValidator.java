@@ -262,7 +262,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void recordMessage(Map<String, Object> message, Map<String, String> attributes) {
+  private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
     String messageBase = String
         .format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
     System.err.println(getTimestamp() + " received " + messageBase);
@@ -276,6 +276,21 @@ public abstract class SequenceValidator {
       throw new RuntimeException("While writing attributes to " + attributeFile.getAbsolutePath(),
           e);
     }
+
+    File messageFile = new File(testOutDir, messageBase + ".json");
+    try {
+      OBJECT_MAPPER.writeValue(messageFile, message);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing message to " + attributeFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void recordLogMessage(Map<String, Object> message) {
+    System.err.println(getTimestamp() + " received " + messageBase);
+    String testOutDirName = TESTS_OUT_DIR + "/" + testName;
+    File testOutDir = new File(deviceOutputDir, testOutDirName);
+    testOutDir.mkdirs();
+    File attributeFile = new File(testOutDir, messageBase + ".attr");
 
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
@@ -369,7 +384,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void updateState(SubFolder subFolder, Map<String, Object> message) {
+  private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
     updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
     updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
     validSerialNo();
@@ -460,41 +475,47 @@ public abstract class SequenceValidator {
       if (!deviceId.equals(attributes.get("deviceId"))) {
         return;
       }
-      recordMessage(message, attributes);
+      recordRawMessage(message, attributes);
       String subFolderRaw = attributes.get("subFolder");
       String subTypeRaw = attributes.get("subType");
 
       if (UPDATE_SUBTYPE.equals(subTypeRaw)) {
-        handleReflectorUpdate(subFolderRaw, message);
+        handleReflectorMessage(subFolderRaw, message);
       } else {
-        handleDeviceUpdate(message, subFolderRaw, subTypeRaw);
+        handleDeviceMessage(message, subFolderRaw, subTypeRaw);
       }
     });
   }
 
-  private void handleDeviceUpdate(Map<String, Object> message, String subFolderRaw, String subTypeRaw) {
-    SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
-    SubType subType = SubType.fromValue(subTypeRaw);
-    switch (subType) {
-      case CONFIG:
-        break;
-      case STATE:
-        updateState(subFolder, message);
-        break;
-      case EVENT:
-        addEventMessage(subFolder, message);
-        break;
+  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw, String subTypeRaw)
+    {
+      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
+      SubType subType = SubType.fromValue(subTypeRaw);
+      switch (subType) {
+        case CONFIG:
+          // These are echos of sent config messages, so do nothing.
+          break;
+        case STATE:
+          handleStateMessage(subFolder, message);
+          break;
+        case EVENT:
+          handleEventMessage(subFolder, message);
+          break;
+      }
     }
-  }
 
-  private void handleReflectorUpdate(String subFolderRaw, Map<String, Object> message) {
+  private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
     System.err.println(getTimestamp() + " updated " + subFolderRaw + " " + message.get("timestamp"));
     receivedUpdates.put(subFolderRaw, convertTo(message, expectedUpdates.get(subFolderRaw)));
   }
 
-  private void addEventMessage(SubFolder subFolder, Map<String, Object> message) {
+  private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
+    if (SubFolder.SYSTEM.equals(subFolder)) {
+      recordLogMessage(message);
+    }
   }
+
 
   private <T> T convertTo(Object message, Class<T> entryClass) {
     try {

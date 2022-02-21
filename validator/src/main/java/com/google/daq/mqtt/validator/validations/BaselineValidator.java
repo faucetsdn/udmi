@@ -69,7 +69,7 @@ public class BaselineValidator extends SequenceValidator {
 
     Date expectedConfig = deviceConfig.timestamp;
     System.err.printf("%s expecting config %s%n", getTimestamp(), getTimestamp(expectedConfig));
-    // hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     // hasLogged(BASE_CONFIG_PARSE, Level.INFO);
     untilTrue(() -> !expectedConfig.equals(deviceState.system.last_config), "state last_config match");
     hasLogged(BASE_CONFIG_APPLY, Level.INFO);

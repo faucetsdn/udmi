@@ -458,8 +458,8 @@ public class Pubber {
     }
   }
 
-  private void publisherConfigLog(Exception e) {
-    publisherHandler("config", "apply", e);
+  private void publisherConfigLog(String phase, Exception e) {
+    publisherHandler("config", phase, e);
   }
 
   private void publisherException(Exception toReport) {
@@ -493,8 +493,8 @@ public class Pubber {
     publishLogMessage(report);
     publishStateMessage();
     if (configLatch.getCount() > 0) {
-      warn("Releasing startup latch because reported error");
-      configHandler(null);
+      configLatch.countDown();
+      warn("Released startup latch because reported error");
     }
   }
 
@@ -532,11 +532,11 @@ public class Pubber {
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
-      publisherConfigLog(null);
-      publishStateMessage();
+      publisherConfigLog("apply", null);
     } catch (Exception e) {
-      publisherConfigLog(e);
+      publisherConfigLog("apply", e);
     }
+    publishStateMessage();
   }
 
   private String getTimestamp() {

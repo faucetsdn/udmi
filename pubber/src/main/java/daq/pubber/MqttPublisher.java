@@ -270,6 +270,11 @@ public class MqttPublisher {
     return String.format(HANDLER_KEY_FORMAT, registryId, topic);
   }
 
+  private String getMessageType(String topic) {
+    // {site}/devices/{device}/{type}
+    return topic.split("/")[3];
+  }
+
   public void connect(String deviceId) {
     getConnectedClient(deviceId);
   }
@@ -300,21 +305,34 @@ public class MqttPublisher {
      * @see MqttCallback#messageArrived(String, MqttMessage)
      */
     public void messageArrived(String topic, MqttMessage message) {
+      String messageType = getMessageType(topic);
       String handlerKey = getHandlerKey(topic);
       Consumer<Object> handler = handlers.get(handlerKey);
       Class<Object> type = handlersType.get(handlerKey);
       if (handler == null) {
-        error("Missing handler", handlerKey, "receive", new RuntimeException("No registered handler for " + handlerKey));
-      } else if (message.toString().length() == 0) {
-        handler.accept(null);
-      } else {
-        try {
-          handler.accept(OBJECT_MAPPER.readValue(message.toString(), type));
-        } catch (Exception e) {
-          error("Processing message", handlerKey, "parse", e);
-        }
+        error("Missing handler", messageType, "receive", new RuntimeException("No registered handler for " + handlerKey));
+        return;
       }
+      success("Received config", messageType, "receive");
+
+      final Object payload;
+      try {
+        if (message.toString().length() == 0) {
+          payload = null;
+        } else {
+          payload = OBJECT_MAPPER.readValue(message.toString(), type);
+        }
+      } catch (Exception e) {
+        error("Processing message", messageType, "parse", e);
+        return;
+      }
+      success("Parsed message", messageType, "parse");
+      handler.accept(payload);
     }
+  }
+
+  private void success(String message, String type, String phase) {
+    onError.accept(new PublisherException(message, type, phase, null));
   }
 
   private void error(String message, String type, String phase, Exception e) {
