@@ -184,7 +184,6 @@ public abstract class SequenceValidator {
 
   @Before
   public void setUp() {
-    deviceConfig = readGeneratedConfig();
     deviceState = null;
     sentConfig.clear();
     receivedState.clear();
@@ -192,15 +191,15 @@ public abstract class SequenceValidator {
     waitingCondition = null;
     confirm_serial = false;
 
-    // Force a config update sequence.
-    deviceConfig.system.min_loglevel = null;
-    syncConfig();
+    deviceConfig = readGeneratedConfig();
+    deviceConfig.system.min_loglevel = 400;
+
+    clearLogs();
+    queryState();
 
     // TODO: min_loglevel should be a string, not an integer
-    deviceConfig.system.min_loglevel = 800;
     syncConfig();
 
-    queryState();
     untilTrue(() -> deviceState != null, "device state update");
   }
 
@@ -416,7 +415,6 @@ public abstract class SequenceValidator {
           continue;
         }
         for (Entry logEntry : systemEvent.logentries) {
-          System.err.println(getTimestamp() + " " + logEntry.level + " " + logEntry.category);
           if (category.equals(logEntry.category) && level.equals(logEntry.level)) {
             return true;
           }

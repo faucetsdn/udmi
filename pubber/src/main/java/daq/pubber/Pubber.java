@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SwarmMessage.Attributes;
 import java.io.File;
@@ -62,16 +63,13 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String CONFIG_ERROR_STATUS_KEY = "config";
-  private static final int LOGGING_MOD_COUNT = 10;
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
-  private static final String CONFIG_PARSE_CATEGORY = "base.config.parse";
-  private static final String CONFIG_PARSE_MESSAGE = "Could not parse device configuration";
+  private static final String MESSAGE_CATEGORY_FORMAT = "base.%s.%s";
   private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
@@ -427,7 +425,7 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    mqttPublisher = new MqttPublisher(configuration, this::reportConfigParseError);
+    mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
           this::gatewayHandler, Config.class);
@@ -460,30 +458,53 @@ public class Pubber {
     }
   }
 
-  private void reportConfigParseError(Exception toReport) {
-    if (toReport != null) {
-      error("Error receiving message: " + toReport);
-      Entry report = entryFromException(CONFIG_PARSE_CATEGORY, CONFIG_PARSE_MESSAGE, toReport);
-      deviceState.system.statuses.put(CONFIG_ERROR_STATUS_KEY, report);
-      publishStateMessage();
-      if (configLatch.getCount() > 0) {
-        warn("Releasing startup latch because reported error");
-        configHandler(null);
-      }
-      if (onDone != null && toReport instanceof ConnectionClosedException) {
+  private void publisherConfigLog(Exception e) {
+    publisherHandler("config", "apply", e);
+  }
+
+  private void publisherException(Exception toReport) {
+    if (toReport instanceof PublisherException) {
+      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase, toReport.getCause());
+    } else if (toReport instanceof ConnectionClosedException) {
+      if (onDone != null) {
         onDone.accept(configuration.deviceId);
       }
     } else {
-      deviceState.system.statuses.remove(CONFIG_ERROR_STATUS_KEY);
+      error("Unknown exception type " + toReport.getClass(), toReport);
     }
   }
 
-  private Entry entryFromException(String category, String message, Exception e) {
+  private void publisherHandler(String type, String phase, Throwable cause) {
+    if (cause != null) {
+      error("Error receiving message " + type, cause);
+    }
+    String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
+    final Entry report;
+    if (cause == null) {
+      report = entryFromException(category, null);
+    } else {
+      report = entryFromException(category, cause);
+    }
+    if (report.level == Level.INFO) {
+      deviceState.system.statuses.remove(type);
+    } else {
+      deviceState.system.statuses.put(type, report);
+    }
+    publishLogMessage(report);
+    publishStateMessage();
+    if (configLatch.getCount() > 0) {
+      warn("Releasing startup latch because reported error");
+      configHandler(null);
+    }
+  }
+
+  private Entry entryFromException(String category, Throwable e) {
+    boolean success = e == null;
     Entry entry = new Entry();
     entry.category = category;
-    entry.message = message;
-    entry.detail = e.toString();
-    entry.level = Level.ERROR;
+    entry.message = success ? "success" : e.getMessage();
+    entry.detail = success ? null : e.toString();
+    entry.level = success ? Level.INFO : Level.ERROR;
     return entry;
   }
 
@@ -511,10 +532,10 @@ public class Pubber {
       }
       maybeRestartExecutor(actualInterval);
       configLatch.countDown();
-      reportConfigParseError(null);
+      publisherConfigLog(null);
       publishStateMessage();
     } catch (Exception e) {
-      reportConfigParseError(e);
+      publisherConfigLog(e);
     }
   }
 
@@ -573,19 +594,23 @@ public class Pubber {
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
-  private void publishLogMessage(String logMessage, Level level) {
-    SystemEvent systemEvent = new SystemEvent();
-    systemEvent.version = 1;
-    systemEvent.timestamp = new Date();
-    if ((++logMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending log message #%d", getTimestamp(), logMessageCount));
-    }
+  private void pubberLogMessage(String logMessage, Level level) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = level;
     logEntry.timestamp = new Date();
     logEntry.message = logMessage;
-    systemEvent.logentries.add(logEntry);
+    publishLogMessage(logEntry);
+  }
+
+  private void publishLogMessage(Entry report) {
+    if ((++logMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
+      info(String.format("%s sending log message #%d", getTimestamp(), logMessageCount));
+    }
+    SystemEvent systemEvent = new SystemEvent();
+    systemEvent.version = 1;
+    systemEvent.timestamp = new Date();
+    systemEvent.logentries.add(report);
     publishMessage(configuration.deviceId, SYSTEM_TOPIC, systemEvent);
   }
 
@@ -633,7 +658,7 @@ public class Pubber {
     }
     try {
       publishingLog = true;
-      publishLogMessage(message, level);
+      pubberLogMessage(message, level);
     } finally {
       publishingLog = false;
     }
@@ -654,7 +679,7 @@ public class Pubber {
     cloudLog(message, Level.ERROR);
   }
 
-  private void error(String message, Exception e) {
+  private void error(String message, Throwable e) {
     LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);

@@ -87,7 +87,7 @@ public class MqttPublisher {
     if (publisherExecutor.isShutdown()) {
       return;
     }
-    LOG.debug("Publishing in background " + registryId + "/" + deviceId);
+    debug("Publishing in background " + registryId + "/" + deviceId);
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
   }
 
@@ -95,10 +95,10 @@ public class MqttPublisher {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
       sendMessage(deviceId, getMessageTopic(deviceId, topic), payload.getBytes());
-      LOG.debug("Publishing complete " + registryId + "/" + deviceId);
+      debug("Publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      LOG.warn(String.format("Publish failed for %s: %s", deviceId, e));
+      warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
       } else {
@@ -116,7 +116,7 @@ public class MqttPublisher {
         }
         removed.close();
       } catch (Exception e) {
-        LOG.error("Error closing MQTT client: " + e.toString());
+        error("Error closing MQTT client: " + e, null, "stop", e);
       }
     }
   }
@@ -153,11 +153,11 @@ public class MqttPublisher {
   private MqttClient newBoundClient(String deviceId) {
     try {
       String gatewayId = configuration.gatewayId;
-      LOG.debug("Connecting through gateway " + gatewayId);
+      debug("Connecting through gateway " + gatewayId);
       MqttClient mqttClient = getConnectedClient(gatewayId);
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
-      LOG.info("Publishing attach message " + topic);
+      info("Publishing attach message " + topic);
       mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), MQTT_QOS, SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
@@ -171,7 +171,7 @@ public class MqttPublisher {
       Preconditions.checkNotNull(registryId, "registryId is null");
       Preconditions.checkNotNull(deviceId, "deviceId is null");
       String clientId = getClientId(deviceId);
-      LOG.info("Creating new mqtt client for " + clientId);
+      info("Creating new mqtt client for " + clientId);
       MqttClient mqttClient = new MqttClient(getBrokerUrl(), clientId,
           new MemoryPersistence());
       return mqttClient;
@@ -187,7 +187,7 @@ public class MqttPublisher {
         throw new RuntimeException("Timeout waiting for connection lock");
       }
       MqttClient mqttClient = newMqttClient(deviceId);
-      LOG.info("Attempting connection to " + getClientId(deviceId));
+      info("Attempting connection to " + getClientId(deviceId));
 
       mqttClient.setCallback(new MqttCallbackHandler(deviceId));
       mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
@@ -198,7 +198,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      LOG.info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
+      info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
       options.setPassword(createJwt());
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
@@ -266,8 +266,8 @@ public class MqttPublisher {
     }
   }
 
-  private String getHandlerKey(String configTopic) {
-    return String.format(HANDLER_KEY_FORMAT, registryId, configTopic);
+  private String getHandlerKey(String topic) {
+    return String.format(HANDLER_KEY_FORMAT, registryId, topic);
   }
 
   public void connect(String deviceId) {
@@ -286,7 +286,7 @@ public class MqttPublisher {
      * @see MqttCallback#connectionLost(Throwable)
      */
     public void connectionLost(Throwable cause) {
-      LOG.warn("MQTT Connection Lost", cause);
+      warn("MQTT Connection Lost: " + cause);
       onError.accept(new ConnectionClosedException());
     }
 
@@ -304,23 +304,39 @@ public class MqttPublisher {
       Consumer<Object> handler = handlers.get(handlerKey);
       Class<Object> type = handlersType.get(handlerKey);
       if (handler == null) {
-        onError.accept(new RuntimeException("No registered handler for " + handlerKey));
+        error("Missing handler", handlerKey, "receive", new RuntimeException("No registered handler for " + handlerKey));
       } else if (message.toString().length() == 0) {
-        LOG.warn("Received message is empty for " + handlerKey);
         handler.accept(null);
       } else {
         try {
           handler.accept(OBJECT_MAPPER.readValue(message.toString(), type));
         } catch (Exception e) {
-          onError.accept(e);
+          error("Processing message", handlerKey, "parse", e);
         }
       }
     }
   }
 
+  private void error(String message, String type, String phase, Exception e) {
+    LOG.error(message, e);
+    onError.accept(new PublisherException(message, type, phase, e));
+  }
+
+  private void warn(String message) {
+    LOG.warn(message);
+  }
+
+  private void info(String message) {
+    LOG.info(message);
+  }
+
+  private void debug(String message) {
+    LOG.debug(message);
+  }
+
   private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
-    LOG.debug("Sending message to " + mqttTopic);
+    debug("Sending message to " + mqttTopic);
     checkAuthentication(deviceId);
     getConnectedClient(deviceId).publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
@@ -330,7 +346,7 @@ public class MqttPublisher {
     if (Instant.now().isBefore(reauthTimes.get(deviceId))) {
       return;
     }
-    LOG.warn("Authentication retry time reached for " + deviceId);
+    warn("Authentication retry time reached for " + deviceId);
     reauthTimes.remove(deviceId);
     MqttClient client = mqttClients.remove(deviceId);
     try {
@@ -393,5 +409,17 @@ public class MqttPublisher {
     public long clientCount = mqttClients.size();
     public int publishCount = publishCounter.getAndSet(0);
     public int errorCount = errorCounter.getAndSet(0);
+  }
+
+  public static class PublisherException extends RuntimeException {
+
+    final String type;
+    final String phase;
+
+    public PublisherException(String message, String type, String phase, Throwable cause) {
+      super(message, cause);
+      this.type = type;
+      this.phase = phase;
+    }
   }
 }

@@ -11,6 +11,7 @@ unspecified category would be just `system.config`.
   * _base_: Baseline system operational messages
     * _start_: System is in the process of (re)starting and essentially offline
     * _ready_: System is fully ready for operation
+    * _comms_: Baseline message handling
   * _config_: Configuration message handling
     * _receive_: Receiving of a config message
     * _parse_: Parsing of a receved message
