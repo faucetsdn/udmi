@@ -93,4 +93,4 @@ jobs:
       - name: Init terraform
         run: (! test -f config.sh) || (source config.sh; cloud/gcp/bin/init)
       - name: Apply terraform
-        run: (! test -f config.sh) || (source config.sh; cloud/gcp/bin/apply)
+        run: (! test -f config.sh) || (source config.sh; cloud/gcp/bin/apply -auto-approve)
