@@ -11,6 +11,9 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.function.BiConsumer;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -305,29 +308,32 @@ public class MqttPublisher {
      * @see MqttCallback#messageArrived(String, MqttMessage)
      */
     public void messageArrived(String topic, MqttMessage message) {
-      String messageType = getMessageType(topic);
-      String handlerKey = getHandlerKey(topic);
-      Consumer<Object> handler = handlers.get(handlerKey);
-      Class<Object> type = handlersType.get(handlerKey);
-      if (handler == null) {
-        error("Missing handler", messageType, "receive", new RuntimeException("No registered handler for " + handlerKey));
-        return;
-      }
-      success("Received config", messageType, "receive");
-
-      final Object payload;
-      try {
-        if (message.toString().length() == 0) {
-          payload = null;
-        } else {
-          payload = OBJECT_MAPPER.readValue(message.toString(), type);
+      synchronized (MqttPublisher.this) {
+        String messageType = getMessageType(topic);
+        String handlerKey = getHandlerKey(topic);
+        Consumer<Object> handler = handlers.get(handlerKey);
+        Class<Object> type = handlersType.get(handlerKey);
+        if (handler == null) {
+          error("Missing handler", messageType, "receive",
+              new RuntimeException("No registered handler for " + handlerKey));
+          return;
         }
-      } catch (Exception e) {
-        error("Processing message", messageType, "parse", e);
-        return;
+        success("Received config", messageType, "receive");
+
+        final Object payload;
+        try {
+          if (message.toString().length() == 0) {
+            payload = null;
+          } else {
+            payload = OBJECT_MAPPER.readValue(message.toString(), type);
+          }
+        } catch (Exception e) {
+          error("Processing message", messageType, "parse", e);
+          return;
+        }
+        success("Parsed message", messageType, "parse");
+        handler.accept(payload);
       }
-      success("Parsed message", messageType, "parse");
-      handler.accept(payload);
     }
   }
 

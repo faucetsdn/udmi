@@ -86,8 +86,15 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private int deviceMessageCount = -1;
-  private int logMessageCount = -1;
+  private AtomicInteger logMessageCount = new AtomicInteger(0);
   private final int MESSAGE_REPORT_INTERVAL = 100;
+
+  private final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
+      Level.DEBUG, LOG::debug,
+      Level.INFO, LOG::info,
+      Level.WARNING, LOG::warn,
+      Level.ERROR, LOG::error
+  );
 
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -490,6 +497,7 @@ public class Pubber {
     } else {
       deviceState.system.statuses.put(type, report);
     }
+    localLog(report);
     publishLogMessage(report);
     publishStateMessage();
     if (configLatch.getCount() > 0) {
@@ -502,6 +510,7 @@ public class Pubber {
     boolean success = e == null;
     Entry entry = new Entry();
     entry.category = category;
+    entry.timestamp = new Date();
     entry.message = success ? "success" : e.getMessage();
     entry.detail = success ? null : e.toString();
     entry.level = success ? Level.INFO : Level.ERROR;
@@ -541,6 +550,15 @@ public class Pubber {
 
   private String getTimestamp() {
     return isoConvert(new Date());
+  }
+
+  private Date isoConvert(String timestamp) {
+    try {
+      String wrappedString = "\"" + timestamp + "\"";
+      return OBJECT_MAPPER.readValue(wrappedString, Date.class);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating date", e);
+    }
   }
 
   private String isoConvert(Date timestamp) {
@@ -594,19 +612,16 @@ public class Pubber {
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
-  private void pubberLogMessage(String logMessage, Level level) {
+  private void pubberLogMessage(String logMessage, Level level, String timestamp, int serial) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = level;
-    logEntry.timestamp = new Date();
+    logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
     publishLogMessage(logEntry);
   }
 
   private void publishLogMessage(Entry report) {
-    if ((++logMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending log message #%d", getTimestamp(), logMessageCount));
-    }
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
@@ -618,7 +633,7 @@ public class Pubber {
     lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info(String.format("%s update state %s", getTimestamp(), isoConvert(deviceState.timestamp)));
+    info(String.format("update state %s", isoConvert(deviceState.timestamp)));
     stateDirty = false;
     publishMessage(deviceId, STATE_TOPIC, deviceState);
   }
@@ -653,29 +668,41 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
+    int serial = logMessageCount.incrementAndGet();
+    String timestamp = getTimestamp();
+    localLog(message, level, timestamp);
+
     if (publishingLog || mqttPublisher == null) {
       return;
     }
+
     try {
       publishingLog = true;
-      pubberLogMessage(message, level);
+      pubberLogMessage(message, level, timestamp, serial);
     } finally {
       publishingLog = false;
     }
   }
 
+  private void localLog(Entry entry) {
+    String message = entry.category + " " + entry.message;
+    localLog(message, entry.level, isoConvert(entry.timestamp));
+  }
+
+  private void localLog(String message, Level level, String timestamp) {
+    String logMessage = String.format("%s %s", timestamp, message);
+    LOG_MAP.get(level).accept(logMessage);
+  }
+
   private void info(String message) {
-    LOG.info(message);
     cloudLog(message, Level.INFO);
   }
 
   private void warn(String message) {
-    LOG.warn(message);
     cloudLog(message, Level.WARNING);
   }
 
   private void error(String message) {
-    LOG.error(message);
     cloudLog(message, Level.ERROR);
   }
 

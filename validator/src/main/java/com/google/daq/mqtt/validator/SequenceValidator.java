@@ -16,6 +16,7 @@ import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -285,18 +286,29 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void recordLogMessage(Map<String, Object> message) {
-    System.err.println(getTimestamp() + " received " + messageBase);
+  private void recordLogMessage(SystemEvent message) {
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
-    File attributeFile = new File(testOutDir, messageBase + ".attr");
 
-    File messageFile = new File(testOutDir, messageBase + ".json");
-    try {
-      OBJECT_MAPPER.writeValue(messageFile, message);
+    if (message.logentries == null || message.logentries.isEmpty()) {
+      return;
+    }
+
+    File logFile = new File(testOutDir, "system.log");
+    try (PrintWriter logAppend = new PrintWriter(new FileOutputStream(logFile, true))) {
+      for (Entry logEntry : message.logentries) {
+        String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
+            logEntry.level,
+            logEntry.category,
+            logEntry.message);
+        logAppend.println(messageStr);
+        if (logEntry.timestamp == null) {
+          throw new RuntimeException("log entry timestamp is null");
+        }
+      }
     } catch (Exception e) {
-      throw new RuntimeException("While writing message to " + attributeFile.getAbsolutePath(), e);
+      throw new RuntimeException("While writing message to " + logFile.getAbsolutePath(), e);
     }
   }
 
@@ -487,22 +499,21 @@ public abstract class SequenceValidator {
     });
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw, String subTypeRaw)
-    {
-      SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
-      SubType subType = SubType.fromValue(subTypeRaw);
-      switch (subType) {
-        case CONFIG:
-          // These are echos of sent config messages, so do nothing.
-          break;
-        case STATE:
-          handleStateMessage(subFolder, message);
-          break;
-        case EVENT:
-          handleEventMessage(subFolder, message);
-          break;
-      }
+  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw, String subTypeRaw) {
+    SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
+    SubType subType = SubType.fromValue(subTypeRaw);
+    switch (subType) {
+      case CONFIG:
+        // These are echos of sent config messages, so do nothing.
+        break;
+      case STATE:
+        handleStateMessage(subFolder, message);
+        break;
+      case EVENT:
+        handleEventMessage(subFolder, message);
+        break;
     }
+  }
 
   private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
     System.err.println(getTimestamp() + " updated " + subFolderRaw + " " + message.get("timestamp"));
@@ -512,7 +523,7 @@ public abstract class SequenceValidator {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      recordLogMessage(message);
+      recordLogMessage(convertTo(message, SystemEvent.class));
     }
   }
 
