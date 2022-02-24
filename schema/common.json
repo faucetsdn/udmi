@@ -31,11 +31,11 @@
         },
         "level": {
           "$comment": "https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity",
-          "description": "The `level` indicates the severity of the status/log entry",
+          "description": "The severity of the status/log entry",
           "type": "string",
-          "enum": [ "ERROR", "WARNING", "INFO", "DEBUG" ],
+          "enum": [ "ERROR", "WARN", "INFO", "DEBUG" ],
           "examples": ["INFO"]
-        }
+       }
       },
       "required": [
         "message",
