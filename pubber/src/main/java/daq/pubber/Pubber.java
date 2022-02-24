@@ -492,7 +492,7 @@ public class Pubber {
     } else {
       report = entryFromException(category, cause);
     }
-    if (report.level == Level.INFO) {
+    if (report.level == Level.DEBUG || report.level == Level.INFO) {
       deviceState.system.statuses.remove(type);
     } else {
       deviceState.system.statuses.put(type, report);
@@ -500,7 +500,7 @@ public class Pubber {
     localLog(report);
     publishLogMessage(report);
     publishStateMessage();
-    if (configLatch.getCount() > 0) {
+    if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
@@ -635,7 +635,7 @@ public class Pubber {
     String deviceId = configuration.deviceId;
     info(String.format("update state %s", isoConvert(deviceState.timestamp)));
     stateDirty = false;
-    publishMessage(deviceId, STATE_TOPIC, deviceState);
+    //publishMessage(deviceId, STATE_TOPIC, deviceState);
   }
 
   private void publishMessage(String deviceId, String topic, Object message) {

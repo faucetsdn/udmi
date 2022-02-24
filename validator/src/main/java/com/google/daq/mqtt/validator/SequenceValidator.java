@@ -16,7 +16,6 @@ import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -178,6 +177,7 @@ public abstract class SequenceValidator {
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
+  private Date lastLog;
   private String waitingCondition;
   private boolean confirm_serial;
   private String testName;
@@ -427,12 +427,13 @@ public abstract class SequenceValidator {
   }
 
   protected List<Map<String, Object>> clearLogs() {
+    lastLog = null;
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
 
   protected void hasLogged(String category, Level level) {
     untilTrue(() -> {
-      List<Map<String, Object>> messages = clearLogs();
+      List<Map<String, Object>> messages = receivedEvents.get(SubFolder.SYSTEM);
       if (messages == null) {
         return false;
       }
@@ -442,7 +443,9 @@ public abstract class SequenceValidator {
           continue;
         }
         for (Entry logEntry : systemEvent.logentries) {
-          if (category.equals(logEntry.category) && level.equals(logEntry.level)) {
+          boolean validEntry = lastLog == null || !logEntry.timestamp.before(lastLog);
+          if (validEntry && category.equals(logEntry.category) && level.equals(logEntry.level)) {
+            lastLog = logEntry.timestamp;
             return true;
           }
         }
