@@ -4,6 +4,7 @@ udmi_site_model/
 gcp_reflect_key.pkcs8
 workspace.xml
 codegen/
+.DS_Store
 .gradle/
 .firebase/
 dashboard/functions/node_modules/
