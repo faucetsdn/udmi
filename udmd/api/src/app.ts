@@ -19,7 +19,7 @@ import { getDefaultContextProcessor }  from './common/context';
   });
 
   // start our server
-  server.listen(4001).then(({ url }) => {
+  server.listen(4300).then(({ url }) => {
     logger.info(`🎙  Universal Device Management Dashboard API is ready to talk: ${url}`);
   });
 })().catch((err) => logger.error(err.stack));
