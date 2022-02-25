@@ -1,13 +1,4 @@
-import { logger } from "../common/logger";
+import { merge } from 'lodash';
+import { resolvers as resolversDevice } from '../device/resolvers';
 
-export const resolvers = {
-  Query: {
-    devices: (_, {}, { dataSources: { } }) => {
-      return [
-        { id: "id1", name:"name1" }, 
-        { id: "id2", name:"name2" }, 
-        { id: "id2", name:"name3" }
-      ];
-    },
-  },
-};
+export const resolvers = merge({}, resolversDevice);
