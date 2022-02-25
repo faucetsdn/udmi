@@ -5,6 +5,7 @@ gcp_reflect_key.pkcs8
 workspace.xml
 codegen/
 .DS_Store
+.vscode
 .gradle/
 .firebase/
 dashboard/functions/node_modules/
