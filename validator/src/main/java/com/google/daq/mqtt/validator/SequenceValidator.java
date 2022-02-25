@@ -198,15 +198,16 @@ public abstract class SequenceValidator {
     clearLogs();
     queryState();
 
-    // TODO: min_loglevel should be a string, not an integer
     syncConfig();
 
     untilTrue(() -> deviceState != null, "device state update");
   }
 
-  protected void syncConfig() {
+  protected Date syncConfig() {
     updateConfig();
     untilTrue(this::configUpdateComplete, "device config update");
+    System.err.println("config synced to " + getTimestamp(deviceConfig.timestamp));
+    return deviceConfig.timestamp;
   }
 
   @Test
@@ -428,6 +429,7 @@ public abstract class SequenceValidator {
 
   protected List<Map<String, Object>> clearLogs() {
     lastLog = null;
+    System.err.println("logs cleared");
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
 
