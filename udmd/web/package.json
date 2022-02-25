@@ -15,7 +15,7 @@
   },
   "private": true,
   "lint-staged": {
-    "src/**/*.{ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
+    "src/**/*.{html,ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   },
   "dependencies": {
     "@angular/animations": "~13.2.0",
