@@ -26,10 +26,6 @@ describe('AppComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have as title "udmd-web"', () => {
-    expect(component.title).toEqual('udmd-web');
-  });
-
   it('should render the navigation component', () => {
     expect(compiled.querySelector('app-navigation')).not.toBeNull();
   });
