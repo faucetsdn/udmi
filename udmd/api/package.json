@@ -27,7 +27,8 @@
     "dev": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:4229  src/app.ts",
     "start": "ts-node src/app.ts",
     "test": "NODE_ENV=test jest --runInBand",
-    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll"
+    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll",
+    "postinstall": "cd ../.. && husky install udmd/api/.husky"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
