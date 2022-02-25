@@ -352,8 +352,14 @@ public class Pubber {
 
   private synchronized void cancelExecutor() {
     if (scheduledFuture != null) {
-      scheduledFuture.cancel(false);
-      scheduledFuture = null;
+      try {
+        scheduledFuture.cancel(false);
+        scheduledFuture.get();
+      } catch (Exception e) {
+        throw new RuntimeException("While cancelling executor", e);
+      } finally {
+        scheduledFuture = null;
+      }
     }
   }
 
@@ -630,12 +636,18 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    lastStateTimeMs = sleepUntil(lastStateTimeMs + STATE_THROTTLE_MS);
+    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+    if (delay > 0) {
+      warn(String.format("defer state update %d", delay));
+      stateDirty = true;
+      return;
+    }
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
     info(String.format("update state %s", isoConvert(deviceState.timestamp)));
     stateDirty = false;
-    //publishMessage(deviceId, STATE_TOPIC, deviceState);
+    publishMessage(deviceId, STATE_TOPIC, deviceState);
+    lastStateTimeMs = System.currentTimeMillis();
   }
 
   private void publishMessage(String deviceId, String topic, Object message) {
