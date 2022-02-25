@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { DevicesComponent } from './devices.component';
 
 describe('DevicesComponent', () => {
@@ -18,7 +17,7 @@ describe('DevicesComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('should compile', () => {
     expect(component).toBeTruthy();
   });
 });
