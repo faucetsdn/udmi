@@ -398,20 +398,17 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#logentries_items_level" onclick="anchorLink('logentries_items_level')">level</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
-<span class="description"><p>The <code>level</code> indicates the severity of the status/log entry</p>
-</span><div class="enum-value" id="logentries_items_level_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"ERROR"</li><li class="list-group-item enum-item">"WARNING"</li><li class="list-group-item enum-item">"INFO"</li><li class="list-group-item enum-item">"DEBUG"</li></ul>
-                </div>
+    <a href="#logentries_items_level" onclick="anchorLink('logentries_items_level')">level</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>The status <code>level</code> should conform to the numerical <a href="https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity">Stackdriver LogEntry</a> levels. The <code>DEFAULT</code> value of 0 is not allowed (lowest value is 100, maximum 800).</p>
+</span>
             
 
             
-            
+            <p><span class="badge badge-light restriction numeric-restriction" id="logentries_items_level_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code> and a multiple of <code>1</code></span></p>
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="logentries_items_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;INFO&quot;</span>
+<br/><div id="logentries_items_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span>
 </pre></div>
 </div>
             </div>
