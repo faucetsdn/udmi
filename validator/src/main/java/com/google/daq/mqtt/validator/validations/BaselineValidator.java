@@ -11,7 +11,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Entry;
-import udmi.schema.Entry.Level;
+import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
