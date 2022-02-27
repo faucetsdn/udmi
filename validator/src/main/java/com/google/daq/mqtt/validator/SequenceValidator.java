@@ -82,7 +82,7 @@ public abstract class SequenceValidator {
   private static final IotCoreClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
-  public static final String RESULT_FORMAT = "RESULT %s %s %s%n";
+  public static final String RESULT_FORMAT = "RESULT %s %s %s";
   public static final Integer INITIAL_MIN_LOGLEVEL = 400;
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
@@ -97,6 +97,7 @@ public abstract class SequenceValidator {
       "configs", Config.class,
       "states", State.class
   );
+  public static final String SEQUENCER_CATEGORY = "sequencer";
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -227,35 +228,56 @@ public abstract class SequenceValidator {
     }
 
     @Override
+    protected void finished(Description description) {
+      assert testName.equals(description.getMethodName());
+      info("ending test " + testName);
+      testName = null;
+    }
+
+    @Override
     protected void succeeded(Description description) {
-      info("passed test " + testName);
-      recordResult(RESULT_PASS, description.getMethodName(), "Sequence completed");
+      recordCompletion(RESULT_PASS, Level.INFO, description,"Sequence complete");
     }
 
     @Override
     protected void failed(Throwable e, Description description) {
       final String message;
       final String type;
+      final Level level;
       if (e instanceof TestTimedOutException) {
         message = "timeout " + waitingCondition;
         type = RESULT_FAIL;
+        level = Level.ERROR;
       } else if (e instanceof SkipTest) {
         message = e.getMessage();
         type = RESULT_SKIP;
+        level = Level.WARNING;
       } else {
         while (e.getCause() != null) {
           e = e.getCause();
         }
         message = e.getMessage();
         type = RESULT_FAIL;
+        level = Level.ERROR;
       }
-      info("failed " + message);
-      recordResult(type, description.getMethodName(), message);
+      recordCompletion(type, level, description, message);
+    }
+
+    private void recordCompletion(String result, Level level, Description description, String message) {
+      String category = description.getMethodName();
+      recordResult(result, category, message);
+      Entry logEntry = new Entry();
+      logEntry.category = SEQUENCER_CATEGORY;
+      logEntry.message = message;
+      logEntry.level = level.value();
+      logEntry.timestamp = new Date();
+      writeSequencerLog(logEntry);
+      writeSystemLog(logEntry);
     }
   };
 
   private void recordResult(String result, String methodName, String message) {
-    System.err.printf(RESULT_FORMAT, result, methodName, message);
+    info(String.format(RESULT_FORMAT, result, methodName, message));
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.printf(RESULT_FORMAT, result, methodName, message);
     } catch (Exception e) {
@@ -287,16 +309,20 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void recordLogMessage(SystemEvent message) {
+  private void writeSystemLogs(SystemEvent message) {
     if (message.logentries == null) {
       return;
     }
     for (Entry logEntry : message.logentries) {
-      writeLogEntry(logEntry, "system.log");
+      writeSystemLog(logEntry);
     }
   }
 
-  private void writeLogEntry(Entry logEntry, String filename) {
+  private String writeSystemLog(Entry logEntry) {
+    return writeLogEntry(logEntry, "system.log");
+  }
+
+  private String writeLogEntry(Entry logEntry, String filename) {
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
@@ -311,6 +337,7 @@ public abstract class SequenceValidator {
       if (logEntry.timestamp == null) {
         throw new RuntimeException("log entry timestamp is null");
       }
+      return messageStr;
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + logFile.getAbsolutePath(), e);
     }
@@ -335,7 +362,7 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
-        System.err.printf("%s sending %s_%s%n", getTimestamp(), "config", subBlock);
+        info(String.format("sending %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
         String topic = "config/" + subBlock;
         client.publish(deviceId, topic, messageData);
@@ -387,7 +414,7 @@ public abstract class SequenceValidator {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
-        System.err.printf("%s updating %s state%n", getTimestamp(), subFolder);
+        info(String.format("updating %s state", subFolder));
         T state = OBJECT_MAPPER.readValue(messageString, target);
         if (deviceState == null) {
           deviceState = new State();
@@ -409,7 +436,7 @@ public abstract class SequenceValidator {
   protected boolean validSerialNo() {
     String device_serial = deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(device_serial, last_serial_no)) {
-      System.err.printf("%s Received serial no %s%n", getTimestamp(), device_serial);
+      info(String.format("Received serial no %s", device_serial));
       last_serial_no = device_serial;
     }
     boolean serialValid = Objects.equals(serial_no, device_serial);
@@ -531,7 +558,7 @@ public abstract class SequenceValidator {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      recordLogMessage(convertTo(message, SystemEvent.class));
+      writeSystemLogs(convertTo(message, SystemEvent.class));
     }
   }
 
@@ -559,8 +586,11 @@ public abstract class SequenceValidator {
     logEntry.timestamp = new Date();
     logEntry.level = Level.INFO.value();
     logEntry.message = message;
-    logEntry.category = "sequencer";
-    System.err.println(getTimestamp(logEntry.timestamp) + " " + message);
-    writeLogEntry(logEntry, "sequencer.log");
+    logEntry.category = SEQUENCER_CATEGORY;
+    writeSequencerLog(logEntry);
+  }
+
+  private void writeSequencerLog(Entry logEntry) {
+    System.err.println(writeLogEntry(logEntry, "sequencer.log"));
   }
 }
