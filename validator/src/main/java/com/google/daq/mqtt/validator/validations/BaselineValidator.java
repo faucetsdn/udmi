@@ -37,7 +37,7 @@ public class BaselineValidator extends SequenceValidator {
       ensurePointConfig(FAILURE_STATE);
       ensurePointConfig(APPLIED_STATE);
     } catch (SkipTest skipTest) {
-      System.err.println("Not setting config points: " + skipTest.getMessage());
+      info("Not setting config points: " + skipTest.getMessage());
     }
     untilTrue(this::validSerialNo, "valid serial no " + serial_no);
   }
@@ -82,7 +82,7 @@ public class BaselineValidator extends SequenceValidator {
     clearLogs();
     Date prevConfig = syncConfig();
     untilTrue(() -> prevConfig.equals(deviceState.system.last_config), "previous config synced");
-    System.err.println(getTimestamp() + " saved last_config " + getTimestamp(prevConfig));
+    info("saved last_config " + getTimestamp(prevConfig));
     extraField = "break_json";
     updateConfig();
     hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
@@ -170,8 +170,7 @@ public class BaselineValidator extends SequenceValidator {
     }
     TargetTestingMetadata testingMetadata = deviceMetadata.testing.targets.get(target);
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
-      System.err.println(getTimestamp()
-          + " No metadata pointset points defined, I hope you know what you're doing");
+      info("No metadata pointset points defined, I hope you know what you're doing");
     } else if (!deviceMetadata.pointset.points.containsKey(testingMetadata.target_point)) {
       throw new RuntimeException(
           String.format("Testing target %s point '%s' not defined in pointset metadata",

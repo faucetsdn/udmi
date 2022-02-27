@@ -143,7 +143,7 @@ public abstract class SequenceValidator {
     resultSummary.delete();
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
-    System.err.printf("Validating device %s serial %s%n", deviceId, serial_no);
+    System.err.printf("Validating against device %s serial %s%n", deviceId, serial_no);
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
   }
 
@@ -206,7 +206,7 @@ public abstract class SequenceValidator {
   protected Date syncConfig() {
     updateConfig();
     untilTrue(this::configUpdateComplete, "device config update");
-    System.err.println("config synced to " + getTimestamp(deviceConfig.timestamp));
+    info("config synced to " + getTimestamp(deviceConfig.timestamp));
     return deviceConfig.timestamp;
   }
 
@@ -223,12 +223,12 @@ public abstract class SequenceValidator {
     @Override
     protected void starting(Description description) {
       testName = description.getMethodName();
-      System.err.println(getTimestamp() + " starting test " + testName);
+      info("starting test " + testName);
     }
 
     @Override
     protected void succeeded(Description description) {
-      System.err.println(getTimestamp() + " passed test " + testName);
+      info("passed test " + testName);
       recordResult(RESULT_PASS, description.getMethodName(), "Sequence completed");
     }
 
@@ -249,7 +249,7 @@ public abstract class SequenceValidator {
         message = e.getMessage();
         type = RESULT_FAIL;
       }
-      System.err.println(getTimestamp() + " failed " + message);
+      info("failed " + message);
       recordResult(type, description.getMethodName(), message);
     }
   };
@@ -267,7 +267,7 @@ public abstract class SequenceValidator {
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
     String messageBase = String
         .format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
-    System.err.println(getTimestamp() + " received " + messageBase);
+    info("received " + messageBase);
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
@@ -288,25 +288,28 @@ public abstract class SequenceValidator {
   }
 
   private void recordLogMessage(SystemEvent message) {
+    if (message.logentries == null) {
+      return;
+    }
+    for (Entry logEntry : message.logentries) {
+      writeLogEntry(logEntry, "system.log");
+    }
+  }
+
+  private void writeLogEntry(Entry logEntry, String filename) {
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
 
-    if (message.logentries == null || message.logentries.isEmpty()) {
-      return;
-    }
-
-    File logFile = new File(testOutDir, "system.log");
+    File logFile = new File(testOutDir, filename);
     try (PrintWriter logAppend = new PrintWriter(new FileOutputStream(logFile, true))) {
-      for (Entry logEntry : message.logentries) {
-        String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
-            logEntry.level,
-            logEntry.category,
-            logEntry.message);
-        logAppend.println(messageStr);
-        if (logEntry.timestamp == null) {
-          throw new RuntimeException("log entry timestamp is null");
-        }
+      String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
+          Level.fromValue(logEntry.level),
+          logEntry.category,
+          logEntry.message);
+      logAppend.println(messageStr);
+      if (logEntry.timestamp == null) {
+        throw new RuntimeException("log entry timestamp is null");
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + logFile.getAbsolutePath(), e);
@@ -421,7 +424,7 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      System.err.println(getTimestamp() + " Suppressing exception: " + e);
+      info("Suppressing exception: " + e);
       e.printStackTrace();
       return false;
     }
@@ -429,7 +432,7 @@ public abstract class SequenceValidator {
 
   protected List<Map<String, Object>> clearLogs() {
     lastLog = null;
-    System.err.println("logs cleared");
+    info("logs cleared");
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
 
@@ -457,17 +460,17 @@ public abstract class SequenceValidator {
   }
 
   protected void hasNotLogged(String category, Level level) {
-    System.err.println("WARNING HASNOTLOGGED IS NOT COMPLETE");
+    info("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
-    System.err.println(getTimestamp() + " start " + waitingCondition);
+    info("start " + waitingCondition);
     while (!caughtAsFalse(evaluator)) {
       receiveMessage();
     }
-    System.err.println(getTimestamp() + " finished " + waitingCondition);
+    info("finished " + waitingCondition);
     waitingCondition = null;
   }
 
@@ -521,7 +524,7 @@ public abstract class SequenceValidator {
   }
 
   private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
-    System.err.println(getTimestamp() + " updated " + subFolderRaw + " " + message.get("timestamp"));
+    info("updated " + subFolderRaw + " " + message.get("timestamp"));
     receivedUpdates.put(subFolderRaw, convertTo(message, expectedUpdates.get(subFolderRaw)));
   }
 
@@ -549,5 +552,15 @@ public abstract class SequenceValidator {
       deviceConfig.version = receivedConfig.version;
     }
     return deviceConfig.equals(receivedConfig);
+  }
+
+  protected void info(String message) {
+    Entry logEntry = new Entry();
+    logEntry.timestamp = new Date();
+    logEntry.level = Level.INFO.value();
+    logEntry.message = message;
+    logEntry.category = "sequencer";
+    System.err.println(getTimestamp(logEntry.timestamp) + " " + message);
+    writeLogEntry(logEntry, "sequencer.log");
   }
 }
