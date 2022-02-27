@@ -32,8 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Config;
 import udmi.schema.Entry;
-import udmi.schema.Entry.Level;
 import udmi.schema.Firmware;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetMetadata;
@@ -498,7 +498,7 @@ public class Pubber {
     } else {
       report = entryFromException(category, cause);
     }
-    if (report.level == Level.DEBUG || report.level == Level.INFO) {
+    if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
       deviceState.system.statuses.remove(type);
     } else {
       deviceState.system.statuses.put(type, report);
@@ -519,7 +519,7 @@ public class Pubber {
     entry.timestamp = new Date();
     entry.message = success ? "success" : e.getMessage();
     entry.detail = success ? null : e.toString();
-    entry.level = success ? Level.INFO : Level.ERROR;
+    entry.level = success ? Level.INFO.value() : Level.ERROR.value();
     return entry;
   }
 
@@ -618,10 +618,10 @@ public class Pubber {
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
 
-  private void pubberLogMessage(String logMessage, Level level, String timestamp, int serial) {
+  private void pubberLogMessage(String logMessage, Level level, String timestamp) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
-    logEntry.level = level;
+    logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
     publishLogMessage(logEntry);
@@ -666,21 +666,7 @@ public class Pubber {
     }
   }
 
-  private long sleepUntil(long targetTimeMs) {
-    long currentTime = System.currentTimeMillis();
-    long delay = targetTimeMs - currentTime;
-    try {
-      if (delay > 0) {
-        Thread.sleep(delay);
-      }
-      return System.currentTimeMillis();
-    } catch (Exception e) {
-      throw new RuntimeException("While sleeping for " + delay, e);
-    }
-  }
-
   private void cloudLog(String message, Level level) {
-    int serial = logMessageCount.incrementAndGet();
     String timestamp = getTimestamp();
     localLog(message, level, timestamp);
 
@@ -690,7 +676,7 @@ public class Pubber {
 
     try {
       publishingLog = true;
-      pubberLogMessage(message, level, timestamp, serial);
+      pubberLogMessage(message, level, timestamp);
     } finally {
       publishingLog = false;
     }
@@ -698,7 +684,7 @@ public class Pubber {
 
   private void localLog(Entry entry) {
     String message = entry.category + " " + entry.message;
-    localLog(message, entry.level, isoConvert(entry.timestamp));
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
   }
 
   private void localLog(String message, Level level, String timestamp) {

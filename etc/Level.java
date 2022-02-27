@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 // This class is manually curated and then copied into the gencode directory. Look for the
-// proper source and don't be fooled!
+// proper source and don't be fooled! This is subset of the StackDriver LogSeverity levels.
 public enum Level {
 
   DEBUG(100),
   INFO(200),
   NOTICE(300),
-  WARN(400),
+  WARNING(400),
   ERROR(500);
 
   private final int value;
