@@ -3,5 +3,8 @@
 # Node
 /node_modules
 
+# jest
+/coverage
+
 # System files
 .DS_Store
