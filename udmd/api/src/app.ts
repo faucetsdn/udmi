@@ -1,12 +1,11 @@
-import { ApolloServer } from "apollo-server";
+import { ApolloServer } from 'apollo-server';
 import dataSources from './server/datasources';
 import { typeDefs } from './server/schema';
-import { resolvers } from './server/resolvers';
-import {  logger } from './common/logger';
-import { getDefaultContextProcessor }  from './common/context';
+import { resolvers } from './device/resolvers';
+import { logger } from './common/logger';
+import { getDefaultContextProcessor } from './common/context';
 
 (async () => {
-
   // required context processor
   const context = await getDefaultContextProcessor();
 
@@ -15,7 +14,7 @@ import { getDefaultContextProcessor }  from './common/context';
     typeDefs,
     resolvers,
     context,
-    dataSources: dataSources()
+    dataSources: dataSources(),
   });
 
   // start our server
@@ -23,4 +22,3 @@ import { getDefaultContextProcessor }  from './common/context';
     logger.info(`🎙  Universal Device Management Dashboard API is ready to talk: ${url}`);
   });
 })().catch((err) => logger.error(err.stack));
-
