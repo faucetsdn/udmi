@@ -4,11 +4,10 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavigationModule } from './navigation/navigation.module';
-import { DevicesModule } from './devices/devices.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, BrowserAnimationsModule, NavigationModule, DevicesModule],
+  imports: [BrowserModule, AppRoutingModule, BrowserAnimationsModule, NavigationModule],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
