@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +50,6 @@ import udmi.schema.SystemState;
 
 public abstract class SequenceValidator {
 
-  protected static final Integer ERROR_LEVEL = 800;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/state";
 
@@ -64,7 +62,7 @@ public abstract class SequenceValidator {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-      .setDateFormat(new ISO8601DateFormat())
+      .setDateFormat(new CleanDateFormat())
       .setSerializationInclusion(Include.NON_NULL);
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
@@ -270,7 +268,7 @@ public abstract class SequenceValidator {
       logEntry.category = SEQUENCER_CATEGORY;
       logEntry.message = message;
       logEntry.level = level.value();
-      logEntry.timestamp = new Date();
+      logEntry.timestamp = CleanDateFormat.cleanDate();
       writeSequencerLog(logEntry);
       writeSystemLog(logEntry);
     }
@@ -476,8 +474,9 @@ public abstract class SequenceValidator {
         }
         for (Entry logEntry : systemEvent.logentries) {
           boolean validEntry = lastLog == null || !logEntry.timestamp.before(lastLog);
-          if (validEntry && category.equals(logEntry.category) && level.equals(logEntry.level)) {
+          if (validEntry && category.equals(logEntry.category) && level.value() == logEntry.level) {
             lastLog = logEntry.timestamp;
+            info("Advancing log marker to " + getTimestamp(lastLog));
             return true;
           }
         }
@@ -511,7 +510,7 @@ public abstract class SequenceValidator {
   }
 
   protected String getTimestamp() {
-    return getTimestamp(new Date());
+    return getTimestamp(CleanDateFormat.cleanDate());
   }
 
   private void receiveMessage() {
@@ -583,7 +582,7 @@ public abstract class SequenceValidator {
 
   protected void info(String message) {
     Entry logEntry = new Entry();
-    logEntry.timestamp = new Date();
+    logEntry.timestamp = CleanDateFormat.cleanDate();
     logEntry.level = Level.INFO.value();
     logEntry.message = message;
     logEntry.category = SEQUENCER_CATEGORY;
