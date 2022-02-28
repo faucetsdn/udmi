@@ -1,17 +1,20 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Device } from './model';
+import { logger } from '../common/logger';
+import { Device, DevicesResponse, SearchOptions } from './model';
+import { filterDevices } from './DeviceFilter';
 
 export class DeviceDataSource extends GraphQLDataSource {
   protected context: any;
 
+  private devices: Device[] = [];
+
   constructor() {
     super();
+    this.devices = this.createDevices(100);
   }
 
   public initialize(config) {
     super.initialize(config);
-
-    // store context information
     this.context = {};
   }
 
@@ -19,11 +22,21 @@ export class DeviceDataSource extends GraphQLDataSource {
     return this.context;
   }
 
-  async getDevices(): Promise<Device[]> {
-    return [
-      { id: 'id1', name: 'name1' },
-      { id: 'id2', name: 'name2' },
-      { id: 'id3', name: 'name3' },
-    ];
+  async getDevices(searchOptions: SearchOptions): Promise<DevicesResponse> {
+    const devices: Device[] = filterDevices(this.devices, searchOptions);
+    return { devices, totalCount: this.devices.length };
+  }
+
+  private createDevices(count: number): Device[] {
+    const devices: Device[] = [];
+    let n = 1;
+    while (n <= count) {
+      const id = `id${n}`;
+      const name = `name${n}`;
+      devices.push({ id, name });
+      n++;
+    }
+
+    return devices;
   }
 }

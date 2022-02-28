@@ -1,8 +1,43 @@
-type Query {
+input SearchOptions {
+  # the number of records to retrieve
+  batchSize: Int
+  # the records to start at
+  offset: Int
+  # the search options
+  sortOptions: SortOptions
+  # the search filter
+  filter: String
+}
+
+input SortOptions {
+  # the direction the data should be sorted
+  direction: SORT_DIRECTION
+  # the field that the sorting should be applied to
+  field: String
+}
+
+enum SORT_DIRECTION {
+  # Descending
+  DESC
+  # Ascending
+  ASC
+}
+
+type DevicesResponse {
+  # the devices that matched the search options
   devices: [Device!]!
+  # the total number of devices in the system
+  totalCount: Int!
 }
 
 type Device {
+  # the ID of the Device
   id: ID!
+  # the name pf the Device
   name: String!
+}
+
+type Query {
+  # Get the devices matching the search options
+  devices( searchOptions: SearchOptions! ): DevicesResponse
 }
