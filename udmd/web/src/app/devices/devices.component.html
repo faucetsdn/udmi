@@ -1,0 +1,20 @@
+<div>
+  <p class="mat-small">{{ dataSource.length }} Devices</p>
+  <span class="spacer"></span>
+</div>
+<table mat-table [dataSource]="dataSource">
+  <!-- ID Column -->
+  <ng-container matColumnDef="position">
+    <th mat-header-cell *matHeaderCellDef>ID</th>
+    <td mat-cell *matCellDef="let element">{{ element.position }}</td>
+  </ng-container>
+
+  <!-- Name Column -->
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Name</th>
+    <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
