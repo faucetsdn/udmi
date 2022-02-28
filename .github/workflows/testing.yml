@@ -46,6 +46,7 @@ jobs:
         run: cd udms && npm run e2e 
 
   udmi:
+    name: Sequence tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
