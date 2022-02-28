@@ -4,6 +4,9 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 
+/**
+ * Interface representing a point reading.
+ */
 public interface AbstractPoint {
 
   String getName();

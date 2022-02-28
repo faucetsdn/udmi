@@ -1,7 +1,9 @@
 package com.google.daq.mqtt.util;
 
-// CHECKSTYLE:OFF: MemberName
-
+/**
+ * Data class encapsulating cloud-based configuration.
+ * CHECKSTYLE:OFF: MemberName
+ */
 public class CloudIotConfig {
   public String registry_id;
   public String cloud_region;
