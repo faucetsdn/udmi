@@ -10,7 +10,7 @@
 * udmi_state
 * device-under-test
 
-### UDMI-Reflect Registry
+### UDMI-REFLECT Registry
 
 * udmi_reflect
 * (no state)
