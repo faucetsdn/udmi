@@ -1,0 +1,17 @@
+<mat-toolbar [class.mat-elevation-z6]="true" color="primary">
+  <span class="title"><b>UDMI</b> Device Management Console</span>
+  <span class="spacer"></span>
+  <nav role="navigation" aria-label="Main navigation">
+    <a mat-button routerLink="/devices" routerLinkActive="active">Devices</a>
+  </nav>
+  <button mat-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+    <span>Hi Marc!</span>
+    <mat-icon class="drop-down-icon">arrow_drop_down</mat-icon>
+  </button>
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item>
+      <mat-icon>power_settings_new</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
