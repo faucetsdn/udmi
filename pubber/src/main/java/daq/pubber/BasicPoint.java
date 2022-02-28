@@ -6,6 +6,9 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointPointsetState.Value_state;
 
+/**
+ * Abstract representation of a basic data point.
+ */
 public abstract class BasicPoint implements AbstractPoint {
 
   protected final String name;
@@ -15,6 +18,12 @@ public abstract class BasicPoint implements AbstractPoint {
   protected boolean written;
   private boolean dirty;
 
+  /**
+   * Construct a maybe writable point.
+   *
+   * @param name Point name
+   * @param writable True if writeable
+   */
   public BasicPoint(String name, boolean writable) {
     this.name = name;
     this.writable = writable;
@@ -35,7 +44,9 @@ public abstract class BasicPoint implements AbstractPoint {
     return state;
   }
 
-  public boolean isDirty() { return dirty; }
+  public boolean isDirty() {
+    return dirty;
+  }
 
   public String getName() {
     return name;
@@ -45,6 +56,11 @@ public abstract class BasicPoint implements AbstractPoint {
     return data;
   }
 
+  /**
+   * Set the configuration for this point, nominally to indicate writing a value.
+   *
+   * @param config Configuration to set
+   */
   public void setConfig(PointPointsetConfig config) {
     if (config == null || config.set_value == null) {
       written = false;
@@ -74,7 +90,7 @@ public abstract class BasicPoint implements AbstractPoint {
     return entry;
   }
 
-  protected abstract boolean validateValue(Object set_value);
+  protected abstract boolean validateValue(Object setValue);
 
   private Entry notWritableStatus() {
     Entry entry = new Entry();
