@@ -2,6 +2,7 @@ import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSou
 import { logger } from '../common/logger';
 import { Device, DevicesResponse, SearchOptions } from './model';
 import { filterDevices } from './DeviceFilter';
+import moment = require('moment');
 
 export class DeviceDataSource extends GraphQLDataSource {
   protected context: any;
@@ -31,9 +32,16 @@ export class DeviceDataSource extends GraphQLDataSource {
     const devices: Device[] = [];
     let n = 1;
     while (n <= count) {
-      const id = `id${n}`;
-      const name = `name${n}`;
-      devices.push({ id, name });
+      const id = `id-${n}`;
+      const name = `name-${n}`;
+      const make: string = `make-${n}`;
+      const model: string = `model-${n}`;
+      const site: string = `site-${n}`;
+      const section: string = `section-${n}`;
+      const lastPayload: string = moment().format('YYYY-MM-DD');
+      const operational: boolean = false;
+      const tags: string[] = [];
+      devices.push({ id, name, make, model, site, section, lastPayload, operational, tags });
       n++;
     }
 

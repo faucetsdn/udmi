@@ -6,14 +6,14 @@ describe('DeviceDataSource.getDevice()', () => {
   const deviceDS = new DeviceDataSource();
   const devices = createDevices(100);
 
-  test('returns all devices batch of devices', async () => {
+  test('returns all devices matching the searchOptions', async () => {
     const searchOptions: SearchOptions = createSearchOptions();
     const expectedResponse = getDevicesResponse(10, 10);
     await expect(deviceDS.getDevices(searchOptions)).resolves.toEqual(expectedResponse);
   });
 
   function getDevicesResponse(count: number, offset: number): DevicesResponse {
-    const filterDevices: Device[] = devices.slice(count, count + offset);
+    const filterDevices: Device[] = devices.slice(offset, offset + count);
     return { devices: filterDevices, totalCount: devices.length };
   }
 });

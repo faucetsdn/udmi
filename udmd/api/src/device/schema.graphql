@@ -31,10 +31,24 @@ type DevicesResponse {
 }
 
 type Device {
-  # the ID of the Device
+  # the ID of the device
   id: ID!
-  # the name pf the Device
+  # the name pf the device
   name: String!
+  # the make of the device
+  make: String
+  # the model of the device
+  model: String
+  # the site where the device is installed
+  site: String
+  # the section within the site where the device is installed
+  section: String
+  # the date of last payload received for the device
+  lastPayload: String
+  # the operational state of the device
+  operational: Boolean
+  # the tags assigned to a device
+  tags: [String!]!
 }
 
 type Query {
