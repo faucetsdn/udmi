@@ -17,6 +17,9 @@ import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.TargetTestingMetadata;
 
+/**
+ * Validate UDMI baseline capabilities.
+ */
 public class BaselineValidator extends SequenceValidator {
 
   public static final String INVALID_STATE = "invalid";
@@ -27,6 +30,9 @@ public class BaselineValidator extends SequenceValidator {
   public static final String BASE_CONFIG_PARSE = "base.config.parse";
   public static final String BASE_CONFIG_APPLY = "base.config.apply";
 
+  /**
+   * Make the required set of points in the config block.
+   */
   @Before
   public void makePoints() {
     deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
@@ -43,9 +49,9 @@ public class BaselineValidator extends SequenceValidator {
   }
 
   private void ensurePointConfig(String target) {
-    String target_point = getTarget(target).target_point;
-    if (!deviceConfig.pointset.points.containsKey(target_point)) {
-      deviceConfig.pointset.points.put(target_point, new PointPointsetConfig());
+    String targetPoint = getTarget(target).target_point;
+    if (!deviceConfig.pointset.points.containsKey(targetPoint)) {
+      deviceConfig.pointset.points.put(targetPoint, new PointPointsetConfig());
     }
   }
 
@@ -53,8 +59,8 @@ public class BaselineValidator extends SequenceValidator {
     if (deviceState.pointset == null || !deviceState.pointset.points.containsKey(pointName)) {
       return false;
     }
-    Value_state value_state = deviceState.pointset.points.get(pointName).value_state;
-    String valueState = value_state == null ? null : value_state.value();
+    Value_state rawState = deviceState.pointset.points.get(pointName).value_state;
+    String valueState = rawState == null ? null : rawState.value();
     boolean equals = Objects.equals(expected, valueState);
     System.err.printf("%s Value state %s equals %s = %s%n",
         getTimestamp(), expected, valueState, equals);
@@ -69,7 +75,8 @@ public class BaselineValidator extends SequenceValidator {
     System.err.printf("%s expecting config %s%n", getTimestamp(), getTimestamp(expectedConfig));
     hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
     hasLogged(BASE_CONFIG_PARSE, Level.INFO);
-    untilTrue(() -> expectedConfig.equals(deviceState.system.last_config), "state last_config match");
+    untilTrue(() -> expectedConfig.equals(deviceState.system.last_config),
+        "state last_config match");
     hasLogged(BASE_CONFIG_APPLY, Level.INFO);
     System.err.printf("%s last_config match %s%n", getTimestamp(), getTimestamp(expectedConfig));
   }
@@ -81,7 +88,8 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     clearLogs();
     Date initialConfig = syncConfig();
-    untilTrue(() -> initialConfig.equals(deviceState.system.last_config), "previous config/state synced");
+    untilTrue(() -> initialConfig.equals(deviceState.system.last_config),
+        "previous config/state synced");
     info("saved last_config " + getTimestamp(initialConfig));
     extraField = "break_json";
     updateConfig();
@@ -110,7 +118,7 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     clearLogs();
-    Date prevConfig = deviceState.system.last_config;
+    final Date prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
     updateConfig();
     hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
@@ -119,11 +127,12 @@ public class BaselineValidator extends SequenceValidator {
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     hasLogged(BASE_CONFIG_PARSE, Level.INFO);
     hasLogged(BASE_CONFIG_APPLY, Level.INFO);
-    Date updatedConfig = deviceState.system.last_config;
+    final Date updatedConfig = deviceState.system.last_config;
     extraField = null;
     updateConfig();
     hasLogged(BASE_CONFIG_RECEIVE, Level.INFO);
-    untilTrue(() -> !deviceState.system.last_config.equals(updatedConfig), "last_config updated again");
+    untilTrue(() -> !deviceState.system.last_config.equals(updatedConfig),
+        "last_config updated again");
     untilTrue(() -> deviceState.system.operational, "system operational");
     untilTrue(() -> !deviceState.system.statuses.containsKey("config"), "statuses missing config");
     hasLogged(BASE_CONFIG_PARSE, Level.INFO);
@@ -163,9 +172,9 @@ public class BaselineValidator extends SequenceValidator {
   }
 
   private TargetTestingMetadata getTarget(String target) {
-    if (deviceMetadata.testing == null ||
-        deviceMetadata.testing.targets == null ||
-        !deviceMetadata.testing.targets.containsKey(target)) {
+    if (deviceMetadata.testing == null
+        || deviceMetadata.testing.targets == null
+        || !deviceMetadata.testing.targets.containsKey(target)) {
       throw new SkipTest(String.format("Missing '%s' target specification", target));
     }
     TargetTestingMetadata testingMetadata = deviceMetadata.testing.targets.get(target);
