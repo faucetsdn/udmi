@@ -1,8 +1,8 @@
 <div>
-  <p class="mat-small">{{ dataSource.length }} Devices</p>
+  <p class="mat-small">{{ devices.length }} Devices</p>
   <span class="spacer"></span>
 </div>
-<table mat-table [dataSource]="dataSource">
+<table mat-table [dataSource]="devices">
   <!-- ID Column -->
   <ng-container matColumnDef="position">
     <th mat-header-cell *matHeaderCellDef>ID</th>
