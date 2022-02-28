@@ -1,23 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { Apollo, gql } from 'apollo-angular';
-
-const GET_DEVICES = gql`
-  query GetDevices {
-    devices {
-      id
-      name
-    }
-  }
-`;
+import { Apollo } from 'apollo-angular';
+import { GET_DEVICES } from './device.gql';
+import { Device } from './device.interface';
 
 @Component({
   templateUrl: './devices.component.html',
   styleUrls: ['./devices.component.scss'],
 })
 export class DevicesComponent implements OnInit {
-  displayedColumns: string[] = ['position', 'name'];
+  displayedColumns: string[] = ['name', 'make', 'model', 'site', 'section', 'lastPayload', 'operational', 'tags'];
   loading: boolean = true;
-  devices: any[] = []; // TODO:: replace with proper model
+  devices: Device[] = [];
 
   constructor(private apollo: Apollo) {}
 
