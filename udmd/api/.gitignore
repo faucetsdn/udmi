@@ -8,7 +8,7 @@ npm-debug.log
 # Visual Studio Code
 .vscode
 
-# jest
+# Jest
 /coverage
 
 # System files
