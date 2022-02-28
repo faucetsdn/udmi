@@ -124,13 +124,13 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 });
 
 function udmi_query_event(attributes, msgObject) {
-  if (attributes.subFolder == 'state') {
-    return udmi_query_state(attributes);
+  if (attributes.subFolder == 'states') {
+    return udmi_query_states(attributes);
   }
   throw 'Unknown query type ' + attributes.subFolder;
 }
 
-function udmi_query_state(attributes) {
+function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
   const cloudRegion = attributes.cloudRegion || DEFAULT_CLOUD_REGION;
   const registryId = attributes.deviceRegistryId;
@@ -143,7 +143,7 @@ function udmi_query_state(attributes) {
     deviceId
   );
 
-  console.log('iot query state', formattedName)
+  console.log('iot query states', formattedName)
 
   const request = {
     name: formattedName
@@ -153,7 +153,7 @@ function udmi_query_state(attributes) {
     const stateBinaryData = deviceData[0].state.binaryData;
     const stateString = stateBinaryData.toString();
     const msgObject = JSON.parse(stateString);
-    return process_state_update(attributes, msgObject);
+    return process_states_update(attributes, msgObject);
   });
 }
 
@@ -163,10 +163,10 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  return process_state_update(attributes, msgObject);
+  return process_states_update(attributes, msgObject);
 });
 
-function process_state_update(attributes, msgObject) {
+function process_states_update(attributes, msgObject) {
   let promises = [];
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
