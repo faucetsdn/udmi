@@ -8,7 +8,7 @@ The project uses an Angular Front End and a GraphQL API Service to get data and 
 
 1.  In order to be able to run both sub projects in parallel, you will need to install npm-run-all
     ```
-    npm install -g npm-run-all`
+    npm install -g npm-run-all
     ```
 
 2.  Build the sub projects
