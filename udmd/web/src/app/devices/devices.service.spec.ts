@@ -3,7 +3,6 @@ import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/tes
 import { GraphQLModule } from '../graphql/graphql.module';
 import { DevicesResponse, GET_DEVICES } from './device.gql';
 import { DevicesService } from './devices.service';
-import { addTypenameToDocument } from '@apollo/client/utilities';
 
 describe('DevicesService', () => {
   let service: DevicesService;
@@ -25,7 +24,7 @@ describe('DevicesService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should return the devices', (done) => {
+  it('should return the devices', () => {
     const mockDevicesResponse: DevicesResponse = {
       devices: [
         {
@@ -46,13 +45,12 @@ describe('DevicesService', () => {
     // Make some assertion about the result for once it's fulfilled.
     service.getDevices().subscribe(({ data }) => {
       expect(data.devices.totalCount).toEqual(1);
-      done();
     });
 
     // The following `expectOne()` will match the operation's document.
     // If no requests or multiple requests matched that document
     // `expectOne()` would throw.
-    const op = controller.expectOne(addTypenameToDocument(GET_DEVICES));
+    const op = controller.expectOne(GET_DEVICES);
 
     // Assert the correct search options were sent.
     expect(op.operation.variables).toEqual({
