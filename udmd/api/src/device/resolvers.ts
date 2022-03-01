@@ -1,7 +1,7 @@
 export const resolvers = {
   Query: {
-    devices: (_, {}, { dataSources: { deviceDS } }) => {
-      return deviceDS.getDevices();
+    devices: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getDevices(searchOptions);
     },
   },
 };
