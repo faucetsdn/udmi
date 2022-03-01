@@ -1,0 +1,28 @@
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  .mat-button-base {
+    margin-left: 8px;
+    min-width: unset;
+  }
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.drop-down-icon {
+  margin-right: -10px;
+}
+
+.title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.active {
+  background: rgba(0, 0, 0, 0.2);
+}

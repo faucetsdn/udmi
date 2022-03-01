@@ -1,5 +1,5 @@
 {
-  "name": "dmc-web",
+  "name": "udmd-web",
   "version": "0.0.0",
   "description": "UDMI Device Management Console UI",
   "author": "Buildings IOT",
@@ -15,17 +15,22 @@
   },
   "private": true,
   "lint-staged": {
-    "src/**/*.{ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
+    "src/**/*.{html,ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   },
   "dependencies": {
     "@angular/animations": "~13.2.0",
+    "@angular/cdk": "^13.2.4",
     "@angular/common": "~13.2.0",
     "@angular/compiler": "~13.2.0",
     "@angular/core": "~13.2.0",
     "@angular/forms": "~13.2.0",
-    "@angular/platform-browser-dynamic": "~13.2.0",
+    "@angular/material": "^13.2.4",
     "@angular/platform-browser": "~13.2.0",
+    "@angular/platform-browser-dynamic": "~13.2.0",
     "@angular/router": "~13.2.0",
+    "@apollo/client": "^3.5.9",
+    "apollo-angular": "^3.0.0",
+    "graphql": "^16.3.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"

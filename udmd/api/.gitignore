@@ -1,9 +1,14 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # Node
+.npm
 /node_modules
+npm-debug.log
 
-# jest
+# Visual Studio Code
+.vscode
+
+# Jest
 /coverage
 
 # System files
