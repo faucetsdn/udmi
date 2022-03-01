@@ -7,8 +7,12 @@ const admin = require('firebase-admin');
 const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
-const REFLECT_REGISTRY = "UDMS-REFLECT";
+const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const DEFAULT_CLOUD_REGION = 'us-central1';
+const UDMI_VERSION = '1';
+const EVENT_TYPE = 'event';
+const CONFIG_TYPE = 'config';
+const STATE_TYPE = 'state';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -17,19 +21,25 @@ const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
 });
 
+function currentTimestamp() {
+  return new Date().toJSON();
+}
+
 function recordMessage(attributes, message) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const subType = attributes.subType || 'events';
+  const subType = attributes.subType || EVENT_TYPE;
   const subFolder = attributes.subFolder || 'unknown';
-
+  const timestamp = (message && message.timestamp) || currentTimestamp();
   const promises = [];
+  const collectionType = subType + 's';
 
-  const timestamp = message.timestamp || new Date().toJSON();
-  message.timestamp = timestamp;
+  if (message) {
+    message.timestamp = timestamp;
+    message.version = message.version || UDMI_VERSION;
+  }
 
-  const messageStr = JSON.stringify(message);
-  console.log('record', registryId, deviceId, subType, subFolder, messageStr);
+  console.log('record', registryId, deviceId, subType, subFolder, message);
 
   const reg_doc = db.collection('registries').doc(registryId);
   promises.push(reg_doc.set({
@@ -39,11 +49,14 @@ function recordMessage(attributes, message) {
   promises.push(dev_doc.set({
     'updated': timestamp
   }, { merge: true }));
-  const config_doc = dev_doc.collection(subType).doc(subFolder);
-  promises.push(config_doc.set(message));
+  const config_doc = dev_doc.collection(collectionType).doc(subFolder);
+  if (message) {
+    promises.push(config_doc.set(message));
+  } else {
+    promises.push(config_doc.delete());
+  }
 
-  const commandFolder = `devices/${deviceId}/${subFolder}/${subType}`;
-
+  const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
 
   return promises;
@@ -74,12 +87,12 @@ function sendCommand(registryId, deviceId, subFolder, message) {
 
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
-  const subType = attributes.subType || 'events';
+  const subType = attributes.subType || EVENT_TYPE;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  if (subType != 'events') {
+  if (subType != EVENT_TYPE) {
     return null;
   }
 
@@ -111,13 +124,13 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 });
 
 function udmi_query_event(attributes, msgObject) {
-  if (attributes.subFolder == 'state') {
-    return udmi_query_state(attributes);
+  if (attributes.subFolder == 'states') {
+    return udmi_query_states(attributes);
   }
   throw 'Unknown query type ' + attributes.subFolder;
 }
 
-function udmi_query_state(attributes) {
+function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
   const cloudRegion = attributes.cloudRegion || DEFAULT_CLOUD_REGION;
   const registryId = attributes.deviceRegistryId;
@@ -130,7 +143,7 @@ function udmi_query_state(attributes) {
     deviceId
   );
 
-  console.log('iot query state', formattedName)
+  console.log('iot query states', formattedName)
 
   const request = {
     name: formattedName
@@ -140,7 +153,7 @@ function udmi_query_state(attributes) {
     const stateBinaryData = deviceData[0].state.binaryData;
     const stateString = stateBinaryData.toString();
     const msgObject = JSON.parse(stateString);
-    return process_state_update(attributes, msgObject);
+    return process_states_update(attributes, msgObject);
   });
 }
 
@@ -150,18 +163,19 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  return process_state_update(attributes, msgObject);
+  return process_states_update(attributes, msgObject);
 });
 
-function process_state_update(attributes, msgObject) {
+function process_states_update(attributes, msgObject) {
   let promises = [];
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/update/state`;
-  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
+  const commandFolder = `devices/${deviceId}/update/states`;
 
-  attributes.subType = 'states';
+  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
+  
+  attributes.subType = STATE_TYPE;
   for (var block in msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
@@ -185,13 +199,14 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
 
+  console.log('udmi_config', registryId, deviceId, subFolder, msgString);
   if (!msgString) {
-    console.log('udmi_config abort', registryId, deviceId, subFolder, msgString);
+    console.warn('udmi_config abort', registryId, deviceId, subFolder, msgString);
     return null;
   }
   const msgObject = JSON.parse(msgString);
 
-  attributes.subType = 'configs';
+  attributes.subType = CONFIG_TYPE;
 
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
@@ -206,7 +221,13 @@ function update_device_config(message, attributes) {
   const deviceId = attributes.deviceId;
   const version = 0;
 
-  const msgString = JSON.stringify(message);
+  const extraField = message.system && message.system.extra_field;
+  const normalJson = extraField !== 'break_json';
+  if (!normalJson) {
+    console.log('breaking json for test');
+  }
+  const msgString = normalJson ? JSON.stringify(message) :
+        '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
 
   const formattedName = iotClient.devicePath(
@@ -222,7 +243,7 @@ function update_device_config(message, attributes) {
     versionToUpdate: version,
     binaryData: binaryData
   };
-  const commandFolder = `devices/${deviceId}/update/config`;
+  const commandFolder = `devices/${deviceId}/update/configs`;
 
   return iotClient
     .modifyCloudToDeviceConfig(request)

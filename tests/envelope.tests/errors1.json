@@ -1,5 +1,6 @@
 {
   "deviceRegistryId": "test/registry",
   "deviceNumId": "921302198324X",
-  "deviceId": "fcu-1"
+  "deviceId": "fcu-1",
+  "subType": 5
 }

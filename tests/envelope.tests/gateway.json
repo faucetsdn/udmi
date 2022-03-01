@@ -3,5 +3,6 @@
   "deviceRegistryId": "NOXIE-ROXIE",
   "deviceNumId": "921302198324",
   "deviceId": "LTGW-2",
-  "subFolder": "pointset"
+  "subFolder": "pointset",
+  "subType": "config"
 }

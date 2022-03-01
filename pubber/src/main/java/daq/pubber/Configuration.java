@@ -1,6 +1,7 @@
 package daq.pubber;
 
 /**
+ * General bucket of pubber configuration information.
  */
 public class Configuration {
   public String bridgeHostname = "mqtt.googleapis.com";
