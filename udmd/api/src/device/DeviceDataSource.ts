@@ -1,6 +1,6 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
 import { Device, DevicesResponse, SearchOptions } from './model';
-import { filterDevices } from './DeviceFilter';
+import { batchDevices } from './DeviceFilter';
 
 export class DeviceDataSource extends GraphQLDataSource {
   protected context: any;
@@ -22,7 +22,7 @@ export class DeviceDataSource extends GraphQLDataSource {
   }
 
   async getDevices(searchOptions: SearchOptions): Promise<DevicesResponse> {
-    const devices: Device[] = filterDevices(this.devices, searchOptions);
+    const devices: Device[] = batchDevices(this.devices, searchOptions);
     return { devices, totalCount: this.devices.length };
   }
 

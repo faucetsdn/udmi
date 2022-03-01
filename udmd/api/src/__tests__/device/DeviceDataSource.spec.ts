@@ -1,4 +1,4 @@
-import { Device, DevicesResponse, SearchOptions, SORT_DIRECTION } from '../../device/model';
+import { Device, DevicesResponse, SearchOptions } from '../../device/model';
 import { DeviceDataSource } from '../../device/DeviceDataSource';
 import { createDevices, createSearchOptions } from './data';
 

@@ -1,6 +1,6 @@
 input SearchOptions {
   # the number of records to retrieve
-  batchSize: Int
+  batchSize: Int!
   # the records to start at
   offset: Int
   # the search options
@@ -13,7 +13,7 @@ input SortOptions {
   # the direction the data should be sorted
   direction: SORT_DIRECTION
   # the field that the sorting should be applied to
-  field: String
+  field: String!
 }
 
 enum SORT_DIRECTION {
