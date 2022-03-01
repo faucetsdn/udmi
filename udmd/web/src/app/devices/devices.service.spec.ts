@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ApolloTestingController, ApolloTestingModule, APOLLO_TESTING_CACHE } from 'apollo-angular/testing';
+import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { GraphQLModule } from '../graphql/graphql.module';
 import { DevicesResponse, GET_DEVICES } from './device.gql';
 import { DevicesService } from './devices.service';
@@ -12,12 +12,6 @@ describe('DevicesService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ApolloTestingModule, GraphQLModule],
-      providers: [
-        {
-          provide: APOLLO_TESTING_CACHE,
-          useValue: { addTypename: true },
-        },
-      ],
     });
     service = TestBed.inject(DevicesService);
     controller = TestBed.inject(ApolloTestingController);
