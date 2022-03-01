@@ -1,4 +1,4 @@
-import { SearchOptions } from '../../device/model';
+import { SearchOptions, SORT_DIRECTION } from '../../device/model';
 import { Device } from '../../device/model';
 import { batchDevices } from '../../device/DeviceFilter';
 import { createDevices, createSearchOptions } from './data';
@@ -18,7 +18,6 @@ describe('DeviceFilter.filterDevices', () => {
     const offset = 20;
 
     const searchOptions: SearchOptions = createSearchOptions(batchSize, offset);
-
     expect(batchDevices(devices, searchOptions)).toEqual(devices.slice(offset, offset + batchSize));
   });
 

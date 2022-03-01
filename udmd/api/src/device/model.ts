@@ -5,9 +5,9 @@ export interface DevicesResponse {
 
 export interface SearchOptions {
   batchSize: number;
-  offset: number;
-  sortOptions: SortOptions;
-  filter: String;
+  offset?: number;
+  sortOptions?: SortOptions;
+  filter?: string;
 }
 
 export interface Device {
@@ -24,7 +24,7 @@ export interface Device {
 
 export interface SortOptions {
   direction: SORT_DIRECTION;
-  field: String;
+  field: string;
 }
 
 export enum SORT_DIRECTION {
