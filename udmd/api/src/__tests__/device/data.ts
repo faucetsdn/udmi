@@ -1,5 +1,4 @@
 import { Device, SearchOptions, SORT_DIRECTION } from '../../device/model';
-import moment = require('moment');
 
 export function createDevices(count: number): Device[] {
   const devices: Device[] = [];
@@ -11,7 +10,7 @@ export function createDevices(count: number): Device[] {
     const model: string = `model-${n}`;
     const site: string = `site-${n}`;
     const section: string = `section-${n}`;
-    const lastPayload: string = moment().format('YYYY-MM-DD');
+    const lastPayload: string = `2022-08-30`;
     const operational: boolean = false;
     const tags: string[] = [];
     devices.push({ id, name, make, model, site, section, lastPayload, operational, tags });
