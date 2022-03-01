@@ -1,0 +1,15 @@
+{
+  "name": "udmd",
+  "version": "1.0.0",
+  "description": "simple package allowing us to run both sub projects with a single command",
+  "scripts": {
+    "web": "npm --prefix web/ run start",
+    "api": "npm --prefix api/ run dev",
+    "all": "npm-run-all --parallel api web"
+  },
+  "author": "Buildings IOT",
+  "license": "ISC",
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}
