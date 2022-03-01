@@ -17,6 +17,6 @@ The project uses an Angular Front End and a GraphQL API Service to get data and 
     ```
 3.  Run the sub projects in parallel, UI will bind to port 4200 and API will bind to port 4300
     ```
-    npm-run-all all
+    npm-run-all start-all
     ```
 4.  Navigate to [http://localhost:4200/](http://localhost:4200/) to see the app. The app will automatically reload if you change any of the source files.
