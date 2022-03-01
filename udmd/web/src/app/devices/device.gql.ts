@@ -5,21 +5,24 @@ const fragments = {
     fragment Device on Device {
       id
       name
-      # make
-      # model
-      # site
-      # section
-      # lastPayload
-      # operational
-      # tags
+      make
+      model
+      site
+      section
+      lastPayload
+      operational
+      tags
     }
   `,
 };
 
 export const GET_DEVICES = gql`
-  query GetDevices {
-    devices {
-      ...Device
+  query GetDevices($searchOptions: SearchOptions!) {
+    devices(searchOptions: $searchOptions) {
+      devices {
+        ...Device
+      }
+      totalCount
     }
   }
   ${fragments.device}
