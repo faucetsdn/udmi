@@ -1,7 +1,6 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
 import { Device, DevicesResponse, SearchOptions } from './model';
 import { filterDevices } from './DeviceFilter';
-import moment = require('moment');
 
 export class DeviceDataSource extends GraphQLDataSource {
   protected context: any;
