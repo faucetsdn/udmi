@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Apollo } from 'apollo-angular';
-import { GET_DEVICES } from './device.gql';
-import { Device, SearchOptions } from './device.interface';
+import { Device } from './device.interface';
 import { Observable, of } from 'rxjs';
-import { shareReplay, pluck } from 'rxjs/operators';
+import { pluck } from 'rxjs/operators';
+import { DevicesService } from './devices.service';
 
 @Component({
   templateUrl: './devices.component.html',
@@ -16,27 +15,13 @@ export class DevicesComponent implements OnInit {
   devices$: Observable<Device[]> = of([]);
   totalCount$: Observable<number> = of(0);
 
-  constructor(private apollo: Apollo) {}
+  constructor(private devicesService: DevicesService) {}
 
   ngOnInit() {
-    const source$ = this.getDevices();
+    const source$ = this.devicesService.getDevices();
 
     this.loading$ = source$.pipe(pluck('loading'));
     this.devices$ = source$.pipe(pluck('data', 'devices', 'devices'));
     this.totalCount$ = source$.pipe(pluck('data', 'devices', 'totalCount'));
-  }
-
-  getDevices() {
-    return this.apollo
-      .watchQuery<any>({
-        query: GET_DEVICES,
-        variables: {
-          searchOptions: <SearchOptions>{
-            batchSize: 10, //TODO:: bind to input from user
-            offset: 0, //TODO:: same ^^
-          },
-        },
-      })
-      .valueChanges.pipe(shareReplay(1));
   }
 }

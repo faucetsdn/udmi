@@ -21,4 +21,4 @@ import { InMemoryCache } from '@apollo/client/core';
     },
   ],
 })
-export class GraphqlModule {}
+export class GraphQLModule {}
