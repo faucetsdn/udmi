@@ -31,7 +31,7 @@ const fragments = {
 };
 
 export const GET_DEVICES = gql<Response, Variables>`
-  query GetDevices($searchOptions: SearchOptions) {
+  query GetDevices($searchOptions: SearchOptions!) {
     devices(searchOptions: $searchOptions) {
       devices {
         ...Device
