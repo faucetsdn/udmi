@@ -32,9 +32,9 @@ variable "tf-state-storage-class" {
   description = "The storage class of the Storage Bucket to create to store the Terraform state"
 }
 
-variable "udmi_access_group" {
+variable "gcp_access_group" {
   type        = string
-  description = "Access group for the UDMI cloud infrastructure"
+  description = "Access group for project-wide cloud infrastructure"
 }
 
 # define log level

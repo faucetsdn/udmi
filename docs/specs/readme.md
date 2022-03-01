@@ -16,3 +16,4 @@
 - [Subblocks](subblocks.md) (core-to-apps API)
 - [Site Model](site_model.md)
 - [Tech Stack](tech_stack.md)
+- [Log/Status Entries](entries.md)

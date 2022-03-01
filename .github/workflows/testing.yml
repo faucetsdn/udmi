@@ -46,6 +46,7 @@ jobs:
         run: cd udms && npm run e2e 
 
   udmi:
+    name: Sequence tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -65,7 +66,7 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          fgrep 'RESULT ' /tmp/test_log.txt > /tmp/results.txt
+          fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/results.txt
           diff /tmp/results.txt etc/sequence.out
       - name: validation logs
         if: ${{ always() }}

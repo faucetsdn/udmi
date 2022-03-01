@@ -25,12 +25,9 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FirestoreDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -49,7 +46,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -85,7 +81,7 @@ public class Validator {
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
-  public static final String STATE_QUERY_TOPIC = "query/state";
+  public static final String STATES_QUERY_TOPIC = "query/states";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final String CONFIG_PREFIX = "config_";
@@ -270,7 +266,7 @@ public class Validator {
 
   private void sendInitializationQuery(MessagePublisher client) {
     System.err.println("Sending initialization query messages");
-    client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {

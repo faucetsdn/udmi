@@ -19,13 +19,13 @@ resource "google_cloudiot_registry" "udms_reflect_cloudiot_registry" {
 resource "google_project_iam_member" "udmi_cloudiot_viewer" {
   project = var.gcp_project_id
   role    = "roles/cloudiot.viewer"
-  member  = var.udmi_access_group
+  member  = var.gcp_access_group
 }
 
 resource "google_project_iam_member" "udmi_cloudiot_provisioner" {
   project = var.gcp_project_id
   role    = "roles/cloudiot.provisioner"
-  member  = var.udmi_access_group
+  member  = var.gcp_access_group
 }
 
 resource "google_pubsub_topic" "udms_target_pubsub_event_topic" {
@@ -73,6 +73,6 @@ resource "google_pubsub_subscription_iam_binding" "udms_reflect_pubsub_event_sub
   project      = var.gcp_project_id
   subscription = "udmi_reflect-subscription"
   role         = "roles/pubsub.subscriber"
-  members      = ["${var.udmi_access_group}"]
+  members      = ["${var.gcp_access_group}"]
   depends_on   = [google_pubsub_subscription.udms_reflect_pubsub_event_subscription]
 }
