@@ -13,7 +13,7 @@ The project uses an Angular Front End and a GraphQL API Service to get data and 
 
 2.  Build the sub projects
     ```
-    npm-run-all buill-all
+    npm-run-all build-all
     ```
 3.  Run the sub projects in parallel, UI will bind to port 4200 and API will bind to port 4300
     ```
