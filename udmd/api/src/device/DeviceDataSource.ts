@@ -1,5 +1,4 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { logger } from '../common/logger';
 import { Device, DevicesResponse, SearchOptions } from './model';
 import { filterDevices } from './DeviceFilter';
 import moment = require('moment');
