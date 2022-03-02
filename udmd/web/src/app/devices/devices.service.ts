@@ -1,25 +1,38 @@
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
-import { GET_DEVICES } from './device.gql';
-import { shareReplay } from 'rxjs/operators';
+import { DevicesQueryResponse, DevicesQueryVariables, GET_DEVICES } from './device.gql';
+import { QueryRef } from 'apollo-angular';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DevicesService {
+  devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
+
   constructor(private apollo: Apollo) {}
 
-  getDevices() {
-    return this.apollo
-      .watchQuery({
-        query: GET_DEVICES,
-        variables: {
-          searchOptions: {
-            batchSize: 10, //TODO:: bind to input from user
-            offset: 0, //TODO:: same ^^
-          },
+  getDevices(offset: number = 0, limit: number = 10) {
+    this.devicesQuery = this.apollo.watchQuery({
+      notifyOnNetworkStatusChange: true,
+      query: GET_DEVICES,
+      fetchPolicy: 'network-only',
+      variables: {
+        searchOptions: {
+          offset,
+          batchSize: limit,
         },
-      })
-      .valueChanges.pipe(shareReplay(1));
+      },
+    });
+
+    return this.devicesQuery.valueChanges;
+  }
+
+  fetchMore(offset: number = 0, limit: number = 10) {
+    this.devicesQuery.refetch({
+      searchOptions: {
+        offset,
+        batchSize: limit,
+      },
+    });
   }
 }

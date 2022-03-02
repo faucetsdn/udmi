@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Device } from './device.interface';
-import { Observable, of } from 'rxjs';
-import { pluck } from 'rxjs/operators';
 import { DevicesService } from './devices.service';
 
 @Component({
@@ -10,18 +8,21 @@ import { DevicesService } from './devices.service';
 })
 export class DevicesComponent implements OnInit {
   displayedColumns: string[] = ['name', 'make', 'model', 'site', 'section', 'lastPayload', 'operational', 'tags'];
-
-  loading$: Observable<boolean> = of(false);
-  devices$: Observable<Device[]> = of([]);
-  totalCount$: Observable<number> = of(0);
+  loading: boolean = false;
+  devices: Device[] = [];
+  totalCount: number = 0;
 
   constructor(private devicesService: DevicesService) {}
 
   ngOnInit() {
-    const source$ = this.devicesService.getDevices();
+    this.devicesService.getDevices().subscribe(({ data, loading }) => {
+      this.loading = loading;
+      this.devices = data.devices?.devices;
+      this.totalCount = data.devices?.totalCount;
+    });
+  }
 
-    this.loading$ = source$.pipe(pluck('loading'));
-    this.devices$ = source$.pipe(pluck('data', 'devices', 'devices'));
-    this.totalCount$ = source$.pipe(pluck('data', 'devices', 'totalCount'));
+  fetchMore() {
+    this.devicesService.fetchMore(10);
   }
 }

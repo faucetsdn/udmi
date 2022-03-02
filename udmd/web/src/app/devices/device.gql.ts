@@ -6,11 +6,11 @@ export type DevicesResponse = {
   totalCount: number;
 };
 
-type Response = {
+export type DevicesQueryResponse = {
   devices: DevicesResponse;
 };
 
-type Variables = {
+export type DevicesQueryVariables = {
   searchOptions: SearchOptions;
 };
 
@@ -30,7 +30,7 @@ const fragments = {
   `,
 };
 
-export const GET_DEVICES = gql<Response, Variables>`
+export const GET_DEVICES = gql<DevicesQueryResponse, DevicesQueryVariables>`
   query GetDevices($searchOptions: SearchOptions!) {
     devices(searchOptions: $searchOptions) {
       devices {
