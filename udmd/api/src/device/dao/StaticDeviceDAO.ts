@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { Device, SearchOptions, SORT_DIRECTION } from '../model';
 import { DeviceDAO } from './DeviceDAO';
 
@@ -51,7 +52,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       const model: string = n % 3 == 0 ? `AAAA-${n}` : `BBBB-${n}`;
       const site: string = `SG-SIN-MBC${n}`;
       const section: string = `SIN-MBC${n}`;
-      const lastPayload: string = '2022-08-30';
+      const lastPayload: string = new Date(new Date().getTime() - randomInt(1000000000)).toISOString();
       const operational: boolean = n % 3 == 0 ? false : true;
       const tags: string[] = [];
       devices.push({ id, name, make, model, site, section, lastPayload, operational, tags });
