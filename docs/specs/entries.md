@@ -9,10 +9,13 @@ that can be properly handled in backend system processing.
 
 General indication of the severity of the message, using standard categorizations:
 
-* **ERROR**: Something bad that needs immediate attention.
-* **WARNING**: Something is not right that should be investigated.
-* **INFO**: Just information about all that is well in the world.
-* **DEBUG**: Stream of consciousness useful for detailed debugging.
+| Level | Label | Description |
+|---|---|---|
+| 100 | DEBUG | Stream of consciousness useful for detailed debugging. |
+| 200 | INFO | Just information about all that is well in the world. |
+| 300 | NOTICE | Normal but significant events, such as start up, shut down, or a configuration change. |
+| 400 | WARNING | Something is not right that should be investigated. |
+| 500 | ERROR | Something bad that needs immediate attention. |
 
 ## Categories
 
