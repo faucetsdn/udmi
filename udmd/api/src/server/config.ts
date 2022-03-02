@@ -11,7 +11,7 @@ export interface Configuration {
 export function loadConfig(): Configuration {
   return {
     nodeEnv: process.env.NODE_ENV,
-    database: process.env.DATABASE,
+    database: process.env.DATABASE || 'STATIC',
     projectId: process.env.PROJECT_ID,
     logLevel: process.env.LOG_LEVEL,
   };
@@ -20,7 +20,7 @@ export function loadConfig(): Configuration {
 export function logConfig(): void {
   const config = loadConfig();
   logger.info(`Running the API service with the following configuration:`);
-  logger.info(`  environment: ${config.nodeEnv}`);
+  logger.info(`  Environment: ${config.nodeEnv}`);
   logger.info(`     Database: ${config.database}`);
   logger.info(`   Project ID: ${config.projectId}`);
   logger.info(`    Log Level: ${config.logLevel}`);

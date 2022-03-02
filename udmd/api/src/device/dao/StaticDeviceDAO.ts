@@ -19,8 +19,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       throw new Error('A batch size greater than zero must be provided.');
     }
 
-    const deviceCount = this.devices.length;
-    if (filter.offset > deviceCount) {
+    if (filter.offset > this.devices.length) {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 

@@ -58,7 +58,7 @@ describe('config.logConfig', () => {
     logConfig();
     expect(logger.info).toHaveBeenCalledTimes(5);
     expect(logger.info).toHaveBeenNthCalledWith(1, 'Running the API service with the following configuration:');
-    expect(logger.info).toHaveBeenNthCalledWith(2, '  environment: test');
+    expect(logger.info).toHaveBeenNthCalledWith(2, '  Environment: test');
     expect(logger.info).toHaveBeenNthCalledWith(3, '     Database: STATIC');
     expect(logger.info).toHaveBeenNthCalledWith(4, '   Project ID: test');
     expect(logger.info).toHaveBeenNthCalledWith(5, '    Log Level: debug');
