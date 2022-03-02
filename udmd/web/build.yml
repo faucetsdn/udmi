@@ -18,21 +18,11 @@ sonarqube-scan:
   rules:
     - when: never
 
-
-build-node:
-  script:
-    - echo "Building node project"
-    - npm install
-    - npm run build
-  artifacts:
-    paths:
-      - build/
-
 scan-docker:
   rules:
     - when: never
 
 publish-docker:
-  variables:
-    VERSION: $CI_PIPELINE_IID
+  rules:
+    - when: never
 
