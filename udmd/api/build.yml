@@ -1,5 +1,5 @@
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: api-${CI_COMMIT_REF_SLUG}
   paths:
     - udmd/api/node_modules/
 
