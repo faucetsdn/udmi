@@ -11,12 +11,10 @@ export async function getDefaultContextProcessor(): Promise<ContextFunction<Expr
 }
 
 export class ContextProcessor {
-  constructor() {
-  }
+  constructor() {}
 
   // This function is called on every incoming graphql request.
   public async processRequest({ req }: ExpressContext): Promise<Context<any>> {
-
     // initialize the context
     const context: Context<any> = {};
 

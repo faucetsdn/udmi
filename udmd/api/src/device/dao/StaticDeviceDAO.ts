@@ -23,7 +23,10 @@ export class StaticDeviceDAO implements DeviceDAO {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 
-    this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+    if (filter.sortOptions) {
+      this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+    }
+
     return this.devices.slice(filter.offset, filter.offset + filter.batchSize);
   }
 

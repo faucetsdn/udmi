@@ -4,7 +4,7 @@ import { DocumentNode } from 'graphql';
 import MockDeviceDataSource from './MockDeviceDataSource';
 import { typeDefs } from '../../server/schema';
 import { resolvers } from '../../device/resolvers';
-import { getDefaultContextProcessor } from '../../common/context';
+import { getDefaultContextProcessor } from '../../server/context';
 
 let testServer: ApolloServer;
 const context = getDefaultContextProcessor();
