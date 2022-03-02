@@ -1,19 +1,22 @@
-import { Device, DevicesResponse, SearchOptions } from '../../device/model';
+import { DevicesResponse, SearchOptions } from '../../device/model';
 import { DeviceDataSource } from '../../device/DeviceDataSource';
-import { createDevices, createSearchOptions } from './data';
+import { createSearchOptions } from './data';
+import { DeviceDAO } from '../../device/dao/DeviceDAO';
+import { StaticDeviceDAO } from '../../device/dao/StaticDeviceDAO';
+
+const deviceDAO: DeviceDAO = new StaticDeviceDAO();
 
 describe('DeviceDataSource.getDevice()', () => {
-  const deviceDS = new DeviceDataSource();
-  const devices = createDevices(100);
+  const deviceDS = new DeviceDataSource(deviceDAO);
+  const searchOptions: SearchOptions = createSearchOptions();
 
-  test('returns all devices matching the searchOptions', async () => {
-    const searchOptions: SearchOptions = createSearchOptions();
-    const expectedResponse = getDevicesResponse(10, 10);
-    await expect(deviceDS.getDevices(searchOptions)).resolves.toEqual(expectedResponse);
+  test('returns a set of devices', async () => {
+    const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
+    await expect(result.devices).not.toBe([]);
   });
 
-  function getDevicesResponse(count: number, offset: number): DevicesResponse {
-    const filterDevices: Device[] = devices.slice(offset, offset + count);
-    return { devices: filterDevices, totalCount: devices.length };
-  }
+  test('returns a total count', async () => {
+    const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
+    await expect(result.totalCount).not.toBe(0);
+  });
 });
