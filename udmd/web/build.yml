@@ -1,0 +1,38 @@
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - udmd/web/node_modules/
+
+include:
+  - project: 'buildings-iot/templates/cicd_pipelines'
+    ref: main
+    file: node.yml
+
+stages:
+  - build
+  - test
+  - static-scan
+  - publish-docker
+
+sonarqube-scan:
+  rules:
+    - when: never
+
+
+build-node:
+  script:
+    - echo "Building node project"
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - build/
+
+scan-docker:
+  rules:
+    - when: never
+
+publish-docker:
+  variables:
+    VERSION: $CI_PIPELINE_IID
+
