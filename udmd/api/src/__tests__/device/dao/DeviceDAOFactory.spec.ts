@@ -7,13 +7,11 @@ import { FirestoreDeviceDAO } from '../../../device/dao/FirestoreDeviceDAO';
 describe('DeviceDAOFactory.getDeviceDAO', () => {
   test('returns a static device dao', () => {
     process.env.DATABASE = 'STATIC';
-    const deviceDAO: DeviceDAO = getDeviceDAO(loadConfig());
-    expect(deviceDAO).toBeInstanceOf(StaticDeviceDAO);
+    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(StaticDeviceDAO);
   });
 
   test('returns a firestore device dao', () => {
     process.env.DATABASE = 'FIRESTORE';
-    const deviceDAO: DeviceDAO = getDeviceDAO(loadConfig());
-    expect(deviceDAO).toBeInstanceOf(FirestoreDeviceDAO);
+    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(FirestoreDeviceDAO);
   });
 });
