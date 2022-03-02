@@ -7,15 +7,8 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
     super();
   }
 
-  protected context: any;
-
   public initialize(config) {
     super.initialize(config);
-    this.context = {};
-  }
-
-  protected getContext(): any {
-    return this.context;
   }
 
   async getDevices(searchOptions: SearchOptions): Promise<DevicesResponse> {
