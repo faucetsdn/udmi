@@ -45,11 +45,12 @@ public class Discovery {
     @JsonPropertyDescription("Major version of the UDMI schema")
     public Discovery.Version version;
     /**
-     * 
+     * Collection of address families identifying the scan target
      * (Required)
      * 
      */
     @JsonProperty("families")
+    @JsonPropertyDescription("Collection of address families identifying the scan target")
     public Object families;
 
     @Override
