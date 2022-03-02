@@ -19,7 +19,7 @@ export class DevicesComponent implements OnInit {
   constructor(private devicesService: DevicesService) {}
 
   ngOnInit() {
-    this.devicesService.getDevices().subscribe(({ data, loading }) => {
+    this.devicesService.getDevices(this.currentPage * this.pageSize, this.pageSize).subscribe(({ data, loading }) => {
       this.loading = loading;
       this.devices = data.devices?.devices;
       this.totalCount = data.devices?.totalCount;

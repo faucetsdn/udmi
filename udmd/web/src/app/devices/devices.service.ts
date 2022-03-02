@@ -11,15 +11,15 @@ export class DevicesService {
 
   constructor(private apollo: Apollo) {}
 
-  getDevices(offset: number = 0, limit: number = 10) {
+  getDevices(offset: number = 0, batchSize: number = 10) {
     this.devicesQuery = this.apollo.watchQuery({
-      notifyOnNetworkStatusChange: true,
+      notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
       query: GET_DEVICES,
       fetchPolicy: 'network-only',
       variables: {
         searchOptions: {
           offset,
-          batchSize: limit,
+          batchSize,
         },
       },
     });
@@ -27,11 +27,11 @@ export class DevicesService {
     return this.devicesQuery.valueChanges;
   }
 
-  fetchMore(offset: number = 0, limit: number = 10) {
+  fetchMore(offset: number = 0, batchSize: number = 10) {
     this.devicesQuery.refetch({
       searchOptions: {
         offset,
-        batchSize: limit,
+        batchSize,
       },
     });
   }

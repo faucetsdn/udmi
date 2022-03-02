@@ -1,10 +1,7 @@
 .table-controls {
   display: flex;
   align-items: center;
-
-  .spacer {
-    flex: 1 1 auto;
-  }
+  justify-content: space-between;
 
   .mat-paginator {
     display: inline-block;
