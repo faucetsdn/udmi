@@ -1,3 +1,18 @@
+.table-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .mat-paginator {
+    display: inline-block;
+    background: transparent;
+  }
+
+  .mat-paginator-container {
+    padding-right: 0;
+  }
+}
+
 .mat-table {
   width: 100%;
   border: solid thin rgba(0, 0, 0, 0.12);

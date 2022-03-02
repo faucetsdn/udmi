@@ -1,8 +1,16 @@
-<div>
-  <p class="mat-small">{{ totalCount$ | async }} Devices</p>
-  <span class="spacer"></span>
+<div class="table-controls">
+  <span class="mat-small">{{ totalCount }} Devices</span>
+  <mat-paginator
+    [length]="totalCount"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="pageChanged($event)"
+    aria-label="Select page"
+  >
+  </mat-paginator>
 </div>
-<table mat-table [dataSource]="devices$">
+<table mat-table [dataSource]="devices">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
     <th mat-header-cell *matHeaderCellDef>{{ columnName | capitalize }}</th>
     <td mat-cell *matCellDef="let element">{{ element[columnName] }}</td>
