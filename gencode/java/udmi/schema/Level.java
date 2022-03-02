@@ -26,6 +26,11 @@ public enum Level {
     this.value = value;
   }
 
+  @Override
+  public String toString() {
+    return Integer.toString(this.value);
+  }
+
   public int value() {
     return this.value;
   }
