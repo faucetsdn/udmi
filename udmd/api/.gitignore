@@ -13,3 +13,6 @@ npm-debug.log
 
 # System files
 .DS_Store
+
+# environment variables
+.env

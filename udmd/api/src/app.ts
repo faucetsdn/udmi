@@ -3,15 +3,20 @@ import dataSources from './server/datasources';
 import { typeDefs } from './server/schema';
 import { resolvers } from './device/resolvers';
 import { logger } from './common/logger';
-import { getDefaultContextProcessor } from './common/context';
-import { StaticDeviceDAO } from './device/dao/StaticDeviceDAO';
+import { getDefaultContextProcessor } from './server/context';
 import { DeviceDAO } from './device/dao/DeviceDAO';
+import { Configuration, loadConfig, logConfig } from './server/config';
+import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
 
 (async () => {
+  // load the configuration from the .env
+  const config: Configuration = loadConfig();
+  logConfig();
+
   // required context processor
   const context = await getDefaultContextProcessor();
 
-  const deviceDAO: DeviceDAO = new StaticDeviceDAO();
+  const deviceDAO: DeviceDAO = getDeviceDAO(config);
 
   // server initialization
   const server: ApolloServer = new ApolloServer({

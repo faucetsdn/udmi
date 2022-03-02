@@ -7,7 +7,7 @@ export class DeviceDataSource extends GraphQLDataSource {
     super();
   }
 
-  public initialize(config) {
+  public initialize(config): void {
     super.initialize(config);
   }
 
