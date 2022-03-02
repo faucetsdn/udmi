@@ -54,6 +54,7 @@ describe('config.logConfig', () => {
 
   test('info logs are written', () => {
     process.env.PROJECT_ID = 'test';
+    process.env.DATABASE = 'STATIC';
 
     logConfig();
     expect(logger.info).toHaveBeenCalledTimes(5);
