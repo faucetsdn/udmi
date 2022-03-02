@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Apollo } from 'apollo-angular';
-import { GET_DEVICES } from './device.gql';
 import { Device } from './device.interface';
+import { Observable, of } from 'rxjs';
+import { pluck } from 'rxjs/operators';
+import { DevicesService } from './devices.service';
 
 @Component({
   templateUrl: './devices.component.html',
@@ -9,19 +10,18 @@ import { Device } from './device.interface';
 })
 export class DevicesComponent implements OnInit {
   displayedColumns: string[] = ['name', 'make', 'model', 'site', 'section', 'lastPayload', 'operational', 'tags'];
-  loading: boolean = true;
-  devices: Device[] = [];
 
-  constructor(private apollo: Apollo) {}
+  loading$: Observable<boolean> = of(false);
+  devices$: Observable<Device[]> = of([]);
+  totalCount$: Observable<number> = of(0);
+
+  constructor(private devicesService: DevicesService) {}
 
   ngOnInit() {
-    this.apollo
-      .watchQuery<any>({
-        query: GET_DEVICES,
-      })
-      .valueChanges.subscribe(({ data, loading }) => {
-        this.loading = loading;
-        this.devices = data.devices;
-      });
+    const source$ = this.devicesService.getDevices();
+
+    this.loading$ = source$.pipe(pluck('loading'));
+    this.devices$ = source$.pipe(pluck('data', 'devices', 'devices'));
+    this.totalCount$ = source$.pipe(pluck('data', 'devices', 'totalCount'));
   }
 }
