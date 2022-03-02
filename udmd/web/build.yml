@@ -1,5 +1,5 @@
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: web-${CI_COMMIT_REF_SLUG}
   paths:
     - udmd/web/node_modules/
 
