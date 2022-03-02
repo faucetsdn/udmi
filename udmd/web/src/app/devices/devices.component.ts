@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
 import { Device } from './device.interface';
 import { DevicesService } from './devices.service';
 
@@ -8,9 +9,12 @@ import { DevicesService } from './devices.service';
 })
 export class DevicesComponent implements OnInit {
   displayedColumns: string[] = ['name', 'make', 'model', 'site', 'section', 'lastPayload', 'operational', 'tags'];
-  loading: boolean = false;
+  loading: boolean = true;
   devices: Device[] = [];
   totalCount: number = 0;
+  currentPage: number = 0;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [10, 25, 50, 100];
 
   constructor(private devicesService: DevicesService) {}
 
@@ -22,7 +26,9 @@ export class DevicesComponent implements OnInit {
     });
   }
 
-  fetchMore() {
-    this.devicesService.fetchMore(10);
+  pageChanged(e: PageEvent) {
+    this.pageSize = e.pageSize;
+    this.currentPage = e.pageIndex;
+    this.devicesService.fetchMore(this.currentPage * this.pageSize, this.pageSize);
   }
 }

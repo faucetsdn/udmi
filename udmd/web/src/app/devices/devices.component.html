@@ -1,8 +1,15 @@
-<div>
-  <p class="mat-small">{{ totalCount }} Devices</p>
+<div class="table-controls">
+  <span class="mat-small">{{ totalCount }} Devices</span>
   <span class="spacer"></span>
-  <mat-icon class="drop-down-icon">arrow_left</mat-icon>
-  <mat-icon class="drop-down-icon">arrow_right</mat-icon>
+  <mat-paginator
+    [length]="totalCount"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="pageChanged($event)"
+    aria-label="Select page"
+  >
+  </mat-paginator>
 </div>
 <table mat-table [dataSource]="devices">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
@@ -13,4 +20,3 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
-<button (click)="fetchMore()">Load more</button>
