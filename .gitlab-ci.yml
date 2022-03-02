@@ -1,0 +1,19 @@
+api:
+  stage: build
+  variables:
+    WORKING_DIR: udmd/api 
+  trigger:
+    include: udmd/api/build.yml
+  except:
+    - external_pull_requests
+  
+
+web:
+  stage: build
+  variables:
+    WORKING_DIR: udmd/web
+  trigger:
+    include: udmd/web/build.yml
+  except:
+    - external_pull_requests
+

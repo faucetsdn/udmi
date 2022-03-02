@@ -20,3 +20,6 @@ The project uses an Angular Front End and a GraphQL API Service to get data and 
     npm-run-all start-all
     ```
 4.  Navigate to [http://localhost:4200/](http://localhost:4200/) to see the app. The app will automatically reload if you change any of the source files.
+
+### Notes
+-  To avoid package-lock.json file generation inconsistencies, anyone contributing should be using Node 16.13.2.
