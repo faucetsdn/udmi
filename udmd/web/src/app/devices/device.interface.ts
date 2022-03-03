@@ -18,11 +18,6 @@ export interface SearchOptions {
 }
 
 export interface SortOptions {
-  direction?: SORT_DIRECTION;
+  direction?: 'ASC' | 'DESC';
   field: string;
-}
-
-export declare enum SORT_DIRECTION {
-  DESC,
-  ASC,
 }
