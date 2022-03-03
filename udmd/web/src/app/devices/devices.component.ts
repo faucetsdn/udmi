@@ -30,6 +30,7 @@ export class DevicesComponent implements OnInit {
   pageChanged(e: PageEvent): void {
     this.pageSize = e.pageSize;
     this.currentPage = e.pageIndex;
+
     this.devicesService.fetchMore(this.currentPage * this.pageSize, this.pageSize);
   }
 
@@ -41,6 +42,6 @@ export class DevicesComponent implements OnInit {
         }
       : undefined;
 
-    this.devicesService.fetchMore(this.currentPage * this.pageSize, this.pageSize, sortOptions);
+    this.devicesService.fetchMore(0, this.pageSize, sortOptions); // go back to first page, i.e. offset 0
   }
 }
