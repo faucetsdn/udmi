@@ -17,6 +17,12 @@ export class DevicesComponent implements OnInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [10, 25, 50, 100];
 
+  //TODO:: test data
+  searchFilterOptions = {
+    name: ['abc', '123', '345'],
+    make: ['make1', 'make2', 'make3'],
+  };
+
   constructor(private devicesService: DevicesService) {}
 
   ngOnInit(): void {
