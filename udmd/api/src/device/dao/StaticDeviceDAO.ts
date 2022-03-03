@@ -24,7 +24,11 @@ export class StaticDeviceDAO implements DeviceDAO {
     }
 
     if (filter.sortOptions) {
-      this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+      if (filter.sortOptions.field === 'operational') {
+        this.devices.sort(this.compareBoolean(filter.sortOptions.direction));
+      } else {
+        this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+      }
     }
 
     return this.devices.slice(filter.offset, filter.offset + filter.batchSize);
@@ -37,6 +41,17 @@ export class StaticDeviceDAO implements DeviceDAO {
         return a[field].localeCompare(b[field]);
       } else {
         return b[field].localeCompare(a[field]);
+      }
+    };
+  }
+
+  // this allows us to sort the static data
+  private compareBoolean(direction: SORT_DIRECTION) {
+    return function (a: Device, b: Device) {
+      if (direction.toString() === 'ASC') {
+        return a.operational === b.operational ? 0 : a.operational ? -1 : 1;
+      } else {
+        return b.operational === a.operational ? 0 : b.operational ? -1 : 1;
       }
     };
   }
