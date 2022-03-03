@@ -25,4 +25,9 @@ scan-docker:
 publish-docker:
   rules:
     - when: never
+    
+test-node:
+  stage: test
+  rules:
+    - when: never
 
