@@ -2,6 +2,8 @@
 
 # UDMI Swarm Pubber Cluster
 
+* container build/deploy script
+  * bin/deploy -- covers both pubber and validator
 * PubSub topic/subscription (e.g. swarm-feed)
   * Manually create in GCP
 * GKE cluster to run pubber container
@@ -11,5 +13,3 @@
   * files in validator/etc/
 * Cloud Scheduler to trigger cloud run
   * Manually setup to run every hour
-* container build/deploy script
-  * bin/deploy -- covers both pubber and validator
