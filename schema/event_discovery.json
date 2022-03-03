@@ -18,6 +18,7 @@
       ]
     },
     "families": {
+      "description": "Collection of address families identifying the scan target",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
