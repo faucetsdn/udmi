@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { DevicesQueryResponse, DevicesQueryVariables, GET_DEVICES } from './device.gql';
 import { QueryRef } from 'apollo-angular';
+import { SortOptions } from './device.interface';
+import { Observable } from 'rxjs';
+import { ApolloQueryResult } from '@apollo/client/core';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +14,11 @@ export class DevicesService {
 
   constructor(private apollo: Apollo) {}
 
-  getDevices(offset: number = 0, batchSize: number = 10) {
+  getDevices(
+    offset?: number,
+    batchSize: number = 10,
+    sortOptions?: SortOptions
+  ): Observable<ApolloQueryResult<DevicesQueryResponse>> {
     this.devicesQuery = this.apollo.watchQuery({
       notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
       query: GET_DEVICES,
@@ -20,6 +27,7 @@ export class DevicesService {
         searchOptions: {
           offset,
           batchSize,
+          sortOptions,
         },
       },
     });
@@ -27,11 +35,12 @@ export class DevicesService {
     return this.devicesQuery.valueChanges;
   }
 
-  fetchMore(offset: number = 0, batchSize: number = 10) {
+  fetchMore(offset?: number, batchSize: number = 10, sortOptions?: SortOptions): void {
     this.devicesQuery.refetch({
       searchOptions: {
         offset,
         batchSize,
+        sortOptions,
       },
     });
   }
