@@ -1,8 +1,6 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatChipInputEvent } from '@angular/material/chips';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -12,14 +10,15 @@ import { map, startWith } from 'rxjs/operators';
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
-export class SearchFilterComponent {
-  data: any;
+export class SearchFilterComponent implements OnInit {
+  data: any = {};
 
-  separatorKeysCodes: number[] = [ENTER, COMMA];
   fruitCtrl = new FormControl();
   filteredFruits: Observable<string[]>;
-  fruits: string[] = ['Lemon'];
-  allFruits: string[] = ['Apple', 'Lemon', 'Lime', 'Orange', 'Strawberry'];
+  fruits: string[] = [];
+  allFruits: string[] = [];
+  filterIndex: number = 0;
+  placeholder: string = 'Select field...';
 
   @ViewChild('fruitInput') fruitInput!: ElementRef<HTMLInputElement>;
 
@@ -30,31 +29,76 @@ export class SearchFilterComponent {
     );
   }
 
-  add(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-
-    // Add our fruit
-    if (value) {
-      this.fruits.push(value);
-    }
-
-    // Clear the input value
-    event.chipInput!.clear();
-
-    this.fruitCtrl.setValue(null);
+  ngOnInit(): void {
+    this._updateAllFruits();
   }
 
   remove(fruit: string): void {
     const index = this.fruits.indexOf(fruit);
 
-    if (index >= 0) {
-      this.fruits.splice(index, 1);
-    }
+    this.fruits.splice(index, 1); // remove last chip
+    this.filterIndex = 0;
+
+    this._updateAllFruits();
+
+    // Show the auto-complete options panel.
+    this._focusFruitInput();
   }
 
   selected(event: MatAutocompleteSelectedEvent): void {
     this.fruits.push(event.option.viewValue);
-    this.fruitInput.nativeElement.value = '';
+    this.filterIndex++;
+
+    this._updateAllFruits();
+
+    // Show the auto-complete options panel.
+    this._focusFruitInput();
+  }
+
+  private _focusFruitInput(): void {
+    setTimeout(() => {
+      this.fruitInput.nativeElement.blur();
+      this.fruitInput.nativeElement.focus();
+    });
+  }
+
+  private _combineLastTwoChips(): void {
+    // Combine the last two chips.
+    const lastTwoItems = this.fruits.splice(this.fruits.length - 2, 2); // remove last 2 chips
+    if (lastTwoItems.length) {
+      this.fruits.push(lastTwoItems.join(' ')); // push it back as a single chip
+    }
+  }
+
+  private _updateAllFruits(): void {
+    switch (this.filterIndex) {
+      case 0:
+        this.allFruits = Object.keys(this.data); // select field
+        this.placeholder = 'Select field...';
+        break;
+      case 1:
+        this.allFruits = ['=', '!=']; // select operator
+        this.placeholder = 'Select operator...';
+        break;
+      case 2:
+        this.allFruits = this.data[this.fruits[this.fruits.length - 2]]; // select the fields options
+        this.placeholder = 'Select value...';
+        this._combineLastTwoChips();
+        break;
+      default:
+        this.allFruits = Object.keys(this.data); // reset
+        this.filterIndex = 0; // reset
+        this.placeholder = 'Select field...';
+        this._combineLastTwoChips();
+
+        // TODO:: run the query with the filter...
+        console.log('run query');
+
+        break;
+    }
+
+    // Clear the input.
+    if (this.fruitInput) this.fruitInput.nativeElement.value = '';
     this.fruitCtrl.setValue(null);
   }
 
