@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: pubber
-  replicas: 250
+  replicas: 10
   strategy:
     rollingUpdate:
       maxSurge: 50%
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: pubber
-        image: "us.gcr.io/labs-333619/pubber:latest"
+        image: "us.gcr.io/${GCP_PROJECT}/pubber:latest"
         imagePullPolicy: Always
         env:
           - name: PUBBER_INSTANCES

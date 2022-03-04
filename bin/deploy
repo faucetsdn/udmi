@@ -27,6 +27,6 @@ for base in pubber validator; do
     docker push $TAG
 done
 
-echo Images uploaded, rescale deployment to restart:
+echo Images uploaded, rescale deployment to restart, e.g.:
 echo kubectl scale deploy pubber-pool --replicas=0
 echo kubectl scale deploy pubber-pool --replicas=$INSTANCES
