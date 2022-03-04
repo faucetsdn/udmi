@@ -50,4 +50,8 @@ export class DevicesComponent implements OnInit {
 
     this.devicesService.fetchMore(0, this.pageSize, sortOptions); // go back to first page, i.e. offset 0
   }
+
+  filterData(filters: any): void {
+    console.log(filters);
+  }
 }

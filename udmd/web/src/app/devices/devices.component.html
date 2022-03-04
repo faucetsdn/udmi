@@ -1,4 +1,4 @@
-<app-search-filter [data]="searchFilterOptions"></app-search-filter>
+<app-search-filter [data]="searchFilterOptions" [handleFilterChange]="filterData"></app-search-filter>
 <div class="table-controls">
   <span class="mat-small">{{ totalCount }} Devices</span>
   <mat-paginator
