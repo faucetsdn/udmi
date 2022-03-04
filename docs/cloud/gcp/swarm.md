@@ -2,6 +2,10 @@
 
 # UDMI Swarm Pubber Cluster
 
+* k8s cluster running a swarm of _pubber_ nodes that simulate IoT Core client devices.
+* cloud run function triggered by cron to manage swarm worker pool.
+* glue PubSub topic/subscriptions to distribute work to nodes.
+
 ## Setup local admin system
 
   * gcloud, kubectl, docker
