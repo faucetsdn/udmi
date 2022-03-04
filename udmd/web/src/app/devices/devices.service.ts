@@ -17,9 +17,10 @@ export class DevicesService {
   getDevices(
     offset?: number,
     batchSize: number = 10,
-    sortOptions?: SortOptions
+    sortOptions?: SortOptions,
+    filters?: string
   ): Observable<ApolloQueryResult<DevicesQueryResponse>> {
-    this.devicesQuery = this.apollo.watchQuery({
+    this.devicesQuery = this.apollo.watchQuery<DevicesQueryResponse, DevicesQueryVariables>({
       notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
       query: GET_DEVICES,
       fetchPolicy: 'network-only',
@@ -28,6 +29,7 @@ export class DevicesService {
           offset,
           batchSize,
           sortOptions,
+          filters,
         },
       },
     });
@@ -35,12 +37,13 @@ export class DevicesService {
     return this.devicesQuery.valueChanges;
   }
 
-  fetchMore(offset?: number, batchSize: number = 10, sortOptions?: SortOptions): void {
+  fetchMore(offset?: number, batchSize: number = 10, sortOptions?: SortOptions, filters?: string): void {
     this.devicesQuery.refetch({
       searchOptions: {
         offset,
         batchSize,
         sortOptions,
+        filters,
       },
     });
   }

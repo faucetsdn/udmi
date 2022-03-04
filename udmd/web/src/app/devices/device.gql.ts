@@ -30,7 +30,7 @@ const fragments = {
   `,
 };
 
-export const GET_DEVICES = gql<DevicesQueryResponse, DevicesQueryVariables>`
+export const GET_DEVICES = gql`
   query GetDevices($searchOptions: SearchOptions!) {
     devices(searchOptions: $searchOptions) {
       devices {
