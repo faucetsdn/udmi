@@ -45,12 +45,10 @@ This will:
   * Make sure to target the right cluster, `kubectl config current-context`
   * Deploy workload `envsubst < pubber/etc/deployment.yaml | kubectl apply -f -`
 
-## PubSub topics/subscriptions
+# This part is still a work in progress...
 
 * PubSub topic/subscription (e.g. swarm-feed)
   * Manually create in GCP
-* GKE cluster to run pubber container
-  * files in pubber/etc/
 * Cloud Run to run swarm container
   * files in validator/etc/
 * Cloud Scheduler to trigger cloud run
