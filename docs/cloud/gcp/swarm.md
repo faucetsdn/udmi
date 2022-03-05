@@ -75,6 +75,7 @@ This will:
   * Create a new cloud run service
   * Image will be something like `us.gcr.io/udmi-swarm-example/validator` (except with the right project instead of `udmi-swarm-example`)
   * Change maximum number of instances to 1
+  * Memory allocation to 1GiB
   * Set Authentication: Require authentication
   * Select "Second generation execution environment"
   * Note the service URL, something like `https://validator-t22jzfa4pq-de.a.run.app`
