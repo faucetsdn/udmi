@@ -316,7 +316,16 @@ public class Pubber {
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
+        safeSleep(10000);
       }
+    }
+  }
+
+  private void safeSleep(int duration) {
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Error sleeping", e);
     }
   }
 
