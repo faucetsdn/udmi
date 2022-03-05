@@ -1,15 +1,12 @@
 [**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [**GCP**](./) / [Swarm](#)
 
-# UDMI Swarm Pubber Cluster
+# UDMI Pubber Swarm Cluster
 
-  * k8s cluster running a swarm of _pubber_ nodes that simulate IoT Core client devices.
-  * cloud run function triggered by cron to manage swarm worker pool.
-  * glue PubSub topic/subscriptions to distribute work to nodes.
-
-## Setup IoT Core Registry
-
-  * Create site registry
-  * Run registrar
+The 'pubber swarm' capability relies on four major components:
+  * IoT Core registry configured as per a specific _site\_model_
+  * k8s cluster running a swarm of _pubber_ nodes that simulate IoT Core client devices
+  * cloud run function triggered by cron to manage swarm worker pool
+  * glue PubSub topic/subscriptions to distribute work to nodes
 
 ## Setup local admin system
 
@@ -22,6 +19,15 @@
   * Set project location if/as necessary for your organization
   * Docs assume GCP_PROJECT env varaible is set appropriately, e.g.
   `export GCP_PROJECT=udmi-swarm-example`
+
+## Setup IoT Core Registry
+
+  * Enable API
+  * Get a _site\_model_ repo (e.g. `zz-top-example`), should end up in `udmi/sites/{site_name}/`
+  * Create site registry
+    * Registry ID and region are defined in the `{site_name}/cloud_iot_config.json` file.
+    * Topic should be for received device data, and is _not_ the one for `swarm-feed`.
+  * Run udmi registrar tool `udmi$ bin/registrar sites/zz-top-example ${GCP_PROJECT}`
 
 ## Create GKE Cluster
 
@@ -38,7 +44,7 @@
   `gcloud --project=${GCP_PROJECT} container clusters --zone=us-central1-c get-credentials pubber-swarm`
 
   * Maybe need to enable access to the container registry?  I did this, but not sure it's required:
-`gsutil iam ch serviceAccount:943284686802-compute@developer.gserviceaccount.com:roles/storage.objectViewer gs://us.artifacts.udmi-swam-example.appspot.com/`
+`gsutil iam ch serviceAccount:943284686802-compute@developer.gserviceaccount.com:roles/storage.objectViewer gs://us.artifacts.udmi-swarm-example.appspot.com/`
 
 ## Container build/deploy script
 
@@ -49,6 +55,7 @@ udmi$ bin/deploy ${GCP_PROJECT}
 This will:
   * Build two docker images { _pubber_ and _validator_ }
   * Upload them to the project container registry
+  * Include the `sites/` directory (containing the downloaded _site\_model_)
 
 ## Deploy Cluster
 
@@ -78,9 +85,9 @@ This will:
   * Name `swarm`
   * Frequency of every 15 minutes with `*/15 * * * *`
   * Target type "HTTP"
-  * URL is something like `https://validator-t22jzfa4pq-de.a.run.app/?site=sg-sin-mbc2&topic=swarm-feed`
+  * URL is something like `https://validator-t22jzfa4pq-de.a.run.app/?site=zz-top-example&topic=swarm-feed`
     * The first bit is the taken from the Cloud Run service
-    * The site (`sg-sin-mbc2`) defines the set of devices to simulate
+    * The site (`zz-top-example`) is the _site\_model_ from before
     * Topic should point at the created PubSub topic.
   * HTTP method "GET"
   * Auth header "Add OIDC token"

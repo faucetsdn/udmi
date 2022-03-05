@@ -57,6 +57,7 @@ import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
@@ -549,10 +550,12 @@ class LocalDevice {
 
   public void validateEnvelope(String registryId, String siteName) {
     try {
+      // Create a fake envelope just to validate registryId and siteName fields.
       Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
       envelope.subFolder = SubFolder.POINTSET;
+      envelope.subType = SubType.EVENT;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
