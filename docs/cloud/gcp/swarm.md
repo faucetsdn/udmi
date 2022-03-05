@@ -26,7 +26,7 @@ The 'pubber swarm' capability relies on four major components:
   * Get a _site\_model_ repo (e.g. `zz-top-example`), should end up in `udmi/sites/{site_name}/`
   * Create site registry
     * Registry ID and region are defined in the `{site_name}/cloud_iot_config.json` file.
-    * Topic should be for received device data, and is _not_ the one for `swarm-feed`.
+    * Topic should be for received device data, e.g. `data-target` _not_ the one for `swarm-feed`.
   * Run udmi registrar tool `udmi$ bin/registrar sites/zz-top-example ${GCP_PROJECT}`
 
 ## Create GKE Cluster
@@ -103,3 +103,4 @@ This will:
   * PubSub subscription to see if the swarm pubber instances are pulling from the subscription
   * Check k8s pod logs to see if they're getting targets and connecting properly
   * IoT Core to see if it's receiving data
+  * The registry topic (e.g. `data-target`) to see that it's receiving data.
