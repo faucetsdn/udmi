@@ -104,3 +104,10 @@ This will:
   * Check k8s pod logs to see if they're getting targets and connecting properly
   * IoT Core to see if it's receiving data
   * The registry topic (e.g. `data-target`) to see that it's receiving data.
+
+## Tweaking the system
+
+  * Control the number of simulated devices by scaling the number of replicas, e.g. `kubectl scale deploy pubber-pool --replicas=10`
+  * Each replica can simulate ~40 devices.
+  * Replicas are limited by the cluster configuration.
+  * Limited by the number of devices in the _site\_model_
