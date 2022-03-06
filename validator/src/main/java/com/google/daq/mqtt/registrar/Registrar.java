@@ -77,7 +77,7 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
-  public static final int RUNNER_THREADS = 50;
+  public static final int RUNNER_THREADS = 25;
 
   private CloudIotManager cloudIotManager;
   private File siteDir;
