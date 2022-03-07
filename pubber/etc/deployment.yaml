@@ -23,7 +23,7 @@ spec:
         imagePullPolicy: Always
         env:
           - name: PUBBER_INSTANCES
-            value: "40"
+            value: "10"
         resources:
           requests:
             memory: 300Mi
