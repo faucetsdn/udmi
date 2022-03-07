@@ -1,6 +1,8 @@
 import { randomInt } from 'crypto';
-import { Device, SearchOptions, SORT_DIRECTION } from '../model';
+import { fromString } from '../FilterParser';
+import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../model';
 import { DeviceDAO } from './DeviceDAO';
+import { filterDevices } from './StaticDeviceFilter';
 
 // this class exists to return static, sorted, and filtered data
 export class StaticDeviceDAO implements DeviceDAO {
@@ -23,15 +25,20 @@ export class StaticDeviceDAO implements DeviceDAO {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 
+    console.log(searchOptions.filter);
+    const filters: Filter[] = fromString(searchOptions.filter);
+
+    const filteredDevices = filterDevices(filters, this.devices);
+
     if (searchOptions.sortOptions) {
       if (searchOptions.sortOptions.field === 'operational') {
-        this.devices.sort(this.compareBoolean(searchOptions.sortOptions.direction));
+        filteredDevices.sort(this.compareBoolean(searchOptions.sortOptions.direction));
       } else {
-        this.devices.sort(this.compare(searchOptions.sortOptions.field, searchOptions.sortOptions.direction));
+        filteredDevices.sort(this.compare(searchOptions.sortOptions.field, searchOptions.sortOptions.direction));
       }
     }
 
-    return this.devices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
+    return filteredDevices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
   }
 
   // this allows us to sort the static data
