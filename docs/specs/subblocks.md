@@ -41,10 +41,18 @@ The _subType_ field encodes the relevant type { _event_, _config_, _state_, _mod
 
 ## [Pointset](../messages/pointset.md)
 
-* [**Model**](../../tests/model_pointset.tests/example.json)
-* [**Event**](../../tests/event_pointset.tests/example.json)
-* [**State**](../../tests/state_pointset.tests/example.json)
-* [**Config**](../../tests/config_pointset.tests/example.json)
+A _pointset_ covers the structures necessary to model a device _point_ with associated data readings.
+This is typically what is thought of as 'device telemetry' and represents the expected end value of
+the device-to-cloud connection.
+
+* [**Model**](../../tests/model_pointset.tests/example.json): Expected model for what the device should
+  be reporting.
+* [**Event**](../../tests/event_pointset.tests/example.json): Streaming telemetry events from the device
+  containing the actual data points.
+* [**State**](../../tests/state_pointset.tests/example.json): State of the device points, indicating any
+  sticky errors or status of any cloud-to-device config.
+* [**Config**](../../tests/config_pointset.tests/example.json): Configuration of the device points,
+  indicating the expected points, cloud-to-device control, etc...
 
 ## System
 
