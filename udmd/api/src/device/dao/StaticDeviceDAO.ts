@@ -14,24 +14,24 @@ export class StaticDeviceDAO implements DeviceDAO {
     return this.devices.length;
   }
 
-  public async getDevices(filter: SearchOptions): Promise<Device[]> {
-    if (filter.batchSize == 0) {
+  public async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
+    if (searchOptions.batchSize == 0) {
       throw new Error('A batch size greater than zero must be provided.');
     }
 
-    if (filter.offset > this.devices.length) {
+    if (searchOptions.offset > this.devices.length) {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 
-    if (filter.sortOptions) {
-      if (filter.sortOptions.field === 'operational') {
-        this.devices.sort(this.compareBoolean(filter.sortOptions.direction));
+    if (searchOptions.sortOptions) {
+      if (searchOptions.sortOptions.field === 'operational') {
+        this.devices.sort(this.compareBoolean(searchOptions.sortOptions.direction));
       } else {
-        this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+        this.devices.sort(this.compare(searchOptions.sortOptions.field, searchOptions.sortOptions.direction));
       }
     }
 
-    return this.devices.slice(filter.offset, filter.offset + filter.batchSize);
+    return this.devices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
   }
 
   // this allows us to sort the static data
