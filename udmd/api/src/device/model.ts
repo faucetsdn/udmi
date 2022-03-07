@@ -31,3 +31,9 @@ export enum SORT_DIRECTION {
   DESC,
   ASC,
 }
+
+export interface Filter {
+  field: string;
+  operator: string;
+  value: string;
+}

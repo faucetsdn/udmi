@@ -1,6 +1,8 @@
 import { randomInt } from 'crypto';
-import { Device, SearchOptions, SORT_DIRECTION } from '../model';
+import { fromString } from '../FilterParser';
+import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../model';
 import { DeviceDAO } from './DeviceDAO';
+import { filterDevices } from './StaticDeviceFilter';
 
 // this class exists to return static, sorted, and filtered data
 export class StaticDeviceDAO implements DeviceDAO {
@@ -14,24 +16,30 @@ export class StaticDeviceDAO implements DeviceDAO {
     return this.devices.length;
   }
 
-  public async getDevices(filter: SearchOptions): Promise<Device[]> {
-    if (filter.batchSize == 0) {
+  public async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
+    if (searchOptions.batchSize == 0) {
       throw new Error('A batch size greater than zero must be provided.');
     }
 
-    if (filter.offset > this.devices.length) {
+    if (searchOptions.offset > this.devices.length) {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 
-    if (filter.sortOptions) {
-      if (filter.sortOptions.field === 'operational') {
-        this.devices.sort(this.compareBoolean(filter.sortOptions.direction));
+    let filteredDevices = this.devices;
+    if (searchOptions.filter) {
+      const filters: Filter[] = fromString(searchOptions.filter);
+      filteredDevices = filterDevices(filters, filteredDevices);
+    }
+
+    if (searchOptions.sortOptions) {
+      if (searchOptions.sortOptions.field === 'operational') {
+        filteredDevices.sort(this.compareBoolean(searchOptions.sortOptions.direction));
       } else {
-        this.devices.sort(this.compare(filter.sortOptions.field, filter.sortOptions.direction));
+        filteredDevices.sort(this.compare(searchOptions.sortOptions.field, searchOptions.sortOptions.direction));
       }
     }
 
-    return this.devices.slice(filter.offset, filter.offset + filter.batchSize);
+    return filteredDevices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
   }
 
   // this allows us to sort the static data
