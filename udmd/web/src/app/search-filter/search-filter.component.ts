@@ -3,6 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { SearchFilterItem } from './search-filter';
 
 @Component({
   selector: 'app-search-filter',
@@ -12,9 +13,9 @@ import { map, startWith } from 'rxjs/operators';
 })
 export class SearchFilterComponent implements OnInit {
   data: any = {};
-  handleFilterChange = (_filter: any[]): void => {};
-  builtEntry: any = {}; // chip cache
-  filter: any[] = [];
+  handleFilterChange = (_filters: SearchFilterItem[]): void => {};
+  filterEntry: SearchFilterItem = {}; // chip cache
+  filters: SearchFilterItem[] = [];
   itemCtrl = new FormControl();
   filteredItems: Observable<string[]>;
   items: string[] = [];
@@ -41,17 +42,17 @@ export class SearchFilterComponent implements OnInit {
     this.items.splice(index, 1); // remove the chip
 
     // Check if we're deleting an exisitng filter, or one we are halfway done building.
-    if (index === this.filter.length) {
+    if (index === this.filters.length) {
       // We're deleting a half built filter.
       this.allItems = Object.keys(this.data); // select field
       this.placeholder = 'Select field...';
       this.filterIndex = 0;
       this.items.splice(index, 1); // remove the chip
-      this.builtEntry = {}; // clear the chip cache
+      this.filterEntry = {}; // clear the chip cache
     } else {
       // We're deleting a built filter.
-      this.filter.splice(index, 1); // remove the filter
-      this.handleFilterChange(this.filter);
+      this.filters.splice(index, 1); // remove the filter
+      this.handleFilterChange(this.filters);
     }
 
     // Clear the input.
@@ -76,12 +77,12 @@ export class SearchFilterComponent implements OnInit {
       case 1:
         this.allItems = ['=', '!=']; // select operator
         this.placeholder = 'Select operator...';
-        this.builtEntry.field = chipValue; // store the field
+        this.filterEntry.field = chipValue; // store the field
         break;
       case 2:
         this.allItems = this.data[this.items[this.items.length - 2]]; // select the fields options
         this.placeholder = 'Select value...';
-        this.builtEntry.operator = chipValue; // store the operator
+        this.filterEntry.operator = chipValue; // store the operator
 
         this._combineLastTwoChips();
         break;
@@ -89,12 +90,12 @@ export class SearchFilterComponent implements OnInit {
         this.allItems = Object.keys(this.data); // reset
         this.placeholder = 'Select field...';
         this.filterIndex = 0; // reset
-        this.builtEntry.value = chipValue; // store the value
-        this.filter.push(this.builtEntry);
-        this.builtEntry = {}; // clear the chip cache
+        this.filterEntry.value = chipValue; // store the value
+        this.filters.push(this.filterEntry);
+        this.filterEntry = {}; // clear the chip cache
 
         this._combineLastTwoChips();
-        this.handleFilterChange(this.filter);
+        this.handleFilterChange(this.filters);
         break;
     }
 

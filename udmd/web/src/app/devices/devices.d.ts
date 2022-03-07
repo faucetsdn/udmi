@@ -21,3 +21,16 @@ export interface SortOptions {
   direction?: 'ASC' | 'DESC';
   field: string;
 }
+
+export type DevicesResponse = {
+  devices: Device[];
+  totalCount: number;
+};
+
+export type DevicesQueryResponse = {
+  devices: DevicesResponse;
+};
+
+export type DevicesQueryVariables = {
+  searchOptions: SearchOptions;
+};

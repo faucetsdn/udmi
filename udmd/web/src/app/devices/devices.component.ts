@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
-import { Device, SortOptions } from './device.interface';
+import { SearchFilterItem } from '../search-filter/search-filter';
+import { Device, SortOptions } from './devices';
 import { DevicesService } from './devices.service';
 
 @Component({
@@ -35,6 +36,7 @@ export class DevicesComponent implements OnInit {
     }); // start off on first page, i.e. offset 0
 
     //TODO:: Keep observable alive after error.
+    //TODO:: Figure out why observable doesn't always update.
   }
 
   pageChanged(e: PageEvent): void {
@@ -55,8 +57,8 @@ export class DevicesComponent implements OnInit {
     this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filter); // go back to first page, i.e. offset 0
   }
 
-  filterData = (filter: any[]): void => {
-    this.filter = filter.length ? JSON.stringify(filter) : undefined; // don't send filter field if no filter
+  filterData = (filters: SearchFilterItem[]): void => {
+    this.filter = filters.length ? JSON.stringify(filters) : undefined; // don't send filter field if no filter
 
     this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filter); // go back to first page, i.e. offset 0
   };

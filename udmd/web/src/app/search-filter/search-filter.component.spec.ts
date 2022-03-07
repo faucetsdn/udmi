@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SearchFilterComponent } from './search-filter.component';
+import { SearchFilterModule } from './search-filter.module';
 
 describe('SearchFilterComponent', () => {
   let component: SearchFilterComponent;
@@ -8,7 +9,7 @@ describe('SearchFilterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SearchFilterComponent],
+      imports: [SearchFilterModule, BrowserAnimationsModule],
     }).compileComponents();
   });
 
