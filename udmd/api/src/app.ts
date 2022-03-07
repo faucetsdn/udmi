@@ -16,7 +16,7 @@ import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
   // required context processor
   const context = await getDefaultContextProcessor();
 
-  const deviceDAO: DeviceDAO = getDeviceDAO(config);
+  const deviceDAO: DeviceDAO = await getDeviceDAO(config);
 
   // server initialization
   const server: ApolloServer = new ApolloServer({
