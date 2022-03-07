@@ -28,7 +28,7 @@ export class StaticDeviceDAO implements DeviceDAO {
     let filteredDevices = this.devices;
     if (searchOptions.filter) {
       const filters: Filter[] = fromString(searchOptions.filter);
-      filteredDevices = filterDevices(filters, this.devices);
+      filteredDevices = filterDevices(filters, filteredDevices);
     }
 
     if (searchOptions.sortOptions) {
