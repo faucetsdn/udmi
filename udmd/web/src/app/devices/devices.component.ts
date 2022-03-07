@@ -22,8 +22,8 @@ export class DevicesComponent implements OnInit {
 
   //TODO:: Pass along proper options to search filter.
   searchFilterOptions = {
-    name: ['abc', '123', '345'],
-    make: ['make1', 'make2', 'make3'],
+    name: ['CDS-1', 'AHU-2', 'CDS-3'],
+    make: ['make-1', 'make-2', 'make-3'],
   };
 
   constructor(private devicesService: DevicesService) {}
@@ -36,7 +36,6 @@ export class DevicesComponent implements OnInit {
     }); // start off on first page, i.e. offset 0
 
     //TODO:: Keep observable alive after error.
-    //TODO:: Figure out why observable doesn't always update.
   }
 
   pageChanged(e: PageEvent): void {

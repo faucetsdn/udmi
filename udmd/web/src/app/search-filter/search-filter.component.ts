@@ -47,17 +47,12 @@ export class SearchFilterComponent implements OnInit {
       this.allItems = Object.keys(this.data); // select field
       this.placeholder = 'Select field...';
       this.filterIndex = 0;
-      this.items.splice(index, 1); // remove the chip
       this.filterEntry = {}; // clear the chip cache
     } else {
       // We're deleting a built filter.
       this.filters.splice(index, 1); // remove the filter
       this.handleFilterChange(this.filters);
     }
-
-    // Clear the input.
-    this.itemInput.nativeElement.value = '';
-    this.itemCtrl.setValue(null);
 
     // Show the auto-complete options panel.
     this._focusItemInput();
@@ -99,15 +94,15 @@ export class SearchFilterComponent implements OnInit {
         break;
     }
 
-    // Clear the input.
-    this.itemInput.nativeElement.value = '';
-    this.itemCtrl.setValue(null);
-
     // Show the auto-complete options panel.
     this._focusItemInput();
   }
 
   private _focusItemInput(): void {
+    // Clear the input.
+    this.itemInput.nativeElement.value = '';
+    this.itemCtrl.setValue(null);
+
     setTimeout(() => {
       this.itemInput.nativeElement.blur();
       this.itemInput.nativeElement.focus();
