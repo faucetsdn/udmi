@@ -11,7 +11,7 @@ const deviceTemplates = [
   { make: 'Enlightened', models: ['Light Gateway'], name: 'enl' },
   { make: 'Tridium', models: ['JACE 8000'], name: 'tri' },
   { make: 'Delta Controls', models: ['Entelibus Manager 100', 'CopperCube'], name: 'dc' },
-  { make: 'Aquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'aqu' },
+  { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'aqu' },
   { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc' },
 ];
 
