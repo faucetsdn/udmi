@@ -4,6 +4,23 @@ import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../model';
 import { DeviceDAO } from './DeviceDAO';
 import { filterDevices } from './StaticDeviceFilter';
 
+const deviceTemplates = [
+  { make: 'Cisco', models: ['Mediator'], name: 'cis' },
+  { make: 'BitBox USA', models: ['BitBox'], name: 'bb-usa' },
+  { make: 'Automated Logic', models: ['LGR', 'G5CE'], name: 'aut-log' },
+  { make: 'Enlightened', models: ['Light Gateway'], name: 'enl' },
+  { make: 'Tridium', models: ['JACE 8000'], name: 'tri' },
+  { make: 'Delta Controls', models: ['Entelibus Manager 100', 'CopperCube'], name: 'dc' },
+  { make: 'Aquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'aqu' },
+  { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc' },
+];
+
+const sites = [
+  { site: 'site1', sections: ['section-a', 'section-b'] },
+  { site: 'site2', sections: ['section-c', 'section-d'] },
+  { site: 'site3', sections: ['section-e', 'section-f'] },
+];
+
 // this class exists to return static, sorted, and filtered data
 export class StaticDeviceDAO implements DeviceDAO {
   constructor() {
@@ -68,12 +85,17 @@ export class StaticDeviceDAO implements DeviceDAO {
     const devices: Device[] = [];
     let n = 1;
     while (n <= count) {
-      const id = `id-${n}`;
-      const name = n % 2 == 0 ? `AHU-${n}` : `CDS-${n}`;
-      const make: string = `make-${n}`;
-      const model: string = n % 3 == 0 ? `AAAA-${n}` : `BBBB-${n}`;
-      const site: string = `SG-SIN-MBC${n}`;
-      const section: string = `SIN-MBC${n}`;
+      const deviceTemplate = this.getRandom(deviceTemplates);
+      const deviceModel = this.getRandom(deviceTemplate.models);
+      const deviceSite = this.getRandom(sites);
+      const deviceSection = this.getRandom(deviceSite.sections);
+
+      const id: string = `${deviceTemplate.name}-${n}`;
+      const name: string = `${deviceTemplate.name}-${n}`;
+      const make: string = `${deviceTemplate.make}`;
+      const model: string = deviceModel;
+      const site: string = deviceSite.site;
+      const section: string = deviceSection;
       const lastPayload: string = new Date(new Date().getTime() - randomInt(1000000000)).toISOString();
       const operational: boolean = n % 3 == 0 ? false : true;
       const tags: string[] = [];
@@ -82,5 +104,9 @@ export class StaticDeviceDAO implements DeviceDAO {
     }
 
     return devices;
+  }
+
+  private getRandom(array: any[]): any {
+    return array[Math.floor(Math.random() * array.length)];
   }
 }
