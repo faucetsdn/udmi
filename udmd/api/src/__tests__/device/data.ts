@@ -24,12 +24,11 @@ export function createSearchOptions(
   batchSize: number = 10,
   offset: number = 10,
   direction: SORT_DIRECTION = SORT_DIRECTION.ASC,
-  filter: string = 'name'
+  filter?: string
 ): SearchOptions {
   return {
     batchSize,
     offset,
     sortOptions: { direction, field: 'name' },
-    filter,
   };
 }
