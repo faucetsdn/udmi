@@ -14,7 +14,7 @@ export interface SearchOptions {
   batchSize: number;
   offset?: number;
   sortOptions?: SortOptions;
-  filters?: string;
+  filter?: string;
 }
 
 export interface SortOptions {

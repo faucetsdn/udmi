@@ -12,118 +12,118 @@ import { map, startWith } from 'rxjs/operators';
 })
 export class SearchFilterComponent implements OnInit {
   data: any = {};
-  handleFilterChange: any = () => {};
+  handleFilterChange = (_filter: any[]): void => {};
   builtEntry: any = {}; // chip cache
-  filters: any = [];
-  fruitCtrl = new FormControl();
-  filteredFruits: Observable<string[]>;
-  fruits: string[] = [];
-  allFruits: string[] = [];
+  filter: any[] = [];
+  itemCtrl = new FormControl();
+  filteredItems: Observable<string[]>;
+  items: string[] = [];
+  allItems: string[] = [];
   filterIndex: number = 0;
   placeholder: string = 'Select field...';
 
-  @ViewChild('fruitInput') fruitInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
 
   constructor() {
-    this.filteredFruits = this.fruitCtrl.valueChanges.pipe(
+    this.filteredItems = this.itemCtrl.valueChanges.pipe(
       startWith(null),
-      map((fruit: string | null) => (fruit ? this._filter(fruit) : this.allFruits.slice()))
+      map((item: string | null) => (item ? this._filter(item) : this.allItems.slice()))
     );
   }
 
   ngOnInit(): void {
-    this.allFruits = Object.keys(this.data);
+    this.allItems = Object.keys(this.data);
   }
 
-  remove(fruit: string): void {
-    const index = this.fruits.indexOf(fruit);
+  remove(item: string): void {
+    const index = this.items.indexOf(item);
 
-    this.fruits.splice(index, 1); // remove the chip
+    this.items.splice(index, 1); // remove the chip
 
     // Check if we're deleting an exisitng filter, or one we are halfway done building.
-    if (index === this.filters.length) {
+    if (index === this.filter.length) {
       // We're deleting a half built filter.
-      this.allFruits = Object.keys(this.data); // select field
+      this.allItems = Object.keys(this.data); // select field
       this.placeholder = 'Select field...';
       this.filterIndex = 0;
-      this.fruits.splice(index, 1); // remove the chip
+      this.items.splice(index, 1); // remove the chip
       this.builtEntry = {}; // clear the chip cache
     } else {
       // We're deleting a built filter.
-      this.filters.splice(index, 1); // remove the filter
-      this.handleFilterChange(this.filters);
+      this.filter.splice(index, 1); // remove the filter
+      this.handleFilterChange(this.filter);
     }
 
     // Clear the input.
-    this.fruitInput.nativeElement.value = '';
-    this.fruitCtrl.setValue(null);
+    this.itemInput.nativeElement.value = '';
+    this.itemCtrl.setValue(null);
 
     // Show the auto-complete options panel.
-    this._focusFruitInput();
+    this._focusItemInput();
   }
 
   selected(event: MatAutocompleteSelectedEvent): void {
     const chipValue = event.option.viewValue;
 
-    this.fruits.push(chipValue);
+    this.items.push(chipValue);
     this.filterIndex++;
 
     switch (this.filterIndex) {
       case 0:
-        this.allFruits = Object.keys(this.data); // select field
+        this.allItems = Object.keys(this.data); // select field
         this.placeholder = 'Select field...';
         break;
       case 1:
-        this.allFruits = ['=', '!=']; // select operator
+        this.allItems = ['=', '!=']; // select operator
         this.placeholder = 'Select operator...';
         this.builtEntry.field = chipValue; // store the field
         break;
       case 2:
-        this.allFruits = this.data[this.fruits[this.fruits.length - 2]]; // select the fields options
+        this.allItems = this.data[this.items[this.items.length - 2]]; // select the fields options
         this.placeholder = 'Select value...';
         this.builtEntry.operator = chipValue; // store the operator
 
         this._combineLastTwoChips();
         break;
       default:
-        this.allFruits = Object.keys(this.data); // reset
+        this.allItems = Object.keys(this.data); // reset
         this.placeholder = 'Select field...';
         this.filterIndex = 0; // reset
         this.builtEntry.value = chipValue; // store the value
-        this.filters.push(this.builtEntry);
+        this.filter.push(this.builtEntry);
         this.builtEntry = {}; // clear the chip cache
 
         this._combineLastTwoChips();
-        this.handleFilterChange(this.filters);
+        this.handleFilterChange(this.filter);
         break;
     }
 
     // Clear the input.
-    this.fruitInput.nativeElement.value = '';
-    this.fruitCtrl.setValue(null);
+    this.itemInput.nativeElement.value = '';
+    this.itemCtrl.setValue(null);
 
     // Show the auto-complete options panel.
-    this._focusFruitInput();
+    this._focusItemInput();
   }
 
-  private _focusFruitInput(): void {
+  private _focusItemInput(): void {
     setTimeout(() => {
-      this.fruitInput.nativeElement.blur();
-      this.fruitInput.nativeElement.focus();
+      this.itemInput.nativeElement.blur();
+      this.itemInput.nativeElement.focus();
     });
   }
 
   private _combineLastTwoChips(): void {
-    const lastTwoItems = this.fruits.splice(this.fruits.length - 2, 2); // remove last 2 chips
+    const lastTwoItems = this.items.splice(this.items.length - 2, 2); // remove last 2 chips
 
     if (lastTwoItems.length) {
-      this.fruits.push(lastTwoItems.join(' ')); // push it back as a single chip
+      this.items.push(lastTwoItems.join(' ')); // push it back as a single chip
     }
   }
 
   private _filter(value: string): string[] {
     const filterValue = value.toLowerCase();
 
-    return this.allFruits.filter((fruit) => fruit.toLowerCase().includes(filterValue));
+    return this.allItems.filter((item) => item.toLowerCase().includes(filterValue));
   }
 }

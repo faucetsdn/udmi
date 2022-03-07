@@ -18,7 +18,7 @@ export class DevicesService {
     offset?: number,
     batchSize: number = 10,
     sortOptions?: SortOptions,
-    filters?: string
+    filter?: string
   ): Observable<ApolloQueryResult<DevicesQueryResponse>> {
     this.devicesQuery = this.apollo.watchQuery<DevicesQueryResponse, DevicesQueryVariables>({
       notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
@@ -29,7 +29,7 @@ export class DevicesService {
           offset,
           batchSize,
           sortOptions,
-          filters,
+          filter,
         },
       },
     });
@@ -37,13 +37,13 @@ export class DevicesService {
     return this.devicesQuery.valueChanges;
   }
 
-  fetchMore(offset?: number, batchSize: number = 10, sortOptions?: SortOptions, filters?: string): void {
+  fetchMore(offset?: number, batchSize: number = 10, sortOptions?: SortOptions, filter?: string): void {
     this.devicesQuery.refetch({
       searchOptions: {
         offset,
         batchSize,
         sortOptions,
-        filters,
+        filter,
       },
     });
   }

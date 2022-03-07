@@ -17,7 +17,7 @@ export class DevicesComponent implements OnInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [10, 25, 50, 100];
   sortOptions: SortOptions | undefined;
-  filters: string | undefined;
+  filter: string | undefined;
 
   //TODO:: Pass along proper options to search filter.
   searchFilterOptions = {
@@ -32,7 +32,7 @@ export class DevicesComponent implements OnInit {
       this.loading = loading;
       this.devices = data.devices?.devices;
       this.totalCount = data.devices?.totalCount;
-    }); // go back to first page, i.e. offset 0
+    }); // start off on first page, i.e. offset 0
 
     //TODO:: Keep observable alive after error.
   }
@@ -41,7 +41,7 @@ export class DevicesComponent implements OnInit {
     this.pageSize = e.pageSize;
     this.currentPage = e.pageIndex;
 
-    this.devicesService.fetchMore(this.currentPage * this.pageSize, this.pageSize, this.sortOptions, this.filters);
+    this.devicesService.fetchMore(this.currentPage * this.pageSize, this.pageSize, this.sortOptions, this.filter);
   }
 
   sortData(e: Sort): void {
@@ -52,12 +52,12 @@ export class DevicesComponent implements OnInit {
         }
       : undefined; // don't send sortOptions field if no direction
 
-    this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filters); // go back to first page, i.e. offset 0
+    this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filter); // go back to first page, i.e. offset 0
   }
 
-  filterData = (filters: any[]): void => {
-    this.filters = filters.length ? JSON.stringify(filters) : undefined; // don't send filters field if no filters
+  filterData = (filter: any[]): void => {
+    this.filter = filter.length ? JSON.stringify(filter) : undefined; // don't send filter field if no filter
 
-    this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filters); // go back to first page, i.e. offset 0
+    this.devicesService.fetchMore(0, this.pageSize, this.sortOptions, this.filter); // go back to first page, i.e. offset 0
   };
 }
