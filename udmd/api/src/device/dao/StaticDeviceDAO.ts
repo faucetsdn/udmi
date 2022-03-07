@@ -25,10 +25,11 @@ export class StaticDeviceDAO implements DeviceDAO {
       throw new Error('An invalid offset that is greater than the total number of devices was provided.');
     }
 
-    console.log(searchOptions.filter);
-    const filters: Filter[] = fromString(searchOptions.filter);
-
-    const filteredDevices = filterDevices(filters, this.devices);
+    let filteredDevices = this.devices;
+    if (searchOptions.filter) {
+      const filters: Filter[] = fromString(searchOptions.filter);
+      filteredDevices = filterDevices(filters, this.devices);
+    }
 
     if (searchOptions.sortOptions) {
       if (searchOptions.sortOptions.field === 'operational') {
