@@ -11,7 +11,7 @@ export function createDevices(count: number): Device[] {
     const section: string = `SIN-MBC${n}`;
     const lastPayload: string = '2022-08-30';
     const operational: boolean = n % 3 == 0 ? false : true;
-    devices.push({ name, make, model, site, section, lastPayload, operational });
+    devices.push({ id: name, name, make, model, site, section, lastPayload, operational, tags: [] });
     n++;
   }
 
