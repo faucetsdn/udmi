@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { GraphQLModule } from '../graphql/graphql.module';
-import { DevicesResponse, GET_DEVICES } from './device.gql';
+import { GET_DEVICES } from './device.gql';
+import { DevicesResponse } from './devices';
 import { DevicesService } from './devices.service';
 
 describe('DevicesService', () => {
