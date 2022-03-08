@@ -1,4 +1,4 @@
-import { StaticDeviceDAO } from '../../device/dao/StaticDeviceDAO';
+import { StaticDeviceDAO } from '../../device/dao/static/StaticDeviceDAO';
 import dataSources from '../../server/datasources';
 
 describe('datasource.datasource', () => {

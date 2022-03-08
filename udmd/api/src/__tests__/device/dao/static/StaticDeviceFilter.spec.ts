@@ -1,5 +1,5 @@
-import { filterDevices } from '../../../device/dao/StaticDeviceFilter';
-import { createDevices } from '../data';
+import { filterDevices } from '../../../../device/dao/static/StaticDeviceFilter';
+import { createDevices } from '../../data';
 
 describe('StaticDeviceFilter.filterDevices', () => {
   const devices = createDevices(100);

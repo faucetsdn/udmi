@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto';
-import { fromString } from '../FilterParser';
-import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../model';
-import { DeviceDAO } from './DeviceDAO';
+import { fromString } from '../../FilterParser';
+import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../../model';
+import { DeviceDAO } from '../DeviceDAO';
 import { filterDevices } from './StaticDeviceFilter';
 
 const deviceTemplates = [

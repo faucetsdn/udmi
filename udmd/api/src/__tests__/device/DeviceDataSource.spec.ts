@@ -2,7 +2,7 @@ import { DevicesResponse, SearchOptions } from '../../device/model';
 import { DeviceDataSource } from '../../device/DeviceDataSource';
 import { createSearchOptions } from './data';
 import { DeviceDAO } from '../../device/dao/DeviceDAO';
-import { StaticDeviceDAO } from '../../device/dao/StaticDeviceDAO';
+import { StaticDeviceDAO } from '../../device/dao/static/StaticDeviceDAO';
 
 const deviceDAO: DeviceDAO = new StaticDeviceDAO();
 

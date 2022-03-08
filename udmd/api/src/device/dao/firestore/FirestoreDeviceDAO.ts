@@ -1,5 +1,5 @@
-import { SearchOptions, Device } from '../model';
-import { DeviceDAO } from './DeviceDAO';
+import { SearchOptions, Device } from '../../model';
+import { DeviceDAO } from '../DeviceDAO';
 
 // this class allows interactions with a firestore db
 export class FirestoreDeviceDAO implements DeviceDAO {
