@@ -242,10 +242,6 @@ public class Registrar {
             cloudIotManager.getRegistryId()));
   }
 
-  private void processDevices() {
-    processDevices(null);
-  }
-
   private String getGenerationString() {
     try {
       Date generationDate = new Date();
@@ -254,6 +250,10 @@ public class Registrar {
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While forming generation timestamp", e);
     }
+  }
+
+  private void processDevices() {
+    processDevices(null);
   }
 
   private void processDevices(List<String> devices) {
