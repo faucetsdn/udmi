@@ -1,17 +1,29 @@
-import { Configuration, loadConfig } from '../../../server/config';
+import { loadConfig } from '../../../server/config';
 import { getDeviceDAO } from '../../../device/dao/DeviceDAOFactory';
-import { DeviceDAO } from '../../../device/dao/DeviceDAO';
-import { StaticDeviceDAO } from '../../../device/dao/StaticDeviceDAO';
-import { FirestoreDeviceDAO } from '../../../device/dao/FirestoreDeviceDAO';
+import { StaticDeviceDAO } from '../../../device/dao/static/StaticDeviceDAO';
+import { MongoDeviceDAO } from '../../../device/dao/mongodb/MongoDeviceDAO';
+import { MongoClient } from 'mongodb';
+
+const mockClient = jest.fn().mockImplementation(() => {
+  return { db: jest.fn() };
+});
 
 describe('DeviceDAOFactory.getDeviceDAO', () => {
-  test('returns a static device dao', () => {
-    process.env.DATABASE = 'STATIC';
-    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(StaticDeviceDAO);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    //mock the static MongoClient.connect here
+    MongoClient.connect = mockClient;
   });
 
-  test('returns a firestore device dao', () => {
-    process.env.DATABASE = 'FIRESTORE';
-    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(FirestoreDeviceDAO);
+  test('returns a static device dao', async () => {
+    const config = loadConfig();
+    config.datasource = 'STATIC';
+    await expect(getDeviceDAO(config)).resolves.toBeInstanceOf(StaticDeviceDAO);
+  });
+
+  test('returns a mongo device dao', async () => {
+    const config = loadConfig();
+    config.datasource = 'MONGO';
+    await expect(getDeviceDAO(config)).resolves.toBeInstanceOf(MongoDeviceDAO);
   });
 });

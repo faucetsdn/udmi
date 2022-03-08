@@ -19,7 +19,7 @@ export interface Device {
   section: string;
   lastPayload: string;
   operational: boolean;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface SortOptions {

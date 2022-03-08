@@ -32,8 +32,9 @@ describe('config.loadConfig', () => {
     expect(loadConfig().nodeEnv).toBe('test');
   });
 
-  test('config has a database entry', () => {
-    expect(loadConfig().database).toBe('STATIC');
+  test('config has a datasource entry', () => {
+    process.env.DATASOURCE = 'STATIC';
+    expect(loadConfig().datasource).toBe('STATIC');
   });
 
   test('config has a project_id entry', () => {
@@ -45,6 +46,31 @@ describe('config.loadConfig', () => {
     process.env.LOG_LEVEL = 'debug';
     expect(loadConfig().logLevel).toBe('debug');
   });
+
+  test('config has a mongo protocol entry', () => {
+    process.env.MONGO_PROTOCOL = 'protocol';
+    expect(loadConfig().mongoProtocol).toBe('protocol');
+  });
+
+  test('config has a mongo protocol entry', () => {
+    process.env.MONGO_USERNAME = 'name';
+    expect(loadConfig().mongoUsername).toBe('name');
+  });
+
+  test('config has a mongo protocol entry', () => {
+    process.env.MONGO_PASSWORD = 'pwd';
+    expect(loadConfig().mongoPassword).toBe('pwd');
+  });
+
+  test('config has a mongo protocol entry', () => {
+    process.env.MONGO_HOST = 'host';
+    expect(loadConfig().mongoHost).toBe('host');
+  });
+
+  test('config has a mongo protocol entry', () => {
+    process.env.MONGO_DATABASE = 'db';
+    expect(loadConfig().mongoDatabase).toBe('db');
+  });
 });
 
 describe('config.logConfig', () => {
@@ -54,14 +80,13 @@ describe('config.logConfig', () => {
 
   test('info logs are written', () => {
     process.env.PROJECT_ID = 'test';
-    process.env.DATABASE = 'STATIC';
 
     logConfig();
     expect(logger.info).toHaveBeenCalledTimes(5);
     expect(logger.info).toHaveBeenNthCalledWith(1, 'Running the API service with the following configuration:');
     expect(logger.info).toHaveBeenNthCalledWith(2, '  Environment: test');
-    expect(logger.info).toHaveBeenNthCalledWith(3, '     Database: STATIC');
+    expect(logger.info).toHaveBeenNthCalledWith(3, '    Log Level: debug');
     expect(logger.info).toHaveBeenNthCalledWith(4, '   Project ID: test');
-    expect(logger.info).toHaveBeenNthCalledWith(5, '    Log Level: debug');
+    expect(logger.info).toHaveBeenNthCalledWith(5, '   Datasource: STATIC');
   });
 });

@@ -6,7 +6,7 @@ Object {
     "devices": Object {
       "devices": Array [
         Object {
-          "id": "id-1",
+          "id": "CDS-1",
           "lastPayload": "2022-08-30",
           "make": "make-1",
           "model": "BBBB-1",
@@ -17,7 +17,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-2",
+          "id": "AHU-2",
           "lastPayload": "2022-08-30",
           "make": "make-2",
           "model": "BBBB-2",
@@ -28,7 +28,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-3",
+          "id": "CDS-3",
           "lastPayload": "2022-08-30",
           "make": "make-3",
           "model": "AAAA-3",
@@ -39,7 +39,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-4",
+          "id": "AHU-4",
           "lastPayload": "2022-08-30",
           "make": "make-4",
           "model": "BBBB-4",
@@ -50,7 +50,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-5",
+          "id": "CDS-5",
           "lastPayload": "2022-08-30",
           "make": "make-5",
           "model": "BBBB-5",
@@ -61,7 +61,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-6",
+          "id": "AHU-6",
           "lastPayload": "2022-08-30",
           "make": "make-6",
           "model": "AAAA-6",
@@ -72,7 +72,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-7",
+          "id": "CDS-7",
           "lastPayload": "2022-08-30",
           "make": "make-7",
           "model": "BBBB-7",
@@ -83,7 +83,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-8",
+          "id": "AHU-8",
           "lastPayload": "2022-08-30",
           "make": "make-8",
           "model": "BBBB-8",
@@ -94,7 +94,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-9",
+          "id": "CDS-9",
           "lastPayload": "2022-08-30",
           "make": "make-9",
           "model": "AAAA-9",
@@ -105,7 +105,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-10",
+          "id": "AHU-10",
           "lastPayload": "2022-08-30",
           "make": "make-10",
           "model": "BBBB-10",
@@ -116,7 +116,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-11",
+          "id": "CDS-11",
           "lastPayload": "2022-08-30",
           "make": "make-11",
           "model": "BBBB-11",
@@ -127,7 +127,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-12",
+          "id": "AHU-12",
           "lastPayload": "2022-08-30",
           "make": "make-12",
           "model": "AAAA-12",
@@ -138,7 +138,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-13",
+          "id": "CDS-13",
           "lastPayload": "2022-08-30",
           "make": "make-13",
           "model": "BBBB-13",
@@ -149,7 +149,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-14",
+          "id": "AHU-14",
           "lastPayload": "2022-08-30",
           "make": "make-14",
           "model": "BBBB-14",
@@ -160,7 +160,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-15",
+          "id": "CDS-15",
           "lastPayload": "2022-08-30",
           "make": "make-15",
           "model": "AAAA-15",
@@ -171,7 +171,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-16",
+          "id": "AHU-16",
           "lastPayload": "2022-08-30",
           "make": "make-16",
           "model": "BBBB-16",
@@ -182,7 +182,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-17",
+          "id": "CDS-17",
           "lastPayload": "2022-08-30",
           "make": "make-17",
           "model": "BBBB-17",
@@ -193,7 +193,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-18",
+          "id": "AHU-18",
           "lastPayload": "2022-08-30",
           "make": "make-18",
           "model": "AAAA-18",
@@ -204,7 +204,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-19",
+          "id": "CDS-19",
           "lastPayload": "2022-08-30",
           "make": "make-19",
           "model": "BBBB-19",
@@ -215,7 +215,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-20",
+          "id": "AHU-20",
           "lastPayload": "2022-08-30",
           "make": "make-20",
           "model": "BBBB-20",
@@ -226,7 +226,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-21",
+          "id": "CDS-21",
           "lastPayload": "2022-08-30",
           "make": "make-21",
           "model": "AAAA-21",
@@ -237,7 +237,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-22",
+          "id": "AHU-22",
           "lastPayload": "2022-08-30",
           "make": "make-22",
           "model": "BBBB-22",
@@ -248,7 +248,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-23",
+          "id": "CDS-23",
           "lastPayload": "2022-08-30",
           "make": "make-23",
           "model": "BBBB-23",
@@ -259,7 +259,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-24",
+          "id": "AHU-24",
           "lastPayload": "2022-08-30",
           "make": "make-24",
           "model": "AAAA-24",
@@ -270,7 +270,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-25",
+          "id": "CDS-25",
           "lastPayload": "2022-08-30",
           "make": "make-25",
           "model": "BBBB-25",
@@ -281,7 +281,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-26",
+          "id": "AHU-26",
           "lastPayload": "2022-08-30",
           "make": "make-26",
           "model": "BBBB-26",
@@ -292,7 +292,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-27",
+          "id": "CDS-27",
           "lastPayload": "2022-08-30",
           "make": "make-27",
           "model": "AAAA-27",
@@ -303,7 +303,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-28",
+          "id": "AHU-28",
           "lastPayload": "2022-08-30",
           "make": "make-28",
           "model": "BBBB-28",
@@ -314,7 +314,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-29",
+          "id": "CDS-29",
           "lastPayload": "2022-08-30",
           "make": "make-29",
           "model": "BBBB-29",
@@ -325,7 +325,7 @@ Object {
           "tags": Array [],
         },
         Object {
-          "id": "id-30",
+          "id": "AHU-30",
           "lastPayload": "2022-08-30",
           "make": "make-30",
           "model": "AAAA-30",

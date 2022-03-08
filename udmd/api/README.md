@@ -14,7 +14,7 @@ The project uses Typescript and depends on Node and npm already being installed 
     Build.sh runs the install and sets up a template environment
 
     `npm install`  
-    `cp envTemplate .env` 
+    `cp .env.example .env` 
     
 2.  Edit the values in .env as needed
 

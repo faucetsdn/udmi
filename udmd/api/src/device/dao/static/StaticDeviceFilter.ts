@@ -1,4 +1,4 @@
-import { Device, Filter } from '../model';
+import { Device, Filter } from '../../model';
 
 export function filterDevices(filters: Filter[], devices: Device[]): Device[] {
   let filteredDevices = devices;

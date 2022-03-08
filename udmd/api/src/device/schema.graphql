@@ -33,7 +33,7 @@ type DevicesResponse {
 type Device {
   # the ID of the device
   id: ID!
-  # the name pf the device
+  # the name of the device
   name: String!
   # the make of the device
   make: String

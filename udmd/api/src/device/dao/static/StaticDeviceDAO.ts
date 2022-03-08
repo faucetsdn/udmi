@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto';
-import { fromString } from '../FilterParser';
-import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../model';
-import { DeviceDAO } from './DeviceDAO';
+import { fromString } from '../../FilterParser';
+import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../../model';
+import { DeviceDAO } from '../DeviceDAO';
 import { filterDevices } from './StaticDeviceFilter';
 
 const deviceTemplates = [
@@ -11,7 +11,7 @@ const deviceTemplates = [
   { make: 'Enlightened', models: ['Light Gateway'], name: 'enl' },
   { make: 'Tridium', models: ['JACE 8000'], name: 'tri' },
   { make: 'Delta Controls', models: ['Entelibus Manager 100', 'CopperCube'], name: 'dc' },
-  { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'aqu' },
+  { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'acq' },
   { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc' },
 ];
 
@@ -98,8 +98,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       const section: string = deviceSection;
       const lastPayload: string = new Date(new Date().getTime() - randomInt(1000000000)).toISOString();
       const operational: boolean = n % 3 == 0 ? false : true;
-      const tags: string[] = [];
-      devices.push({ id, name, make, model, site, section, lastPayload, operational, tags });
+      devices.push({ id, name, make, model, site, section, lastPayload, operational, tags: [] });
       n++;
     }
 
