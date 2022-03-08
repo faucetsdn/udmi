@@ -6,7 +6,8 @@ import { of } from 'rxjs';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
-import { SortOptions } from './device.interface';
+import { SortOptions } from './devices';
+import { SearchFilterItem } from '../search-filter/search-filter';
 
 describe('DevicesComponent', () => {
   let component: DevicesComponent;
@@ -29,7 +30,7 @@ describe('DevicesComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should compile', () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 
@@ -44,7 +45,7 @@ describe('DevicesComponent', () => {
 
     expect(component.pageSize).toEqual(11);
     expect(component.currentPage).toEqual(2);
-    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(22, 11);
+    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(22, 11, undefined, undefined);
   });
 
   it('should sort', () => {
@@ -60,6 +61,24 @@ describe('DevicesComponent', () => {
       field: 'site',
     };
 
-    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(0, 10, sortOptions);
+    expect(component.sortOptions).toEqual(sortOptions);
+    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(0, 10, sortOptions, undefined);
+  });
+
+  it('should filter', () => {
+    const filters: SearchFilterItem[] = [
+      {
+        field: 'name',
+        operator: '=',
+        value: 'AHU1',
+      },
+    ];
+
+    component.filterData(filters);
+
+    const filter: string = JSON.stringify(filters);
+
+    expect(component.filter).toEqual(filter);
+    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(0, 10, undefined, filter);
   });
 });

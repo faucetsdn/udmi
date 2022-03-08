@@ -10,6 +10,7 @@ class Envelope:
     self.deviceRegistryId = None
     self.projectId = None
     self.subFolder = None
+    self.subType = None
 
   @staticmethod
   def from_dict(source):
@@ -21,6 +22,7 @@ class Envelope:
     result.deviceRegistryId = source.get('deviceRegistryId')
     result.projectId = source.get('projectId')
     result.subFolder = source.get('subFolder')
+    result.subType = source.get('subType')
     return result
 
   @staticmethod
@@ -51,4 +53,6 @@ class Envelope:
       result['projectId'] = self.projectId # 5
     if self.subFolder:
       result['subFolder'] = self.subFolder # 5
+    if self.subType:
+      result['subType'] = self.subType # 5
     return result

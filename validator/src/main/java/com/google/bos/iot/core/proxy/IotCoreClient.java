@@ -88,8 +88,8 @@ public class IotCoreClient implements MessagePublisher {
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
       attributes.put( "deviceId", parts[4]);
-      attributes.put("subFolder", parts[5]);
-      attributes.put("subType", parts[6]);
+      attributes.put("subType", parts[5]);
+      attributes.put("subFolder", parts[6]);
       assert parts.length == 7;
     } else {
       assert parts.length == 3;

@@ -1,5 +1,8 @@
 package daq.pubber;
 
+/**
+ * Represents a randomly generated numerical point.
+ */
 public class RandomPoint extends BasicPoint implements AbstractPoint {
 
   private final String name;
@@ -28,13 +31,13 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected boolean validateValue(Object set_value) {
-    if (set_value instanceof Integer) {
-      int value = (int) set_value;
+  protected boolean validateValue(Object setValue) {
+    if (setValue instanceof Integer) {
+      int value = (int) setValue;
       return value >= min && value <= max;
     }
-    if (set_value instanceof Double) {
-      double value = (double) set_value;
+    if (setValue instanceof Double) {
+      double value = (double) setValue;
       return value >= min && value <= max;
     }
     return false;

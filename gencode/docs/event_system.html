@@ -195,7 +195,7 @@
             />
         </svg>
     <a href="#logentries_items_message" onclick="anchorLink('logentries_items_message')">message</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A one-line representation of the triggering condition.</p>
+<span class="description"><p>A human-readable one-line description of the entry</p>
 </span>
             
 
@@ -247,7 +247,7 @@
             />
         </svg>
     <a href="#logentries_items_detail" onclick="anchorLink('logentries_items_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.</p>
+<span class="description"><p>An optional extensive entry which can include more detail, e.g. a complete program stack-trace</p>
 </span>
             
 
@@ -295,7 +295,7 @@
             />
         </svg>
     <a href="#logentries_items_category" onclick="anchorLink('logentries_items_category')">category</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.</p>
+<span class="description"><p>A device-specific representation of the category an entry pertains to</p>
 </span><span class="pattern-value" id="logentries_items_category_pattern">Must match regular expression: <code>^[a-z][._a-zA-Z]*[a-zA-Z]$</code></span>
             
 
@@ -304,7 +304,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="logentries_items_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;state.pointset.points.config.invalid&quot;</span>
+<br/><div id="logentries_items_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;pointset.points.config&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -347,7 +347,7 @@
             />
         </svg>
     <a href="#logentries_items_timestamp" onclick="anchorLink('logentries_items_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message <code>timestamp</code> if the condition is not checked often or is sticky until it's cleared.</p>
+<span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
 

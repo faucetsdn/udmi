@@ -27,3 +27,10 @@ update (e.g. _pointset_, _logentry_, _discover_ message) at this interval.
 override any operational values, but not override alarm conditions.
 * `min_loglevel`: Indicates the minimum loglevel for reporting log messages below which log entries
 should not be sent. See note below for a description of the level value.
+
+## Config Entries
+
+During a config up sequence, the system should produce the following log/status update entries:
+
+* system.config.update
+

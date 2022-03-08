@@ -1,18 +1,4 @@
 import { gql } from 'apollo-angular';
-import { Device, SearchOptions } from './device.interface';
-
-export type DevicesResponse = {
-  devices: Device[];
-  totalCount: number;
-};
-
-export type DevicesQueryResponse = {
-  devices: DevicesResponse;
-};
-
-export type DevicesQueryVariables = {
-  searchOptions: SearchOptions;
-};
 
 const fragments = {
   device: gql`
@@ -30,7 +16,7 @@ const fragments = {
   `,
 };
 
-export const GET_DEVICES = gql<DevicesQueryResponse, DevicesQueryVariables>`
+export const GET_DEVICES = gql`
   query GetDevices($searchOptions: SearchOptions!) {
     devices(searchOptions: $searchOptions) {
       devices {

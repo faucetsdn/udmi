@@ -23,7 +23,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "deviceNumId",
     "deviceRegistryId",
     "projectId",
-    "subFolder"
+    "subFolder",
+    "subType"
 })
 @Generated("jsonschema2pojo")
 public class Envelope {
@@ -63,13 +64,21 @@ public class Envelope {
      */
     @JsonProperty("subFolder")
     public Envelope.SubFolder subFolder;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("subType")
+    public Envelope.SubType subType;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.deviceNumId == null)? 0 :this.deviceNumId.hashCode()));
-        result = ((result* 31)+((this.deviceRegistryId == null)? 0 :this.deviceRegistryId.hashCode()));
         result = ((result* 31)+((this.subFolder == null)? 0 :this.subFolder.hashCode()));
+        result = ((result* 31)+((this.deviceRegistryId == null)? 0 :this.deviceRegistryId.hashCode()));
+        result = ((result* 31)+((this.subType == null)? 0 :this.subType.hashCode()));
         result = ((result* 31)+((this.deviceId == null)? 0 :this.deviceId.hashCode()));
         result = ((result* 31)+((this.projectId == null)? 0 :this.projectId.hashCode()));
         return result;
@@ -84,18 +93,19 @@ public class Envelope {
             return false;
         }
         Envelope rhs = ((Envelope) other);
-        return ((((((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId)))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))));
+        return (((((((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId)))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))));
     }
 
     @Generated("jsonschema2pojo")
     public enum SubFolder {
 
-        CONFIG("config"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
+        GATEWAY("gateway"),
+        LOCALNET("localnet"),
         METADATA("metadata"),
         POINTSET("pointset"),
-        STATE("state");
+        BLOBSET("blobset");
         private final String value;
         private final static Map<String, Envelope.SubFolder> CONSTANTS = new HashMap<String, Envelope.SubFolder>();
 
@@ -122,6 +132,48 @@ public class Envelope {
         @JsonCreator
         public static Envelope.SubFolder fromValue(String value) {
             Envelope.SubFolder constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
+    }
+
+    @Generated("jsonschema2pojo")
+    public enum SubType {
+
+        EVENT("event"),
+        COMMAND("command"),
+        STATE("state"),
+        CONFIG("config");
+        private final String value;
+        private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();
+
+        static {
+            for (Envelope.SubType c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        SubType(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static Envelope.SubType fromValue(String value) {
+            Envelope.SubType constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

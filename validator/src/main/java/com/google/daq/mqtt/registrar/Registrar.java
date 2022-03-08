@@ -1,10 +1,6 @@
 
 package com.google.daq.mqtt.registrar;
 
-import static com.google.daq.mqtt.registrar.LocalDevice.GATEWAY_SUBFOLDER;
-import static com.google.daq.mqtt.registrar.LocalDevice.LOCALNET_SUBFOLDER;
-import static com.google.daq.mqtt.registrar.LocalDevice.POINTSET_SUBFOLDER;
-import static com.google.daq.mqtt.registrar.LocalDevice.SYSTEM_SUBFOLDER;
 import static com.google.daq.mqtt.validator.Validator.NO_SITE;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -52,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
+import udmi.schema.Envelope.SubFolder;
 
 public class Registrar {
 
@@ -437,20 +434,20 @@ public class Registrar {
     System.err.println("Sending config messages for " + localDevice.getDeviceId());
 
     Config deviceConfig = localDevice.deviceConfigObject();
-    sendConfigMessage(localDevice, SYSTEM_SUBFOLDER, deviceConfig.system);
-    sendConfigMessage(localDevice, POINTSET_SUBFOLDER, deviceConfig.pointset);
-    sendConfigMessage(localDevice, GATEWAY_SUBFOLDER, deviceConfig.gateway);
-    sendConfigMessage(localDevice, LOCALNET_SUBFOLDER, deviceConfig.localnet);
+    sendConfigMessage(localDevice, SubFolder.SYSTEM, deviceConfig.system);
+    sendConfigMessage(localDevice, SubFolder.POINTSET, deviceConfig.pointset);
+    sendConfigMessage(localDevice, SubFolder.GATEWAY, deviceConfig.gateway);
+    sendConfigMessage(localDevice, SubFolder.LOCALNET, deviceConfig.localnet);
   }
 
-  private void sendConfigMessage(LocalDevice localDevice, String subFolder, Object subConfig) {
+  private void sendConfigMessage(LocalDevice localDevice, SubFolder subFolder, Object subConfig) {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("deviceId", localDevice.getDeviceId());
       attributes.put("deviceNumId", localDevice.getDeviceNumId());
       attributes.put("deviceRegistryId", cloudIotManager.getRegistryId());
       attributes.put("projectId", cloudIotManager.getProjectId());
-      attributes.put("subFolder", subFolder);
+      attributes.put("subFolder", subFolder.value());
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
       configPusher.sendMessage(attributes, messageString);
     } catch (JsonProcessingException e) {
