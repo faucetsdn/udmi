@@ -1,5 +1,8 @@
 package daq.pubber;
 
+/**
+ * Represents a random boolean point.
+ */
 public class RandomBoolean extends BasicPoint implements AbstractPoint {
 
   public RandomBoolean(String name, boolean writable) {
@@ -11,7 +14,7 @@ public class RandomBoolean extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected boolean validateValue(Object set_value) {
-    return set_value instanceof Boolean;
+  protected boolean validateValue(Object setValue) {
+    return setValue instanceof Boolean;
   }
 }

@@ -56,6 +56,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
 import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
@@ -168,10 +170,6 @@ class LocalDevice {
           ES_AUTH_TYPE, ES_KEY_FORMAT,
           ES_CERT_TYPE, ES_CERT_FILE);
 
-  public static final String POINTSET_SUBFOLDER = "pointset";
-  public static final String SYSTEM_SUBFOLDER = "system";
-  public static final String GATEWAY_SUBFOLDER = "gateway";
-  public static final String LOCALNET_SUBFOLDER = "localnet";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
   public static final String INVALID_METADATA_HASH = "INVALID";
@@ -552,10 +550,12 @@ class LocalDevice {
 
   public void validateEnvelope(String registryId, String siteName) {
     try {
+      // Create a fake envelope just to validate registryId and siteName fields.
       Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
       envelope.deviceRegistryId = registryId;
-      envelope.subFolder = Envelope.SubFolder.fromValue(POINTSET_SUBFOLDER);
+      envelope.subFolder = SubFolder.POINTSET;
+      envelope.subType = SubType.EVENT;
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);

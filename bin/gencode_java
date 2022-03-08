@@ -27,6 +27,10 @@ JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
 $GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $OUTDIR
 
+# There is no way to specify enum constants in generated code, so just hack it in manually.
+echo Copying Level.java
+cp -n $ROOT_DIR/etc/Level.java $OUTDIR/udmi/schema/Level.java
+
 echo Cleaning up __ classes...
 find $OUTDIR -name \*__\*.java | xargs rm
 

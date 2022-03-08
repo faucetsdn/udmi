@@ -15,3 +15,4 @@
 - [Sequences](sequences/) (for example _writeback_ and _state_ sequences) 
 - [Site Model](site_model.md)
 - [Tech Stack](tech_stack.md)
+- [Log/Status Entries](entries.md)

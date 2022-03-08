@@ -88,13 +88,13 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: const</span> <span class="badge badge-success default-value">Default: 1</span><br/>
 <span class="description"><p>Major version of the UDMI schema</p>
-</span>
+</span><span class="const-value" id="version_const">Specific value: <code>1</code></span>
             
 
             
-            <p><span class="badge badge-light restriction numeric-restriction" id="version_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>1</code></span></p>
+            
 
             
             </div>
@@ -531,7 +531,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_message" onclick="anchorLink('system_statuses_pattern1_message')">message</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A one-line representation of the triggering condition.</p>
+<span class="description"><p>A human-readable one-line description of the entry</p>
 </span>
             
 
@@ -590,7 +590,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_detail" onclick="anchorLink('system_statuses_pattern1_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.</p>
+<span class="description"><p>An optional extensive entry which can include more detail, e.g. a complete program stack-trace</p>
 </span>
             
 
@@ -645,7 +645,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_category" onclick="anchorLink('system_statuses_pattern1_category')">category</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.</p>
+<span class="description"><p>A device-specific representation of the category an entry pertains to</p>
 </span><span class="pattern-value" id="system_statuses_pattern1_category_pattern">Must match regular expression: <code>^[a-z][._a-zA-Z]*[a-zA-Z]$</code></span>
             
 
@@ -654,7 +654,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;state.pointset.points.config.invalid&quot;</span>
+<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;pointset.points.config&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -704,7 +704,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_timestamp" onclick="anchorLink('system_statuses_pattern1_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message <code>timestamp</code> if the condition is not checked often or is sticky until it's cleared.</p>
+<span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
 
@@ -1264,7 +1264,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_message" onclick="anchorLink('system_statuses_pattern1_message')">message</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A one-line representation of the triggering condition.</p>
+<span class="description"><p>A human-readable one-line description of the entry</p>
 </span>
             
 
@@ -1323,7 +1323,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_detail" onclick="anchorLink('system_statuses_pattern1_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.</p>
+<span class="description"><p>An optional extensive entry which can include more detail, e.g. a complete program stack-trace</p>
 </span>
             
 
@@ -1378,7 +1378,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_category" onclick="anchorLink('system_statuses_pattern1_category')">category</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.</p>
+<span class="description"><p>A device-specific representation of the category an entry pertains to</p>
 </span><span class="pattern-value" id="system_statuses_pattern1_category_pattern">Must match regular expression: <code>^[a-z][._a-zA-Z]*[a-zA-Z]$</code></span>
             
 
@@ -1387,7 +1387,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;state.pointset.points.config.invalid&quot;</span>
+<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;pointset.points.config&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -1437,7 +1437,7 @@
             />
         </svg>
     <a href="#system_statuses_pattern1_timestamp" onclick="anchorLink('system_statuses_pattern1_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message <code>timestamp</code> if the condition is not checked often or is sticky until it's cleared.</p>
+<span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
 
@@ -1911,7 +1911,7 @@ When the value state indicates an error state, an assosciated status entry shoul
             />
         </svg>
     <a href="#system_statuses_pattern1_message" onclick="anchorLink('system_statuses_pattern1_message')">message</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A one-line representation of the triggering condition.</p>
+<span class="description"><p>A human-readable one-line description of the entry</p>
 </span>
             
 
@@ -1970,7 +1970,7 @@ When the value state indicates an error state, an assosciated status entry shoul
             />
         </svg>
     <a href="#system_statuses_pattern1_detail" onclick="anchorLink('system_statuses_pattern1_detail')">detail</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>An optional be multi-line entry which can include more detail, e.g. a complete program stack-trace.</p>
+<span class="description"><p>An optional extensive entry which can include more detail, e.g. a complete program stack-trace</p>
 </span>
             
 
@@ -2025,7 +2025,7 @@ When the value state indicates an error state, an assosciated status entry shoul
             />
         </svg>
     <a href="#system_statuses_pattern1_category" onclick="anchorLink('system_statuses_pattern1_category')">category</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A device-specific representation of which sub-system the message comes from. In a Java environment, for example, it would be the fully qualified path name of the Class triggering the message.</p>
+<span class="description"><p>A device-specific representation of the category an entry pertains to</p>
 </span><span class="pattern-value" id="system_statuses_pattern1_category_pattern">Must match regular expression: <code>^[a-z][._a-zA-Z]*[a-zA-Z]$</code></span>
             
 
@@ -2034,7 +2034,7 @@ When the value state indicates an error state, an assosciated status entry shoul
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;state.pointset.points.config.invalid&quot;</span>
+<br/><div id="system_statuses_pattern1_category_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;pointset.points.config&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -2084,7 +2084,7 @@ When the value state indicates an error state, an assosciated status entry shoul
             />
         </svg>
     <a href="#system_statuses_pattern1_timestamp" onclick="anchorLink('system_statuses_pattern1_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Ttimestamp the condition was triggered, or most recently updated. It might be different than the top-level message <code>timestamp</code> if the condition is not checked often or is sticky until it's cleared.</p>
+<span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
 

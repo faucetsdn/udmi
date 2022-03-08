@@ -17,14 +17,16 @@ import com.google.daq.mqtt.util.CloudIotConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+/**
+ * General functions for managing the connection with IoT Core.
+ */
 public class CloudIotManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(CloudIotManager.class);
@@ -37,6 +39,12 @@ public class CloudIotManager {
   private Map<String, Device> deviceMap = new HashMap<>();
   private CloudIot.Projects.Locations.Registries cloudIotRegistries;
 
+  /**
+   * Create a manager with the given configuration.
+   *
+   * @param projectId Cloud project ID.
+   * @param iotConfig Configuration parameters.
+   */
   CloudIotManager(String projectId, CloudIotConfig iotConfig) {
     this.projectId = projectId;
     this.iotConfig = iotConfig;
