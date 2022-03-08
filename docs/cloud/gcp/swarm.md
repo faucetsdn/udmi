@@ -104,10 +104,12 @@ This will:
   * Check k8s pod logs to see if they're getting targets and connecting properly
   * IoT Core to see if it's receiving data
   * The registry topic (e.g. `data-target`) to see that it's receiving data.
+  * Validator to check received data `udmi$ bin/validator sites/zz-top-example ${GCP_PROJECT} ${DATA_SUBSCRIPTION}`
 
 ## Tweaking the system
 
-  * Control the number of simulated devices by scaling the number of replicas, e.g. `kubectl scale deploy pubber-pool --replicas=10`
-  * Each replica can simulate ~40 devices.
-  * Replicas are limited by the cluster configuration.
-  * Limited by the number of devices in the _site\_model_
+  * Control the number of simulated devices by scaling the number of replicas and pubber instances, total
+  equals _replicas * instances_.
+  * Use `kubectl scale deploy pubber-pool --replicas=10`, or editing the workload configuration file.
+  * Edit the `PUBBER_INSTANCES` env variable in the deployment config.
+  * Also limited by the number of devices in the _site\_model_
