@@ -8,6 +8,17 @@ describe('SearchFilterComponent', () => {
   let component: SearchFilterComponent;
   let fixture: ComponentFixture<SearchFilterComponent>;
 
+  function injectViewValue(viewValue: string): void {
+    let e: MatAutocompleteSelectedEvent = {
+      option: {
+        viewValue,
+      },
+    } as MatAutocompleteSelectedEvent;
+
+    component.selected(e);
+    tick(); // clear setTimeout from _focusItemInput
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SearchFilterModule, BrowserAnimationsModule],
@@ -24,25 +35,19 @@ describe('SearchFilterComponent', () => {
     fixture.detectChanges();
   });
 
+  beforeEach(() => {
+    spyOn(component, 'handleFilterChange');
+    spyOn(component.itemCtrl, 'setValue');
+    spyOn(component.itemInput.nativeElement, 'blur');
+    spyOn(component.itemInput.nativeElement, 'focus');
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
   it('should add a filter', fakeAsync(() => {
-    spyOn(component, 'handleFilterChange');
-    spyOn(component.itemCtrl, 'setValue');
-    spyOn(component.itemInput.nativeElement, 'blur');
-    spyOn(component.itemInput.nativeElement, 'focus');
-
-    // User has chosen a field.
-    let e: MatAutocompleteSelectedEvent = {
-      option: {
-        viewValue: 'name',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
+    injectViewValue('name');
 
     expect(component.items).toContain('name');
     expect(component.filterIndex).toEqual(1);
@@ -56,15 +61,7 @@ describe('SearchFilterComponent', () => {
     expect(component.itemInput.nativeElement.value).toEqual('');
     expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
 
-    // User has chosen an operator.
-    e = {
-      option: {
-        viewValue: '=',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
+    injectViewValue('=');
 
     expect(component.items).toContain('name =');
     expect(component.filterIndex).toEqual(2);
@@ -78,15 +75,7 @@ describe('SearchFilterComponent', () => {
     expect(component.itemInput.nativeElement.value).toEqual('');
     expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
 
-    // User has chosen a value.
-    e = {
-      option: {
-        viewValue: 'AHU-2',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
+    injectViewValue('AHU-2');
 
     expect(component.items).toContain('name = AHU-2');
     expect(component.filterIndex).toEqual(0);
@@ -108,40 +97,9 @@ describe('SearchFilterComponent', () => {
   }));
 
   it('should remove a built filter', fakeAsync(() => {
-    spyOn(component, 'handleFilterChange');
-    spyOn(component.itemCtrl, 'setValue');
-    spyOn(component.itemInput.nativeElement, 'blur');
-    spyOn(component.itemInput.nativeElement, 'focus');
-
-    // User has chosen a field.
-    let e: MatAutocompleteSelectedEvent = {
-      option: {
-        viewValue: 'name',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User has chosen an operator.
-    e = {
-      option: {
-        viewValue: '=',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User has chosen a value.
-    e = {
-      option: {
-        viewValue: 'AHU-2',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
+    injectViewValue('name');
+    injectViewValue('=');
+    injectViewValue('AHU-2');
 
     component.remove('name = AHU-2');
     tick(); // clear setTimeout from _focusItemInput
@@ -159,60 +117,11 @@ describe('SearchFilterComponent', () => {
   }));
 
   it('should remove a partially built filter', fakeAsync(() => {
-    spyOn(component, 'handleFilterChange');
-    spyOn(component.itemCtrl, 'setValue');
-    spyOn(component.itemInput.nativeElement, 'blur');
-    spyOn(component.itemInput.nativeElement, 'focus');
-
-    // User has chosen a field.
-    let e: MatAutocompleteSelectedEvent = {
-      option: {
-        viewValue: 'name',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User has chosen an operator.
-    e = {
-      option: {
-        viewValue: '=',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User has chosen a value.
-    e = {
-      option: {
-        viewValue: 'AHU-2',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User is adding another filter, has chosen field.
-    e = {
-      option: {
-        viewValue: 'make',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
-
-    // User has chosen operator.
-    e = {
-      option: {
-        viewValue: '=',
-      },
-    } as MatAutocompleteSelectedEvent;
-
-    component.selected(e);
-    tick(); // clear setTimeout from _focusItemInput
+    injectViewValue('name');
+    injectViewValue('=');
+    injectViewValue('AHU-2');
+    injectViewValue('make');
+    injectViewValue('=');
 
     component.remove('make =');
     tick(); // clear setTimeout from _focusItemInput

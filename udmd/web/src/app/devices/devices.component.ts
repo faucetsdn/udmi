@@ -22,8 +22,17 @@ export class DevicesComponent implements OnInit {
 
   //TODO:: Pass along proper options to search filter.
   searchFilterOptions = {
-    name: ['CDS-1', 'AHU-2', 'CDS-3'],
-    make: ['make-1', 'make-2', 'make-3'],
+    site: ['site1', 'site2', 'site3'],
+    make: [
+      'Cisco',
+      'BitBox USA',
+      'Automated Logic',
+      'Enlightened',
+      'Tridium',
+      'Delta Controls',
+      'Acquisuite',
+      'Schneider Electric / APC',
+    ],
   };
 
   constructor(private devicesService: DevicesService) {}
