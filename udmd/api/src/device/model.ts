@@ -11,6 +11,7 @@ export interface SearchOptions {
 }
 
 export interface Device {
+  id: string;
   name: string;
   make: string;
   model: string;

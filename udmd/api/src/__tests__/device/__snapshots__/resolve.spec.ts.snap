@@ -2,9 +2,11 @@
 
 exports[`Devices devices 1`] = `
 Object {
-  "data": undefined,
+  "data": Object {
+    "devices": null,
+  },
   "errors": Array [
-    [ValidationError: Cannot query field "id" on type "Device".],
+    [GraphQLError: Cannot return null for non-nullable field Device.id.],
   ],
   "extensions": undefined,
   "http": Object {

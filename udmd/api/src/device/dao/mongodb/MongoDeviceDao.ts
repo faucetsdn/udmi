@@ -7,7 +7,7 @@ export class MongoDeviceDAO implements DeviceDAO {
   constructor(private db: Db) {}
 
   async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
-    return this.db.collection<Device>('device').find().toArray();
+    return this.db.collection<Device>('device').find().limit(searchOptions.batchSize).toArray();
   }
 
   async getDeviceCount(): Promise<number> {

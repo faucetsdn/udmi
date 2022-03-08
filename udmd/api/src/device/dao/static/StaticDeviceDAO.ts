@@ -11,7 +11,7 @@ const deviceTemplates = [
   { make: 'Enlightened', models: ['Light Gateway'], name: 'enl' },
   { make: 'Tridium', models: ['JACE 8000'], name: 'tri' },
   { make: 'Delta Controls', models: ['Entelibus Manager 100', 'CopperCube'], name: 'dc' },
-  { make: 'Aquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'aqu' },
+  { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'acq' },
   { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc' },
 ];
 
@@ -98,7 +98,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       const section: string = deviceSection;
       const lastPayload: string = new Date(new Date().getTime() - randomInt(1000000000)).toISOString();
       const operational: boolean = n % 3 == 0 ? false : true;
-      devices.push({ name, make, model, site, section, lastPayload, operational });
+      devices.push({ id, name, make, model, site, section, lastPayload, operational, tags: [] });
       n++;
     }
 
