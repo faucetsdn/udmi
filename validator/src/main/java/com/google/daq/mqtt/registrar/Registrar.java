@@ -516,14 +516,14 @@ public class Registrar {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
     }
 
-    String[] devices;
+    final String[] devices;
     if (specifiedDevices == null) {
       devices = devicesDir.list();
     } else {
       devices = devicesDir.list(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return specifiedDevices.contains(name);
-      }
+        public boolean accept(File dir, String name) {
+          return specifiedDevices.contains(name);
+        }
       });
     }
 
