@@ -271,18 +271,7 @@ public class Registrar {
         }
       }
 
-      ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
-      for (String localName : localDevices.keySet()) {
-        executor.execute(() -> {
-          int count = processedCount.incrementAndGet();
-          if (count % 500 == 0) {
-            System.err.printf("Processed %d device records...%n", count);
-          }
-          processLocalDevice(localName, updatedCount);
-        });
-      }
-      executor.shutdown();
-      executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
+      processLocalDevices(updatedCount, processedCount);
       System.err.printf("Finished processing %d device records...%n", processedCount.get());
 
       if (updateCloudIoT) {
@@ -299,6 +288,22 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
+      throws InterruptedException {
+    ExecutorService executor = Executors.newFixedThreadPool(RUNNER_THREADS);
+    for (String localName : localDevices.keySet()) {
+      executor.execute(() -> {
+        int count = processedCount.incrementAndGet();
+        if (count % 500 == 0) {
+          System.err.printf("Processed %d device records...%n", count);
+        }
+        processLocalDevice(localName, updatedCount);
+      });
+    }
+    executor.shutdown();
+    executor.awaitTermination(PROCESSING_TIMEOUT_MIN, TimeUnit.MINUTES);
   }
 
   private void processLocalDevice(String localName, AtomicInteger processedDeviceCount) {

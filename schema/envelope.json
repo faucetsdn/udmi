@@ -44,7 +44,6 @@
     "deviceRegistryId",
     "deviceNumId",
     "deviceId",
-    "subFolder",
-    "subType"
+    "subFolder"
   ]
 }
