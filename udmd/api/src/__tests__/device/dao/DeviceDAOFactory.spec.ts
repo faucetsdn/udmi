@@ -1,17 +1,16 @@
-import { Configuration, loadConfig } from '../../../server/config';
+import { loadConfig } from '../../../server/config';
 import { getDeviceDAO } from '../../../device/dao/DeviceDAOFactory';
-import { DeviceDAO } from '../../../device/dao/DeviceDAO';
 import { StaticDeviceDAO } from '../../../device/dao/StaticDeviceDAO';
-import { FirestoreDeviceDAO } from '../../../device/dao/FirestoreDeviceDAO';
+import { MongoDeviceDAO } from '../../../device/dao/mongodb/MongoDeviceDao';
 
 describe('DeviceDAOFactory.getDeviceDAO', () => {
-  test('returns a static device dao', () => {
+  test('returns a static device dao', async () => {
     process.env.DATABASE = 'STATIC';
-    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(StaticDeviceDAO);
+    await expect(getDeviceDAO(loadConfig())).resolves.toBeInstanceOf(StaticDeviceDAO);
   });
 
-  test('returns a firestore device dao', () => {
-    process.env.DATABASE = 'FIRESTORE';
-    expect(getDeviceDAO(loadConfig())).toBeInstanceOf(FirestoreDeviceDAO);
+  test('returns a firestore device dao', async () => {
+    process.env.DATABASE = 'MONGO';
+    await expect(getDeviceDAO(loadConfig())).resolves.toBeInstanceOf(MongoDeviceDAO);
   });
 });

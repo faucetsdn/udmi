@@ -1,19 +1,16 @@
-import { cli } from 'winston/lib/winston/config';
 import { SearchOptions, Device } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
-import { getMongoDb } from './MongoClient';
 import { Db } from 'mongodb';
 
-// this class exists to return static, sorted, and filtered data
+// this class exists to return sorted, and filtered data from MongoDB
 export class MongoDeviceDAO implements DeviceDAO {
   constructor(private db: Db) {}
 
   async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
-    const devices = await this.db.collection('device').find();
-
-    return [];
+    return this.db.collection<Device>('device').find().toArray();
   }
+
   async getDeviceCount(): Promise<number> {
-    return 0;
+    return this.db.collection<Device>('device').countDocuments();
   }
 }

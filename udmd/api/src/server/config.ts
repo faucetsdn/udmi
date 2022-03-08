@@ -21,7 +21,7 @@ export function logConfig(): void {
   const config = loadConfig();
   logger.info(`Running the API service with the following configuration:`);
   logger.info(`  Environment: ${config.nodeEnv}`);
-  logger.info(`     Database: ${config.database}`);
-  logger.info(`   Project ID: ${config.projectId}`);
   logger.info(`    Log Level: ${config.logLevel}`);
+  logger.info(`   Project ID: ${config.projectId}`);
+  logger.info(`   Datasource: ${config.database}`);
 }

@@ -33,6 +33,7 @@ describe('config.loadConfig', () => {
   });
 
   test('config has a database entry', () => {
+    process.env.DATABASE = 'STATIC';
     expect(loadConfig().database).toBe('STATIC');
   });
 
@@ -60,8 +61,8 @@ describe('config.logConfig', () => {
     expect(logger.info).toHaveBeenCalledTimes(5);
     expect(logger.info).toHaveBeenNthCalledWith(1, 'Running the API service with the following configuration:');
     expect(logger.info).toHaveBeenNthCalledWith(2, '  Environment: test');
-    expect(logger.info).toHaveBeenNthCalledWith(3, '     Database: STATIC');
+    expect(logger.info).toHaveBeenNthCalledWith(3, '    Log Level: debug');
     expect(logger.info).toHaveBeenNthCalledWith(4, '   Project ID: test');
-    expect(logger.info).toHaveBeenNthCalledWith(5, '    Log Level: debug');
+    expect(logger.info).toHaveBeenNthCalledWith(5, '   Datasource: STATIC');
   });
 });

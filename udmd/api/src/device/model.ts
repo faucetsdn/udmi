@@ -11,7 +11,6 @@ export interface SearchOptions {
 }
 
 export interface Device {
-  id: string;
   name: string;
   make: string;
   model: string;
@@ -19,7 +18,7 @@ export interface Device {
   section: string;
   lastPayload: string;
   operational: boolean;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface SortOptions {
