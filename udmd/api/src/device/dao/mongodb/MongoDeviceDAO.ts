@@ -3,6 +3,7 @@ import { DeviceDAO } from '../DeviceDAO';
 import { Db } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
 import { getFilter } from './MongoFilterBuilder';
+import { getSort } from './MongoSortBuilder';
 import { logger } from '../../../common/logger';
 
 // this class exists to return sorted, and filtered data from MongoDB
@@ -28,7 +29,7 @@ export class MongoDeviceDAO implements DeviceDAO {
   }
 
   private getSort(searchOptions: SearchOptions): any {
-    return searchOptions.filter ? {} : {};
+    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
   }
 
   private getOffset(searchOptions: SearchOptions): number {

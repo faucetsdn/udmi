@@ -12,11 +12,17 @@ let findSpy;
 let limitSpy;
 let skipSpy;
 
-beforeEach(async () => {
+beforeAll(async () => {
   // in memory mongo
   connection = await MongoClient.connect(process.env.MONGO_URL);
   db = await connection.db('tmp');
+});
 
+afterAll(async () => {
+  await connection.close();
+});
+
+beforeEach(async () => {
   // object under test
   mongoDeviceDAO = new MongoDeviceDAO(db);
 
@@ -31,8 +37,8 @@ beforeEach(async () => {
   skipSpy = jest.spyOn(FindCursor.prototype, 'skip');
 });
 
-afterEach(() => {
-  db.dropCollection('device');
+afterEach(async () => {
+  await db.collection('device').deleteMany({});
   jest.resetAllMocks();
   jest.restoreAllMocks();
 });
