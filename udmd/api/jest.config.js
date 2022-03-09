@@ -13,7 +13,9 @@ module.exports = {
     "cobertura",
     "lcov"
   ],
-  testEnvironment: "node",
+  preset: "@shelf/jest-mongodb",
+  // testEnvironment: "node",
   testRegex: '(/__tests__/spec.ts|(\\.|/)(test|spec))\\.tsx?$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  watchPathIgnorePatterns: ['globalConfig'],
 }

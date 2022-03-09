@@ -3,42 +3,38 @@ import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { Configuration } from '../../../server/config';
 
 export async function getMongoDb(systemConfiguration: Configuration): Promise<Db> {
-  // get the mongo specific configuration from the system config
-  const config: MongoConfig = getMongoConfig(systemConfiguration);
-
-  // setup connection details
-  const credentials = config.username ? `${config.username}:${config.password}@` : '';
-  const uri = `${config.protocol}://${credentials}${config.host}`;
+  const uri = getUri(systemConfiguration);
+  const host = systemConfiguration.mongoHost;
 
   try {
-    const client: MongoClient = await MongoClient.connect(uri, getMongoClientOptions(systemConfiguration));
-    logger.debug(`Connected to mongo host ${config.host}.`);
-    return client.db(config.database);
+    const client: MongoClient = await MongoClient.connect(uri, getClientOptions());
+    logger.debug(`Connected to mongo host ${host}.`);
+    return client.db(systemConfiguration.mongoDatabase);
   } catch (e) {
-    logger.error(`Error connecting to mongo host ${config.host} - ${e}`);
+    logger.error(`Error connecting to mongo host ${host} - ${e}`);
     throw e;
   }
 }
 
-// Configuration information required to connect to a mongo database
-interface MongoConfig {
-  protocol: string;
-  host: string;
-  username: string;
-  password: string;
-  database: string;
+function getUri(systemConfiguration: Configuration): string {
+  // extracting for readability
+  const userName = systemConfiguration.mongoUsername;
+  const password = systemConfiguration.mongoPassword;
+  const host = systemConfiguration.mongoHost;
+  const protocol = systemConfiguration.mongoProtocol;
+
+  logger.debug(`Attempting to connect to mongo as user: '${userName}'`);
+
+  // set up the uri
+  const credentials = userName ? `${userName}:${password}@` : '';
+  return `${protocol}://${credentials}${host}`;
 }
 
-function getMongoConfig(config: Configuration): MongoConfig {
-  return {
-    protocol: config.mongoProtocol,
-    username: config.mongoUsername,
-    password: config.mongoPassword,
-    host: config.mongoHost,
-    database: config.mongoDatabase,
-  };
-}
-
-function getMongoClientOptions(config: Configuration): MongoClientOptions {
+/**
+ * Get the options for the Mongo Client. Connections are managed by specifying the min and max number of connections in the connection pool.
+ * If we need more flexibility in controlling the client, we can configure values in the environment and use the system configuration to confgiure the client options.
+ * @returns the Mongo Client Options
+ */
+function getClientOptions(): MongoClientOptions {
   return { minPoolSize: 1, maxPoolSize: 10 };
 }

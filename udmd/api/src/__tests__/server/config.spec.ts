@@ -43,8 +43,8 @@ describe('config.loadConfig', () => {
   });
 
   test('config has a log level entry', () => {
-    process.env.LOG_LEVEL = 'debug';
-    expect(loadConfig().logLevel).toBe('debug');
+    process.env.LOG_LEVEL = 'info';
+    expect(loadConfig().logLevel).toBe('info');
   });
 
   test('config has a mongo protocol entry', () => {
@@ -85,7 +85,7 @@ describe('config.logConfig', () => {
     expect(logger.info).toHaveBeenCalledTimes(5);
     expect(logger.info).toHaveBeenNthCalledWith(1, 'Running the API service with the following configuration:');
     expect(logger.info).toHaveBeenNthCalledWith(2, '  Environment: test');
-    expect(logger.info).toHaveBeenNthCalledWith(3, '    Log Level: debug');
+    expect(logger.info).toHaveBeenNthCalledWith(3, '    Log Level: info');
     expect(logger.info).toHaveBeenNthCalledWith(4, '   Project ID: test');
     expect(logger.info).toHaveBeenNthCalledWith(5, '   Datasource: STATIC');
   });

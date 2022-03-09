@@ -13,7 +13,7 @@ const formatLogMsg = ({ timestamp, level, message }) => {
 let loggerFormat: Format = format.combine(format.splat(), format.printf(formatLogMsg));
 
 export const logger: Logger = createLogger({
-  level: process.env.LOG_LEVEL || 'debug',
+  level: process.env.LOG_LEVEL || 'info',
   format: loggerFormat,
   silent: false,
   transports: [
