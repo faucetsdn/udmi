@@ -46,3 +46,4 @@ load("/util/UDMI-devices.js");
 - Run `npm build` to build the project. The build artifacts will be stored in the `dist/` directory.
 - Run `npm test` to execute the unit tests via [Jest](https://jestjs.io).
 - Run `npm run testInteractive` to continuosly execute the unit tests via [Jest](https://jestjs.io).  The tests will be run every time a file is saved.
+- Followed these instructions to setup jest and mongodb testing: [Using with MongoDB](https://jestjs.io/docs/mongodb)
