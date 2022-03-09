@@ -16,8 +16,8 @@ web:
     include: udmd/web/build.yml
   except:
     - external_pull_requests
-    
- gcp:
+
+gcp:
   stage: build
   trigger:
     include: cloud/gcp/build.yml
