@@ -1,0 +1,66 @@
+include:
+  - project: 'buildings-iot/templates/cicd_pipelines'
+    ref: main
+    file: terraform/base.yml
+
+stages:
+  - init
+  - validate
+  - build
+  - deploy
+  - cleanup
+
+cache:
+  key: ${CI_PROJECT_NAME}-gcp
+  paths:
+    - ${TF_ROOT}/.terraform
+
+init:
+  extends: .init
+  environment: staging
+  variables:
+    TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
+  before_script:
+    - cd cloud/gcp
+    - sed -E < main.tf.template > main.tf -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
+    - sed -E < udmi-sites.tf.template > udmi-sites.tf -e "s/@UDMI_SITE_NAME@/${UDMI_SITE_NAME}/" -e "s/@UDMI_SITE_REGION@/${UDMI_SITE_REGION}/" -e "s/@UDMI_SITE_GROUP@/${UDMI_SITE_GROUP}/"
+    - sed -E < terraform.tfvars.template > terraform.tfvars -e "s/@GCP_PROJECT_NAME@/${GCP_PROJECT_NAME}/g" -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" -e "s/@GCP_PROJECT_REGION@/${GCP_PROJECT_REGION}/" -e "s/@GCP_PROJECT_GROUP@/${GCP_RPOJECT_GROUP}/"
+    - echo "$GCP_CREDENTIALS" >> auth/credentials.json
+
+validate:
+  extends: .validate
+  environment: staging
+  variables:
+    TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
+  before_script:
+    - cd cloud/gcp
+    - sed -E < main.tf.template > main.tf -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
+    - sed -E < udmi-sites.tf.template > udmi-sites.tf -e "s/@UDMI_SITE_NAME@/${UDMI_SITE_NAME}/" -e "s/@UDMI_SITE_REGION@/${UDMI_SITE_REGION}/" -e "s/@UDMI_SITE_GROUP@/${UDMI_SITE_GROUP}/"
+    - sed -E < terraform.tfvars.template > terraform.tfvars -e "s/@GCP_PROJECT_NAME@/${GCP_PROJECT_NAME}/g" -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" -e "s/@GCP_PROJECT_REGION@/${GCP_PROJECT_REGION}/" -e "s/@GCP_PROJECT_GROUP@/${GCP_RPOJECT_GROUP}/"
+    - echo "$GCP_CREDENTIALS" >> auth/credentials.json
+
+build:
+  extends: .build
+  environment: staging
+  variables:
+    TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
+  before_script:
+    - cd cloud/gcp
+    - sed -E < main.tf.template > main.tf -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
+    - sed -E < udmi-sites.tf.template > udmi-sites.tf -e "s/@UDMI_SITE_NAME@/${UDMI_SITE_NAME}/" -e "s/@UDMI_SITE_REGION@/${UDMI_SITE_REGION}/" -e "s/@UDMI_SITE_GROUP@/${UDMI_SITE_GROUP}/"
+    - sed -E < terraform.tfvars.template > terraform.tfvars -e "s/@GCP_PROJECT_NAME@/${GCP_PROJECT_NAME}/g" -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" -e "s/@GCP_PROJECT_REGION@/${GCP_PROJECT_REGION}/" -e "s/@GCP_PROJECT_GROUP@/${GCP_RPOJECT_GROUP}/"
+    - echo "$GCP_CREDENTIALS" >> auth/credentials.json
+
+deploy:
+  extends: .deploy
+  environment: staging
+  dependencies:
+    - build
+  needs: ["build"]          
+
+destroy:
+  extends: .destroy
+  environment: staging
+  rules:
+    - when: never
+

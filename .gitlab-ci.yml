@@ -17,3 +17,9 @@ web:
   except:
     - external_pull_requests
 
+gcp:
+  stage: build
+  trigger:
+    include: cloud/gcp/build.yml
+
+
