@@ -1,10 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase } from 'lodash-es';
+import { startCase } from 'lodash';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
+import { MatChipInputEvent } from '@angular/material/chips';
 
 @Component({
   selector: 'app-search-filter',
@@ -37,6 +38,22 @@ export class SearchFilterComponent implements OnInit {
   ngOnInit(): void {
     this.allItems = Object.keys(this.data).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
     this.fieldItems = this.allItems;
+  }
+
+  add(event: MatChipInputEvent): void {
+    const value: string = (event.value || '').trim();
+
+    // If we have chosen the contains (~) operator, inject what the user
+    // has typed in as the selected value.
+    if (this.filterIndex === 2 && this.filterEntry.operator === '~' && value) {
+      const $event: MatAutocompleteSelectedEvent = {
+        option: {
+          value: event.value,
+        },
+      } as MatAutocompleteSelectedEvent;
+
+      this.selected($event);
+    }
   }
 
   remove(item: ChipItem): void {
@@ -82,7 +99,10 @@ export class SearchFilterComponent implements OnInit {
         this.filterEntry.field = chipValue; // store the field
         break;
       case 2:
-        this.allItems = this.data[this.items[this.items.length - 2].value].map((cv) => ({ label: cv, value: cv })); // select the fields options
+        this.allItems =
+          chipValue === '~'
+            ? []
+            : this.data[this.items[this.items.length - 2].value].map((cv) => ({ label: cv, value: cv })); // select the fields options when operator is not contains (~)
         this.placeholder = 'Select value...';
         this.filterEntry.operator = chipValue; // store the operator
         this._combineLastTwoChips();
@@ -127,6 +147,6 @@ export class SearchFilterComponent implements OnInit {
   private _filter(value: string): ChipItem[] {
     const filterValue: string = value.toLowerCase();
 
-    return this.allItems.filter((item) => item.value.toLowerCase().includes(filterValue));
+    return this.allItems.filter((item) => item.label.toLowerCase().includes(filterValue));
   }
 }
