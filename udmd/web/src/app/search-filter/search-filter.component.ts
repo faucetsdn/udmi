@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase } from 'lodash';
+import { startCase, findIndex } from 'lodash';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
@@ -57,7 +57,7 @@ export class SearchFilterComponent implements OnInit {
   }
 
   remove(item: ChipItem): void {
-    const index: number = this.items.indexOf(item);
+    const index: number = findIndex(this.items, { value: item.value });
 
     this.items.splice(index, 1); // remove the chip
 
