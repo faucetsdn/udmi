@@ -26,6 +26,22 @@ The project uses Typescript and depends on Node and npm already being installed 
     ```
 2.  Navigate to [http://localhost:4300/](http://localhost:4300/) to see the GraphQL interface. The app will automatically reload if you change any of the source files.
 
+
+### Populate Data for the Project
+
+**Assumption:** mongodb and mongosh are already installed.
+
+1. Create a 'udmi' db with a 'device' collection by following the instructions here: [Creating a DB](https://www.mongodb.com/basics/create-database).  
+2. Connect to the local mongo db using Mongo-Shell if not already connected
+```
+mongosh -host mongo-db udmi
+```
+3. Load the data using the following command:
+
+```
+load("/util/UDMI-devices.js");
+```
+
 ### Notes
 - Run `npm build` to build the project. The build artifacts will be stored in the `dist/` directory.
 - Run `npm test` to execute the unit tests via [Jest](https://jestjs.io).
