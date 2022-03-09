@@ -2,8 +2,8 @@
   <mat-label>Filter Devices</mat-label>
   <mat-chip-list #chipList aria-label="Devices filter selection">
     <mat-chip *ngFor="let item of items" (removed)="remove(item)">
-      {{ item }}
-      <button matChipRemove>
+      {{ item.label }}
+      <button matChipRemove attr.aria-label="Remove filter {{ item.label }}">
         <mat-icon>cancel</mat-icon>
       </button>
     </mat-chip>
@@ -14,11 +14,12 @@
       [formControl]="itemCtrl"
       [matAutocomplete]="auto"
       [matChipInputFor]="chipList"
+      (matChipInputTokenEnd)="add($event)"
     />
   </mat-chip-list>
   <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)" autoActiveFirstOption>
-    <mat-option *ngFor="let item of filteredItems | async" [value]="item">
-      {{ item }}
+    <mat-option *ngFor="let item of filteredItems | async" [value]="item.value">
+      {{ item.label }}
     </mat-option>
   </mat-autocomplete>
 </mat-form-field>

@@ -7,3 +7,8 @@ export type SearchFilterItem =
       value: string;
     }
   | EmptyObject;
+
+export interface ChipItem {
+  label: string;
+  value: string;
+}
