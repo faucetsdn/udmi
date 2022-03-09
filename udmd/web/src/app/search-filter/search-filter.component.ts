@@ -1,9 +1,10 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { startCase } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-import { SearchFilterItem } from './search-filter';
+import { ChipItem, SearchFilterItem } from './search-filter';
 
 @Component({
   selector: 'app-search-filter',
@@ -12,16 +13,17 @@ import { SearchFilterItem } from './search-filter';
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
-  data: any = {};
+  data: Record<string, string[]> = {};
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
   itemCtrl = new FormControl();
-  filteredItems: Observable<string[]>;
-  items: string[] = [];
-  allItems: string[] = [];
+  filteredItems: Observable<ChipItem[]>;
+  items: ChipItem[] = [];
+  allItems: ChipItem[] = [];
   filterIndex: number = 0;
   placeholder: string = 'Select field...';
+  fieldItems: ChipItem[] = [];
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
 
@@ -33,18 +35,19 @@ export class SearchFilterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.allItems = Object.keys(this.data);
+    this.allItems = Object.keys(this.data).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
+    this.fieldItems = this.allItems;
   }
 
-  remove(item: string): void {
-    const index = this.items.indexOf(item);
+  remove(item: ChipItem): void {
+    const index: number = this.items.indexOf(item);
 
     this.items.splice(index, 1); // remove the chip
 
     // Check if we're deleting an exisitng filter, or one we are halfway done building.
     if (index === this.filters.length) {
       // We're deleting a half built filter.
-      this.allItems = Object.keys(this.data); // select field
+      this.allItems = this.fieldItems; // select field
       this.placeholder = 'Select field...';
       this.filterIndex = 0;
       this.filterEntry = {}; // clear the chip cache
@@ -59,36 +62,38 @@ export class SearchFilterComponent implements OnInit {
   }
 
   selected(event: MatAutocompleteSelectedEvent): void {
-    const chipValue = event.option.viewValue;
+    const chipValue: string = event.option.value;
+    const chipItem: ChipItem = { label: this.filterIndex === 0 ? startCase(chipValue) : chipValue, value: chipValue };
 
-    this.items.push(chipValue);
+    this.items.push(chipItem);
     this.filterIndex++;
 
     switch (this.filterIndex) {
       case 0:
-        this.allItems = Object.keys(this.data); // select field
+        this.allItems = this.fieldItems; // select field
         this.placeholder = 'Select field...';
         break;
       case 1:
-        this.allItems = ['=', '!=']; // select operator
+        this.allItems = [
+          { label: '(=) Equals', value: '=' },
+          { label: '(~) Contains', value: '~' },
+        ]; // select operator
         this.placeholder = 'Select operator...';
         this.filterEntry.field = chipValue; // store the field
         break;
       case 2:
-        this.allItems = this.data[this.items[this.items.length - 2]]; // select the fields options
+        this.allItems = this.data[this.items[this.items.length - 2].value].map((cv) => ({ label: cv, value: cv })); // select the fields options
         this.placeholder = 'Select value...';
         this.filterEntry.operator = chipValue; // store the operator
-
         this._combineLastTwoChips();
         break;
       default:
-        this.allItems = Object.keys(this.data); // reset
+        this.allItems = this.fieldItems; // reset
         this.placeholder = 'Select field...';
         this.filterIndex = 0; // reset
         this.filterEntry.value = chipValue; // store the value
         this.filters.push(this.filterEntry);
         this.filterEntry = {}; // clear the chip cache
-
         this._combineLastTwoChips();
         this.handleFilterChange(this.filters);
         break;
@@ -110,16 +115,18 @@ export class SearchFilterComponent implements OnInit {
   }
 
   private _combineLastTwoChips(): void {
-    const lastTwoItems = this.items.splice(this.items.length - 2, 2); // remove last 2 chips
+    const lastTwoItems: ChipItem[] = this.items.splice(this.items.length - 2, 2); // remove last 2 chips
+    const chipValue: string = lastTwoItems.map(({ label }) => label).join(' ');
+    const chipItem: ChipItem = { label: chipValue, value: chipValue };
 
     if (lastTwoItems.length) {
-      this.items.push(lastTwoItems.join(' ')); // push it back as a single chip
+      this.items.push(chipItem); // push it back as a single chip
     }
   }
 
-  private _filter(value: string): string[] {
-    const filterValue = value.toLowerCase();
+  private _filter(value: string): ChipItem[] {
+    const filterValue: string = value.toLowerCase();
 
-    return this.allItems.filter((item) => item.toLowerCase().includes(filterValue));
+    return this.allItems.filter((item) => item.value.toLowerCase().includes(filterValue));
   }
 }
