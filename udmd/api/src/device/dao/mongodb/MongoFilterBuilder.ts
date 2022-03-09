@@ -6,7 +6,8 @@ export function getFilter(jsonFilters: Filter[]): any {
 
   jsonFilters.forEach((filter) => {
     // '~' is our symbol for 'contains'
-    if (filter.operator === '~') {
+    // the operational field is a boolean so do not try a partial match on this field
+    if (filter.operator === '~' && filter.field !== 'operational') {
       // this means we need to do a case insensitive regex match for the value of the field
       mongoFilters[filter.field] = { $regex: filter.value, $options: 'i' };
     }

@@ -6,6 +6,7 @@ const emptyMongoFilter = {};
 const filters = [
   [getContainsFilter('make', 'value'), getExpectedRegex('make', 'value')],
   [getContainsFilter('model', 'value'), getExpectedRegex('model', 'value')],
+  [getContainsFilter('operational', 'true'), emptyMongoFilter],
   [getEqualsFilter('make', 'value'), emptyMongoFilter],
 ];
 
