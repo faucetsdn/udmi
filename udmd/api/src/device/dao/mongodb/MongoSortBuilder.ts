@@ -11,5 +11,6 @@ export function getSort(sortOptions: SortOptions): any {
     mongoSort[sortOptions.field] = -1;
     mongoSort['name'] = -1;
   }
+
   return mongoSort;
 }
