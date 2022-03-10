@@ -21,7 +21,6 @@ export class MongoDeviceDAO implements DeviceDAO {
   }
 
   async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
-    // console.log(await this.db.collection<Device>('device').countDocuments());
     return await this.db.collection<Device>('device').countDocuments(this.getFilter(searchOptions));
   }
 
