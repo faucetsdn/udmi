@@ -33,15 +33,17 @@ export class StaticDeviceDAO implements DeviceDAO {
     return this.devices.length;
   }
 
+  public async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
+    let filteredDevices = this.devices;
+    if (searchOptions.filter) {
+      const filters: Filter[] = fromString(searchOptions.filter);
+      filteredDevices = filterDevices(filters, filteredDevices);
+    }
+
+    return filterDevices.length;
+  }
+
   public async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
-    if (searchOptions.batchSize == 0) {
-      throw new Error('A batch size greater than zero must be provided.');
-    }
-
-    if (searchOptions.offset > this.devices.length) {
-      throw new Error('An invalid offset that is greater than the total number of devices was provided.');
-    }
-
     let filteredDevices = this.devices;
     if (searchOptions.filter) {
       const filters: Filter[] = fromString(searchOptions.filter);

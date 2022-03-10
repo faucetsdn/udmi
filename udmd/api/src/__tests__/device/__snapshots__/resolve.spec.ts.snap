@@ -337,6 +337,7 @@ Object {
         },
       ],
       "totalCount": 30,
+      "totalFilteredCount": 10,
     },
   },
   "errors": undefined,

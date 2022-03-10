@@ -13,6 +13,7 @@ const QUERY_DEVICES = gql`
   query {
     devices(searchOptions: { batchSize: 10, offset: 10, sortOptions: { direction: DESC, field: "name" }, filter: "" }) {
       totalCount
+      totalFilteredCount
       devices {
         id
         name

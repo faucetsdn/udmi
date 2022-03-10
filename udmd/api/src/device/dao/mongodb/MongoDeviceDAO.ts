@@ -1,6 +1,6 @@
 import { SearchOptions, Device } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
-import { Db } from 'mongodb';
+import { Db, Filter, FindCursor } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
 import { getFilter } from './MongoFilterBuilder';
 import { getSort } from './MongoSortBuilder';
@@ -20,11 +20,15 @@ export class MongoDeviceDAO implements DeviceDAO {
       .toArray();
   }
 
+  async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
+    return await this.db.collection<Device>('device').countDocuments(this.getFilter(searchOptions));
+  }
+
   async getDeviceCount(): Promise<number> {
     return this.db.collection<Device>('device').countDocuments();
   }
 
-  private getFilter(searchOptions: SearchOptions): any {
+  private getFilter(searchOptions: SearchOptions): Filter<Device> {
     return searchOptions.filter ? getFilter(fromString(searchOptions.filter)) : {};
   }
 

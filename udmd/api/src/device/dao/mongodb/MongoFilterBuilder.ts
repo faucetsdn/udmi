@@ -5,11 +5,17 @@ export function getFilter(jsonFilters: Filter[]): any {
   const mongoFilters: any = {};
 
   jsonFilters.forEach((filter) => {
+    if (filter.field === 'operational') {
+      // do nothing for filtering on the operational boolean yet
+      // TODO: resolve in a future PR
+    }
     // '~' is our symbol for 'contains'
-    // the operational field is a boolean so do not try a partial match on this field
-    if (filter.operator === '~' && filter.field !== 'operational') {
+    else if (filter.operator === '~') {
       // this means we need to do a case insensitive regex match for the value of the field
       mongoFilters[filter.field] = { $regex: filter.value, $options: 'i' };
+    } else if (filter.operator === '=') {
+      // this means we need to do an exact match for the value of the field
+      mongoFilters[filter.field] = filter.value;
     }
   });
 
