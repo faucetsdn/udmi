@@ -21,6 +21,10 @@ sonarqube-scan:
 scan-docker:
   rules:
     - when: never
+    
+build-docker:
+  rules:
+    - when: never
 
 publish-docker:
   rules:
