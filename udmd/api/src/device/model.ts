@@ -1,6 +1,7 @@
 export interface DevicesResponse {
   devices: Device[];
   totalCount: number;
+  totalFilteredCount: number;
 }
 
 export interface SearchOptions {

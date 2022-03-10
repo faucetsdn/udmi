@@ -19,4 +19,9 @@ describe('DeviceDataSource.getDevice()', () => {
     const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
     await expect(result.totalCount).not.toBe(0);
   });
+
+  test('returns a total filtered count', async () => {
+    const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
+    await expect(result.totalFilteredCount).not.toBe(0);
+  });
 });

@@ -28,6 +28,8 @@ type DevicesResponse {
   devices: [Device!]!
   # the total number of devices in the system
   totalCount: Int!
+  # the total number of devices after the filter in the search options has been applied
+  totalFilteredCount: Int!
 }
 
 type Device {

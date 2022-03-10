@@ -22,27 +22,6 @@ describe('StaticDeviceDAO.getDevices', () => {
     searchOptions = createSearchOptions(batchSize, offset);
     await expect(deviceDAO.getDevices(searchOptions)).resolves.toEqual(allDevices.slice(offset, offset + batchSize));
   });
-
-  test('that providing an offset greater than the number of devices throws an error', async () => {
-    const batchSize = 20;
-    const offset = 200;
-
-    const searchOptions: SearchOptions = createSearchOptions(batchSize, offset);
-
-    await expect(deviceDAO.getDevices(searchOptions)).rejects.toThrowError(
-      'An invalid offset that is greater than the total number of devices was provided.'
-    );
-  });
-
-  test('that if a batch size of 0 is provided, an error is thrown', async () => {
-    const batchSize = 0;
-
-    const searchOptions: SearchOptions = createSearchOptions(batchSize);
-
-    await expect(deviceDAO.getDevices(searchOptions)).rejects.toThrowError(
-      'A batch size greater than zero must be provided'
-    );
-  });
 });
 
 describe('StaticDeviceDAO.getDeviceCount', () => {

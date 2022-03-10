@@ -7,7 +7,9 @@ let connection: MongoClient;
 let db: Db;
 let deviceCollection: Collection;
 let mongoDeviceDAO: MongoDeviceDAO;
-let mockDevices: Device[];
+const mockDevices: Device[] = createDevices(100);
+
+// mocks
 let findSpy;
 let sortSpy;
 let limitSpy;
@@ -28,9 +30,8 @@ beforeEach(async () => {
   mongoDeviceDAO = new MongoDeviceDAO(db);
 
   // data prep
-  mockDevices = createDevices(100);
   deviceCollection = db.collection('device');
-  deviceCollection.insertMany(mockDevices);
+  await deviceCollection.insertMany(mockDevices);
 
   // spies
   findSpy = jest.spyOn(Collection.prototype, 'find');
@@ -41,8 +42,9 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await db.collection('device').deleteMany({});
-  jest.resetAllMocks();
-  jest.restoreAllMocks();
+
+  // jest.resetAllMocks();
+  // jest.restoreAllMocks();
 });
 
 describe('MongoDeviceDAO.getDevices', () => {
@@ -148,5 +150,15 @@ describe('MongoDeviceDAO.getDeviceCount', () => {
     const count: number = await mongoDeviceDAO.getDeviceCount();
 
     expect(count).toBe(mockDevices.length);
+  });
+});
+
+describe('MongoDeviceDAO.getFilteredDeviceCount', () => {
+  test('returns the filtered device count in the mongo db', async () => {
+    const searchOptions: SearchOptions = { batchSize: 10 };
+
+    const filterdDeviceCount: number = await mongoDeviceDAO.getFilteredDeviceCount(searchOptions);
+
+    expect(filterdDeviceCount).toBe(mockDevices.length);
   });
 });
