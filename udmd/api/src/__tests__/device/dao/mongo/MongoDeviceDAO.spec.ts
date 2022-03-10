@@ -3,13 +3,17 @@ import { MongoDeviceDAO } from '../../../../device/dao/mongodb/MongoDeviceDAO';
 import { Device, SearchOptions, SORT_DIRECTION } from '../../../../device/model';
 import { createDevices } from '../../data';
 
+const mockDevices: Device[] = createDevices(100);
+
+// mongo objects
 let connection: MongoClient;
 let db: Db;
 let deviceCollection: Collection;
-let mongoDeviceDAO: MongoDeviceDAO;
-const mockDevices: Device[] = createDevices(100);
 
-// mocks
+// object under test
+let mongoDeviceDAO: MongoDeviceDAO;
+
+// spies
 let findSpy;
 let sortSpy;
 let limitSpy;
@@ -26,14 +30,12 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  // object under test
   mongoDeviceDAO = new MongoDeviceDAO(db);
 
   // data prep
   deviceCollection = db.collection('device');
   await deviceCollection.insertMany(mockDevices);
 
-  // spies
   findSpy = jest.spyOn(Collection.prototype, 'find');
   sortSpy = jest.spyOn(FindCursor.prototype, 'sort');
   limitSpy = jest.spyOn(FindCursor.prototype, 'limit');
@@ -43,8 +45,8 @@ beforeEach(async () => {
 afterEach(async () => {
   await db.collection('device').deleteMany({});
 
-  // jest.resetAllMocks();
-  // jest.restoreAllMocks();
+  jest.resetAllMocks();
+  jest.restoreAllMocks();
 });
 
 describe('MongoDeviceDAO.getDevices', () => {
