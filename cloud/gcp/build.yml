@@ -54,6 +54,8 @@ build:
 deploy:
   extends: .deploy
   environment: staging
+  variables:
+    TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
   dependencies:
     - build
   needs: ["build"]          
@@ -61,6 +63,8 @@ deploy:
 destroy:
   extends: .destroy
   environment: staging
+  variables:
+    TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
   rules:
     - when: never
 
