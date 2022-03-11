@@ -1,2 +1,2 @@
 npm install
-cp envTemplate .env
+cp env.example .env
