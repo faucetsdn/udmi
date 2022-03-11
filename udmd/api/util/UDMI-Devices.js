@@ -11,9 +11,9 @@ const deviceTemplates = [
 ];
 
 const sites = [
-    { site: 'site1', sections: ['section-a', 'section-b'] },
-    { site: 'site2', sections: ['section-c', 'section-d'] },
-    { site: 'site3', sections: ['section-e', 'section-f'] },
+    { site: 'CA-US-M1', sections: ['LK', 'PK'] },
+    { site: 'CA-US-M2', sections: ['AK', 'DK'] },
+    { site: 'CA-US-M3', sections: ['JK', 'FK'] },
 ];
 
 let n = 1;
@@ -31,7 +31,7 @@ while (n <= 10000) {
     const lastPayload = new Date(new Date() - getRandomInt(1000000000)).toISOString();
     const operational = n % 3 == 0 ? false : true;
 
-    db.device.insertOne({ "id": n, name, make, model, site, section, lastPayload, operational, "tags": [] });
+    db.device.insertOne({ "id": UUID(), name, make, model, site, section, lastPayload, operational, "tags": [] });
     n++;
 }
 

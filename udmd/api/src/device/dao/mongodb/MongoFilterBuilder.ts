@@ -1,5 +1,8 @@
 import { Filter } from '../../../device/model';
 
+// list of possible columns to search on
+const filterableColumns = ['name', 'make', 'model', 'site'];
+
 export function getFilter(filters: Filter[]): any {
   return convertMapOfFiltersToFilter(getMapOfFiltersByField(filters));
 }
@@ -16,10 +19,7 @@ function getMapOfFiltersByField(filters: Filter[]): Map<string, Filter[]> {
 }
 
 function convertMapOfFiltersToFilter(mapOfFilters: Map<string, Filter[]>): any {
-  // list of possible columns to search on
-  const columns = ['name', 'make', 'model', 'section', 'site', 'lastPayload', 'operational'];
-
-  const filterExpressions = columns
+  const filterExpressions = filterableColumns
     .map((column) => {
       if (mapOfFilters[column]) {
         const inArray = mapOfFilters[column].map((filter: Filter) =>
@@ -30,5 +30,5 @@ function convertMapOfFiltersToFilter(mapOfFilters: Map<string, Filter[]>): any {
     })
     .filter((expression) => expression);
 
-  return { $and: filterExpressions };
+  return { $or: filterExpressions };
 }
