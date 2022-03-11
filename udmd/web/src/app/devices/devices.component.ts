@@ -14,6 +14,7 @@ export class DevicesComponent implements OnInit {
   loading: boolean = true;
   devices: Device[] = [];
   totalCount: number = 0;
+  totalFilteredCount: number = 0;
   currentPage: number = 0;
   pageSize: number = 10;
   pageSizeOptions: number[] = [10, 25, 50, 100];
@@ -42,6 +43,7 @@ export class DevicesComponent implements OnInit {
       this.loading = loading;
       this.devices = data.devices?.devices;
       this.totalCount = data.devices?.totalCount;
+      this.totalFilteredCount = data.devices?.totalFilteredCount;
     }); // start off on first page, i.e. offset 0
 
     //TODO:: Keep observable alive after error.

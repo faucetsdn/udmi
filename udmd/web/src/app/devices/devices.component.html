@@ -2,7 +2,7 @@
 <div class="table-controls">
   <span class="mat-small">{{ totalCount }} Devices</span>
   <mat-paginator
-    [length]="totalCount"
+    [length]="totalFilteredCount"
     [pageSize]="pageSize"
     [pageIndex]="currentPage"
     [pageSizeOptions]="pageSizeOptions"

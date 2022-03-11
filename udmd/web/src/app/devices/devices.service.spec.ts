@@ -41,6 +41,7 @@ describe('DevicesService', () => {
         },
       ],
       totalCount: 1,
+      totalFilteredCount: 1,
     };
 
     // Make some assertion about the result for once it's fulfilled.
