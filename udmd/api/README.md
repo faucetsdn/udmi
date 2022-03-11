@@ -29,7 +29,7 @@ The project uses Typescript and depends on Node and npm already being installed 
 
 ### Populate Data for the Project
 
-**Assumption:** mongodb and mongosh are already installed.
+**Assumption:** mongodb and mongosh are already installed.  Not all the steps have been verified to work.
 
 1. Create a 'udmi' db with a 'device' collection by following the instructions here: [Creating a DB](https://www.mongodb.com/basics/create-database).  
 2. Connect to the local mongo db using Mongo-Shell if not already connected
