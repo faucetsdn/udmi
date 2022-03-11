@@ -1,10 +1,9 @@
 import { SearchOptions, Device } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
-import { Db, Filter, FindCursor } from 'mongodb';
+import { Db, Filter } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
 import { getFilter } from './MongoFilterBuilder';
 import { getSort } from './MongoSortBuilder';
-import { logger } from '../../../common/logger';
 
 // this class exists to return sorted, and filtered data from MongoDB
 export class MongoDeviceDAO implements DeviceDAO {
@@ -15,8 +14,8 @@ export class MongoDeviceDAO implements DeviceDAO {
       .collection<Device>('device')
       .find(this.getFilter(searchOptions))
       .sort(this.getSort(searchOptions))
-      .skip(this.getOffset(searchOptions))
-      .limit(this.getBatchSize(searchOptions))
+      .skip(searchOptions.offset)
+      .limit(searchOptions.batchSize)
       .toArray();
   }
 
@@ -34,25 +33,5 @@ export class MongoDeviceDAO implements DeviceDAO {
 
   private getSort(searchOptions: SearchOptions): any {
     return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
-  }
-
-  private getOffset(searchOptions: SearchOptions): number {
-    const offset = searchOptions.offset;
-    if (offset === undefined) {
-      logger.warn(`An offset was not provided, defaulting to 0`);
-      return 0;
-    }
-
-    return offset;
-  }
-
-  private getBatchSize(searchOptions: SearchOptions): number {
-    const batchSize: number = searchOptions.batchSize;
-    if (batchSize > 1000) {
-      logger.warn(`The batch size ${batchSize} exceeds max of 1000, restricting to 1000 records`);
-      return 1000;
-    }
-
-    return batchSize;
   }
 }

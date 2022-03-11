@@ -79,7 +79,7 @@ describe('MongoDeviceDAO.getDevices', () => {
     expect(sortSpy).toHaveBeenCalledWith({ name: 1 });
   });
 
-  test('filtering returns devices with AHU in their name if searchOption specifies a filter of name contains AHU', async () => {
+  test('that the filter is applied and devices returned are limited to those matching the filter', async () => {
     const value = 'AHU';
     const searchOptions: SearchOptions = {
       batchSize: 100,
@@ -92,7 +92,6 @@ describe('MongoDeviceDAO.getDevices', () => {
     retrievedDevices.forEach((device) => {
       expect(device.name.includes(value)).toBe(true);
     });
-    expect(findSpy).toHaveBeenCalledWith({ name: { $regex: value, $options: 'i' } });
   });
 
   test('limit returns a number of devices <= to the limit provided', async () => {
@@ -102,26 +101,6 @@ describe('MongoDeviceDAO.getDevices', () => {
 
     expect(retrievedDevices.length <= 10).toBeTruthy();
     expect(limitSpy).toHaveBeenCalledWith(10);
-  });
-
-  test.each([
-    [999, 999],
-    [1000, 1000],
-    [1001, 1000],
-  ])('limit is reduced to 1000 if a value greater than 1000', async (value, expected) => {
-    const searchOptions: SearchOptions = { batchSize: value, offset: 0 };
-
-    await mongoDeviceDAO.getDevices(searchOptions);
-
-    expect(limitSpy).toHaveBeenCalledWith(expected);
-  });
-
-  test('skip is called with 0 if an offset was not provided', async () => {
-    const searchOptions: SearchOptions = { batchSize: 10 };
-
-    await mongoDeviceDAO.getDevices(searchOptions);
-
-    expect(skipSpy).toHaveBeenCalledWith(0);
   });
 
   test('if offset is provided, skip is called with the offset', async () => {
