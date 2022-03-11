@@ -69,7 +69,7 @@ public class Pubber {
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
-  private static final String MESSAGE_CATEGORY_FORMAT = "base.%s.%s";
+  private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
   private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
