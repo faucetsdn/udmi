@@ -26,6 +26,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
@@ -241,10 +242,6 @@ public class Registrar {
             cloudIotManager.getRegistryId()));
   }
 
-  private void processDevices() {
-    processDevices(null);
-  }
-
   private String getGenerationString() {
     try {
       Date generationDate = new Date();
@@ -255,12 +252,16 @@ public class Registrar {
     }
   }
 
+  private void processDevices() {
+    processDevices(null);
+  }
+
   private void processDevices(List<String> devices) {
     Set<String> deviceSet = calculateDevices(devices);
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
-      localDevices = loadLocalDevices();
+      localDevices = loadLocalDevices(deviceSet);
       cloudDevices = fetchCloudDevices();
 
       if (deviceSet != null) {
@@ -513,13 +514,24 @@ public class Registrar {
     }
   }
 
-  private Map<String, LocalDevice> loadLocalDevices() {
+  private Map<String, LocalDevice> loadLocalDevices(Set<String> specifiedDevices) {
     Preconditions.checkNotNull(siteDir, "site directory");
     File devicesDir = new File(siteDir, DEVICES_DIR);
     if (!devicesDir.isDirectory()) {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
     }
-    String[] devices = devicesDir.list();
+
+    final String[] devices;
+    if (specifiedDevices == null) {
+      devices = devicesDir.list();
+    } else {
+      devices = devicesDir.list(new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+          return specifiedDevices.contains(name);
+        }
+      });
+    }
+
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
     Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
     writeNormalized(localDevices);
