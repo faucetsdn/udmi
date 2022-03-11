@@ -1,6 +1,7 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
 import { Device, DevicesResponse, SearchOptions } from './model';
 import { DeviceDAO } from './dao/DeviceDAO';
+import { validate } from './SearchOptionsValidator';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DeviceDAO) {
@@ -12,9 +13,12 @@ export class DeviceDataSource extends GraphQLDataSource {
   }
 
   async getDevices(searchOptions: SearchOptions): Promise<DevicesResponse> {
+    const validatedSearchOptions: SearchOptions = validate(searchOptions);
+
+    const devices: Device[] = await this.deviceDAO.getDevices(validatedSearchOptions);
     const totalCount = await this.deviceDAO.getDeviceCount();
-    const devices: Device[] = await this.deviceDAO.getDevices(searchOptions);
-    const totalFilteredCount: number = await this.deviceDAO.getFilteredDeviceCount(searchOptions);
+    const totalFilteredCount: number = await this.deviceDAO.getFilteredDeviceCount(validatedSearchOptions);
+
     return { devices, totalCount, totalFilteredCount };
   }
 }

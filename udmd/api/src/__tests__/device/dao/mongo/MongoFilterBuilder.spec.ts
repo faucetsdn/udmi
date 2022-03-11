@@ -1,23 +1,29 @@
 import { Filter } from '../../../../device/model';
 import { getFilter } from '../../../../device/dao/mongodb/MongoFilterBuilder';
 
-const emptyMongoFilter = {};
-
-const containfilters = [
-  [getContainsFilter('make', 'value'), getExpectedRegex('make', 'value')],
-  [getContainsFilter('model', 'value'), getExpectedRegex('model', 'value')],
-  [getContainsFilter('operational', 'true'), emptyMongoFilter],
-  [getEqualsFilter('make', 'value'), getExpectedEqualsExpression('make', 'value')],
-];
-
 describe('MongoFilterBuilder.getFilter', () => {
-  test.each(containfilters)(
-    'returns a regex filter object when ~ is the operator',
-    async (filter: Filter, expectedResult) => {
-      const jsonFilters: Filter[] = [filter];
-      expect(getFilter(jsonFilters)).toEqual(expectedResult);
-    }
-  );
+  test('multiple contains filters on the different field results in a ANDed filter where the same field uses an in clause', () => {
+    const filters: Filter[] = [
+      getContainsFilter('make', 'val1'),
+      getContainsFilter('make', 'val2'),
+      getContainsFilter('model', 'val2'),
+      getContainsFilter('site', 'val3'),
+      getEqualsFilter('make', 'val4'),
+    ];
+    expect(getFilter(filters)).toEqual({
+      $and: [
+        {
+          make: { $in: [/val1/i, /val2/i, 'val4'] },
+        },
+        {
+          model: { $in: [/val2/i] },
+        },
+        {
+          site: { $in: [/val3/i] },
+        },
+      ],
+    });
+  });
 });
 
 function getContainsFilter(field: string, value: string): Filter {
@@ -26,16 +32,4 @@ function getContainsFilter(field: string, value: string): Filter {
 
 function getEqualsFilter(field: string, value: string): Filter {
   return { field, operator: '=', value };
-}
-
-function getExpectedEqualsExpression(field: string, value: string): any {
-  const equalsExpression = {};
-  equalsExpression[field] = value;
-  return equalsExpression;
-}
-
-function getExpectedRegex(field: string, value: string): any {
-  const regex = {};
-  regex[field] = { $regex: value, $options: 'i' };
-  return regex;
 }

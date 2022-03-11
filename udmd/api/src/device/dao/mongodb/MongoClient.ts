@@ -32,7 +32,7 @@ function getUri(systemConfiguration: Configuration): string {
 
 /**
  * Get the options for the Mongo Client. Connections are managed by specifying the min and max number of connections in the connection pool.
- * If we need more flexibility in controlling the client, we can configure values in the environment and use the system configuration to confgiure the client options.
+ * If we need more flexibility in controlling the client, we can add configuration values to the environment and set them here.
  * @returns the Mongo Client Options
  */
 function getClientOptions(): MongoClientOptions {
