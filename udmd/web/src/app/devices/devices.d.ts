@@ -25,6 +25,7 @@ export interface SortOptions {
 export type DevicesResponse = {
   devices: Device[];
   totalCount: number;
+  totalFilteredCount: number;
 };
 
 export type DevicesQueryResponse = {

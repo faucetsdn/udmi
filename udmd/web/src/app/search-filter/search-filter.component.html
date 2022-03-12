@@ -1,6 +1,6 @@
 <mat-form-field class="search-filter" appearance="fill" [floatLabel]="'always'">
   <mat-label>Filter Devices</mat-label>
-  <mat-chip-list #chipList aria-label="Devices filter selection">
+  <mat-chip-list #chipList aria-label="Device filters">
     <mat-chip *ngFor="let item of items" (removed)="remove(item)">
       {{ item.label }}
       <button matChipRemove attr.aria-label="Remove filter {{ item.label }}">

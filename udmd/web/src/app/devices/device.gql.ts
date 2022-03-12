@@ -23,6 +23,7 @@ export const GET_DEVICES = gql`
         ...Device
       }
       totalCount
+      totalFilteredCount
     }
   }
   ${fragments.device}
