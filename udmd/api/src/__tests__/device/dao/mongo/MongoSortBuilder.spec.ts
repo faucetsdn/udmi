@@ -1,23 +1,11 @@
 import { SortOptions, SORT_DIRECTION } from '../../../../device/model';
 import { getSort } from '../../../../device/dao/mongodb/MongoSortBuilder';
 
-const filters = [
-  [{ field: 'make', direction: SORT_DIRECTION.ASC }, getExpectedSort('make', 1)],
-  [{ field: 'model', direction: SORT_DIRECTION.DESC }, getExpectedSort('model', -1)],
-];
-
 describe('MongoFilterBuilder.getFilter', () => {
-  test.each(filters)(
-    'returns a sort object with the direction set',
-    async (sortOptions: SortOptions, expectedResult) => {
-      expect(getSort(sortOptions)).toEqual(expectedResult);
-    }
-  );
+  test('returns a sort ASC object with the direction set', async () => {
+    expect(getSort({ field: 'make', direction: SORT_DIRECTION.ASC })).toEqual({ make: 1, name: 1 });
+  });
+  test('returns a sort DESC object with the direction set', async () => {
+    expect(getSort({ field: 'model', direction: SORT_DIRECTION.DESC })).toEqual({ model: -1, name: -1 });
+  });
 });
-
-function getExpectedSort(field: string, direction: number): any {
-  const sort = {};
-  sort[field] = direction;
-  sort['name'] = direction;
-  return sort;
-}

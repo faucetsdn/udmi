@@ -29,8 +29,8 @@ export interface SortOptions {
 }
 
 export enum SORT_DIRECTION {
-  DESC,
   ASC,
+  DESC,
 }
 
 export interface Filter {
