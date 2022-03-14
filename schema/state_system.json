@@ -39,16 +39,8 @@
       "comment": "Operational status of the device",
       "type": "boolean"
     },
-    "statuses": {
-      "description": "A map of 'sticky' conditions that are keyed on a value that can be used to manage updates by a particular (device dependent) subsystem.",
-      "type": "object",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, Entry>",
-      "patternProperties": {
-        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:common.json#/definitions/entry"
-        }
-      }
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
     }
   },
   "required": [

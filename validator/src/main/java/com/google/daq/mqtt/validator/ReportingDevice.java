@@ -14,8 +14,8 @@ public class ReportingDevice {
   private final String deviceId;
   private final MetadataDiff metadataDiff = new MetadataDiff();
   private Metadata metadata;
-  private List<Exception> errors = new ArrayList<>();
-  private Set<String> validatedTypes = new HashSet<>();
+  private final List<Exception> errors = new ArrayList<>();
+  private final Set<String> validatedTypes = new HashSet<>();
 
   public ReportingDevice(String deviceId) {
     this.deviceId = deviceId;

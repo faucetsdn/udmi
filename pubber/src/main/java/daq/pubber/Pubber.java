@@ -271,7 +271,6 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.system.statuses = new HashMap<>();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
@@ -499,9 +498,9 @@ public class Pubber {
       report = entryFromException(category, cause);
     }
     if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
-      deviceState.system.statuses.remove(type);
+      deviceState.system.status = null;
     } else {
-      deviceState.system.statuses.put(type, report);
+      deviceState.system.status = report;
     }
     localLog(report);
     publishLogMessage(report);
