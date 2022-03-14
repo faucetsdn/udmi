@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { startCase } from 'lodash-es';
+import { Breadcrumb } from './breadcrumb';
 
 @Component({
   selector: 'app-breadcrumb',
@@ -8,7 +9,7 @@ import { startCase } from 'lodash-es';
   styleUrls: ['./breadcrumb.component.scss'],
 })
 export class BreadcrumbComponent implements OnInit {
-  items: any[] = [];
+  items: Breadcrumb[] = [];
 
   constructor(private route: ActivatedRoute) {}
 
@@ -17,7 +18,7 @@ export class BreadcrumbComponent implements OnInit {
   }
 
   private _getSlugs(): void {
-    const slugs: any[] = [];
+    const slugs: string[] = [];
     let parent: ActivatedRoute | null = this.route.parent;
 
     while (parent && parent.snapshot.url[0]) {
@@ -26,8 +27,8 @@ export class BreadcrumbComponent implements OnInit {
       parent = parent.parent;
     }
 
-    this.items = slugs.reduce((prevItems, slug, i) => {
-      const prevItem = prevItems[i - 1];
+    this.items = slugs.reduce<Breadcrumb[]>((prevItems, slug, i) => {
+      const prevItem: Breadcrumb = prevItems[i - 1];
 
       return [
         ...prevItems,
