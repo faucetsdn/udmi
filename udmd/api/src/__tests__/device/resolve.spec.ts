@@ -29,6 +29,22 @@ const QUERY_DEVICES = gql`
   }
 `;
 
+const QUERY_DEVICE = gql`
+  query {
+    device(id: "some-id") {
+      id
+      name
+      make
+      model
+      site
+      section
+      lastPayload
+      operational
+      tags
+    }
+  }
+`;
+
 beforeAll(async () => {
   const dataSources = () => {
     return {
@@ -47,6 +63,10 @@ beforeAll(async () => {
 describe('Devices', () => {
   test('devices', async () => {
     const result = await runQuery(QUERY_DEVICES, {});
+    expect(result).toMatchSnapshot();
+  });
+  test('device', async () => {
+    const result = await runQuery(QUERY_DEVICE, {});
     expect(result).toMatchSnapshot();
   });
 });

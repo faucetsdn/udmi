@@ -1,4 +1,5 @@
 import { randomInt } from 'crypto';
+import { v4 as uuid } from 'uuid';
 import { fromString } from '../../FilterParser';
 import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
@@ -41,6 +42,11 @@ export class StaticDeviceDAO implements DeviceDAO {
     }
 
     return filterDevices.length;
+  }
+
+  public async getDevice(id: string): Promise<Device | null> {
+    const device = this.devices.find((device) => device.id === id);
+    return device ? device : null;
   }
 
   public async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
@@ -92,7 +98,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       const deviceSite = this.getRandom(sites);
       const deviceSection = this.getRandom(deviceSite.sections);
 
-      const id: string = `${deviceTemplate.name}-${n}`;
+      const id: string = uuid();
       const name: string = `${deviceTemplate.name}-${n}`;
       const make: string = `${deviceTemplate.make}`;
       const model: string = deviceModel;

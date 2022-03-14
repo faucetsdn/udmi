@@ -4,6 +4,7 @@
  */
 import { createLogger, format, transports, Logger } from 'winston';
 import { Format } from 'logform';
+import { loadConfig } from '../server/config';
 
 // formatting output function
 const formatLogMsg = ({ timestamp, level, message }) => {
@@ -13,7 +14,7 @@ const formatLogMsg = ({ timestamp, level, message }) => {
 let loggerFormat: Format = format.combine(format.splat(), format.printf(formatLogMsg));
 
 export const logger: Logger = createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: loadConfig().logLevel || 'info',
   format: loggerFormat,
   silent: false,
   transports: [

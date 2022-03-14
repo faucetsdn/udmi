@@ -1,27 +1,5 @@
-const logger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-};
-
-// IMPORTANT First mock winston
-jest.mock('winston', () => ({
-  format: {
-    colorize: jest.fn(),
-    combine: jest.fn(),
-    label: jest.fn(),
-    timestamp: jest.fn(),
-    printf: jest.fn(),
-    splat: jest.fn(),
-  },
-  createLogger: jest.fn().mockReturnValue(logger),
-  transports: {
-    Console: jest.fn(),
-  },
-}));
-
 // IMPORTANT import the mock after
-import * as winston from 'winston';
-import { loadConfig, logConfig } from '../../server/config';
+import { loadConfig } from '../../server/config';
 
 describe('config.loadConfig', () => {
   test('loads the confiuration and returns an object that can be passed with all the values', () => {
@@ -70,23 +48,5 @@ describe('config.loadConfig', () => {
   test('config has a mongo protocol entry', () => {
     process.env.MONGO_DATABASE = 'db';
     expect(loadConfig().mongoDatabase).toBe('db');
-  });
-});
-
-describe('config.logConfig', () => {
-  let loggerMock: winston.Logger;
-  const mockCreateLogger = jest.spyOn(winston, 'createLogger');
-  loggerMock = mockCreateLogger.mock.instances[0];
-
-  test('info logs are written', () => {
-    process.env.PROJECT_ID = 'test';
-
-    logConfig();
-    expect(logger.info).toHaveBeenCalledTimes(5);
-    expect(logger.info).toHaveBeenNthCalledWith(1, 'Running the API service with the following configuration:');
-    expect(logger.info).toHaveBeenNthCalledWith(2, '  Environment: test');
-    expect(logger.info).toHaveBeenNthCalledWith(3, '    Log Level: info');
-    expect(logger.info).toHaveBeenNthCalledWith(4, '   Project ID: test');
-    expect(logger.info).toHaveBeenNthCalledWith(5, '   Datasource: STATIC');
   });
 });

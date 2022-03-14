@@ -9,5 +9,8 @@ export const resolvers = {
     devices: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
       return deviceDS.getDevices(searchOptions);
     },
+    device: (_, { id }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getDevice(id);
+    },
   },
 };

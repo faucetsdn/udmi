@@ -5,13 +5,12 @@ import { resolvers } from './device/resolvers';
 import { logger } from './common/logger';
 import { getDefaultContextProcessor } from './server/context';
 import { DeviceDAO } from './device/dao/DeviceDAO';
-import { Configuration, loadConfig, logConfig } from './server/config';
+import { Configuration, loadConfig } from './server/config';
 import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
 
 (async () => {
   // load the configuration from the .env
   const config: Configuration = loadConfig();
-  logConfig();
 
   // required context processor
   const context = await getDefaultContextProcessor();
