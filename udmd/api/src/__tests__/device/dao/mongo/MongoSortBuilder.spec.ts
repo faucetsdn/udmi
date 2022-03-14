@@ -1,7 +1,7 @@
 import { SortOptions, SORT_DIRECTION } from '../../../../device/model';
 import { getSort } from '../../../../device/dao/mongodb/MongoSortBuilder';
 
-describe('MongoFilterBuilder.getFilter', () => {
+describe('MongoSortBuilder.getSort', () => {
   test('returns a sort ASC object with the direction set', async () => {
     expect(getSort({ field: 'make', direction: SORT_DIRECTION.ASC })).toEqual({ make: 1, name: 1 });
   });
