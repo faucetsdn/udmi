@@ -74,7 +74,7 @@ public class ConfigValidator extends SequenceValidator {
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
     untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> deviceState.system.status != null, "status has config");
+    untilTrue(() -> deviceState.system.status == null, "config no status");
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
     hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
     final Date updatedConfig = deviceState.system.last_config;
