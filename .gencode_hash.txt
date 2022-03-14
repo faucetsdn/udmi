@@ -1,18 +1,10 @@
-<<<<<<< HEAD
-b6121a702fd528086f8130090dca551f5befd71206d03c5a1452aa5700870354  gencode/docs/config.html
-=======
 f2bdc1264c53c504d170399fd11d2ac15fa0eee62f35ef8892a0d6b23a3bcc1b  gencode/docs/config.html
->>>>>>> master
 7f4f659da86796660d8ed610bb74bb2e6cff6688a1e92b2019b20ebc34227033  gencode/docs/envelope.html
 99a1cc3cb90112a06997feae86f27f6e4fb415b56746257a4bd08a205d616fef  gencode/docs/event_discovery.html
 8e3be05180ede024f0376e9f4102406f603f72b125df2b923043aa8b7b0637cc  gencode/docs/event_pointset.html
 5d173e050b2583b442636153559fe3bd2fb26efe85ff6db01cc0123bcff9b266  gencode/docs/event_system.html
 a82821e72af6d0ee35800e6262eb9bb05256309b98aed2dad1a368fd2d6882bb  gencode/docs/index.html
-<<<<<<< HEAD
-73eada079f619fde048cb5e0d2e2fa88d1f40c3e8391401834fffdb662391747  gencode/docs/metadata.html
-=======
 b23269bf0f609ca6d0f0ebc3f6412d78777fad1975963f9e5479a2728b0f918d  gencode/docs/metadata.html
->>>>>>> master
 741b880216be3743f6747800a042f2dbd89f3b0344c6b0a965f4bc010f03a930  gencode/docs/schema_doc.css
 878ea88206c974f40643c3cc430875f9c4e8c5e3fd6bcd6358bd3eb6d48699a9  gencode/docs/schema_doc.min.js
 7ed934930aee763e0beebc349725ba3909115e8d346bb762f28bcbe745bb163a  gencode/docs/schema_extras.js
