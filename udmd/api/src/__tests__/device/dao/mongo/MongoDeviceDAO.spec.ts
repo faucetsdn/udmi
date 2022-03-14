@@ -67,7 +67,7 @@ describe('MongoDeviceDAO.getDevices', () => {
     expect(sortSpy).toHaveBeenCalledWith({});
   });
 
-  test('sorting is done if the searchOption does specify sortOptions', async () => {
+  test('sorting can be done in ascending order', async () => {
     const searchOptions: SearchOptions = {
       batchSize: 100,
       offset: 0,
@@ -77,6 +77,18 @@ describe('MongoDeviceDAO.getDevices', () => {
     await mongoDeviceDAO.getDevices(searchOptions);
 
     expect(sortSpy).toHaveBeenCalledWith({ name: 1 });
+  });
+
+  test('sorting can be done in descending order', async () => {
+    const searchOptions: SearchOptions = {
+      batchSize: 100,
+      offset: 0,
+      sortOptions: { field: 'name', direction: SORT_DIRECTION.DESC },
+    };
+
+    await mongoDeviceDAO.getDevices(searchOptions);
+
+    expect(sortSpy).toHaveBeenCalledWith({ name: -1 });
   });
 
   test('that the filter is applied and devices returned are limited to those matching the filter', async () => {

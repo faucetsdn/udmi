@@ -3,7 +3,7 @@ import { SortOptions, SORT_DIRECTION } from '../../../device/model';
 export function getSort(sortOptions: SortOptions): any {
   let direction = 1;
 
-  if ('DESC' === sortOptions.direction.toString()) {
+  if (SORT_DIRECTION.DESC === sortOptions.direction) {
     direction = -1;
   }
 
