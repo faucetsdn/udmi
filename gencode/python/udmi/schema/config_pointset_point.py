@@ -8,6 +8,9 @@ class PointPointsetConfig:
     self.ref = None
     self.units = None
     self.set_value = None
+    self.min_loglevel = None
+    self.sample_limit_sec = None
+    self.sample_rate_sec = None
 
   @staticmethod
   def from_dict(source):
@@ -17,6 +20,9 @@ class PointPointsetConfig:
     result.ref = source.get('ref')
     result.units = source.get('units')
     result.set_value = source.get('set_value')
+    result.min_loglevel = source.get('min_loglevel')
+    result.sample_limit_sec = source.get('sample_limit_sec')
+    result.sample_rate_sec = source.get('sample_rate_sec')
     return result
 
   @staticmethod
@@ -43,4 +49,10 @@ class PointPointsetConfig:
       result['units'] = self.units # 5
     if self.set_value:
       result['set_value'] = self.set_value # 5
+    if self.min_loglevel:
+      result['min_loglevel'] = self.min_loglevel # 5
+    if self.sample_limit_sec:
+      result['sample_limit_sec'] = self.sample_limit_sec # 5
+    if self.sample_rate_sec:
+      result['sample_rate_sec'] = self.sample_rate_sec # 5
     return result
