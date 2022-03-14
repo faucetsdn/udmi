@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { startCase } from 'lodash';
+import { startCase } from 'lodash-es';
 
 @Pipe({
   name: 'capitalize',

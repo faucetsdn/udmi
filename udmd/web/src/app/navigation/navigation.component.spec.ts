@@ -1,23 +1,16 @@
-import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavigationComponent } from './navigation.component';
-import { AppRoutingModule } from '../app-routing.module';
-import { MatMenuModule } from '@angular/material/menu';
+import { NavigationModule } from './navigation.module';
 
 describe('NavigationComponent', () => {
   let component: NavigationComponent;
   let fixture: ComponentFixture<NavigationComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [NavigationComponent],
-        imports: [AppRoutingModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
-      }).compileComponents();
-    })
-  );
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [NavigationModule],
+    }).compileComponents();
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavigationComponent);
