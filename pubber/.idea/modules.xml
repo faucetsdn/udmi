@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/daq-pubber.pubber.iml" filepath="$PROJECT_DIR$/.idea/modules/daq-pubber.pubber.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../gencode/java/gencode.iml" filepath="$PROJECT_DIR$/../gencode/java/gencode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gencode/gencode.iml" filepath="$PROJECT_DIR$/../gencode/gencode.iml" />
       <module fileurl="file://$PROJECT_DIR$/pubber.iml" filepath="$PROJECT_DIR$/pubber.iml" />
     </modules>
   </component>
