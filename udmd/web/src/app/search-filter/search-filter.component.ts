@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase, findIndex } from 'lodash';
+import { startCase, findIndex } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';

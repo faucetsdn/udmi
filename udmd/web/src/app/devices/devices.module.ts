@@ -3,15 +3,15 @@ import { MatTableModule } from '@angular/material/table';
 import { DevicesComponent } from './devices.component';
 import { DevicesRoutingModule } from './devices-routing.module';
 import { CommonModule } from '@angular/common';
-import { CapitalizePipe } from '../common/pipes/capitalize.pipe';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { SearchFilterModule } from '../search-filter/search-filter.module';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { PipesModule } from '../common/pipes/pipes.module';
 
 @NgModule({
-  declarations: [DevicesComponent, CapitalizePipe],
+  declarations: [DevicesComponent],
   imports: [
     DevicesRoutingModule,
     MatTableModule,
@@ -21,6 +21,7 @@ import { MatButtonModule } from '@angular/material/button';
     SearchFilterModule,
     RouterModule,
     MatButtonModule,
+    PipesModule,
   ],
 })
 export class DevicesModule {}

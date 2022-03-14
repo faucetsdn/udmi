@@ -1,0 +1,15 @@
+@use '@angular/material' as mat;
+@import '../../styles/variables';
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+
+  a {
+    color: mat.get-color-from-palette($accent);
+  }
+
+  .mat-icon {
+    color: mat.get-color-from-palette($text-secondary);
+  }
+}

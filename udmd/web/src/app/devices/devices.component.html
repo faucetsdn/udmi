@@ -16,7 +16,7 @@
     <mat-header-cell *matHeaderCellDef mat-sort-header="{{ columnName }}">{{
       columnName | capitalize
     }}</mat-header-cell>
-    <mat-cell *matCellDef="let element" routeLink>{{ element[columnName] }}</mat-cell>
+    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
