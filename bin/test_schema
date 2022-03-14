@@ -10,11 +10,12 @@ rm -f $errorfile
 
 build=y
 force=n
+parallel=
 
 schemadir=schema
 testdir=tests
 
-while getopts "d:fn" opt; do
+while getopts "d:s:fnp" opt; do
     case $opt in
         f)
             force=y
@@ -22,8 +23,14 @@ while getopts "d:fn" opt; do
         n)
             build=n
             ;;
+        s)
+            subsets=${OPTARG}
+            ;;
         d)
             testdir=${OPTARG}
+            ;;
+        p)
+            parallel=y
             ;;
         \?)
             echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
@@ -41,12 +48,19 @@ fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 
-subsets=$(cd $testdir; ls -d *.tests)
+if [[ -n $parallel ]]; then
+    echo ========================= Running validation tests in parallel...
+fi
+
+if [[ -z $subsets ]]; then
+    subsets=$(cd $testdir; ls -d *.tests)
+fi
+if [[ -z $subsets ]]; then
+    echo Schema $schema has no X.tests dirs.
+    false
+fi
+echo Testing against $subsets
 for subset in $subsets; do
-    if [ -z "$subset" ]; then
-        echo Schema $schema has no .tests dirs.
-        false
-    fi
     schemaname=${subset%.tests}.json
     testfiles=$(cd $testdir/$subset; ls *.json)
     for testfile in $testfiles; do
@@ -68,21 +82,32 @@ for subset in $subsets; do
             fi
         fi
 
-        error=0
         if [[ "$testbase" == "$schemadir" ]]; then
           reltest=${testpath#$testbase/}
         else
           reldir=$(realpath --relative-to $schemadir $testdir)
           reltest=$reldir:$(realpath --relative-to $testdir $testpath)
         fi
-        (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -- $schemaname files $reltest --) 2> $output || error=$?
-        if [ $force == y ]; then
-            diff $expected $output || echo Updating $expected && cp $output $expected
-        else
-            diff -b $expected $output || (echo '   ' cp $output $expected | tee -a $errorfile)
+        (
+            (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -- $schemaname files $reltest --) 2> $output || true
+            if [ $force == y ]; then
+                diff $output $expected || echo Updating $expected && cp $output $expected
+            else
+                diff -b $output $expected || (echo '   ' diff $output $expected | tee -a $errorfile)
+            fi
+        ) &
+
+        if [[ -z $parallel ]]; then
+            wait
         fi
     done
 done
+
+if [[ -n $parallel ]]; then
+    sleep 5
+    echo ========================= Waiting for validation results...
+    wait
+fi
 
 echo
 
@@ -93,4 +118,3 @@ if [ -f $errorfile ]; then
 fi
 
 echo Done with validation.
-              
