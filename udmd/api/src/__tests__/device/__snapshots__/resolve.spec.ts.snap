@@ -2,10 +2,22 @@
 
 exports[`Devices device 1`] = `
 Object {
-  "data": undefined,
-  "errors": Array [
-    [ValidationError: Cannot query field "firmwareVersion" on type "Device". Did you mean "firmware"?],
-  ],
+  "data": Object {
+    "device": Object {
+      "firmware": "v-1",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "lastPayload": "2022-08-30",
+      "make": "make-1",
+      "model": "BBBB-1",
+      "name": "CDS-1",
+      "operational": true,
+      "section": "SIN-MBC1",
+      "serialNumber": "serialNo-1",
+      "site": "SG-SIN-MBC1",
+      "tags": Array [],
+    },
+  },
+  "errors": undefined,
   "extensions": undefined,
   "http": Object {
     "headers": Headers {

@@ -40,7 +40,7 @@ const QUERY_DEVICE = gql`
       section
       lastPayload
       operational
-      firmwareVersion
+      firmware
       serialNumber
       tags
     }
