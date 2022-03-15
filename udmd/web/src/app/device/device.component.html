@@ -1,1 +1,7 @@
 <app-breadcrumb></app-breadcrumb>
+<mat-card class="summary">
+  <div class="item" *ngFor="let field of fields">
+    <span class="mat-body-2">{{ field | capitalize }}</span>
+    <p>{{ device[field] }}</p>
+  </div>
+</mat-card>
