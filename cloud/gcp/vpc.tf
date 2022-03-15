@@ -1,5 +1,6 @@
 variable "gcp_vpc_name" {
     type = string
+    default = "udmi"
     description = "vpc name"
 }
 
