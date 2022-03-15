@@ -17,3 +17,6 @@ globalConfig.json
 
 # environment variables
 .env
+
+# mongo output
+.mongodb
