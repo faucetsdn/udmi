@@ -49,8 +49,8 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven { url 'https://mvnrepository.com' }
+    maven { url 'https://jitpack.io' }
 }
-
 
 dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'

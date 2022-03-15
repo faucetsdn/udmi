@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -54,6 +55,7 @@ public class Validator {
 
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
+          .enable(Feature.ALLOW_COMMENTS)
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())

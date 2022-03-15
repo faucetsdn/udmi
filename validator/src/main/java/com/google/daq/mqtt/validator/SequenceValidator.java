@@ -106,6 +106,7 @@ public abstract class SequenceValidator {
     }
     final File CONFIG_FILE = new File(CONFIG_PATH);
     try {
+      System.err.println("Reading config file " + CONFIG_FILE.getAbsolutePath());
       ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(CONFIG_FILE);
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
@@ -408,7 +409,7 @@ public abstract class SequenceValidator {
         return false;
       }
       String timestamp = (String) message.remove("timestamp");
-      String version = (String) message.remove("timestamp");
+      String version = (String) message.remove("version");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
