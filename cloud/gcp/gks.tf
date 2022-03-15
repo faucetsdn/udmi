@@ -21,7 +21,7 @@ resource "google_container_cluster" "biot" {
 resource "google_container_node_pool" "node_pool" {
   name       = "${var.gcp_project_id}-node-pool"
   location   = var.gcp_region
-  cluster    = var.gcp_project_id
+  cluster    = google_container_cluster.biot.name
   node_count = var.gke_num_nodes
 
   node_config {
