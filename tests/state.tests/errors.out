@@ -1,13 +1,11 @@
 Validating 1 schemas
   Validating 1 files against state.json
     Against input state.tests/errors.json
-      9 schema violations found
+      8 schema violations found
         instance type (string) does not match any allowed primitive type (allowed: ["object"])
-        numeric instance is lower than the required minimum (minimum: 100, found: 30)
-        object has missing required properties (["category","message"])
         object has missing required properties (["last_config","make_model","operational","serial_no"])
         object has missing required properties (["version"])
         object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
-        object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","status","system_status"]
+        object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","system_status"]
         object instance has properties which are not allowed by the schema: ["id","status"]
         object instance has properties which are not allowed by the schema: ["revision"]

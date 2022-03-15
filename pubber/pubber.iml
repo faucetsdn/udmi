@@ -108,6 +108,5 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.20" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: io.perfmark:perfmark-api:0.23.0" level="project" />
     <orderEntry type="module" module-name="gencode" />
-    <orderEntry type="module" module-name="daq-pubber.pubber" />
   </component>
 </module>

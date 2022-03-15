@@ -48,7 +48,7 @@ class SystemState:
     self.firmware = None
     self.last_config = None
     self.operational = None
-    self.statuses = None
+    self.status = None
 
   @staticmethod
   def from_dict(source):
@@ -60,7 +60,7 @@ class SystemState:
     result.firmware = ObjectBF5DA4FA.from_dict(source.get('firmware'))
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
-    result.statuses = Entry.map_from(source.get('statuses'))
+    result.status = Entry.from_dict(source.get('status'))
     return result
 
   @staticmethod
@@ -91,6 +91,6 @@ class SystemState:
       result['last_config'] = self.last_config # 5
     if self.operational:
       result['operational'] = self.operational # 5
-    if self.statuses:
-      result['statuses'] = Entry.expand_dict(self.statuses) # 2
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     return result
