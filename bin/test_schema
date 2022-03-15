@@ -33,7 +33,7 @@ while getopts "d:s:fnp" opt; do
             parallel=y
             ;;
         \?)
-            echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
+            echo "Usage: $0 [-p] [-f] [-n] [-d TEST_DATA_DIR] [-s SEQUENCE]"
             exit -1
             ;;
     esac
