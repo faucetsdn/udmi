@@ -106,7 +106,21 @@ export class StaticDeviceDAO implements DeviceDAO {
       const section: string = deviceSection;
       const lastPayload: string = new Date(new Date().getTime() - randomInt(1000000000)).toISOString();
       const operational: boolean = n % 3 == 0 ? false : true;
-      devices.push({ id, name, make, model, site, section, lastPayload, operational, tags: [] });
+      const serialNumber: string = `serialNo-${n}`;
+      const firmware: string = `v-${n}`;
+      devices.push({
+        id,
+        name,
+        make,
+        model,
+        site,
+        section,
+        lastPayload,
+        operational,
+        firmware: firmware,
+        serialNumber,
+        tags: [],
+      });
       n++;
     }
 

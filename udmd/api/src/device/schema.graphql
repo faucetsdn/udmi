@@ -49,6 +49,10 @@ type Device {
   lastPayload: String
   # the operational state of the device
   operational: Boolean
+  # the firmware version fo the device
+  firmware: String
+  # the serial number of the device
+  serialNumber: String
   # the tags assigned to a device
   tags: [String!]!
 }

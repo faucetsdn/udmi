@@ -20,6 +20,8 @@ export interface Device {
   section: string;
   lastPayload: string;
   operational: boolean;
+  firmware: string;
+  serialNumber: string;
   tags?: string[];
 }
 

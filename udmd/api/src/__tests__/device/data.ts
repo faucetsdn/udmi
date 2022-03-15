@@ -12,7 +12,21 @@ export function createDevices(count: number): Device[] {
     const section: string = `SIN-MBC${n}`;
     const lastPayload: string = '2022-08-30';
     const operational: boolean = n % 3 == 0 ? false : true;
-    devices.push({ id, name, make, model, site, section, lastPayload, operational, tags: [] });
+    const serialNumber: string = `serialNo-${n}`;
+    const firmware: string = `v-${n}`;
+    devices.push({
+      id,
+      name,
+      make,
+      model,
+      site,
+      section,
+      lastPayload,
+      operational,
+      serialNumber,
+      firmware: firmware,
+      tags: [],
+    });
     n++;
   }
 
