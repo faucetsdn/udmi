@@ -36,7 +36,7 @@ while (n <= 10000) {
     const tags = [];
     const firmware = getRandom(deviceTemplate.firmwareVersion);
 
-    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, serialNumber, tags });
+    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, serialNumber, firmware, tags });
     n++;
 }
 
@@ -49,23 +49,13 @@ function getRandomInt(max) {
 }
 
 function generateSerial() {
-
-    var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-
+    var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         serialLength = 10,
+        randomSerial = "";
 
-        randomSerial = "",
-
-        i,
-
-        randomNumber;
-
-    for (i = 0; i < serialLength; i = i + 1) {
-
-        randomNumber = Math.floor(Math.random() * chars.length);
-
+    for (var i = 0; i < serialLength; i = i + 1) {
+        const randomNumber = getRandomInt(chars.length);
         randomSerial += chars.substring(randomNumber, randomNumber + 1);
-
     }
 
     return randomSerial;
