@@ -28,6 +28,9 @@
     "gateway": {
       "$ref": "file:state_gateway.json#"
     },
+    "discovery": {
+      "$ref": "file:state_discovery.json#"
+    },
     "blobset": {
       "$ref": "file:state_blobset.json#"
     },

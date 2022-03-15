@@ -8,11 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
-import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -36,6 +37,8 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
+import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -81,13 +84,13 @@ public abstract class SequenceValidator {
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
   public static final String RESULT_FORMAT = "RESULT %s %s %s";
-  public static final Integer INITIAL_MIN_LOGLEVEL = 400;
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
 
-  private static final Map<SubFolder, Class<?>> expectedEvents = ImmutableMap.of(
-      SubFolder.SYSTEM, SystemEvent.class,
-      SubFolder.POINTSET, PointsetEvent.class
+  private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
+      SystemEvent.class, SubFolder.SYSTEM,
+      PointsetEvent.class, SubFolder.POINTSET,
+      DiscoveryEvent.class, SubFolder.DISCOVERY
   );
 
   public static final String UPDATE_SUBTYPE = "update";
@@ -179,9 +182,9 @@ public abstract class SequenceValidator {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private Date lastLog;
   private String waitingCondition;
-  private boolean confirm_serial;
+  private boolean confirmSerial;
   private String testName;
-  private String last_serial_no;
+  private String lastSerialNo;
 
   @Before
   public void setUp() {
@@ -190,7 +193,7 @@ public abstract class SequenceValidator {
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = null;
-    confirm_serial = false;
+    confirmSerial = false;
 
     deviceConfig = readGeneratedConfig();
     deviceConfig.system.min_loglevel = 400;
@@ -235,7 +238,7 @@ public abstract class SequenceValidator {
 
     @Override
     protected void succeeded(Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description,"Sequence complete");
+      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
     }
 
     @Override
@@ -378,6 +381,7 @@ public abstract class SequenceValidator {
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
+    updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
   }
 
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
@@ -392,24 +396,14 @@ public abstract class SequenceValidator {
     }
   }
 
-  private <T> T messageConvert(Class<T> target, Map<String, Object> message) {
-    try {
-      String timestamp = (String) message.remove("timestamp");
-      String messageString = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(messageString, target);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting object type " + target.getName(), e);
-    }
-  }
-
   private <T> boolean updateState(SubFolder subFolder, SubFolder expected, Class<T> target,
       Map<String, Object> message, Consumer<T> handler) {
     try {
       if (!expected.equals(subFolder)) {
         return false;
       }
-      String timestamp = (String) message.remove("timestamp");
-      String version = (String) message.remove("version");
+      message.remove("timestamp");
+      message.remove("version");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
@@ -429,20 +423,21 @@ public abstract class SequenceValidator {
   private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
     updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
     updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
+    updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message, state -> deviceState.discovery = state);
     validSerialNo();
   }
 
   protected boolean validSerialNo() {
     String device_serial = deviceState.system == null ? null : deviceState.system.serial_no;
-    if (!Objects.equals(device_serial, last_serial_no)) {
+    if (!Objects.equals(device_serial, lastSerialNo)) {
       info(String.format("Received serial no %s", device_serial));
-      last_serial_no = device_serial;
+      lastSerialNo = device_serial;
     }
     boolean serialValid = Objects.equals(serial_no, device_serial);
-    if (!serialValid && confirm_serial) {
+    if (!serialValid && confirmSerial) {
       throw new IllegalStateException("Unexpected serial_no " + device_serial);
     }
-    confirm_serial = serialValid;
+    confirmSerial = serialValid;
     return serialValid;
   }
 
@@ -450,8 +445,6 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      info("Suppressing exception: " + e);
-      e.printStackTrace();
       return false;
     }
   }
@@ -490,15 +483,23 @@ public abstract class SequenceValidator {
     info("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
-  protected void untilTrue(Supplier<Boolean> evaluator, String description) {
+  private void untilLoop(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
     info("start " + waitingCondition);
-    while (!caughtAsFalse(evaluator)) {
+    while (evaluator.get()) {
       receiveMessage();
     }
     info("finished " + waitingCondition);
     waitingCondition = null;
+  }
+
+  protected void untilTrue(Supplier<Boolean> evaluator, String description) {
+    untilLoop(() -> !caughtAsFalse(evaluator), description);
+  }
+
+  protected void untilUntrue(Supplier<Boolean> evaluator, String description) {
+    untilLoop(() -> caughtAsFalse(evaluator), description);
   }
 
   protected String getTimestamp(Date date) {
@@ -562,6 +563,13 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected String toJsonString(Object message) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying message", e);
+    }
+  }
 
   private <T> T convertTo(Object message, Class<T> entryClass) {
     try {
@@ -592,5 +600,14 @@ public abstract class SequenceValidator {
 
   private void writeSequencerLog(Entry logEntry) {
     System.err.println(writeLogEntry(logEntry, "sequencer.log"));
+  }
+
+  protected <T> List<T> getReceivedEvents(Class<T> clazz) {
+    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
+    List<Map<String, Object>> events = receivedEvents.remove(subFolder);
+    if (events == null) {
+      return ImmutableList.of();
+    }
+    return events.stream().map(message -> convertTo(message, clazz)).collect(Collectors.toList());
   }
 }

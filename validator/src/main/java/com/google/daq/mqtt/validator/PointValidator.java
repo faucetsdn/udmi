@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.validator;
 
-import com.google.daq.mqtt.validator.validations.SkipTest;
 import com.google.daq.mqtt.validator.validations.WritebackValidator;
 import java.util.HashMap;
 import java.util.Optional;

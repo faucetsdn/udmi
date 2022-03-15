@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import udmi.schema.PointEnumerationEvent;
+
 /**
  * Represents a random boolean point.
  */
@@ -16,5 +18,11 @@ public class RandomBoolean extends BasicPoint implements AbstractPoint {
   @Override
   protected boolean validateValue(Object setValue) {
     return setValue instanceof Boolean;
+  }
+
+  @Override
+  protected void populateEnumeration(PointEnumerationEvent point) {
+    point.type = "multistate";
+    point.possible_values = null; // Need multi-state values here
   }
 }

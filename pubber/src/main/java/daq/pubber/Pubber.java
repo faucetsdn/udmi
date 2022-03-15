@@ -27,11 +27,16 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Config;
+import udmi.schema.DiscoveryConfig;
+import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
+import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Firmware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -53,9 +58,6 @@ public class Pubber {
 
   private static final String HOSTNAME = System.getenv("HOSTNAME");
 
-  private static final String POINTSET_TOPIC = "events/pointset";
-  private static final String SYSTEM_TOPIC = "events/system";
-  private static final String STATE_TOPIC = "state";
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
 
@@ -67,13 +69,22 @@ public class Pubber {
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
   private static final String SWARM_SUBFOLDER = "swarm";
-  private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
+  private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
+
   private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
-      "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
-      "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
-      "superimposition_reading", makePointPointsetMetadaa(false)
+      "recalcitrant_angle", makePointPointsetMetadata(true, 50, 50, "Celsius"),
+      "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
+      "superimposition_reading", makePointPointsetMetadata(false)
+  );
+
+  private static final Map<Class<?>, String> MESSAGE_TOPIC_MAP = ImmutableMap.of(
+      State.class, "state",
+      SystemEvent.class, "events/system",
+      PointsetEvent.class, "events/pointset",
+      ExtraPointsetEvent.class, "events/pointset",
+      DiscoveryEvent.class, "events/discovery"
   );
 
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -104,17 +115,18 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
+  private Date lastDiscoveryGeneration = new Date();
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
+  private static PointPointsetMetadata makePointPointsetMetadata(boolean writable, int value, double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writeable = writeable;
+    pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
     return pointMetadata;
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+  private static PointPointsetMetadata makePointPointsetMetadata(boolean writable) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
     return pointMetadata;
   }
@@ -229,15 +241,15 @@ public class Pubber {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
-    boolean writeable = point.writeable != null && point.writeable;
+    boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, writeable);
+      return new RandomBoolean(name, writable);
     } else {
       double baseline_value = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
       double baseline_tolerance = convertValue(point.baseline_tolerance, baseline_value);
       double min = baseline_value - baseline_tolerance;
       double max = baseline_value + baseline_tolerance;
-      return new RandomPoint(name, writeable, min, max, point.units);
+      return new RandomPoint(name, writable, min, max, point.units);
     }
   }
 
@@ -365,7 +377,7 @@ public class Pubber {
   private void sendMessages() {
     try {
       updatePoints();
-      sendDeviceMessage(configuration.deviceId);
+      sendDeviceMessage();
       if (stateDirty) {
         publishStateMessage();
       }
@@ -534,23 +546,49 @@ public class Pubber {
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
-      final int actualInterval;
-      if (config != null) {
-        info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
-        deviceState.system.last_config = config.timestamp;
-        actualInterval = updateSystemConfig(config.pointset);
-        updatePointsetConfig(config.pointset);
-      } else {
-        info(getTimestamp() + " defaulting empty config");
-        actualInterval = DEFAULT_REPORT_SEC * 1000;
-      }
-      maybeRestartExecutor(actualInterval);
+      processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
     } catch (Exception e) {
       publisherConfigLog("apply", e);
     }
     publishStateMessage();
+  }
+
+  private void processConfigUpdate(Config config) {
+    final int actualInterval;
+    if (config != null) {
+      info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
+      deviceState.system.last_config = config.timestamp;
+      actualInterval = updateSystemConfig(config.pointset);
+      updatePointsetConfig(config.pointset);
+      updateDiscoveryConfig(config.discovery);
+    } else {
+      info(getTimestamp() + " defaulting empty config");
+      actualInterval = DEFAULT_REPORT_SEC * 1000;
+    }
+    maybeRestartExecutor(actualInterval);
+  }
+
+  private void updateDiscoveryConfig(DiscoveryConfig discovery) {
+    if (discovery == null || discovery.enumeration == null) {
+      deviceState.discovery = null;
+      return;
+    }
+    Date enumerationGeneration = discovery.enumeration.generation;
+    if (!enumerationGeneration.after(lastDiscoveryGeneration)) {
+      return;
+    }
+    lastDiscoveryGeneration = enumerationGeneration;
+    deviceState.discovery = new DiscoveryState();
+    deviceState.discovery.enumeration = new FamilyDiscoveryState();
+    deviceState.discovery.enumeration.generation = enumerationGeneration;
+    info("Discovery enumeration generation " + isoConvert(enumerationGeneration));
+    DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+    discoveryEvent.generation = enumerationGeneration;
+    discoveryEvent.points = allPoints.stream().collect(Collectors.toMap(AbstractPoint::getName,
+        AbstractPoint::enumerate));
+    publishDeviceMessage(discoveryEvent);
   }
 
   private String getTimestamp() {
@@ -608,13 +646,13 @@ public class Pubber {
     }
   }
 
-  private void sendDeviceMessage(String deviceId) {
+  private void sendDeviceMessage() {
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
       info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp), deviceMessageCount));
     }
-    publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
+    publishDeviceMessage(devicePoints);
   }
 
   private void pubberLogMessage(String logMessage, Level level, String timestamp) {
@@ -631,7 +669,7 @@ public class Pubber {
     systemEvent.version = 1;
     systemEvent.timestamp = new Date();
     systemEvent.logentries.add(report);
-    publishMessage(configuration.deviceId, SYSTEM_TOPIC, systemEvent);
+    publishDeviceMessage(systemEvent);
   }
 
   private void publishStateMessage() {
@@ -642,19 +680,23 @@ public class Pubber {
       return;
     }
     deviceState.timestamp = new Date();
-    String deviceId = configuration.deviceId;
     info(String.format("update state %s", isoConvert(deviceState.timestamp)));
     stateDirty = false;
-    publishMessage(deviceId, STATE_TOPIC, deviceState);
+    publishDeviceMessage(deviceState);
     lastStateTimeMs = System.currentTimeMillis();
   }
 
-  private void publishMessage(String deviceId, String topic, Object message) {
+  private void publishDeviceMessage(Object message) {
     if (mqttPublisher == null) {
       warn("Ignoring publish message b/c connection is shutdown");
       return;
     }
-    mqttPublisher.publish(deviceId, topic, message);
+    String topic = MESSAGE_TOPIC_MAP.get(message.getClass());
+    if (topic == null) {
+      error("Unknown message class " + message.getClass());
+      return;
+    }
+    mqttPublisher.publish(configuration.deviceId, topic, message);
 
     String fileName = topic.replace("/", "_") + ".json";
     File stateOut = new File(OUT_DIR, fileName);

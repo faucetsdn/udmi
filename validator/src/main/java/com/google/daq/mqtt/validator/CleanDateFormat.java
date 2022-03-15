@@ -2,7 +2,6 @@ package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.text.ParseException;
-import java.text.ParsePosition;
 import java.util.Date;
 
 public class CleanDateFormat extends ISO8601DateFormat {
@@ -18,7 +17,7 @@ public class CleanDateFormat extends ISO8601DateFormat {
     return parsedDate;
   }
 
-  static Date cleanDate() {
+  public static Date cleanDate() {
     return cleanDate(new Date());
   }
 

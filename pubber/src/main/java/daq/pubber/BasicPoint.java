@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import udmi.schema.Entry;
+import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
@@ -22,7 +23,7 @@ public abstract class BasicPoint implements AbstractPoint {
    * Construct a maybe writable point.
    *
    * @param name Point name
-   * @param writable True if writeable
+   * @param writable True if writable
    */
   public BasicPoint(String name, boolean writable) {
     this.name = name;
@@ -97,4 +98,15 @@ public abstract class BasicPoint implements AbstractPoint {
     entry.message = "Point is not writable";
     return entry;
   }
+
+  @Override
+  public PointEnumerationEvent enumerate() {
+    PointEnumerationEvent point = new PointEnumerationEvent();
+    point.description = getClass().getSimpleName() + " " + getName();
+    point.writable = writable ? true : null;
+    populateEnumeration(point);
+    return point;
+  }
+
+  protected abstract void populateEnumeration(PointEnumerationEvent point);
 }

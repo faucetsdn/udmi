@@ -1,0 +1,13 @@
+//
+// MQTT topic: /devices/{device_id}/config
+// where {device_id} is that of the enumerated node
+//
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "discovery": {
+    "enumeration": {
+      "generation": "2018-08-26T21:37:12Z"
+    }
+  }
+}

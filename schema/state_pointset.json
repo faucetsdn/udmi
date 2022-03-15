@@ -10,6 +10,10 @@
       "type": "string",
       "maxLength": 32
     },
+    "status": {
+      "description": "Optional status information about pointset",
+      "$ref": "file:common.json#/definitions/entry"
+    },
     "points": {
       "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,

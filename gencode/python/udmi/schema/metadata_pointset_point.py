@@ -6,7 +6,7 @@ class PointPointsetMetadata:
 
   def __init__(self):
     self.units = None
-    self.writeable = None
+    self.writable = None
     self.baseline_value = None
     self.baseline_tolerance = None
     self.baseline_state = None
@@ -22,7 +22,7 @@ class PointPointsetMetadata:
       return None
     result = PointPointsetMetadata()
     result.units = source.get('units')
-    result.writeable = source.get('writeable')
+    result.writable = source.get('writable')
     result.baseline_value = source.get('baseline_value')
     result.baseline_tolerance = source.get('baseline_tolerance')
     result.baseline_state = source.get('baseline_state')
@@ -53,8 +53,8 @@ class PointPointsetMetadata:
     result = {}
     if self.units:
       result['units'] = self.units # 5
-    if self.writeable:
-      result['writeable'] = self.writeable # 5
+    if self.writable:
+      result['writable'] = self.writable # 5
     if self.baseline_value:
       result['baseline_value'] = self.baseline_value # 5
     if self.baseline_tolerance:

@@ -44,12 +44,12 @@ public class SystemState {
     @JsonPropertyDescription("The serial number of the physical device")
     public String serial_no;
     /**
-     * Information about the physical device firmware
+     * Information about the device firmware
      * (Required)
      * 
      */
     @JsonProperty("firmware")
-    @JsonPropertyDescription("Information about the physical device firmware")
+    @JsonPropertyDescription("Information about the device firmware")
     public Firmware firmware;
     /**
      * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).

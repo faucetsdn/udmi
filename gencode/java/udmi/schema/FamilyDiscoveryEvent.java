@@ -4,38 +4,36 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
  * Family Discovery Event
  * <p>
- * 
+ * Discovery information for an individual protocol family.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
-    "group"
+    "id"
 })
 @Generated("jsonschema2pojo")
 public class FamilyDiscoveryEvent {
 
     /**
-     * 
+     * Device id in the namespace of the given family
      * (Required)
      * 
      */
     @JsonProperty("id")
+    @JsonPropertyDescription("Device id in the namespace of the given family")
     public String id;
-    @JsonProperty("group")
-    public String group;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
-        result = ((result* 31)+((this.group == null)? 0 :this.group.hashCode()));
         return result;
     }
 
@@ -48,7 +46,7 @@ public class FamilyDiscoveryEvent {
             return false;
         }
         FamilyDiscoveryEvent rhs = ((FamilyDiscoveryEvent) other);
-        return (((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)))&&((this.group == rhs.group)||((this.group!= null)&&this.group.equals(rhs.group))));
+        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
     }
 
 }
