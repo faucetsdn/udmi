@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { GraphQLModule } from '../graphql/graphql.module';
 import { GET_DEVICE } from './device.gql';
-import { DeviceResponse } from './device';
+import { DeviceQueryResponse } from './device';
 import { DeviceService } from './device.service';
 
 describe('DeviceService', () => {
@@ -26,7 +26,7 @@ describe('DeviceService', () => {
   });
 
   xit('should return the device', (done) => {
-    const mockDeviceResponse: DeviceResponse = {
+    const mockDeviceResponse: DeviceQueryResponse = {
       device: {
         id: '123',
         name: 'device one',
@@ -36,6 +36,8 @@ describe('DeviceService', () => {
         section: 'ABC 3',
         lastPayload: '2022-01-03',
         operational: false,
+        serialNumber: 's123',
+        firmware: 'V3',
         tags: [],
       },
     };
@@ -58,9 +60,7 @@ describe('DeviceService', () => {
 
     // Respond with mock data, causing Observable to resolve.
     op.flush({
-      data: {
-        devices: mockDeviceResponse,
-      },
+      data: mockDeviceResponse,
     });
   });
 });
