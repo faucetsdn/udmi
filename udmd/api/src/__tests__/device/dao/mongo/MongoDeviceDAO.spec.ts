@@ -155,3 +155,16 @@ describe('MongoDeviceDAO.getFilteredDeviceCount', () => {
     expect(filterdDeviceCount).toBe(mockDevices.length);
   });
 });
+
+describe('MongoDeviceDAO.getDevice', () => {
+  test('returns null if the device with the same id is not in the mongo db', async () => {
+    const device: Device = await mongoDeviceDAO.getDevice('some-id');
+    expect(device).toBe(null);
+  });
+
+  test('returns the device with the same id that is in the mongodb', async () => {
+    const device = await db.collection<Device>('device').findOne({ make: new RegExp('make', 'i') });
+    const retrievedDevice: Device = await mongoDeviceDAO.getDevice(device.id);
+    expect(retrievedDevice.id).toBe(device.id);
+  });
+});

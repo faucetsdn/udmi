@@ -15,4 +15,8 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
     const devices: Device[] = createDevices(30);
     return { devices, totalCount: 30, totalFilteredCount: 10 };
   }
+
+  async getDevice(id: string): Promise<Device> {
+    return createDevices(1)[0];
+  }
 }

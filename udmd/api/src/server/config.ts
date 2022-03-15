@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { logger } from '../common/logger';
 
 export interface Configuration {
   nodeEnv: string;
@@ -25,13 +24,4 @@ export function loadConfig(): Configuration {
     mongoHost: process.env.MONGO_HOST,
     mongoDatabase: process.env.MONGO_DATABASE,
   };
-}
-
-export function logConfig(): void {
-  const config = loadConfig();
-  logger.info(`Running the API service with the following configuration:`);
-  logger.info(`  Environment: ${config.nodeEnv}`);
-  logger.info(`    Log Level: ${config.logLevel}`);
-  logger.info(`   Project ID: ${config.projectId}`);
-  logger.info(`   Datasource: ${config.datasource}`);
 }

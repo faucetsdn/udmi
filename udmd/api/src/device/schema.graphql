@@ -56,4 +56,6 @@ type Device {
 type Query {
   # Get the devices matching the search options
   devices( searchOptions: SearchOptions! ): DevicesResponse
+  # Get a device by ID
+  device( id: ID!): Device
 }

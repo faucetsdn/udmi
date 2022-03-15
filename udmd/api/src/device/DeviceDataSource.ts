@@ -21,4 +21,8 @@ export class DeviceDataSource extends GraphQLDataSource {
 
     return { devices, totalCount, totalFilteredCount };
   }
+
+  async getDevice(id: string): Promise<Device> {
+    return this.deviceDAO.getDevice(id);
+  }
 }

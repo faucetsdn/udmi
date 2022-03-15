@@ -1,3 +1,4 @@
+const { v4: uuid } = require('uuid');
 
 const deviceTemplates = [
     { make: 'Cisco', models: ['Mediator'], name: 'cis' },
@@ -23,6 +24,7 @@ while (n <= 10000) {
     const deviceSite = getRandom(sites);
     const deviceSection = getRandom(deviceSite.sections);
 
+    const id = uuid();
     const name = `${deviceTemplate.name}-${n}`;
     const make = `${deviceTemplate.make}`;
     const model = deviceModel;
@@ -31,7 +33,7 @@ while (n <= 10000) {
     const lastPayload = new Date(new Date() - getRandomInt(1000000000)).toISOString();
     const operational = n % 3 == 0 ? false : true;
 
-    db.device.insertOne({ "id": UUID(), name, make, model, site, section, lastPayload, operational, "tags": [] });
+    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, "tags": [] });
     n++;
 }
 
