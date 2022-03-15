@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { SearchFilterItem } from '../search-filter/search-filter';
-import { Device, SortOptions } from './devices';
+import { Device } from '../device/device';
+import { SortOptions } from './devices';
 import { DevicesService } from './devices.service';
 
 @Component({

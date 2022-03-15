@@ -1,19 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { GraphQLModule } from '../graphql/graphql.module';
-import { GET_DEVICES } from './devices.gql';
-import { DevicesResponse } from './devices';
-import { DevicesService } from './devices.service';
+import { GET_DEVICE } from './device.gql';
+import { DeviceResponse } from './device';
+import { DeviceService } from './device.service';
 
-describe('DevicesService', () => {
-  let service: DevicesService;
+describe('DeviceService', () => {
+  let service: DeviceService;
   let controller: ApolloTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ApolloTestingModule, GraphQLModule],
     });
-    service = TestBed.inject(DevicesService);
+    service = TestBed.inject(DeviceService);
     controller = TestBed.inject(ApolloTestingController);
   });
 
@@ -25,48 +25,41 @@ describe('DevicesService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should return the devices', (done) => {
-    const mockDevicesResponse: DevicesResponse = {
-      devices: [
-        {
-          id: '123',
-          name: 'device one',
-          make: 'Mitr',
-          model: 'MTR 1',
-          site: 'ABC',
-          section: 'ABC 3',
-          lastPayload: '2022-01-03',
-          operational: false,
-          tags: [],
-        },
-      ],
-      totalCount: 1,
-      totalFilteredCount: 1,
+  xit('should return the device', (done) => {
+    const mockDeviceResponse: DeviceResponse = {
+      device: {
+        id: '123',
+        name: 'device one',
+        make: 'Mitr',
+        model: 'MTR 1',
+        site: 'ABC',
+        section: 'ABC 3',
+        lastPayload: '2022-01-03',
+        operational: false,
+        tags: [],
+      },
     };
 
     // Make some assertion about the result for once it's fulfilled.
-    service.getDevices().subscribe(({ data }) => {
-      expect(data.devices.totalCount).toEqual(1);
+    service.getDevice('123').subscribe(({ data }) => {
+      expect(data).toEqual(mockDeviceResponse);
       done();
     });
 
     // The following `expectOne()` will match the operation's document.
     // If no requests or multiple requests matched that document
     // `expectOne()` would throw.
-    const op = controller.expectOne(GET_DEVICES);
+    const op = controller.expectOne(GET_DEVICE);
 
     // Assert the correct search options were sent.
     expect(op.operation.variables).toEqual({
-      searchOptions: {
-        batchSize: 10,
-        offset: 0,
-      },
+      id: '123',
     });
 
     // Respond with mock data, causing Observable to resolve.
     op.flush({
       data: {
-        devices: mockDevicesResponse,
+        devices: mockDeviceResponse,
       },
     });
   });

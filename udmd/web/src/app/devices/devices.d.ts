@@ -1,14 +1,4 @@
-export interface Device {
-  id: string;
-  name: string;
-  make?: string;
-  model?: string;
-  site?: string;
-  section?: string;
-  lastPayload?: string;
-  operational?: boolean;
-  tags: string[];
-}
+import { Device } from '../device/device';
 
 export interface SearchOptions {
   batchSize: number;

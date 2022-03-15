@@ -1,30 +1,36 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Device } from '../devices/devices';
+import { Device } from './device';
+import { DeviceService } from './device.service';
 
 @Component({
   templateUrl: './device.component.html',
   styleUrls: ['./device.component.scss'],
 })
 export class DeviceComponent implements OnInit {
-  fields: (keyof Device)[] = ['name', 'make', 'model', 'site', 'section', 'operational', 'tags'];
+  fields: (keyof Device)[] = [
+    'name',
+    'make',
+    'model',
+    'site',
+    'section',
+    'operational',
+    'serialNumber',
+    'firmware',
+    'lastPayload',
+    'tags',
+  ];
   device!: Device;
+  loading: boolean = true;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, private deviceService: DeviceService) {}
 
   ngOnInit(): void {
-    const deviceId = this.route.snapshot.params['id'];
+    const deviceId: string = this.route.snapshot.params['id'];
 
-    // TODO:: make call to get device by id
-    this.device = {
-      id: '123',
-      name: 'Name2',
-      make: 'TEst',
-      model: 'Model X',
-      site: 'LA',
-      section: 'Bay 4',
-      operational: true,
-      tags: [],
-    };
+    this.deviceService.getDevice(deviceId).subscribe(({ data, loading }) => {
+      this.loading = loading;
+      this.device = data.device;
+    });
   }
 }
