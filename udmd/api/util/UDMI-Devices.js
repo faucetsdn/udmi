@@ -1,14 +1,15 @@
 const { v4: uuid } = require('uuid');
 
 const deviceTemplates = [
-    { make: 'Cisco', models: ['Mediator'], name: 'cis' },
-    { make: 'BitBox USA', models: ['BitBox'], name: 'bb-usa' },
-    { make: 'Automated Logic', models: ['LGR', 'G5CE'], name: 'aut-log' },
-    { make: 'Enlightened', models: ['Light Gateway'], name: 'enl' },
-    { make: 'Tridium', models: ['JACE 8000'], name: 'tri' },
-    { make: 'Delta Controls', models: ['Entelibus Manager 100', 'CopperCube'], name: 'dc' },
-    { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'acq' },
-    { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc' },
+    { make: 'Cisco', models: ['Mediator'], name: 'cis', firmwareVersion: ['v1.2'] },
+    { make: 'BitBox USA', models: ['BitBox'], name: 'bb-usa', firmwareVersion: ['v2.3'] },
+    { make: 'Automated Logic', models: ['LGR', 'G5CE'], name: 'aut-log', firmwareVersion: ['drv_melgr_vanilla_6-02-034', 'drv_melgr_vaisala_6-00a-001', 'drv_melgr_mb_combo_6-00-01'] },
+    { make: 'Enlightened', models: ['Light Gateway'], name: 'enl', firmwareVersion: ['drv_fwex_101-00-2051'] },
+    { make: 'Tridium', models: ['JACE 8000'], name: 'tri', firmwareVersion: ['4.2.36.36'] },
+    { make: 'Delta Controls', models: ['CopperCube'], name: 'dc', firmwareVersion: ['535847'] },
+    { make: 'Delta Controls', models: ['Entelibus Manager 100'], name: 'dc', firmwareVersion: ['4.3.7.64'] },
+    { make: 'Acquisuite', models: ['Obvious AcquiSuite A88 12-1'], name: 'acq', firmwareVersion: ['v3.4'] },
+    { make: 'Schneider Electric / APC', models: ['PowerLogic ION', 'AP9630', 'AP9631', 'AP9635'], name: 'apc', firmwareVersion: ['v4.5'] },
 ];
 
 const sites = [
@@ -22,18 +23,20 @@ while (n <= 10000) {
     const deviceTemplate = getRandom(deviceTemplates);
     const deviceModel = getRandom(deviceTemplate.models);
     const deviceSite = getRandom(sites);
-    const deviceSection = getRandom(deviceSite.sections);
 
     const id = uuid();
     const name = `${deviceTemplate.name}-${n}`;
     const make = `${deviceTemplate.make}`;
     const model = deviceModel;
     const site = deviceSite.site;
-    const section = deviceSection;
     const lastPayload = new Date(new Date() - getRandomInt(1000000000)).toISOString();
     const operational = n % 3 == 0 ? false : true;
+    const section = getRandom(deviceSite.sections);
+    const serialNumber = generateSerial();
+    const tags = [];
+    const firmware = getRandom(deviceTemplate.firmwareVersion);
 
-    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, "tags": [] });
+    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, serialNumber, tags });
     n++;
 }
 
@@ -43,4 +46,28 @@ function getRandom(array) {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
+}
+
+function generateSerial() {
+
+    var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+
+        serialLength = 10,
+
+        randomSerial = "",
+
+        i,
+
+        randomNumber;
+
+    for (i = 0; i < serialLength; i = i + 1) {
+
+        randomNumber = Math.floor(Math.random() * chars.length);
+
+        randomSerial += chars.substring(randomNumber, randomNumber + 1);
+
+    }
+
+    return randomSerial;
+
 }
