@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/docs.iml" filepath="$PROJECT_DIR$/.idea/docs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gencode/gencode.iml" filepath="$PROJECT_DIR$/../gencode/gencode.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/schema.iml" filepath="$PROJECT_DIR$/.idea/schema.iml" />
       <module fileurl="file://$PROJECT_DIR$/validator.iml" filepath="$PROJECT_DIR$/validator.iml" />
     </modules>

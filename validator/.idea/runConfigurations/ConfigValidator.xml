@@ -1,6 +1,11 @@
 <component name="ProjectRunConfigurationManager">
+<<<<<<<< HEAD:validator/.idea/runConfigurations/ConfigValidator.xml
   <configuration default="false" name="ConfigValidator" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
     <module name="validator" />
+========
+  <configuration default="false" name="WritebackValidator" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="daq-validator.validator" />
+>>>>>>>> master:validator/.idea/runConfigurations/WritebackValidator.xml
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.daq.mqtt.validator.validations.*" />
@@ -8,7 +13,11 @@
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.google.daq.mqtt.validator.validations" />
+<<<<<<<< HEAD:validator/.idea/runConfigurations/ConfigValidator.xml
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.ConfigValidator" />
+========
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.WritebackValidator" />
+>>>>>>>> master:validator/.idea/runConfigurations/WritebackValidator.xml
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="class" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
