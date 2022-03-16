@@ -2,7 +2,7 @@
 
 # Discovery
 
-Discovery consists of two related processesd to describe the 'as built'
+Discovery consists of two related processes for describing the 'as built'
 state of a system: _scanning_ and _enumeration_. For devices, the overall
 [discovery sequence](sequences/discovery.md) describes the exact sequence
 of device messages employed in each case. Each process can be
