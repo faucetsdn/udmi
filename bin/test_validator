@@ -10,7 +10,6 @@ fi
 project_id=$1
 shift
 
-bin/clone_model
 site_path=udmi_site_model
 device_id=AHU-1
 
