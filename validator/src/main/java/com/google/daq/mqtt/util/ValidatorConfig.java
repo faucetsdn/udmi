@@ -1,5 +1,9 @@
 package com.google.daq.mqtt.util;
 
+/**
+ * Configuration of a validator instance.
+ */
+@SuppressWarnings("MemberName")
 public class ValidatorConfig {
   public String site_model;
   public String device_id;
