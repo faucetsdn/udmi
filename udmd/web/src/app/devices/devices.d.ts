@@ -13,7 +13,7 @@ export interface SortOptions {
 }
 
 export type DevicesResponse = {
-  devices: Device[];
+  devices: Device[] | null;
   totalCount: number;
   totalFilteredCount: number;
 };

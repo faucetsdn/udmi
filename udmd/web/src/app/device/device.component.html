@@ -7,7 +7,9 @@
 </mat-card>
 
 <nav mat-tab-nav-bar [tabPanel]="tabPanel">
-  <a mat-tab-link routerLink="points" routerLinkActive="active">Points</a>
+  <a mat-tab-link routerLink="points" routerLinkActive="active" #rla="routerLinkActive" [active]="rla.isActive"
+    >Points</a
+  >
 </nav>
 <mat-tab-nav-panel #tabPanel>
   <div class="container">
