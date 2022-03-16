@@ -9,8 +9,11 @@ fi
 
 site_path=$(realpath $1)
 project_id=$2
-subscription=$3
-shift 3
+shift 2
+if [[ -n $1 ]]; then
+    subscription=$1
+    shift
+fi
 
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
