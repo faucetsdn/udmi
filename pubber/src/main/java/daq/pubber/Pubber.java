@@ -137,17 +137,16 @@ public class Pubber {
     }
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value,
-      double tolerance, String units) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable, int value, double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writeable = writeable;
+    pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
     return pointMetadata;
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
     return pointMetadata;
   }
@@ -246,15 +245,15 @@ public class Pubber {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
-    boolean writeable = point.writeable != null && point.writeable;
+    boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, writeable);
+      return new RandomBoolean(name, writable);
     } else {
       double baselineValue = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
       double baselineTolerance = convertValue(point.baseline_tolerance, baselineValue);
       double min = baselineValue - baselineTolerance;
       double max = baselineValue + baselineTolerance;
-      return new RandomPoint(name, writeable, min, max, point.units);
+      return new RandomPoint(name, writable, min, max, point.units);
     }
   }
 

@@ -73,8 +73,8 @@ device and can be used for defining requirements.
         *   **Successful Writeback**
             *   `Value state applied` - point state in state message set to applied
             *   `Point value updated` - point value updated in telemetry
-        *   **Unwriteable and overridden points**
-            *   `Value not applied` - points which are unwriteable or overridden are not updated and state is set to failure
+        *   **Unwritable and overridden points**
+            *   `Value not applied` - points which are unwritable or overridden are not updated and state is set to failure
             *   **Status**
                 *   `state.pointset.points.config.failure` - point status for failure to apply
         *   **Invalid writeback**

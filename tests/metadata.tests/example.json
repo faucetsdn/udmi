@@ -33,7 +33,7 @@
         "baseline_tolerance": 2
       },
       "room_setpoint": {
-        "writeable": true,
+        "writable": true,
         "units": "Degrees-Celsius",
         "baseline_value": 20,
         "baseline_state": "applied"
