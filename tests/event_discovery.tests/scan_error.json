@@ -1,0 +1,30 @@
+//
+// Sent on MQTT topic: /devices/{device_id}/events/discovery
+// where {device_id} is that of the discovery node. The
+// discovered {device_id} should be taken from the provided families.
+//
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:42:12.237Z",
+  "generation": "2018-08-26T21:37:12Z",
+  "families": {
+    "bacnet": {
+      "id": "92EA09"
+    },
+    "ipv4": {
+      "id": "192.168.1.2"
+    },
+    "ipv6": {
+      "id": "fe80::d05c:1a90:dd9e:a582"
+    },
+    "ethmac": {
+      "id": "0e:93:32:11:04:82"
+    }
+  },
+  "status": {
+    "message": "Could not find all points",
+    "category": "discovery.enumeration.incomplete",
+    "timestamp": "2018-08-26T21:39:28.364Z",
+    "level": 600
+  }
+}

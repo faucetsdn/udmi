@@ -2,6 +2,8 @@ from .common import Common
 from .config import Config
 from .config_blobset import BlobsetConfig
 from .config_blobset_blob import BlobBlobsetConfig
+from .config_discovery import DiscoveryConfig
+from .config_discovery_family import FamilyDiscoveryConfig
 from .config_gateway import GatewayConfig
 from .config_localnet import LocalnetConfig
 from .config_pointset import PointsetConfig
@@ -9,8 +11,10 @@ from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .envelope import Envelope
 from .event import Event
-from .event_discovery import Discovery
+from .event_discovery import DiscoveryEvent
+from .event_discovery_blob import BlobEnumerationEvent
 from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_point import PointEnumerationEvent
 from .event_pointset import PointsetEvent
 from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent
@@ -28,6 +32,8 @@ from .properties import Properties
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState
+from .state_discovery import DiscoveryState
+from .state_discovery_family import FamilyDiscoveryState
 from .state_gateway import GatewayState
 from .state_pointset import PointsetState
 from .state_pointset_point import PointPointsetState

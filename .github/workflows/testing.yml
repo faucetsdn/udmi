@@ -66,13 +66,12 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/results.txt
-          diff /tmp/results.txt etc/sequence.out && echo No output diff detected.
-      - name: validation logs
+          diff -u /tmp/results.txt etc/sequence.out && echo No output diff detected.
+      - name: sequencer logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          echo Pubber output logs:
           cat pubber.out || true
+          more `find out/groups/ -type f`

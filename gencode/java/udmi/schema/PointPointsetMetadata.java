@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "units",
-    "writeable",
+    "writable",
     "baseline_value",
     "baseline_tolerance",
     "baseline_state",
@@ -45,9 +45,9 @@ public class PointPointsetMetadata {
      * Indicates if this point is writable (else read-only)
      * 
      */
-    @JsonProperty("writeable")
+    @JsonProperty("writable")
     @JsonPropertyDescription("Indicates if this point is writable (else read-only)")
-    public Boolean writeable;
+    public Boolean writable;
     /**
      * Represents the expected baseline value of the point
      * 
@@ -114,10 +114,10 @@ public class PointPointsetMetadata {
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
         result = ((result* 31)+((this.baseline_state == null)? 0 :this.baseline_state.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
-        result = ((result* 31)+((this.writeable == null)? 0 :this.writeable.hashCode()));
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
         result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         result = ((result* 31)+((this.sample_limit_sec == null)? 0 :this.sample_limit_sec.hashCode()));
+        result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
         return result;
     }
 
@@ -130,7 +130,7 @@ public class PointPointsetMetadata {
             return false;
         }
         PointPointsetMetadata rhs = ((PointPointsetMetadata) other);
-        return (((((((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.writeable == rhs.writeable)||((this.writeable!= null)&&this.writeable.equals(rhs.writeable))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))));
+        return (((((((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
     }
 
 
