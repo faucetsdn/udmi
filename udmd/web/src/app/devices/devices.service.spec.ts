@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { GraphQLModule } from '../graphql/graphql.module';
-import { GET_DEVICES } from './device.gql';
-import { DevicesResponse } from './devices';
+import { GET_DEVICES } from './devices.gql';
+import { DevicesQueryResponse } from './devices';
 import { DevicesService } from './devices.service';
 
 describe('DevicesService', () => {
@@ -26,27 +26,31 @@ describe('DevicesService', () => {
   });
 
   xit('should return the devices', (done) => {
-    const mockDevicesResponse: DevicesResponse = {
-      devices: [
-        {
-          id: '123',
-          name: 'device one',
-          make: 'Mitr',
-          model: 'MTR 1',
-          site: 'ABC',
-          section: 'ABC 3',
-          lastPayload: '2022-01-03',
-          operational: false,
-          tags: [],
-        },
-      ],
-      totalCount: 1,
-      totalFilteredCount: 1,
+    const mockDevicesResponse: DevicesQueryResponse = {
+      devices: {
+        devices: [
+          {
+            id: '123',
+            name: 'device one',
+            make: 'Mitr',
+            model: 'MTR 1',
+            site: 'ABC',
+            section: 'ABC 3',
+            lastPayload: '2022-01-03',
+            operational: false,
+            serialNumber: 's123',
+            firmware: 'V3',
+            tags: [],
+          },
+        ],
+        totalCount: 1,
+        totalFilteredCount: 1,
+      },
     };
 
     // Make some assertion about the result for once it's fulfilled.
     service.getDevices().subscribe(({ data }) => {
-      expect(data.devices.totalCount).toEqual(1);
+      expect(data).toEqual(mockDevicesResponse);
       done();
     });
 
@@ -65,9 +69,7 @@ describe('DevicesService', () => {
 
     // Respond with mock data, causing Observable to resolve.
     op.flush({
-      data: {
-        devices: mockDevicesResponse,
-      },
+      data: mockDevicesResponse,
     });
   });
 });

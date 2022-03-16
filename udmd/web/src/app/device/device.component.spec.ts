@@ -1,23 +1,43 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { ApolloQueryResult } from '@apollo/client/core';
+import { of } from 'rxjs';
+import { Device, DeviceQueryResponse } from './device';
 import { DeviceComponent } from './device.component';
 import { DeviceModule } from './device.module';
+import { DeviceService } from './device.service';
 
 describe('DeviceComponent', () => {
   let component: DeviceComponent;
   let fixture: ComponentFixture<DeviceComponent>;
-  let deviceId: string = 'device-id-1';
+  let mockDeviceService: jasmine.SpyObj<DeviceService>;
+  let device: Device = {
+    id: 'device-id-123',
+    name: 'device one',
+    tags: [],
+  };
 
   beforeEach(async () => {
+    mockDeviceService = jasmine.createSpyObj(DeviceService, ['getDevice']);
+    mockDeviceService.getDevice.and.returnValue(
+      of(<ApolloQueryResult<DeviceQueryResponse>>{
+        data: {
+          device,
+        },
+        loading: false,
+      })
+    );
+
     await TestBed.configureTestingModule({
       imports: [DeviceModule],
       providers: [
+        { provide: DeviceService, useValue: mockDeviceService },
         {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
               params: {
-                id: deviceId,
+                id: 'device-id-123',
               },
             },
           },
@@ -36,7 +56,9 @@ describe('DeviceComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should store the device id in memory', () => {
-    expect(component.deviceId).toEqual(deviceId);
+  it('should store the device in memory', () => {
+    expect(mockDeviceService.getDevice).toHaveBeenCalledWith('device-id-123');
+    expect(component.device).toEqual(device);
+    expect(component.loading).toBeFalse();
   });
 });

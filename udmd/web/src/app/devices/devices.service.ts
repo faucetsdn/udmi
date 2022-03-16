@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
-import { GET_DEVICES } from './device.gql';
+import { GET_DEVICES } from './devices.gql';
 import { QueryRef } from 'apollo-angular';
 import { DevicesQueryResponse, DevicesQueryVariables, SortOptions } from './devices';
 import { Observable } from 'rxjs';
