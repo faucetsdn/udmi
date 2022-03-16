@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { ApolloQueryResult } from '@apollo/client/core';
 import { of } from 'rxjs';
@@ -29,7 +30,7 @@ describe('PointsComponent', () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [PointsModule],
+      imports: [PointsModule, BrowserAnimationsModule],
       providers: [
         { provide: PointsService, useValue: mockPointsService },
         {
