@@ -54,6 +54,18 @@ const QUERY_DEVICE = gql`
   }
 `;
 
+const QUERY_POINTS = gql`
+  query {
+    points(deviceId: "some-id") {
+      id
+      name
+      value
+      units
+      state
+    }
+  }
+`;
+
 beforeAll(async () => {
   const dataSources = () => {
     return {
@@ -76,6 +88,10 @@ describe('Devices', () => {
   });
   test('device', async () => {
     const result = await runQuery(QUERY_DEVICE, {});
+    expect(result).toMatchSnapshot();
+  });
+  test('points', async () => {
+    const result = await runQuery(QUERY_POINTS, {});
     expect(result).toMatchSnapshot();
   });
 });

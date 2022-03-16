@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, FindCursor } from 'mongodb';
 import { MongoDeviceDAO } from '../../../../device/dao/mongodb/MongoDeviceDAO';
-import { Device, SearchOptions, SORT_DIRECTION } from '../../../../device/model';
+import { Device, Point, SearchOptions, SORT_DIRECTION } from '../../../../device/model';
 import { createDevices } from '../../data';
 
 const mockDevices: Device[] = createDevices(100);
@@ -166,5 +166,24 @@ describe('MongoDeviceDAO.getDevice', () => {
     const device = await db.collection<Device>('device').findOne({ make: new RegExp('make', 'i') });
     const retrievedDevice: Device = await mongoDeviceDAO.getDevice(device.id);
     expect(retrievedDevice.id).toBe(device.id);
+  });
+
+  test('returns a device with some Points', async () => {
+    const device = await db.collection<Device>('device').findOne({ make: new RegExp('make', 'i') });
+    const retrievedDevice: Device = await mongoDeviceDAO.getDevice(device.id);
+    expect(retrievedDevice.points).not.toEqual([]);
+  });
+});
+
+describe('MongoDeviceDAO.getPoints', () => {
+  test('returns empty array if the device with the same id is not in the mongo db', async () => {
+    const points: Point[] = await mongoDeviceDAO.getPoints('some-id');
+    expect(points).toEqual([]);
+  });
+
+  test('returns the points for the device id that is in the mongodb', async () => {
+    const device = await db.collection<Device>('device').findOne({ make: new RegExp('make', 'i') });
+    const points: Point[] = await mongoDeviceDAO.getPoints(device.id);
+    expect(points).toEqual(device.points);
   });
 });

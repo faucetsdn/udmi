@@ -1,4 +1,4 @@
-import { SearchOptions, Device } from '../../model';
+import { SearchOptions, Device, Point } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { Db, Filter } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
@@ -29,6 +29,11 @@ export class MongoDeviceDAO implements DeviceDAO {
 
   async getDeviceCount(): Promise<number> {
     return this.db.collection<Device>('device').countDocuments();
+  }
+
+  async getPoints(deviceId: string): Promise<Point[]> {
+    const device: Device = await this.getDevice(deviceId);
+    return device ? device.points : [];
   }
 
   private getFilter(searchOptions: SearchOptions): Filter<Device> {

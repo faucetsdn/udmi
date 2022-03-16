@@ -1,5 +1,5 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Device, DevicesResponse, SearchOptions } from '../../device/model';
+import { Device, DevicesResponse, Point, SearchOptions } from '../../device/model';
 import { createDevices } from './data';
 
 export default class MockDeviceDataSource extends GraphQLDataSource<object> {
@@ -18,5 +18,9 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
 
   async getDevice(id: string): Promise<Device> {
     return createDevices(1)[0];
+  }
+
+  async getPoints(deviceId: string): Promise<Point[]> {
+    return createDevices(1)[0].points;
   }
 }
