@@ -1,4 +1,4 @@
-import { Device, SearchOptions, SORT_DIRECTION } from '../../device/model';
+import { Device, Point, SearchOptions, SORT_DIRECTION } from '../../device/model';
 
 export function createDevices(count: number): Device[] {
   const devices: Device[] = [];
@@ -14,6 +14,10 @@ export function createDevices(count: number): Device[] {
     const operational: boolean = n % 3 == 0 ? false : true;
     const serialNumber: string = `serialNo-${n}`;
     const firmware: string = `v-${n}`;
+    const tags: string[] = [];
+
+    const points: Point[] = createPoints(5);
+
     devices.push({
       id,
       name,
@@ -24,18 +28,14 @@ export function createDevices(count: number): Device[] {
       lastPayload,
       operational,
       serialNumber,
-      firmware: firmware,
-      tags: [],
+      firmware,
+      tags,
+      points,
     });
     n++;
   }
 
   return devices;
-}
-
-function pad(num) {
-  var s = '000' + num;
-  return s.substring(s.length - 3);
 }
 
 export function createSearchOptions(
@@ -49,4 +49,24 @@ export function createSearchOptions(
     offset,
     sortOptions: { direction, field: 'name' },
   };
+}
+
+export function createPoints(count: number): Point[] {
+  return [...Array(count)].map((_, i) => {
+    const id: string = `id-${i}`;
+    const name: string = `point-${i}`;
+    const value: string = `value-${i}`;
+    const units: string = `units-${i}`;
+    const state: string = states[i];
+    return { id, name, value, units, state };
+  });
+}
+
+const pointTemplate: [{}] = [{ id: '', name: '', value: '', units: '' }];
+
+const states: string[] = ['Applied', 'Updating', 'Overriden', 'Invalid', 'Failure'];
+
+function pad(num) {
+  var s = '000' + num;
+  return s.substring(s.length - 3);
 }

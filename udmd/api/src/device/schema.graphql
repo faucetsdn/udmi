@@ -32,6 +32,20 @@ type DevicesResponse {
   totalFilteredCount: Int!
 }
 
+
+type Point{
+  # the ID of the point
+  id: ID!
+  # the name of the point
+  name: String!
+  # the value of the point
+  value: String!
+  # the units of the point
+  units: String!
+  # the name of the point
+  state: String!
+}
+
 type Device {
   # the ID of the device
   id: ID!
@@ -55,6 +69,8 @@ type Device {
   serialNumber: String
   # the tags assigned to a device
   tags: [String!]!
+  # the points on a device
+  points: [Point!]!
 }
 
 type Query {

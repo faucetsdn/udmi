@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto';
 import { v4 as uuid } from 'uuid';
 import { fromString } from '../../FilterParser';
-import { Device, Filter, SearchOptions, SORT_DIRECTION } from '../../model';
+import { Device, Filter, Point, SearchOptions, SORT_DIRECTION } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { filterDevices } from './StaticDeviceFilter';
 
@@ -108,6 +108,7 @@ export class StaticDeviceDAO implements DeviceDAO {
       const operational: boolean = n % 3 == 0 ? false : true;
       const serialNumber: string = `serialNo-${n}`;
       const firmware: string = `v-${n}`;
+      const points: Point[] = [];
       devices.push({
         id,
         name,
@@ -119,6 +120,7 @@ export class StaticDeviceDAO implements DeviceDAO {
         operational,
         firmware: firmware,
         serialNumber,
+        points,
         tags: [],
       });
       n++;
