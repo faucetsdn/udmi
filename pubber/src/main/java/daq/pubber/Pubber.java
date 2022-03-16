@@ -105,16 +105,16 @@ public class Pubber {
   private Consumer<String> onDone;
   private boolean publishingLog;
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable, int value, double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writable = writeable;
+    pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
     return pointMetadata;
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
     return pointMetadata;
   }
@@ -229,15 +229,15 @@ public class Pubber {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
-    boolean writeable = point.writable != null && point.writable;
+    boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, writeable);
+      return new RandomBoolean(name, writable);
     } else {
       double baseline_value = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
       double baseline_tolerance = convertValue(point.baseline_tolerance, baseline_value);
       double min = baseline_value - baseline_tolerance;
       double max = baseline_value + baseline_tolerance;
-      return new RandomPoint(name, writeable, min, max, point.units);
+      return new RandomPoint(name, writable, min, max, point.units);
     }
   }
 
