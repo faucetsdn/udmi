@@ -13,13 +13,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
 
+/**
+ * Wrapper class for a PubSub client.
+ */
 public class PubSubClient {
 
-  private final static Logger LOG = LoggerFactory.getLogger(PubSubClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PubSubClient.class);
 
   private final String subscriptionName;
   private final GrpcSubscriberStub subscriber;
 
+  /**
+   * Subscribe to the given subscription.
+   *
+   * @param projectId      GCP project id
+   * @param subscriptionId PubSub subscription
+   */
   public PubSubClient(String projectId, String subscriptionId) {
     subscriptionName = ProjectSubscriptionName.format(projectId, subscriptionId);
     LOG.info("Using PubSub subscription " + subscriptionName);
@@ -38,6 +47,11 @@ public class PubSubClient {
     }
   }
 
+  /**
+   * Pull a message from the subscription.
+   *
+   * @return Bundle of pulled message.
+   */
   public Bundle pull() {
     PullRequest pullRequest =
         PullRequest.newBuilder()
@@ -49,7 +63,7 @@ public class PubSubClient {
     do {
       PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
       messages = pullResponse.getReceivedMessagesList();
-    } while(messages.size() == 0);
+    } while (messages.size() == 0);
 
     if (messages.size() != 1) {
       throw new RuntimeException("Did not receive singular message");
@@ -71,6 +85,7 @@ public class PubSubClient {
   }
 
   static class Bundle {
+
     String body;
     Map<String, String> attributes;
   }

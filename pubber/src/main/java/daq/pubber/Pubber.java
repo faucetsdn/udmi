@@ -44,6 +44,9 @@ import udmi.schema.State;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
+/**
+ * IoT Core UDMI Device Emulator.
+ */
 public class Pubber {
 
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
@@ -75,25 +78,22 @@ public class Pubber {
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadaa(false)
   );
-
-  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-  private final Configuration configuration;
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
-  private final CountDownLatch configLatch = new CountDownLatch(1);
-
-  private final State deviceState = new State();
-  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
-  private final Set<AbstractPoint> allPoints = new HashSet<>();
-  private final int MESSAGE_REPORT_INTERVAL = 100;
-  private final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
+  private static final int MESSAGE_REPORT_INTERVAL = 100;
+  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
       Level.DEBUG, LOG::debug,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-  private int deviceMessageCount = -1;
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private final Configuration configuration;
+  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
+  private final CountDownLatch configLatch = new CountDownLatch(1);
+  private final State deviceState = new State();
+  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
+  private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
+  private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
@@ -103,6 +103,11 @@ public class Pubber {
   private Consumer<String> onDone;
   private boolean publishingLog;
 
+  /**
+   * Start an instance from a configuration file.
+   *
+   * @param configPath Path to configuration file.
+   */
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
@@ -112,6 +117,14 @@ public class Pubber {
     }
   }
 
+  /**
+   * Start an instance from explicit args.
+   *
+   * @param projectId GCP project
+   * @param sitePath  Path to site_model
+   * @param deviceId  Device ID to emulate
+   * @param serialNo  Serial number of the device
+   */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
     configuration.projectId = projectId;
@@ -139,6 +152,12 @@ public class Pubber {
     return pointMetadata;
   }
 
+  /**
+   * Start a pubber instance with command line args.
+   *
+   * @param args The usual
+   * @throws Exception When something is wrong...
+   */
   public static void main(String[] args) throws Exception {
     boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
     if (swarm) {
@@ -231,25 +250,25 @@ public class Pubber {
     if (BOOLEAN_UNITS.contains(point.units)) {
       return new RandomBoolean(name, writeable);
     } else {
-      double baseline_value = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
-      double baseline_tolerance = convertValue(point.baseline_tolerance, baseline_value);
-      double min = baseline_value - baseline_tolerance;
-      double max = baseline_value + baseline_tolerance;
+      double baselineValue = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
+      double baselineTolerance = convertValue(point.baseline_tolerance, baselineValue);
+      double min = baselineValue - baselineTolerance;
+      double max = baselineValue + baselineTolerance;
       return new RandomPoint(name, writeable, min, max, point.units);
     }
   }
 
-  private double convertValue(Object baseline_value, double defaultBaselineValue) {
-    if (baseline_value == null) {
+  private double convertValue(Object baselineValue, double defaultBaselineValue) {
+    if (baselineValue == null) {
       return defaultBaselineValue;
     }
-    if (baseline_value instanceof Double) {
-      return (double) baseline_value;
+    if (baselineValue instanceof Double) {
+      return (double) baselineValue;
     }
-    if (baseline_value instanceof Integer) {
-      return (double) (int) baseline_value;
+    if (baselineValue instanceof Integer) {
+      return (double) (int) baselineValue;
     }
-    throw new RuntimeException("Unknown value type " + baseline_value.getClass());
+    throw new RuntimeException("Unknown value type " + baselineValue.getClass());
   }
 
   private void loadCloudConfig() {
@@ -323,11 +342,11 @@ public class Pubber {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
         .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
-    processCloudConfig(makeCloudIoTConfig(attributes));
+    processCloudConfig(makeCloudIotConfig(attributes));
     processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
-  private CloudIotConfig makeCloudIoTConfig(Attributes attributes) {
+  private CloudIotConfig makeCloudIotConfig(Attributes attributes) {
     CloudIotConfig cloudIotConfig = new CloudIotConfig();
     cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
