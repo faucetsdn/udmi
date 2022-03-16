@@ -22,7 +22,7 @@ public abstract class BasicPoint implements AbstractPoint {
    * Construct a maybe writable point.
    *
    * @param name Point name
-   * @param writable True if writeable
+   * @param writable True if writable
    */
   public BasicPoint(String name, boolean writable) {
     this.name = name;
