@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { SearchFilterItem } from '../search-filter/search-filter';
-import { Device } from '../device/device';
+import { Device, DeviceModel } from '../device/device';
 import { SortOptions } from './devices';
 import { DevicesService } from './devices.service';
 
@@ -11,7 +11,16 @@ import { DevicesService } from './devices.service';
   styleUrls: ['./devices.component.scss'],
 })
 export class DevicesComponent implements OnInit {
-  displayedColumns: string[] = ['name', 'make', 'model', 'site', 'section', 'lastPayload', 'operational', 'tags'];
+  displayedColumns: (keyof DeviceModel)[] = [
+    'name',
+    'make',
+    'model',
+    'site',
+    'section',
+    'lastPayload',
+    'operational',
+    'tags',
+  ];
   loading: boolean = true;
   devices: Device[] = [];
   totalCount: number = 0;
@@ -42,7 +51,7 @@ export class DevicesComponent implements OnInit {
   ngOnInit(): void {
     this.devicesService.getDevices(0, this.pageSize).subscribe(({ data, loading }) => {
       this.loading = loading;
-      this.devices = data.devices?.devices;
+      this.devices = data.devices?.devices ?? [];
       this.totalCount = data.devices?.totalCount;
       this.totalFilteredCount = data.devices?.totalFilteredCount;
     }); // start off on first page, i.e. offset 0

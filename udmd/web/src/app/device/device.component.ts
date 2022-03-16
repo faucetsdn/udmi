@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Device } from './device';
+import { Device, DeviceModel } from './device';
 import { DeviceService } from './device.service';
 
 @Component({
@@ -8,7 +8,7 @@ import { DeviceService } from './device.service';
   styleUrls: ['./device.component.scss'],
 })
 export class DeviceComponent implements OnInit {
-  fields: (keyof Device)[] = [
+  fields: (keyof DeviceModel)[] = [
     'name',
     'make',
     'model',
@@ -20,7 +20,7 @@ export class DeviceComponent implements OnInit {
     'lastPayload',
     'tags',
   ];
-  device!: Device;
+  device: Device = null;
   loading: boolean = true;
 
   constructor(private route: ActivatedRoute, private deviceService: DeviceService) {}
