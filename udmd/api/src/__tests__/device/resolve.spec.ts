@@ -43,6 +43,13 @@ const QUERY_DEVICE = gql`
       firmware
       serialNumber
       tags
+      points {
+        id
+        name
+        value
+        units
+        state
+      }
     }
   }
 `;

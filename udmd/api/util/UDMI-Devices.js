@@ -18,6 +18,18 @@ const sites = [
     { site: 'CA-US-M3', sections: ['JK', 'FK'] },
 ];
 
+
+const pointTemplates = [
+    { id: "ZT-1", name: "Zone Temperature", value: "78.12", units: "℉" },
+    { id: "FSP-1", name: "Fan Speed Command", value: "true", units: "" },
+    { id: "IAF-1", name: "Inlet Air Flow", value: "15", units: "CFM" },
+    { id: "DAT-1", name: "Discharge Air Temperature", value: "67.8", units: "℉" },
+    { id: "CO2", name: "CO2", value: "0.00034", units: "PPM" },
+];
+
+const pointStates = ['Applied', 'Updating', 'Overriden', 'Invalid', 'Failure'];
+
+
 let n = 1;
 while (n <= 10000) {
     const deviceTemplate = getRandom(deviceTemplates);
@@ -35,9 +47,16 @@ while (n <= 10000) {
     const serialNumber = generateSerial();
     const tags = [];
     const firmware = getRandom(deviceTemplate.firmwareVersion);
+    const points = getPoints(getRandomNumberBetween(1, pointTemplates.length));
 
-    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, serialNumber, firmware, tags });
+    db.device.insertOne({ id, name, make, model, site, section, lastPayload, operational, serialNumber, firmware, tags, points });
     n++;
+}
+
+function getPoints(count) {
+    return [...Array(count)].map((_, i) => {
+        return { ...pointTemplates[i], state: pointStates[i] };
+    });
 }
 
 function getRandom(array) {
@@ -48,15 +67,19 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+function getRandomNumberBetween(min, max) {
+    return Math.floor(Math.random() * max - 1) + min;
+}
+
 function generateSerial() {
     var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         serialLength = 10,
         randomSerial = "";
 
-    for (var i = 0; i < serialLength; i = i + 1) {
+    [...Array(serialLength)].forEach(() => {
         const randomNumber = getRandomInt(chars.length);
         randomSerial += chars.substring(randomNumber, randomNumber + 1);
-    }
+    });
 
     return randomSerial;
 

@@ -11,6 +11,14 @@ export interface SearchOptions {
   filter?: string;
 }
 
+export interface Point {
+  id: string;
+  name: string;
+  value: string;
+  units: string;
+  state: string;
+}
+
 export interface Device {
   id: string;
   name: string;
@@ -23,6 +31,7 @@ export interface Device {
   firmware: string;
   serialNumber: string;
   tags?: string[];
+  points?: Point[];
 }
 
 export interface SortOptions {
