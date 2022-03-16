@@ -55,7 +55,7 @@ should be possible to setup a schema to scan every day exactly at midnight.
 
 ## Continuous Scan
 
-A _continuous scan_ is the mode for a system that can passivly monitor traffic and deduce scan results, so
+A _continuous scan_ is the mode for a system that can passively monitor traffic and deduce scan results, so
 there is no need for a _sporadic_/_periodic_ scan. This might be a system that monitors network ARP requests,
 or transient BACnet traffic.
 
@@ -66,7 +66,7 @@ or transient BACnet traffic.
 
 For this case, there is no _stop state_ message since the scan never stops: The process silently stops when the
 `scan_interval_sec` parameter is removed from the config. Addionally, the `scan_interval_sec` field indicates the
-duration within which a scan result for a given device should _not_ be repeated. E.g., if a device is passivly
+duration within which a scan result for a given device should _not_ be repeated. E.g., if a device is passively
 detected every _30 sec_, but the scan interval is _60 sec_, then the result would only be reported for
 (approximately) every other detection.
 
