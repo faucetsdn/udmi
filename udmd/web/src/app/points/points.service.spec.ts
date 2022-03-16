@@ -27,10 +27,7 @@ describe('PointsService', () => {
 
   xit('should return the points', (done) => {
     const mockDeviceResponse: PointsQueryResponse = {
-      device: {
-        id: '123',
-        points: [],
-      },
+      points: [],
     };
 
     // Make some assertion about the result for once it's fulfilled.

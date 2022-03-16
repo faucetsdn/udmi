@@ -18,7 +18,7 @@ export class PointsComponent implements OnInit {
 
     this.pointsService.getPoints(deviceId).subscribe(({ data, loading }) => {
       this.loading = loading;
-      this.points = data.device?.points ?? [];
+      this.points = data.points ?? [];
     });
   }
 }

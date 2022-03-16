@@ -22,10 +22,7 @@ describe('PointsComponent', () => {
     mockPointsService.getPoints.and.returnValue(
       of(<ApolloQueryResult<PointsQueryResponse>>{
         data: {
-          device: {
-            id: 'device-id-123',
-            points,
-          },
+          points,
         },
         loading: false,
       })
