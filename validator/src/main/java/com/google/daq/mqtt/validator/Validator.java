@@ -48,6 +48,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
@@ -79,7 +82,7 @@ public class Validator {
   private static final String DEVICES_SUBDIR = "devices";
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
-  private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
+  private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
@@ -88,6 +91,7 @@ public class Validator {
   public static final String NO_SITE = "--";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
+  public static final String UNKNOWN_TYPE_DEFAULT = "event";
 
   private final String projectId;
   private FirestoreDataSink dataSink;
@@ -444,22 +448,26 @@ public class Validator {
     String subType = attributes.get("subType");
 
     if (Strings.isNullOrEmpty(subFolder)) {
-      subFolder = UNKNOWN_SCHEMA_DEFAULT;
+      subFolder = UNKNOWN_FOLDER_DEFAULT;
     }
 
     if (Strings.isNullOrEmpty(subType)) {
-      return "event_" + subFolder;
+      subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (subFolder.equals("update")) {
-      if (!subType.equals("config") && !subType.equals("state")) {
+    if (matches(subFolder, SubFolder.UPDATE)) {
+      if (!matches(subType, SubType.CONFIG) && !matches(subType, SubType.STATE)) {
         throw new RuntimeException("Unrecognized update type " + subType);
       }
-    } else if (!subType.endsWith("s")) {
+    } else if (subType.endsWith("s")) {
       throw new RuntimeException("Malformed plural subType " + subType);
     }
 
-    return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
+    return String.format("%s_%s", subType, subFolder);
+  }
+
+  private boolean matches(String target, Object value) {
+    return target.equals(value.toString());
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {

@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Validator" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.Validator" />
-    <module name="daq-validator.validator" />
-    <option name="PROGRAM_PARAMETERS" value="labs-333619 schema pubsub poc-validator $USER_HOME$/sites/BIOT-1200" />
+    <module name="validator" />
+    <option name="PROGRAM_PARAMETERS" value="bos-daq-testing schema pubsub peringknife-debug udmi_site_model" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>
