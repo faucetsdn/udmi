@@ -40,7 +40,7 @@ At this point, the _config_ `generation` entry can be removed with no effect, or
 ## Periodic Scan
 
 A _periodic scan_ is like a _sporadic scan_ except that the scan automatically occurs due to a predefined
-interval (rather than individual tirgger _config_s). This allows for repeated scans without any _config_ changes.
+interval (rather than individual trigger _config_s). This allows for repeated scans without any _config_ changes.
 
 * [_start config_](../../../tests/config.tests/periodic.json): Sets up a periodic scan, as defined by the
   `scan_interval_sec` parameter.
