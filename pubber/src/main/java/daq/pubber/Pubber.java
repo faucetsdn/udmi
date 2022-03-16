@@ -107,7 +107,7 @@ public class Pubber {
 
   private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writeable = writeable;
+    pointMetadata.writable = writeable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
@@ -229,7 +229,7 @@ public class Pubber {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
-    boolean writeable = point.writeable != null && point.writeable;
+    boolean writeable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
       return new RandomBoolean(name, writeable);
     } else {
