@@ -5,3 +5,12 @@
     <p>{{ device?.[field] ?? '-' }}</p>
   </div>
 </mat-card>
+
+<nav mat-tab-nav-bar [tabPanel]="tabPanel">
+  <a mat-tab-link routerLink="points" routerLinkActive="active">Points</a>
+</nav>
+<mat-tab-nav-panel #tabPanel>
+  <div class="container">
+    <router-outlet name="deviceTabs"></router-outlet>
+  </div>
+</mat-tab-nav-panel>

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 import { ApolloQueryResult } from '@apollo/client/core';
 import { of } from 'rxjs';
 import { Device, DeviceQueryResponse } from './device';
@@ -29,7 +30,7 @@ describe('DeviceComponent', () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [DeviceModule],
+      imports: [DeviceModule, RouterTestingModule],
       providers: [
         { provide: DeviceService, useValue: mockDeviceService },
         {

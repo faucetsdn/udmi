@@ -2,6 +2,15 @@
 
 .summary {
   margin-top: $gutter-width;
+  margin-bottom: $gutter-width;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.active {
+  opacity: 1;
+}
+
+.container {
+  padding: $gutter-width 0;
 }

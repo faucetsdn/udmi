@@ -1,3 +1,5 @@
+@import '../styles/variables';
+
 .container {
-  padding: 16px;
+  padding: $gutter-width;
 }
