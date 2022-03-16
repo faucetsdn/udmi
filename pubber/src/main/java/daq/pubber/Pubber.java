@@ -137,7 +137,8 @@ public class Pubber {
     }
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable, int value, double tolerance, String units) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable, int value,
+      double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
     pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
