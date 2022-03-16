@@ -2,8 +2,8 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-if [ $# != 3 ]; then
-    echo $0 SITE_PATH PROJECT_ID SUBSCRIPTION_ID
+if [ $# != 2 -a $# != 3 ]; then
+    echo $0 SITE_PATH PROJECT_ID [SUBSCRIPTION_ID]
     false
 fi
 
@@ -22,4 +22,9 @@ $ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-$ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+if [[ -z $ubscription ]]; then
+    echo No subscription supplied, assuming UDMI reflector.
+    $ROOT_DIR/validator/bin/validate $project_id schema reflect -- $site_path
+else
+    $ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+fi

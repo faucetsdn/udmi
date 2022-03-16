@@ -2,7 +2,7 @@
   <configuration default="false" name="Validator" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.Validator" />
     <module name="validator" />
-    <option name="PROGRAM_PARAMETERS" value="bos-daq-testing schema reflect AHU-1 udmi_site_model" />
+    <option name="PROGRAM_PARAMETERS" value="bos-daq-testing schema reflect -- udmi_site_model" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>

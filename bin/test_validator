@@ -13,7 +13,6 @@ shift
 bin/clone_model
 site_path=udmi_site_model
 device_id=AHU-1
-subscription_id=peringknife-debug
 
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
@@ -28,7 +27,7 @@ fi
 
 rm -rf out/devices
 
-bin/validator $site_path $project_id $subscription_id &
+bin/validator $site_path $project_id &
 vpid=$!
 sleep 10
 echo Started validator pid $vpid
