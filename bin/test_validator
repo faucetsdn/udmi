@@ -26,6 +26,10 @@ fi
 
 rm -rf out/devices
 
+# Prepare auth key used by reflector
+cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 \
+   udmi_site_model/gcp_reflect_key.pkcs8
+
 bin/validator $site_path $project_id &
 vpid=$!
 sleep 10
