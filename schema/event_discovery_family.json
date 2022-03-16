@@ -7,7 +7,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[-_.:0-9a-zA-Z]+$",
+      "pattern": "^[-_.:0-9A-Z]+$",
       "description": "Device id in the namespace of the given family"
     }
   },
