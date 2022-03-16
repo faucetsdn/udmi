@@ -68,7 +68,7 @@ jobs:
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
           cat out/validation_report.json
-          diff /tmp/validator.out etc/validator.out && echo No validator diff detected.
+          diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -76,7 +76,7 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/sequencer.out
-          diff /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
+          diff -u /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
       - name: device ouput logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
