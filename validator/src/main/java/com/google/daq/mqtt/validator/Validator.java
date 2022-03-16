@@ -48,7 +48,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
@@ -244,7 +243,7 @@ public class Validator {
   }
 
   private void validateReflector(String instName) {
-    deviceId = instName;
+    deviceId = NO_SITE.equals(instName) ? null : instName;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -253,7 +252,7 @@ public class Validator {
 
   private void messageLoop(MessagePublisher client) {
     System.err.println(
-        "Entering message loop on " + client.getSubscriptionId() + " for device " + deviceId);
+        "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     boolean initialized = false;
     while (client.isActive()) {
@@ -271,8 +270,10 @@ public class Validator {
   }
 
   private void sendInitializationQuery(MessagePublisher client) {
-    System.err.println("Sending initialization query messages");
-    client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+    if (deviceId != null) {
+      System.err.println("Sending initialization query messages for device " + deviceId);
+      client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+    }
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {
@@ -455,12 +456,15 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (matches(subFolder, SubFolder.UPDATE)) {
-      if (!matches(subType, SubType.CONFIG) && !matches(subType, SubType.STATE)) {
-        throw new RuntimeException("Unrecognized update type " + subType);
+    if (matches(subType, SubFolder.UPDATE)) {
+      if (!subFolder.endsWith("s")) {
+        throw new RuntimeException("Update subFolder missing plural: " + subFolder);
       }
-    } else if (subType.endsWith("s")) {
-      throw new RuntimeException("Malformed plural subType " + subType);
+      String singularFolder = subFolder.substring(0, subFolder.length() - 1);
+      if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
+        throw new RuntimeException("Unrecognized update type: " + subFolder);
+      }
+      return singularFolder;
     }
 
     return String.format("%s_%s", subType, subFolder);
