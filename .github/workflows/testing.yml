@@ -54,12 +54,8 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11'
-      - name: code checks
-        run: |
-          bin/setup_base
-          bin/gencode check
-          pubber/bin/build check
-          validator/bin/build check
+      - name: base setup
+        run: bin/setup_base
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -67,6 +63,12 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           diff -u /tmp/results.txt etc/sequence.out && echo No output diff detected.
+      - name: code checks
+        if: ${{ always() }}
+        run: |
+          bin/gencode check
+          pubber/bin/build check
+          validator/bin/build check
       - name: sequencer logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
