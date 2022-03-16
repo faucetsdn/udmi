@@ -5,5 +5,5 @@ export interface DeviceDAO {
   getDevices(searchOptions: SearchOptions): Promise<Device[]>;
   getDeviceCount(): Promise<number>;
   getDevice(id: string): Promise<Device | null>;
-  getPoints(id: string): Promise<Point[]>;
+  getPoints(deviceId: string): Promise<Point[]>;
 }

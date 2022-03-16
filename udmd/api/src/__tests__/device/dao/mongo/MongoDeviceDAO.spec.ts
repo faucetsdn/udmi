@@ -181,7 +181,7 @@ describe('MongoDeviceDAO.getPoints', () => {
     expect(points).toEqual([]);
   });
 
-  test('returns the device with the same id that is in the mongodb', async () => {
+  test('returns the points for the device id that is in the mongodb', async () => {
     const device = await db.collection<Device>('device').findOne({ make: new RegExp('make', 'i') });
     const points: Point[] = await mongoDeviceDAO.getPoints(device.id);
     expect(points).toEqual(device.points);

@@ -31,8 +31,8 @@ export class MongoDeviceDAO implements DeviceDAO {
     return this.db.collection<Device>('device').countDocuments();
   }
 
-  async getPoints(id: string): Promise<Point[]> {
-    const device: Device = await this.getDevice(id);
+  async getPoints(deviceId: string): Promise<Point[]> {
+    const device: Device = await this.getDevice(deviceId);
     return device ? device.points : [];
   }
 
