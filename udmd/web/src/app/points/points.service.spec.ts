@@ -3,17 +3,17 @@ import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/tes
 import { GraphQLModule } from '../graphql/graphql.module';
 import { GET_POINTS } from './points.gql';
 import { PointsQueryResponse } from './points';
-import { DeviceService } from './points.service';
+import { PointsService } from './points.service';
 
-describe('DeviceService', () => {
-  let service: DeviceService;
+describe('PointsService', () => {
+  let service: PointsService;
   let controller: ApolloTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ApolloTestingModule, GraphQLModule],
     });
-    service = TestBed.inject(DeviceService);
+    service = TestBed.inject(PointsService);
     controller = TestBed.inject(ApolloTestingController);
   });
 
