@@ -70,7 +70,7 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
+  private static final Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadaa(false)
@@ -85,17 +85,15 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
-  private int deviceMessageCount = -1;
-  private AtomicInteger logMessageCount = new AtomicInteger(0);
   private final int MESSAGE_REPORT_INTERVAL = 100;
-
   private final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
       Level.DEBUG, LOG::debug,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-
+  private int deviceMessageCount = -1;
+  private final AtomicInteger logMessageCount = new AtomicInteger(0);
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
@@ -104,83 +102,6 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
-
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
-    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writeable = writeable;
-    pointMetadata.baseline_value = value;
-    pointMetadata.baseline_tolerance = tolerance;
-    pointMetadata.units = units;
-    return pointMetadata;
-  }
-
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
-    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    return pointMetadata;
-  }
-
-  static class ExtraPointsetEvent extends PointsetEvent {
-    // This extraField exists only to trigger schema parsing errors.
-    public Object extraField;
-  }
-
-  public static void main(String[] args) throws Exception {
-    boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
-    if (swarm) {
-      swarmPubber(args);
-    } else {
-      singularPubber(args);
-    }
-    LOG.info("Done with main");
-  }
-
-  private static void singularPubber(String[] args) throws InterruptedException {
-    final Pubber pubber;
-    if (args.length == 1) {
-      pubber = new Pubber(args[0]);
-    } else if (args.length == 4) {
-      pubber = new Pubber(args[0], args[1], args[2], args[3]);
-    } else {
-      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
-    }
-    pubber.initialize();
-    pubber.startConnection(deviceId -> {
-      LOG.info("Connection closed/finished " + deviceId);
-      pubber.terminate();
-    });
-  }
-
-  private static void swarmPubber(String[] args) throws InterruptedException {
-    if (args.length != 4) {
-      throw new IllegalArgumentException("Usage: { project_id PubSub pubsub_subscription instance_count }");
-    }
-    String projectId = args[0];
-    String siteName = args[1];
-    String feedName = args[2];
-    int instances = Integer.parseInt(args[3]);
-    LOG.info(String.format("Starting %d pubber instances", instances));
-    for (int instance = 0; instance < instances; instance++) {
-      String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
-      startFeedListener(projectId, siteName, feedName, serialNo);
-    }
-    LOG.info(String.format("Started all %d pubber instances", instances));
-  }
-
-  private static void startFeedListener(String projectId, String siteName, String feedName, String serialNo) {
-    try {
-      LOG.info("Starting feed listener " + serialNo);
-      Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
-      pubber.initialize();
-      pubber.startConnection(deviceId -> {
-        pubber.terminate();
-        LOG.error("Connection terminated, restarting listener");
-        startFeedListener(projectId, siteName, feedName, serialNo);
-      });
-    } catch (Exception e) {
-      LOG.error("Exception starting instance " + serialNo, e);
-      startFeedListener(projectId, siteName, feedName, serialNo);
-    }
-  }
 
   public Pubber(String configPath) {
     File configFile = new File(configPath);
@@ -203,6 +124,82 @@ public class Pubber {
     }
   }
 
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value,
+      double tolerance, String units) {
+    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+    pointMetadata.writeable = writeable;
+    pointMetadata.baseline_value = value;
+    pointMetadata.baseline_tolerance = tolerance;
+    pointMetadata.units = units;
+    return pointMetadata;
+  }
+
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+    return pointMetadata;
+  }
+
+  public static void main(String[] args) throws Exception {
+    boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
+    if (swarm) {
+      swarmPubber(args);
+    } else {
+      singularPubber(args);
+    }
+    LOG.info("Done with main");
+  }
+
+  private static void singularPubber(String[] args) throws InterruptedException {
+    final Pubber pubber;
+    if (args.length == 1) {
+      pubber = new Pubber(args[0]);
+    } else if (args.length == 4) {
+      pubber = new Pubber(args[0], args[1], args[2], args[3]);
+    } else {
+      throw new IllegalArgumentException(
+          "Usage: config_file or { project_id site_path/ device_id serial_no }");
+    }
+    pubber.initialize();
+    pubber.startConnection(deviceId -> {
+      LOG.info("Connection closed/finished " + deviceId);
+      pubber.terminate();
+    });
+  }
+
+  private static void swarmPubber(String[] args) throws InterruptedException {
+    if (args.length != 4) {
+      throw new IllegalArgumentException(
+          "Usage: { project_id PubSub pubsub_subscription instance_count }");
+    }
+    String projectId = args[0];
+    String siteName = args[1];
+    String feedName = args[2];
+    int instances = Integer.parseInt(args[3]);
+    LOG.info(String.format("Starting %d pubber instances", instances));
+    for (int instance = 0; instance < instances; instance++) {
+      String serialNo = String.format("%s-%d", HOSTNAME, (instance + 1));
+      startFeedListener(projectId, siteName, feedName, serialNo);
+    }
+    LOG.info(String.format("Started all %d pubber instances", instances));
+  }
+
+  private static void startFeedListener(String projectId, String siteName, String feedName,
+      String serialNo) {
+    try {
+      LOG.info("Starting feed listener " + serialNo);
+      Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
+      pubber.initialize();
+      pubber.startConnection(deviceId -> {
+        pubber.terminate();
+        LOG.error("Connection terminated, restarting listener");
+        startFeedListener(projectId, siteName, feedName, serialNo);
+      });
+    } catch (Exception e) {
+      LOG.error("Exception starting instance " + serialNo, e);
+      startFeedListener(projectId, siteName, feedName, serialNo);
+    }
+  }
+
   private void loadDeviceMetadata() {
     Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
     Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
@@ -213,7 +210,8 @@ public class Pubber {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
       processDeviceMetadata(metadata);
     } catch (Exception e) {
-      throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+      throw new RuntimeException(
+          "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
@@ -255,7 +253,8 @@ public class Pubber {
   }
 
   private void loadCloudConfig() {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined in configuration");
+    Preconditions.checkState(configuration.sitePath != null,
+        "sitePath not defined in configuration");
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
       processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
@@ -283,7 +282,8 @@ public class Pubber {
     }
 
     info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
-        configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
+        configuration.deviceId, configuration.serialNo, configuration.macAddr,
+        configuration.extraField,
         configuration.gatewayId));
 
     deviceState.system.operational = true;
@@ -297,7 +297,7 @@ public class Pubber {
   }
 
   private void pullDeviceMessage() {
-    while(true) {
+    while (true) {
       try {
         info("Waiting for swarm configuration");
         SwarmMessage.Attributes attributes = new Attributes();
@@ -321,15 +321,18 @@ public class Pubber {
 
   private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
-    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
+    configuration.keyBytes = Base64.getDecoder()
+        .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
     processCloudConfig(makeCloudIoTConfig(attributes));
     processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
   private CloudIotConfig makeCloudIoTConfig(Attributes attributes) {
     CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId, "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation, "deviceRegistryLocation");
+    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+        "deviceRegistryId");
+    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+        "deviceRegistryLocation");
     return cloudIotConfig;
   }
 
@@ -476,7 +479,8 @@ public class Pubber {
 
   private void publisherException(Exception toReport) {
     if (toReport instanceof PublisherException) {
-      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase, toReport.getCause());
+      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
+          toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
       if (onDone != null) {
         onDone.accept(configuration.deviceId);
@@ -612,7 +616,8 @@ public class Pubber {
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp), deviceMessageCount));
+      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
+          deviceMessageCount));
     }
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
@@ -707,5 +712,11 @@ public class Pubber {
     LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+  }
+
+  static class ExtraPointsetEvent extends PointsetEvent {
+
+    // This extraField exists only to trigger schema parsing errors.
+    public Object extraField;
   }
 }
