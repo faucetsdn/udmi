@@ -8,6 +8,7 @@ variable "gke_num_nodes" {
 resource "google_container_cluster" "biot" {
     name     = "${var.gcp_project_id}-gke"
     location = var.gcp_region
+    node_locations = ["us-central1-b"]
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default
