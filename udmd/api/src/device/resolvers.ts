@@ -12,5 +12,8 @@ export const resolvers = {
     device: (_, { id }, { dataSources: { deviceDS } }) => {
       return deviceDS.getDevice(id);
     },
+    points: (_, { deviceId }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getPoints(deviceId);
+    },
   },
 };

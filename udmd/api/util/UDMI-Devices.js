@@ -20,11 +20,11 @@ const sites = [
 
 
 const pointTemplates = [
-    { id: "ZT-1", name: "Zone Temperature", value: "78.12", units: "℉" },
-    { id: "FSP-1", name: "Fan Speed Command", value: "true", units: "" },
-    { id: "IAF-1", name: "Inlet Air Flow", value: "15", units: "CFM" },
-    { id: "DAT-1", name: "Discharge Air Temperature", value: "67.8", units: "℉" },
-    { id: "CO2", name: "CO2", value: "0.00034", units: "PPM" },
+    { id: "ZT-1", name: "Zone Temperature", value: "78.12", units: "℉", meta: { code: "zone_temperature", units: "℉" } },
+    { id: "FSP-1", name: "Fan Speed Command", value: "true", units: "", meta: { code: "fan_speed_command", units: "" } },
+    { id: "IAF-1", name: "Inlet Air Flow", value: "15", units: "CFM", meta: { code: "inlet_air_flow", units: "CFM" } },
+    { id: "DAT-1", name: "Discharge Air Temperature", value: "67.8", units: "℉", meta: { code: "discharge_air_temperature", units: "℉" } },
+    { id: "CO2", name: "Carbon Dioxide", value: "0.00034", units: "PPM", meta: { code: "carbon_dioxide", units: "PPM" } },
 ];
 
 const pointStates = ['Applied', 'Updating', 'Overriden', 'Invalid', 'Failure'];

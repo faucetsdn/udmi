@@ -77,5 +77,7 @@ type Query {
   # Get the devices matching the search options
   devices( searchOptions: SearchOptions! ): DevicesResponse
   # Get a device by ID
-  device( id: ID!): Device
+  device( id: ID! ): Device
+  # Get points by a Device ID
+  points( deviceId: ID!) : [Point!]!
 }

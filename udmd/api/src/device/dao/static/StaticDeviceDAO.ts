@@ -34,6 +34,10 @@ export class StaticDeviceDAO implements DeviceDAO {
     return this.devices.length;
   }
 
+  public async getPoints(deviceId: string): Promise<Point[]> {
+    return this.devices[0].points;
+  }
+
   public async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
     let filteredDevices = this.devices;
     if (searchOptions.filter) {

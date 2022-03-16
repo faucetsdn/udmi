@@ -1,5 +1,5 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Device, DevicesResponse, SearchOptions } from './model';
+import { Device, DevicesResponse, Point, SearchOptions } from './model';
 import { DeviceDAO } from './dao/DeviceDAO';
 import { validate } from './SearchOptionsValidator';
 
@@ -24,5 +24,9 @@ export class DeviceDataSource extends GraphQLDataSource {
 
   async getDevice(id: string): Promise<Device> {
     return this.deviceDAO.getDevice(id);
+  }
+
+  async getPoints(deviceId: string): Promise<Point[]> {
+    return this.deviceDAO.getPoints(deviceId);
   }
 }

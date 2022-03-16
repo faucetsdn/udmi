@@ -413,3 +413,54 @@ Object {
   },
 }
 `;
+
+exports[`Devices points 1`] = `
+Object {
+  "data": Object {
+    "points": Array [
+      Object {
+        "id": "id-0",
+        "name": "point-0",
+        "state": "Applied",
+        "units": "units-0",
+        "value": "value-0",
+      },
+      Object {
+        "id": "id-1",
+        "name": "point-1",
+        "state": "Updating",
+        "units": "units-1",
+        "value": "value-1",
+      },
+      Object {
+        "id": "id-2",
+        "name": "point-2",
+        "state": "Overriden",
+        "units": "units-2",
+        "value": "value-2",
+      },
+      Object {
+        "id": "id-3",
+        "name": "point-3",
+        "state": "Invalid",
+        "units": "units-3",
+        "value": "value-3",
+      },
+      Object {
+        "id": "id-4",
+        "name": "point-4",
+        "state": "Failure",
+        "units": "units-4",
+        "value": "value-4",
+      },
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
