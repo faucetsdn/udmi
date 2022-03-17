@@ -48,6 +48,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
@@ -85,12 +87,14 @@ public class Validator {
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
-  private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
+  private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
+  private static final String UNKNOWN_TYPE_DEFAULT = "event";
+
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -252,7 +256,7 @@ public class Validator {
   }
 
   private void validateReflector(String instName) {
-    deviceId = instName;
+    deviceId = NO_SITE.equals(instName) ? null : instName;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -261,7 +265,7 @@ public class Validator {
 
   private void messageLoop(MessagePublisher client) {
     System.err.println(
-        "Entering message loop on " + client.getSubscriptionId() + " for device " + deviceId);
+        "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     boolean initialized = false;
     while (client.isActive()) {
@@ -279,8 +283,10 @@ public class Validator {
   }
 
   private void sendInitializationQuery(MessagePublisher client) {
-    System.err.println("Sending initialization query messages");
-    client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+    if (deviceId != null) {
+      System.err.println("Sending initialization query messages for device " + deviceId);
+      client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+    }
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {
@@ -464,22 +470,29 @@ public class Validator {
     String subType = attributes.get("subType");
 
     if (Strings.isNullOrEmpty(subFolder)) {
-      subFolder = UNKNOWN_SCHEMA_DEFAULT;
+      subFolder = UNKNOWN_FOLDER_DEFAULT;
     }
 
     if (Strings.isNullOrEmpty(subType)) {
-      return "event_" + subFolder;
+      subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (subFolder.equals("update")) {
-      if (!subType.equals("config") && !subType.equals("state")) {
-        throw new RuntimeException("Unrecognized update type " + subType);
+    if (matches(subType, SubFolder.UPDATE)) {
+      if (!subFolder.endsWith("s")) {
+        throw new RuntimeException("Update subFolder missing plural: " + subFolder);
       }
-    } else if (!subType.endsWith("s")) {
-      throw new RuntimeException("Malformed plural subType " + subType);
+      String singularFolder = subFolder.substring(0, subFolder.length() - 1);
+      if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
+        throw new RuntimeException("Unrecognized update type: " + subFolder);
+      }
+      return singularFolder;
     }
 
-    return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
+    return String.format("%s_%s", subType, subFolder);
+  }
+
+  private boolean matches(String target, Object value) {
+    return target.equals(value.toString());
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
