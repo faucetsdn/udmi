@@ -78,7 +78,7 @@ jobs:
           bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/sequencer.out
           diff -u /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
-      - name: device ouput logs
+      - name: device output logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
       - name: pubber logs
