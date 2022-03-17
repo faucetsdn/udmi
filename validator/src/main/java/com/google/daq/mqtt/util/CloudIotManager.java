@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
  */
 public class CloudIotManager {
 
-  private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   public static final String UDMI_METADATA = "udmi_metadata";
+  private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final String UDMI_GENERATION = "udmi_generation";
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
@@ -55,8 +55,8 @@ public class CloudIotManager {
   private CloudIot cloudIotService;
   private String projectPath;
   private CloudIot.Projects.Locations.Registries cloudIotRegistries;
-  private Map<String, Device> deviceMap = new ConcurrentHashMap<>();
-  private String schemaName;
+  private final Map<String, Device> deviceMap = new ConcurrentHashMap<>();
+  private final String schemaName;
 
   public CloudIotManager(String projectId, File iotConfigFile, String schemaName) {
     this.projectId = projectId;
@@ -79,6 +79,16 @@ public class CloudIotManager {
     Preconditions.checkNotNull(cloudIotConfig.cloud_region, "cloud_region not defined");
     Preconditions.checkNotNull(cloudIotConfig.site_name, "site_name not defined");
     return cloudIotConfig;
+  }
+
+  public static DeviceCredential makeCredentials(String keyFormat, String keyData) {
+    PublicKeyCredential publicKeyCredential = new PublicKeyCredential();
+    publicKeyCredential.setFormat(keyFormat);
+    publicKeyCredential.setKey(keyData);
+
+    DeviceCredential deviceCredential = new DeviceCredential();
+    deviceCredential.setPublicKey(publicKeyCredential);
+    return deviceCredential;
   }
 
   public String getRegistryPath() {
@@ -144,7 +154,8 @@ public class CloudIotManager {
       String path = getDevicePath(deviceId);
       cloudIotRegistries.devices().patch(path, device).setUpdateMask("blocked").execute();
     } catch (Exception e) {
-      throw new RuntimeException(String.format("While (un)blocking device %s/%s=%s", registryId, deviceId, blocked), e);
+      throw new RuntimeException(
+          String.format("While (un)blocking device %s/%s=%s", registryId, deviceId, blocked), e);
     }
   }
 
@@ -206,16 +217,6 @@ public class CloudIotManager {
     } catch (Exception e) {
       throw new RuntimeException("Remote error patching device " + deviceId, e);
     }
-  }
-
-  public static DeviceCredential makeCredentials(String keyFormat, String keyData) {
-    PublicKeyCredential publicKeyCredential = new PublicKeyCredential();
-    publicKeyCredential.setFormat(keyFormat);
-    publicKeyCredential.setKey(keyData);
-
-    DeviceCredential deviceCredential = new DeviceCredential();
-    deviceCredential.setPublicKey(publicKeyCredential);
-    return deviceCredential;
   }
 
   public Set<String> fetchDeviceList() {

@@ -1,26 +1,23 @@
-# UDMI 
+[**UDMI**](#)
 
-**Documentation** - [docs/](https://faucetsdn.github.io/udmi/docs)
-
-**Schema** - [schema/](https://github.com/faucetsdn/udmi/tree/master/schema)
- ([_🧬Interactive viewer_](gencode/docs/))
-
-**Mailing list & discussion** - [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss)
-
----
+# UDMI Overview
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
 management and operation of physical IoT systems. This data is typically exchanged
-with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud. Please
-join the [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss)
-mailing list for questions and discussion.
+with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud.
+
+* [Core UDMI documentation](docs/) for tools and specifications
+* [Message schema definition](https://github.com/faucetsdn/udmi/tree/master/schema) with ([_🧬Interactive Viewer_](gencode/docs/))
+* [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss) email discussion list
+* Bi-weekly _UDMI Discuss_ video meeting open to all (join the mailing list to get an invite)
+
+---
 
 By design, this schema is intended to be:
-* <b>U</b>niversal: Apply to all subsystems in a building, not a singular vertical solution.
-* <b>D</b>evice: Operations on an IoT _device_, a managed entity in physical space.
-* <b>M</b>anagement: Focus on device _management_, rather than command & control.
-* <b>I</b>nterface: Define an interface specification, rather than a client-library or
-RPC mechanism.
+* **U**niversal: Apply to all subsystems in a building, not a singular vertical solution.
+* **D**evice: Operations on an IoT _device_, a managed entity in physical space.
+* **M**anagement: Focus on device _management_, rather than command & control.
+* **I**nterface: Define an interface specification, rather than a client-library or RPC mechanism.
 
 See the associated [UDMI Tech Stack](docs/specs/tech_stack.md) for details about transport mechanism
 outside of the core schema definition. Nominally meant for use with
@@ -126,24 +123,3 @@ Using UDMI on a project entails not only the base device and server implementati
 properly registering and validating device configuration. The [registrar](docs/tools/registrar.md)
 tool and [validator](docs/tools/validator.md) tool provide a means to configure and check site
 installations, respectively.
-
-### State Message
-
-* See notes below about 'State status' fields.
-* There is an implicit minimum update interval of _one second_ applied to state updates, and it
-is considered an error to update device state more often than that. If there are multiple
-_state_ updates from a device in under a second they should be coalessed into one update
-(sent after an appropriate backoff timer) and not buffered (sending multiple messages).
-* `last_config` should be the timestamp _from_ the `timestamp` field of the last successfully
-parsed `config` message (not the timestamp the message was received/processed).
-
-### Config Message
-
-* `sample_rate_sec`: Sampling rate for the system, which should proactively send an
-update (e.g. _pointset_, _logentry_, _discover_ message) at this interval.
-* `sample_limit_sec`: Minimum time between sample updates. Updates that happen faster than this time
-(e.g. due to _cov_ events) should be coalesced so that only the most recent update is sent.
-* `set_value`: Set a value to be used during diagnostics and operational use. Should
-override any operational values, but not override alarm conditions.
-* `min_loglevel`: Indicates the minimum loglevel for reporting log messages below which log entries
-should not be sent. See note below for a description of the level value.

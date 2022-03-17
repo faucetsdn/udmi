@@ -31,7 +31,7 @@ sourceSets {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 70
+    maxWarnings = 0
 }
 checkstyleMain.source = 'src/main/java'
 
@@ -49,8 +49,8 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven { url 'https://mvnrepository.com' }
+    maven { url 'https://jitpack.io' }
 }
-
 
 dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'

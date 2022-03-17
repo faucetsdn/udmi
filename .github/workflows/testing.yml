@@ -19,7 +19,7 @@ jobs:
           sudo apt-get install openjdk-11-jdk
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
       - name: Running unit tests
-        run: bin/test_schema
+        run: bin/test_schema -p
       - name: Run registrar validation
         run: bin/test_registrar
 
@@ -67,7 +67,7 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/results.txt
-          diff /tmp/results.txt etc/sequence.out
+          diff /tmp/results.txt etc/sequence.out && echo No output diff detected.
       - name: validation logs
         if: ${{ always() }}
         run: more `find out/devices/ -type f`
