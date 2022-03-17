@@ -9,14 +9,11 @@ export interface PointModel {
 export type Point = Partial<PointModel> | null;
 
 export type PointsResponse = {
-  device: {
-    id: string;
-    points: Point[];
-  } | null;
+  points: Point[] | null;
 };
 
 export type PointsQueryResponse = PointsResponse;
 
 export type PointsQueryVariables = {
-  id: string;
+  deviceId: string;
 };
