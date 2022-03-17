@@ -53,6 +53,7 @@ for test_class in DiscoveryValidator ConfigValidator WritebackValidator; do
     for file in out/*.json; do
         # Format output so it looks nice...
         jq < $file > out/groups/$test_class/${file#out/}
+        rm $file
     done
 done
 
