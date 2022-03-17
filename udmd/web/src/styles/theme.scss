@@ -6,8 +6,8 @@
 $my-theme: mat.define-light-theme(
   (
     color: (
-      primary: $primary,
-      accent: $accent,
+      primary: $primary-palette,
+      accent: $accent-palette,
     ),
   )
 );

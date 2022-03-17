@@ -6,7 +6,6 @@ import { CommonModule } from '@angular/common';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { SearchFilterModule } from '../search-filter/search-filter.module';
-import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { PipesModule } from '../common/pipes/pipes.module';
 
@@ -19,7 +18,6 @@ import { PipesModule } from '../common/pipes/pipes.module';
     MatPaginatorModule,
     MatSortModule,
     SearchFilterModule,
-    RouterModule,
     MatButtonModule,
     PipesModule,
   ],

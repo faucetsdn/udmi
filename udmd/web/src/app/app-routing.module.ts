@@ -4,6 +4,10 @@ import { RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   { path: '', redirectTo: 'devices', pathMatch: 'full' },
   { path: 'devices', loadChildren: () => import('./devices/devices.module').then((m) => m.DevicesModule) },
+  {
+    path: '**',
+    loadChildren: () => import('./page-not-found/page-not-found.module').then((m) => m.PageNotFoundModule),
+  },
 ];
 
 @NgModule({
