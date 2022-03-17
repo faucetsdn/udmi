@@ -1,9 +1,12 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # This script intentionally runs silent if there is no version mismatch found.
 #
 
 ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+git remote -v
 
 branch=master
 origin=`git remote -v | fgrep :faucetsdn/udmi.git | awk '{print $1}' | uniq`
