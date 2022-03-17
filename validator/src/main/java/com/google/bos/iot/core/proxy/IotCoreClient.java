@@ -47,7 +47,8 @@ public class IotCoreClient implements MessagePublisher {
               iotConfig.registry_id);
       active = true;
     } catch (Exception e) {
-      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(), e);
+      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
+          e);
     }
   }
 
@@ -87,7 +88,7 @@ public class IotCoreClient implements MessagePublisher {
     attributes.put("deviceRegistryId", siteName);
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
-      attributes.put( "deviceId", parts[4]);
+      attributes.put("deviceId", parts[4]);
       attributes.put("subType", parts[5]);
       attributes.put("subFolder", parts[6]);
       assert parts.length == 7;
@@ -143,11 +144,13 @@ public class IotCoreClient implements MessagePublisher {
   }
 
   static class MessageBundle {
+
     Map<String, Object> message;
     Map<String, String> attributes;
   }
 
   static class ErrorContainer extends TreeMap<String, Object> {
+
     ErrorContainer(Exception e, String topic, String message) {
       put("exception", e.toString());
       put("topic", topic);
