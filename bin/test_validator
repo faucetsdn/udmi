@@ -13,7 +13,7 @@ shift
 site_path=udmi_site_model
 device_id=AHU-1
 
-serial_no=sequencer-$RANDOM
+serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
@@ -23,6 +23,17 @@ if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
     kill $pids
 fi
+
+rm -rf out/devices
+
+# Prepare auth key used by reflector
+cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 \
+   udmi_site_model/gcp_reflect_key.pkcs8
+
+bin/validator $site_path $project_id &
+vpid=$!
+sleep 10
+echo Started validator pid $vpid
 
 pubber/bin/build
 
@@ -45,8 +56,13 @@ if [[ $i == $WAITING ]]; then
     false
 fi
 
-bin/sequencer $site_path $project_id $device_id $serial_no
+echo Waiting for system to run for a bit...
+sleep 30
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-echo Killing pubber pids $pids
-kill $pids
+echo Killing pids $vpid $pids
+kill $vpid $pids
+
+outfiles=`find out/devices -name \*.out` || true
+echo Found .out files $outfiles, copying to /tmp/validator.out
+more $outfiles > /tmp/validator.out || true
