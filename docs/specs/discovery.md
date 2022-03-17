@@ -8,8 +8,8 @@ state of a system: _scanning_ and _enumeration_. For devices, the overall
 of device messages employed in each case. Each process can be
 executed independently, or together (known as _scan enumeration_):
 
-* _scanning_ scans for existing devices
-exist, and returns a correlation between their address families. This is
+* _scanning_ scans for existing devices, and returns information about
+their discovered address families. This is
 information about how the device is indexed in the world around it.
 
 * _enumeration_ lists the properties of a given target device. Providing

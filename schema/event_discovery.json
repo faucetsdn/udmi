@@ -30,6 +30,7 @@
       "description": "Address family results for a scan. Not included for device enumeration messages.",
       "type": "object",
       "additionalProperties": false,
+      "$comment": "The json schema validator used doesn't support propertyNames, so use a regex instead.",
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {
           "$ref": "file:event_discovery_family.json"

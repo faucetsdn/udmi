@@ -4,7 +4,7 @@
 
 The basic discovery device message sequence follows a standard config/state call/response mechanism, with
 slightly different parameters for each different mode of operation. During the process, there's two major
-device's involved: the _enumerated_ node (the thing with the `points` that are being described), and the
+devices involved: the _enumerated_ node (the thing with the `points` that are being described), and the
 _discovery_ node (the thing that is doing the scan, which does not exist in the _self enumeration_ case).
 
 There's a few basic modes for the discovery _scan_ capability:
@@ -73,10 +73,10 @@ detected every _30 sec_, but the scan interval is _60 sec_, then the result woul
 ## Self Enumeration
 
 _Self enumeration_ is used for a device that is already registered in the cloud systems (no scan required),
-and can be explicitly directed to enumrate itself. This also applies to all direct-connect (not proxy) devices
+and can be explicitly directed to enumerate itself. This also applies to all direct-connect (not proxy) devices
 (which likely can't be scanned anyway)
 
-* [_start config_](../../../tests/config.tests/enumeration.json): `generation` paramerter in the `system`
+* [_start config_](../../../tests/config.tests/enumeration.json): `generation` parameter in the `system`
   block starts the self enumeration process (rather than the `discovery` block).
 * [_start state_](../../../tests/state.tests/enumeration.json): The `system` block indicates the `generation`
   of enumeration that is currently being processed.
