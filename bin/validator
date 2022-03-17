@@ -2,15 +2,18 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-if [ $# != 3 ]; then
-    echo $0 SITE_PATH PROJECT_ID SUBSCRIPTION_ID
+if [ $# != 2 -a $# != 3 ]; then
+    echo $0 SITE_PATH PROJECT_ID [SUBSCRIPTION_ID]
     false
 fi
 
 site_path=$(realpath $1)
 project_id=$2
-subscription=$3
-shift 3
+shift 2
+if [[ -n $1 ]]; then
+    subscription=$1
+    shift
+fi
 
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
@@ -22,6 +25,11 @@ $ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-$ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+if [[ -n $subscription ]]; then
+    $ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+else
+    echo No subscription supplied, assuming UDMI reflector.
+    $ROOT_DIR/validator/bin/validate $project_id schema reflect -- $site_path
+fi
 
 bin/check_version
