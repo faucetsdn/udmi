@@ -10,9 +10,9 @@ branch=master
 origin=`git remote -v | fgrep faucetsdn/udmi | awk '{print $1}' | uniq`
 
 if [[ -z $origin ]]; then
-    git remote -v
-    echo No git origin count, skipping version check.
-    exit 1
+    echo No git origin found, adding faucetsdn...
+    git remote add faucetsdn https://github.com/faucetsdn/udmi.git
+    origin=faucetsdn
 fi
 
 git fetch $origin --tags 2>/dev/null
