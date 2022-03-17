@@ -23,3 +23,5 @@ $ROOT_DIR/validator/bin/build > /dev/null
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
 $ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+
+bin/check_version
