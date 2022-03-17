@@ -64,11 +64,6 @@ public class Envelope {
      */
     @JsonProperty("subFolder")
     public Envelope.SubFolder subFolder;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("subType")
     public Envelope.SubType subType;
 
@@ -99,6 +94,7 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubFolder {
 
+        UPDATE("update"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
         GATEWAY("gateway"),
