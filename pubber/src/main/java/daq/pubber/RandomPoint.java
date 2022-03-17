@@ -12,11 +12,11 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   /**
    * Creates a random point generator for data simulation.
    *
-   * @param name point name
+   * @param name     point name
    * @param writable indicates if point is writable
-   * @param min minimum value for generated point
-   * @param max maximum value for generated point
-   * @param units units of generated point
+   * @param min      minimum value for generated point
+   * @param max      maximum value for generated point
+   * @param units    units of generated point
    */
   public RandomPoint(String name, boolean writable, double min, double max, String units) {
     super(name, writable);

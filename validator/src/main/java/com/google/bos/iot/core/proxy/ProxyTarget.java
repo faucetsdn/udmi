@@ -22,21 +22,18 @@ import udmi.schema.Metadata;
 
 public class ProxyTarget {
 
+  static final String STATE_TOPIC = "state";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(Include.NON_NULL);
-
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
-
   private static final String EVENTS_TOPIC_FORMAT = "events/%s";
   private static final String CONFIG_TOPIC = "config";
   private static final String DEVICE_TOPIC_PREFIX = "/devices/";
   private static final String STATE_SUBFOLDER = "state";
-
-  static final String STATE_TOPIC = "state";
   private static final long DEVICE_REFRESH_SEC = 10 * 60;
   private static final long CONFIG_UPDATE_LIMIT_MS = 2000; // 1sec limit, but allow for jitter.
 
@@ -47,9 +44,9 @@ public class ProxyTarget {
   private final Consumer<MessageBundle> bundleOut;
   private CloudIotConfig cloudConfig;
   private CloudIotManager cloudIotManager;
-  private Map<String, LocalDateTime> initializedTimes = new ConcurrentHashMap<>();
-  private Map<String, LocalDateTime> configTimes = new ConcurrentHashMap<>();
-  private Map<String, Metadata> udmiMetadata = new ConcurrentHashMap<>();
+  private final Map<String, LocalDateTime> initializedTimes = new ConcurrentHashMap<>();
+  private final Map<String, LocalDateTime> configTimes = new ConcurrentHashMap<>();
+  private final Map<String, Metadata> udmiMetadata = new ConcurrentHashMap<>();
 
   public ProxyTarget(Map<String, String> configMap, String registryId,
       Consumer<MessageBundle> bundleOut) {
@@ -68,22 +65,23 @@ public class ProxyTarget {
   }
 
   private void initialize() {
-    checkNotNull(cloudConfig.cloud_region,"cloud config cloud_region not defined");
-    checkNotNull(cloudConfig.registry_id,"cloud config registry_id not defined");
-    checkNotNull(proxyConfig.dstProjectId,"proxy config dstProjectId not defined");
-    checkNotNull(proxyConfig.dstCloudRegion,"proxy config dstCloudRegion not defined");
+    checkNotNull(cloudConfig.cloud_region, "cloud config cloud_region not defined");
+    checkNotNull(cloudConfig.registry_id, "cloud config registry_id not defined");
+    checkNotNull(proxyConfig.dstProjectId, "proxy config dstProjectId not defined");
+    checkNotNull(proxyConfig.dstCloudRegion, "proxy config dstCloudRegion not defined");
 
     LOG.info(String.format("Pushing to Cloud IoT registry %s/%s/%s",
-        proxyConfig.dstProjectId,proxyConfig.dstCloudRegion, proxyConfig.dstRegistryId));
+        proxyConfig.dstProjectId, proxyConfig.dstCloudRegion, proxyConfig.dstRegistryId));
 
     cloudIotManager = new CloudIotManager(PROJECT_ID, cloudConfig);
   }
 
   private ProxyConfig loadProxyConfig(String srcRegistryId) {
-    String keyPrefix = getKeyPrefix(srcRegistryId);
-    String regionKey = keyPrefix + "region";
-    String targetKey = keyPrefix + "target";
-    String registryKey = keyPrefix + "registry";
+    final String keyPrefix = getKeyPrefix(srcRegistryId);
+    final String regionKey = keyPrefix + "region";
+    final String targetKey = keyPrefix + "target";
+    final String registryKey = keyPrefix + "registry";
+
     if (!configMap.containsKey(targetKey)) {
       LOG.warn("Proxy target key not found: " + targetKey);
       return null;
@@ -145,8 +143,8 @@ public class ProxyTarget {
     }
     info("Publishers create " + deviceId);
     String keyAlgorithm = metadata.get("key_algorithm");
-    String key_bytes = metadata.get("key_bytes");
-    byte[] keyBytes = Base64.getDecoder().decode(key_bytes);
+    String keyBytesRaw = metadata.get("key_bytes");
+    byte[] keyBytes = Base64.getDecoder().decode(keyBytesRaw);
     return new MqttPublisher(proxyConfig.dstProjectId, proxyConfig.dstCloudRegion,
         proxyConfig.dstRegistryId, deviceId, keyBytes, keyAlgorithm,
         this::messageHandler, this::errorHandler);
@@ -167,11 +165,11 @@ public class ProxyTarget {
       if (metadata == null) {
         return new Metadata();
       }
-      String udmi_metadata = metadata.get(UDMI_METADATA);
-      if (udmi_metadata == null) {
+      String udmiMetadata = metadata.get(UDMI_METADATA);
+      if (udmiMetadata == null) {
         return new Metadata();
       }
-      return OBJECT_MAPPER.readValue(udmi_metadata, Metadata.class);
+      return OBJECT_MAPPER.readValue(udmiMetadata, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException("While loading device udmi metadata for " + deviceId, e);
     }
@@ -186,8 +184,8 @@ public class ProxyTarget {
       return false;
     }
     if (shouldIgnoreTarget(deviceId)) {
-        info("Ignoring " + subFolder + " message for " + deviceId);
-        return false;
+      info("Ignoring " + subFolder + " message for " + deviceId);
+      return false;
     }
     try {
       MessagePublisher messagePublisher = getMqttPublisher(deviceId);
@@ -240,7 +238,8 @@ public class ProxyTarget {
             .computeIfAbsent(deviceId, id -> LocalDateTime.now().minusMinutes(1));
         long deltaMs = Duration.between(configTime, LocalDateTime.now()).toMillis();
         info(String
-            .format("Updating device config for %s/%s after %dms", srcRegistryId, deviceId, deltaMs));
+            .format("Updating device config for %s/%s after %dms", srcRegistryId, deviceId,
+                deltaMs));
         if (deltaMs < CONFIG_UPDATE_LIMIT_MS) {
           Thread.sleep(CONFIG_UPDATE_LIMIT_MS - deltaMs);
         }
