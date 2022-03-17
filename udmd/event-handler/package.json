@@ -1,0 +1,21 @@
+{
+  "name": "udmi-device-cf",
+  "version": "1.0.0",
+  "description": "Cloud Function that Receives Events and Writes Device Documents to MongoDB",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0"
+  },
+  "watch": {
+    "start": "*.js"
+  },
+  "devDependencies": {
+    "npm-watch": "^0.6.0"
+  },
+  "scripts": {
+    "watch": "npm-watch start",
+    "start": "functions-framework --target=handleUDMIEvent --signature-type=event"
+  }
+}
