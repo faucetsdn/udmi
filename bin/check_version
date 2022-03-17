@@ -9,7 +9,7 @@ cd $ROOT_DIR
 git remote -v
 
 branch=master
-origin=`git remote -v | fgrep :faucetsdn/udmi.git | awk '{print $1}' | uniq`
+origin=`git remote -v | fgrep faucetsdn/udmi | awk '{print $1}' | uniq`
 
 git fetch $origin 2>/dev/null
 upstream_ver=`git describe $origin/$branch --abbrev=0`
