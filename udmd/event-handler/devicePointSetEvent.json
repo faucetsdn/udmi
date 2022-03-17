@@ -1,0 +1,12 @@
+{
+    "@type": "type.googleapis.com/google.pubsub.v1.PubsubMessage",
+    "attributes": {
+        "subFolder": "pointset",
+        "deviceRegistryId": "SG-SIN-MBC2",
+        "deviceRegistryLocation": "asia-east1",
+        "deviceId": "LT-3492",
+        "deviceNumId": "3105471515352383",
+        "projectId": "labs-333619"
+    },
+    "data": "ew0KICAgICAgICAidmVyc2lvbiI6IDEsDQogICAgICAgICJwb2ludHMiOiB7DQogICAgICAgICAgICAiZmF1bHR5X2ZpbmRpbmciOiB7DQogICAgICAgICAgICAgICAgInByZXNlbnRfdmFsdWUiOiBmYWxzZQ0KICAgICAgICAgICAgfSwNCiAgICAgICAgICAgICJyZWNhbGNpdHJhbnRfYW5nbGUiOiB7DQogICAgICAgICAgICAgICAgInByZXNlbnRfdmFsdWUiOiA0MA0KICAgICAgICAgICAgfSwNCiAgICAgICAgICAgICJzdXBlcmltcG9zaXRpb25fcmVhZGluZyI6IHsNCiAgICAgICAgICAgICAgICAicHJlc2VudF92YWx1ZSI6IDU3DQogICAgICAgICAgICB9DQogICAgICAgIH0sDQogICAgICAgICJ0aW1lc3RhbXAiOiAiMjAyMi0wMy0xNlQxNDo0ODoyNVoiDQogICAgfQ=="
+}

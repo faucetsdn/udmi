@@ -45,5 +45,8 @@ curl -d "@devicePointSetStatesEvent.json" \
 
 TBD
 
+---
+
 ## Notes
 -- Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs)
+-- The data inside the json is expected to be base64 encoded

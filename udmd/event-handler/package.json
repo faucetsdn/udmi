@@ -6,7 +6,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.0.0"
+    "@google-cloud/functions-framework": "^3.0.0",
+    "mongodb": "^4.4.1"
   },
   "watch": {
     "start": "*.js"
