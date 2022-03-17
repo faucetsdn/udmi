@@ -1,9 +1,14 @@
 @use '@angular/material' as mat;
 
+// Palettes
+$primary-palette: mat.define-palette(mat.$indigo-palette);
+$accent-palette: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$text-secondary-palette: mat.define-palette(mat.$gray-palette);
+
 // Colors
-$primary: mat.define-palette(mat.$indigo-palette);
-$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-$text-secondary: mat.define-palette(mat.$gray-palette);
+$primary: mat.get-color-from-palette($primary-palette);
+$accent: mat.get-color-from-palette($accent-palette);
+$text-secondary: mat.get-color-from-palette($text-secondary-palette);
 
 // Spacing
 $spacing: 8px;
