@@ -9,6 +9,9 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
 import udmi.schema.TargetTestingMetadata;
 
+/**
+ * Class used for validating test about sequences with points.
+ */
 public abstract class PointValidator extends SequenceValidator {
 
   /**
