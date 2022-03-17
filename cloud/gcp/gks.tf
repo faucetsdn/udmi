@@ -1,11 +1,9 @@
 variable "gke_num_nodes" {
     type = number 
-    default = ""
     description = "number of gke nodes"
 }
 variable "node_locations" {
   type = list(string)
-  default = ""
   description = "The list of zones in which the cluster's nodes are located"
 }
 
