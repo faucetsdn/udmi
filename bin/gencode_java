@@ -6,7 +6,7 @@ JBASENAME=jsonschema2pojo
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-rm -rf codegen gencode
+rm -rf gencode
 mkdir -p codegen gencode
 
 OUTDIR=$ROOT_DIR/gencode/java
@@ -14,18 +14,21 @@ cd codegen
 GENDIR=$PWD
 
 JARVER=$JBASENAME-$JVERSION
+JARBIN=$GENDIR/$JARVER/bin/$JBASENAME
 
-curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$JARVER.tar.gz -o $JARVER.tgz
+if [[ ! -f $JARBIN ]]; then
+    curl -L https://github.com/joelittlejohn/$JBASENAME/releases/download/$JARVER/$JARVER.tar.gz -o $JARVER.tgz
+    tar -xzvf $JARVER.tgz
+fi
 
-tar -xzvf $JARVER.tgz
-
+ls -l $JARBIN
 cd $ROOT_DIR/schema
 
 find . -name \*~ | xargs -r rm
 
 JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
-$GENDIR/$JARVER/bin/$JBASENAME $JOPTS --source . --target $OUTDIR
+$JARBIN $JOPTS --source . --target $OUTDIR
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying Level.java

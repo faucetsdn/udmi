@@ -44,6 +44,9 @@ import udmi.schema.State;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
+/**
+ * IoT Core UDMI Device Emulator.
+ */
 public class Pubber {
 
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
@@ -70,32 +73,27 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("foo");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
+  private static final Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadaa(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadaa(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadaa(false)
   );
-
-  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-  private final Configuration configuration;
-  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
-  private final CountDownLatch configLatch = new CountDownLatch(1);
-
-  private final State deviceState = new State();
-  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
-  private final Set<AbstractPoint> allPoints = new HashSet<>();
-  private int deviceMessageCount = -1;
-  private AtomicInteger logMessageCount = new AtomicInteger(0);
-  private final int MESSAGE_REPORT_INTERVAL = 100;
-
-  private final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
+  private static final int MESSAGE_REPORT_INTERVAL = 100;
+  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
       Level.DEBUG, LOG::debug,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private final Configuration configuration;
+  private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
+  private final CountDownLatch configLatch = new CountDownLatch(1);
+  private final State deviceState = new State();
+  private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
+  private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private final AtomicInteger logMessageCount = new AtomicInteger(0);
+  private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
@@ -105,25 +103,61 @@ public class Pubber {
   private Consumer<String> onDone;
   private boolean publishingLog;
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable, int value, double tolerance, String units) {
+  /**
+   * Start an instance from a configuration file.
+   *
+   * @param configPath Path to configuration file.
+   */
+  public Pubber(String configPath) {
+    File configFile = new File(configPath);
+    try {
+      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Start an instance from explicit args.
+   *
+   * @param projectId GCP project
+   * @param sitePath  Path to site_model
+   * @param deviceId  Device ID to emulate
+   * @param serialNo  Serial number of the device
+   */
+  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
+    configuration = new Configuration();
+    configuration.projectId = projectId;
+    configuration.deviceId = deviceId;
+    configuration.serialNo = serialNo;
+    if (PUBSUB_SITE.equals(sitePath)) {
+      pubSubClient = new PubSubClient(projectId, deviceId);
+    } else {
+      configuration.sitePath = sitePath;
+    }
+  }
+
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable, int value,
+      double tolerance, String units) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
-    pointMetadata.writeable = writeable;
+    pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
     return pointMetadata;
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writeable) {
+  private static PointPointsetMetadata makePointPointsetMetadaa(boolean writable) {
     PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
     return pointMetadata;
   }
 
-  static class ExtraPointsetEvent extends PointsetEvent {
-    // This extraField exists only to trigger schema parsing errors.
-    public Object extraField;
-  }
-
+  /**
+   * Start a pubber instance with command line args.
+   *
+   * @param args The usual
+   * @throws Exception When something is wrong...
+   */
   public static void main(String[] args) throws Exception {
     boolean swarm = args.length > 1 && PUBSUB_SITE.equals(args[1]);
     if (swarm) {
@@ -141,7 +175,8 @@ public class Pubber {
     } else if (args.length == 4) {
       pubber = new Pubber(args[0], args[1], args[2], args[3]);
     } else {
-      throw new IllegalArgumentException("Usage: config_file or { project_id site_path/ device_id serial_no }");
+      throw new IllegalArgumentException(
+          "Usage: config_file or { project_id site_path/ device_id serial_no }");
     }
     pubber.initialize();
     pubber.startConnection(deviceId -> {
@@ -152,7 +187,8 @@ public class Pubber {
 
   private static void swarmPubber(String[] args) throws InterruptedException {
     if (args.length != 4) {
-      throw new IllegalArgumentException("Usage: { project_id PubSub pubsub_subscription instance_count }");
+      throw new IllegalArgumentException(
+          "Usage: { project_id PubSub pubsub_subscription instance_count }");
     }
     String projectId = args[0];
     String siteName = args[1];
@@ -166,7 +202,8 @@ public class Pubber {
     LOG.info(String.format("Started all %d pubber instances", instances));
   }
 
-  private static void startFeedListener(String projectId, String siteName, String feedName, String serialNo) {
+  private static void startFeedListener(String projectId, String siteName, String feedName,
+      String serialNo) {
     try {
       LOG.info("Starting feed listener " + serialNo);
       Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
@@ -182,27 +219,6 @@ public class Pubber {
     }
   }
 
-  public Pubber(String configPath) {
-    File configFile = new File(configPath);
-    try {
-      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
-    }
-  }
-
-  public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
-    configuration = new Configuration();
-    configuration.projectId = projectId;
-    configuration.deviceId = deviceId;
-    configuration.serialNo = serialNo;
-    if (PUBSUB_SITE.equals(sitePath)) {
-      pubSubClient = new PubSubClient(projectId, deviceId);
-    } else {
-      configuration.sitePath = sitePath;
-    }
-  }
-
   private void loadDeviceMetadata() {
     Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
     Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
@@ -213,7 +229,8 @@ public class Pubber {
       Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
       processDeviceMetadata(metadata);
     } catch (Exception e) {
-      throw new RuntimeException("While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+      throw new RuntimeException(
+          "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
@@ -229,33 +246,34 @@ public class Pubber {
   }
 
   private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
-    boolean writeable = point.writeable != null && point.writeable;
+    boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, writeable);
+      return new RandomBoolean(name, writable);
     } else {
-      double baseline_value = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
-      double baseline_tolerance = convertValue(point.baseline_tolerance, baseline_value);
-      double min = baseline_value - baseline_tolerance;
-      double max = baseline_value + baseline_tolerance;
-      return new RandomPoint(name, writeable, min, max, point.units);
+      double baselineValue = convertValue(point.baseline_value, DEFAULT_BASELINE_VALUE);
+      double baselineTolerance = convertValue(point.baseline_tolerance, baselineValue);
+      double min = baselineValue - baselineTolerance;
+      double max = baselineValue + baselineTolerance;
+      return new RandomPoint(name, writable, min, max, point.units);
     }
   }
 
-  private double convertValue(Object baseline_value, double defaultBaselineValue) {
-    if (baseline_value == null) {
+  private double convertValue(Object baselineValue, double defaultBaselineValue) {
+    if (baselineValue == null) {
       return defaultBaselineValue;
     }
-    if (baseline_value instanceof Double) {
-      return (double) baseline_value;
+    if (baselineValue instanceof Double) {
+      return (double) baselineValue;
     }
-    if (baseline_value instanceof Integer) {
-      return (double) (int) baseline_value;
+    if (baselineValue instanceof Integer) {
+      return (double) (int) baselineValue;
     }
-    throw new RuntimeException("Unknown value type " + baseline_value.getClass());
+    throw new RuntimeException("Unknown value type " + baselineValue.getClass());
   }
 
   private void loadCloudConfig() {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined in configuration");
+    Preconditions.checkState(configuration.sitePath != null,
+        "sitePath not defined in configuration");
     File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
     try {
       processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
@@ -271,7 +289,6 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.system.statuses = new HashMap<>();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
@@ -284,7 +301,8 @@ public class Pubber {
     }
 
     info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
-        configuration.deviceId, configuration.serialNo, configuration.macAddr, configuration.extraField,
+        configuration.deviceId, configuration.serialNo, configuration.macAddr,
+        configuration.extraField,
         configuration.gatewayId));
 
     deviceState.system.operational = true;
@@ -298,7 +316,7 @@ public class Pubber {
   }
 
   private void pullDeviceMessage() {
-    while(true) {
+    while (true) {
       try {
         info("Waiting for swarm configuration");
         SwarmMessage.Attributes attributes = new Attributes();
@@ -331,15 +349,18 @@ public class Pubber {
 
   private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
-    configuration.keyBytes = Base64.getDecoder().decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
-    processCloudConfig(makeCloudIoTConfig(attributes));
+    configuration.keyBytes = Base64.getDecoder()
+        .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
+    processCloudConfig(makeCloudIotConfig(attributes));
     processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
-  private CloudIotConfig makeCloudIoTConfig(Attributes attributes) {
+  private CloudIotConfig makeCloudIotConfig(Attributes attributes) {
     CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId, "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation, "deviceRegistryLocation");
+    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+        "deviceRegistryId");
+    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+        "deviceRegistryLocation");
     return cloudIotConfig;
   }
 
@@ -486,7 +507,8 @@ public class Pubber {
 
   private void publisherException(Exception toReport) {
     if (toReport instanceof PublisherException) {
-      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase, toReport.getCause());
+      publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
+          toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
       if (onDone != null) {
         onDone.accept(configuration.deviceId);
@@ -508,9 +530,9 @@ public class Pubber {
       report = entryFromException(category, cause);
     }
     if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
-      deviceState.system.statuses.remove(type);
+      deviceState.system.status = null;
     } else {
-      deviceState.system.statuses.put(type, report);
+      deviceState.system.status = report;
     }
     localLog(report);
     publishLogMessage(report);
@@ -622,7 +644,8 @@ public class Pubber {
     devicePoints.version = 1;
     devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp), deviceMessageCount));
+      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
+          deviceMessageCount));
     }
     publishMessage(deviceId, POINTSET_TOPIC, devicePoints);
   }
@@ -717,5 +740,11 @@ public class Pubber {
     LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+  }
+
+  static class ExtraPointsetEvent extends PointsetEvent {
+
+    // This extraField exists only to trigger schema parsing errors.
+    public Object extraField;
   }
 }

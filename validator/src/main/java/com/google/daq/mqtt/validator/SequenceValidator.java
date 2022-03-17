@@ -48,54 +48,52 @@ import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemState;
 
+/**
+ * Validate a device using a sequence of message exchanges.
+ */
 public abstract class SequenceValidator {
 
+  public static final String RESULT_FAIL = "fail";
+  public static final String RESULT_PASS = "pass";
+  public static final String RESULT_SKIP = "skip";
+  public static final String RESULT_FORMAT = "RESULT %s %s %s";
+  public static final Integer INITIAL_MIN_LOGLEVEL = 400;
+  public static final String TESTS_OUT_DIR = "tests";
+  public static final String SERIAL_NO_MISSING = "//";
+  public static final String UPDATE_SUBTYPE = "update";
+  public static final String SEQUENCER_CATEGORY = "sequencer";
+  protected static final String serial_no;
+  protected static final Metadata deviceMetadata;
+  protected static final Config generatedConfig;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/state";
-
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new CleanDateFormat())
       .setSerializationInclusion(Include.NON_NULL);
-  public static final String RESULT_FAIL = "fail";
-  public static final String RESULT_PASS = "pass";
-  public static final String RESULT_SKIP = "skip";
-
   private static final String projectId;
   private static final String deviceId;
   private static final String siteModel;
   private static final String registryId;
-  protected static final String serial_no;
-  protected static final Metadata deviceMetadata;
-  protected static final Config generatedConfig;
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
-  public static final String RESULT_FORMAT = "RESULT %s %s %s";
-  public static final Integer INITIAL_MIN_LOGLEVEL = 400;
-  public static final String TESTS_OUT_DIR = "tests";
-  public static final String SERIAL_NO_MISSING = "//";
-
   private static final Map<SubFolder, Class<?>> expectedEvents = ImmutableMap.of(
       SubFolder.SYSTEM, SystemEvent.class,
       SubFolder.POINTSET, PointsetEvent.class
   );
-
-  public static final String UPDATE_SUBTYPE = "update";
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
       "configs", Config.class,
       "states", State.class
   );
-  public static final String SEQUENCER_CATEGORY = "sequencer";
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -104,9 +102,10 @@ public abstract class SequenceValidator {
     if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
       throw new RuntimeException(VALIDATOR_CONFIG + " env not defined.");
     }
-    final File CONFIG_FILE = new File(CONFIG_PATH);
+    final File configFile = new File(CONFIG_PATH);
     try {
-      ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(CONFIG_FILE);
+      System.err.println("Reading config file " + configFile.getAbsolutePath());
+      ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(configFile);
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
@@ -114,16 +113,16 @@ public abstract class SequenceValidator {
       serial_no = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + CONFIG_FILE, e);
+      throw new RuntimeException("While loading " + configFile, e);
     }
 
-    File cloudIoTConfigFile = new File(siteModel + "/" + CLOUD_IOT_CONFIG_FILE);
+    File cloudIotConfigFile = new File(siteModel + "/" + CLOUD_IOT_CONFIG_FILE);
     final CloudIotConfig cloudIotConfig;
     try {
-      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIoTConfigFile);
+      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
       registryId = checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + cloudIoTConfigFile.getAbsolutePath(), e);
+      throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
 
     deviceMetadata = readDeviceMetadata();
@@ -146,77 +145,19 @@ public abstract class SequenceValidator {
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
   }
 
-  private static Metadata readDeviceMetadata() {
-    File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
-    try {
-      System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
-    }
-  }
-
-  private static Config readGeneratedConfig() {
-    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
-    try {
-      System.err.println("Reading generated config file " + deviceConfigFile.getPath());
-      Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
-      Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
-      config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
-      return config;
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
-    }
-  }
-
-  protected String extraField;
-  protected Config deviceConfig;
-  protected State deviceState;
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
-  private Date lastLog;
-  private String waitingCondition;
-  private boolean confirm_serial;
-  private String testName;
-  private String last_serial_no;
-
-  @Before
-  public void setUp() {
-    deviceState = null;
-    sentConfig.clear();
-    receivedState.clear();
-    receivedEvents.clear();
-    waitingCondition = null;
-    confirm_serial = false;
-
-    deviceConfig = readGeneratedConfig();
-    deviceConfig.system.min_loglevel = 400;
-
-    clearLogs();
-    queryState();
-
-    syncConfig();
-
-    untilTrue(() -> deviceState != null, "device state update");
-  }
-
-  protected Date syncConfig() {
-    updateConfig();
-    untilTrue(this::configUpdateComplete, "device config update");
-    info("config synced to " + getTimestamp(deviceConfig.timestamp));
-    return deviceConfig.timestamp;
-  }
-
-  @Test
-  public void valid_serial_no() {
-    Preconditions.checkNotNull(serial_no, "no test serial_no provided");
-  }
-
   @Rule
   public Timeout globalTimeout = new Timeout(60, TimeUnit.SECONDS);
-
+  protected String extraField;
+  protected Config deviceConfig;
+  protected State deviceState;
+  private Date lastLog;
+  private String waitingCondition;
+  private boolean confirmSerial;
+  private String testName;
   @Rule
   public TestWatcher testWatcher = new TestWatcher() {
     @Override
@@ -234,7 +175,7 @@ public abstract class SequenceValidator {
 
     @Override
     protected void succeeded(Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description,"Sequence complete");
+      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
     }
 
     @Override
@@ -261,7 +202,8 @@ public abstract class SequenceValidator {
       recordCompletion(type, level, description, message);
     }
 
-    private void recordCompletion(String result, Level level, Description description, String message) {
+    private void recordCompletion(String result, Level level, Description description,
+        String message) {
       String category = description.getMethodName();
       recordResult(result, category, message);
       Entry logEntry = new Entry();
@@ -273,6 +215,65 @@ public abstract class SequenceValidator {
       writeSystemLog(logEntry);
     }
   };
+  private String lastSerialNo;
+
+  private static Metadata readDeviceMetadata() {
+    File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
+      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static Config readGeneratedConfig() {
+    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
+    try {
+      System.err.println("Reading generated config file " + deviceConfigFile.getPath());
+      Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
+      Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
+      config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
+      return config;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Prepare everything for an initial test run.
+   */
+  @Before
+  public void setUp() {
+    deviceState = null;
+    sentConfig.clear();
+    receivedState.clear();
+    receivedEvents.clear();
+    waitingCondition = null;
+    confirmSerial = false;
+
+    deviceConfig = readGeneratedConfig();
+    deviceConfig.system.min_loglevel = 400;
+
+    clearLogs();
+    queryState();
+
+    syncConfig();
+
+    untilTrue(() -> deviceState != null, "device state update");
+  }
+
+  protected Date syncConfig() {
+    updateConfig();
+    untilTrue(this::configUpdateComplete, "device config update");
+    info("config synced to " + getTimestamp(deviceConfig.timestamp));
+    return deviceConfig.timestamp;
+  }
+
+  @Test
+  public void valid_serial_no() {
+    Preconditions.checkNotNull(serial_no, "no test serial_no provided");
+  }
 
   private void recordResult(String result, String methodName, String message) {
     info(String.format(RESULT_FORMAT, result, methodName, message));
@@ -345,6 +346,9 @@ public abstract class SequenceValidator {
     client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
+  /**
+   * Reset everything (including the state of the DUT) when done.
+   */
   @After
   public void tearDown() {
     // Restore the config to a canonical state.
@@ -408,7 +412,7 @@ public abstract class SequenceValidator {
         return false;
       }
       String timestamp = (String) message.remove("timestamp");
-      String version = (String) message.remove("timestamp");
+      String version = (String) message.remove("version");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
@@ -426,22 +430,24 @@ public abstract class SequenceValidator {
   }
 
   private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
-    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
-    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
+    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
+        state -> deviceState.system = state);
+    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
+        state -> deviceState.pointset = state);
     validSerialNo();
   }
 
   protected boolean validSerialNo() {
-    String device_serial = deviceState.system == null ? null : deviceState.system.serial_no;
-    if (!Objects.equals(device_serial, last_serial_no)) {
-      info(String.format("Received serial no %s", device_serial));
-      last_serial_no = device_serial;
+    String deviceSerial = deviceState.system == null ? null : deviceState.system.serial_no;
+    if (!Objects.equals(deviceSerial, lastSerialNo)) {
+      info(String.format("Received serial no %s", deviceSerial));
+      lastSerialNo = deviceSerial;
     }
-    boolean serialValid = Objects.equals(serial_no, device_serial);
-    if (!serialValid && confirm_serial) {
-      throw new IllegalStateException("Unexpected serial_no " + device_serial);
+    boolean serialValid = Objects.equals(serial_no, deviceSerial);
+    if (!serialValid && confirmSerial) {
+      throw new IllegalStateException("Unexpected serial_no " + deviceSerial);
     }
-    confirm_serial = serialValid;
+    confirmSerial = serialValid;
     return serialValid;
   }
 
@@ -533,7 +539,8 @@ public abstract class SequenceValidator {
     });
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw, String subTypeRaw) {
+  private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
+      String subTypeRaw) {
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
@@ -546,6 +553,8 @@ public abstract class SequenceValidator {
       case EVENT:
         handleEventMessage(subFolder, message);
         break;
+      default:
+        info("Encountered unexpected subType " + subTypeRaw);
     }
   }
 

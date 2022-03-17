@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -50,15 +51,21 @@ import java.util.stream.Collectors;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
+/**
+ * Class to validate streaming messages.
+ */
 public class Validator {
 
+  public static final String STATES_QUERY_TOPIC = "query/states";
+  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
+  public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
+          .enable(Feature.ALLOW_COMMENTS)
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String JSON_SUFFIX = ".json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
@@ -76,32 +83,42 @@ public class Validator {
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
+  public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
-  public static final String STATES_QUERY_TOPIC = "query/states";
-  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
-  public static final String NO_SITE = "--";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
-
   private final String projectId;
-  private FirestoreDataSink dataSink;
-  private File schemaRoot;
-  private String schemaSpec;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
-  private CloudIotConfig cloudIotConfig;
-  public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private final Set<String> ignoredRegistries = new HashSet();
+  private FirestoreDataSink dataSink;
+  private File schemaRoot;
+  private String schemaSpec;
+  private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
   private String deviceId;
 
+  /**
+   * Validator for streaming message validator.
+   *
+   * @param projectId Project to validate against.
+   */
+  public Validator(String projectId) {
+    this.projectId = projectId;
+  }
+
+  /**
+   * Instantiate a stream validator instance.
+   *
+   * @param args What to do!
+   */
   public static void main(String[] args) {
     if (args.length != 5) {
       throw new IllegalArgumentException("Args: [project] [schema] [target] [instance] [site]");
@@ -140,14 +157,11 @@ public class Validator {
     System.exit(0);
   }
 
-  public Validator(String projectId) {
-    this.projectId = projectId;
-  }
-
   private void setSiteDir(String siteDir) {
     this.siteDir = siteDir;
     File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig), projectId);
+    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+        projectId);
 
     initializeExpectedDevices(siteDir);
   }
@@ -223,11 +237,11 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    Map<String, JsonSchema> schemaMap = getSchemaMap();
     OUT_BASE_FILE.mkdirs();
     System.err.println("Results may be in such directories as " + OUT_BASE_FILE.getAbsolutePath());
     System.err.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
 
+    Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
   }
 
@@ -283,6 +297,14 @@ public class Validator {
     attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
+    }
+  }
+
+  private void validateMessage(JsonSchema schema, Object message) {
+    try {
+      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
     }
   }
 
@@ -495,17 +517,6 @@ public class Validator {
     }
   }
 
-  public static class MetadataReport {
-
-    public Date updated;
-    public Set<String> expectedDevices;
-    public Set<String> missingDevices;
-    public Set<String> extraDevices;
-    public Set<String> pointsetDevices;
-    public Set<String> base64Devices;
-    public Map<String, ReportingDevice.MetadataDiff> errorDevices;
-  }
-
   private void processViolation(
       Map<String, Object> message,
       Map<String, String> attributes,
@@ -582,25 +593,6 @@ public class Validator {
     }
   }
 
-  class RelativeDownloader implements URIDownloader {
-    public static final String FILE_URL_PREFIX = "file:";
-
-    @Override
-    public InputStream fetch(URI source) {
-      String url = source.toString();
-      try {
-        if (!url.startsWith(FILE_URL_PREFIX)) {
-          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
-        }
-        String new_url =
-            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-        return (InputStream) (new URL(new_url)).getContent();
-      } catch (Exception e) {
-        throw new RuntimeException("While loading URL " + url, e);
-      }
-    }
-  }
-
   private List<File> makeFileList(String prefix, String spec) {
     return makeFileList(prefix, new File(spec));
   }
@@ -623,14 +615,6 @@ public class Validator {
     return Arrays.stream(fileNames)
         .map(name -> new File(parent, name))
         .collect(Collectors.toList());
-  }
-
-  private void validateMessage(JsonSchema schema, Object message) throws ProcessingException {
-    try {
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
   }
 
   private void validateFile(
@@ -662,6 +646,40 @@ public class Validator {
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
+  /**
+   * Report for results from processing the metadata.
+   */
+  public static class MetadataReport {
+
+    public Date updated;
+    public Set<String> expectedDevices;
+    public Set<String> missingDevices;
+    public Set<String> extraDevices;
+    public Set<String> pointsetDevices;
+    public Set<String> base64Devices;
+    public Map<String, ReportingDevice.MetadataDiff> errorDevices;
+  }
+
+  class RelativeDownloader implements URIDownloader {
+
+    public static final String FILE_URL_PREFIX = "file:";
+
+    @Override
+    public InputStream fetch(URI source) {
+      String url = source.toString();
+      try {
+        if (!url.startsWith(FILE_URL_PREFIX)) {
+          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+        }
+        String newUrl =
+            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
+        return (InputStream) (new URL(newUrl)).getContent();
+      } catch (Exception e) {
+        throw new RuntimeException("While loading URL " + url, e);
+      }
     }
   }
 }

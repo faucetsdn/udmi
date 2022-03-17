@@ -28,7 +28,7 @@ public class MessageValidator {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   Map<String, JsonSchema> schemaMap = Maps.newConcurrentMap();
-  private File schemaRoot;
+  private final File schemaRoot;
 
   public MessageValidator(String schemaRootPath) {
     schemaRoot = new File(schemaRootPath);
@@ -73,6 +73,7 @@ public class MessageValidator {
   }
 
   class RelativeDownloader implements URIDownloader {
+
     public static final String FILE_URL_PREFIX = "file:";
 
     @Override
@@ -82,9 +83,9 @@ public class MessageValidator {
         if (!url.startsWith(FILE_URL_PREFIX)) {
           throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
         }
-        String new_url =
+        String newUrl =
             FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-        return (InputStream) (new URL(new_url)).getContent();
+        return (InputStream) (new URL(newUrl)).getContent();
       } catch (Exception e) {
         throw new RuntimeException("While loading URL " + url, e);
       }

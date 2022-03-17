@@ -11,11 +11,9 @@
       "revision": "should be version"
     },
     "system_status": "Operational",
-    "statuses": {
-      "default": {
-        "timestamp": "2018-08-26T21:39:30.364Z",
-        "level": 30
-      }
+    "status": {
+      "timestamp": "2018-08-26T21:39:30.364Z",
+      "level": 30
     },
     "status": "hunky-dory"
   },

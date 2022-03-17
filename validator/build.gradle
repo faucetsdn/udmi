@@ -31,7 +31,7 @@ sourceSets {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 150
+    maxWarnings = 66
 }
 checkstyleMain.source = 'src/main/java'
 
@@ -41,16 +41,15 @@ jar {
     }
 }
 
-repositories {
-    mavenCentral()
-    maven {
-        url 'https://jitpack.io'
-    }
-}
-
-// Address really weird bug of 'pick_first' load balancer not loading.
 shadowJar {
     mergeServiceFiles()
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://mvnrepository.com' }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
