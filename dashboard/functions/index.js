@@ -8,11 +8,13 @@ const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
-const DEFAULT_CLOUD_REGION = 'us-central1';
 const UDMI_VERSION = '1';
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
+
+// TODO: Make this dynamic so it's appropriately determined by use.
+const DEFAULT_CLOUD_REGION = 'us-central1';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
