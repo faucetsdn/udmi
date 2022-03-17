@@ -21,6 +21,7 @@
     },
     "subFolder": {
       "enum": [
+        "update",
         "discovery",
         "system",
         "gateway",
