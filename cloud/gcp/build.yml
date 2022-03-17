@@ -57,14 +57,14 @@ deploy-staging:
   environment: staging
   dependencies:
     - build-staging
-  needs: ["deploy-staging"]
+  needs: ["build-staging"]
 
 deploy-lab:
   extends: .deploy
   environment: lab
   dependencies:
     - build-lab
-  needs: ["deploy-lab"]
+  needs: ["build-lab"]
 
 destroy-staging:
   extends: .destroy
