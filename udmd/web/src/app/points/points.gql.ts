@@ -13,12 +13,9 @@ export const fragments = {
 };
 
 export const GET_POINTS = gql`
-  query GetDevicePoints($id: ID!) {
-    device(id: $id) {
-      id
-      points {
-        ...Point
-      }
+  query GetPoints($deviceId: ID!) {
+    points(deviceId: $deviceId) {
+      ...Point
     }
   }
   ${fragments.point}

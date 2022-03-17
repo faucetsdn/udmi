@@ -10,18 +10,18 @@ import { DeviceQueryResponse, DeviceQueryVariables } from './device';
   providedIn: 'root',
 })
 export class DeviceService {
-  devicesQuery!: QueryRef<DeviceQueryResponse, DeviceQueryVariables>;
+  deviceQuery!: QueryRef<DeviceQueryResponse, DeviceQueryVariables>;
 
   constructor(private apollo: Apollo) {}
 
   getDevice(id: string): Observable<ApolloQueryResult<DeviceQueryResponse>> {
-    this.devicesQuery = this.apollo.watchQuery<DeviceQueryResponse, DeviceQueryVariables>({
+    this.deviceQuery = this.apollo.watchQuery<DeviceQueryResponse, DeviceQueryVariables>({
       query: GET_DEVICE,
       variables: {
         id,
       },
     });
 
-    return this.devicesQuery.valueChanges;
+    return this.deviceQuery.valueChanges;
   }
 }

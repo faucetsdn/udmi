@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { ApolloQueryResult } from '@apollo/client/core';
 import { of } from 'rxjs';
@@ -22,17 +23,14 @@ describe('PointsComponent', () => {
     mockPointsService.getPoints.and.returnValue(
       of(<ApolloQueryResult<PointsQueryResponse>>{
         data: {
-          device: {
-            id: 'device-id-123',
-            points,
-          },
+          points,
         },
         loading: false,
       })
     );
 
     await TestBed.configureTestingModule({
-      imports: [PointsModule],
+      imports: [PointsModule, BrowserAnimationsModule],
       providers: [
         { provide: PointsService, useValue: mockPointsService },
         {

@@ -10,18 +10,18 @@ import { PointsQueryResponse, PointsQueryVariables } from './points';
   providedIn: 'root',
 })
 export class PointsService {
-  devicesQuery!: QueryRef<PointsQueryResponse, PointsQueryVariables>;
+  pointsQuery!: QueryRef<PointsQueryResponse, PointsQueryVariables>;
 
   constructor(private apollo: Apollo) {}
 
   getPoints(deviceId: string): Observable<ApolloQueryResult<PointsQueryResponse>> {
-    this.devicesQuery = this.apollo.watchQuery<PointsQueryResponse, PointsQueryVariables>({
+    this.pointsQuery = this.apollo.watchQuery<PointsQueryResponse, PointsQueryVariables>({
       query: GET_POINTS,
       variables: {
-        id: deviceId,
+        deviceId,
       },
     });
 
-    return this.devicesQuery.valueChanges;
+    return this.pointsQuery.valueChanges;
   }
 }
