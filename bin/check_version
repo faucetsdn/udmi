@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # This script intentionally runs silent if there is no version mismatch found.
 #
@@ -8,6 +8,12 @@ cd $ROOT_DIR
 
 branch=master
 origin=`git remote -v | fgrep faucetsdn/udmi | awk '{print $1}' | uniq`
+
+if [[ -z $origin ]]; then
+    git remote -v
+    echo No git origin count, skipping version check.
+    exit 1
+fi
 
 git fetch $origin --tags 2>/dev/null
 upstream_ver=`git describe $origin/$branch --abbrev=0`
