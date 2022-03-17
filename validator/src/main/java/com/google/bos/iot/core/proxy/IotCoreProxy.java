@@ -48,6 +48,14 @@ public class IotCoreProxy {
   private MessageValidator messageValidator;
   private int exitCode;
 
+  private IotCoreProxy(String configFile) {
+    try {
+      this.configMap = OBJECT_MAPPER.readValue(new File(configFile), ProjectMetadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While reading config file " + configFile, e);
+    }
+  }
+
   public static void main(String[] args) {
     long startTime = System.currentTimeMillis();
     int exitCode = 0;
@@ -75,14 +83,6 @@ public class IotCoreProxy {
           minutedElapsed));
       LOG.error("Exiting with code " + exitCode);
       System.exit(exitCode);
-    }
-  }
-
-  private IotCoreProxy(String configFile) {
-    try {
-      this.configMap = OBJECT_MAPPER.readValue(new File(configFile), ProjectMetadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While reading config file " + configFile, e);
     }
   }
 
@@ -190,13 +190,15 @@ public class IotCoreProxy {
   }
 
   private void initialize() {
-    String proxySubBase = checkNotNull(configMap.get("proxy_sub_base"), "proxy_sub_base not defined");
+    String proxySubBase = checkNotNull(configMap.get("proxy_sub_base"),
+        "proxy_sub_base not defined");
     String proxySubscriptionName = String.format(PROXY_SUBSCRIPTION_FMT, proxySubBase);
     String stateSubscriptionName = String.format(STATE_SUBSCRIPTION_FMT, proxySubBase);
     proxySubscription = new PubSubClient(PROJECT_ID, proxySubscriptionName);
     stateSubscription = new PubSubClient(PROJECT_ID, stateSubscriptionName);
 
-    String proxyTopicBase = checkNotNull(configMap.get("proxy_topic_base"), "proxy_topic_base not defined");
+    String proxyTopicBase = checkNotNull(configMap.get("proxy_topic_base"),
+        "proxy_topic_base not defined");
     String configTopicName = String.format(CONFIG_TOPIC_FMT, proxyTopicBase);
     String validationTopicName = String.format(VALIDATION_TOPIC_FMT, proxyTopicBase);
     configPublisher = new PubSubPusher(PROJECT_ID, configTopicName);
@@ -210,6 +212,7 @@ public class IotCoreProxy {
   }
 
   private static class ValidationBundle {
+
     public List<String> errors;
   }
 }

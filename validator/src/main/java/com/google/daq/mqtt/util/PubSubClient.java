@@ -52,7 +52,7 @@ public class PubSubClient implements MessagePublisher {
   private final Subscriber subscriber;
   private final Publisher publisher;
 
-  public PubSubClient(String projectId, String registryId, String name)  {
+  public PubSubClient(String projectId, String registryId, String name) {
     try {
       this.projectId = projectId;
       this.registryId = registryId;
@@ -72,7 +72,8 @@ public class PubSubClient implements MessagePublisher {
   }
 
   private SeekRequest getCurrentTimeSeekRequest(String subscription) {
-    Timestamp timestamp = Timestamp.newBuilder().setSeconds(System.currentTimeMillis()/1000).build();
+    Timestamp timestamp = Timestamp.newBuilder().setSeconds(System.currentTimeMillis() / 1000)
+        .build();
     return SeekRequest.newBuilder().setSubscription(subscription).setTime(timestamp).build();
   }
 
@@ -107,7 +108,7 @@ public class PubSubClient implements MessagePublisher {
       }
 
       attributes = new HashMap<>(attributes);
-      attributes.put(WAS_BASE_64, ""+ base64);
+      attributes.put(WAS_BASE_64, "" + base64);
 
       handler.accept(asMap, attributes);
     } catch (Exception e) {
@@ -139,13 +140,6 @@ public class PubSubClient implements MessagePublisher {
     }
   }
 
-  static class ErrorContainer extends TreeMap<String, Object> {
-    ErrorContainer(Exception e, String message) {
-      put("exception", e.toString());
-      put("message", message);
-    }
-  }
-
   @Override
   public void close() {
     if (subscriber != null) {
@@ -156,14 +150,6 @@ public class PubSubClient implements MessagePublisher {
 
   public String getSubscriptionId() {
     return subscriber.getSubscriptionNameString();
-  }
-
-  private class MessageProcessor implements MessageReceiver {
-    @Override
-    public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-      messages.offer(message);
-      consumer.ack();
-    }
   }
 
   private void resetSubscription(ProjectSubscriptionName subscriptionName) {
@@ -191,5 +177,22 @@ public class PubSubClient implements MessagePublisher {
       }
     }
     return false;
+  }
+
+  static class ErrorContainer extends TreeMap<String, Object> {
+
+    ErrorContainer(Exception e, String message) {
+      put("exception", e.toString());
+      put("message", message);
+    }
+  }
+
+  private class MessageProcessor implements MessageReceiver {
+
+    @Override
+    public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
+      messages.offer(message);
+      consumer.ack();
+    }
   }
 }

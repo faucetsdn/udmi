@@ -35,10 +35,10 @@ import org.slf4j.LoggerFactory;
  */
 class MqttPublisher implements MessagePublisher {
 
+  public static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
+  public static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-
   private static final boolean MQTT_SHOULD_RETAIN = false;
-
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
   private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
@@ -47,27 +47,21 @@ class MqttPublisher implements MessagePublisher {
   private static final int COMMANDS_QOS = 0;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
-
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
   private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
-  private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
   private static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
-  private final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
-
+  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
-
   private final Semaphore connectWait = new Semaphore(0);
-
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
-
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
-
   private final BiConsumer<String, String> onMessage;
   private final BiConsumer<MqttPublisher, Throwable> onError;
   private final String deviceId;
@@ -78,8 +72,6 @@ class MqttPublisher implements MessagePublisher {
   private final String cloudRegion;
   private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
-  public static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
-  public static final String BRIDGE_PORT = "8883";
 
   MqttPublisher(String projectId, String cloudRegion, String registryId,
       String deviceId, byte[] keyBytes, String algorithm, BiConsumer<String, String> onMessage,
@@ -167,7 +159,7 @@ class MqttPublisher implements MessagePublisher {
       }
       mqttClient.close();
     } catch (Exception e) {
-      LOG.error(deviceId + " while terminating client: " + e.toString(), e);
+      LOG.error(deviceId + " while terminating client: " + e, e);
     }
   }
 
@@ -193,7 +185,8 @@ class MqttPublisher implements MessagePublisher {
       String payload = "";
       sendMessage(topic, payload.getBytes());
     } catch (Exception e) {
-      LOG.error(this.deviceId + String.format(" error while binding client %s: %s", deviceId, e.toString()));
+      LOG.error(this.deviceId + String.format(" error while binding client %s: %s", deviceId,
+          e));
     }
   }
 
@@ -270,7 +263,7 @@ class MqttPublisher implements MessagePublisher {
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    return String.format(CLIENT_ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
+    return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
   }
 
   private String getBrokerUrl() {
@@ -314,6 +307,55 @@ class MqttPublisher implements MessagePublisher {
     return deviceId;
   }
 
+  /**
+   * Load a PKCS8 encoded keyfile from the given path.
+   */
+  private PrivateKey loadKeyBytes(byte[] keyBytes, String algorithm) throws Exception {
+    try {
+      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+      KeyFactory kf = KeyFactory.getInstance(algorithm);
+      return kf.generatePrivate(spec);
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Loading key bytes", e);
+    }
+  }
+
+  private char[] createJwt() {
+    try {
+      return createJwt(projectId, keyBytes, algorithm).toCharArray();
+    } catch (Throwable t) {
+      throw new RuntimeException("While creating jwt", t);
+    }
+  }
+
+  /**
+   * Create a Cloud IoT JWT for the given project id, signed with the given private key
+   */
+  private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
+      throws Exception {
+    DateTime now = new DateTime();
+
+    JwtBuilder jwtBuilder =
+        Jwts.builder()
+            .setIssuedAt(now.toDate())
+            .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
+            .setAudience(projectId);
+
+    switch (algorithm) {
+      case "RS256": {
+        PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
+        return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
+      }
+      case "ES256": {
+        PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
+        return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
+      }
+      default:
+        throw new IllegalArgumentException(
+            "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
+    }
+  }
+
   private class MqttCallbackHandler implements MqttCallback {
 
     MqttCallbackHandler() {
@@ -339,51 +381,6 @@ class MqttPublisher implements MessagePublisher {
      */
     public void messageArrived(String topic, MqttMessage message) {
       onMessage.accept(topic, message.toString());
-    }
-  }
-
-  /** Load a PKCS8 encoded keyfile from the given path. */
-  private PrivateKey loadKeyBytes(byte[] keyBytes, String algorithm) throws Exception {
-    try {
-      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-      KeyFactory kf = KeyFactory.getInstance(algorithm);
-      return kf.generatePrivate(spec);
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Loading key bytes", e);
-    }
-  }
-
-  private char[] createJwt() {
-    try {
-      return createJwt(projectId, keyBytes, algorithm).toCharArray();
-    } catch (Throwable t) {
-      throw new RuntimeException("While creating jwt", t);
-    }
-  }
-
-  /** Create a Cloud IoT JWT for the given project id, signed with the given private key */
-  private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
-      throws Exception {
-    DateTime now = new DateTime();
-
-    JwtBuilder jwtBuilder =
-        Jwts.builder()
-            .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
-            .setAudience(projectId);
-
-    switch (algorithm) {
-      case "RS256": {
-        PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
-        return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
-      }
-      case "ES256": {
-        PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
-        return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
-      }
-      default:
-        throw new IllegalArgumentException(
-            "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
     }
   }
 }

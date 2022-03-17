@@ -44,7 +44,8 @@ class PubSubClient {
       subscriber.startAsync().awaitRunning();
       active.set(true);
     } catch (Exception e) {
-      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId, subscriptionName), e);
+      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId, subscriptionName),
+          e);
     }
   }
 
@@ -93,6 +94,7 @@ class PubSubClient {
   }
 
   private class MessageReceiver implements com.google.cloud.pubsub.v1.MessageReceiver {
+
     @Override
     public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
       if (!messages.offer(message)) {
@@ -103,6 +105,7 @@ class PubSubClient {
   }
 
   private class SubscriberListener extends Listener {
+
     @Override
     public void failed(State from, Throwable failure) {
       active.set(false);

@@ -1,9 +1,13 @@
 package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
-
 import com.google.common.collect.ImmutableMap;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetMetadata;
@@ -13,9 +17,9 @@ public class ReportingDevice {
 
   private final String deviceId;
   private final MetadataDiff metadataDiff = new MetadataDiff();
-  private Metadata metadata;
   private final List<Exception> errors = new ArrayList<>();
   private final Set<String> validatedTypes = new HashSet<>();
+  private Metadata metadata;
 
   public ReportingDevice(String deviceId) {
     this.deviceId = deviceId;
@@ -96,6 +100,7 @@ public class ReportingDevice {
   }
 
   public static class MetadataDiff {
+
     public List<String> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;

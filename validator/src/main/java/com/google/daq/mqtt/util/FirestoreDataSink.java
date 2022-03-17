@@ -59,12 +59,12 @@ public class FirestoreDataSink {
       registryDoc.update("validated", instantNow);
       DocumentReference deviceDoc = registryDoc.collection("devices").document(deviceId);
       deviceDoc.update("validated", instantNow);
-      DocumentReference resultDoc = deviceDoc.collection("validations").document(schemaId);
       PojoBundle dataBundle = new PojoBundle();
       dataBundle.validated = instantNow;
       dataBundle.errorTree = errorTree;
       dataBundle.attributes = attributes;
       dataBundle.message = message;
+      DocumentReference resultDoc = deviceDoc.collection("validations").document(schemaId);
       resultDoc.set(dataBundle);
     } catch (Exception e) {
       throw new RuntimeException("While writing result for " + deviceId, e);
