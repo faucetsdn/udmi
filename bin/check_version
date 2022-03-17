@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # This script intentionally runs silent if there is no version mismatch found.
 #
@@ -6,15 +6,12 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-git remote -v
-
 branch=master
 origin=`git remote -v | fgrep faucetsdn/udmi | awk '{print $1}' | uniq`
 
 git fetch $origin --tags 2>/dev/null
 upstream_ver=`git describe $origin/$branch --abbrev=0`
-git log -n 10
-current_ver=`git describe HEAD --abbrev=0`
+current_ver=`git describe HEAD --abbrev=0 || echo unknown`
 
 if [[ $current_ver != $upstream_ver ]]; then
     echo
