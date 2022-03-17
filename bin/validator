@@ -25,9 +25,9 @@ $ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-if [[ -z $ubscription ]]; then
+if [[ -n $subscription ]]; then
+    $ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
+else
     echo No subscription supplied, assuming UDMI reflector.
     $ROOT_DIR/validator/bin/validate $project_id schema reflect -- $site_path
-else
-    $ROOT_DIR/validator/bin/validate $project_id schema pubsub $subscription $site_path
 fi
