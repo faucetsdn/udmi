@@ -650,7 +650,7 @@ public class Validator {
   }
 
   /**
-   * Data holder for a generated report file.
+   * Report for results from processing the metadata.
    */
   public static class MetadataReport {
 

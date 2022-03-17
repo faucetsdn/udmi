@@ -1,4 +1,3 @@
-
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.validator.Validator.NO_SITE;
@@ -53,23 +52,21 @@ import udmi.schema.Envelope.SubFolder;
 
 public class Registrar {
 
+  public static final String SCHEMA_BASE_PATH = "schema";
+  public static final int RUNNER_THREADS = 50;
   static final String METADATA_JSON = "metadata.json";
   static final String ENVELOPE_JSON = "envelope.json";
-
   static final String NORMALIZED_JSON = "metadata_norm.json";
   static final String DEVICE_ERRORS_JSON = "errors.json";
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
-
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
-
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-  public static final String SCHEMA_BASE_PATH = "schema";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
   private static final String VERSION_MAIN_KEY = "main";
@@ -78,11 +75,10 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
-  public static final int RUNNER_THREADS = 50;
-
+  private final Map<String, JsonSchema> schemas = new HashMap<>();
+  private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
   private File siteDir;
-  private final Map<String, JsonSchema> schemas = new HashMap<>();
   private File schemaBase;
   private PubSubPusher configPusher;
   private PubSubPusher feedPusher;
@@ -90,7 +86,6 @@ public class Registrar {
   private File summaryFile;
   private ExceptionMap blockErrors;
   private String projectId;
-  private final String generation = getGenerationString();
   private boolean updateCloudIoT;
   private Duration idleLimit;
   private Set<String> cloudDevices;
@@ -292,7 +287,8 @@ public class Registrar {
             : Sets.difference(cloudDevices, localDevices.keySet());
         blockErrors = blockExtraDevices(extraDevices);
       }
-      System.err.printf("Updated %d devices (out of %d)%n", updatedCount.get(), localDevices.size());
+      System.err.printf("Updated %d devices (out of %d)%n", updatedCount.get(),
+          localDevices.size());
       if (cloudDevices != null) {
         Set<String> unknownDevices = Sets.difference(localDevices.keySet(), cloudDevices);
         System.err.printf("Skipped %d not-in-cloud devices.%n", unknownDevices.size());
@@ -386,6 +382,17 @@ public class Registrar {
     localDevice.setDeviceNumId(numId.toString());
   }
 
+  private void updateCloudIoT(LocalDevice localDevice) {
+    String localName = localDevice.getDeviceId();
+    fetchDevice(localName);
+    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
+    if (cloudIotManager.registerDevice(localName, localDeviceSettings)) {
+      System.err.println("Created new device entry " + localName);
+    } else {
+      System.err.println("Updated device entry " + localName);
+    }
+  }
+
   private Set<String> calculateDevices(List<String> devices) {
     if (devices == null) {
       return null;
@@ -453,17 +460,6 @@ public class Registrar {
       configPusher.sendMessage(attributes, messageString);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("While sending config " + subFolder, e);
-    }
-  }
-
-  private void updateCloudIoT(LocalDevice localDevice) {
-    String localName = localDevice.getDeviceId();
-    fetchDevice(localName);
-    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
-    if (cloudIotManager.registerDevice(localName, localDeviceSettings)) {
-      System.err.println("Created new device entry " + localName);
-    } else {
-      System.err.println("Updated device entry " + localName);
     }
   }
 
@@ -614,7 +610,7 @@ public class Registrar {
                 cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
           } catch (Exception e) {
             localDevice.captureError(LocalDevice.EXCEPTION_ENVELOPE,
-                    new RuntimeException("While validating envelope", e));
+                new RuntimeException("While validating envelope", e));
           }
         }
       }
@@ -638,7 +634,8 @@ public class Registrar {
       loadSchema(schemaFile.getName());
     }
     if (schemas.isEmpty()) {
-      throw new RuntimeException("No schemas successfully loaded from " + schemaBase.getAbsolutePath());
+      throw new RuntimeException(
+          "No schemas successfully loaded from " + schemaBase.getAbsolutePath());
     }
   }
 

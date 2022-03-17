@@ -7,28 +7,30 @@ import com.google.cloud.pubsub.v1.stub.GrpcSubscriberStub;
 import com.google.cloud.pubsub.v1.stub.SubscriberStubSettings;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.AcknowledgeRequest;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-
 import com.google.pubsub.v1.PullRequest;
 import com.google.pubsub.v1.PullResponse;
-import com.google.pubsub.v1.ReceivedMessage;
-import java.io.File;
 import java.nio.charset.Charset;
-import java.util.List;
 import java.util.Map;
 import org.threeten.bp.Duration;
 
-import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
-
+/**
+ * Push a pubsub message.
+ */
 public class PubSubPusher {
 
   private final Publisher publisher;
   private final String outTopic;
   private final String projectId;
 
+  /**
+   * Create something with the intended topic target.
+   *
+   * @param projectId Target project
+   * @param outTopic Target topic
+   */
   public PubSubPusher(String projectId, String outTopic) {
     try {
       Preconditions.checkNotNull(projectId, "PubSub projectId");
