@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Information about the physical device firmware
+ * Information about the device firmware
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

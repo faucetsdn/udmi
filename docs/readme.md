@@ -4,10 +4,10 @@
 
 ## Contents
 
-- [**Specification**](specs/)
+- [**Specifications**](specs/)
 - [**Messages**](messages/)
 - [**Guides**](guides/)
-- [**Cloud**](cloud/)
+- [**Cloud Platforms**](cloud/)
 - [**Tools**](tools/)
 - [**Schema**](https://github.com/faucetsdn/udmi/tree/master/schema)
   ([_🧬Interactive viewer_](../gencode/docs/))

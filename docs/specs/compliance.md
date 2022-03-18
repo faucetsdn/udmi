@@ -23,10 +23,10 @@ device and can be used for defining requirements.
 *   **Software Defined Building**
     *   **Native UDMI**
         *   `Payloads` - Native configuration of UDMI payloads - not dependant on manual creation of MQTT message structures
-        *   `Dynamic Point Mapping` - Dynamic configuration of points via config 
+        *   `Dynamic Point Mapping` - Dynamic configuration of points via config
 *   **Connection**
     *   `MQTT 3.1.1 support` - Device supports MQTT 3.1.1
-    *   `MQTT/TLS Support` - Device supports connection to an MQTT broker with TLS encryption and at least TLS v1.2 
+    *   `MQTT/TLS Support` - Device supports connection to an MQTT broker with TLS encryption and at least TLS v1.2
     *   `Server certificate validation` - Device validates MQTT broker server certificates
     *   `JWT Certificates` - Device supports use of JWT for authentication with an MQTT broker
     *   `GCP IoT Core support` - Device is able to successfully connect to  GCP IoT Core
@@ -35,8 +35,10 @@ device and can be used for defining requirements.
 *   **Endpoint**
     *   `Configurable private keys` - Possible to upload private keys onto the device for MQTT authentication
     *   `Client certificate Rotation` - Device can rotate between multiple private keys to use for MQTT broker connection
-    *   `Endpoint remote configuration ` - Device can be remotely reconfigured to a different GCP Project/MQTT Broker 
-    *   `Config subscription` - Device subscribes to config topic 
+    *   `Endpoint remote configuration ` - Device can be remotely reconfigured to a different GCP Project/MQTT Broker
+*   **Base**
+    *   `Config subscription` - Device subscribes to config topic
+    *   `State last update` - last_update field in state is timestamp of last configuration
 *   **Pointset**
     *   **Datapoints mapping**
         *   `Datapoint mapping` - Map internal data points to UDMI data points
@@ -56,10 +58,9 @@ device and can be used for defining requirements.
         *   `Frequency` - State update sent at a frequency > {X}s
         *   `Rate Limiting` - Device publishes state no more than 1 state update per second
         *   `State after configuration` - Device publishes state update after receiving new configuration
-        *   `State last update` - last_update field in state is timestamp of last configuration 
 *   **Monitoring**
     *   **System Status**
-        *   `Publishes status` - Device publishes status fields 
+        *   `Publishes status` - Device publishes status fields
         *   `status schema` - Status blocks are valid according to the schema
     *   `min_loglevel` - Configurable min log level for publishing status/logging information
     *   **Log entries**
@@ -76,19 +77,19 @@ device and can be used for defining requirements.
         *   **Unwritable and overridden points**
             *   `Value not applied` - points which are unwritable or overridden are not updated and state is set to failure
             *   **Status**
-                *   `state.pointset.points.config.failure` - point status for failure to apply
+                *   `pointset.points.failure` - point status for failure to apply
         *   **Invalid writeback**
             *   `Value not applied` - Invalid writeback (e.g. out of range) is reported
             *   **Status**
-                *   `state.pointset.points.config.invalid` - point status for invalid writeback
+                *   `pointset.points.invalid` - point status for invalid writeback
     *   **State etag**
         *   `State etags` - Device implements state etags and rejects config updates with invalid etags
         *   **Status**
-            *   **state.pointset.points.config.invalid**
+            *   `pointset.points.invalid`
     *   **Config Expiry**
         *   `Config Expiry` - Device implements configuration expiry
         *   **Status**
-            *   `state.pointset.points.config.invalid` - status for invalid expiry
+            *   `pointset.points.invalid` - status for invalid expiry
 
 ## Testing
 

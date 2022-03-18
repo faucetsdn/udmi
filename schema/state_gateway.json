@@ -4,9 +4,6 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "required": [
-    "error_ids"
-  ],
   "properties": {
     "error_ids": {
       "type": "array",

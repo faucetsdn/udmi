@@ -1,6 +1,7 @@
 """Generated class for state.json"""
 from .state_system import SystemState
 from .state_gateway import GatewayState
+from .state_discovery import DiscoveryState
 from .state_blobset import BlobsetState
 from .state_pointset import PointsetState
 
@@ -13,6 +14,7 @@ class State:
     self.version = None
     self.system = None
     self.gateway = None
+    self.discovery = None
     self.blobset = None
     self.pointset = None
 
@@ -25,6 +27,7 @@ class State:
     result.version = source.get('version')
     result.system = SystemState.from_dict(source.get('system'))
     result.gateway = GatewayState.from_dict(source.get('gateway'))
+    result.discovery = DiscoveryState.from_dict(source.get('discovery'))
     result.blobset = BlobsetState.from_dict(source.get('blobset'))
     result.pointset = PointsetState.from_dict(source.get('pointset'))
     return result
@@ -55,6 +58,8 @@ class State:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:
       result['gateway'] = self.gateway.to_dict() # 4
+    if self.discovery:
+      result['discovery'] = self.discovery.to_dict() # 4
     if self.blobset:
       result['blobset'] = self.blobset.to_dict() # 4
     if self.pointset:

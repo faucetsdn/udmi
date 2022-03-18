@@ -77,7 +77,7 @@ BUILD SUCCESSFUL in 4s
 2 actionable tasks: 2 executed
 -rw-r--r-- 1 username primarygroup 34284160 May 24 22:14 build/libs/validator-1.0-SNAPSHOT-all.jar
 Done with validator build.
-java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar org.junit.runner.JUnitCore com.google.daq.mqtt.validator.validations.BaselineValidator
+java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar org.junit.runner.JUnitCore com.google.daq.mqtt.validator.validations.WritebackValidator
 JUnit version 4.13.1
 Writing results to /home/username/udmi/out/devices/FAUX-01/RESULT.log
 Validating device FAUX-01 serial sequencer-29581
