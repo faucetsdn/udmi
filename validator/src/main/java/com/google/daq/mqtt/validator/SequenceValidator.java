@@ -426,9 +426,12 @@ public abstract class SequenceValidator {
   }
 
   private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
-    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message, state -> deviceState.system = state);
-    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message, state -> deviceState.pointset = state);
-    updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message, state -> deviceState.discovery = state);
+    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
+        state -> deviceState.system = state);
+    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
+        state -> deviceState.pointset = state);
+    updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message,
+        state -> deviceState.discovery = state);
     validSerialNo();
   }
 
