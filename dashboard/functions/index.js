@@ -13,13 +13,17 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 
-console.log('process.env', process.env);
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-admin.initializeApp(functions.config().firebase);
-const db = admin.firestore();
+if (process.env.FIREBASE_CONFIG) {
+  admin.initializeApp(functions.config().firebase);
+  const db = admin.firestore();
+} else {
+  console.log('No FIREBASE_CONFIG defined');
+  const db = null;
+}
 
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
@@ -47,19 +51,21 @@ function recordMessage(attributes, message) {
 
   console.log('record', registryId, deviceId, subType, subFolder, message);
 
-  const reg_doc = db.collection('registries').doc(registryId);
-  promises.push(reg_doc.set({
-    'updated': timestamp
-  }, { merge: true }));
-  const dev_doc = reg_doc.collection('devices').doc(deviceId);
-  promises.push(dev_doc.set({
-    'updated': timestamp
-  }, { merge: true }));
-  const config_doc = dev_doc.collection(collectionType).doc(subFolder);
-  if (message) {
-    promises.push(config_doc.set(message));
-  } else {
-    promises.push(config_doc.delete());
+  if (db) {
+    const reg_doc = db.collection('registries').doc(registryId);
+    promises.push(reg_doc.set({
+      'updated': timestamp
+    }, { merge: true }));
+    const dev_doc = reg_doc.collection('devices').doc(deviceId);
+    promises.push(dev_doc.set({
+      'updated': timestamp
+    }, { merge: true }));
+    const config_doc = dev_doc.collection(collectionType).doc(subFolder);
+    if (message) {
+      promises.push(config_doc.set(message));
+    } else {
+      promises.push(config_doc.delete());
+    }
   }
 
   const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
@@ -69,11 +75,10 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
-  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
   const cloudRegion = registry_regions[registryId];
 
   const formattedName =
-        iotClient.devicePath(projectId, cloudRegion, registryId, deviceId);
+        iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
   const messageStr = JSON.stringify(message);
   console.log('command', formattedName, subFolder, messageStr);
@@ -144,6 +149,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   attributes.deviceId = parts[1];
   const subType = parts[2];
   attributes.subFolder = parts[3];
+  attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
 
   if (subType == 'query') {
     return udmi_query_event(attributes, msgObject);
@@ -164,7 +170,7 @@ function udmi_query_event(attributes, msgObject) {
 function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
-  const cloudRegion = attributes.cloudRegion || registry_regions[registryId];
+  const cloudRegion = attributes.cloudRegion;
   const deviceId = attributes.deviceId;
 
   const formattedName = iotClient.devicePath(
@@ -282,7 +288,6 @@ function update_device_config(message, attributes) {
 }
 
 function consolidateConfig(registryId, deviceId) {
-  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
   const cloudRegion = registry_regions[registryId];
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
@@ -295,7 +300,7 @@ function consolidateConfig(registryId, deviceId) {
   };
 
   const attributes = {
-    projectId: projectId,
+    projectId: PROJECT_ID,
     cloudRegion: cloudRegion,
     deviceId: deviceId,
     deviceRegistryId: registryId
