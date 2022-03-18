@@ -13,8 +13,9 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 
-// TODO: Make this dynamic so it's appropriately determined by use.
-const DEFAULT_CLOUD_REGION = 'us-central1';
+const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
+let registry_regions = null;
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -22,6 +23,8 @@ const db = admin.firestore();
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
 });
+
+getRegistryRegions();
 
 function currentTimestamp() {
   return new Date().toJSON();
@@ -66,7 +69,7 @@ function recordMessage(attributes, message) {
 
 function sendCommand(registryId, deviceId, subFolder, message) {
   const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  const cloudRegion = DEFAULT_CLOUD_REGION;
+  const cloudRegion = registry_regions[registryId];
 
   const formattedName =
         iotClient.devicePath(projectId, cloudRegion, registryId, deviceId);
@@ -103,6 +106,25 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
   return Promise.all(promises);
 });
 
+function getRegistryRegions() {
+  registry_regions = {};
+  ALL_REGIONS.forEach(region => {
+    console.log('Fetching registries for ' + region);
+    const formattedParent = iotClient.locationPath(PROJECT_ID, region);
+    iotClient.listDeviceRegistries({
+      parent: formattedParent,
+    }).then(result => {
+      const registries = result[0];
+      registries.forEach(registry => {
+        registry_regions[registry.id] = region;
+      });
+    }).catch(error => {
+      console.error(error);
+    });
+  });
+  console.log('Fetched ' + Object.keys(registry_regions).length + ' registry regions', registry_regions);
+}
+
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
@@ -134,8 +156,8 @@ function udmi_query_event(attributes, msgObject) {
 
 function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
-  const cloudRegion = attributes.cloudRegion || DEFAULT_CLOUD_REGION;
   const registryId = attributes.deviceRegistryId;
+  const cloudRegion = attributes.cloudRegion || registry_regions[registryId];
   const deviceId = attributes.deviceId;
 
   const formattedName = iotClient.devicePath(
@@ -254,7 +276,7 @@ function update_device_config(message, attributes) {
 
 function consolidateConfig(registryId, deviceId) {
   const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  const cloudRegion = DEFAULT_CLOUD_REGION;
+  const cloudRegion = registry_regions[registryId];
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');
