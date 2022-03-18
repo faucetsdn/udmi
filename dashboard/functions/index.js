@@ -13,6 +13,7 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 
+console.log('process.env', process.env);
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -106,23 +107,29 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
   return Promise.all(promises);
 });
 
-function getRegistryRegions() {
-  registry_regions = {};
-  ALL_REGIONS.forEach(region => {
-    console.log('Fetching registries for ' + region);
-    const formattedParent = iotClient.locationPath(PROJECT_ID, region);
-    iotClient.listDeviceRegistries({
-      parent: formattedParent,
-    }).then(result => {
-      const registries = result[0];
-      registries.forEach(registry => {
-        registry_regions[registry.id] = region;
-      });
-    }).catch(error => {
-      console.error(error);
+function getRegistries(region) {
+  console.log('Fetching registries for ' + region);
+  const formattedParent = iotClient.locationPath(PROJECT_ID, region);
+  return iotClient.listDeviceRegistries({
+    parent: formattedParent,
+  }).then(result => {
+    const registries = result[0];
+    console.log('Processing results for ' + region);
+    registries.forEach(registry => {
+      registry_regions[registry.id] = region;
     });
   });
-  console.log('Fetched ' + Object.keys(registry_regions).length + ' registry regions', registry_regions);
+}
+
+function getRegistryRegions() {
+  registry_regions = {};
+  promises = [];
+  ALL_REGIONS.forEach(region => {
+    promises.push(getRegistries(region));
+  });
+  Promise.all(promises).then(() => {
+    console.log('Fetched ' + Object.keys(registry_regions).length + ' registry regions');
+  }).catch(console.error);
 }
 
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
