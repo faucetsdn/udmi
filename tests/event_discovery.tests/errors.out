@@ -2,7 +2,7 @@ Validating 1 schemas
   Validating 1 files against event_discovery.json
     Against input event_discovery.tests/errors.json
       5 schema violations found
-        ECMA 262 regex "^[-_.:0-9a-zA-Z]+$" does not match input string "92E*A09"
+        ECMA 262 regex "^[-_.:0-9A-Z]+$" does not match input string "92E*A09"
         object has missing required properties (["generation"])
         object instance has properties which are not allowed by the schema: ["bad_entity_name_"]
         object instance has properties which are not allowed by the schema: ["id"]

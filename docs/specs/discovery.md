@@ -2,14 +2,14 @@
 
 # Discovery
 
-Discovery consists of two related processesd to describe the 'as built'
+Discovery consists of two related processes for describing the 'as built'
 state of a system: _scanning_ and _enumeration_. For devices, the overall
 [discovery sequence](sequences/discovery.md) describes the exact sequence
 of device messages employed in each case. Each process can be
 executed independently, or together (known as _scan enumeration_):
 
-* _scanning_ scans for existing devices
-exist, and returns a correlation between their address families. This is
+* _scanning_ scans for existing devices, and returns information about
+their discovered address families. This is
 information about how the device is indexed in the world around it.
 
 * _enumeration_ lists the properties of a given target device. Providing
@@ -25,15 +25,15 @@ _Scanning_ is the process of scanning a network and identifying the various
 entities thereof. Often (but not always), this comes along with a correlation
 of various address families (e.g. IPv4 address associated with a particular MAC):
 
-* mac (_82:CC:18:9A:45:1C_): Low-level hardware identifier for network connection
+* ethmac (_82:CC:18:9A:45:1C_): Ethernet mac address for low-level networking
 * ipv4 (_10.27.38.123_): Assigned IPv4 device network address
-* ipv6 (_fe80::8e8c:bc72_): Assigned IPv6 device network address
+* ipv6 (_FE80::8E8C:BC72_): Assigned IPv6 device network address
 * bacnet (_92EA09_): The device's BACnet mac-address
 * iot (_AHU-32_): Device designation as used in cloud-native processing
-* host (_ahu-2.acme.com_): DNS hostname for a device
+* host (_AHU-32.ACME.COM_): DNS hostname for a device
 
 Scanning results can only describe a subset of the complete picture (e.g. only the
-_MAC_ and _IPv4_ address), and it is up to the back-end systems to properly link/infer complete
+_ETHMAC_ and _IPv4_ address), and it is up to the back-end systems to properly link/infer complete
 relationships. Some systems may only care about singular entries (e.g. just discovering
 what IoT devices are there, but not caring about any association).
 

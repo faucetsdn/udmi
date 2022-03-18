@@ -4,7 +4,7 @@
 
 The basic discovery device message sequence follows a standard config/state call/response mechanism, with
 slightly different parameters for each different mode of operation. During the process, there's two major
-device's involved: the _enumerated_ node (the thing with the `points` that are being described), and the
+devices involved: the _enumerated_ node (the thing with the `points` that are being described), and the
 _discovery_ node (the thing that is doing the scan, which does not exist in the _self enumeration_ case).
 
 There's a few basic modes for the discovery _scan_ capability:
@@ -40,7 +40,7 @@ At this point, the _config_ `generation` entry can be removed with no effect, or
 ## Periodic Scan
 
 A _periodic scan_ is like a _sporadic scan_ except that the scan automatically occurs due to a predefined
-interval (rather than individual tirgger _config_s). This allows for repeated scans without any _config_ changes.
+interval (rather than individual trigger _config_s). This allows for repeated scans without any _config_ changes.
 
 * [_start config_](../../../tests/config.tests/periodic.json): Sets up a periodic scan, as defined by the
   `scan_interval_sec` parameter.
@@ -55,7 +55,7 @@ should be possible to setup a schema to scan every day exactly at midnight.
 
 ## Continuous Scan
 
-A _continuous scan_ is the mode for a system that can passivly monitor traffic and deduce scan results, so
+A _continuous scan_ is the mode for a system that can passively monitor traffic and deduce scan results, so
 there is no need for a _sporadic_/_periodic_ scan. This might be a system that monitors network ARP requests,
 or transient BACnet traffic.
 
@@ -66,17 +66,17 @@ or transient BACnet traffic.
 
 For this case, there is no _stop state_ message since the scan never stops: The process silently stops when the
 `scan_interval_sec` parameter is removed from the config. Addionally, the `scan_interval_sec` field indicates the
-duration within which a scan result for a given device should _not_ be repeated. E.g., if a device is passivly
+duration within which a scan result for a given device should _not_ be repeated. E.g., if a device is passively
 detected every _30 sec_, but the scan interval is _60 sec_, then the result would only be reported for
 (approximately) every other detection.
 
 ## Self Enumeration
 
 _Self enumeration_ is used for a device that is already registered in the cloud systems (no scan required),
-and can be explicitly directed to enumrate itself. This also applies to all direct-connect (not proxy) devices
+and can be explicitly directed to enumerate itself. This also applies to all direct-connect (not proxy) devices
 (which likely can't be scanned anyway)
 
-* [_start config_](../../../tests/config.tests/enumeration.json): `generation` paramerter in the `system`
+* [_start config_](../../../tests/config.tests/enumeration.json): `generation` parameter in the `system`
   block starts the self enumeration process (rather than the `discovery` block).
 * [_start state_](../../../tests/state.tests/enumeration.json): The `system` block indicates the `generation`
   of enumeration that is currently being processed.
