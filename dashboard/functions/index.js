@@ -29,7 +29,7 @@ const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
 });
 
-getRegistryRegions();
+const registry_promise = getRegistryRegions();
 
 function currentTimestamp() {
   return new Date().toJSON();
@@ -75,6 +75,12 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
+  return registry_promise.then(() => {
+    return sendCommandSafe(registryId, deviceId, subFolder, message);
+  });
+}
+
+function sendCommandSafe(registryId, deviceId, subFolder, message) {
   const cloudRegion = registry_regions[registryId];
 
   const formattedName =
@@ -132,7 +138,7 @@ function getRegistryRegions() {
   ALL_REGIONS.forEach(region => {
     promises.push(getRegistries(region));
   });
-  Promise.all(promises).then(() => {
+  return Promise.all(promises).then(() => {
     console.log('Fetched ' + Object.keys(registry_regions).length + ' registry regions');
   }).catch(console.error);
 }
@@ -149,15 +155,15 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   attributes.deviceId = parts[1];
   const subType = parts[2];
   attributes.subFolder = parts[3];
-  attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
 
-  if (subType == 'query') {
-    return udmi_query_event(attributes, msgObject);
-  }
-
-  target = 'udmi_' + subType;
-
-  return publishPubsubMessage(target, attributes, msgObject);
+  return registry_promise.then(() => {
+    attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
+    if (subType == 'query') {
+      return udmi_query_event(attributes, msgObject);
+    }
+    target = 'udmi_' + subType;
+    return publishPubsubMessage(target, attributes, msgObject);
+  });
 });
 
 function udmi_query_event(attributes, msgObject) {
@@ -211,7 +217,7 @@ function process_states_update(attributes, msgObject) {
   const commandFolder = `devices/${deviceId}/update/states`;
 
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
-  
+
   attributes.subType = STATE_TYPE;
   for (var block in msgObject) {
     let subMsg = msgObject[block];
@@ -287,7 +293,14 @@ function update_device_config(message, attributes) {
     .then(() => sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
 }
 
+
 function consolidateConfig(registryId, deviceId) {
+  return registry_promise.then(() => {
+    consolidateConfigSafe(registryId, deviceId);
+  });
+}
+
+function consolidateConfigSafe(registryId, deviceId) {
   const cloudRegion = registry_regions[registryId];
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
@@ -305,7 +318,6 @@ function consolidateConfig(registryId, deviceId) {
     deviceId: deviceId,
     deviceRegistryId: registryId
   };
-
   const timestamps = [];
 
   return configs.get()
