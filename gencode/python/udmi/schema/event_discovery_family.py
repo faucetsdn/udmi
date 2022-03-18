@@ -6,7 +6,6 @@ class FamilyDiscoveryEvent:
 
   def __init__(self):
     self.id = None
-    self.group = None
 
   @staticmethod
   def from_dict(source):
@@ -14,7 +13,6 @@ class FamilyDiscoveryEvent:
       return None
     result = FamilyDiscoveryEvent()
     result.id = source.get('id')
-    result.group = source.get('group')
     return result
 
   @staticmethod
@@ -37,6 +35,4 @@ class FamilyDiscoveryEvent:
     result = {}
     if self.id:
       result['id'] = self.id # 5
-    if self.group:
-      result['group'] = self.group # 5
     return result

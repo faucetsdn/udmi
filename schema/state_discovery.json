@@ -1,0 +1,21 @@
+{
+  "title": "Discovery State",
+  "description": "State for [discovery](../docs/specs/discovery.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "enumeration": {
+      "$ref": "file:state_discovery_family.json#"
+    },
+    "families": {
+      "description": "Discovery protocol families",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^iot|bacnet|ipv4|ipv6|ethmac$": {
+          "$ref": "file:state_discovery_family.json"
+        }
+      }
+    }
+  }
+}

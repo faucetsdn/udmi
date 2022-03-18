@@ -16,7 +16,7 @@
       "examples": ["A1B2C3D4", "00001"]
     },
     "firmware": {
-      "description": "Information about the physical device firmware",
+      "description": "Information about the device firmware",
       "type": "object",
       "additionalProperties": false,
       "properties": {

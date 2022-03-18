@@ -3,13 +3,12 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
+  "description": "Discovery information for an individual protocol family.",
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[-_.:/0-9a-zA-Z]+$"
-    },
-    "group": {
-      "type": "string"
+      "pattern": "^[-_.:0-9A-Z]+$",
+      "description": "Device id in the namespace of the given family"
     }
   },
   "required": [

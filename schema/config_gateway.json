@@ -4,9 +4,6 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "required": [
-    "proxy_ids"
-  ],
   "properties": {
     "proxy_ids": {
       "description": "An array of all the device IDs which are bound to the device",
