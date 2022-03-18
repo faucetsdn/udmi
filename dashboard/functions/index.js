@@ -19,11 +19,10 @@ let registry_regions = null;
 
 if (process.env.FIREBASE_CONFIG) {
   admin.initializeApp(functions.config().firebase);
-  const db = admin.firestore();
 } else {
   console.log('No FIREBASE_CONFIG defined');
-  const db = null;
 }
+const db = process.env.FIREBASE_CONFIG ? admin.firestore() : null;
 
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
