@@ -253,10 +253,29 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  promises.push(get_device_config(registryId, deviceId));
+  promises.push(modify_device_config(registryId, deviceId));
 
   return Promise.all(promises);
 });
+
+async function modify_device_config(registryId, deviceId) {
+  const [oldConfig, version] = await get_device_config(registryId, deviceId);
+  const message = JSON.parse(oldConfig);
+  const attributes = {
+    projectId: PROJECT_ID,
+    cloudRegion: registry_regions[registryId],
+    deviceId: deviceId,
+    deviceRegistryId: registryId
+  };
+  return update_device_config(message, attributes, version)
+    .catch(e => {
+      console.log('Config update rejected, retry...');
+      return modify_device_config(registryId, deviceId);
+    })
+    .then(() => {
+      console.log('Config accepted version', version);
+    });
+}
 
 async function get_device_config(registryId, deviceId) {
   await registry_promise;
@@ -278,15 +297,17 @@ async function get_device_config(registryId, deviceId) {
     return null;
   }
 
-  return configs[0].binaryData.toString('utf8');
+  return [configs[0].binaryData.toString('utf8'), configs[0].version];
 }
 
-function update_device_config(message, attributes) {
+function update_device_config(message, attributes, preVersion) {
   const projectId = attributes.projectId;
   const cloudRegion = attributes.cloudRegion;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const version = 0;
+  const version = preVersion || 0;
+
+  console.log('Updating config version', version);
 
   const extraField = message.system && message.system.extra_field;
   const normalJson = extraField !== 'break_json';
@@ -303,7 +324,7 @@ function update_device_config(message, attributes) {
     registryId,
     deviceId
   );
-  console.log('iot modify config', formattedName, msgString);
+  console.log('iot modify config version', version, formattedName);
 
   const request = {
     name: formattedName,
