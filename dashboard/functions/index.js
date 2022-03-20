@@ -253,8 +253,33 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
+  promises.push(get_device_config(registryId, deviceId));
+
   return Promise.all(promises);
 });
+
+async function get_device_config(registryId, deviceId) {
+  await registry_promise;
+  const cloudRegion = registry_regions[registryId];
+
+  const devicePath = iotClient.devicePath(
+    PROJECT_ID,
+    cloudRegion,
+    registryId,
+    deviceId
+  );
+
+  const [response] = await iotClient.listDeviceConfigVersions({
+    name: devicePath,
+  });
+
+  const configs = response.deviceConfigs;
+  if (configs.length === 0) {
+    return null;
+  }
+
+  return configs[0].binaryData.toString('utf8');
+}
 
 function update_device_config(message, attributes) {
   const projectId = attributes.projectId;
@@ -292,14 +317,7 @@ function update_device_config(message, attributes) {
     .then(() => sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
 }
 
-
-function consolidateConfig(registryId, deviceId) {
-  return registry_promise.then(() => {
-    consolidateConfigSafe(registryId, deviceId);
-  });
-}
-
-function consolidateConfigSafe(registryId, deviceId) {
+function consolidate_config(registryId, deviceId) {
   const cloudRegion = registry_regions[registryId];
   const reg_doc = db.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
@@ -345,7 +363,9 @@ function consolidateConfigSafe(registryId, deviceId) {
 exports.udmi_update = functions.firestore
   .document('registries/{registryId}/devices/{deviceId}/configs/{subFolder}')
   .onWrite((change, context) => {
-    return consolidateConfig(context.params.registryId, context.params.deviceId);
+    const registryId = context.params.registryId;
+    const deviceId = constext.params.deviceId;
+    return registry_promise.then(consolidate_config(registryId, deviceId));
   });
 
 function publishPubsubMessage(topicName, attributes, data) {
