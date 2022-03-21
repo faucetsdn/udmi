@@ -11,7 +11,7 @@ stages:
   - cleanup
 
 cache:
-   key: ${CI_PROJECT_NAME}-$CI_ENVIRONMENT_SLUG-gcp
+  key: ${CI_PROJECT_NAME}-$CI_ENVIRONMENT_SLUG-gcp
   paths:
     - ${TF_ROOT}/.terraform
     
