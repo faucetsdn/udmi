@@ -22,7 +22,7 @@ if (process.env.FIREBASE_CONFIG) {
 } else {
   console.log('No FIREBASE_CONFIG defined');
 }
-const db = process.env.FIREBASE_CONFIG ? admin.firestore() : null;
+const firestore = process.env.FIREBASE_CONFIG ? admin.firestore() : null;
 
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
@@ -50,8 +50,8 @@ function recordMessage(attributes, message) {
 
   console.log('record', registryId, deviceId, subType, subFolder, message);
 
-  if (db) {
-    const reg_doc = db.collection('registries').doc(registryId);
+  if (firestore) {
+    const reg_doc = firestore.collection('registries').doc(registryId);
     promises.push(reg_doc.set({
       'updated': timestamp
     }, { merge: true }));
@@ -253,7 +253,9 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
+  if (!firestore) {
+    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
+  }
 
   return Promise.all(promises);
 });
@@ -347,7 +349,7 @@ function update_device_config(message, attributes, preVersion) {
 
 function consolidate_config(registryId, deviceId) {
   const cloudRegion = registry_regions[registryId];
-  const reg_doc = db.collection('registries').doc(registryId);
+  const reg_doc = firestore.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');
 
