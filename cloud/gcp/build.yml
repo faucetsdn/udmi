@@ -19,8 +19,7 @@ variables:
   TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
 before_script:
   - cd cloud/gcp
-  - sed -E < main.tf.template > main.tf -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/"
-  - sed -E < terraform.tfvars.template > terraform.tfvars -e "s/@GCP_PROJECT_NAME@/${GCP_PROJECT_NAME}/g" -e "s/@GCP_PROJECT_ID@/${GCP_PROJECT_ID}/" -e "s/@GCP_PROJECT_REGION@/${GCP_PROJECT_REGION}/" -e "s/@GCP_PROJECT_GROUP@/${GCP_PROJECT_GROUP}/"
+  - echo "$MAIN_TF" >> main.tf
   - echo "$UDMI_SITES" >> udmi-sites.tf
   - echo "$GCP_CREDENTIALS" >> auth/credentials.json
 
