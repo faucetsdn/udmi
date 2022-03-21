@@ -5,6 +5,6 @@
     "restart_count": 10,
     "mem_total_mb": 250164.88,
     "mem_free_mb": 169104.33,
-    "cpu_usage": 1.00
+    "cpu_load_5m": 0.82
   }
 }

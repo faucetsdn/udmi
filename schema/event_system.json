@@ -25,7 +25,21 @@
     },
     "metrics": {
       "type": "object",
-      "additionalProperties": false
+      "additionalProperties": false,
+      "properties": {
+        "restart_count": {
+          "type": "number"
+        },
+        "mem_total_mb": {
+          "type": "number"
+        },
+        "mem_free_mb": {
+          "type": "number"
+        },
+        "cpu_load_5m": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [
