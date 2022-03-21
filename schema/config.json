@@ -27,6 +27,9 @@
     "gateway": {
       "$ref": "file:config_gateway.json#"
     },
+    "discovery": {
+      "$ref": "file:config_discovery.json#"
+    },
     "localnet": {
       "$ref": "file:config_localnet.json#"
     },

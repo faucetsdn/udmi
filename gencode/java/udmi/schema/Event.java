@@ -42,14 +42,14 @@ public class Event {
     @JsonPropertyDescription("A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)")
     public PointsetEvent pointset;
     /**
-     * Discovery
+     * Discovery Event
      * <p>
-     * [Discovery Documentation](../docs/specs/discovery.md)
+     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
      * 
      */
     @JsonProperty("discovery")
-    @JsonPropertyDescription("[Discovery Documentation](../docs/specs/discovery.md)")
-    public Discovery discovery;
+    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
+    public DiscoveryEvent discovery;
 
     @Override
     public int hashCode() {

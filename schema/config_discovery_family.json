@@ -1,0 +1,28 @@
+{
+  "title": "Family Discovery Config",
+  "description": "Configuration for [discovery](../docs/specs/discovery.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "generation": {
+      "description": "Generational marker for controlling discovery",
+      "type": "string",
+      "format": "date-time"
+    },
+    "scan_interval_sec": {
+      "description": "Period, in seconds, for automatic scanning",
+      "type": "integer",
+      "minimum": 0
+    },
+    "scan_duration_sec": {
+      "description": "Scan duration, in seconds",
+      "type": "integer",
+      "minimum": 0
+    },
+    "enumerate": {
+      "description": "Indicates implicit enumeration of discovered devices",
+      "type": "boolean"
+    }
+  }
+}

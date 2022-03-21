@@ -1,4 +1,5 @@
 """Generated class for state_pointset.json"""
+from .common import Entry
 from .state_pointset_point import PointPointsetState
 
 
@@ -7,6 +8,7 @@ class PointsetState:
 
   def __init__(self):
     self.state_etag = None
+    self.status = None
     self.points = None
 
   @staticmethod
@@ -15,6 +17,7 @@ class PointsetState:
       return None
     result = PointsetState()
     result.state_etag = source.get('state_etag')
+    result.status = Entry.from_dict(source.get('status'))
     result.points = PointPointsetState.map_from(source.get('points'))
     return result
 
@@ -38,6 +41,8 @@ class PointsetState:
     result = {}
     if self.state_etag:
       result['state_etag'] = self.state_etag # 5
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     if self.points:
       result['points'] = PointPointsetState.expand_dict(self.points) # 2
     return result
