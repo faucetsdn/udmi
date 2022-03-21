@@ -40,10 +40,12 @@ public class IotCoreClient implements MessagePublisher {
       byte[] keyBytes = getFileBytes(keyFile);
       siteName = iotConfig.registry_id;
       this.projectId = projectId;
-      mqttPublisher = new MqttPublisher(projectId, iotConfig.cloud_region, UDMS_REFLECT,
+      String cloudRegion =
+          iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
+      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
           siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
       subscriptionId =
-          String.format("%s/%s/%s/%s", projectId, iotConfig.cloud_region, UDMS_REFLECT,
+          String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT,
               iotConfig.registry_id);
       active = true;
     } catch (Exception e) {

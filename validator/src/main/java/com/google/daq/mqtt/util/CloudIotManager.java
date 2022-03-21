@@ -40,6 +40,7 @@ public class CloudIotManager {
 
   public static final String UDMI_METADATA = "udmi_metadata";
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
+  private static final String UDMI_CONFIG = "udmi_config";
   private static final String UDMI_GENERATION = "udmi_generation";
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
@@ -168,6 +169,7 @@ public class CloudIotManager {
     metadataMap.put(UDMI_METADATA, settings.metadata);
     metadataMap.put(UDMI_UPDATED, settings.updated);
     metadataMap.put(UDMI_GENERATION, settings.generation);
+    metadataMap.put(UDMI_CONFIG, settings.config);
     if (settings.keyBytes == null) {
       metadataMap.remove(KEY_BYTES_KEY);
       metadataMap.remove(KEY_ALGORITHM_KEY);
