@@ -1,0 +1,22 @@
+{
+  "title": "Family Discovery State",
+  "description": "State for [discovery](../docs/specs/discovery.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "generation": {
+      "description": "Generational marker for controlling discovery",
+      "type": "string",
+      "format": "date-time"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Indicates if the discovery process is currently active"
+    },
+    "status": {
+      "description": "Status information about the discovery operation",
+      "$ref": "file:common.json#/definitions/entry"
+    }
+  }
+}

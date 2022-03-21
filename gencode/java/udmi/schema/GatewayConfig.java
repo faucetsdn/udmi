@@ -25,7 +25,6 @@ public class GatewayConfig {
 
     /**
      * An array of all the device IDs which are bound to the device
-     * (Required)
      * 
      */
     @JsonProperty("proxy_ids")

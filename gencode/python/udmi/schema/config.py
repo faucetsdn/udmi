@@ -1,6 +1,7 @@
 """Generated class for config.json"""
 from .config_system import SystemConfig
 from .config_gateway import GatewayConfig
+from .config_discovery import DiscoveryConfig
 from .config_localnet import LocalnetConfig
 from .config_blobset import BlobsetConfig
 from .config_pointset import PointsetConfig
@@ -14,6 +15,7 @@ class Config:
     self.version = None
     self.system = None
     self.gateway = None
+    self.discovery = None
     self.localnet = None
     self.blobset = None
     self.pointset = None
@@ -27,6 +29,7 @@ class Config:
     result.version = source.get('version')
     result.system = SystemConfig.from_dict(source.get('system'))
     result.gateway = GatewayConfig.from_dict(source.get('gateway'))
+    result.discovery = DiscoveryConfig.from_dict(source.get('discovery'))
     result.localnet = LocalnetConfig.from_dict(source.get('localnet'))
     result.blobset = BlobsetConfig.from_dict(source.get('blobset'))
     result.pointset = PointsetConfig.from_dict(source.get('pointset'))
@@ -58,6 +61,8 @@ class Config:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:
       result['gateway'] = self.gateway.to_dict() # 4
+    if self.discovery:
+      result['discovery'] = self.discovery.to_dict() # 4
     if self.localnet:
       result['localnet'] = self.localnet.to_dict() # 4
     if self.blobset:
