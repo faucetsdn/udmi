@@ -86,7 +86,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, message) {
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
   const messageStr = JSON.stringify(message);
-  console.log('command', formattedName, subFolder, messageStr);
+  console.log('command', formattedName, subFolder);
 
   const binaryData = Buffer.from(messageStr);
   const request = {
@@ -241,9 +241,9 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
 
-  console.log('udmi_config', registryId, deviceId, subFolder, msgString);
+  console.log('Config message', registryId, deviceId, subFolder, msgString);
   if (!msgString) {
-    console.warn('udmi_config abort', registryId, deviceId, subFolder, msgString);
+    console.warn('Config abort', registryId, deviceId, subFolder, msgString);
     return null;
   }
   const msgObject = JSON.parse(msgString);
@@ -253,14 +253,21 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  promises.push(modify_device_config(registryId, deviceId));
+  promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
 
   return Promise.all(promises);
 });
 
-async function modify_device_config(registryId, deviceId) {
+async function modify_device_config(registryId, deviceId, subFolder, subContents) {
+  console.log('Config modify subFolder', subFolder);
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   const message = JSON.parse(oldConfig);
+  console.log('Config modify version', version, subFolder);
+  if (subContents) {
+    message[subFolder] = subContents;
+  } else {
+    delete message[subFolder];
+  }
   const attributes = {
     projectId: PROJECT_ID,
     cloudRegion: registry_regions[registryId],
@@ -269,11 +276,11 @@ async function modify_device_config(registryId, deviceId) {
   };
   return update_device_config(message, attributes, version)
     .catch(e => {
-      console.log('Config update rejected, retry...');
-      return modify_device_config(registryId, deviceId);
+      console.log('Config update rejected, retry', subFolder);
+      return modify_device_config(registryId, deviceId, subFolder, subContents);
     })
     .then(() => {
-      console.log('Config accepted version', version);
+      console.log('Config accepted version', version, subFolder);
     });
 }
 
