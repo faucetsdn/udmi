@@ -12,11 +12,14 @@ variable "initial_node_count" {
   default = 1
   description = "The number of nodes to create in this cluster"
 }
-
+variable "gke_cluster_name" {
+  type = string
+  description = "gke cluster name"
+}
 
 #GKE CLUSTER
 resource "google_container_cluster" "biot" {
-    name     = "${var.gcp_project_id}-gke"
+    name     = var.gke_cluster_name
     location = var.gcp_region
     node_locations = var.node_locations
 
