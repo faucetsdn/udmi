@@ -22,6 +22,10 @@
       "items": {
         "$ref": "file:common.json#/definitions/entry"
       }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false
     }
   },
   "required": [

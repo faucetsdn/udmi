@@ -5,10 +5,19 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "make_model": {
-      "description": "The make and model of the physical device",
-      "type": "string",
-      "examples": ["Delta Controls O3-DIN-SRC", "Arup Gateway"]
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+      }
+    },
+    "software": {
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "config": {
+      "additionalProperties": false,
+      "type": "object"
     },
     "serial_no": {
       "description": "The serial number of the physical device",
