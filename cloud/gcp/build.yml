@@ -20,7 +20,7 @@ variables:
 before_script:
   - cd cloud/gcp
   - echo "$MAIN_TF" >> main.tf
-  - echo "$UDMI_SITES" >> udmi-sites.tf
+  - echo "$UDMI_SITES_TF" >> udmi-sites.tf
   - echo "$GCP_CREDENTIALS" >> auth/credentials.json
 
 init-staging:
