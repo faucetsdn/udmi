@@ -2,9 +2,22 @@
   "version": 1,
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
-    "make_model": "ACME Gateway v2",
-    "firmware": {
-      "version": "3.2a"
+    "hardware": {  // Fixed set of keys with arbitrary values indicating hardware items.
+      "make": "ACME",
+      "model": "Gateway",
+      "sku": "A9BB-F",
+      "rev": "2183147c"
+    },
+    "software": {  // Keys and expected values defined by hardware type lookup.
+      "firmware": "3.2a",
+      "baseband": "1287ab787e98df01",
+      "application": "4.13.0.347 (4130-001) D",
+      "python": "3.8",
+      "monkey_rabbits": "These are all arbitrary key/value pairs"
+    },
+    "config": {  // Keys defined by hardwre type lookup, values are unique per device.
+      "wpa_key": "ab7879e2873c871e",
+      "iot_config": "cc8d93e8f87a7ec9"
     },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
