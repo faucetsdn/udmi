@@ -1,0 +1,86 @@
+//
+// Sent on MQTT topic: /devices/{device_id}/events/discovery
+// where {device_id} is that of the enumerated node.
+//
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:42:12.237Z",
+  "generation": "2018-08-26T21:37:12Z",
+  "points": {
+    // Numerical value with an articulated unit
+    "sup_flow_actual_avo_1": {
+      "units": "percent",  // with units, type typically defaults to 'number'
+      "ref": "analog-value_29",  // Internal reference used on-prem (e.g. reference to bacnet property)
+      "writable": true,
+      "description": "Basic value reading"
+    },
+    // Multi-state enumerated value
+    "zone_mode_msv_1": {
+      "possible_values": [ "Deadband Mode", "Heating Mode", "Cooling Mode" ],
+      "type": "multistate"  // enumerated values defining the multistate
+    },
+    // Example boolean value, which is just a degenerate case of multi-state
+    "ztmp_hi_alm_1": {
+      "possible_values": [ "Off", "On" ],
+      "type": "multistate"  // enumerated values, can be mapped to inactive/active boolean states
+    },
+    // General-purpose string value, e.g. for a descriptive string
+    "string_value": {
+      "type": "string"
+    },
+    // Representation of a point with unknown/arbitrary parameters
+    "NClass_1": {
+      "ref": "notification-class_1",
+      // 'notificaiton-class' is not a UDMI-defined type, so can't be exported outside of object-type
+      "ancillary": {  // arbitrary json not codifed with a UDMI schema
+        "object-type": "notification-class",
+        "ack-required": [
+          false,
+          false,
+          false
+        ],
+        "recipient-list": [
+          {
+            "fromTime": {
+              "hour": 0,
+              "minute": 0,
+              "second": 0,
+              "hundredth": 0
+            },
+            "toTime": {
+              "hour": 23,
+              "minute": 59,
+              "second": 59,
+              "hundredth": 99
+            },
+            "recipient": {
+              "address": "Address [networkNumber=27000, macAddress=[64,45,41,32,ba,c0]]"
+            },
+            "processIdentifier": 1,
+            "validDays": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "issueConfirmedNotifications": true,
+            "transitions": [
+              true,
+              true,
+              true
+            ]
+          }
+        ],
+        "notification-class": 1,
+        "priority": [
+          128,
+          64,
+          128
+        ]
+      }
+    }
+  }
+}

@@ -35,17 +35,11 @@ public class PointPointsetState {
     @JsonPropertyDescription("If specified, indicates a programmed point unit. If empty, means unspecified or matches configured point.")
     public String units;
     /**
-     * Optional enumeration indicating the state of the points value. Valid `value_state` settings include:
-     * * _<missing>_: No `set_value` _config_ has been specified, the source is device-native.
-     * * _applied_: The `set_value` _config_ has been successfully applied.
-     * * _overridden_: The _config_ setting is being overridden by another source.
-     * * _invalid_: A problem has been identified with the _config_ setting.
-     * * _failure_: The _config_ is fine, but a problem has been encountered applying the setting.
-     * When the value state indicates an error state, an assosciated status entry should be included
+     * Optional enumeration indicating the state of the points value.
      * 
      */
     @JsonProperty("value_state")
-    @JsonPropertyDescription("Optional enumeration indicating the state of the points value. Valid `value_state` settings include:\n* _<missing>_: No `set_value` _config_ has been specified, the source is device-native.\n* _applied_: The `set_value` _config_ has been successfully applied.\n* _overridden_: The _config_ setting is being overridden by another source.\n* _invalid_: A problem has been identified with the _config_ setting.\n* _failure_: The _config_ is fine, but a problem has been encountered applying the setting.\nWhen the value state indicates an error state, an assosciated status entry should be included")
+    @JsonPropertyDescription("Optional enumeration indicating the state of the points value.")
     public PointPointsetState.Value_state value_state;
     /**
      * Entry
@@ -79,13 +73,7 @@ public class PointPointsetState {
 
 
     /**
-     * Optional enumeration indicating the state of the points value. Valid `value_state` settings include:
-     * * _<missing>_: No `set_value` _config_ has been specified, the source is device-native.
-     * * _applied_: The `set_value` _config_ has been successfully applied.
-     * * _overridden_: The _config_ setting is being overridden by another source.
-     * * _invalid_: A problem has been identified with the _config_ setting.
-     * * _failure_: The _config_ is fine, but a problem has been encountered applying the setting.
-     * When the value state indicates an error state, an assosciated status entry should be included
+     * Optional enumeration indicating the state of the points value.
      * 
      */
     @Generated("jsonschema2pojo")

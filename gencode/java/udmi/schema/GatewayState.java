@@ -22,11 +22,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class GatewayState {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("error_ids")
     public List<String> error_ids = new ArrayList<String>();
 

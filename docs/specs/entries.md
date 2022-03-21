@@ -17,7 +17,7 @@ General indication of the severity of the message, using standard categorization
 | 400 | WARNING | Something is not right that should be investigated. |
 | 500 | ERROR | Something bad that needs immediate attention. |
 
-## Categories
+## Category
 
 The entry _category_ is a dot-separated string providing a semantic hierarchy for a given message.
 [Canonical categories](categories.md) correspond to expected values for log and status entries. These
@@ -27,10 +27,11 @@ are designed to be automatically categorized and processed by backend systems.
 
 The entry _message_ is a single sentence of human-readable output describing what went wrong.
 This will likely be directly exposed to a system operator to give them high-level information on
-how to triage, diganose, or rectify the situation.
+how to triage, diganose, or rectify the situation. Exact messages are not prescribed, although some
+specific categories will have guiding principles (e.g. prepend point _message_ with "Point _pointname_").
 
 ## Detail
 
-More detail used for specifically diagnosing the error. E.g. a complete stack-trace or parsing
+The entry _detail_ is use for specifically diagnosing the error. E.g. a complete stack-trace or parsing
 message that details exactly where the error occured. This would be used for detailed debugging by
 a domain expert.

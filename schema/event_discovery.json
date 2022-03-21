@@ -1,6 +1,6 @@
 {
-  "title": "Discovery",
-  "description": "[Discovery Documentation](../docs/specs/discovery.md)",
+  "title": "Discovery Event",
+  "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -13,16 +13,47 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "enum": [
-        1
-      ]
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "generation": {
+      "description": "The event's discovery scan trigger's generation timestamp",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
     },
     "families": {
-      "description": "Collection of address families identifying the scan target",
+      "description": "Address family results for a scan. Not included for device enumeration messages.",
+      "type": "object",
       "additionalProperties": false,
+      "$explanation": "The json schema validator used doesn't support propertyNames, so use a regex instead.",
+      "patternProperties": {
+        "^iot|bacnet|ipv4|ipv6|ethmac$": {
+          "$ref": "file:event_discovery_family.json"
+        }
+      }
+    },
+    "points": {
+      "description": "Collection of data points available for this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$": {
+          "$ref": "file:event_discovery_point.json#"
+        }
+      }
+    },
+    "blobs": {
+      "description": "Collection of data blobs recognized by this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, BlobEnumerationEvent>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:event_discovery_family.json"
+          "$ref": "file:event_discovery_blob.json#"
         }
       }
     }
@@ -30,6 +61,6 @@
   "required": [
     "timestamp",
     "version",
-    "families"
+    "generation"
   ]
 }
