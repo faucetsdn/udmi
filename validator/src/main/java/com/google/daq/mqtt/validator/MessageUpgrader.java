@@ -7,12 +7,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
-  private static final String TARGET_VERSION = "1.3.14";
+  private static final String TARGET_FORMAT = "%d.%d.%d";
   private final JsonNode message;
   private final String schemaName;
   private final int major;
-  private final int patch;
-  private final int minor;
+  private int patch;
+  private int minor;
 
   public MessageUpgrader(String schemaName, JsonNode message) {
     this.message = message;
@@ -31,25 +31,38 @@ public class MessageUpgrader {
     if (parts.length >= 4) {
       throw new IllegalArgumentException("Unexpected version " + verStr);
     }
-    if (major != 1) {
-      throw new IllegalArgumentException("Starting major version " + major);
-    }
   }
 
   public void upgrade() {
-    if ("state".equals(schemaName)) {
-      if (major <= 1 && minor <= 3) {
-        upgradeState1_3();
-      }
+    if (major != 1) {
+      throw new IllegalArgumentException("Starting major version " + major);
+    }
+    if (minor < 3) {
+      upgrade_1_3();
+    }
+    if (patch < 14) {
+      upgrade_1_3_14();
     }
     if (message.has("version")) {
-      ((ObjectNode) message).put("version", TARGET_VERSION);
+      ((ObjectNode) message).put("version", String.format(TARGET_FORMAT, major, minor, patch));
     }
   }
 
-  private void upgradeState1_3() {
+  private void upgrade_1_3() {
+    minor = 3;
+    patch = 0;
+  }
+
+  private void upgrade_1_3_14() {
+    patch = 14;
+    if ("state".equals(schemaName)) {
+      upgrade_1_3_14_state();
+    }
+  }
+
+  private void upgrade_1_3_14_state() {
     ObjectNode system = (ObjectNode) message.get("system");
-    if (system != null && patch < 14) {
+    if (system != null) {
       if (system.has("hardware") || system.has("software")) {
         throw new IllegalStateException("Node already has hardware/software field");
       }
