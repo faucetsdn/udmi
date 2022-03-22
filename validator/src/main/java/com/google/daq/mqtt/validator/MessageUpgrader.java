@@ -20,7 +20,7 @@ public class MessageUpgrader {
 
     JsonNode version = message.get("version");
     String verStr =
-        version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.toString()
+        version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
             : "1";
 
     String[] parts = verStr.split("\\.", 4);
@@ -50,6 +50,9 @@ public class MessageUpgrader {
   private void upgradeState1_3() {
     ObjectNode system = (ObjectNode) message.get("system");
     if (system != null && patch < 14) {
+      if (system.has("hardware") || system.has("software")) {
+        throw new IllegalStateException("Node already has hardware/software field");
+      }
       JsonNode make_model = system.remove("make_model");
       if (make_model != null) {
         ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);

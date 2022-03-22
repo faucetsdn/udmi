@@ -33,7 +33,7 @@
       "additionalProperties": false,
       "type": "object",
       "patternProperties": {
-        "^[a-z]+$": {
+        "^[a-z_]+$": {
           "type": "string"
         }
       }
@@ -42,7 +42,7 @@
       "additionalProperties": false,
       "type": "object",
       "patternProperties": {
-        "^[a-z]+$": {
+        "^[a-z_]+$": {
           "type": "string"
         }
       }
