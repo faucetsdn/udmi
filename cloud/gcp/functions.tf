@@ -2,52 +2,46 @@
 
 #packe.js-/Users/naveenlakshmi/udmi/udmd/event-handler/package.json
 
-variable "function_name" {
-    type = string
-    default = "transform-EventHandler"
-    description = "functions name"
-}
-
-resource "google_storage_bucket" "fu-bucket" {
+resource "google_storage_bucket" "function-bucket" {
   name     = "${var.gcp_project_id}-${var.function_name}"
   location = var.gcp_region
 }
 
 # Add the zipped file to the bucket.
-resource "google_storage_bucket_object" "fu-object" {
+resource "google_storage_bucket_object" "function-object" {
   # Use an MD5 here. If there's no changes to the source code, this won't change either.
   # We can avoid unnecessary redeployments by validating the code is unchanged, and forcing
   # a redeployment when it has!
   name   = "${var.gcp_project_id}-${var.function_name}"
-  bucket = google_storage_bucket.fu-bucket.name
+  bucket = google_storage_bucket.function-bucket.name
   source = "./udmd/event-handler/index.js"
 }
 
 # The cloud function resource.
-resource "google_cloudfunctions_function" "function" {
-  available_memory_mb = "128"
+resource "google_cloudfunctions_function" "functions" {
+  available_memory_mb = var.function_memory
   entry_point         = "http_EventHandler"
   ingress_settings    = "ALLOW_ALL"
 
   name                  = var.function_name
   project               = var.gcp_project_name
   region                = var.gcp_region
-  runtime               = "nodejs14"
-  timeout               = 20
+  runtime               = var.function_runtime 
+  timeout               = var.function_timeout
   event_trigger {
       event_type = "google cloud pub/sub"
       resource = "projects/udmi-staging/topics/udmi_target"
   }      
-  source_archive_bucket = google_storage_bucket.fu-bucket.name
-  source_archive_object = google_storage_bucket_object.fu-object.name
+  source_archive_bucket = google_storage_bucket.function-bucket.name
+  source_archive_object = google_storage_bucket_object.function-object.name
 }
 
 # IAM Configuration. This allows unauthenticated, public access to the function.
 # Change this if you require more control here.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = google_cloudfunctions_function.function.project
-  region         = google_cloudfunctions_function.function.region
-  cloud_function = google_cloudfunctions_function.function.name
+  project        = google_cloudfunctions_function.functions.project
+  region         = google_cloudfunctions_function.functions.region
+  cloud_function = google_cloudfunctions_function.functions.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
