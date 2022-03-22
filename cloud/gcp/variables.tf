@@ -121,3 +121,19 @@ variable "function_timeout" {
     default = 20
     description = "The amount of time in seconds allotted for the execution of the function."
 }
+variable "function_entry_point" {
+     type = string
+     default = "udmi-EventHandler"
+     description = "The name of a method in the function source which will be invoked when the function is executed."
+}
+variable "function_environment_variables" {
+  type        = map(string)
+  default     = {
+    MONGO_PROTOCOL= "mongodb+srv"
+    MONGO_USER= ""
+    MONGO_PWD= ""
+    MONGO_HOST= "preprod.imvgx.mongodb.net/udmi?retryWrites=true&w=majority"
+    MONGO_DB= "udmi"
+  }
+  description = "A set of key/value environment variable pairs to assign to the function."
+}

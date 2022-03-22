@@ -16,7 +16,7 @@ resource "google_storage_bucket_object" "function-object" {
 # The cloud function resource.
 resource "google_cloudfunctions_function" "functions" {
   available_memory_mb = var.function_memory
-  entry_point         = "http_EventHandler"
+  entry_point         = var.function_entry_point
   ingress_settings    = "ALLOW_ALL"
 
   name                  = var.function_name
@@ -27,7 +27,8 @@ resource "google_cloudfunctions_function" "functions" {
   event_trigger {
       event_type = "google cloud pub/sub"
       resource = "projects/udmi-staging/topics/udmi_target"
-  }      
+  } 
+  environment_variables = var.function_environment_variables     
   source_archive_bucket = google_storage_bucket.function-bucket.name
   source_archive_object = google_storage_bucket_object.function-object.name
 }
