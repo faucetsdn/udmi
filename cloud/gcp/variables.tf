@@ -99,3 +99,25 @@ variable "create_vpc" {
   default = false
   description = "we can use default vpc or new vpc"
 }
+
+## function variables 
+variable "function_name" {
+    type = string
+    default = "transform-EventHandler"
+    description = "functions name"
+}
+variable "function_memory" {
+    type = number
+    default = 256
+    description = "The amount of memory in megabytes allotted for the function to use."
+}
+variable "function_runtime" {
+    type = string 
+    default = "nodejs14"
+    description = "The runtime in which the function will be executed."
+}
+variable "function_timeout" {
+    type = number
+    default = 20
+    description = "The amount of time in seconds allotted for the execution of the function."
+}
