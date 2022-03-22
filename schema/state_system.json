@@ -23,6 +23,7 @@
     "hardware": {
       "type": "object",
       "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {
         "^make|model|sku|rev$": {
           "type": "string"
@@ -32,6 +33,7 @@
     "software": {
       "additionalProperties": false,
       "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {
         "^[a-z_]+$": {
           "type": "string"
@@ -42,6 +44,7 @@
       "title": "Config System State",
       "additionalProperties": false,
       "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {
         "^[a-z_]+$": {
           "type": "string"
