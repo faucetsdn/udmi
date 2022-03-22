@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * Container class for upgrading UDMI messages from older versions.
+ */
 public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
@@ -14,6 +17,12 @@ public class MessageUpgrader {
   private int patch;
   private int minor;
 
+  /**
+   * Create basic container for message upgrading.
+   *
+   * @param schemaName schema name to work with
+   * @param message    message to be upgraded
+   */
   public MessageUpgrader(String schemaName, JsonNode message) {
     this.message = message;
     this.schemaName = schemaName;
@@ -33,6 +42,9 @@ public class MessageUpgrader {
     }
   }
 
+  /**
+   * Update message to latest standard.
+   */
   public void upgrade() {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
@@ -66,10 +78,10 @@ public class MessageUpgrader {
       if (system.has("hardware") || system.has("software")) {
         throw new IllegalStateException("Node already has hardware/software field");
       }
-      JsonNode make_model = system.remove("make_model");
-      if (make_model != null) {
+      JsonNode makeModel = system.remove("make_model");
+      if (makeModel != null) {
         ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
-        hardwareNode.put("model", make_model.asText());
+        hardwareNode.put("model", makeModel.asText());
         system.set("hardware", hardwareNode);
       }
       JsonNode firmware = system.remove("firmware");
