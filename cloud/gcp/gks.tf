@@ -20,16 +20,15 @@ variable "gke_cluster_name" {
 
 variable "node_pool_name" {
   type = string
-  default = "pubber-swarm"
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
   type = string
-  default = "us-central1-f"
+  description = "The location (region or zone) of the cluster"
 }
 variable "machine_type" {
   type = string
-  default = "e2-standard-2"
+  description = "Type of machine"
 }
 
 #GKE CLUSTER
