@@ -34,7 +34,10 @@ resource "google_cloudfunctions_function" "function" {
   region                = var.gcp_region
   runtime               = "nodejs14"
   timeout               = 20
-  trigger_http          = true
+  event_trigger {
+      event_type = "google cloud pub/sub"
+      resource = "projects/udmi-staging/topics/udmi_target"
+  }      
   source_archive_bucket = google_storage_bucket.fu-bucket.name
   source_archive_object = google_storage_bucket_object.fu-object.name
 }
