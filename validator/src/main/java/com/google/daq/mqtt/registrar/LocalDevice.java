@@ -170,6 +170,7 @@ class LocalDevice {
           ES_CERT_TYPE, ES_CERT_FILE);
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
+  public static final String UDMI_VERSION = "1.3.14";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;
@@ -483,7 +484,7 @@ class LocalDevice {
   public Config deviceConfigObject() {
     Config config = new Config();
     config.timestamp = metadata.timestamp;
-    config.version = 1;
+    config.version = UDMI_VERSION;
     if (isGateway()) {
       config.gateway = new GatewayConfig();
       config.gateway.proxy_ids = getProxyDevicesList();

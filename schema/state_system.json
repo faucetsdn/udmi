@@ -39,6 +39,7 @@
       }
     },
     "config": {
+      "title": "Config System State",
       "additionalProperties": false,
       "type": "object",
       "patternProperties": {
