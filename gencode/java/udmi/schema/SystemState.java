@@ -66,12 +66,6 @@ public class SystemState {
      */
     @JsonProperty("software")
     public Map<String, String> software;
-    /**
-     * Config System State
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("config")
     public Map<String, String> config;
     /**

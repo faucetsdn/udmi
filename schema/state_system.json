@@ -41,7 +41,6 @@
       }
     },
     "config": {
-      "title": "Config System State",
       "additionalProperties": false,
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
