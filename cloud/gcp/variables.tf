@@ -125,3 +125,7 @@ variable "function_environment_variables" {
   type        = map(string)
   description = "A set of key/value environment variable pairs to assign to the function."
 }
+variable "bucket-source" {
+  type = string
+   description = "The contents of this directory will be archived and used as the function source."
+}
