@@ -18,6 +18,11 @@ public class ConfigValidator extends SequenceValidator {
   public static final String SYSTEM_CONFIG_APPLY = "system.config.apply";
 
   @Test
+  public void always_fail() {
+    throw new RuntimeException("Failure.");
+  }
+
+  @Test
   public void system_last_update() {
     deviceConfig.system.min_loglevel = 400;
     clearLogs();

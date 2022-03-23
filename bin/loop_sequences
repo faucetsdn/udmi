@@ -32,12 +32,12 @@ EXPECTED_SEQUENCES=2
 validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
 rm -rf out/devices/$device_id
 
 exit_code=0
-for test_class in DiscoveryValidator ConfigValidator WritebackValidator; do
+for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
     CLASS=com.google.daq.mqtt.validator.validations.$test_class
     echo $JAVA_CMD $CLASS
