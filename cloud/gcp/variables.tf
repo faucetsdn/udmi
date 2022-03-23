@@ -99,3 +99,29 @@ variable "create_vpc" {
   default = false
   description = "we can use default vpc or new vpc"
 }
+
+## function variables 
+variable "function_name" {
+    type = string
+    description = "functions name"
+}
+variable "function_memory" {
+    type = number
+    description = "The amount of memory in megabytes allotted for the function to use."
+}
+variable "function_runtime" {
+    type = string 
+    description = "The runtime in which the function will be executed."
+}
+variable "function_timeout" {
+    type = number
+    description = "The amount of time in seconds allotted for the execution of the function."
+}
+variable "function_entry_point" {
+     type = string
+     description = "The name of a method in the function source which will be invoked when the function is executed."
+}
+variable "function_environment_variables" {
+  type        = map(string)
+  description = "A set of key/value environment variable pairs to assign to the function."
+}
