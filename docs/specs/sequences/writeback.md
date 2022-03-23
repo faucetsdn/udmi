@@ -77,7 +77,7 @@ An example of how the `state_etag` works and the race condition this field preve
 
 When the device receives a config, it should check that `set_value_expiry` exists and is greater than the timestamp field in the config, sending an invalid `value_state` if not. 
 
-If the `set_value_expiry` has already passed, then there’s no write to perform, and a state should be sent with a missing `value_state`.
+If the `set_value_expiry` has already passed, then there’s no write to perform, so the state of the device shouldn't change (i.e. this is a no-op)
 
 If the config passes these checks, then the device should 
 1) perform the write
