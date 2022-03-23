@@ -34,7 +34,7 @@ public class SequenceTestRunner {
     System.err.println("Test successes: " + successes);
     failures.forEach(failure -> {
       System.err.println(
-          "Test failure: " + failure.getDescription().getMethodName() + failure.getMessage());
+          "Test failure: " + failure.getDescription().getMethodName() + " " + failure.getMessage());
     });
     System.exit(failures.isEmpty() ? 0 : 1);
   }
