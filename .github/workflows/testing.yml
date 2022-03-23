@@ -88,4 +88,4 @@ jobs:
         if: ${{ always() }}
         run: |
           cat pubber.out || true
-          more `find out/groups/ -type f`
+          more out/*.json

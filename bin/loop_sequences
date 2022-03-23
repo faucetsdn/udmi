@@ -48,13 +48,6 @@ for test_class in DiscoveryValidator ConfigValidator WritebackValidator; do
         echo Sequence test $test_class exited with error code $result
         exit_code=$result
     fi
-
-    mkdir -p out/groups/$test_class/
-    for file in out/*.json; do
-        # Format output so it looks nice...
-        jq < $file > out/groups/$test_class/${file#out/}
-        rm $file
-    done
 done
 
 echo Done with test sequence execution, exit $exit_code.
