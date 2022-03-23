@@ -14,10 +14,7 @@ COPY $BUILD_DIR $WEB_DIR
 # Copy the custom nginx template file into the nginx folder
 # to allow envsubst to pick it up and generate a nginx.conf file
 # with the replaced docker runtime env variables.
-COPY prod/nginx.conf /etc/nginx/templates/nginx.conf.template
-
-# Copy the docker entrypoint file to the root.
-COPY prod/docker-entrypoint.sh /
+COPY prod/nginx.conf /etc/nginx/
 
 # Launch nginx.
 CMD ["nginx", "-g", "daemon off;"]
