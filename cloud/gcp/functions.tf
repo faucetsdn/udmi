@@ -10,7 +10,7 @@ resource "google_storage_bucket_object" "function-object" {
   # a redeployment when it has!
   name   = "${var.gcp_project_id}-${var.function_name}"
   bucket = google_storage_bucket.function-bucket.name
-  source = "./udmd/event-handler/index.js"
+  source = var.bucket-source 
 }
 
 # The cloud function resource.
@@ -24,7 +24,7 @@ resource "google_cloudfunctions_function" "functions" {
   region                = var.gcp_region
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
-  event_trigger {
+  event_trigger   {
       event_type = "google cloud pub/sub"
       resource = "projects/udmi-staging/topics/udmi_target"
   } 
