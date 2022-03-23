@@ -22,13 +22,10 @@ scan-docker:
   rules:
     - when: never
     
-build-docker:
-  rules:
-    - when: never
-
 publish-docker:
-  rules:
-    - when: never
+  variables: 
+    VERSION: $CI_PIPELINE_IID
+
     
     
 
