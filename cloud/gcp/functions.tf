@@ -51,5 +51,5 @@ resource "google_cloudfunctions_function_iam_member" "invoker" {
   cloud_function = google_cloudfunctions_function.functions.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = var.gcp_access_group
 }
