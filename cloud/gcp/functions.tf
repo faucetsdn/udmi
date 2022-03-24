@@ -35,7 +35,7 @@ resource "google_cloudfunctions_function" "functions" {
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
   event_trigger   {
-      event_type = "google_pubsub_topic.udmd_pubsub"
+      event_type = "google_pubsub_topic.publish"
       resource   = "projects/var.gcp_project_id/topics/udmi_target"
   } 
   environment_variables = var.function_environment_variables     
