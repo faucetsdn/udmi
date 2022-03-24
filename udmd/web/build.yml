@@ -2,7 +2,7 @@ cache:
   key: web-${CI_COMMIT_REF_SLUG}
   paths:
     - udmd/web/node_modules/
-    - udmd/web/build/
+    - udmd/web/dist/
 
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
