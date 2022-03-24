@@ -61,7 +61,6 @@ jobs:
           bin/setup_base
           bin/clone_model
       - name: telemetry validator
-        if: ${{ always() }}
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
@@ -71,7 +70,6 @@ jobs:
           cat out/devices/AHU-1/state.json && echo
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: sequence tests
-        if: ${{ always() }}
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
