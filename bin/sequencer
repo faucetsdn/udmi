@@ -7,8 +7,8 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 
-if [ $# -lt 3 -o $# -gt 4 ]; then
-    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO]
+if [[ $# < 3 ]]; then
+    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
     false
 fi
 
@@ -18,6 +18,9 @@ device_id=$3
 shift 3
 
 serial_no=${1:-//}
+shift || true
+
+test_names="$@"
 
 cd $ROOT_DIR
 
@@ -34,7 +37,7 @@ EOF
 
 cat /tmp/validator_config.json
 
-bin/loop_sequences 2>&1 | tee $TEST_LOG
+bin/loop_sequences $test_names 2>&1 | tee $TEST_LOG
 
 echo
 # Sort by test name (6th field)

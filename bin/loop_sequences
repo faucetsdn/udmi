@@ -5,9 +5,18 @@ export VALIDATOR_CONFIG=/tmp/validator_config.json
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-if [[ $# != 0 ]]; then
-    echo Usage: $0 [-n]
+if [[ $1 == '-h' ]]; then
+    echo Usage: $0 [TEST_NAMES...]
     false
+fi
+
+test_names="$@"
+if [[ -z $test_names ]]; then
+    test_names=" "
+    test_prefix=
+else
+    test_prefix=\#
+    echo Executing specific tests $test_names
 fi
 
 echo Parsing $VALIDATOR_CONFIG:
@@ -36,12 +45,11 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
 rm -rf out/devices/$device_id
 
-#test_method=\#broken_config
-
 exit_code=2
-for test_class in ConfigValidator WritebackValidator; do
+for test_name in $test_names; do
+  for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
-    target=$test_class$test_method
+    target=$test_class$test_prefix$test_name
     CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
     timeout 5m $JAVA_CMD $CLASS
@@ -52,9 +60,10 @@ for test_class in ConfigValidator WritebackValidator; do
     elif [[ $result != 0 ]]; then
         echo Sequence test $target exited with error code $result.
         exit_code=$result
-    else
+    elif [[ $exit_code == 2 ]]; then
         exit_code=0;
     fi
+  done
 done
 
 echo Done with test sequence execution, exit $exit_code.
