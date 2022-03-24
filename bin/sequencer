@@ -36,6 +36,7 @@ cat <<EOF > /tmp/validator_config.json
 EOF
 
 cat /tmp/validator_config.json
+echo Running tools version `(cd $ROOT_DIR; git describe)`
 
 bin/loop_sequences $test_names 2>&1 | tee $TEST_LOG
 
@@ -47,5 +48,7 @@ if [[ `wc -l < /tmp/sequencer.out` == 0 ]]; then
     echo No test results found.
     exit 1
 fi
+
+bin/check_version
 
 echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`

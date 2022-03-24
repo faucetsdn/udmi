@@ -44,7 +44,7 @@ public class Config {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    public String version;
     /**
      * System Config
      * <p>

@@ -13,9 +13,7 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 1
+      "type": "string"
     },
     "partial_update": {
       "description": "Indicates if this is a partial update (only some points may be included)",
