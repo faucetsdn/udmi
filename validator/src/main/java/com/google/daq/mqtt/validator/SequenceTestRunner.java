@@ -18,8 +18,8 @@ public class SequenceTestRunner {
   private static final int EXIT_STATUS_NO_TESTS = 2;
 
   /**
-   * Thundercats go!
-   * 
+   * Thundercats are go.
+   *
    * @param args Test classes/method to test.
    *
    * @throws ClassNotFoundException For bad test class
