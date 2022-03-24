@@ -40,4 +40,9 @@ echo
 # Sort by test name (6th field)
 fgrep 'RESULT ' $TEST_LOG | sort -k 6 | tee /tmp/sequencer.out
 
+if [[ `wc -l < /tmp/sequencer.out` == 0 ]]; then
+    echo No test results found.
+    exit 1
+fi
+
 echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`

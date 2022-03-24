@@ -36,7 +36,7 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
 rm -rf out/devices/$device_id
 
-test_method=\#broken_config
+#test_method=\#broken_config
 
 exit_code=2
 for test_class in ConfigValidator WritebackValidator; do
