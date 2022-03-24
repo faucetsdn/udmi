@@ -40,12 +40,8 @@ echo
 # Sort by test name (6th field)
 fgrep 'RESULT ' $TEST_LOG | sort -k 6 | tee /tmp/sequencer.out
 
-<<<<<<< HEAD
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-echo SUMMARY `fgrep 'RESULT ' $TEST_LOG | awk '{print $3, $2}' | sort | awk '{print $2}'`
-
 bin/check_version
-=======
+
 echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`
->>>>>>> master
