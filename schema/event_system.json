@@ -34,6 +34,15 @@
         "mem_free_mb": {
           "type": "number"
         },
+        "store_total_mb": {
+          "type": "number"
+        },
+        "store_free_mb": {
+          "type": "number"
+        },
+        "cpu_temp_c": {
+          "type": "number"
+        },
         "cpu_load_5m": {
           "type": "number"
         }

@@ -15,9 +15,10 @@
       "python": "3.8",
       "monkey_rabbits": "These are all arbitrary key/value pairs"
     },
-    "config": {  // Keys defined by hardwre type lookup, values are unique per device.
-      "wpa_key": "ab7879e2873c871e",
-      "iot_config": "cc8d93e8f87a7ec9"
+    "params": {  // Keys defined by hardwre type lookup, values are per-device.
+      "wpa_key_hash": "ab7879e2873c871e",
+      "iot_config_hash": "cc8d93e8f87a7ec9",
+      "user_login": "hacker012"
     },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
