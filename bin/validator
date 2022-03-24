@@ -31,3 +31,5 @@ else
     echo No subscription supplied, assuming UDMI reflector.
     $ROOT_DIR/validator/bin/validate $project_id schema reflect -- $site_path
 fi
+
+bin/check_version
