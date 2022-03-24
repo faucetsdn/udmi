@@ -8,6 +8,11 @@ data "archive_file" "source" {
   source_dir  = "../src"
   output_path = "./function.zip"
 }
+resource "google_pubsub_topic" "udmd_pubsub" {
+  project = var.gcp_project_id
+  name    = "udmi_target"
+}
+
 
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
@@ -30,8 +35,8 @@ resource "google_cloudfunctions_function" "functions" {
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
   event_trigger   {
-      event_type = "cloud pub/sub"
-      resource = "projects/udmi-staging/topics/udmi_target"
+      event_type = "google_pubsub_topic.udmd_pubsub"
+      resource = "google_pubsub_topic.udmd_pubsub.name"
   } 
   environment_variables = var.function_environment_variables     
   source_archive_bucket = google_storage_bucket.function-bucket.name
