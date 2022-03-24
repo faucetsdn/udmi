@@ -19,8 +19,10 @@ jobs:
           sudo apt-get install openjdk-11-jdk
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
       - name: Running unit tests
+        if: ${{ always() }}
         run: bin/test_schema -p
       - name: Run registrar validation
+        if: ${{ always() }}
         run: bin/test_registrar
 
   ui:
@@ -59,6 +61,7 @@ jobs:
           bin/setup_base
           bin/clone_model
       - name: telemetry validator
+        if: ${{ always() }}
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
@@ -68,6 +71,7 @@ jobs:
           cat out/devices/AHU-1/state.json && echo
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: sequence tests
+        if: ${{ always() }}
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
