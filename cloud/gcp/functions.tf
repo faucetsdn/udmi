@@ -5,7 +5,7 @@ resource "google_storage_bucket" "function-bucket" {
 
 data "archive_file" "source" {
   type = "zip"
-  source_dir  = "../src"
+  source_dir  = "./src"
   output_path = "./function.zip"
 }
 resource "google_pubsub_topic" "udmd_pubsub" {
@@ -36,7 +36,7 @@ resource "google_cloudfunctions_function" "functions" {
   timeout               = var.function_timeout
   event_trigger   {
       event_type = "google_pubsub_topic.udmd_pubsub"
-      resource = "google_pubsub_topic.udmd_pubsub.name"
+      resource   = "projects/var.gcp_project_id/topics/udmi_target"
   } 
   environment_variables = var.function_environment_variables     
   source_archive_bucket = google_storage_bucket.function-bucket.name
