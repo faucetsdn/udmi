@@ -88,13 +88,13 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Major version of the UDMI schema</p>
 </span>
             
 
             
-            <p><span class="badge badge-light restriction numeric-restriction" id="version_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>1</code></span></p>
+            
 
             
             </div>
@@ -161,13 +161,54 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#system_min_loglevel" onclick="anchorLink('system_min_loglevel')">min_loglevel</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+    <a href="#system_min_loglevel" onclick="anchorLink('system_min_loglevel')">min_loglevel</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 300</span><br/>
 <span class="description"><p>The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.</p>
 </span>
             
 
             
             <p><span class="badge badge-light restriction numeric-restriction" id="system_min_loglevel_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code></span></p>
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_metrics_rate_sec">
+    <div class="card">
+        <div class="card-header" id="headingsystem_metrics_rate_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_metrics_rate_sec"
+                        aria-expanded="" aria-controls="system_metrics_rate_sec" onclick="setAnchor('#system_metrics_rate_sec')"><span class="property-name">metrics_rate_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="system_metrics_rate_sec"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_metrics_rate_sec"
+             data-parent="#accordionsystem_metrics_rate_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_metrics_rate_sec" onclick="anchorLink('system_metrics_rate_sec')">metrics_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 600</span><br/>
+<span class="description"><p>The rate at which the system should send system event metric updates. 0 indicates no updates.</p>
+</span>
+            
+
+            
+            <p><span class="badge badge-light restriction numeric-restriction" id="system_metrics_rate_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
 
             
             </div>

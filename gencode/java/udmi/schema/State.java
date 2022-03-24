@@ -43,7 +43,7 @@ public class State {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version = 1;
+    public String version;
     /**
      * System State
      * <p>

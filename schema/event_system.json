@@ -13,14 +13,39 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 1
+      "type": "string"
     },
     "logentries": {
       "type": "array",
       "items": {
         "$ref": "file:common.json#/definitions/entry"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restart_count": {
+          "type": "number"
+        },
+        "mem_total_mb": {
+          "type": "number"
+        },
+        "mem_free_mb": {
+          "type": "number"
+        },
+        "store_total_mb": {
+          "type": "number"
+        },
+        "store_free_mb": {
+          "type": "number"
+        },
+        "cpu_temp_c": {
+          "type": "number"
+        },
+        "cpu_load_5m": {
+          "type": "number"
+        }
       }
     }
   },
