@@ -39,7 +39,7 @@ rm -rf out/devices/$device_id
 exit_code=0
 for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
-    CLASS=com.google.daq.mqtt.validator.validations.$test_class
+    CLASS=com.google.daq.mqtt.validator.validations.$test_class\#valid_serial_no
     echo $JAVA_CMD $CLASS
     timeout 5m $JAVA_CMD $CLASS
     result=$?
