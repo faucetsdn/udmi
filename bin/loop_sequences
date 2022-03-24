@@ -12,7 +12,7 @@ fi
 
 test_names="$@"
 if [[ -z $test_names ]]; then
-    test_names=" "
+    test_names="."
     test_prefix=
 else
     test_prefix=\#
@@ -47,6 +47,9 @@ rm -rf out/devices/$device_id
 
 exit_code=2
 for test_name in $test_names; do
+  if [[ $test_name == . ]]; then
+    test_name=
+  fi
   for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
     target=$test_class$test_prefix$test_name
