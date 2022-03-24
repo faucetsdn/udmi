@@ -1,7 +1,4 @@
-Validating 1 schemas
-  Validating 1 files against envelope.json
-    Against input envelope.tests/errors2.json
-      3 schema violations found
-        ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"
-        ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "FCUs_02_NW_12"
-        object has missing required properties (["projectId","subFolder"])
+3 schema violations found
+  ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"
+  ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "FCUs_02_NW_12"
+  object has missing required properties (["projectId","subFolder"])

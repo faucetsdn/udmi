@@ -1,5 +1,2 @@
-Validating 1 schemas
-  Validating 1 files against state.json
-    Against input state.tests/scan_bad.json
-      1 schema violations found
-        object instance has properties which are not allowed by the schema: ["BACnet"]
+1 schema violations found
+  object instance has properties which are not allowed by the schema: ["BACnet"]

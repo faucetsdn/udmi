@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,40 +18,17 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "make_model",
-    "serial_no",
-    "firmware",
     "last_config",
     "operational",
+    "serial_no",
+    "hardware",
+    "software",
+    "config",
     "status"
 })
 @Generated("jsonschema2pojo")
 public class SystemState {
 
-    /**
-     * The make and model of the physical device
-     * (Required)
-     * 
-     */
-    @JsonProperty("make_model")
-    @JsonPropertyDescription("The make and model of the physical device")
-    public String make_model;
-    /**
-     * The serial number of the physical device
-     * (Required)
-     * 
-     */
-    @JsonProperty("serial_no")
-    @JsonPropertyDescription("The serial number of the physical device")
-    public String serial_no;
-    /**
-     * Information about the device firmware
-     * (Required)
-     * 
-     */
-    @JsonProperty("firmware")
-    @JsonPropertyDescription("Information about the device firmware")
-    public Firmware firmware;
     /**
      * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).
      * (Required)
@@ -67,6 +45,30 @@ public class SystemState {
     @JsonProperty("operational")
     public Boolean operational;
     /**
+     * The serial number of the physical device
+     * (Required)
+     * 
+     */
+    @JsonProperty("serial_no")
+    @JsonPropertyDescription("The serial number of the physical device")
+    public java.lang.String serial_no;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("hardware")
+    public Map<String, String> hardware;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("software")
+    public Map<String, String> software;
+    @JsonProperty("config")
+    public Map<String, String> config;
+    /**
      * Entry
      * <p>
      * 
@@ -78,11 +80,12 @@ public class SystemState {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
-        result = ((result* 31)+((this.firmware == null)? 0 :this.firmware.hashCode()));
-        result = ((result* 31)+((this.make_model == null)? 0 :this.make_model.hashCode()));
+        result = ((result* 31)+((this.config == null)? 0 :this.config.hashCode()));
         result = ((result* 31)+((this.last_config == null)? 0 :this.last_config.hashCode()));
+        result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -96,7 +99,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return (((((((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational)))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.firmware == rhs.firmware)||((this.firmware!= null)&&this.firmware.equals(rhs.firmware))))&&((this.make_model == rhs.make_model)||((this.make_model!= null)&&this.make_model.equals(rhs.make_model))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.config == rhs.config)||((this.config!= null)&&this.config.equals(rhs.config))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

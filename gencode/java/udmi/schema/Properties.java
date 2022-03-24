@@ -7,6 +7,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -34,12 +35,13 @@ public class Properties {
     @JsonProperty("key_type")
     public Properties.Key_type key_type;
     /**
-     * 
+     * Major version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
-    public Properties.Version version;
+    @JsonPropertyDescription("Major version of the UDMI schema")
+    public String version;
     /**
      * 
      * (Required)
@@ -139,45 +141,6 @@ public class Properties {
         @JsonCreator
         public static Properties.Key_type fromValue(String value) {
             Properties.Key_type constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
-    }
-
-    @Generated("jsonschema2pojo")
-    public enum Version {
-
-        _1("1");
-        private final String value;
-        private final static Map<String, Properties.Version> CONSTANTS = new HashMap<String, Properties.Version>();
-
-        static {
-            for (Properties.Version c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Version(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static Properties.Version fromValue(String value) {
-            Properties.Version constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {
