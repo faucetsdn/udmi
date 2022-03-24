@@ -5,30 +5,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "make_model": {
-      "description": "The make and model of the physical device",
-      "type": "string",
-      "examples": ["Delta Controls O3-DIN-SRC", "Arup Gateway"]
-    },
-    "serial_no": {
-      "description": "The serial number of the physical device",
-      "type": "string",
-      "examples": ["A1B2C3D4", "00001"]
-    },
-    "firmware": {
-      "description": "Information about the device firmware",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "version": {
-          "description": "Version of the local firmware",
-          "type": "string"
-        }
-      },
-      "required": [
-        "version"
-      ]
-    },
     "last_config": {
       "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).",
       "type": "string",
@@ -39,15 +15,50 @@
       "comment": "Operational status of the device",
       "type": "boolean"
     },
+    "serial_no": {
+      "description": "The serial number of the physical device",
+      "type": "string",
+      "examples": ["A1B2C3D4", "00001"]
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, String>",
+      "patternProperties": {
+        "^make|model|sku|rev$": {
+          "type": "string"
+        }
+      }
+    },
+    "software": {
+      "additionalProperties": false,
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
+    "params": {
+      "additionalProperties": false,
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     }
   },
   "required": [
-    "make_model",
     "serial_no",
     "last_config",
-    "firmware",
+    "hardware",
+    "software",
     "operational"
   ]
 }

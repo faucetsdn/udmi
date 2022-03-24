@@ -110,9 +110,8 @@ public class Registrar {
       registrar.writeErrors();
       registrar.shutdown();
     } catch (ExceptionMap em) {
-      ErrorTree errorTree = ExceptionMap.format(em, ERROR_FORMAT_INDENT);
-      errorTree.write(System.err);
-      throw new RuntimeException("mapped exceptions");
+      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
+      throw new RuntimeException("mapped exceptions", em);
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new RuntimeException("main exception", ex);

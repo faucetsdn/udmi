@@ -45,7 +45,7 @@ public class DiscoveryEvent {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    public java.lang.String version;
     /**
      * The event's discovery scan trigger's generation timestamp
      * (Required)

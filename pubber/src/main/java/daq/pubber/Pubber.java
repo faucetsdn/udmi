@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Config;
 import udmi.schema.Entry;
-import udmi.schema.Firmware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
@@ -85,6 +84,7 @@ public class Pubber {
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
+  public static final String UDMI_VERSION = "1.3.14";
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -307,9 +307,11 @@ public class Pubber {
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
-    deviceState.system.make_model = "DAQ_pubber";
-    deviceState.system.firmware = new Firmware();
-    deviceState.system.firmware.version = "v1";
+    deviceState.system.hardware = new HashMap<>();
+    deviceState.system.hardware.put("make", "BOS");
+    deviceState.system.hardware.put("model", "pubber");
+    deviceState.system.software = new HashMap<>();
+    deviceState.system.software.put("firmware", "v1");
     devicePoints.extraField = configuration.extraField;
 
     stateDirty = true;
@@ -641,7 +643,7 @@ public class Pubber {
   }
 
   private void sendDeviceMessage(String deviceId) {
-    devicePoints.version = 1;
+    devicePoints.version = UDMI_VERSION;
     devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
       info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
@@ -661,7 +663,7 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     SystemEvent systemEvent = new SystemEvent();
-    systemEvent.version = 1;
+    systemEvent.version = UDMI_VERSION;
     systemEvent.timestamp = new Date();
     systemEvent.logentries.add(report);
     publishMessage(configuration.deviceId, SYSTEM_TOPIC, systemEvent);

@@ -16,9 +16,8 @@
       ]
     },
     "version": {
-      "enum": [
-        1
-      ]
+      "description": "Major version of the UDMI schema",
+      "type": "string"
     },
     "connect": {
       "enum": [
