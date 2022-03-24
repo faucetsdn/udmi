@@ -1,8 +1,5 @@
-Validating 1 schemas
-  Validating 1 files against event_system.json
-    Against input event_system.tests/errors.json
-      4 schema violations found
-        ECMA 262 regex "^[a-z][._a-zA-Z]*[a-zA-Z]$" does not match input string "com.testCategory$"
-        instance type (string) does not match any allowed primitive type (allowed: ["object"])
-        numeric instance is lower than the required minimum (minimum: 100, found: 60)
-        object has missing required properties (["message","timestamp"])
+4 schema violations found
+  ECMA 262 regex "^[a-z][._a-zA-Z]*[a-zA-Z]$" does not match input string "com.testCategory$"
+  instance type (string) does not match any allowed primitive type (allowed: ["object"])
+  numeric instance is lower than the required minimum (minimum: 100, found: 60)
+  object has missing required properties (["message","timestamp"])

@@ -1,5 +1,2 @@
-Validating 1 schemas
-  Validating 1 files against config.json
-    Against input config.tests/empty.json
-      1 schema violations found
-        object has missing required properties (["timestamp","version"])
+1 schema violations found
+  object has missing required properties (["timestamp","version"])

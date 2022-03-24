@@ -21,7 +21,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "logentries"
+    "logentries",
+    "metrics"
 })
 @Generated("jsonschema2pojo")
 public class SystemEvent {
@@ -41,13 +42,16 @@ public class SystemEvent {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    public String version;
     @JsonProperty("logentries")
     public List<Entry> logentries = new ArrayList<Entry>();
+    @JsonProperty("metrics")
+    public Metrics metrics;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.metrics == null)? 0 :this.metrics.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.logentries == null)? 0 :this.logentries.hashCode()));
@@ -63,7 +67,7 @@ public class SystemEvent {
             return false;
         }
         SystemEvent rhs = ((SystemEvent) other);
-        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
+        return (((((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
     }
 
 }

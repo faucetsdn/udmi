@@ -89,7 +89,7 @@ for subset in $subsets; do
           reltest=$reldir:$(realpath --relative-to $testdir $testpath)
         fi
         (
-            (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -- $schemaname files $reltest --) 2> $output || true
+            (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -- $schemaname files $reltest --) || true
             if [ $force == y ]; then
                 diff $output $expected || echo Updating $expected && cp $output $expected
             else

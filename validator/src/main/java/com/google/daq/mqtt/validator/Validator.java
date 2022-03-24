@@ -632,14 +632,42 @@ public class Validator {
 
   private void validateFile(
       String prefix, String targetFile, String schemaName, JsonSchema schema) {
+    final File targetOut = getTargetPath(prefix, targetFile.replace(".json", ".out"));
     try {
       File fullPath = getFullPath(prefix, new File(targetFile));
       Map<String, Object> message = OBJECT_MAPPER.readValue(fullPath, Map.class);
       sanitizeMessage(schemaName, message);
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
+      JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
+      upgradeMessage(schemaName, jsonNode);
+      OBJECT_MAPPER.writeValue(getTargetPath(prefix, targetFile), jsonNode);
+      validateJsonNode(schema, jsonNode);
+      writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
+      writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Against input " + targetFile, e);
     }
+  }
+
+  private void writeExceptionOutput(File targetOut, Exception e) {
+    try (OutputStream outputStream = new FileOutputStream(targetOut)) {
+      if (e != null) {
+        ExceptionMap.format(e, ERROR_FORMAT_INDENT).write(outputStream);
+      }
+    } catch (Exception e2) {
+      throw new RuntimeException("While writing " + targetOut, e2);
+    }
+  }
+
+  private File getTargetPath(String baseFile, String addedFile) {
+    File prefix = new File(baseFile);
+    File outBase = new File(prefix.getParentFile(), "out/tests");
+    File full = new File(outBase, addedFile);
+    full.getParentFile().mkdirs();
+    return full;
+  }
+
+  private void upgradeMessage(String schemaName, JsonNode jsonNode) {
+    new MessageUpgrader(schemaName, jsonNode).upgrade();
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
