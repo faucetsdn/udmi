@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "serial_no",
     "hardware",
     "software",
-    "config",
+    "params",
     "status"
 })
 @Generated("jsonschema2pojo")
@@ -66,8 +66,8 @@ public class SystemState {
      */
     @JsonProperty("software")
     public Map<String, String> software;
-    @JsonProperty("config")
-    public Map<String, String> config;
+    @JsonProperty("params")
+    public Map<String, String> params;
     /**
      * Entry
      * <p>
@@ -82,8 +82,8 @@ public class SystemState {
         int result = 1;
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
+        result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
-        result = ((result* 31)+((this.config == null)? 0 :this.config.hashCode()));
         result = ((result* 31)+((this.last_config == null)? 0 :this.last_config.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
@@ -99,7 +99,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.config == rhs.config)||((this.config!= null)&&this.config.equals(rhs.config))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

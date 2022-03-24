@@ -40,7 +40,7 @@
         }
       }
     },
-    "config": {
+    "params": {
       "additionalProperties": false,
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
