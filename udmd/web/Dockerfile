@@ -1,6 +1,6 @@
 FROM nginx:1.21.5-alpine
 
-ENV BUILD_DIR dist/udmd-web
+ENV BUILD_DIR udmd/web/dist/udmd-web
 ENV WEB_DIR /usr/share/nginx/html 
 ENV HOME_DIR /usr/share/nginx
 
