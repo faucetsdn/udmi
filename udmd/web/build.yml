@@ -20,8 +20,7 @@ build-node:
     - npm install
     - npm install -g @angular/cli
     - npm run build
-    - ls -ltr
-    
+
 sonarqube-scan:
   rules:
     - when: never
