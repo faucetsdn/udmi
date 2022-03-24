@@ -6,7 +6,7 @@ resource "google_storage_bucket" "function-bucket" {
 data "archive_file" "source" {
   type = "zip"
   source_dir  = "../src"
-  output_path = "/tmp/function.zip"
+  output_path = "./function.zip"
 }
 
 # Add the zipped file to the bucket.
@@ -16,7 +16,7 @@ resource "google_storage_bucket_object" "function-object" {
   # a redeployment when it has!
   name   = "index.zip"
   bucket = google_storage_bucket.function-bucket.name
-  source = data.archive_file.source.output_path 
+  source = data.archive_file.source.output_path
 }
 
 # The cloud function resource.
