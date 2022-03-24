@@ -9,7 +9,15 @@
       "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.",
       "type": "integer",
       "minimum": 100,
-      "maximum": 800
+      "maximum": 800,
+      "default": 300
+    },
+    "metrics_rate_sec": {
+      "description": "The rate at which the system should send system event metric updates. 0 indicates no updates.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400,
+      "default": 600
     }
   }
 }

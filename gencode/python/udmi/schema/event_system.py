@@ -1,23 +1,29 @@
 """Generated class for event_system.json"""
 
 
-class ObjectB73078E6:
+class Object32FA76A9:
   """Generated schema class"""
 
   def __init__(self):
     self.restart_count = None
     self.mem_total_mb = None
     self.mem_free_mb = None
+    self.store_total_mb = None
+    self.store_free_mb = None
+    self.cpu_temp_c = None
     self.cpu_load_5m = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = ObjectB73078E6()
+    result = Object32FA76A9()
     result.restart_count = source.get('restart_count')
     result.mem_total_mb = source.get('mem_total_mb')
     result.mem_free_mb = source.get('mem_free_mb')
+    result.store_total_mb = source.get('store_total_mb')
+    result.store_free_mb = source.get('store_free_mb')
+    result.cpu_temp_c = source.get('cpu_temp_c')
     result.cpu_load_5m = source.get('cpu_load_5m')
     return result
 
@@ -27,7 +33,7 @@ class ObjectB73078E6:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectB73078E6.from_dict(source[key])
+      result[key] = Object32FA76A9.from_dict(source[key])
     return result
 
   @staticmethod
@@ -45,6 +51,12 @@ class ObjectB73078E6:
       result['mem_total_mb'] = self.mem_total_mb # 5
     if self.mem_free_mb:
       result['mem_free_mb'] = self.mem_free_mb # 5
+    if self.store_total_mb:
+      result['store_total_mb'] = self.store_total_mb # 5
+    if self.store_free_mb:
+      result['store_free_mb'] = self.store_free_mb # 5
+    if self.cpu_temp_c:
+      result['cpu_temp_c'] = self.cpu_temp_c # 5
     if self.cpu_load_5m:
       result['cpu_load_5m'] = self.cpu_load_5m # 5
     return result
@@ -67,7 +79,7 @@ class SystemEvent:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.logentries = Entry.array_from(source.get('logentries'))
-    result.metrics = ObjectB73078E6.from_dict(source.get('metrics'))
+    result.metrics = Object32FA76A9.from_dict(source.get('metrics'))
     return result
 
   @staticmethod

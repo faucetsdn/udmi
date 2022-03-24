@@ -18,9 +18,7 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "default": 1,
-      "const": 1
+      "type": "string"
     },
     "system": {
       "$ref": "file:state_system.json#"

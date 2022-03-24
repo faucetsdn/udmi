@@ -13,9 +13,7 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 1
+      "type": "string"
     },
     "generation": {
       "description": "The event's discovery scan trigger's generation timestamp",
