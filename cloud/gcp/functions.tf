@@ -3,14 +3,20 @@ resource "google_storage_bucket" "function-bucket" {
   location = var.gcp_region
 }
 
+data "archive_file" "source" {
+  type = "zip"
+  source_dir  = "../src"
+  output_path = "/tmp/function.zip"
+}
+
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
   # Use an MD5 here. If there's no changes to the source code, this won't change either.
   # We can avoid unnecessary redeployments by validating the code is unchanged, and forcing
   # a redeployment when it has!
-  name   = "${var.gcp_project_id}-${var.function_name}"
+  name   = "index.zip"
   bucket = google_storage_bucket.function-bucket.name
-  source = var.bucket-source 
+  source = data.archive_file.source.output_path 
 }
 
 # The cloud function resource.
