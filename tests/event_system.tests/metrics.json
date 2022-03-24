@@ -5,8 +5,8 @@
     "restart_count": 10,
     "mem_total_mb": 25164.88,
     "mem_free_mb": 16104.33,
-    "disk_total_mb": 250164.88,
-    "disk_free_mb": 169104.33,
+    "store_total_mb": 250164.88,
+    "store_free_mb": 169104.33,
     "cpu_load_5m": 0.82
   }
 }
