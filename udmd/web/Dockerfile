@@ -12,7 +12,7 @@ COPY $BUILD_DIR $WEB_DIR
 # Copy the custom nginx template file into the nginx folder
 # to allow envsubst to pick it up and generate a nginx.conf file
 # with the replaced docker runtime env variables.
-COPY prod/nginx.conf /etc/nginx
+COPY udmd/web/prod/nginx.conf /etc/nginx
 
 
 
