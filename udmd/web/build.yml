@@ -2,6 +2,7 @@ cache:
   key: web-${CI_COMMIT_REF_SLUG}
   paths:
     - udmd/web/node_modules/
+    - udmd/web/build/
 
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
@@ -14,6 +15,12 @@ stages:
   - static-scan
   - publish-docker
 
+build-node:
+  script:
+    - npm install
+    - npm install -g @angular/cli
+    - npm run build
+    
 sonarqube-scan:
   rules:
     - when: never
