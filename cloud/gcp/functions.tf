@@ -11,7 +11,6 @@ data "archive_file" "source" {
 
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
-  # Use an MD5 here. If there's no changes to the source code, this won't change either.
   # We can avoid unnecessary redeployments by validating the code is unchanged, and forcing
   # a redeployment when it has!
   name   = "index.zip"
@@ -31,7 +30,7 @@ resource "google_cloudfunctions_function" "functions" {
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
   event_trigger   {
-      event_type = "google cloud pub/sub"
+      event_type = "cloud pub/sub"
       resource = "projects/udmi-staging/topics/udmi_target"
   } 
   environment_variables = var.function_environment_variables     
