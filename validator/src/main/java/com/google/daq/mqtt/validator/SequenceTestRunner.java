@@ -9,6 +9,11 @@ import org.junit.runner.notification.Failure;
 
 public class SequenceTestRunner {
 
+  private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
+  private static final int EXIT_STATUS_SUCCESS = 0;
+  private static final int EXIST_STATUS_FAILURE = 1;
+  private static final int EXIT_STATUS_NO_TESTS = 2;
+
   public static void main(String... args) throws ClassNotFoundException {
     int successes = 0;
     List<Failure> failures = new ArrayList<>();
@@ -28,14 +33,25 @@ public class SequenceTestRunner {
       }
 
       Result result = new JUnitCore().run(request);
-      failures.addAll(result.getFailures());
-      successes += result.getRunCount() - failures.size();
+      if (hasActualTestResults(result)) {
+        failures.addAll(result.getFailures());
+        successes += result.getRunCount() - failures.size();
+      }
     }
     System.err.println("Test successes: " + successes);
     failures.forEach(failure -> {
       System.err.println(
           "Test failure: " + failure.getDescription().getMethodName() + " " + failure.getMessage());
     });
-    System.exit(failures.isEmpty() ? 0 : 1);
+    if (successes == 0 && failures.isEmpty()) {
+      System.err.println("No matching tests found");
+      System.exit(EXIT_STATUS_NO_TESTS);
+    }
+    System.exit(failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE);
+  }
+
+  private static boolean hasActualTestResults(Result result) {
+    return (result.getFailures().size() != 1 ||
+        !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
   }
 }

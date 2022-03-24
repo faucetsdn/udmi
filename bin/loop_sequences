@@ -36,17 +36,24 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
 rm -rf out/devices/$device_id
 
-exit_code=0
+test_method=\#broken_config
+
+exit_code=2
 for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
-    CLASS=com.google.daq.mqtt.validator.validations.$test_class\#valid_serial_no
+    target=$test_class$test_method
+    CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
     timeout 5m $JAVA_CMD $CLASS
     result=$?
 
-    if [[ $result != 0 ]]; then
-        echo Sequence test $test_class exited with error code $result
+    if [[ $result == 2 ]]; then
+        echo Sequence test $target found no matching tests.
+    elif [[ $result != 0 ]]; then
+        echo Sequence test $target exited with error code $result.
         exit_code=$result
+    else
+        exit_code=0;
     fi
 done
 
