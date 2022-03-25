@@ -438,7 +438,8 @@ public abstract class SequenceValidator {
   }
 
   protected boolean validSerialNo() {
-    String deviceSerial = deviceState.system == null ? null : deviceState.system.serial_no;
+    String deviceSerial = deviceState == null ? null
+        : deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(deviceSerial, lastSerialNo)) {
       info(String.format("Received serial no %s", deviceSerial));
       lastSerialNo = deviceSerial;

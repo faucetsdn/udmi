@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 
 export VALIDATOR_CONFIG=/tmp/validator_config.json
 
