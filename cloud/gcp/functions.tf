@@ -34,8 +34,8 @@ resource "google_cloudfunctions_function" "functions" {
       resource   = "projects/var.gcp_project_id/topics/udmi_target"
   } 
   environment_variables = var.function_environment_variables     
-  #source_archive_bucket = google_storage_bucket.function-bucket.name
-  #source_archive_object = google_storage_bucket_object.function-object.name
+  source_archive_bucket = google_storage_bucket.function-bucket.name
+  source_archive_object = google_storage_bucket_object.function-object.name
 }
 
 # IAM Configuration. This allows unauthenticated, public access to the function.
