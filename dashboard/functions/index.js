@@ -17,12 +17,14 @@ const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-if (process.env.FIREBASE_CONFIG) {
+const useFirestore = process.env.FIREBASE_CONFIG && !process.env.IGNORE_FIRESTORE
+
+if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
 } else {
   console.log('No FIREBASE_CONFIG defined');
 }
-const firestore = process.env.FIREBASE_CONFIG ? admin.firestore() : null;
+const firestore = useFirestore ? admin.firestore() : null;
 
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
@@ -50,7 +52,7 @@ function recordMessage(attributes, message) {
 
   console.log('record', registryId, deviceId, subType, subFolder, message);
 
-  if (firestore) {
+  if (useFirestore) {
     const reg_doc = firestore.collection('registries').doc(registryId);
     promises.push(reg_doc.set({
       'updated': timestamp
@@ -253,7 +255,9 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  if (!firestore) {
+  if (useFirestore) {
+    console.info('Deferring to firestore trigger for IoT Core modification.');
+  } else {
     promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
   }
 
@@ -261,7 +265,6 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 });
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
-  console.log('Config modify subFolder', subFolder);
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   const message = JSON.parse(oldConfig);
   console.log('Config modify version', version, subFolder);
