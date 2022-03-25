@@ -1,4 +1,4 @@
-FROM node:12.22.9-slim
+FROM node:16.13.2
 
 ENV PORT 4300
 
