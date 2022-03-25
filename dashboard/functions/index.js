@@ -8,7 +8,7 @@ const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
-const UDMI_VERSION = '1';
+const UDMI_VERSION = '1.3.14';
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
@@ -267,8 +267,14 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   const message = JSON.parse(oldConfig);
+
+  message.version = UDMI_VERSION;
+  message.timestamp = currentTimestamp();
+
   console.log('Config modify version', version, subFolder);
   if (subContents) {
+    delete subContents.version;
+    delete subContents.timestamp;
     message[subFolder] = subContents;
   } else {
     delete message[subFolder];
