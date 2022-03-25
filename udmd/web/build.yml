@@ -32,6 +32,7 @@ scan-docker:
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
+    DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE-web
     
 test-node:
   stage: test
