@@ -8,10 +8,6 @@ data "archive_file" "source" {
   source_dir  = "./src"
   output_path = "./function.zip"
 }
-resource "google_pubsub_topic" "udmd_pubsub" {
-  project = var.gcp_project_id
-  name    = "udmi_target"
-}
 
 
 # Add the zipped file to the bucket.
@@ -22,7 +18,6 @@ resource "google_storage_bucket_object" "function-object" {
   bucket = google_storage_bucket.function-bucket.name
   source = data.archive_file.source.output_path
 }
-
 # The cloud function resource.
 resource "google_cloudfunctions_function" "functions" {
   available_memory_mb = var.function_memory
@@ -34,13 +29,13 @@ resource "google_cloudfunctions_function" "functions" {
   region                = var.gcp_region
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
-  event_trigger   {
-      event_type = "google_pubsub_topic.publish"
+   event_trigger   {
+      event_type = "Cloud Pub/Sub"
       resource   = "projects/var.gcp_project_id/topics/udmi_target"
   } 
   environment_variables = var.function_environment_variables     
-  source_archive_bucket = google_storage_bucket.function-bucket.name
-  source_archive_object = google_storage_bucket_object.function-object.name
+  #source_archive_bucket = google_storage_bucket.function-bucket.name
+  #source_archive_object = google_storage_bucket_object.function-object.name
 }
 
 # IAM Configuration. This allows unauthenticated, public access to the function.
