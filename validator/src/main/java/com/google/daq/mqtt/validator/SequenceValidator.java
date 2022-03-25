@@ -116,7 +116,7 @@ public abstract class SequenceValidator {
       throw new RuntimeException("While loading " + configFile, e);
     }
 
-    File cloudIotConfigFile = new File(siteModel + "/" + CLOUD_IOT_CONFIG_FILE);
+    File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
     final CloudIotConfig cloudIotConfig;
     try {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
@@ -128,7 +128,7 @@ public abstract class SequenceValidator {
     deviceMetadata = readDeviceMetadata();
     generatedConfig = readGeneratedConfig();
 
-    deviceOutputDir = new File("out/devices/" + deviceId);
+    deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
     try {
       deviceOutputDir.mkdirs();
       File testsOutputDir = new File(deviceOutputDir, TESTS_OUT_DIR);

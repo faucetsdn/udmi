@@ -30,6 +30,11 @@ echo Site model $site_model
 echo Target device $device_id
 echo Device serial $serial_no
 
+if [[ ! -d $site_model ]]; then
+    echo Site model $site_model not found.
+    false
+fi
+
 awc=$(echo $project_id $site_model $device_id $serial_no | wc -w)
 if [[ $awc != 4 ]]; then
     echo Missing configuration paramaters.
@@ -43,7 +48,7 @@ validator/bin/build
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
-rm -rf out/devices/$device_id
+rm -rf $site_model/out/devices/$device_id
 
 exit_code=2
 for test_name in $test_names; do
