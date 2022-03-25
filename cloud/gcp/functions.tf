@@ -31,7 +31,7 @@ resource "google_cloudfunctions_function" "functions" {
   timeout               = var.function_timeout
    event_trigger  {
       event_type = "providers/cloud.pubsub/eventTypes/topic.publish"
-      resource   = "projects/var.gcp_project_id/topics/udmi_target"
+      resource   = "udmi_target"
   } 
   environment_variables = var.function_environment_variables     
   source_archive_bucket = google_storage_bucket.function-bucket.name
