@@ -13,8 +13,11 @@ import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.validations.SkipTest;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,7 +67,6 @@ public abstract class SequenceValidator {
   public static final String SEQUENCER_CATEGORY = "sequencer";
   protected static final String serial_no;
   protected static final Metadata deviceMetadata;
-  protected static final Config generatedConfig;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/states";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
@@ -94,6 +96,8 @@ public abstract class SequenceValidator {
       "configs", Config.class,
       "states", State.class
   );
+
+  private static final int LOG_LEVEL = 200;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -126,7 +130,6 @@ public abstract class SequenceValidator {
     }
 
     deviceMetadata = readDeviceMetadata();
-    generatedConfig = readGeneratedConfig();
 
     deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
     try {
@@ -227,10 +230,10 @@ public abstract class SequenceValidator {
     }
   }
 
-  private static Config readGeneratedConfig() {
+  private Config readGeneratedConfig() {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
-      System.err.println("Reading generated config file " + deviceConfigFile.getPath());
+      notice("Reading generated config file " + deviceConfigFile.getPath());
       Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
       Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
       config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
@@ -456,10 +459,18 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      info("Suppressing exception: " + e);
-      e.printStackTrace();
+      warning("Suppressing exception: " + e);
+      debug(stackTraceString(e));
       return false;
     }
+  }
+
+  private String stackTraceString(Exception e) {
+    OutputStream outputStream = new ByteArrayOutputStream();
+    try (PrintStream ps = new PrintStream(outputStream)) {
+      e.printStackTrace(ps);
+    }
+    return outputStream.toString();
   }
 
   protected List<Map<String, Object>> clearLogs() {
@@ -590,16 +601,39 @@ public abstract class SequenceValidator {
     return deviceConfig.equals(receivedConfig);
   }
 
+  protected void debug(String message) {
+    log(message, Level.DEBUG);
+  }
+
   protected void info(String message) {
+    log(message, Level.INFO);
+  }
+
+  protected void notice(String message) {
+    log(message, Level.NOTICE);
+  }
+
+  protected void warning(String message) {
+    log(message, Level.WARNING);
+  }
+
+  protected void error(String message) {
+    log(message, Level.ERROR);
+  }
+
+  private void log(String message, Level level) {
     Entry logEntry = new Entry();
     logEntry.timestamp = CleanDateFormat.cleanDate();
-    logEntry.level = Level.INFO.value();
+    logEntry.level = level.value();
     logEntry.message = message;
     logEntry.category = SEQUENCER_CATEGORY;
     writeSequencerLog(logEntry);
   }
 
   private void writeSequencerLog(Entry logEntry) {
-    System.err.println(writeLogEntry(logEntry, "sequencer.log"));
+    String entry = writeLogEntry(logEntry, "sequencer.log");
+    if (logEntry.level >= LOG_LEVEL) {
+      System.err.println(entry);
+    }
   }
 }
