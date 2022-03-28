@@ -39,7 +39,7 @@ resource "google_cloudfunctions_function" "enventHandlerFunction" {
   source_archive_object = google_storage_bucket_object.function-object.name
 }
 
-# IAM Configuration. This allows authenticated to members.
+# IAM Configuration. This allows to provied access to the function.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
   project        = google_cloudfunctions_function.enventHandlerFunction.project
   region         = google_cloudfunctions_function.enventHandlerFunction.region
