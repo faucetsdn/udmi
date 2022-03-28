@@ -17,7 +17,7 @@ resource "google_storage_bucket_object" "function-object" {
   source = data.archive_file.source.output_path
 }
 # The cloud function resource.
-resource "google_cloudfunctions_function" "functions" {
+resource "google_cloudfunctions_function" "enventHandlerFunction" {
   available_memory_mb = var.function_memory
   entry_point         = var.function_entry_point
   ingress_settings    = "ALLOW_ALL"
@@ -39,9 +39,9 @@ resource "google_cloudfunctions_function" "functions" {
 # IAM Configuration. This allows unauthenticated, public access to the function.
 # Change this if you require more control here.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = google_cloudfunctions_function.functions.project
-  region         = google_cloudfunctions_function.functions.region
-  cloud_function = google_cloudfunctions_function.functions.name
+  project        = google_cloudfunctions_function.enventHandlerFunction.project
+  region         = google_cloudfunctions_function.enventHandlerFunction.region
+  cloud_function = google_cloudfunctions_function.enventHandlerFunction.name
 
   role   = "roles/cloudfunctions.invoker"
   member = var.gcp_access_group
