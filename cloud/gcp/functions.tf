@@ -16,7 +16,7 @@ resource "google_storage_bucket_object" "function-object" {
   bucket = google_storage_bucket.function-bucket.name
   source = data.archive_file.source.output_path
   lifecycle {
-    ignore_changes = [detect_md5hash] 
+    ignore_changes = [md5hash] 
   }
 }
 # The cloud function resource.
@@ -39,8 +39,7 @@ resource "google_cloudfunctions_function" "enventHandlerFunction" {
   source_archive_object = google_storage_bucket_object.function-object.name
 }
 
-# IAM Configuration. This allows unauthenticated, public access to the function.
-# Change this if you require more control here.
+# IAM Configuration. This allows authenticated to members.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
   project        = google_cloudfunctions_function.enventHandlerFunction.project
   region         = google_cloudfunctions_function.enventHandlerFunction.region
