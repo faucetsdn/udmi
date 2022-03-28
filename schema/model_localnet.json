@@ -10,7 +10,7 @@
       "existingJavaType": "java.util.HashMap<String, SubsystemLocalnetMetadata>",
       "patternProperties": {
         "^[a-z0-9-]+$": {
-          "$ref": "file:metadata_localnet_subsystem.json"
+          "$ref": "file:model_localnet_subsystem.json"
         }
       }
     }
