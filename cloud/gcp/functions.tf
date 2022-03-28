@@ -16,7 +16,7 @@ resource "google_storage_bucket_object" "function-object" {
   bucket = google_storage_bucket.function-bucket.name
   source = data.archive_file.source.output_path
   lifecycle {
-    ignore_changes = [md5hash] 
+    ignore_changes = [detect_md5hash] 
   }
 }
 # The cloud function resource.
