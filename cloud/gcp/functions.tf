@@ -8,13 +8,6 @@ data "archive_file" "source" {
   source_dir  = "./src"
   output_path = "./function.zip"
 }
-resource "google_pubsub_topic" "topic" {
-  name    = "udmi_target"
-  project = "${var.gcp_project_id}"
-}
-
-
-
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
   # We can avoid unnecessary redeployments by validating the code is unchanged, and forcing
@@ -30,13 +23,13 @@ resource "google_cloudfunctions_function" "functions" {
   ingress_settings    = "ALLOW_ALL"
 
   name                  = var.function_name
-  project               = var.gcp_project_name
+  project               = var.gcp_project_id
   region                = var.gcp_region
   runtime               = var.function_runtime 
   timeout               = var.function_timeout
    event_trigger  {
       event_type = "providers/cloud.pubsub/eventTypes/topic.publish"
-      resource   = "${google_pubsub_topic.topic.name}"
+      resource   = "udmi_target"
   } 
   environment_variables = var.function_environment_variables     
   source_archive_bucket = google_storage_bucket.function-bucket.name
