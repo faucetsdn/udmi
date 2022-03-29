@@ -82,20 +82,6 @@ variable "gke_machine_type" {
   default = "e2-standard-2"
   description = "Type of machine"
 }
-variable "registry_username" {
-  type = string
-  default = "gcpgitlab"
-  description = " gitlab user name for gcp"
-}
-variable "registry_password" {
-  type = string
-  description = "gitlab registry password"
-}
-variable "registry_server" {
-  type = string
-  default = "registry.gitlab.com"
-  description = "gitlab server"
-}
 
 ##vpc variables##
 variable "gcp_vpc_name" {
