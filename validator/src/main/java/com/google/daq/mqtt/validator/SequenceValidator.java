@@ -65,7 +65,6 @@ public abstract class SequenceValidator {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String UPDATE_SUBTYPE = "update";
   public static final String SEQUENCER_CATEGORY = "sequencer";
-  protected static final String serial_no;
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/states";
@@ -83,6 +82,8 @@ public abstract class SequenceValidator {
   private static final String deviceId;
   private static final String siteModel;
   private static final String registryId;
+  private static final String serialNo;
+  private static final int logLevel;
   private static final File deviceOutputDir;
   private static final File resultSummary;
   private static final IotCoreClient client;
@@ -97,7 +98,6 @@ public abstract class SequenceValidator {
       "states", State.class
   );
 
-  private static final int LOG_LEVEL = 200;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -114,7 +114,8 @@ public abstract class SequenceValidator {
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
       String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
-      serial_no = serial.equals(SERIAL_NO_MISSING) ? null : serial;
+      serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
+      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined")).value();
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       throw new RuntimeException("While loading " + configFile, e);
@@ -144,7 +145,7 @@ public abstract class SequenceValidator {
     resultSummary.delete();
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
-    System.err.printf("Validating against device %s serial %s%n", deviceId, serial_no);
+    System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
   }
 
@@ -275,7 +276,7 @@ public abstract class SequenceValidator {
 
   @Test
   public void valid_serial_no() {
-    Preconditions.checkNotNull(serial_no, "no test serial_no provided");
+    Preconditions.checkNotNull(serialNo, "no test serial_no provided");
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -447,7 +448,7 @@ public abstract class SequenceValidator {
       info(String.format("Received serial no %s", deviceSerial));
       lastSerialNo = deviceSerial;
     }
-    boolean serialValid = Objects.equals(serial_no, deviceSerial);
+    boolean serialValid = Objects.equals(serialNo, deviceSerial);
     if (!serialValid && confirmSerial) {
       throw new IllegalStateException("Unexpected serial_no " + deviceSerial);
     }
@@ -632,7 +633,7 @@ public abstract class SequenceValidator {
 
   private void writeSequencerLog(Entry logEntry) {
     String entry = writeLogEntry(logEntry, "sequencer.log");
-    if (logEntry.level >= LOG_LEVEL) {
+    if (logEntry.level >= logLevel) {
       System.err.println(entry);
     }
   }

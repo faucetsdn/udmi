@@ -6,6 +6,17 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
+log_level=NOTICE
+
+if [[ $1 == '-v' ]]; then
+    log_level=INFO
+    shift
+fi
+
+if [[ $1 == '-v' || $1 == '-vv' ]]; then
+    log_level=DEBUG
+    shift
+fi
 
 if [[ $# < 3 ]]; then
     echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
@@ -31,6 +42,7 @@ cat <<EOF > /tmp/validator_config.json
   "site_model": "$site_path",
   "device_id": "$device_id",
   "serial_no": "$serial_no",
+  "log_level": "$log_level",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }
 EOF
