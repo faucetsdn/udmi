@@ -24,11 +24,10 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
-rm -rf out/devices
+rm -rf $site_path/out/devices
 
 # Prepare auth key used by reflector
-cp udmi_site_model/devices/AHU-1/rsa_private.pkcs8 \
-   udmi_site_model/gcp_reflect_key.pkcs8
+cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/gcp_reflect_key.pkcs8
 
 bin/validator $site_path $project_id &
 vpid=$!
@@ -63,6 +62,6 @@ pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 echo Killing pids $vpid $pids
 kill $vpid $pids
 
-outfiles=`find out/devices -name \*.out` || true
+outfiles=`find $site_path/out/devices -name \*.out` || true
 echo Found .out files $outfiles, copying to /tmp/validator.out
 more $outfiles > /tmp/validator.out || true
