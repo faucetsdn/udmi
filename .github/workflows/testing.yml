@@ -66,6 +66,8 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
+          find . -name validation_report.json
+          find . -name state.json
           cat out/validation_report.json && echo
           cat out/devices/AHU-1/state.json && echo
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
