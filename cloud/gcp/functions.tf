@@ -28,8 +28,7 @@ resource "google_cloudfunctions_function" "enventHandlerFunction" {
   name                  = var.function_name
   project               = var.gcp_project_id
   region                = var.gcp_region
-  runtime               = var.function_runtime 
-  timeout               = var.function_timeout
+  runtime               = var.function_runtime
    event_trigger  {
       event_type = "providers/cloud.pubsub/eventTypes/topic.publish"
       resource   = "udmi_target"
@@ -38,6 +37,7 @@ resource "google_cloudfunctions_function" "enventHandlerFunction" {
   source_archive_bucket = google_storage_bucket.function-bucket.name
   source_archive_object = google_storage_bucket_object.function-object.name
 }
+
 
 # IAM Configuration. This allows to provied access to the function.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
