@@ -113,10 +113,6 @@ variable "function_runtime" {
     type = string 
     description = "The runtime in which the function will be executed."
 }
-variable "function_timeout" {
-    type = number
-    description = "The amount of time in seconds allotted for the execution of the function."
-}
 variable "function_entry_point" {
      type = string
      description = "The name of a method in the function source which will be invoked when the function is executed."
@@ -124,8 +120,4 @@ variable "function_entry_point" {
 variable "function_environment_variables" {
   type        = map(string)
   description = "A set of key/value environment variable pairs to assign to the function."
-}
-variable "bucket-source" {
-  type = string
-   description = "The contents of this directory will be archived and used as the function source."
 }
