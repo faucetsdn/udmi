@@ -167,13 +167,13 @@ public abstract class SequenceValidator {
     @Override
     protected void starting(Description description) {
       testName = description.getMethodName();
-      info("starting test " + testName);
+      notice("starting test " + testName);
     }
 
     @Override
     protected void finished(Description description) {
       assert testName.equals(description.getMethodName());
-      info("ending test " + testName);
+      notice("ending test " + testName);
       testName = null;
     }
 
@@ -234,7 +234,7 @@ public abstract class SequenceValidator {
   private Config readGeneratedConfig() {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
-      notice("Reading generated config file " + deviceConfigFile.getPath());
+      info("Reading generated config file " + deviceConfigFile.getPath());
       Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
       Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
       config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
@@ -460,7 +460,7 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      warning("Suppressing exception: " + e);
+      info("Suppressing exception: " + e);
       debug(stackTraceString(e));
       return false;
     }
@@ -572,7 +572,7 @@ public abstract class SequenceValidator {
   }
 
   private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
-    info("updated " + subFolderRaw + " " + message.get("timestamp"));
+    notice("updated " + subFolderRaw + " " + message.get("timestamp"));
     receivedUpdates.put(subFolderRaw, convertTo(message, expectedUpdates.get(subFolderRaw)));
   }
 
