@@ -30,24 +30,3 @@ resource "google_container_node_pool" "node_pool" {
     }
   }
 }
-
-resource "kubernetes_secret" "docker-secret" {
-  metadata {
-    name = "docker-cfg"
-    namespace = "udmi"
-  }
-
-  type = "kubernetes.io/dockerconfigjson"
-
-  data = {
-    ".dockerconfigjson" = jsonencode({
-      auths = {
-        "${var.registry_server}" = {
-          "username" = var.registry_username
-          "password" = var.registry_password
-          "auth"     = base64encode("${var.registry_username}:${var.registry_password}")
-        }
-      }
-    })
-  }
-}
