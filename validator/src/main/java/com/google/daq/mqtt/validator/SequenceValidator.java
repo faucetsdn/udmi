@@ -115,7 +115,8 @@ public abstract class SequenceValidator {
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
       String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
       serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
-      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined")).value();
+      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
+          .value();
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       throw new RuntimeException("While loading " + configFile, e);
@@ -280,7 +281,7 @@ public abstract class SequenceValidator {
   }
 
   private void recordResult(String result, String methodName, String message) {
-    info(String.format(RESULT_FORMAT, result, methodName, message));
+    notice(String.format(RESULT_FORMAT, result, methodName, message));
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.printf(RESULT_FORMAT, result, methodName, message);
     } catch (Exception e) {
@@ -572,8 +573,16 @@ public abstract class SequenceValidator {
   }
 
   private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
-    notice("updated " + subFolderRaw + " " + message.get("timestamp"));
-    receivedUpdates.put(subFolderRaw, convertTo(message, expectedUpdates.get(subFolderRaw)));
+    Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
+    receivedUpdates.put(subFolderRaw, converted);
+    if (converted instanceof Config) {
+      notice("Updated config with timestamp " + getTimestamp(((Config) converted).timestamp));
+    } else if (converted instanceof State) {
+      notice(
+          "Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
+    } else {
+      warning("Unknown update type " + converted.getClass().getSimpleName());
+    }
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {

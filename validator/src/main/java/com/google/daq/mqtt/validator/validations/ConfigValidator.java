@@ -22,13 +22,13 @@ public class ConfigValidator extends SequenceValidator {
     deviceConfig.system.min_loglevel = 400;
     clearLogs();
     Date expectedConfig = syncConfig();
-    System.err.printf("%s expecting config %s%n", getTimestamp(), getTimestamp(expectedConfig));
+    info(String.format("%s expecting config %s%n", getTimestamp(), getTimestamp(expectedConfig)));
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
     untilTrue(() -> expectedConfig.equals(deviceState.system.last_config),
         "state last_config match");
     hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
-    System.err.printf("%s last_config match %s%n", getTimestamp(), getTimestamp(expectedConfig));
+    info(String.format("%s last_config match %s%n", getTimestamp(), getTimestamp(expectedConfig)));
   }
 
   @Test
