@@ -1,6 +1,8 @@
 resource "google_storage_bucket" "function-bucket" {
-  name     = "${var.gcp_project_id}-${var.function_name}"
-  location = var.gcp_region
+  name     = "${var.gcp_project_name}-${var.function_name}"
+  project = var.gcp_project_id
+  storage_class = "STANDARD"
+  location = "US"
 }
 
 data "archive_file" "source" {
