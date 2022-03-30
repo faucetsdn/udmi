@@ -43,6 +43,7 @@ test-node:
 deploy-staging:
   extends: .gks-deploy
   stage: deploy-staging
+  environment: staging
   variables:
     CHART_NAME: udmi-web
     HELM_REPO: udmd/helm
