@@ -85,7 +85,7 @@ jobs:
           validator/bin/build check
       - name: device ouput logs
         if: ${{ always() }}
-        run: more `find out/devices/ -type f`
+        run: more `find udmi_site_model/out/devices/ -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |
