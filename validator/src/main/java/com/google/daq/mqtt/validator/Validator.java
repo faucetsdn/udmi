@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -382,6 +383,7 @@ public class Validator {
 
       if (schemaMap.containsKey(schemaName)) {
         try {
+          message = upgradeMessage(schemaName, message);
           validateMessage(schemaMap.get(schemaName), message);
           if (dataSink != null) {
             dataSink.validationResult(deviceId, schemaName, attributes, message, null);
@@ -664,6 +666,13 @@ public class Validator {
     File full = new File(outBase, addedFile);
     full.getParentFile().mkdirs();
     return full;
+  }
+
+  private Map<String, Object> upgradeMessage(String schemaName, Map<String, Object> message) {
+    JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
+    upgradeMessage(schemaName, jsonNode);
+    return OBJECT_MAPPER.convertValue(jsonNode, new TypeReference<>() {
+    });
   }
 
   private void upgradeMessage(String schemaName, JsonNode jsonNode) {
