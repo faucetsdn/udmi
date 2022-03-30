@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
@@ -154,29 +155,15 @@ public class PubSubClient implements MessagePublisher {
 
   private void resetSubscription(ProjectSubscriptionName subscriptionName) {
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
-      if (subscriptionExists(subscriptionAdminClient, subscriptionName)) {
-        System.err.println("Resetting existing subscription " + subscriptionName);
-        subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
-        Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
-      } else {
-        throw new RuntimeException("Missing subscription for " + subscriptionName);
-      }
+      System.err.println("Resetting existing subscription " + subscriptionName);
+      subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
+      Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
+    } catch (NotFoundException e) {
+      throw new RuntimeException("Missing subscription for " + subscriptionName);
     } catch (Exception e) {
       throw new RuntimeException(
           String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
     }
-  }
-
-  private boolean subscriptionExists(SubscriptionAdminClient subscriptionAdminClient,
-      ProjectSubscriptionName subscriptionName) {
-    ListSubscriptionsPagedResponse listSubscriptionsPagedResponse = subscriptionAdminClient
-        .listSubscriptions(ProjectName.of(projectId));
-    for (Subscription subscription : listSubscriptionsPagedResponse.iterateAll()) {
-      if (subscription.getName().equals(subscriptionName.toString())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static class ErrorContainer extends TreeMap<String, Object> {
