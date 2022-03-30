@@ -2,6 +2,14 @@
  * Simple function to ingest test results event from DAQ.
  */
 
+// Hacky stuff to work with "maybe have firestore enabled"
+const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+const useFirestore = process.env.FIREBASE_CONFIG;
+if (!process.env.GCLOUD_PROJECT) {
+  console.log("Setting GCLOUD_PROJECT to " + PROJECT_ID);
+  process.env.GCLOUD_PROJECT = PROJECT_ID;
+}
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { PubSub } = require(`@google-cloud/pubsub`);
@@ -13,11 +21,8 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 
-const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
-
-const useFirestore = process.env.FIREBASE_CONFIG && !process.env.IGNORE_FIRESTORE
 
 if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
