@@ -235,7 +235,7 @@ public abstract class SequenceValidator {
   private Config readGeneratedConfig() {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
-      info("Reading generated config file " + deviceConfigFile.getPath());
+      debug("Reading generated config file " + deviceConfigFile.getPath());
       Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
       Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
       config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
@@ -293,7 +293,7 @@ public abstract class SequenceValidator {
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
     String messageBase = String
         .format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
-    info("received " + messageBase);
+    debug("received " + messageBase);
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
@@ -369,7 +369,7 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
-        info(String.format("sending %s_%s", "config", subBlock));
+        debug(String.format("sending %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
         String topic = "config/" + subBlock;
         client.publish(deviceId, topic, messageData);
@@ -421,7 +421,7 @@ public abstract class SequenceValidator {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
-        info(String.format("updating %s state", subFolder));
+        debug(String.format("updating %s state", subFolder));
         T state = OBJECT_MAPPER.readValue(messageString, target);
         if (deviceState == null) {
           deviceState = new State();
@@ -477,7 +477,7 @@ public abstract class SequenceValidator {
 
   protected List<Map<String, Object>> clearLogs() {
     lastLog = null;
-    info("logs cleared");
+    debug("logs cleared");
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
 
@@ -496,7 +496,7 @@ public abstract class SequenceValidator {
           boolean validEntry = lastLog == null || !logEntry.timestamp.before(lastLog);
           if (validEntry && category.equals(logEntry.category) && level.value() == logEntry.level) {
             lastLog = logEntry.timestamp;
-            info("Advancing log marker to " + getTimestamp(lastLog));
+            debug("Advancing log marker to " + getTimestamp(lastLog));
             return true;
           }
         }
@@ -506,7 +506,7 @@ public abstract class SequenceValidator {
   }
 
   protected void hasNotLogged(String category, Level level) {
-    info("WARNING HASNOTLOGGED IS NOT COMPLETE");
+    warning("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
   protected void untilTrue(Supplier<Boolean> evaluator, String description) {
@@ -579,9 +579,9 @@ public abstract class SequenceValidator {
     Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
-      notice("Updated config with timestamp " + getTimestamp(((Config) converted).timestamp));
+      info("Updated config with timestamp " + getTimestamp(((Config) converted).timestamp));
     } else if (converted instanceof State) {
-      notice(
+      info(
           "Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
     } else {
       warning("Unknown update type " + converted.getClass().getSimpleName());
