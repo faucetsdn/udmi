@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# Force consistent sort order
+export LC_ALL=C
+
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
