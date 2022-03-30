@@ -301,7 +301,7 @@ public class Validator {
       Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
-    attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
+    //attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
@@ -334,6 +334,10 @@ public class Validator {
       return false;
     }
 
+    if (!shouldValidateMessage(attributes)) {
+      return false;
+    }
+
     try {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
@@ -342,7 +346,7 @@ public class Validator {
         processedDevices.add(deviceId);
       }
 
-      String schemaName = makeSchemaName(attributes);
+      String schemaName = mungeAndExtractSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
@@ -357,6 +361,7 @@ public class Validator {
       }
 
       sanitizeMessage(schemaName, message);
+      upgradeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -383,7 +388,6 @@ public class Validator {
 
       if (schemaMap.containsKey(schemaName)) {
         try {
-          message = upgradeMessage(schemaName, message);
           validateMessage(schemaMap.get(schemaName), message);
           if (dataSink != null) {
             dataSink.validationResult(deviceId, schemaName, attributes, message, null);
@@ -435,6 +439,12 @@ public class Validator {
     }
   }
 
+  private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    return "event".equals(subFolder) || "update".equals(subType);
+  }
+
   private File prepareDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
@@ -467,7 +477,7 @@ public class Validator {
     return deviceDir;
   }
 
-  private String makeSchemaName(Map<String, String> attributes) {
+  private String mungeAndExtractSchema(Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
 
@@ -487,6 +497,8 @@ public class Validator {
       if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
         throw new RuntimeException("Unrecognized update type: " + subFolder);
       }
+      attributes.put("subType", singularFolder);
+      attributes.put("subFolder", SubFolder.UPDATE.value());
       return singularFolder;
     }
 
@@ -668,11 +680,14 @@ public class Validator {
     return full;
   }
 
-  private Map<String, Object> upgradeMessage(String schemaName, Map<String, Object> message) {
+  private void upgradeMessage(String schemaName, Map<String, Object> message) {
     JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
     upgradeMessage(schemaName, jsonNode);
-    return OBJECT_MAPPER.convertValue(jsonNode, new TypeReference<>() {
-    });
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(jsonNode,
+        new TypeReference<>() {
+        });
+    message.clear();
+    message.putAll(objectMap);
   }
 
   private void upgradeMessage(String schemaName, JsonNode jsonNode) {

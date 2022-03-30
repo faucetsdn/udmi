@@ -99,7 +99,6 @@ public class Envelope {
         SYSTEM("system"),
         GATEWAY("gateway"),
         LOCALNET("localnet"),
-        METADATA("metadata"),
         POINTSET("pointset"),
         BLOBSET("blobset");
         private final String value;
@@ -143,7 +142,8 @@ public class Envelope {
         EVENT("event"),
         COMMAND("command"),
         STATE("state"),
-        CONFIG("config");
+        CONFIG("config"),
+        MODEL("model");
         private final String value;
         private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();
 
