@@ -60,3 +60,13 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "dockerconfigjson.b64dec" }}
+  {{- print "{\"auths\":{" }}
+    {{- printf "\"%s\":{\"auth\":\"%s\"}" (.Values.gitlab.registry) (printf "%s:%s" .Values.gitlab.username .Values.gitlab.accessToken | b64enc) }}
+  {{- print "}}" }}
+{{- end }}
+
+{{- define "dockerconfigjson.b64enc" }}
+  {{- include "dockerconfigjson.b64dec" . | b64enc }}
+{{- end }}

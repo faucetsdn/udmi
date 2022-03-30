@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: registry.gitlab.com/buildings-iot/udmi/udmd-web
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -13,6 +13,11 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+gitlab:
+    registry: "registry.gitlab.com"
+    username: "gitlab"
+    accessToken: <<Defined in CI/CD as GITLAB_REGISTRY_TOKEN>>
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -37,8 +42,8 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
-  port: 80
+  type: NodePort
+  port: 4200
 
 ingress:
   enabled: false

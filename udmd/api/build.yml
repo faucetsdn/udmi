@@ -13,6 +13,7 @@ stages:
   - test
   - static-scan
   - publish-docker
+  - deploy-staging
 
 sonarqube-scan:
   rules:
@@ -26,6 +27,17 @@ publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
     DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmd-api
+
+deploy-staging:
+  extends: .gks-deploy
+  stage: deploy-staging
+  variables:
+    CHART_NAME: udmi-api
+    HELM_REPO: udmd/helm
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN
+
+
+
 
     
     
