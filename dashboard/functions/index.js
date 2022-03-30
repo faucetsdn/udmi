@@ -2,27 +2,34 @@
  * Simple function to ingest test results event from DAQ.
  */
 
+// Hacky stuff to work with "maybe have firestore enabled"
+const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+const useFirestore = !!process.env.FIREBASE_CONFIG;
+if (!process.env.GCLOUD_PROJECT) {
+  console.log("Setting GCLOUD_PROJECT to " + PROJECT_ID);
+  process.env.GCLOUD_PROJECT = PROJECT_ID;
+}
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { PubSub } = require(`@google-cloud/pubsub`);
 const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
-const UDMI_VERSION = '1';
+const UDMI_VERSION = '1.3.14';
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 
-const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-if (process.env.FIREBASE_CONFIG) {
+if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
 } else {
   console.log('No FIREBASE_CONFIG defined');
 }
-const firestore = process.env.FIREBASE_CONFIG ? admin.firestore() : null;
+const firestore = useFirestore ? admin.firestore() : null;
 
 const iotClient = new iot.v1.DeviceManagerClient({
   // optional auth parameters.
@@ -48,9 +55,9 @@ function recordMessage(attributes, message) {
     message.version = message.version || UDMI_VERSION;
   }
 
-  console.log('record', registryId, deviceId, subType, subFolder, message);
+  console.log('Message record', registryId, deviceId, subType, subFolder);
 
-  if (firestore) {
+  if (useFirestore) {
     const reg_doc = firestore.collection('registries').doc(registryId);
     promises.push(reg_doc.set({
       'updated': timestamp
@@ -97,7 +104,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, message) {
 
   return iotClient.sendCommandToDevice(request)
     .catch((e) => {
-      console.error('error sending command:', e.details);
+      console.error('Command error', e.details);
     });
 }
 
@@ -253,7 +260,9 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const promises = recordMessage(attributes, msgObject);
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  if (!firestore) {
+  if (useFirestore) {
+    console.info('Deferring to firestore trigger for IoT Core modification.');
+  } else {
     promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
   }
 
@@ -261,11 +270,16 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 });
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
-  console.log('Config modify subFolder', subFolder);
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   const message = JSON.parse(oldConfig);
+
+  message.version = UDMI_VERSION;
+  message.timestamp = currentTimestamp();
+
   console.log('Config modify version', version, subFolder);
   if (subContents) {
+    delete subContents.version;
+    delete subContents.timestamp;
     message[subFolder] = subContents;
   } else {
     delete message[subFolder];

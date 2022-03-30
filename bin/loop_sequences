@@ -1,13 +1,22 @@
-#!/bin/bash
+#!/bin/bash -e
 
 export VALIDATOR_CONFIG=/tmp/validator_config.json
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-if [[ $# != 0 ]]; then
-    echo Usage: $0 [-n]
+if [[ $1 == '-h' ]]; then
+    echo Usage: $0 [TEST_NAMES...]
     false
+fi
+
+test_names="$@"
+if [[ -z $test_names ]]; then
+    test_names="."
+    test_prefix=
+else
+    test_prefix=\#
+    echo Executing specific tests $test_names
 fi
 
 echo Parsing $VALIDATOR_CONFIG:
@@ -21,6 +30,11 @@ echo Site model $site_model
 echo Target device $device_id
 echo Device serial $serial_no
 
+if [[ ! -d $site_model ]]; then
+    echo Site model $site_model not found.
+    false
+fi
+
 awc=$(echo $project_id $site_model $device_id $serial_no | wc -w)
 if [[ $awc != 4 ]]; then
     echo Missing configuration paramaters.
@@ -32,29 +46,32 @@ EXPECTED_SEQUENCES=2
 validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE org.junit.runner.JUnitCore"
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
-rm -rf out/devices/$device_id
+rm -rf $site_model/out/devices/$device_id
 
-exit_code=0
-for test_class in DiscoveryValidator ConfigValidator WritebackValidator; do
+exit_code=2
+for test_name in $test_names; do
+  if [[ $test_name == . ]]; then
+    test_name=
+  fi
+  for test_class in ConfigValidator WritebackValidator; do
     rm -f out/*.json
-    CLASS=com.google.daq.mqtt.validator.validations.$test_class
+    target=$test_class$test_prefix$test_name
+    CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
     timeout 5m $JAVA_CMD $CLASS
     result=$?
 
-    if [[ $result != 0 ]]; then
-        echo Sequence test $test_class exited with error code $result
+    if [[ $result == 2 ]]; then
+        echo Sequence test $target found no matching tests.
+    elif [[ $result != 0 ]]; then
+        echo Sequence test $target exited with error code $result.
         exit_code=$result
+    elif [[ $exit_code == 2 ]]; then
+        exit_code=0;
     fi
-
-    mkdir -p out/groups/$test_class/
-    for file in out/*.json; do
-        # Format output so it looks nice...
-        jq < $file > out/groups/$test_class/${file#out/}
-        rm $file
-    done
+  done
 done
 
 echo Done with test sequence execution, exit $exit_code.

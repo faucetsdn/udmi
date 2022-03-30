@@ -76,7 +76,6 @@ public class Validator {
   private static final String PUBSUB_MARKER = "pubsub";
   private static final String FILES_MARKER = "files";
   private static final String REFLECT_MARKER = "reflect";
-  private static final File OUT_BASE_FILE = new File("out");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
@@ -86,7 +85,6 @@ public class Validator {
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
-  public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
@@ -95,13 +93,14 @@ public class Validator {
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
-
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
   private final Set<String> ignoredRegistries = new HashSet();
+  private File outBaseDir;
+  private File metadataReportFile;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
@@ -134,9 +133,7 @@ public class Validator {
       String targetSpec = args[2];
       String instName = args[3];
       String siteDir = args[4];
-      if (!NO_SITE.equals(siteDir)) {
-        validator.setSiteDir(siteDir);
-      }
+      validator.setSiteDir(siteDir);
       switch (targetSpec) {
         case PUBSUB_MARKER:
           validator.initializeCloudIoT();
@@ -163,12 +160,23 @@ public class Validator {
   }
 
   private void setSiteDir(String siteDir) {
-    this.siteDir = siteDir;
-    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
-        projectId);
+    final File baseDir;
+    if (NO_SITE.equals(siteDir)) {
+      this.siteDir = null;
+      baseDir = new File(".");
+    } else {
+      this.siteDir = siteDir;
+      baseDir = new File(siteDir);
+      File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+          projectId);
+      initializeExpectedDevices(siteDir);
+    }
 
-    initializeExpectedDevices(siteDir);
+    outBaseDir = new File(baseDir, "out");
+    outBaseDir.mkdirs();
+    metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    metadataReportFile.delete();
   }
 
   private void initializeExpectedDevices(String siteDir) {
@@ -242,9 +250,9 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    OUT_BASE_FILE.mkdirs();
-    System.err.println("Results may be in such directories as " + OUT_BASE_FILE.getAbsolutePath());
-    System.err.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
+    outBaseDir.mkdirs();
+    System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
+    System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
     Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
@@ -472,7 +480,7 @@ public class Validator {
   }
 
   private File makeDeviceDir(String deviceId) {
-    File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
+    File deviceDir = new File(outBaseDir, String.format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
   }
@@ -537,10 +545,10 @@ public class Validator {
           metadataReport.missingDevices.add(deviceId);
         }
       }
-      OBJECT_MAPPER.writeValue(METADATA_REPORT_FILE, metadataReport);
+      OBJECT_MAPPER.writeValue(metadataReportFile, metadataReport);
     } catch (Exception e) {
       throw new RuntimeException(
-          "While generating metadata report file " + METADATA_REPORT_FILE.getAbsolutePath(), e);
+          "While generating metadata report file " + metadataReportFile.getAbsolutePath(), e);
     }
   }
 
