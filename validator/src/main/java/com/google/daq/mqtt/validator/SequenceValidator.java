@@ -522,6 +522,9 @@ public abstract class SequenceValidator {
 
   protected String getTimestamp(Date date) {
     try {
+      if (date == null) {
+        return "null";
+      }
       String dateString = OBJECT_MAPPER.writeValueAsString(date);
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {

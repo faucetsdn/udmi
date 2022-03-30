@@ -271,7 +271,12 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-  const message = JSON.parse(oldConfig);
+  let message = {};
+  try {
+    message = JSON.parse(oldConfig);
+  } catch (e) {
+    console.warn('Config parse error, assuming empty', e);
+  }
 
   message.version = UDMI_VERSION;
   message.timestamp = currentTimestamp();
