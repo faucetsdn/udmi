@@ -14,6 +14,12 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+gitlab:
+    registry: "registry.gitlab.com"
+    username: "gitlab"
+    accessToken: <<Defined in CI/CD as GITLAB_REGISTRY_TOKEN>>
+
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
