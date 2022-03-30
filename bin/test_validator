@@ -62,6 +62,6 @@ pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 echo Killing pids $vpid $pids
 kill $vpid $pids
 
-outfiles=`find $site_path/out/devices -name \*.out` || true
+outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 echo Found .out files $outfiles, copying to /tmp/validator.out
 more $outfiles > /tmp/validator.out || true
