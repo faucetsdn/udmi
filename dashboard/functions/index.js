@@ -55,7 +55,7 @@ function recordMessage(attributes, message) {
     message.version = message.version || UDMI_VERSION;
   }
 
-  console.log('record', registryId, deviceId, subType, subFolder, message);
+  console.log('Message record', registryId, deviceId, subType, subFolder);
 
   if (useFirestore) {
     const reg_doc = firestore.collection('registries').doc(registryId);
@@ -104,7 +104,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, message) {
 
   return iotClient.sendCommandToDevice(request)
     .catch((e) => {
-      console.error('error sending command:', e.details);
+      console.error('Command error', e.details);
     });
 }
 
