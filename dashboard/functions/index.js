@@ -4,7 +4,7 @@
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-const useFirestore = process.env.FIREBASE_CONFIG;
+const useFirestore = !!process.env.FIREBASE_CONFIG;
 if (!process.env.GCLOUD_PROJECT) {
   console.log("Setting GCLOUD_PROJECT to " + PROJECT_ID);
   process.env.GCLOUD_PROJECT = PROJECT_ID;
