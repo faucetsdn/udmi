@@ -1,7 +1,7 @@
 resource "google_storage_bucket" "function-bucket" {
   name     = "${var.gcp_project_name}-${var.function_name}"
   project = var.gcp_project_id
-  storage_class = "MULTI_REGIONAL"
+  storage_class = "STANDARD"
   location = "US"
 }
 
