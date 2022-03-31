@@ -11,7 +11,9 @@ import java.util.Date;
 public class CleanDateFormat extends ISO8601DateFormat {
 
   public static Date cleanDate(Date parsedDate) {
-    parsedDate.setTime(parsedDate.getTime() - parsedDate.getTime() % 1000);
+    if (parsedDate != null) {
+      parsedDate.setTime(parsedDate.getTime() - parsedDate.getTime() % 1000);
+    }
     return parsedDate;
   }
 
@@ -20,8 +22,6 @@ public class CleanDateFormat extends ISO8601DateFormat {
   }
 
   public static boolean dateEquals(Date dateBase, Date dateTarget) {
-    System.err.println("dateEquals " + SequenceValidator.getTimestamp(cleanDate(dateBase)) + " " +
-        SequenceValidator.getTimestamp(cleanDate(dateTarget)));
     return cleanDate(dateBase).equals(cleanDate(dateTarget));
   }
 

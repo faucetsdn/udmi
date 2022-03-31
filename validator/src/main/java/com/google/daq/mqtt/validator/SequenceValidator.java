@@ -66,7 +66,6 @@ public abstract class SequenceValidator {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String UPDATE_SUBTYPE = "update";
   public static final String SEQUENCER_CATEGORY = "sequencer";
-  public static final int CONFIG_SYNC_DELAY_MS = 10000;
   public static final String EVENT_PREFIX = "event_";
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
@@ -287,8 +286,7 @@ public abstract class SequenceValidator {
   }
 
   private void resetConfig() {
-    deviceConfig = new Config();
-    deviceConfig.system = new SystemConfig();
+    clearDeviceConfig();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     recordDeviceConfig();
@@ -296,11 +294,13 @@ public abstract class SequenceValidator {
     extraField = null;
   }
 
-  protected Date syncConfig() {
+  private void clearDeviceConfig() {
+    deviceConfig = new Config();
+    deviceConfig.system = new SystemConfig();
+  }
+
+  private Date syncConfig() {
     updateConfig();
-    final long endTime = System.currentTimeMillis() + CONFIG_SYNC_DELAY_MS;
-    debug("config startup delay " + CONFIG_SYNC_DELAY_MS);
-    untilTrue(() -> System.currentTimeMillis() > endTime, "startup delay");
     untilTrue(this::configUpdateComplete, "device config sync");
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
@@ -440,7 +440,7 @@ public abstract class SequenceValidator {
         sentDeviceConfig = messageData;
       }
     } catch (Exception e) {
-      throw new RuntimeException("Whole recording device config", e);
+      throw new RuntimeException("While recording device config", e);
     }
   }
 
@@ -642,6 +642,10 @@ public abstract class SequenceValidator {
     Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
+      if (isResetConfigMessage(message)) {
+        debug("Update with config reset");
+        clearDeviceConfig();
+      }
       Config config = (Config) converted;
       deviceConfig.timestamp = config.timestamp;
       deviceConfig.version = config.version;
@@ -653,6 +657,14 @@ public abstract class SequenceValidator {
     } else {
       warning("Unknown update type " + converted.getClass().getSimpleName());
     }
+  }
+
+  private boolean isResetConfigMessage(Map<String, Object> message) {
+    Object system = message.get("system");
+    if (system instanceof Map) {
+      return "reset_config".equals(((Map<?, ?>) system).get("extra_field"));
+    }
+    return false;
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {

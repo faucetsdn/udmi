@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.validator.validations;
 
+import static com.google.daq.mqtt.validator.CleanDateFormat.cleanDate;
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.daq.mqtt.validator.CleanDateFormat;
 import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
 import org.junit.Test;
@@ -23,11 +23,13 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void system_last_update() {
     deviceConfig.system.min_loglevel = 400;
-    Date expectedConfig = syncConfig();
-    info(String.format("%s expecting config %s%n", getTimestamp(), getTimestamp(expectedConfig)));
-    untilTrue(() -> dateEquals(expectedConfig, deviceState.system.last_config),
-        "state last_config match");
-    info(String.format("%s last_config match %s%n", getTimestamp(), getTimestamp(expectedConfig)));
+    untilTrue(() -> {
+      Date expectedConfig = deviceConfig.timestamp;
+      Date lastConfig = deviceState.system.last_config;
+      debug("date match  " + getTimestamp(cleanDate(expectedConfig)) + " " +
+          getTimestamp(cleanDate(lastConfig)));
+      return dateEquals(expectedConfig, lastConfig);
+    }, "state last_config match");
   }
 
   @Test
@@ -36,10 +38,8 @@ public class ConfigValidator extends SequenceValidator {
     untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
     untilTrue(() -> deviceState.system.status == null, "state no status");
     clearLogs();
-    final Date initialConfig = syncConfig();
-    untilTrue(() -> dateEquals(initialConfig, deviceState.system.last_config),
+    untilTrue(() -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config),
         "previous config/state synced");
-    info("saved last_config " + getTimestamp(initialConfig));
     extraField = "break_json";
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
@@ -49,10 +49,11 @@ public class ConfigValidator extends SequenceValidator {
     info("Error detail: " + stateStatus.detail);
     assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-    info("initialConfig " + getTimestamp(initialConfig));
-    info("lastConfig " + getTimestamp(CleanDateFormat.cleanDate(deviceState.system.last_config)));
-    assertTrue("matches initial last_config",
-        dateEquals(initialConfig, deviceState.system.last_config));
+    Date matchedConfig = deviceConfig.timestamp;
+    info("deviceConfig " + getTimestamp(matchedConfig));
+    info("lastConfig " + getTimestamp(deviceState.system.last_config));
+    assertTrue("last_config matches config timestamp",
+        dateEquals(matchedConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     hasNotLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
@@ -60,7 +61,7 @@ public class ConfigValidator extends SequenceValidator {
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> deviceState.system.status == null, "state no status");
-    untilTrue(() -> !dateEquals(initialConfig, deviceState.system.last_config),
+    untilTrue(() -> !dateEquals(matchedConfig, deviceState.system.last_config),
         "last_config updated");
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);

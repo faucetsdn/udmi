@@ -271,28 +271,30 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-  let message = {};
+  let newConfig = {};
   try {
     const resetConfig = subFolder === "system" && subContents.extra_field === "reset_config";
     if (!resetConfig && oldConfig) {
-      message = JSON.parse(oldConfig);
+      newConfig = JSON.parse(oldConfig);
     } else {
       console.log("Config reset explicit=" + resetConfig);
+      resetConfig && delete subContents.extra_field;
     }
   } catch (e) {
     console.warn('Previous config parse error, ignoring update');
+    return;
   }
 
-  message.version = UDMI_VERSION;
-  message.timestamp = currentTimestamp();
+  newConfig.version = UDMI_VERSION;
+  newConfig.timestamp = currentTimestamp();
 
   console.log('Config modify version', version, subFolder);
   if (subContents) {
     delete subContents.version;
     delete subContents.timestamp;
-    message[subFolder] = subContents;
+    newConfig[subFolder] = subContents;
   } else {
-    delete message[subFolder];
+    delete newConfig[subFolder];
   }
   const attributes = {
     projectId: PROJECT_ID,
@@ -300,7 +302,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     deviceId: deviceId,
     deviceRegistryId: registryId
   };
-  return update_device_config(message, attributes, version)
+  return update_device_config(newConfig, attributes, version)
     .catch(e => {
       console.log('Config update rejected, retry', subFolder);
       return modify_device_config(registryId, deviceId, subFolder, subContents);
@@ -344,9 +346,8 @@ function update_device_config(message, attributes, preVersion) {
 
   const extraField = message.system && message.system.extra_field;
   const normalJson = extraField !== 'break_json';
-  if (!normalJson) {
-    console.log('breaking json for test');
-  }
+  console.log('Config extra field is ' + extraField + ' ' + normalJson);
+
   const msgString = normalJson ? JSON.stringify(message) :
         '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
