@@ -285,7 +285,7 @@ public abstract class SequenceValidator {
     untilTrue(() -> deviceState != null, "device state update");
   }
 
-  private void resetConfig() {
+  protected void resetConfig() {
     clearDeviceConfig();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));

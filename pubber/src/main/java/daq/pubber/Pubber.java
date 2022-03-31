@@ -10,7 +10,10 @@ import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SwarmMessage.Attributes;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,6 +80,7 @@ public class Pubber {
   );
   private static final int MESSAGE_REPORT_INTERVAL = 100;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
+      Level.TRACE, LOG::trace,
       Level.DEBUG, LOG::debug,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
@@ -581,8 +585,17 @@ public class Pubber {
       publisherConfigLog("apply", null);
     } catch (Exception e) {
       publisherConfigLog("apply", e);
+      trace(stackTraceString(e));
     }
     publishStateMessage();
+  }
+
+  private String stackTraceString(Throwable e) {
+    OutputStream outputStream = new ByteArrayOutputStream();
+    try (PrintStream ps = new PrintStream(outputStream)) {
+      e.printStackTrace(ps);
+    }
+    return outputStream.toString();
   }
 
   private String getTimestamp() {
@@ -600,7 +613,11 @@ public class Pubber {
 
   private String isoConvert(Date timestamp) {
     try {
+      if (timestamp == null) {
+        return "null";
+      }
       String dateString = OBJECT_MAPPER.writeValueAsString(timestamp);
+      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
@@ -731,6 +748,10 @@ public class Pubber {
     cloudLog(message, Level.INFO);
   }
 
+  private void trace(String message) {
+    cloudLog(message, Level.TRACE);
+  }
+
   private void warn(String message) {
     cloudLog(message, Level.WARNING);
   }
@@ -740,9 +761,9 @@ public class Pubber {
   }
 
   private void error(String message, Throwable e) {
-    LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+    trace(stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -43,22 +44,29 @@ public class ConfigValidator extends SequenceValidator {
     extraField = "break_json";
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-    untilTrue(() -> deviceState.system.status != null, "state has status");
+    AtomicReference<Date> stableConfig = new AtomicReference<>(null);
+    untilTrue(() -> {
+      boolean hasStatus = deviceState.system.status != null;
+      if (!hasStatus) {
+        stableConfig.set(deviceState.system.last_config);
+      }
+      return hasStatus;
+    }, "state has status");
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     info("Error detail: " + stateStatus.detail);
     assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-    Date matchedConfig = deviceConfig.timestamp;
-    info("deviceConfig " + getTimestamp(matchedConfig));
-    info("lastConfig " + getTimestamp(deviceState.system.last_config));
+    Date matchedConfig = stableConfig.get();
+    info("stable_config " + getTimestamp(matchedConfig));
+    info("last_config " + getTimestamp(deviceState.system.last_config));
     assertTrue("last_config matches config timestamp",
         dateEquals(matchedConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     hasNotLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
+    resetConfig();
     extraField = null;
-    updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
     untilTrue(() -> deviceState.system.status == null, "state no status");
     untilTrue(() -> !dateEquals(matchedConfig, deviceState.system.last_config),
