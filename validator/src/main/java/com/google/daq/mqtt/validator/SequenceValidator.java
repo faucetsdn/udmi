@@ -3,6 +3,7 @@ package com.google.daq.mqtt.validator;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -155,7 +156,7 @@ public abstract class SequenceValidator {
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   @Rule
-  public Timeout globalTimeout = new Timeout(60, TimeUnit.SECONDS);
+  public Timeout globalTimeout = new Timeout(75, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
@@ -257,6 +258,8 @@ public abstract class SequenceValidator {
     waitingCondition = null;
     confirmSerial = false;
 
+    resetConfig();
+
     deviceConfig = readGeneratedConfig();
     deviceConfig.system.min_loglevel = 400;
 
@@ -268,9 +271,18 @@ public abstract class SequenceValidator {
     untilTrue(() -> deviceState != null, "device state update");
   }
 
+  private void resetConfig() {
+    deviceConfig = new Config();
+    deviceConfig.system = new SystemConfig();
+    extraField = "reset_config";
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    untilTrue(this::configUpdateComplete, "device config reset");
+    extraField = null;
+  }
+
   protected Date syncConfig() {
     updateConfig();
-    untilTrue(this::configUpdateComplete, "device config update");
+    untilTrue(this::configUpdateComplete, "device config sync");
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
@@ -291,12 +303,14 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
-    String messageBase = String
-        .format("%s_%s", attributes.get("subType"), attributes.get("subFolder"));
-    debug("received " + messageBase);
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    String messageBase = String.format("%s_%s", subType, subFolder);
+
+    recordRawMessage(message, messageBase);
+
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
-    testOutDir.mkdirs();
     File attributeFile = new File(testOutDir, messageBase + ".attr");
     try {
       OBJECT_MAPPER.writeValue(attributeFile, attributes);
@@ -304,12 +318,23 @@ public abstract class SequenceValidator {
       throw new RuntimeException("While writing attributes to " + attributeFile.getAbsolutePath(),
           e);
     }
+  }
+
+  private void recordRawMessage(Object message, String messageBase) {
+    recordRawMessage(OBJECT_MAPPER.convertValue(message, new TypeReference<>(){}), messageBase);
+  }
+
+  private void recordRawMessage(Map<String, Object> message, String messageBase) {
+    String testOutDirName = TESTS_OUT_DIR + "/" + testName;
+    File testOutDir = new File(deviceOutputDir, testOutDirName);
+    debug("received " + messageBase);
+    testOutDir.mkdirs();
 
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing message to " + attributeFile.getAbsolutePath(), e);
+      throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     }
   }
 
@@ -359,13 +384,13 @@ public abstract class SequenceValidator {
     // Restore the config to a canonical state.
     deviceConfig = readGeneratedConfig();
     updateConfig();
-
     deviceConfig = null;
     deviceState = null;
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
+      recordRawMessage(data, "local_" + subBlock.value());
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
@@ -393,6 +418,7 @@ public abstract class SequenceValidator {
       String conversionString = OBJECT_MAPPER.writeValueAsString(system);
       AugmentedSystemConfig augmentedConfig = OBJECT_MAPPER.readValue(conversionString,
           AugmentedSystemConfig.class);
+      debug("System config extra field " + extraField);
       augmentedConfig.extraField = extraField;
       return augmentedConfig;
     } catch (Exception e) {
@@ -461,8 +487,8 @@ public abstract class SequenceValidator {
     try {
       return evaluator.get();
     } catch (Exception e) {
-      info("Suppressing exception: " + e);
-      debug(stackTraceString(e));
+      debug("Suppressing exception: " + e);
+      trace(stackTraceString(e));
       return false;
     }
   }
@@ -520,7 +546,7 @@ public abstract class SequenceValidator {
     waitingCondition = null;
   }
 
-  protected String getTimestamp(Date date) {
+  protected static String getTimestamp(Date date) {
     try {
       if (date == null) {
         return "null";
@@ -612,6 +638,10 @@ public abstract class SequenceValidator {
       deviceConfig.version = receivedConfig.version;
     }
     return deviceConfig.equals(receivedConfig);
+  }
+
+  protected void trace(String message) {
+    log(message, Level.TRACE);
   }
 
   protected void debug(String message) {

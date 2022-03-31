@@ -273,9 +273,14 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   let message = {};
   try {
-    message = JSON.parse(oldConfig);
+    const resetConfig = subFolder === "system" && subContents.extra_field === "reset_config";
+    if (!resetConfig && oldConfig) {
+      message = JSON.parse(oldConfig);
+    } else {
+      console.log("Config reset explicit=" + resetConfig);
+    }
   } catch (e) {
-    console.warn('Config parse error, assuming empty', e);
+    console.warn('Previous config parse error, ignoring update');
   }
 
   message.version = UDMI_VERSION;

@@ -5,8 +5,8 @@ import java.text.ParseException;
 import java.util.Date;
 
 /**
- * Date format that strips out the ms to keep compatibility with string representations that
- * don't include allllllll the seconds. This basically makes .equals() work.
+ * Date format that strips out the ms to keep compatibility with string representations that don't
+ * include allllllll the seconds. This basically makes .equals() work.
  */
 public class CleanDateFormat extends ISO8601DateFormat {
 
@@ -19,8 +19,10 @@ public class CleanDateFormat extends ISO8601DateFormat {
     return cleanDate(new Date());
   }
 
-  public static boolean dateEquals(Date initialConfig, Date last_config) {
-    return cleanDate(initialConfig).equals(cleanDate(last_config));
+  public static boolean dateEquals(Date dateBase, Date dateTarget) {
+    System.err.println("dateEquals " + SequenceValidator.getTimestamp(cleanDate(dateBase)) + " " +
+        SequenceValidator.getTimestamp(cleanDate(dateTarget)));
+    return cleanDate(dateBase).equals(cleanDate(dateTarget));
   }
 
   @Override
