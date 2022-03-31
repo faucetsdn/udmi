@@ -98,6 +98,7 @@ public abstract class SequenceValidator {
       "configs", Config.class,
       "states", State.class
   );
+  public static final int CONFIG_SYNC_DELAY_MS = 10000;
 
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -282,6 +283,8 @@ public abstract class SequenceValidator {
 
   protected Date syncConfig() {
     updateConfig();
+    final long endTime = System.currentTimeMillis() + CONFIG_SYNC_DELAY_MS;
+    untilTrue(() -> System.currentTimeMillis() > endTime, "startup delay");
     untilTrue(this::configUpdateComplete, "device config sync");
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
@@ -305,7 +308,10 @@ public abstract class SequenceValidator {
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    String messageBase = String.format("%s_%s", subType, subFolder);
+    String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
+    if (logLevel <= Level.TRACE.value()) {
+      messageBase = messageBase + "_" + message.get("timestamp");
+    }
 
     recordRawMessage(message, messageBase);
 
@@ -321,7 +327,12 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Object message, String messageBase) {
-    recordRawMessage(OBJECT_MAPPER.convertValue(message, new TypeReference<>(){}), messageBase);
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(message, new TypeReference<>() {
+    });
+    if (logLevel <= Level.TRACE.value()) {
+      messageBase = messageBase + "_" + getTimestamp();
+    }
+    recordRawMessage(objectMap, messageBase);
   }
 
   private void recordRawMessage(Map<String, Object> message, String messageBase) {
@@ -406,6 +417,7 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
+    recordRawMessage(deviceConfig, "local_configs");
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -601,7 +613,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
+  private synchronized void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
     Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
@@ -621,7 +633,6 @@ public abstract class SequenceValidator {
     }
   }
 
-
   private <T> T convertTo(Object message, Class<T> entryClass) {
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
@@ -631,12 +642,10 @@ public abstract class SequenceValidator {
     }
   }
 
-  private boolean configUpdateComplete() {
+  private synchronized boolean configUpdateComplete() {
     Config receivedConfig = (Config) receivedUpdates.get("configs");
-    if (receivedConfig != null) {
-      deviceConfig.timestamp = receivedConfig.timestamp;
-      deviceConfig.version = receivedConfig.version;
-    }
+    deviceConfig.timestamp = receivedConfig == null ? null : receivedConfig.timestamp;
+    deviceConfig.version = receivedConfig == null ? null : receivedConfig.version;
     return deviceConfig.equals(receivedConfig);
   }
 
