@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -17,16 +18,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.daq.mqtt.util.CloudDeviceSettings;
-import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.daq.mqtt.util.*;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
-import com.google.daq.mqtt.util.PubSubPusher;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.InputStream;
+
+import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
@@ -49,6 +44,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Metadata;
+import udmi.schema.SiteDefaults;
 
 public class Registrar {
 
@@ -73,6 +70,7 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
+  private static final String SITE_DEFAULTS_JSON = "site_defaults.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
@@ -89,6 +87,7 @@ public class Registrar {
   private boolean updateCloudIoT;
   private Duration idleLimit;
   private Set<String> cloudDevices;
+  private SiteDefaults siteDefaults;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -99,6 +98,8 @@ public class Registrar {
       if (registrar.schemaBase == null) {
         registrar.setToolRoot(null);
       }
+
+      registrar.loadSiteDefaults();
 
       if (processAllDevices) {
         registrar.processDevices();
@@ -597,7 +598,7 @@ public class Registrar {
         LocalDevice localDevice =
             localDevices.computeIfAbsent(
                 deviceName,
-                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation));
+                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation, siteDefaults));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -652,6 +653,28 @@ public class Registrar {
       schemas.put(key, schema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void loadSiteDefaults() {
+    if (!schemas.containsKey("site_defaults.json"))
+      return;
+
+    File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_JSON);
+    try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
+      schemas.get(SITE_DEFAULTS_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+    } catch (ProcessingException | ValidationException e) {
+      throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
+    } catch (IOException e) {
+      throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
+    }
+
+    this.siteDefaults = null;
+
+    try {
+      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, SiteDefaults.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + SITE_DEFAULTS_JSON, e);
     }
   }
 

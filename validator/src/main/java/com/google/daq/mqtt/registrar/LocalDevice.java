@@ -64,20 +64,12 @@ import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetMetadata;
 import udmi.schema.PointsetConfig;
+import udmi.schema.SiteDefaults;
 
 class LocalDevice {
 
-  public static final String INVALID_METADATA_HASH = "INVALID";
-  public static final String EXCEPTION_VALIDATING = "Validating";
-  public static final String EXCEPTION_LOADING = "Loading";
-  public static final String EXCEPTION_READING = "Reading";
-  public static final String EXCEPTION_WRITING = "Writing";
-  public static final String EXCEPTION_FILES = "Files";
-  public static final String EXCEPTION_REGISTERING = "Registering";
-  public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_ENVELOPE = "Envelope";
-  public static final String EXCEPTION_SAMPLES = "Samples";
   private static final PrettyPrinter PROPER_PRETTY_PRINTER_POLICY = new ProperPrettyPrinterPolicy();
+
   private static final ObjectMapper OBJECT_MAPPER_RAW =
       new ObjectMapper()
           .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
@@ -86,11 +78,13 @@ class LocalDevice {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
+
   private static final ObjectMapper OBJECT_MAPPER =
       OBJECT_MAPPER_RAW
           .copy()
           .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .enable(SerializationFeature.INDENT_OUTPUT);
+
   private static final String RSA_AUTH_TYPE = "RS256";
   private static final String RSA_CERT_TYPE = "RS256_X509";
   private static final String RSA_KEY_FORMAT = "RSA_PEM";
@@ -101,6 +95,7 @@ class LocalDevice {
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
+
   private static final String ES_AUTH_TYPE = "ES256";
   private static final String ES_CERT_TYPE = "ES256_X509";
   private static final String ES_KEY_FORMAT = "ES256_PEM";
@@ -111,17 +106,14 @@ class LocalDevice {
   private static final String ES_CERT_PEM = "ec_cert.pem";
   private static final String ES_PRIVATE_PEM = "ec_private.pem";
   private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
-  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
-      ImmutableMap.of(
-          RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
-          RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
-          ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
-          ES_CERT_TYPE, ES_PRIVATE_PKCS8);
+
   private static final String SAMPLES_DIR = "samples";
   private static final String AUX_DIR = "aux";
   private static final String OUT_DIR = "out";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
+
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
+
   private static final Set<String> RSA_PRIVATE_KEY_FILES =
       ImmutableSet.of(RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
   private static final Set<String> ES_PRIVATE_KEY_FILES =
@@ -132,6 +124,14 @@ class LocalDevice {
           RSA_CERT_TYPE, RSA_PRIVATE_KEY_FILES,
           ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
           ES_CERT_TYPE, ES_PRIVATE_KEY_FILES);
+
+  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
+          RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
+          ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
+          ES_CERT_TYPE, ES_PRIVATE_PKCS8);
+
   private static final Map<String, String> PUBLIC_KEY_FILE_MAP =
       ImmutableMap.of(
           RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
@@ -151,8 +151,10 @@ class LocalDevice {
           SAMPLES_DIR,
           AUX_DIR,
           OUT_DIR);
+
   private static final Set<String> OUT_FILES =
       ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
+
   private static final Set<String> ALL_KEY_FILES =
       ImmutableSet.of(
           RSA_PUBLIC_PEM,
@@ -168,9 +170,23 @@ class LocalDevice {
           RSA_CERT_TYPE, RSA_CERT_FORMAT,
           ES_AUTH_TYPE, ES_KEY_FORMAT,
           ES_CERT_TYPE, ES_CERT_FILE);
+
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
-  public static final String UDMI_VERSION = "1.3.14";
+  private static final String UDMI_VERSION = "1.3.14";
+
+  public static final String INVALID_METADATA_HASH = "INVALID";
+
+  public static final String EXCEPTION_VALIDATING = "Validating";
+  public static final String EXCEPTION_LOADING = "Loading";
+  public static final String EXCEPTION_READING = "Reading";
+  public static final String EXCEPTION_WRITING = "Writing";
+  public static final String EXCEPTION_FILES = "Files";
+  public static final String EXCEPTION_REGISTERING = "Registering";
+  public static final String EXCEPTION_CREDENTIALS = "Credential";
+  public static final String EXCEPTION_ENVELOPE = "Envelope";
+  public static final String EXCEPTION_SAMPLES = "Samples";
+
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;
@@ -180,6 +196,7 @@ class LocalDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
+  private final SiteDefaults siteDefaults;
 
   private String deviceNumId;
 
@@ -187,12 +204,13 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation) {
+      String generation, SiteDefaults siteDefaults) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
+      this.siteDefaults = siteDefaults;
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -203,8 +221,10 @@ class LocalDevice {
     }
   }
 
-  static boolean deviceExists(File devicesDir, String deviceName) {
-    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
+  LocalDevice(
+          File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+          String generation) {
+    this(siteDir, devicesDir, deviceId, schemas, generation, null);
   }
 
   private void prepareOutDir() {
@@ -213,6 +233,10 @@ class LocalDevice {
     }
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     exceptionLog.delete();
+  }
+
+  static boolean deviceExists(File devicesDir, String deviceName) {
+    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
   }
 
   public void validateExpected() {
@@ -244,28 +268,49 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private Metadata readMetadata() {
+  private Metadata readMetadataBase() {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
-    } catch (ProcessingException | ValidationException metadataException) {
-      exceptionMap.put(EXCEPTION_VALIDATING, metadataException);
+    } catch (ProcessingException | ValidationException metadata_exception) {
+      exceptionMap.put(EXCEPTION_VALIDATING, metadata_exception);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
     try {
       return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
-    } catch (Exception mappingException) {
-      exceptionMap.put(EXCEPTION_READING, mappingException);
+    } catch (Exception mapping_exception) {
+      exceptionMap.put(EXCEPTION_READING, mapping_exception);
     }
     return null;
+  }
+
+  private Metadata readMetadata() {
+    final Metadata metadata = readMetadataBase();
+    // Copy values from siteDefaults into the metadata
+
+    if (siteDefaults != null) {
+      // Fields in siteDefaults that go into PointPointsetMetadata
+      for (String pointName : metadata.pointset.points.keySet()) {
+        PointPointsetMetadata ppm = metadata.pointset.points.get(pointName);
+        if (ppm.min_loglevel == null)
+          ppm.min_loglevel = siteDefaults.min_loglevel;
+        if (ppm.sample_limit_sec == null)
+          ppm.sample_limit_sec = siteDefaults.sample_limit_sec;
+        if (ppm.sample_rate_sec == null)
+          ppm.sample_rate_sec = siteDefaults.sample_rate_sec;
+        metadata.pointset.points.put(pointName, ppm);
+      }
+    }
+
+    return metadata;
   }
 
   private Metadata readNormalized() {
     try {
       File metadataFile = new File(outDir, NORMALIZED_JSON);
       return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
-    } catch (Exception mappingException) {
+    } catch (Exception mapping_exception) {
       return new Metadata();
     }
   }
@@ -510,11 +555,11 @@ class LocalDevice {
     metadata.pointset.points.forEach(
         (metadataKey, value) ->
             pointsetConfig.points.computeIfAbsent(
-                metadataKey, configKey -> configFromMetadata(value)));
+                metadataKey, configKey -> ConfigFromMetadata(value)));
     return pointsetConfig;
   }
 
-  PointPointsetConfig configFromMetadata(PointPointsetMetadata metadata) {
+  PointPointsetConfig ConfigFromMetadata(PointPointsetMetadata metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.ref = metadata.ref;
     if (Boolean.TRUE.equals(metadata.writable)) {
@@ -550,8 +595,7 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER.writeValueAsString(envelope);
-      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
-          .validate(OBJECT_MAPPER.readTree(envelopeJson));
+      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON).validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
           throw new RuntimeException("against schema", action.asException());
@@ -690,7 +734,7 @@ class LocalDevice {
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     try {
       try (FileWriter fileWriter = new FileWriter(exceptionLog, true);
-          PrintWriter printWriter = new PrintWriter(fileWriter)) {
+           PrintWriter printWriter = new PrintWriter(fileWriter)) {
         printWriter.println(exceptionType);
         exception.printStackTrace(printWriter);
       }
@@ -742,7 +786,6 @@ class LocalDevice {
   }
 
   private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {
-
     @Override
     public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
       jg.writeRaw(": ");
