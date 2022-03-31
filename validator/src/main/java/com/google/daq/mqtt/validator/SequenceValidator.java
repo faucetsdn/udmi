@@ -160,6 +160,7 @@ public abstract class SequenceValidator {
   public Timeout globalTimeout = new Timeout(75, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
+  private String sentDeviceConfig;
   protected State deviceState;
   private Date lastLog;
   private String waitingCondition;
@@ -240,6 +241,7 @@ public abstract class SequenceValidator {
         return "null";
       }
       String dateString = OBJECT_MAPPER.writeValueAsString(date);
+      // Remove the encapsulating quotes included because it's a JSON string-in-a-string.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
@@ -289,6 +291,7 @@ public abstract class SequenceValidator {
     deviceConfig.system = new SystemConfig();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    recordDeviceConfig();
     untilTrue(this::configUpdateComplete, "device config reset");
     extraField = null;
   }
@@ -420,12 +423,33 @@ public abstract class SequenceValidator {
     deviceState = null;
   }
 
+  protected void updateConfig() {
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
+    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
+    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
+    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
+    recordDeviceConfig();
+  }
+
+  private void recordDeviceConfig() {
+    try {
+      String messageData = OBJECT_MAPPER.writeValueAsString(deviceConfig);
+      if (!messageData.equals(sentDeviceConfig)) {
+        recordRawMessage(deviceConfig, "local_configs");
+        sentDeviceConfig = messageData;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Whole recording device config", e);
+    }
+  }
+
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
-      recordRawMessage(data, "local_" + subBlock.value());
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
+        recordRawMessage(data, "local_" + subBlock.value());
         debug(String.format("sending %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
         String topic = "config/" + subBlock;
@@ -435,15 +459,6 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
-  }
-
-  protected void updateConfig() {
-    recordRawMessage(deviceConfig, "local_configs");
-    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
-    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
-    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
-    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
   }
 
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
@@ -627,7 +642,11 @@ public abstract class SequenceValidator {
     Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
-      info("Updated config with timestamp " + getTimestamp(((Config) converted).timestamp));
+      Config config = (Config) converted;
+      deviceConfig.timestamp = config.timestamp;
+      deviceConfig.version = config.version;
+      info("Updated config with timestamp " + getTimestamp(config.timestamp));
+      recordDeviceConfig();
     } else if (converted instanceof State) {
       info(
           "Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
@@ -653,10 +672,7 @@ public abstract class SequenceValidator {
   }
 
   private synchronized boolean configUpdateComplete() {
-    Config receivedConfig = (Config) receivedUpdates.get("configs");
-    deviceConfig.timestamp = receivedConfig == null ? null : receivedConfig.timestamp;
-    deviceConfig.version = receivedConfig == null ? null : receivedConfig.version;
-    return deviceConfig.equals(receivedConfig);
+    return deviceConfig.equals(receivedUpdates.get("configs"));
   }
 
   protected void trace(String message) {
