@@ -66,6 +66,8 @@ public abstract class SequenceValidator {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String UPDATE_SUBTYPE = "update";
   public static final String SEQUENCER_CATEGORY = "sequencer";
+  public static final int CONFIG_SYNC_DELAY_MS = 10000;
+  public static final String EVENT_PREFIX = "event_";
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String STATE_QUERY_TOPIC = "query/states";
@@ -98,8 +100,6 @@ public abstract class SequenceValidator {
       "configs", Config.class,
       "states", State.class
   );
-  public static final int CONFIG_SYNC_DELAY_MS = 10000;
-
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -234,6 +234,18 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected static String getTimestamp(Date date) {
+    try {
+      if (date == null) {
+        return "null";
+      }
+      String dateString = OBJECT_MAPPER.writeValueAsString(date);
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
   private Config readGeneratedConfig() {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
@@ -348,8 +360,8 @@ public abstract class SequenceValidator {
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
-      if (traceLogLevel()) {
-        trace("received " + messageBase + ": " + OBJECT_MAPPER.writeValueAsString(message));
+      if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
+        trace("received " + messageBase + ":\n" + OBJECT_MAPPER.writeValueAsString(message));
       } else {
         debug("received " + messageBase);
       }
@@ -439,7 +451,7 @@ public abstract class SequenceValidator {
       String conversionString = OBJECT_MAPPER.writeValueAsString(system);
       AugmentedSystemConfig augmentedConfig = OBJECT_MAPPER.readValue(conversionString,
           AugmentedSystemConfig.class);
-      debug("System config extra field " + extraField);
+      debug("system config extra field " + extraField);
       augmentedConfig.extraField = extraField;
       return augmentedConfig;
     } catch (Exception e) {
@@ -567,18 +579,6 @@ public abstract class SequenceValidator {
     waitingCondition = null;
   }
 
-  protected static String getTimestamp(Date date) {
-    try {
-      if (date == null) {
-        return "null";
-      }
-      String dateString = OBJECT_MAPPER.writeValueAsString(date);
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
   protected String getTimestamp() {
     return getTimestamp(CleanDateFormat.cleanDate());
   }
@@ -622,7 +622,8 @@ public abstract class SequenceValidator {
     }
   }
 
-  private synchronized void handleReflectorMessage(String subFolderRaw, Map<String, Object> message) {
+  private synchronized void handleReflectorMessage(String subFolderRaw,
+      Map<String, Object> message) {
     Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
