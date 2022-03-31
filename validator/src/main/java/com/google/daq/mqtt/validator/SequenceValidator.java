@@ -284,6 +284,7 @@ public abstract class SequenceValidator {
   protected Date syncConfig() {
     updateConfig();
     final long endTime = System.currentTimeMillis() + CONFIG_SYNC_DELAY_MS;
+    debug("config startup delay " + CONFIG_SYNC_DELAY_MS);
     untilTrue(() -> System.currentTimeMillis() > endTime, "startup delay");
     untilTrue(this::configUpdateComplete, "device config sync");
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
@@ -309,7 +310,7 @@ public abstract class SequenceValidator {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
     String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
-    if (logLevel <= Level.TRACE.value()) {
+    if (traceLogLevel()) {
       messageBase = messageBase + "_" + message.get("timestamp");
     }
 
@@ -326,10 +327,14 @@ public abstract class SequenceValidator {
     }
   }
 
+  private boolean traceLogLevel() {
+    return logLevel <= Level.TRACE.value();
+  }
+
   private void recordRawMessage(Object message, String messageBase) {
     Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(message, new TypeReference<>() {
     });
-    if (logLevel <= Level.TRACE.value()) {
+    if (traceLogLevel()) {
       messageBase = messageBase + "_" + getTimestamp();
     }
     recordRawMessage(objectMap, messageBase);
@@ -338,12 +343,16 @@ public abstract class SequenceValidator {
   private void recordRawMessage(Map<String, Object> message, String messageBase) {
     String testOutDirName = TESTS_OUT_DIR + "/" + testName;
     File testOutDir = new File(deviceOutputDir, testOutDirName);
-    debug("received " + messageBase);
     testOutDir.mkdirs();
 
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
+      if (traceLogLevel()) {
+        trace("received " + messageBase + ": " + OBJECT_MAPPER.writeValueAsString(message));
+      } else {
+        debug("received " + messageBase);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     }
