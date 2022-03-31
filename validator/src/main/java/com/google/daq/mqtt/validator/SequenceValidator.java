@@ -234,6 +234,10 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected String getTimestamp() {
+    return getTimestamp(CleanDateFormat.cleanDate());
+  }
+
   protected static String getTimestamp(Date date) {
     try {
       if (date == null) {
@@ -417,6 +421,7 @@ public abstract class SequenceValidator {
   @After
   public void tearDown() {
     // Restore the config to a canonical state.
+    resetConfig();
     deviceConfig = readGeneratedConfig();
     updateConfig();
     deviceConfig = null;
@@ -592,10 +597,6 @@ public abstract class SequenceValidator {
     }
     info("finished " + waitingCondition);
     waitingCondition = null;
-  }
-
-  protected String getTimestamp() {
-    return getTimestamp(CleanDateFormat.cleanDate());
   }
 
   private void receiveMessage() {

@@ -21,6 +21,13 @@ public class CleanDateFormat extends ISO8601DateFormat {
     return cleanDate(new Date());
   }
 
+  /**
+   * Check if two dates are equal after cleaning them up.
+   *
+   * @param dateBase   base date
+   * @param dateTarget compare against
+   * @return if the dates are equal (after cleaning)
+   */
   public static boolean dateEquals(Date dateBase, Date dateTarget) {
     return cleanDate(dateBase).equals(cleanDate(dateTarget));
   }

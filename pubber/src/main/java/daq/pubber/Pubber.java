@@ -53,6 +53,7 @@ public class Pubber {
 
   public static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
+
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);

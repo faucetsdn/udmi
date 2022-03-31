@@ -27,8 +27,8 @@ public class ConfigValidator extends SequenceValidator {
     untilTrue(() -> {
       Date expectedConfig = deviceConfig.timestamp;
       Date lastConfig = deviceState.system.last_config;
-      debug("date match  " + getTimestamp(cleanDate(expectedConfig)) + " " +
-          getTimestamp(cleanDate(lastConfig)));
+      debug("date match  " + getTimestamp(cleanDate(expectedConfig)) + " "
+          + getTimestamp(cleanDate(lastConfig)));
       return dateEquals(expectedConfig, lastConfig);
     }, "state last_config match");
   }
