@@ -45,6 +45,7 @@ deploy-staging:
   stage: deploy-staging
   environment: staging
   variables:
+    NAMESPACE: udmi
     CHART_NAME: udmi-web
     HELM_REPO: udmd/helm
     CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN
