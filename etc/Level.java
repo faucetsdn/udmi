@@ -7,6 +7,7 @@ import java.util.Map;
 // proper source and don't be fooled! This is subset of the StackDriver LogSeverity levels.
 public enum Level {
 
+  TRACE(50),
   DEBUG(100),
   INFO(200),
   NOTICE(300),

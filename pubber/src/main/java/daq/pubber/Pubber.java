@@ -48,19 +48,17 @@ import udmi.schema.SystemState;
  */
 public class Pubber {
 
+  public static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-
   private static final String POINTSET_TOPIC = "events/pointset";
   private static final String SYSTEM_TOPIC = "events/system";
   private static final String STATE_TOPIC = "state";
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
-
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
@@ -84,7 +82,6 @@ public class Pubber {
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-  public static final String UDMI_VERSION = "1.3.14";
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -541,10 +538,20 @@ public class Pubber {
     Entry entry = new Entry();
     entry.category = category;
     entry.timestamp = new Date();
-    entry.message = success ? "success" : e.getMessage();
-    entry.detail = success ? null : e.toString();
+    entry.message = success ? "success"
+        : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+    entry.detail = success ? null : exceptionDetail(e);
     entry.level = success ? Level.INFO.value() : Level.ERROR.value();
     return entry;
+  }
+
+  private String exceptionDetail(Throwable e) {
+    StringBuilder buffer = new StringBuilder();
+    while (e != null) {
+      buffer.append(e).append(';');
+      e = e.getCause();
+    }
+    return buffer.toString();
   }
 
   private void gatewayHandler(Config config) {
@@ -602,8 +609,10 @@ public class Pubber {
 
   private void updatePointsetConfig(PointsetConfig pointsetConfig) {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
+    Map<String, PointPointsetConfig> points =
+        useConfig.points != null ? useConfig.points : new HashMap<>();
     allPoints.forEach(point ->
-        updatePointConfig(point, useConfig.points.get(point.getName())));
+        updatePointConfig(point, points.get(point.getName())));
     deviceState.pointset.state_etag = useConfig.state_etag;
   }
 
@@ -669,7 +678,8 @@ public class Pubber {
     }
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
-    info(String.format("update state %s", isoConvert(deviceState.timestamp)));
+    info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+        isoConvert(deviceState.system.last_config)));
     stateDirty = false;
     publishMessage(deviceId, STATE_TOPIC, deviceState);
     lastStateTimeMs = System.currentTimeMillis();

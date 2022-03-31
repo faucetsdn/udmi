@@ -271,12 +271,12 @@ public abstract class SequenceValidator {
   protected Date syncConfig() {
     updateConfig();
     untilTrue(this::configUpdateComplete, "device config update");
-    info("config synced to " + getTimestamp(deviceConfig.timestamp));
-    return deviceConfig.timestamp;
+    debug("config synced to " + getTimestamp(deviceConfig.timestamp));
+    return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
 
   @Test
-  public void valid_serial_no() {
+  public void provided_serial_no() {
     Preconditions.checkNotNull(serialNo, "no test serial_no provided");
   }
 
@@ -446,7 +446,7 @@ public abstract class SequenceValidator {
     String deviceSerial = deviceState == null ? null
         : deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(deviceSerial, lastSerialNo)) {
-      info(String.format("Received serial no %s", deviceSerial));
+      debug(String.format("Received serial no %s", deviceSerial));
       lastSerialNo = deviceSerial;
     }
     boolean serialValid = Objects.equals(serialNo, deviceSerial);

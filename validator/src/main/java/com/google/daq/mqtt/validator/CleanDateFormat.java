@@ -10,13 +10,17 @@ import java.util.Date;
  */
 public class CleanDateFormat extends ISO8601DateFormat {
 
-  static Date cleanDate(Date parsedDate) {
+  public static Date cleanDate(Date parsedDate) {
     parsedDate.setTime(parsedDate.getTime() - parsedDate.getTime() % 1000);
     return parsedDate;
   }
 
   static Date cleanDate() {
     return cleanDate(new Date());
+  }
+
+  public static boolean dateEquals(Date initialConfig, Date last_config) {
+    return cleanDate(initialConfig).equals(cleanDate(last_config));
   }
 
   @Override
