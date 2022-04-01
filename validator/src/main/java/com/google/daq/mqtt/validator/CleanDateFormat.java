@@ -10,6 +10,12 @@ import java.util.Date;
  */
 public class CleanDateFormat extends ISO8601DateFormat {
 
+  /**
+   * Clean a date object (remove ms).
+   *
+   * @param parsedDate date to clean
+   * @return cleaned date
+   */
   public static Date cleanDate(Date parsedDate) {
     if (parsedDate != null) {
       parsedDate.setTime(parsedDate.getTime() - parsedDate.getTime() % 1000);
