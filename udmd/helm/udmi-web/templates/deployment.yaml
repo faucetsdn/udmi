@@ -40,15 +40,15 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 4200
+              containerPort: 80
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthcheck
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthcheck
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

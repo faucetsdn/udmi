@@ -48,6 +48,9 @@ deploy-lab:
     CHART_NAME: udmi-api
     HELM_REPO: udmd/helm
     CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN
+  rules:
+      - if: $CI_COMMIT_BRANCH == "master"
+        when: manual  
 
 
 
