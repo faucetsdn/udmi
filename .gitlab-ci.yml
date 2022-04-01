@@ -7,8 +7,6 @@ api:
   rules:
     - changes:
       - "udmd/api/*"
-    
-  
 
 web:
   stage: build
@@ -19,7 +17,6 @@ web:
   rules:
     - changes:
       - "udmd/web/*"
-    
 
 gcp:
   stage: build
