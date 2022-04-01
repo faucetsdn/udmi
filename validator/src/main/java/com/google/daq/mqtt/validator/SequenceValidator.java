@@ -346,10 +346,6 @@ public abstract class SequenceValidator {
     }
   }
 
-  private boolean traceLogLevel() {
-    return logLevel <= Level.TRACE.value();
-  }
-
   private void recordRawMessage(Object message, String messageBase) {
     Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(message, new TypeReference<>() {
     });
@@ -375,6 +371,10 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     }
+  }
+
+  private boolean traceLogLevel() {
+    return logLevel <= Level.TRACE.value();
   }
 
   private void writeSystemLogs(SystemEvent message) {
@@ -437,18 +437,6 @@ public abstract class SequenceValidator {
     recordDeviceConfig();
   }
 
-  private void recordDeviceConfig() {
-    try {
-      String messageData = OBJECT_MAPPER.writeValueAsString(deviceConfig);
-      if (!messageData.equals(sentDeviceConfig)) {
-        recordRawMessage(deviceConfig, "local_configs");
-        sentDeviceConfig = messageData;
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("While recording device config", e);
-    }
-  }
-
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
@@ -463,6 +451,18 @@ public abstract class SequenceValidator {
       return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
+    }
+  }
+
+  private void recordDeviceConfig() {
+    try {
+      String messageData = OBJECT_MAPPER.writeValueAsString(deviceConfig);
+      if (!messageData.equals(sentDeviceConfig)) {
+        recordRawMessage(deviceConfig, "local_configs");
+        sentDeviceConfig = messageData;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While recording device config", e);
     }
   }
 
