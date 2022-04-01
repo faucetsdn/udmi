@@ -271,7 +271,6 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-
   let newConfig = {};
   try {
     const resetConfig = subFolder === "system" && subContents.extra_field === "reset_config";

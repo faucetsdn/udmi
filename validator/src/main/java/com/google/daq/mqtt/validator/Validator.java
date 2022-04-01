@@ -309,7 +309,6 @@ public class Validator {
       Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
-    //attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
