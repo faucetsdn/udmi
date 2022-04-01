@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="WritebackValidator.system_last_update" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
-    <module name="daq-validator.validator" />
+  <configuration default="false" name="ConfigValidator.system_last_update" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="validator" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.google.daq.mqtt.validator.*" />
@@ -8,12 +8,12 @@
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.google.daq.mqtt.validator.validations" />
-    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.WritebackValidator" />
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.ConfigValidator" />
     <option name="METHOD_NAME" value="system_last_update" />
     <option name="TEST_OBJECT" value="method" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <envs>
-      <env name="VALIDATOR_CONFIG" value="udmi_site_model/validator/validator.json" />
+      <env name="VALIDATOR_CONFIG" value="$USER_HOME$/sites/delta-daq-site-model/validator/validator.json" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />

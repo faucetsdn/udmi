@@ -28,7 +28,6 @@ public abstract class PointValidator extends SequenceValidator {
     } catch (SkipTest skipTest) {
       info("Not setting config points: " + skipTest.getMessage());
     }
-    untilTrue(this::validSerialNo, "valid serial no " + serial_no);
   }
 
   private void ensurePointConfig(String target) {

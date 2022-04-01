@@ -1,8 +1,8 @@
 RESULT pass broken_config Sequence complete
 RESULT pass extra_config Sequence complete
+RESULT pass provided_serial_no Sequence complete
+RESULT pass provided_serial_no Sequence complete
+RESULT pass provided_serial_no Sequence complete
 RESULT pass self_enumeration Sequence complete
 RESULT pass system_last_update Sequence complete
-RESULT pass valid_serial_no Sequence complete
-RESULT pass valid_serial_no Sequence complete
-RESULT pass valid_serial_no Sequence complete
 RESULT skip writeback_states Missing 'invalid' target specification

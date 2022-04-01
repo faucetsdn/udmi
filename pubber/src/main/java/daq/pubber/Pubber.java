@@ -10,7 +10,10 @@ import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import daq.pubber.SwarmMessage.Attributes;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,16 +55,19 @@ import udmi.schema.SystemState;
  */
 public class Pubber {
 
+  public static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
+
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
   private static final String HOSTNAME = System.getenv("HOSTNAME");
 
+  private static final String POINTSET_TOPIC = "events/pointset";
+  private static final String SYSTEM_TOPIC = "events/system";
+  private static final String STATE_TOPIC = "state";
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
-
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
@@ -82,20 +88,19 @@ public class Pubber {
   );
   private static final int MESSAGE_REPORT_INTERVAL = 100;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
+      Level.TRACE, LOG::trace,
       Level.DEBUG, LOG::debug,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-<<<<<<< HEAD
+
   private static final Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadata(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadata(false)
   );
-=======
-  public static final String UDMI_VERSION = "1.3.14";
->>>>>>> master
+
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -553,10 +558,20 @@ public class Pubber {
     Entry entry = new Entry();
     entry.category = category;
     entry.timestamp = new Date();
-    entry.message = success ? "success" : e.getMessage();
-    entry.detail = success ? null : e.toString();
+    entry.message = success ? "success"
+        : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+    entry.detail = success ? null : exceptionDetail(e);
     entry.level = success ? Level.INFO.value() : Level.ERROR.value();
     return entry;
+  }
+
+  private String exceptionDetail(Throwable e) {
+    StringBuilder buffer = new StringBuilder();
+    while (e != null) {
+      buffer.append(e).append(';');
+      e = e.getCause();
+    }
+    return buffer.toString();
   }
 
   private void gatewayHandler(Config config) {
@@ -576,6 +591,7 @@ public class Pubber {
       publisherConfigLog("apply", null);
     } catch (Exception e) {
       publisherConfigLog("apply", e);
+      trace(stackTraceString(e));
     }
     publishStateMessage();
   }
@@ -615,6 +631,14 @@ public class Pubber {
         AbstractPoint::enumerate));
     publishDeviceMessage(discoveryEvent);
   }
+    
+  private String stackTraceString(Throwable e) {
+    OutputStream outputStream = new ByteArrayOutputStream();
+    try (PrintStream ps = new PrintStream(outputStream)) {
+      e.printStackTrace(ps);
+    }
+    return outputStream.toString();
+  }
 
   private String getTimestamp() {
     return isoConvert(new Date());
@@ -631,7 +655,11 @@ public class Pubber {
 
   private String isoConvert(Date timestamp) {
     try {
+      if (timestamp == null) {
+        return "null";
+      }
       String dateString = OBJECT_MAPPER.writeValueAsString(timestamp);
+      // Strip off the leading and trailing quotes from the JSON string-as-string representation.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
@@ -640,8 +668,10 @@ public class Pubber {
 
   private void updatePointsetConfig(PointsetConfig pointsetConfig) {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
+    Map<String, PointPointsetConfig> points =
+        useConfig.points != null ? useConfig.points : new HashMap<>();
     allPoints.forEach(point ->
-        updatePointConfig(point, useConfig.points.get(point.getName())));
+        updatePointConfig(point, points.get(point.getName())));
     deviceState.pointset.state_etag = useConfig.state_etag;
   }
 
@@ -671,13 +701,8 @@ public class Pubber {
     }
   }
 
-<<<<<<< HEAD
   private void sendDeviceMessage() {
-    devicePoints.version = 1;
-=======
-  private void sendDeviceMessage(String deviceId) {
     devicePoints.version = UDMI_VERSION;
->>>>>>> master
     devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
       info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
@@ -711,7 +736,9 @@ public class Pubber {
       return;
     }
     deviceState.timestamp = new Date();
-    info(String.format("update state %s", isoConvert(deviceState.timestamp)));
+    String deviceId = configuration.deviceId;
+    info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
+        isoConvert(deviceState.system.last_config)));
     stateDirty = false;
     publishDeviceMessage(deviceState);
     lastStateTimeMs = System.currentTimeMillis();
@@ -768,6 +795,10 @@ public class Pubber {
     cloudLog(message, Level.INFO);
   }
 
+  private void trace(String message) {
+    cloudLog(message, Level.TRACE);
+  }
+
   private void warn(String message) {
     cloudLog(message, Level.WARNING);
   }
@@ -777,9 +808,9 @@ public class Pubber {
   }
 
   private void error(String message, Throwable e) {
-    LOG.error(message, e);
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+    trace(stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {

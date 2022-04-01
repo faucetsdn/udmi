@@ -66,8 +66,8 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
-          cat out/validation_report.json && echo
-          cat out/devices/AHU-1/state.json && echo
+          cat udmi_site_model/out/validation_report.json && echo
+          cat udmi_site_model/out/devices/AHU-1/state.json && echo
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: sequence tests
         env:
@@ -85,9 +85,9 @@ jobs:
           validator/bin/build check
       - name: device output logs
         if: ${{ always() }}
-        run: more `find out/devices/ -type f`
+        run: more `find udmi_site_model/out/devices/ -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |
           cat pubber.out || true
-          more `find out/groups/ -type f`
+          more out/*.json
