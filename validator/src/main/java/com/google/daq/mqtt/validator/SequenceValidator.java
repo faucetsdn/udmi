@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -162,7 +163,7 @@ public abstract class SequenceValidator {
   private String sentDeviceConfig;
   private Date lastLog;
   private String waitingCondition;
-  private boolean confirmSerial;
+  private boolean enforceSerial;
   private String testName;
   @Rule
   public TestWatcher testWatcher = new TestWatcher() {
@@ -273,7 +274,7 @@ public abstract class SequenceValidator {
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = null;
-    confirmSerial = false;
+    enforceSerial = false;
 
     resetConfig();
 
@@ -310,8 +311,11 @@ public abstract class SequenceValidator {
   }
 
   @Test
-  public void provided_serial_no() {
-    checkNotNull(serialNo, "no test serial_no provided");
+  public void valid_serial_no() {
+    if (serialNo == null) {
+      throw new SkipTest("No test serial number provided");
+    }
+    assertEquals("received serial no", serialNo, lastSerialNo);
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -537,14 +541,14 @@ public abstract class SequenceValidator {
     String deviceSerial = deviceState == null ? null
         : deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(deviceSerial, lastSerialNo)) {
-      debug(String.format("Received serial no %s", deviceSerial));
+      notice(String.format("Received serial no %s", deviceSerial));
       lastSerialNo = deviceSerial;
     }
-    boolean serialValid = Objects.equals(serialNo, deviceSerial);
-    if (!serialValid && confirmSerial) {
-      throw new IllegalStateException("Unexpected serial_no " + deviceSerial);
+    boolean serialValid = deviceSerial != null && Objects.equals(serialNo, deviceSerial);
+    if (!serialValid && enforceSerial) {
+      assertEquals("state serial no", serialNo, deviceSerial);
     }
-    confirmSerial = serialValid;
+    enforceSerial = serialValid;
     return serialValid;
   }
 
