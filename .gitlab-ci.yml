@@ -4,8 +4,10 @@ api:
     WORKING_DIR: udmd/api 
   trigger:
     include: udmd/api/build.yml
-  except:
-    - external_pull_requests
+  rules:
+    - changes:
+      - "udmd/api/*"
+    
   
 
 web:
@@ -14,12 +16,16 @@ web:
     WORKING_DIR: udmd/web
   trigger:
     include: udmd/web/build.yml
-  except:
-    - external_pull_requests
+  rules:
+    - changes:
+      - "udmd/web/*"
+    
 
 gcp:
   stage: build
   trigger:
     include: cloud/gcp/build.yml
-
-
+  rules:
+    - changes:
+      - "cloud/gcp/*"
+    

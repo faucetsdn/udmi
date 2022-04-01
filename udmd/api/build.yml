@@ -37,7 +37,7 @@ deploy-staging:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
     HELM_REPO: udmd/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
 
 deploy-lab:
   extends: .gks-deploy
@@ -47,7 +47,7 @@ deploy-lab:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
     HELM_REPO: udmd/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
   rules:
       - if: $CI_COMMIT_BRANCH == "master"
         when: manual  
