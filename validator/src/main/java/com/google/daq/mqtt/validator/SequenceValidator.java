@@ -696,10 +696,6 @@ public abstract class SequenceValidator {
     log(message, Level.DEBUG);
   }
 
-  protected void debug(String message) {
-    log(message, Level.DEBUG);
-  }
-
   protected void info(String message) {
     log(message, Level.INFO);
   }

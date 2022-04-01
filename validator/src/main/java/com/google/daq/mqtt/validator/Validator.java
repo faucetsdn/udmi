@@ -450,7 +450,7 @@ public class Validator {
   private boolean shouldValidateMessage(Map<String, String> attributes) {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    return "event".equals(subFolder) || "update".equals(subType);
+    return "event".equals(subType) || "update".equals(subType);
   }
 
   private File prepareDeviceOutDir(
