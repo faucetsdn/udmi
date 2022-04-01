@@ -81,7 +81,10 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
-  const messageStr = JSON.stringify(message);
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message));
+}
+
+function sendCommandStr(registryId, deviceId, subFolder, messageStr) {
   return registry_promise.then(() => {
     return sendCommandSafe(registryId, deviceId, subFolder, messageStr);
   });
@@ -269,19 +272,26 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   return Promise.all(promises);
 });
 
+function parse_old_config(oldConfig, resetConfig) {
+  if (!oldConfig || resetConfig) {
+    console.warn('Resetting config bock, explicit=' + resetConfig);
+    return {};
+  }
+
+  try {
+    return JSON.parse(oldConfig);
+  } catch(e) {
+    console.warn('Previous config parse error, ignoring update');
+    return null;
+  }
+}
+
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-  let newConfig = {};
-  try {
-    const resetConfig = subFolder === "system" && subContents.extra_field === "reset_config";
-    if (!resetConfig && oldConfig) {
-      newConfig = JSON.parse(oldConfig);
-    } else {
-      console.log("Config reset explicit=" + resetConfig);
-      resetConfig && delete subContents.extra_field;
-    }
-  } catch (e) {
-    console.warn('Previous config parse error, ignoring update');
+
+  const resetConfig = subFolder == "system" && subContents && subContents.extra_field == "reset_config";
+  const newConfig = parse_old_config(oldConfig, resetConfig);
+  if (newConfig === null) {
     return;
   }
 
@@ -369,7 +379,7 @@ function update_device_config(message, attributes, preVersion) {
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
+    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString));
 }
 
 function consolidate_config(registryId, deviceId) {

@@ -8,12 +8,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.proxy.IotCoreClient;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
-import com.google.daq.mqtt.validator.validations.SkipTest;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -160,8 +158,8 @@ public abstract class SequenceValidator {
   public Timeout globalTimeout = new Timeout(75, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
-  private String sentDeviceConfig;
   protected State deviceState;
+  private String sentDeviceConfig;
   private Date lastLog;
   private String waitingCondition;
   private boolean confirmSerial;
@@ -235,10 +233,6 @@ public abstract class SequenceValidator {
     }
   }
 
-  protected String getTimestamp() {
-    return getTimestamp(CleanDateFormat.cleanDate());
-  }
-
   protected static String getTimestamp(Date date) {
     try {
       if (date == null) {
@@ -250,6 +244,10 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
     }
+  }
+
+  protected String getTimestamp() {
+    return getTimestamp(CleanDateFormat.cleanDate());
   }
 
   private Config readGeneratedConfig() {
@@ -313,7 +311,7 @@ public abstract class SequenceValidator {
 
   @Test
   public void provided_serial_no() {
-    Preconditions.checkNotNull(serialNo, "no test serial_no provided");
+    checkNotNull(serialNo, "no test serial_no provided");
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -327,16 +325,20 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
+    if (testName == null) {
+      return;
+    }
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
     String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
+    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
     if (traceLogLevel()) {
-      messageBase = messageBase + "_" + message.get("timestamp");
+      messageBase = messageBase + "_" + timestamp;
     }
 
     recordRawMessage(message, messageBase);
 
-    String testOutDirName = TESTS_OUT_DIR + "/" + testName;
+    String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     File attributeFile = new File(testOutDir, messageBase + ".attr");
     try {
@@ -357,7 +359,7 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Map<String, Object> message, String messageBase) {
-    String testOutDirName = TESTS_OUT_DIR + "/" + testName;
+    String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
 
@@ -379,7 +381,7 @@ public abstract class SequenceValidator {
   }
 
   private void writeSystemLogs(SystemEvent message) {
-    if (message.logentries == null) {
+    if (message == null || message.logentries == null) {
       return;
     }
     for (Entry logEntry : message.logentries) {
@@ -392,20 +394,24 @@ public abstract class SequenceValidator {
   }
 
   private String writeLogEntry(Entry logEntry, String filename) {
-    String testOutDirName = TESTS_OUT_DIR + "/" + testName;
+    if (logEntry.timestamp == null) {
+      throw new RuntimeException("log entry timestamp is null");
+    }
+    String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
+        Level.fromValue(logEntry.level),
+        logEntry.category,
+        logEntry.message);
+    if (testName == null) {
+      return messageStr;
+    }
+
+    String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
 
     File logFile = new File(testOutDir, filename);
     try (PrintWriter logAppend = new PrintWriter(new FileOutputStream(logFile, true))) {
-      String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
-          Level.fromValue(logEntry.level),
-          logEntry.category,
-          logEntry.message);
       logAppend.println(messageStr);
-      if (logEntry.timestamp == null) {
-        throw new RuntimeException("log entry timestamp is null");
-      }
       return messageStr;
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + logFile.getAbsolutePath(), e);
@@ -421,10 +427,14 @@ public abstract class SequenceValidator {
    */
   @After
   public void tearDown() {
-    // Restore the config to a canonical state.
-    resetConfig();
-    deviceConfig = readGeneratedConfig();
-    updateConfig();
+    if (traceLogLevel()) {
+      warning("Not resetting config b/c trace is enabled.");
+    } else {
+      // Restore the config to a canonical state.
+      resetConfig();
+      deviceConfig = readGeneratedConfig();
+      updateConfig();
+    }
     deviceConfig = null;
     deviceState = null;
   }
@@ -496,6 +506,7 @@ public abstract class SequenceValidator {
       if (!expected.equals(subFolder)) {
         return false;
       }
+      // TODO: Handle null message
       String timestamp = (String) message.remove("timestamp");
       String version = (String) message.remove("version");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
@@ -568,7 +579,7 @@ public abstract class SequenceValidator {
         return false;
       }
       for (Map<String, Object> message : messages) {
-        SystemEvent systemEvent = convertTo(message, SystemEvent.class);
+        SystemEvent systemEvent = convertTo(SystemEvent.class, message);
         if (systemEvent.logentries == null) {
           continue;
         }
@@ -641,12 +652,15 @@ public abstract class SequenceValidator {
 
   private synchronized void handleReflectorMessage(String subFolderRaw,
       Map<String, Object> message) {
-    Object converted = convertTo(message, expectedUpdates.get(subFolderRaw));
+    Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
     receivedUpdates.put(subFolderRaw, converted);
     if (converted instanceof Config) {
-      if (isResetConfigMessage(message)) {
+      String extraField = getExtraField(message);
+      if ("reset_config".equals(extraField)) {
         debug("Update with config reset");
-        clearDeviceConfig();
+      } else if ("break_json".equals(extraField)) {
+        notice("Ignoring broken json");
+        return;
       }
       Config config = (Config) converted;
       deviceConfig.timestamp = config.timestamp;
@@ -660,27 +674,30 @@ public abstract class SequenceValidator {
     }
   }
 
-  private boolean isResetConfigMessage(Map<String, Object> message) {
+  private String getExtraField(Map<String, Object> message) {
     Object system = message.get("system");
     if (system instanceof Map) {
-      return "reset_config".equals(((Map<?, ?>) system).get("extra_field"));
+      return (String) ((Map<?, ?>) system).get("extra_field");
     }
-    return false;
+    return null;
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(convertTo(message, SystemEvent.class));
+      writeSystemLogs(convertTo(SystemEvent.class, message));
     }
   }
 
-  private <T> T convertTo(Object message, Class<T> entryClass) {
+  private <T> T convertTo(Class<T> targetClass, Object message) {
+    if (message == null) {
+      return null;
+    }
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(messageString, entryClass);
+      return OBJECT_MAPPER.readValue(messageString, targetClass);
     } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + entryClass.getName(), e);
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
     }
   }
 
