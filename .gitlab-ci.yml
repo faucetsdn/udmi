@@ -7,7 +7,7 @@ api:
   rules:
     - changes:
       - "udmd/api/*"
-    - when: manual
+    
   
 
 web:
@@ -19,7 +19,7 @@ web:
   rules:
     - changes:
       - "udmd/web/*"
-    - when: manual
+    
 
 gcp:
   stage: build
@@ -28,4 +28,4 @@ gcp:
   rules:
     - changes:
       - "cloud/gcp/*"
-    - when: manual
+    
