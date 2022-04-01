@@ -1,8 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,18 +15,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "error_ids"
+    "devices"
 })
 @Generated("jsonschema2pojo")
 public class GatewayState {
 
-    @JsonProperty("error_ids")
-    public List<String> error_ids = new ArrayList<String>();
+    @JsonProperty("devices")
+    public Object devices;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.error_ids == null)? 0 :this.error_ids.hashCode()));
+        result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         return result;
     }
 
@@ -41,7 +39,7 @@ public class GatewayState {
             return false;
         }
         GatewayState rhs = ((GatewayState) other);
-        return ((this.error_ids == rhs.error_ids)||((this.error_ids!= null)&&this.error_ids.equals(rhs.error_ids)));
+        return ((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices)));
     }
 
 }

@@ -31,6 +31,23 @@
     }
   },
   "gateway": {
-    "error_ids": [ "991", "SMS-91" ]
+    "devices": {
+      "991": {
+        "status": {
+          "message": "Error attaching device",
+          "category": "device.state.com",
+          "timestamp": "2018-08-26T21:39:30.364Z",
+          "level": 600
+        }
+      },
+      "SMS-91": {
+        "status": {
+          "message": "Error attaching device",
+          "category": "device.state.com",
+          "timestamp": "2018-08-26T21:39:30.364Z",
+          "level": 600
+        }
+      }
+    }
   }
 }
