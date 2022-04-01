@@ -81,18 +81,18 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
+  const messageStr = JSON.stringify(message);
   return registry_promise.then(() => {
-    return sendCommandSafe(registryId, deviceId, subFolder, message);
+    return sendCommandSafe(registryId, deviceId, subFolder, messageStr);
   });
 }
 
-function sendCommandSafe(registryId, deviceId, subFolder, message) {
+function sendCommandSafe(registryId, deviceId, subFolder, messageStr) {
   const cloudRegion = registry_regions[registryId];
 
   const formattedName =
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
-  const messageStr = JSON.stringify(message);
   console.log('command', formattedName, subFolder);
 
   const binaryData = Buffer.from(messageStr);
@@ -221,7 +221,6 @@ function process_states_update(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
 
   const commandFolder = `devices/${deviceId}/update/states`;
-
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
 
   attributes.subType = STATE_TYPE;
@@ -230,6 +229,7 @@ function process_states_update(attributes, msgObject) {
     if (typeof subMsg === 'object') {
       attributes.subFolder = block;
       subMsg.timestamp = msgObject.timestamp;
+      subMsg.version = msgObject.version;
       promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
       promises.push(...new_promises);
@@ -271,18 +271,31 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-  const message = JSON.parse(oldConfig);
 
-  message.version = UDMI_VERSION;
-  message.timestamp = currentTimestamp();
+  let newConfig = {};
+  try {
+    const resetConfig = subFolder === "system" && subContents.extra_field === "reset_config";
+    if (!resetConfig && oldConfig) {
+      newConfig = JSON.parse(oldConfig);
+    } else {
+      console.log("Config reset explicit=" + resetConfig);
+      resetConfig && delete subContents.extra_field;
+    }
+  } catch (e) {
+    console.warn('Previous config parse error, ignoring update');
+    return;
+  }
+
+  newConfig.version = UDMI_VERSION;
+  newConfig.timestamp = currentTimestamp();
 
   console.log('Config modify version', version, subFolder);
   if (subContents) {
     delete subContents.version;
     delete subContents.timestamp;
-    message[subFolder] = subContents;
+    newConfig[subFolder] = subContents;
   } else {
-    delete message[subFolder];
+    delete newConfig[subFolder];
   }
   const attributes = {
     projectId: PROJECT_ID,
@@ -290,7 +303,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     deviceId: deviceId,
     deviceRegistryId: registryId
   };
-  return update_device_config(message, attributes, version)
+  return update_device_config(newConfig, attributes, version)
     .catch(e => {
       console.log('Config update rejected, retry', subFolder);
       return modify_device_config(registryId, deviceId, subFolder, subContents);
@@ -334,9 +347,8 @@ function update_device_config(message, attributes, preVersion) {
 
   const extraField = message.system && message.system.extra_field;
   const normalJson = extraField !== 'break_json';
-  if (!normalJson) {
-    console.log('breaking json for test');
-  }
+  console.log('Config extra field is ' + extraField + ' ' + normalJson);
+
   const msgString = normalJson ? JSON.stringify(message) :
         '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
@@ -417,7 +429,7 @@ function publishPubsubMessage(topicName, attributes, data) {
   const dataBuffer = Buffer.from(dataStr);
   var attr_copy = Object.assign({}, attributes);
 
-  console.log('publish', topicName, attributes, dataStr);
+  console.log('Message publish', topicName, JSON.stringify(attributes));
 
   return pubsub
     .topic(topicName)

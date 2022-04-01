@@ -6,15 +6,15 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
-log_level=NOTICE
+log_level=INFO
 
 if [[ $1 == '-v' ]]; then
-    log_level=INFO
+    log_level=DEBUG
     shift
 fi
 
 if [[ $1 == '-v' || $1 == '-vv' ]]; then
-    log_level=DEBUG
+    log_level=TRACE
     shift
 fi
 

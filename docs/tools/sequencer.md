@@ -1,8 +1,8 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Sequencer](#)
 
-# Sequence Validator Setup
+# Sequencer Setup
 
-The UDMI sequence validator tool monitors a sequence of messages from a device's stream and
+The UDMI _sequencer_ tool monitors a sequence of messages from a device's stream and
 validates that the composition of sequential messsages is compliant with the UDMI Schema
 
 1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/dashboard.md) to your GCP project
@@ -17,18 +17,23 @@ validates that the composition of sequential messsages is compliant with the UDM
     *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested.
     *   auth_key: Use the public key you just created from `validator/rsa_public.pem`
 
-## Running Validator
+## Running Sequencer
 
-To run the sequence validator and pubber device, run the command from the top-level
-of the _site_model_ directory:
-```
-~/udmi/bin/sequence ${GCP_PROJECT_NAME} ${TARGET_DEVICE}
-```
-
-To test against a real device, add the appropriate device serial number at the end:
+To run the _sequencer_, run the command from the top-level of the _site_model_ directory, with
+an optional device serial number:
 ```
 ~/udmi/bin/sequence ${GCP_PROJECT_NAME} ${TARGET_DEVICE} ${SERIAL_NUMBER}
 ```
+
+## Troubleshooting
+
+To increase the logging verbosity add a `-v` at the beginning of the command options, or add
+another `-v` or just `-vv` to add even more details.
+
+Adding a specific test names (e.g. `broken_config`) to the end will trigger just those explicitly
+specified tests.
+
+## Example Output
 
 An example output (using the pubber device), looks something like:
 
