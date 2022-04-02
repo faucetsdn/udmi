@@ -98,7 +98,6 @@ public abstract class SequenceValidator {
       "configs", Config.class,
       "states", State.class
   );
-  public static final int CONFIG_RESET_DELAY_MS = 5000;
   public static final int CONFIG_UPDATE_DELAY_MS = 1000;
 
 
@@ -272,7 +271,6 @@ public abstract class SequenceValidator {
   @Before
   public void setUp() {
     deviceState = null;
-    sentConfig.clear();
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = null;
@@ -292,17 +290,13 @@ public abstract class SequenceValidator {
   }
 
   protected void resetConfig() {
-    clearDeviceConfig();
-    extraField = "reset_config";
-    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    safeSleep(CONFIG_RESET_DELAY_MS);
-    untilTrue(this::configUpdateComplete, "device config reset");
-    extraField = null;
-  }
-
-  private void clearDeviceConfig() {
     deviceConfig = new Config();
     deviceConfig.system = new SystemConfig();
+    sentConfig.clear();
+    extraField = "reset_config";
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    untilTrue(this::configUpdateComplete, "device config reset");
+    extraField = null;
   }
 
   private Date syncConfig() {
@@ -446,37 +440,26 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
-    boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    updated = updateConfig(SubFolder.POINTSET, deviceConfig.pointset) || updated;
-    updated = updateConfig(SubFolder.GATEWAY, deviceConfig.gateway) || updated;
-    updated = updateConfig(SubFolder.LOCALNET, deviceConfig.localnet) || updated;
-    updated = updateConfig(SubFolder.BLOBSET, deviceConfig.blobset) || updated;
-    if (updated) {
-      safeSleep(CONFIG_UPDATE_DELAY_MS);
-    }
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
+    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
+    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
+    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     recordDeviceConfig();
   }
 
-  private void safeSleep(long ms) {
-    try {
-      Thread.sleep(ms);
-    } catch (Exception e) {
-      throw new RuntimeException("While sleeping", e);
-    }
-  }
-
-  private boolean updateConfig(SubFolder subBlock, Object data) {
+  private void updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
         recordRawMessage(data, "local_" + subBlock.value());
-        debug(String.format("sending %s_%s", "config", subBlock));
+        debug(String.format("update %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
         String topic = "config/" + subBlock;
         client.publish(deviceId, topic, messageData);
+        Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
-      return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }

@@ -298,15 +298,15 @@ async function modify_device_config(registryId, deviceId, subFolder, startTime, 
   newConfig.version = UDMI_VERSION;
   newConfig.timestamp = currentTimestamp();
 
-  console.log('Config modify version', version, subFolder, startTime);
+  console.log('Config modify version', subFolder, version, startTime);
   if (subContents) {
     delete subContents.version;
     delete subContents.timestamp;
     newConfig[subFolder] = subContents;
   } else {
     if (!newConfig[subFolder]) {
-      console.log('Config target already null', version, subFolder, startTime);
-      //return;
+      console.log('Config target already null', subFolder, version, startTime);
+      return;
     }
     delete newConfig[subFolder];
   }
@@ -318,9 +318,9 @@ async function modify_device_config(registryId, deviceId, subFolder, startTime, 
   };
   return update_device_config(newConfig, attributes, version)
     .then(() => {
-      console.log('Config accepted version', version, subFolder, startTime);
+      console.log('Config accepted version', subFolder, version, startTime);
     }).catch(e => {
-      console.log('Config update rejected', version, subFolder, startTime);
+      console.log('Config update rejected', subFolder, version, startTime);
       return modify_device_config(registryId, deviceId, subFolder, startTime, subContents);
     })
 }
