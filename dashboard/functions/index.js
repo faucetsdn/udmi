@@ -266,7 +266,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   if (useFirestore) {
     console.info('Deferring to firestore trigger for IoT Core modification.');
   } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject));
+    promises.push(modify_device_config(registryId, deviceId, subFolder, currentTimestamp(), msgObject));
   }
 
   return Promise.all(promises);
@@ -286,7 +286,7 @@ function parse_old_config(oldConfig, resetConfig) {
   }
 }
 
-async function modify_device_config(registryId, deviceId, subFolder, subContents) {
+async function modify_device_config(registryId, deviceId, subFolder, startTime, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
 
   const resetConfig = subFolder == "system" && subContents && subContents.extra_field == "reset_config";
@@ -298,12 +298,16 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   newConfig.version = UDMI_VERSION;
   newConfig.timestamp = currentTimestamp();
 
-  console.log('Config modify version', version, subFolder);
+  console.log('Config modify version', version, subFolder, startTime);
   if (subContents) {
     delete subContents.version;
     delete subContents.timestamp;
     newConfig[subFolder] = subContents;
   } else {
+    if (!newConfig[subFolder]) {
+      console.log('Config target already null', version, subFolder, startTime);
+      //return;
+    }
     delete newConfig[subFolder];
   }
   const attributes = {
@@ -313,13 +317,12 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     deviceRegistryId: registryId
   };
   return update_device_config(newConfig, attributes, version)
-    .catch(e => {
-      console.log('Config update rejected, retry', subFolder);
-      return modify_device_config(registryId, deviceId, subFolder, subContents);
-    })
     .then(() => {
-      console.log('Config accepted version', version, subFolder);
-    });
+      console.log('Config accepted version', version, subFolder, startTime);
+    }).catch(e => {
+      console.log('Config update rejected', version, subFolder, startTime);
+      return modify_device_config(registryId, deviceId, subFolder, startTime, subContents);
+    })
 }
 
 async function get_device_config(registryId, deviceId) {
