@@ -49,7 +49,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import udmi.schema.Envelope.SubType;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
@@ -487,8 +487,8 @@ public class Validator {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
 
-    if (matches(subType, SubType.UPDATE)) {
-      return updateSchema(subFolder);
+    if (SubFolder.UPDATE.value().equals(subType)) {
+      return subType;
     }
 
     if (Strings.isNullOrEmpty(subFolder)) {
@@ -500,25 +500,6 @@ public class Validator {
     }
 
     return String.format("%s_%s", subType, subFolder);
-  }
-
-  private String updateSchema(String subFolder) {
-    if (!subFolder.endsWith("s")) {
-      throw new RuntimeException("Update subFolder missing plural: " + subFolder);
-    }
-
-    // Remove trailing 's' (e.g. states --> state)
-    String singularFolder = subFolder.substring(0, subFolder.length() - 1);
-
-    // Updates are a collection of typed updates, so the folder that's specified as part of an
-    // update type needs to be a well-defined subType, so enforce that here (will throw exception).
-    SubType.fromValue(singularFolder);
-
-    return singularFolder;
-  }
-
-  private boolean matches(String target, Object value) {
-    return target.equals(value.toString());
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
