@@ -33,11 +33,12 @@ resource "google_container_node_pool" "node_pool" {
 resource "google_dns_managed_zone" "udmi_dns_zone" {
   name     = var.gcp_project_name
   dns_name = var.dns_name
+  project = var.gcp_project_id
 }
 
 resource "google_compute_managed_ssl_certificate" "udmi_ssl_certs" {
   name = "udmi-ssl"
-
+  project = var.gcp_project_id
   managed {
     domains = [var.dns_name]
   }
