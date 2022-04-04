@@ -30,3 +30,7 @@ resource "google_container_node_pool" "node_pool" {
     }
   }
 }
+resource "google_dns_managed_zone" "udmi_dns_zone" {
+  name     = "var.gcp_project_name"
+  dns_name = "var.dns_name"
+}

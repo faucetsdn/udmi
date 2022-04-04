@@ -82,6 +82,11 @@ variable "gke_machine_type" {
   default = "e2-standard-2"
   description = "Type of machine"
 }
+#cloud DNS variables
+variable "dns_name" {
+  type = string
+  description = "DNS name"
+}
 
 ##vpc variables##
 variable "gcp_vpc_name" {
