@@ -66,17 +66,16 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          cat /tmp/sequencer.out
+          more /tmp/sequencer.out
           diff -u /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
+          # Run after sequencer to device config starts in a known state
           bin/test_validator $GCP_TARGET_PROJECT
-          cat udmi_site_model/out/validation_report.json && echo
-          cat udmi_site_model/out/devices/AHU-1/state.json && echo
-          cat /tmp/validator.out
+          more /tmp/validator.out
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: code checks
         if: ${{ always() }}

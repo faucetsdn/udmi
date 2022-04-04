@@ -6,7 +6,7 @@
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
 const useFirestore = !!process.env.FIREBASE_CONFIG;
 if (!process.env.GCLOUD_PROJECT) {
-  console.log("Setting GCLOUD_PROJECT to " + PROJECT_ID);
+  console.log('Setting GCLOUD_PROJECT to ' + PROJECT_ID);
   process.env.GCLOUD_PROJECT = PROJECT_ID;
 }
 
@@ -20,6 +20,8 @@ const UDMI_VERSION = '1.3.14';
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
+const UPDATE_TYPE = 'update';
+const STATES_FOLDER = 'states';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -176,7 +178,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 });
 
 function udmi_query_event(attributes, msgObject) {
-  if (attributes.subFolder == 'states') {
+  if (attributes.subFolder == STATES_FOLDER) {
     return udmi_query_states(attributes);
   }
   throw 'Unknown query type ' + attributes.subFolder;
@@ -223,8 +225,12 @@ function process_states_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/update/states`;
+  const commandFolder = `devices/${deviceId}/${UPDATE_TYPE}/${STATES_FOLDER}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
+
+  attributes.subType = UPDATE_TYPE;
+  attributes.subFolder = STATES_FOLDER;
+  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   attributes.subType = STATE_TYPE;
   for (var block in msgObject) {
@@ -289,7 +295,7 @@ function parse_old_config(oldConfig, resetConfig) {
 async function modify_device_config(registryId, deviceId, subFolder, startTime, subContents) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
 
-  const resetConfig = subFolder == "system" && subContents && subContents.extra_field == "reset_config";
+  const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
   const newConfig = parse_old_config(oldConfig, resetConfig);
   if (newConfig === null) {
     return;
