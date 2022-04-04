@@ -94,8 +94,7 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubFolder {
 
-        STATES("states"),
-        CONFIGS("configs"),
+        UPDATE("update"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
         GATEWAY("gateway"),
@@ -140,7 +139,6 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubType {
 
-        UPDATE("update"),
         EVENT("event"),
         COMMAND("command"),
         STATE("state"),

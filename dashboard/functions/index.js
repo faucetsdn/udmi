@@ -20,8 +20,7 @@ const UDMI_VERSION = '1.3.14';
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
-const UPDATE_TYPE = 'update';
-const STATES_FOLDER = 'states';
+const UPDATE_FOLDER = 'update';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -50,7 +49,6 @@ function recordMessage(attributes, message) {
   const subFolder = attributes.subFolder || 'unknown';
   const timestamp = (message && message.timestamp) || currentTimestamp();
   const promises = [];
-  const collectionType = subType + 's';
 
   if (message) {
     message.timestamp = timestamp;
@@ -68,7 +66,7 @@ function recordMessage(attributes, message) {
     promises.push(dev_doc.set({
       'updated': timestamp
     }, { merge: true }));
-    const config_doc = dev_doc.collection(collectionType).doc(subFolder);
+    const config_doc = dev_doc.collection(subType).doc(subFolder);
     if (message) {
       promises.push(config_doc.set(message));
     } else {
@@ -225,14 +223,13 @@ function process_states_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/${UPDATE_TYPE}/${STATES_FOLDER}`;
+  const commandFolder = `devices/${deviceId}/${STATE_TYPE}/${UPDATE_FOLDER}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
 
-  attributes.subType = UPDATE_TYPE;
-  attributes.subFolder = STATES_FOLDER;
+  attributes.subFolder = UPDATE_FOLDER;
+  attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  attributes.subType = STATE_TYPE;
   for (var block in msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
@@ -384,19 +381,23 @@ function update_device_config(message, attributes, preVersion) {
     versionToUpdate: version,
     binaryData: binaryData
   };
-  const commandFolder = `devices/${deviceId}/update/configs`;
+  const commandFolder = `devices/${deviceId}/${CONFIG_TYPE}/${UPDATE_FOLDER}`;
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
     .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString));
 }
 
-function consolidate_config(registryId, deviceId) {
+function consolidate_config(registryId, deviceId, subFolder) {
   const cloudRegion = registry_regions[registryId];
   const reg_doc = firestore.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
   const configs = dev_doc.collection('configs');
 
+  if (subFolder == UPDATE_FOLDER) {
+    return;
+  }
+  
   console.log('consolidating config for', registryId, deviceId);
 
   const new_config = {
@@ -435,11 +436,12 @@ function consolidate_config(registryId, deviceId) {
 }
 
 exports.udmi_update = functions.firestore
-  .document('registries/{registryId}/devices/{deviceId}/configs/{subFolder}')
+  .document('registries/{registryId}/devices/{deviceId}/config/{subFolder}')
   .onWrite((change, context) => {
     const registryId = context.params.registryId;
-    const deviceId = constext.params.deviceId;
-    return registry_promise.then(consolidate_config(registryId, deviceId));
+    const deviceId = context.params.deviceId;
+    const subFolder = context.params.subFolder;
+    return registry_promise.then(consolidate_config(registryId, deviceId, subFolder));
   });
 
 function publishPubsubMessage(topicName, attributes, data) {
