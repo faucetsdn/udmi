@@ -21,7 +21,8 @@
     },
     "subFolder": {
       "enum": [
-        "update",
+        "states",
+        "configs",
         "discovery",
         "system",
         "gateway",
@@ -32,6 +33,7 @@
     },
     "subType": {
       "enum": [
+        "update",
         "event",
         "command",
         "state",

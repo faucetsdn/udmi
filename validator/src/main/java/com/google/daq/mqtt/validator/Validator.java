@@ -49,7 +49,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -353,7 +352,7 @@ public class Validator {
         processedDevices.add(deviceId);
       }
 
-      String schemaName = mungeAndExtractSchema(attributes);
+      String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
@@ -484,9 +483,13 @@ public class Validator {
     return deviceDir;
   }
 
-  private String mungeAndExtractSchema(Map<String, String> attributes) {
+  private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
+
+    if (matches(subType, SubType.UPDATE)) {
+      return updateSchema(subFolder);
+    }
 
     if (Strings.isNullOrEmpty(subFolder)) {
       subFolder = UNKNOWN_FOLDER_DEFAULT;
@@ -496,20 +499,22 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (matches(subType, SubFolder.UPDATE)) {
-      if (!subFolder.endsWith("s")) {
-        throw new RuntimeException("Update subFolder missing plural: " + subFolder);
-      }
-      String singularFolder = subFolder.substring(0, subFolder.length() - 1);
-      if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
-        throw new RuntimeException("Unrecognized update type: " + subFolder);
-      }
-      attributes.put("subType", singularFolder);
-      attributes.put("subFolder", SubFolder.UPDATE.value());
-      return singularFolder;
+    return String.format("%s_%s", subType, subFolder);
+  }
+
+  private String updateSchema(String subFolder) {
+    if (!subFolder.endsWith("s")) {
+      throw new RuntimeException("Update subFolder missing plural: " + subFolder);
     }
 
-    return String.format("%s_%s", subType, subFolder);
+    // Remove trailing 's' (e.g. states --> state)
+    String singularFolder = subFolder.substring(0, subFolder.length() - 1);
+
+    // Updates are a collection of typed updates, so the folder that's specified as part of an
+    // update type needs to be a well-defined subType, so enforce that here (will throw exception).
+    SubType.fromValue(singularFolder);
+
+    return singularFolder;
   }
 
   private boolean matches(String target, Object value) {
