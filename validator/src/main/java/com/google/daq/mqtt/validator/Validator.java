@@ -487,7 +487,7 @@ public class Validator {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
 
-    if (SubFolder.UPDATE.value().equals(subType)) {
+    if (SubFolder.UPDATE.value().equals(subFolder)) {
       return subType;
     }
 
