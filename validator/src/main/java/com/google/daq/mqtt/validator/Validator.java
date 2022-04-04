@@ -58,7 +58,7 @@ import udmi.schema.PointsetEvent;
  */
 public class Validator {
 
-  public static final String STATES_QUERY_TOPIC = "query/states";
+  public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
@@ -293,7 +293,7 @@ public class Validator {
   private void sendInitializationQuery(MessagePublisher client) {
     if (deviceId != null) {
       System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 

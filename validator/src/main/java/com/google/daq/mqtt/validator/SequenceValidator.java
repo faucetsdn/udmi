@@ -68,7 +68,6 @@ public abstract class SequenceValidator {
   public static final String EVENT_PREFIX = "event_";
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
-  private static final String STATE_QUERY_TOPIC = "query/states";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
@@ -419,7 +418,7 @@ public abstract class SequenceValidator {
   }
 
   private void queryState() {
-    client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    client.publish(deviceId, Validator.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   /**

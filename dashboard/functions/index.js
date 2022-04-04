@@ -21,6 +21,7 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 const UPDATE_FOLDER = 'update';
+const QUERY_FOLDER = 'query';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -167,7 +168,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 
   return registry_promise.then(() => {
     attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
-    if (subType == 'query') {
+    if (subFolder == QUERY_FOLDER) {
       return udmi_query_event(attributes, msgObject);
     }
     target = 'udmi_' + subType;
@@ -176,10 +177,10 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 });
 
 function udmi_query_event(attributes, msgObject) {
-  if (attributes.subFolder == STATES_FOLDER) {
+  if (attributes.subType == STATE_TYPE) {
     return udmi_query_states(attributes);
   }
-  throw 'Unknown query type ' + attributes.subFolder;
+  throw 'Unknown query type ' + attributes.subType;
 }
 
 function udmi_query_states(attributes) {
