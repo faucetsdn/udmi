@@ -34,3 +34,11 @@ resource "google_dns_managed_zone" "udmi_dns_zone" {
   name     = var.gcp_project_name
   dns_name = var.dns_name
 }
+
+resource "google_compute_managed_ssl_certificate" "udmi_ssl_certs" {
+  name = "udmi-ssl"
+
+  managed {
+    domains = [var.dns_name]
+  }
+}
