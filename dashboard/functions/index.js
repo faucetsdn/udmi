@@ -163,15 +163,16 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 
   attributes.deviceRegistryId = attributes.deviceId;
   attributes.deviceId = parts[1];
-  const subType = parts[2];
-  attributes.subFolder = parts[3];
+  attributes.subFolder = parts[2];
+  attributes.subType = parts[3];
+  console.log('Reflect', attributes.deviceId, attributes.subType, attributes.subFolder);
 
   return registry_promise.then(() => {
     attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
-    if (subFolder == QUERY_FOLDER) {
+    if (attributes.subFolder == QUERY_FOLDER) {
       return udmi_query_event(attributes, msgObject);
     }
-    target = 'udmi_' + subType;
+    target = 'udmi_' + attributes.subType;
     return publishPubsubMessage(target, attributes, msgObject);
   });
 });
@@ -206,7 +207,7 @@ function udmi_query_states(attributes) {
     const stateBinaryData = deviceData[0].state.binaryData;
     const stateString = stateBinaryData.toString();
     const msgObject = JSON.parse(stateString);
-    return process_states_update(attributes, msgObject);
+    return process_state_update(attributes, msgObject);
   });
 }
 
@@ -216,10 +217,10 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  return process_states_update(attributes, msgObject);
+  return process_state_update(attributes, msgObject);
 });
 
-function process_states_update(attributes, msgObject) {
+function process_state_update(attributes, msgObject) {
   let promises = [];
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;

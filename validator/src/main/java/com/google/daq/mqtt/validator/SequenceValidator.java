@@ -60,13 +60,12 @@ public abstract class SequenceValidator {
   public static final String RESULT_PASS = "pass";
   public static final String RESULT_SKIP = "skip";
   public static final String RESULT_FORMAT = "RESULT %s %s %s";
-  public static final Integer INITIAL_MIN_LOGLEVEL = 400;
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
-  public static final String UPDATE_SUBTYPE = "update";
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final int CONFIG_UPDATE_DELAY_MS = 1000;
+  public static final int UDMI_TEST_TIMEOUT_SEC = 60;
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
@@ -155,7 +154,7 @@ public abstract class SequenceValidator {
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   @Rule
-  public Timeout globalTimeout = new Timeout(75, TimeUnit.SECONDS);
+  public Timeout globalTimeout = new Timeout(UDMI_TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
@@ -454,7 +453,7 @@ public abstract class SequenceValidator {
         recordRawMessage(data, "local_" + subBlock.value());
         debug(String.format("update %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
-        String topic = "config/" + subBlock;
+        String topic = subBlock + "/config";
         client.publish(deviceId, topic, messageData);
         Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
@@ -468,7 +467,7 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(deviceConfig);
       boolean updated = !messageData.equals(sentDeviceConfig);
       if (updated) {
-        recordRawMessage(deviceConfig, "local_configs");
+        recordRawMessage(deviceConfig, "local_config");
         sentDeviceConfig = messageData;
       }
       return updated;
@@ -623,8 +622,8 @@ public abstract class SequenceValidator {
       String subFolderRaw = attributes.get("subFolder");
       String subTypeRaw = attributes.get("subType");
 
-      if (UPDATE_SUBTYPE.equals(subTypeRaw)) {
-        handleReflectorMessage(subFolderRaw, message);
+      if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+        handleReflectorMessage(subTypeRaw, message);
       } else {
         handleDeviceMessage(message, subFolderRaw, subTypeRaw);
       }
@@ -702,7 +701,7 @@ public abstract class SequenceValidator {
   }
 
   private synchronized boolean configUpdateComplete() {
-    return deviceConfig.equals(receivedUpdates.get("configs"));
+    return deviceConfig.equals(receivedUpdates.get("config"));
   }
 
   protected void trace(String message) {
