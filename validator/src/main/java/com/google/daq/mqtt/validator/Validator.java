@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -58,7 +59,7 @@ import udmi.schema.PointsetEvent;
  */
 public class Validator {
 
-  public static final String STATES_QUERY_TOPIC = "query/states";
+  public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
@@ -293,7 +294,7 @@ public class Validator {
   private void sendInitializationQuery(MessagePublisher client) {
     if (deviceId != null) {
       System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 
@@ -308,7 +309,6 @@ public class Validator {
       Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
-    attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
@@ -341,6 +341,10 @@ public class Validator {
       return false;
     }
 
+    if (!shouldValidateMessage(attributes)) {
+      return false;
+    }
+
     try {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
@@ -349,7 +353,7 @@ public class Validator {
         processedDevices.add(deviceId);
       }
 
-      String schemaName = makeSchemaName(attributes);
+      String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
@@ -364,6 +368,7 @@ public class Validator {
       }
 
       sanitizeMessage(schemaName, message);
+      upgradeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -441,6 +446,14 @@ public class Validator {
     }
   }
 
+  private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    return subType == null
+        || SubType.EVENT.value().equals(subType)
+        || SubFolder.UPDATE.value().equals(subFolder);
+  }
+
   private File prepareDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
@@ -473,9 +486,13 @@ public class Validator {
     return deviceDir;
   }
 
-  private String makeSchemaName(Map<String, String> attributes) {
+  private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
+
+    if (SubFolder.UPDATE.value().equals(subFolder)) {
+      return subType;
+    }
 
     if (Strings.isNullOrEmpty(subFolder)) {
       subFolder = UNKNOWN_FOLDER_DEFAULT;
@@ -485,22 +502,7 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (matches(subType, SubFolder.UPDATE)) {
-      if (!subFolder.endsWith("s")) {
-        throw new RuntimeException("Update subFolder missing plural: " + subFolder);
-      }
-      String singularFolder = subFolder.substring(0, subFolder.length() - 1);
-      if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
-        throw new RuntimeException("Unrecognized update type: " + subFolder);
-      }
-      return singularFolder;
-    }
-
     return String.format("%s_%s", subType, subFolder);
-  }
-
-  private boolean matches(String target, Object value) {
-    return target.equals(value.toString());
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
@@ -672,6 +674,16 @@ public class Validator {
     File full = new File(outBase, addedFile);
     full.getParentFile().mkdirs();
     return full;
+  }
+
+  private void upgradeMessage(String schemaName, Map<String, Object> message) {
+    JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
+    upgradeMessage(schemaName, jsonNode);
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(jsonNode,
+        new TypeReference<>() {
+        });
+    message.clear();
+    message.putAll(objectMap);
   }
 
   private void upgradeMessage(String schemaName, JsonNode jsonNode) {

@@ -43,7 +43,7 @@ public class MessageUpgrader {
   }
 
   /**
-   * Update message to latest standard.
+   * Update message to the latest standard.
    */
   public void upgrade() {
     if (major != 1) {
@@ -75,24 +75,52 @@ public class MessageUpgrader {
   private void upgrade_1_3_14_state() {
     ObjectNode system = (ObjectNode) message.get("system");
     if (system != null) {
-      if (system.has("hardware") || system.has("software")) {
-        throw new IllegalStateException("Node already has hardware/software field");
+      upgradeMakeModel(system);
+      upgradeFirmware(system);
+      upgradeStatuses(system);
+    }
+  }
+
+  private void upgradeStatuses(ObjectNode system) {
+    JsonNode statuses = system.remove("statuses");
+    if (statuses != null) {
+      if (system.has("status")) {
+        throw new IllegalStateException("Node already has status field");
       }
-      JsonNode makeModel = system.remove("make_model");
-      if (makeModel != null) {
-        ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
-        hardwareNode.put("model", makeModel.asText());
-        system.set("hardware", hardwareNode);
+      if (statuses.size() == 0) {
+        return;
       }
-      JsonNode firmware = system.remove("firmware");
-      if (firmware != null) {
-        JsonNode version = ((ObjectNode) firmware).remove("version");
-        if (version != null) {
-          ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
-          softwareNode.put("firmware", version.asText());
-          system.set("software", softwareNode);
-        }
+      if (statuses.size() > 1) {
+        throw new IllegalStateException("More than one statuses to upgrade");
       }
+      system.set("status", statuses.get(0));
+    }
+  }
+
+  private void upgradeFirmware(ObjectNode system) {
+    JsonNode firmware = system.remove("firmware");
+    if (firmware != null) {
+      if (system.has("software")) {
+        throw new IllegalStateException("Node already has software field");
+      }
+      JsonNode version = ((ObjectNode) firmware).remove("version");
+      if (version != null) {
+        ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
+        softwareNode.put("firmware", version.asText());
+        system.set("software", softwareNode);
+      }
+    }
+  }
+
+  private void upgradeMakeModel(ObjectNode system) {
+    JsonNode makeModel = system.remove("make_model");
+    if (makeModel != null) {
+      if (system.has("hardware")) {
+        throw new IllegalStateException("Node already has hardware field");
+      }
+      ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
+      hardwareNode.put("model", makeModel.asText());
+      system.set("hardware", hardwareNode);
     }
   }
 }

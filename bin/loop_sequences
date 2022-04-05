@@ -56,7 +56,6 @@ for test_name in $test_names; do
     test_name=
   fi
   for test_class in ConfigValidator WritebackValidator; do
-    rm -f out/*.json
     target=$test_class$test_prefix$test_name
     CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
