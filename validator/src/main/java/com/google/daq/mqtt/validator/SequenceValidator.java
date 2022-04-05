@@ -66,6 +66,7 @@ public abstract class SequenceValidator {
   public static final String UPDATE_SUBTYPE = "update";
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
+  public static final int CONFIG_UPDATE_DELAY_MS = 1000;
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
@@ -94,11 +95,9 @@ public abstract class SequenceValidator {
       SubFolder.POINTSET, PointsetEvent.class
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
-      "configs", Config.class,
-      "states", State.class
+      "config", Config.class,
+      "state", State.class
   );
-  public static final int CONFIG_UPDATE_DELAY_MS = 1000;
-
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -696,7 +695,7 @@ public abstract class SequenceValidator {
     }
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(messageString, targetClass);
+      return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
       throw new RuntimeException("While converting message to " + targetClass.getName(), e);
     }
