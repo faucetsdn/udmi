@@ -49,7 +49,7 @@ deploy-staging:
     NAMESPACE: udmi
     CHART_NAME: udmi-web
     HELM_REPO: udmd/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --set ingress.hosts.host[0]=web.$INGRESS_HOST --create-namespace 
 
 
 deploy-lab:

@@ -30,16 +30,31 @@ resource "google_container_node_pool" "node_pool" {
     }
   }
 }
+
+resource "google_compute_global_address" "udmi_global_address"{
+ name = "udmi-global-address"
+}
+
 resource "google_dns_managed_zone" "udmi_dns_zone" {
   name     = var.gcp_project_name
   dns_name = var.dns_name
   project = var.gcp_project_id
 }
 
+resource "google_dns_record_set" "dns_record" {
+  project = var.gcp_project_id
+  managed_zone = var.gcp_project_name
+  name = "*.${var.dns_name}"
+  type = "A"
+  ttl = 300
+  rrdatas = ["${google_compute_global_address.udmi_global_address.address}"]
+}
+
 resource "google_compute_managed_ssl_certificate" "udmi_ssl_certs" {
   name = "udmi-ssl"
   project = var.gcp_project_id
   managed {
-    domains = [var.dns_name]
+    domains = var.ssl_domains
   }
 }
+
