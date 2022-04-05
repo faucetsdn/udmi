@@ -51,8 +51,12 @@ ingress:
   annotations: 
     kubernetes.io/ingress.class: "gce"
     # kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.global-static-ip-name: "udmi-global-address"
+    kubernetes.io/ingress.allow-http: "true"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "udmi-ssl"
+    networking.gke.io/v1beta1.FrontendConfig: "udmi-web"
   hosts:
-    - host:
+    - host: "web.staging.udmi.buildingsiot.com"
       paths:
         - path: /*
           pathType: ImplementationSpecific

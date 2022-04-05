@@ -87,7 +87,11 @@ variable "dns_name" {
   type = string
   description = "DNS name"
 }
-
+#ssl variable
+variable "ssl_domains" {
+  type = list(string)
+  description = "list of domain names"
+}
 ##vpc variables##
 variable "gcp_vpc_name" {
     type = string
