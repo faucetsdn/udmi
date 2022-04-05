@@ -50,6 +50,7 @@ import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
@@ -448,7 +449,9 @@ public class Validator {
   private boolean shouldValidateMessage(Map<String, String> attributes) {
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    return subType == null || "event".equals(subType) || "update".equals(subType);
+    return subType == null
+        || SubType.EVENT.value().equals(subType)
+        || SubFolder.UPDATE.value().equals(subFolder);
   }
 
   private File prepareDeviceOutDir(
