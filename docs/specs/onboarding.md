@@ -61,13 +61,13 @@ to configure when the discovery *Node* should activate) to complete the overall 
 1. _(Info)_ contains natively-encoded *Device* information (format out of scope for UDMI)
   * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }, and public key `XYZZYZ`"
 2. Discovery *Node* sends _discovery_ message
-  * "Device `78F936`, has points { }, with a public key `XYZZYZ`"
+  * "Device `78F936` has points { }, with a public key `XYZZYZ`"
 3. *Matcher* send a _mapping_ message (both *Sink* and *Agent* components receive)
-  * "Device `78F936` is an `AHU`, called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
+  * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 5. The *Agent* sets up the *Cloud* layer with the device _IoT ID_ to directly communicate with the device
   * "Device `AHU-183` exists and has public key `XYZZYZ`"
 4. The *Agent* sends a _discovery_ message containing the device's 'IoT ID'
-  * "Device `78F936`, should call itself `AHU-183` when connecting to the cloud"
+  * "Device `78F936` should call itself `AHU-183` when connecting to the cloud"
 5. Discovery *Node* provisions the *Device* using native protocols (if possible)
   * "Device `78F936`, you are celled `AHU-183` when connecting to the cloud"
 7. *Sink* can send _pointset_ messages directly to the *Device* (after it connects to the cloud)
