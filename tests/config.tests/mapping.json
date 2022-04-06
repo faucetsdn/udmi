@@ -9,7 +9,8 @@
   "mapping": {
     "devices": {
       "FCU-123": {
-        "applied": "2018-08-27T22:39:12.364Z",
+        "applied": "2018-08-27T22:39:12.364Z",  // Last time a promotion was successfully applied
+        "requested": "2018-08-27T22:39:12.364Z",  // Last time a model export was requested
         "status": {
           "message": "Update in progress",
           "category": "mapping.apply.start",

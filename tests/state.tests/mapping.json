@@ -11,9 +11,10 @@
   "mapping": {
     "devices": {
       "FCU-123": {
-        "discovered": "2018-08-26T21:39:29.364Z",
-        "staged": "2018-08-28T21:59:18.364Z",
-        "promoted": "2018-08-28T22:39:12.364Z"
+        "discovered": "2018-08-26T21:39:29.364Z",  // Timestamp of last received discovery message
+        "staged": "2018-08-28T21:59:18.364Z",  // Timestamp of last recommendation staging
+        "promoted": "2018-08-28T22:39:12.364Z",  // Timestamp of last recommendation promotion
+        "exported": "2018-08-28T22:39:12.364Z",  // Timestamp of last time a device mapping was exported
       }
     }
   }
