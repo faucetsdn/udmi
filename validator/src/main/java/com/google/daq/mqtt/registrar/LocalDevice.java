@@ -42,16 +42,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
@@ -196,7 +188,7 @@ class LocalDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
-  private final SiteDefaults siteDefaults;
+  private final TreeMap<String, Object> siteDefaults;
 
   private String deviceNumId;
 
@@ -204,13 +196,17 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, SiteDefaults siteDefaults) {
+      String generation, Metadata siteDefaults) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
-      this.siteDefaults = siteDefaults;
+      if (siteDefaults != null) {
+        this.siteDefaults = OBJECT_MAPPER.convertValue(siteDefaults, TreeMap.class);
+      } else {
+        this.siteDefaults = new TreeMap<String, Object>();
+      }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -268,7 +264,26 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private Metadata readMetadataBase() {
+  private List listMerge(List list1, List list2) {
+    list2.removeAll(list1);
+    list1.addAll(list2);
+    return list1;
+  }
+  private void deepMerge(Map<String, Object> map1, Map<String, Object> map2) {
+    for(String key : map2.keySet()) {
+      Object value2 = map2.get(key);
+      if (map1.containsKey(key)) {
+        Object value1 = map1.get(key);
+        if (value1 instanceof Map && value2 instanceof Map)
+          deepMerge((Map<String, Object>) value1, (Map<String, Object>) value2);
+        else if (value1 instanceof List && value2 instanceof List)
+          map1.put(key, listMerge((List) value1, (List) value2));
+        else map1.put(key, value2);
+      } else map1.put(key, value2);
+    }
+  }
+
+  private Metadata readMetadataBase(Map<String, Object> siteDefaults) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
@@ -278,7 +293,13 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
     try {
-      return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
+      if (siteDefaults == null) {
+        return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
+      } else {
+        final Map<String, Object> metadata_base = OBJECT_MAPPER.readValue(metadataFile, TreeMap.class);
+        deepMerge(metadata_base, siteDefaults);
+        return OBJECT_MAPPER.convertValue(metadata_base, Metadata.class);
+      }
     } catch (Exception mapping_exception) {
       exceptionMap.put(EXCEPTION_READING, mapping_exception);
     }
@@ -286,9 +307,10 @@ class LocalDevice {
   }
 
   private Metadata readMetadata() {
-    final Metadata metadata = readMetadataBase();
-    // Copy values from siteDefaults into the metadata
+    return readMetadataBase(siteDefaults);
 
+
+    /*
     if (siteDefaults != null) {
       // Fields in siteDefaults that go into PointPointsetMetadata
       for (String pointName : metadata.pointset.points.keySet()) {
@@ -301,9 +323,7 @@ class LocalDevice {
           ppm.sample_rate_sec = siteDefaults.sample_rate_sec;
         metadata.pointset.points.put(pointName, ppm);
       }
-    }
-
-    return metadata;
+    }*/
   }
 
   private Metadata readNormalized() {

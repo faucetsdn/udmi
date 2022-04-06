@@ -63,7 +63,8 @@ public class Registrar {
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
-          .setSerializationInclusion(Include.NON_NULL);
+          .setSerializationInclusion(Include.NON_NULL)
+              .setDefaultMergeable(Boolean.TRUE);
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
   private static final String VERSION_MAIN_KEY = "main";
@@ -87,7 +88,7 @@ public class Registrar {
   private boolean updateCloudIoT;
   private Duration idleLimit;
   private Set<String> cloudDevices;
-  private SiteDefaults siteDefaults;
+  private Metadata siteDefaults;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -657,12 +658,12 @@ public class Registrar {
   }
 
   private void loadSiteDefaults() {
-    if (!schemas.containsKey("site_defaults.json"))
+    if (!schemas.containsKey(METADATA_JSON))
       return;
 
     File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_JSON);
     try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
-      schemas.get(SITE_DEFAULTS_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (ProcessingException | ValidationException e) {
       throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     } catch (IOException e) {
@@ -672,7 +673,7 @@ public class Registrar {
     this.siteDefaults = null;
 
     try {
-      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, SiteDefaults.class);
+      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + SITE_DEFAULTS_JSON, e);
     }
