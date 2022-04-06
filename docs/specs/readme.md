@@ -5,6 +5,7 @@
 - [UDMI Compliance](compliance.md)
 - [Tech Stack](tech_stack.md)
 - [Discovery](discovery.md)
+- [Onboarding](onboarding.md)
 - [Messages](../messages/)
 - [Message Walk](message_walk.md)
 - [Sequences](sequences/)
