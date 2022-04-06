@@ -59,27 +59,22 @@ to configure when the discovery *Node* should activate) to complete the overall 
 ```
 
 1. _(Info)_ contains natively-encoded *Device* information (format out of scope for UDMI)
-  * This could be, for example, a BACnet whois/iam exchange initiated from *Node* on a periodic timer
+  * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }"
+  * "Oh, and my public key is `XYZZYZ` in case you need it"
 2. Discovery *Node* sends _discovery_ message
-  * In the case of BACnet, this would be the BACnet iam response transcoded to a UDMI discovery event
+  * "Device `78F936`, has points, with a public key `XYZZYZ`"
 3. *Matcher* send a _mapping_ message (both *Sink* and *Agent* components receive)
-  * Describes the exact _entity type_ and _IoT ID_ for the device as determined by the *Matcher*
-  * Also includes 'translation' information required by the data sink to process device messages
+  * "Device `78F936` is an `AHU`, called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 5. The *Agent* sets up the *Cloud* layer with the device _IoT ID_ to directly communicate with the device
-  * Essentially, these are RPC calls to the IoT Core API to create a new device entry
-  * Also includes the device's public key, either from the discovery process or self-generated
+  * "Device `AHU-183` exists and has public key `XYZZYZ`"
 4. The *Agent* sends a _discovery_ message containing the device's 'IoT ID'
-  * This really provisioning information hidden inside of _discovery_
-  * Includes all info required to directly connect to the cloud (possibly including auth keys)
+  * "Device `78F936`, should call itself `AHU-183` when connecting to the cloud"
 5. Discovery *Node* provisions the *Device* using native protocols (if possible)
-  * After this, the device should be able to communicate directly with the cloud
-  * For BACnet, this might be writing to a device-specific BACnet object
+  * "Device `78F936`, you are celled `AHU-183` when connecting to the cloud"
 7. *Sink* can now send _pointset_ messages directly to the *Device*
-  * Assumes that the device can successfully directly connect to the cloud
-  * This might, for example, configure the device with specific data points it should report
+  * "Device `AHU-183`, you should send the `room_temp` data point every 10 minutes"
 8. *Device* sends _pointset_ messages through to the data *Sink*
-  * Including hopefully the intended data points that were just configured
-  * This is 'business as usual' at this point, and is the desired end-state for the system
+  * "I am `AHU-183`, and my `room_temp` is 73"
 
 ## Gateway
 
