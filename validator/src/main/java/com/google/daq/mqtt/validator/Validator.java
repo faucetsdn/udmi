@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -58,7 +59,7 @@ import udmi.schema.PointsetEvent;
  */
 public class Validator {
 
-  public static final String STATES_QUERY_TOPIC = "query/states";
+  public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
@@ -75,7 +76,6 @@ public class Validator {
   private static final String PUBSUB_MARKER = "pubsub";
   private static final String FILES_MARKER = "files";
   private static final String REFLECT_MARKER = "reflect";
-  private static final File OUT_BASE_FILE = new File("out");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
@@ -85,7 +85,6 @@ public class Validator {
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
-  public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
@@ -94,13 +93,14 @@ public class Validator {
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
-
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
   private final Set<String> ignoredRegistries = new HashSet();
+  private File outBaseDir;
+  private File metadataReportFile;
   private FirestoreDataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
@@ -133,9 +133,7 @@ public class Validator {
       String targetSpec = args[2];
       String instName = args[3];
       String siteDir = args[4];
-      if (!NO_SITE.equals(siteDir)) {
-        validator.setSiteDir(siteDir);
-      }
+      validator.setSiteDir(siteDir);
       switch (targetSpec) {
         case PUBSUB_MARKER:
           validator.initializeCloudIoT();
@@ -162,12 +160,23 @@ public class Validator {
   }
 
   private void setSiteDir(String siteDir) {
-    this.siteDir = siteDir;
-    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
-        projectId);
+    final File baseDir;
+    if (NO_SITE.equals(siteDir)) {
+      this.siteDir = null;
+      baseDir = new File(".");
+    } else {
+      this.siteDir = siteDir;
+      baseDir = new File(siteDir);
+      File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+          projectId);
+      initializeExpectedDevices(siteDir);
+    }
 
-    initializeExpectedDevices(siteDir);
+    outBaseDir = new File(baseDir, "out");
+    outBaseDir.mkdirs();
+    metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    metadataReportFile.delete();
   }
 
   private void initializeExpectedDevices(String siteDir) {
@@ -241,9 +250,9 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    OUT_BASE_FILE.mkdirs();
-    System.err.println("Results may be in such directories as " + OUT_BASE_FILE.getAbsolutePath());
-    System.err.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
+    outBaseDir.mkdirs();
+    System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
+    System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
     Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
@@ -285,7 +294,7 @@ public class Validator {
   private void sendInitializationQuery(MessagePublisher client) {
     if (deviceId != null) {
       System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 
@@ -300,7 +309,6 @@ public class Validator {
       Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
-    attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
     }
@@ -333,6 +341,10 @@ public class Validator {
       return false;
     }
 
+    if (!shouldValidateMessage(attributes)) {
+      return false;
+    }
+
     try {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
@@ -341,7 +353,7 @@ public class Validator {
         processedDevices.add(deviceId);
       }
 
-      String schemaName = makeSchemaName(attributes);
+      String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
@@ -356,6 +368,7 @@ public class Validator {
       }
 
       sanitizeMessage(schemaName, message);
+      upgradeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -433,6 +446,14 @@ public class Validator {
     }
   }
 
+  private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    return subType == null
+        || SubType.EVENT.value().equals(subType)
+        || SubFolder.UPDATE.value().equals(subFolder);
+  }
+
   private File prepareDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
@@ -460,14 +481,18 @@ public class Validator {
   }
 
   private File makeDeviceDir(String deviceId) {
-    File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
+    File deviceDir = new File(outBaseDir, String.format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
   }
 
-  private String makeSchemaName(Map<String, String> attributes) {
+  private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
+
+    if (SubFolder.UPDATE.value().equals(subFolder)) {
+      return subType;
+    }
 
     if (Strings.isNullOrEmpty(subFolder)) {
       subFolder = UNKNOWN_FOLDER_DEFAULT;
@@ -477,22 +502,7 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (matches(subType, SubFolder.UPDATE)) {
-      if (!subFolder.endsWith("s")) {
-        throw new RuntimeException("Update subFolder missing plural: " + subFolder);
-      }
-      String singularFolder = subFolder.substring(0, subFolder.length() - 1);
-      if (!matches(singularFolder, SubType.CONFIG) && !matches(singularFolder, SubType.STATE)) {
-        throw new RuntimeException("Unrecognized update type: " + subFolder);
-      }
-      return singularFolder;
-    }
-
     return String.format("%s_%s", subType, subFolder);
-  }
-
-  private boolean matches(String target, Object value) {
-    return target.equals(value.toString());
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
@@ -523,10 +533,10 @@ public class Validator {
           metadataReport.missingDevices.add(deviceId);
         }
       }
-      OBJECT_MAPPER.writeValue(METADATA_REPORT_FILE, metadataReport);
+      OBJECT_MAPPER.writeValue(metadataReportFile, metadataReport);
     } catch (Exception e) {
       throw new RuntimeException(
-          "While generating metadata report file " + METADATA_REPORT_FILE.getAbsolutePath(), e);
+          "While generating metadata report file " + metadataReportFile.getAbsolutePath(), e);
     }
   }
 
@@ -664,6 +674,16 @@ public class Validator {
     File full = new File(outBase, addedFile);
     full.getParentFile().mkdirs();
     return full;
+  }
+
+  private void upgradeMessage(String schemaName, Map<String, Object> message) {
+    JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
+    upgradeMessage(schemaName, jsonNode);
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(jsonNode,
+        new TypeReference<>() {
+        });
+    message.clear();
+    message.putAll(objectMap);
   }
 
   private void upgradeMessage(String schemaName, JsonNode jsonNode) {

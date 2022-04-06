@@ -109,6 +109,10 @@ public class MqttPublisher {
       warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
+        if (mqttClients.isEmpty()) {
+          warn("Last client closed, shutting down publisher");
+          publisherExecutor.shutdown();
+        }
       } else {
         close();
       }
@@ -137,12 +141,8 @@ public class MqttPublisher {
       }
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
-      throw new RuntimeException("While closing publisher");
+      throw new RuntimeException("While closing publisher", e);
     }
-  }
-
-  long clientCount() {
-    return mqttClients.size();
   }
 
   private void validateCloudIotOptions() {

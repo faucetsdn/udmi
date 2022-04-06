@@ -26,7 +26,6 @@
         "system",
         "gateway",
         "localnet",
-        "metadata",
         "pointset",
         "blobset"
       ]
@@ -36,7 +35,8 @@
         "event",
         "command",
         "state",
-        "config"
+        "config",
+        "model"
       ]
     }
   },
