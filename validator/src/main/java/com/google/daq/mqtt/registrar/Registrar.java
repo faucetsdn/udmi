@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
-import udmi.schema.SiteDefaults;
 
 public class Registrar {
 

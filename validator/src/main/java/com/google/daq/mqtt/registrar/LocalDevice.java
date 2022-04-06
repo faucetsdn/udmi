@@ -56,7 +56,6 @@ import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetMetadata;
 import udmi.schema.PointsetConfig;
-import udmi.schema.SiteDefaults;
 
 class LocalDevice {
 
