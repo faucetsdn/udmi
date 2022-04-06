@@ -1,14 +1,14 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="BaselineValidator.broken_config" type="JUnit" factoryName="JUnit">
-    <module name="daq-validator.validator" />
+    <module name="validator" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.daq.mqtt.validator.validations.*" />
+        <option name="PATTERN" value="com.google.daq.mqtt.validator.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.google.daq.mqtt.validator.validations" />
-    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.WritebackValidator" />
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.ConfigValidator" />
     <option name="METHOD_NAME" value="broken_config" />
     <option name="TEST_OBJECT" value="method" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />

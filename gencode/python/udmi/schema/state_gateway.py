@@ -5,14 +5,14 @@ class GatewayState:
   """Generated schema class"""
 
   def __init__(self):
-    self.error_ids = None
+    self.devices = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = GatewayState()
-    result.error_ids = source.get('error_ids')
+    result.devices = source.get('devices')
     return result
 
   @staticmethod
@@ -33,6 +33,6 @@ class GatewayState:
 
   def to_dict(self):
     result = {}
-    if self.error_ids:
-      result['error_ids'] = self.error_ids # 1
+    if self.devices:
+      result['devices'] = self.devices # 5
     return result
