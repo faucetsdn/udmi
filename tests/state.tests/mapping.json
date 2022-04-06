@@ -1,7 +1,7 @@
 //
 // This message represents the entire high-level state of a recommendation model.
 // Additional messages would be required to detail specific bits (e.g. what was
-// discovered, or what the staged or promoted contents look like).
+// discovered or the actual staged or promoted contents).
 //
 // Note that building id is included as part of the message envelope.
 //
