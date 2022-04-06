@@ -205,7 +205,7 @@ class LocalDevice {
       if (siteDefaults != null) {
         this.siteDefaults = OBJECT_MAPPER.convertValue(siteDefaults, TreeMap.class);
       } else {
-        this.siteDefaults = new TreeMap<String, Object>();
+        this.siteDefaults = null;
       }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
