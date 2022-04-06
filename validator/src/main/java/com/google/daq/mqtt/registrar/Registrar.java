@@ -62,8 +62,7 @@ public class Registrar {
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
-          .setSerializationInclusion(Include.NON_NULL)
-              .setDefaultMergeable(Boolean.TRUE);
+          .setSerializationInclusion(Include.NON_NULL);
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
   private static final String VERSION_MAIN_KEY = "main";
