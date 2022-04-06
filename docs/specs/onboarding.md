@@ -22,8 +22,14 @@ Functional Components:
 * **Matcher**: Uses hueristics, ML, or a UI to convert discovery information into a concrete device/sink mapping
 * **Sink**: Ultimate recepient of pointset information. The thing that cares about 'temperature' in a room
 
-Note: Only "interesting" messages are shown in the diagram, there's other 'control flow' things that go on (e.g.
+Notes & Caveats:
+1. Only "interesting" messages are shown in the diagram, there's other control flow things that go on (e.g.
 to configure when the discovery *Node* should activate) to complete the overall flow.
+2. This just shows one-of-many potential provisioning (handling keys) techniques. There's other paths
+that would be possible.
+3. This shows the flow for a direct-connect (no IoT Gateway) device. Other than the provisioning steps, the
+basic message exchanges for a proxied-device (with IoT Gateway) would be more-or-less the same.
+
 ```
 +---------+               +-------+ +-------+               +-------+           +---------+          +-------+
 | Device  |               | Node  | | Cloud |               | Agent |           | Matcher |          | Sink  |
@@ -74,14 +80,6 @@ to configure when the discovery *Node* should activate) to complete the overall 
   * "Device `AHU-183`, you should send the `room_temp` data point every `10 minutes`"
 8. **Pointset Events** sends telemetry events from the _Device_ to _Sink_... business as usual!
   * "I am `AHU-183`, and my `room_temp` is `73`"
-
-Note: This assumes one-of-several auth key provisioning exchanges. There are others.
-
-## Gateway
-
-The gateway (non-direct) version of this would largely look the same, except the device wouldn't
-directly communicate with the cloud, and instead would always be proxied through an on-prem node,
-which is likely the same physical component as the discovery *Node*.
 
 ## Source
 Created using https://textart.io/sequence#
