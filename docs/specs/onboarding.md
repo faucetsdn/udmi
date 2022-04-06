@@ -28,8 +28,8 @@ Notes & Caveats:
 to configure when the discovery *Node* should activate) to complete the overall flow.
 2. This just shows one-of-many potential provisioning (handling keys) techniques. There's other paths
 that would be possible (including manually, which is the baseline default).
-3. This shows the flow for a direct-connect (no IoT Gateway) device. Other than the provisioning steps, the
-basic message exchanges for a proxied-device (with IoT Gateway) would be more-or-less the same.
+3. This shows the flow for a direct-connect (no IoT Gateway) device. The overall flow for a proxied device
+(with IoT Gateway) would more or less be the same, just different details about exact communication mechanisms.
 
 ```
 +---------+               +-------+ +-------+               +-------+           +---------+          +-------+
