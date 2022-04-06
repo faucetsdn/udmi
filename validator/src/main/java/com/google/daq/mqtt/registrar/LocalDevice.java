@@ -263,22 +263,19 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private List listMerge(List list1, List list2) {
-    list2.removeAll(list1);
-    list1.addAll(list2);
-    return list1;
-  }
   private void deepMerge(Map<String, Object> map1, Map<String, Object> map2) {
-    for(String key : map2.keySet()) {
+    for (String key : map2.keySet()) {
       Object value2 = map2.get(key);
       if (map1.containsKey(key)) {
         Object value1 = map1.get(key);
-        if (value1 instanceof Map && value2 instanceof Map)
+        if (value1 instanceof Map && value2 instanceof Map) {
           deepMerge((Map<String, Object>) value1, (Map<String, Object>) value2);
-        else if (value1 instanceof List && value2 instanceof List)
-          map1.put(key, listMerge((List) value1, (List) value2));
-        else map1.put(key, value2);
-      } else map1.put(key, value2);
+        } else {
+          map1.put(key, value2);
+        }
+      } else {
+        map1.put(key, value2);
+      }
     }
   }
 
