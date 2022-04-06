@@ -20,7 +20,7 @@ The overall onboarding sequence involves multiple components that work together 
 * **Node**: A 'discovery node' responsible for handling on-prem non-UDMI discovery communication with a device
 * **Cloud**: The on-prem/in-cloud boundary. Things to the left are things in the building, to the right are in the cloud
 * **Agent**: Responsible for managing the overall _discovery_ process (how often, what color, etc...)
-* **Matcher**: Uses hueristics, ML, or a UI to convert discovery information into a concrete device/sink mapping
+* **Mapper**: Uses hueristics, ML, or a UI to convert discovery information into a concrete device/sink mapping
 * **Sink**: Ultimate recepient of pointset information. The thing that cares about 'temperature' in a room
 
 Notes & Caveats:
@@ -32,9 +32,9 @@ that would be possible (including manually, which is the baseline default).
 (with IoT Gateway) would more or less be the same, just different details about exact communication mechanisms.
 
 ```
-+---------+               +-------+ +-------+               +-------+           +---------+          +-------+
-| Device  |               | Node  | | Cloud |               | Agent |           | Matcher |          | Sink  |
-+---------+               +-------+ +-------+               +-------+           +---------+          +-------+
++---------+               +-------+ +-------+               +-------+           +--------+          +-------+
+| Device  |               | Node  | | Cloud |               | Agent |           | Mapper |          | Sink  |
++---------+               +-------+ +-------+               +-------+           +--------+          +-------+
      |                        |         |                       |                    |                   |
      | (Info)                 |         |                       |                    |                   |
      |----------------------->|         |                       |                    |                   |
@@ -67,9 +67,9 @@ that would be possible (including manually, which is the baseline default).
 
 1. **(Info)** contains natively-encoded _Device_ information (format out of scope for UDMI)
   * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }, and public key `XYZZYZ`"
-2. **Discovery Event** from _Node_ wraps up the device info into a UDMI-normalized format
+2. **[Discovery Event](../../tests/event_discovery.tests/enumeration.json)** from _Node_ wraps up the device info into a UDMI-normalized format
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
-3. **Mapping Event** from the _Matcher_ (recieved by both _Sink_ and _Agent_)
+3. **Mapping Event** from the _Mapper_ (recieved by both _Sink_ and _Agent_)
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 5. **(Cloud Provision)** from _Agent_ sets up the _Cloud_ layer using the IoT Core API.
   * "Device `AHU-183` exists and has public key `XYZZYZ`"
@@ -85,11 +85,11 @@ that would be possible (including manually, which is the baseline default).
 ## Source
 Created using https://textart.io/sequence#
 ```
-object Device Node Cloud Agent Matcher Sink
+object Device Node Cloud Agent Mapper Sink
 Device->Node: (Info)
-Node->Matcher: Discovery Event
-Matcher->Sink: Mapping Event
-Matcher->Agent: Mapping Event
+Node->Mapper: Discovery Event
+Mapper->Sink: Mapping Event
+Mapper->Agent: Mapping Event
 Agent->Cloud: (Cloud Provision)
 Agent->Node: Discovery Command
 Node->Device: (Device Provision)
