@@ -282,7 +282,7 @@ class LocalDevice {
     }
   }
 
-  private Metadata readMetadataBase(Map<String, Object> siteDefaults) {
+  private Metadata readMetadata() {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
@@ -304,27 +304,7 @@ class LocalDevice {
     }
     return null;
   }
-
-  private Metadata readMetadata() {
-    return readMetadataBase(siteDefaults);
-
-
-    /*
-    if (siteDefaults != null) {
-      // Fields in siteDefaults that go into PointPointsetMetadata
-      for (String pointName : metadata.pointset.points.keySet()) {
-        PointPointsetMetadata ppm = metadata.pointset.points.get(pointName);
-        if (ppm.min_loglevel == null)
-          ppm.min_loglevel = siteDefaults.min_loglevel;
-        if (ppm.sample_limit_sec == null)
-          ppm.sample_limit_sec = siteDefaults.sample_limit_sec;
-        if (ppm.sample_rate_sec == null)
-          ppm.sample_rate_sec = siteDefaults.sample_rate_sec;
-        metadata.pointset.points.put(pointName, ppm);
-      }
-    }*/
-  }
-
+  
   private Metadata readNormalized() {
     try {
       File metadataFile = new File(outDir, NORMALIZED_JSON);
