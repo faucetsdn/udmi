@@ -2,11 +2,12 @@
 
 # Onboarding
 
-The overall 'onboarding' flow consists of a number of separate subflows stitched together for a complete
-end-to-end process. This generall starts from an "unknown" device in the system, ultimately resulting in
-a UDMI-complient setup.
+The overall "onboarding" flow consists of a number of separate subflows stitched together for a complete
+end-to-end process. This generall starts from an "unknown" device in the system through to a UDMI-compliant
+device that's properly integrated with backend services.
 
-Message Subgroups:
+At a high-level, the overall process involves different message subgroups that handle slightly different
+scopes of device data:
 * **(Native)**: Device communicaiton using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
 * **Discovery**: Messages relating to the discovery (and provisioning) of devices (e.g. messy BACnet info)
 * **Mapping**: Messages relating to a 'resolved' device type and ID (e.g. the device is an `AHU` called `AHU-1`)
@@ -14,7 +15,7 @@ Message Subgroups:
 
 ## Sequence Diagram
 
-Functional Components:
+The overall onboarding sequence involves multiple components that work together to provide the overall flow:
 * **Device**: The target thing that needs to be discovered, configured, and ultimately communications point data
 * **Node**: A 'discovery node' responsible for handling on-prem non-UDMI discovery communication with a device
 * **Cloud**: The on-prem/in-cloud boundary. Things to the left are things in the building, to the right are in the cloud
@@ -26,7 +27,7 @@ Notes & Caveats:
 1. Only "interesting" messages are shown in the diagram, there's other control flow things that go on (e.g.
 to configure when the discovery *Node* should activate) to complete the overall flow.
 2. This just shows one-of-many potential provisioning (handling keys) techniques. There's other paths
-that would be possible.
+that would be possible (including manually, which is the baseline default).
 3. This shows the flow for a direct-connect (no IoT Gateway) device. Other than the provisioning steps, the
 basic message exchanges for a proxied-device (with IoT Gateway) would be more-or-less the same.
 
