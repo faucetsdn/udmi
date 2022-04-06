@@ -304,7 +304,7 @@ class LocalDevice {
     }
     return null;
   }
-  
+
   private Metadata readNormalized() {
     try {
       File metadataFile = new File(outDir, NORMALIZED_JSON);

@@ -657,6 +657,8 @@ public class Registrar {
   }
 
   private void loadSiteDefaults() {
+    this.siteDefaults = null;
+
     if (!schemas.containsKey(METADATA_JSON))
       return;
 
@@ -668,8 +670,6 @@ public class Registrar {
     } catch (IOException e) {
       throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     }
-
-    this.siteDefaults = null;
 
     try {
       this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, Metadata.class);
