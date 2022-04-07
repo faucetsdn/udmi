@@ -33,6 +33,7 @@ resource "google_container_node_pool" "node_pool" {
 
 resource "google_compute_global_address" "udmi_global_address"{
  name = "udmi-global-address"
+ project = var.gcp_project_id
 }
 
 resource "google_dns_managed_zone" "udmi_dns_zone" {
