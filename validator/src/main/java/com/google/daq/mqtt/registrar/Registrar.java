@@ -18,10 +18,19 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.daq.mqtt.util.*;
+import com.google.daq.mqtt.util.CloudDeviceSettings;
+import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
-
-import java.io.*;
+import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.daq.mqtt.util.ValidationException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
@@ -597,7 +606,8 @@ public class Registrar {
         LocalDevice localDevice =
             localDevices.computeIfAbsent(
                 deviceName,
-                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation, siteDefaults));
+                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
+                    siteDefaults));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -658,8 +668,9 @@ public class Registrar {
   private void loadSiteDefaults() {
     this.siteDefaults = null;
 
-    if (!schemas.containsKey(METADATA_JSON))
+    if (!schemas.containsKey(METADATA_JSON)) {
       return;
+    }
 
     File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_JSON);
     try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
