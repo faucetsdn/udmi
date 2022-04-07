@@ -282,11 +282,7 @@ class LocalDevice {
           deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
         }
       } else {
-        // Subtle. If map1[key] does not exist, copy the default value from map2[key] only if
-        // it is not a map. However this will only work for 1 level deep.
-        if (!(value2 instanceof Map)) {
-          map1.put(key, value2);
-        }
+        map1.put(key, value2);
       }
     }
   }
