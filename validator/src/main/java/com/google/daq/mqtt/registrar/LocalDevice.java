@@ -272,17 +272,18 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private void deepMergeDefaults(Map<String, Object> map1, Map<String, Object> map2) {
-    for (String key : map2.keySet()) {
-      Object value2 = map2.get(key);
-      if (map1.containsKey(key)) {
-        Object value1 = map1.get(key);
-        // Only deep copy maps, don't copy values from map2, or the defaults override new values.
+  private void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
+    for (String key : source.keySet()) {
+      Object value2 = source.get(key);
+      if (destination.containsKey(key)) {
+        Object value1 = destination.get(key);
+        // When destination and source both contain key, deep copy maps but not other key/values,
+        // which would produce config override rather than defaults.
         if (value1 instanceof Map && value2 instanceof Map) {
           deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
         }
       } else {
-        map1.put(key, value2);
+        destination.put(key, value2);
       }
     }
   }

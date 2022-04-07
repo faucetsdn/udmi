@@ -675,11 +675,9 @@ public class Registrar {
     File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_JSON);
     try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
-    } catch (ProcessingException | ValidationException e) {
-      throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     } catch (FileNotFoundException e) {
       return;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     }
 
