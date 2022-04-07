@@ -42,8 +42,17 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import udmi.schema.Config;
@@ -217,8 +226,8 @@ class LocalDevice {
   }
 
   LocalDevice(
-          File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-          String generation) {
+      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+      String generation) {
     this(siteDir, devicesDir, deviceId, schemas, generation, null);
   }
 
@@ -263,18 +272,21 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-  private void deepMerge(Map<String, Object> map1, Map<String, Object> map2) {
+  private void deepMergeDefaults(Map<String, Object> map1, Map<String, Object> map2) {
     for (String key : map2.keySet()) {
       Object value2 = map2.get(key);
       if (map1.containsKey(key)) {
         Object value1 = map1.get(key);
+        // Only deep copy maps, don't copy values from map2, or the defaults override new values.
         if (value1 instanceof Map && value2 instanceof Map) {
-          deepMerge((Map<String, Object>) value1, (Map<String, Object>) value2);
-        } else {
-          map1.put(key, value2);
+          deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
         }
       } else {
-        map1.put(key, value2);
+        // Subtle. If map1[key] does not exist, copy the default value from map2[key] only if
+        // it is not a map. However this will only work for 1 level deep.
+        if (!(value2 instanceof Map)) {
+          map1.put(key, value2);
+        }
       }
     }
   }
@@ -283,8 +295,8 @@ class LocalDevice {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
-    } catch (ProcessingException | ValidationException metadata_exception) {
-      exceptionMap.put(EXCEPTION_VALIDATING, metadata_exception);
+    } catch (ProcessingException | ValidationException e) {
+      exceptionMap.put(EXCEPTION_VALIDATING, e);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
@@ -292,12 +304,13 @@ class LocalDevice {
       if (siteDefaults == null) {
         return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
       } else {
-        final Map<String, Object> metadata_base = OBJECT_MAPPER.readValue(metadataFile, TreeMap.class);
-        deepMerge(metadata_base, siteDefaults);
-        return OBJECT_MAPPER.convertValue(metadata_base, Metadata.class);
+        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(metadataFile,
+            TreeMap.class);
+        deepMergeDefaults(metadataBase, siteDefaults);
+        return OBJECT_MAPPER.convertValue(metadataBase, Metadata.class);
       }
-    } catch (Exception mapping_exception) {
-      exceptionMap.put(EXCEPTION_READING, mapping_exception);
+    } catch (Exception e) {
+      exceptionMap.put(EXCEPTION_READING, e);
     }
     return null;
   }
@@ -306,7 +319,7 @@ class LocalDevice {
     try {
       File metadataFile = new File(outDir, NORMALIZED_JSON);
       return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
-    } catch (Exception mapping_exception) {
+    } catch (Exception e) {
       return new Metadata();
     }
   }
@@ -551,11 +564,11 @@ class LocalDevice {
     metadata.pointset.points.forEach(
         (metadataKey, value) ->
             pointsetConfig.points.computeIfAbsent(
-                metadataKey, configKey -> ConfigFromMetadata(value)));
+                metadataKey, configKey -> configFromMetadata(value)));
     return pointsetConfig;
   }
 
-  PointPointsetConfig ConfigFromMetadata(PointPointsetMetadata metadata) {
+  PointPointsetConfig configFromMetadata(PointPointsetMetadata metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.ref = metadata.ref;
     if (Boolean.TRUE.equals(metadata.writable)) {
@@ -591,7 +604,8 @@ class LocalDevice {
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
       String envelopeJson = OBJECT_MAPPER.writeValueAsString(envelope);
-      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON).validate(OBJECT_MAPPER.readTree(envelopeJson));
+      ProcessingReport processingReport = schemas.get(ENVELOPE_JSON)
+          .validate(OBJECT_MAPPER.readTree(envelopeJson));
       if (!processingReport.isSuccess()) {
         processingReport.forEach(action -> {
           throw new RuntimeException("against schema", action.asException());
@@ -730,7 +744,7 @@ class LocalDevice {
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     try {
       try (FileWriter fileWriter = new FileWriter(exceptionLog, true);
-           PrintWriter printWriter = new PrintWriter(fileWriter)) {
+          PrintWriter printWriter = new PrintWriter(fileWriter)) {
         printWriter.println(exceptionType);
         exception.printStackTrace(printWriter);
       }
@@ -782,6 +796,7 @@ class LocalDevice {
   }
 
   private static class ProperPrettyPrinterPolicy extends DefaultPrettyPrinter {
+
     @Override
     public void writeObjectFieldValueSeparator(JsonGenerator jg) throws IOException {
       jg.writeRaw(": ");

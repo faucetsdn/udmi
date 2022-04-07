@@ -666,6 +666,8 @@ public class Registrar {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (ProcessingException | ValidationException e) {
       throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
+    } catch (FileNotFoundException e) {
+      return;
     } catch (IOException e) {
       throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     }
