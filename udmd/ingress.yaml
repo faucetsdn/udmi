@@ -14,7 +14,7 @@ metadata:
     networking.gke.io/v1beta1.FrontendConfig: udmi-web
 spec:
   rules:
-    - host: "@HOST_NAME@"
+    - host: "web.lab.udmi.buildingsiot.com"
       http:
         paths:
           - path: /api
