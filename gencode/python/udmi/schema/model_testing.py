@@ -1,20 +1,19 @@
-"""Generated class for metadata_testing_target.json"""
+"""Generated class for model_testing.json"""
+from .model_testing_target import TargetTestingMetadata
 
 
-class TargetTestingMetadata:
+class TestingMetadata:
   """Generated schema class"""
 
   def __init__(self):
-    self.target_point = None
-    self.target_value = None
+    self.targets = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = TargetTestingMetadata()
-    result.target_point = source.get('target_point')
-    result.target_value = source.get('target_value')
+    result = TestingMetadata()
+    result.targets = TargetTestingMetadata.map_from(source.get('targets'))
     return result
 
   @staticmethod
@@ -23,7 +22,7 @@ class TargetTestingMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = TargetTestingMetadata.from_dict(source[key])
+      result[key] = TestingMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,8 +34,6 @@ class TargetTestingMetadata:
 
   def to_dict(self):
     result = {}
-    if self.target_point:
-      result['target_point'] = self.target_point # 5
-    if self.target_value:
-      result['target_value'] = self.target_value # 5
+    if self.targets:
+      result['targets'] = TargetTestingMetadata.expand_dict(self.targets) # 2
     return result

@@ -1,28 +1,23 @@
-"""Generated class for state_pointset.json"""
+"""Generated class for event_mapping.json"""
 from .common import Entry
-from .state_pointset_point import PointPointsetState
 
 
-class PointsetState:
+class DiscoveryEvent:
   """Generated schema class"""
 
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.state_etag = None
     self.status = None
-    self.points = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = PointsetState()
+    result = DiscoveryEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.state_etag = source.get('state_etag')
     result.status = Entry.from_dict(source.get('status'))
-    result.points = PointPointsetState.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -31,7 +26,7 @@ class PointsetState:
       return None
     result = {}
     for key in source:
-      result[key] = PointsetState.from_dict(source[key])
+      result[key] = DiscoveryEvent.from_dict(source[key])
     return result
 
   @staticmethod
@@ -47,10 +42,6 @@ class PointsetState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.state_etag:
-      result['state_etag'] = self.state_etag # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.points:
-      result['points'] = PointPointsetState.expand_dict(self.points) # 2
     return result

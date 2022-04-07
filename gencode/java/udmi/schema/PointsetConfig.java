@@ -18,6 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "timestamp",
+    "version",
     "state_etag",
     "set_value_expiry",
     "sample_limit_sec",
@@ -27,6 +29,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class PointsetConfig {
 
+    /**
+     * RFC 3339 timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Major version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Major version of the UDMI schema")
+    public Integer version;
     /**
      * The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)
      * 
@@ -69,7 +85,9 @@ public class PointsetConfig {
         result = ((result* 31)+((this.sample_rate_sec == null)? 0 :this.sample_rate_sec.hashCode()));
         result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
         result = ((result* 31)+((this.set_value_expiry == null)? 0 :this.set_value_expiry.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.sample_limit_sec == null)? 0 :this.sample_limit_sec.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
@@ -83,7 +101,7 @@ public class PointsetConfig {
             return false;
         }
         PointsetConfig rhs = ((PointsetConfig) other);
-        return ((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))))&&((this.set_value_expiry == rhs.set_value_expiry)||((this.set_value_expiry!= null)&&this.set_value_expiry.equals(rhs.set_value_expiry))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return ((((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))))&&((this.set_value_expiry == rhs.set_value_expiry)||((this.set_value_expiry!= null)&&this.set_value_expiry.equals(rhs.set_value_expiry))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

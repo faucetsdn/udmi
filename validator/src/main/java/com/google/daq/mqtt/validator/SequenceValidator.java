@@ -701,7 +701,7 @@ public abstract class SequenceValidator {
       throw new RuntimeException("While stringifying message", e);
     }
   }
-  
+
   private <T> T convertTo(Class<T> targetClass, Object message) {
     if (message == null) {
       return null;

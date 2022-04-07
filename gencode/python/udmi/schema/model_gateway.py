@@ -1,19 +1,22 @@
-"""Generated class for metadata_localnet.json"""
-from .metadata_localnet_subsystem import SubsystemLocalnetMetadata
+"""Generated class for model_gateway.json"""
 
 
-class LocalnetMetadata:
+class GatewayMetadata:
   """Generated schema class"""
 
   def __init__(self):
+    self.gateway_id = None
     self.subsystem = None
+    self.proxy_ids = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetMetadata()
-    result.subsystem = SubsystemLocalnetMetadata.map_from(source.get('subsystem'))
+    result = GatewayMetadata()
+    result.gateway_id = source.get('gateway_id')
+    result.subsystem = source.get('subsystem')
+    result.proxy_ids = source.get('proxy_ids')
     return result
 
   @staticmethod
@@ -22,7 +25,7 @@ class LocalnetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetMetadata.from_dict(source[key])
+      result[key] = GatewayMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +37,10 @@ class LocalnetMetadata:
 
   def to_dict(self):
     result = {}
+    if self.gateway_id:
+      result['gateway_id'] = self.gateway_id # 5
     if self.subsystem:
-      result['subsystem'] = SubsystemLocalnetMetadata.expand_dict(self.subsystem) # 2
+      result['subsystem'] = self.subsystem # 5
+    if self.proxy_ids:
+      result['proxy_ids'] = self.proxy_ids # 1
     return result
