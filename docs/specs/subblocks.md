@@ -34,10 +34,19 @@ different sources:
   [comprehensive device config message](../../tests/config.tests/example.json)
   this message contains information _only_ for a single subblock. Used for writing configuration
   changes to a device, so will be _sent from_ a client app.
+* **Commands**: Streaming commands from cloud to the device. Generally not used because a model-based
+  approach using device state is preferred.
 
 In all cases, the _Subblock API_ messages encode the relevant subblock ID { pointset, discovery, ... }
 in the [message envelope's](../../tests/envelope.tests/example.json) _subFolder_ field.
 The _subType_ field encodes the relevant type { _event_, _config_, _state_, _model_ }.
+
+## System
+
+* **Model**
+* **Event**
+* **State**
+* **Config**
 
 ## [Pointset](../messages/pointset.md)
 
@@ -54,21 +63,33 @@ the device-to-cloud connection.
 * [**Config**](../../tests/config_pointset.tests/example.json): Configuration of the device points,
   indicating the expected points, cloud-to-device control, etc...
 
-## System
-
-* **Model**
-* **Event**
-* **State**
-* **Config**
-
 ## Discovery
 
+_Discovery_ covers systems that are actively searching for systems on a network (of some kind), and
+returning results about what was discovered and what their capabilities are. This provides a mechanism
+for doing things like a BACnet discovery sequence.
+
 * **Model**
 * **Event**
 * **State**
 * **Config**
 
-## Blobs
+## Audit
+
+_Audit_ covers an external "black box" audit of a system for vunerabilities or other characteristics.
+E.g., doing a port-scan of a device to see what network ports are open would be part of a network
+exposure autit.
+
+* **Model**
+* **Event**
+* **State**
+* **Config**
+
+## Mapping
+
+The _mapping_ process covers the determination of a translation from a set of identifiers or points to
+a canonical or other set of identifiers or points. E.g., there's a mapping process that goes on to
+correlate a BACnet MAC address (such as `9832C2`) with an associated IoT ID (such as `FCU-323`).
 
 * **Model**
 * **Event**
