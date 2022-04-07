@@ -694,6 +694,14 @@ public abstract class SequenceValidator {
     }
   }
 
+  protected String toJsonString(Object message) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying message", e);
+    }
+  }
+  
   private <T> T convertTo(Class<T> targetClass, Object message) {
     if (message == null) {
       return null;
