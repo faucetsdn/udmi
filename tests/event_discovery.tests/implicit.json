@@ -3,7 +3,7 @@
 // an implicit object point enumeration.
 //
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
-// where {device_id} is that of the scanning node (e.g. gateway). The {device_id}
+// where {device_id} is that of the scanning node. The {device_id}
 // of the enumerated node is provided by families.iot.id in the message payload.
 //
 {
