@@ -39,6 +39,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
+import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
@@ -630,7 +631,7 @@ public class Pubber {
         AbstractPoint::enumerate));
     publishDeviceMessage(discoveryEvent);
   }
-    
+
   private String stackTraceString(Throwable e) {
     OutputStream outputStream = new ByteArrayOutputStream();
     try (PrintStream ps = new PrintStream(outputStream)) {
