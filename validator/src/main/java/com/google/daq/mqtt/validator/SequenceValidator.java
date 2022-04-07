@@ -616,19 +616,6 @@ public abstract class SequenceValidator {
     untilLoop(() -> caughtAsFalse(evaluator), description);
   }
 
-  protected String getTimestamp(Date date) {
-    try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(date);
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
-  protected String getTimestamp() {
-    return getTimestamp(CleanDateFormat.cleanDate());
-  }
-
   private void receiveMessage() {
     if (!client.isActive()) {
       throw new RuntimeException("Trying to receive message from inactive client");
