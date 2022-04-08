@@ -1,5 +1,0 @@
-Validating 1 schemas
-  Validating 1 files against event_discover.json
-    Against input event_discover.tests/empty.json
-      1 schema violations found
-        object has missing required properties (["families","timestamp","version"])
