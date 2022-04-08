@@ -130,7 +130,7 @@ variable "function_environment_variables" {
   type        = map(string)
   description = "A set of key/value environment variable pairs to assign to the function."
 }
-
+## Mongodb variables
 variable "public_key" {
   type  = string
   description = "mangodb api public key"
@@ -139,3 +139,36 @@ variable "private_key" {
   type  = string
   description = "mangodb api private key"
 }
+
+variable "cluster_name" {
+  type = string 
+  description = "Mongodbatlas Cluster Name"
+}
+variable "mongodb_version" {
+  type = string 
+  description = "Mongodbatlas version"
+}
+variable "cluster_region" {
+  type = string 
+  description = "Mongodbatlas cluster region"
+}
+variable "provider_name" {
+  type = string 
+  description = "Mongodbatlas cloud provider"
+}
+variable "disk_size_gb" {
+  type = string 
+  description = "mongodb space were we are using for this project"
+}
+variable "instance_size_name" {
+  type = string 
+  description = "mongodb space name were we are using for this project"
+}
+variable "auto_scaling_instance_size" {
+  type = string 
+  description = "auto scalling instance size when it require"
+}
+
+
+
+
