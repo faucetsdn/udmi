@@ -30,6 +30,7 @@ The primary use of the site_model will be through the [registrar](../tools/regis
 ```json
 {
   "cloud_region": "us-central1",
+  "reflect_region": "europe-west1",
   "site_name": "ZZ-TRI-FECTA",
   "registry_id": "registrar_test"
 }
@@ -40,6 +41,7 @@ required for API calls.
 * `site_name`: The semantic name of the site, which is used for various bits of validation and
 reporting.
 * `registry_id`: The Cloud IoT Core _registry_ id for this site.
+* `reflect_region`: The cloud region used by the UDMS-REFLECT registry for UDMI tool access.
 
 ## `devices/`
 
