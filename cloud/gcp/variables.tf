@@ -130,3 +130,12 @@ variable "function_environment_variables" {
   type        = map(string)
   description = "A set of key/value environment variable pairs to assign to the function."
 }
+
+variable "public_key" {
+  type  = string
+  description = "mangodb api public key"
+}
+variable "private_key" {
+  type  = string
+  description = "mangodb api private key"
+}
