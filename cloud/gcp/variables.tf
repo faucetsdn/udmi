@@ -164,10 +164,15 @@ variable "instance_size_name" {
   type = string 
   description = "mongodb space name were we are using for this project"
 }
-variable "auto_scaling_instance_size" {
+variable "auto_scaling_max_instance_size" {
   type = string 
-  description = "auto scalling instance size when it require"
+  description = "auto scalling max instance size when it require"
 }
+variable "auto_scaling_min_instance_size" {
+  type = string 
+  description = "auto scalling min instance size when it require"
+}
+
 
 
 
