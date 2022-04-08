@@ -196,7 +196,7 @@ class LocalDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
-  private final TreeMap<String, Object> siteDefaults;
+  private final TreeMap<String, Object> siteMetadata;
 
   private String deviceNumId;
 
@@ -204,16 +204,16 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteDefaults) {
+      String generation, Metadata siteMetadata) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
-      if (siteDefaults != null) {
-        this.siteDefaults = OBJECT_MAPPER.convertValue(siteDefaults, TreeMap.class);
+      if (siteMetadata != null) {
+        this.siteMetadata = OBJECT_MAPPER.convertValue(siteMetadata, TreeMap.class);
       } else {
-        this.siteDefaults = null;
+        this.siteMetadata = null;
       }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
@@ -298,12 +298,12 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
     }
     try {
-      if (siteDefaults == null) {
+      if (siteMetadata == null) {
         return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
       } else {
         final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(metadataFile,
             TreeMap.class);
-        deepMergeDefaults(metadataBase, siteDefaults);
+        deepMergeDefaults(metadataBase, siteMetadata);
         return OBJECT_MAPPER.convertValue(metadataBase, Metadata.class);
       }
     } catch (Exception e) {

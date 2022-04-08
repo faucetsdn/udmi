@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -24,12 +23,10 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URI;
@@ -78,7 +75,7 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
-  private static final String SITE_DEFAULTS_JSON = "site_defaults.json";
+  private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
@@ -95,7 +92,7 @@ public class Registrar {
   private boolean updateCloudIoT;
   private Duration idleLimit;
   private Set<String> cloudDevices;
-  private Metadata siteDefaults;
+  private Metadata siteMetadata;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -107,7 +104,7 @@ public class Registrar {
         registrar.setToolRoot(null);
       }
 
-      registrar.loadSiteDefaults();
+      registrar.loadSiteMetadata();
 
       if (processAllDevices) {
         registrar.processDevices();
@@ -607,7 +604,7 @@ public class Registrar {
             localDevices.computeIfAbsent(
                 deviceName,
                 keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
-                    siteDefaults));
+                    siteMetadata));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -665,26 +662,26 @@ public class Registrar {
     }
   }
 
-  private void loadSiteDefaults() {
-    this.siteDefaults = null;
+  private void loadSiteMetadata() {
+    this.siteMetadata = null;
 
     if (!schemas.containsKey(METADATA_JSON)) {
       return;
     }
 
-    File siteDefaultsFile = new File(siteDir, SITE_DEFAULTS_JSON);
-    try (InputStream targetStream = new FileInputStream(siteDefaultsFile)) {
+    File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
+    try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
     } catch (Exception e) {
-      throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
+      throw new RuntimeException("While validating " + SITE_METADATA_JSON, e);
     }
 
     try {
-      this.siteDefaults = OBJECT_MAPPER.readValue(siteDefaultsFile, Metadata.class);
+      this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + SITE_DEFAULTS_JSON, e);
+      throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
     }
   }
 
