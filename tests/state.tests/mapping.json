@@ -1,9 +1,15 @@
 //
-// This message represents the entire high-level state of a recommendation model.
+// This message represents the entire high-level state of a mapping recommendation.
 // Additional messages would be required to detail specific bits (e.g. what was
 // discovered or the actual staged or promoted contents).
 //
 // Note that building id is included as part of the message envelope.
+//
+// Gendral gendral workflow is:
+// 1. Mapper receives discovery message
+// 2. Internal algorithm predicts what it might be and gives options
+// 3. Some process for promoting a single option based on prediction
+// 4. Result of promotion are exported for external consumption
 //
 {
   "version": "1.3.14",
@@ -11,10 +17,10 @@
   "mapping": {
     "devices": {
       "FCU-123": {
-        "discovered": "2018-08-26T21:39:29.364Z",  // Timestamp of last received discovery message
-        "staged": "2018-08-28T21:59:18.364Z",  // Timestamp of last recommendation staging
-        "promoted": "2018-08-28T22:39:12.364Z",  // Timestamp of last recommendation promotion
-        "exported": "2018-08-28T22:39:12.364Z",  // Timestamp of last time a device mapping was exported
+        "discovered": "2018-08-26T21:39:29.364Z",  // Last received discovery message
+        "predicted": "2018-08-28T21:59:18.364Z",  // Last recommendation staging (result of automatic prediction)
+        "promoted": "2018-08-28T22:39:12.364Z",  // Last recommendation promotion (result of manual QA)
+        "exported": "2018-08-28T22:39:12.364Z",  // Last time this device mapping was exported
       }
     }
   }
