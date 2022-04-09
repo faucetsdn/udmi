@@ -17,6 +17,7 @@
   "mapping": {
     "devices": {
       "FCU-123": {
+        "guid": "21387BBA787ADD", 
         "discovered": "2018-08-26T21:39:29.364Z",  // Last received discovery message
         "predicted": "2018-08-28T21:59:18.364Z",  // Last recommendation staging (result of automatic prediction)
         "promoted": "2018-08-28T22:39:12.364Z",  // Last recommendation promotion (result of manual QA)

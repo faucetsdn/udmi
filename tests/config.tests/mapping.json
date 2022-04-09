@@ -16,6 +16,7 @@
   "mapping": {
     "devices": {
       "FCU-123": {
+        "guid": "21387BBA787ADD", 
         "applied": "2018-08-27T22:39:12.364Z", // Last time a promotion was successfully applied externally
         "requested": "2018-08-27T22:39:12.364Z", // Timestamp of requested model export
         "status": {
