@@ -1,6 +1,6 @@
 resource "mongodbatlas_project" "udmi" {
   name   = var.project_name
-  org_id = var.atlasorgid
+  org_id = var.atlas_org_id
 }
 ## mangodbatlas cluster  
 resource "mongodbatlas_cluster" "udmi" {

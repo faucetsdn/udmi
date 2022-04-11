@@ -143,7 +143,7 @@ variable "project_name" {
   type = string
   description = "mangodb project name"
 }
-variable "atlasorgid" {
+variable "atlas_org_id" {
   type = string
   description = "atlas orgination id "
 }
