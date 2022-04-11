@@ -1,0 +1,51 @@
+{
+    "building_name": "US-MTV-1804",  // building id from discovery message
+    "equipment":
+    [
+        {
+            "data":
+              {
+                "cloud_id": "270074000670001",  // from UDMI discovery
+                "model.equip_type_predictions":  // top five predictions
+                  {
+                    "foo_1": 0.10,
+                    "foo_2": 0.15,
+                    "foo_3": 0.20,
+                    "foo_4": 0.25,
+                    "foo_5": 0.30
+                  },
+                "equip_type": "foo_5",  // top prediction
+                "model.equip_id": "ENTITY-GUID-1",  // predicted equipment instance ID
+                "model.parent": null,  // predicted parent equipment ID
+              },
+            "created": "2022-03-25T18:16:36+00:00",
+            "last_promoted": null,
+            "modified": null,
+        }
+    ],
+    "points_by_equip_id":
+    {
+      "ENTITY-GUID-1":
+        [
+            {
+                "data":
+                {
+                    "object_identifier": "('analogInupt', 1)",  // from UDMI discovery 
+                    "model.point_type_predictions":  // top five predictions
+                    {
+                        "bar_1": 0.10,
+                        "bar_2": 0.15,
+                        "bar_3": 0.20,
+                        "bar_4": 0.25,
+                        "bar_5": 0.30
+                    },
+                    "point_type": "bar_5",  // top prediction
+                },
+              "created": "2022-03-25T18:16:36+00:00",
+              "last_promoted": null,
+              "modified": null,
+              "equip_id": "ENTITY-GUID-1",
+            }
+        ]
+      }
+}
