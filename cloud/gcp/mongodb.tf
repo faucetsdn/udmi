@@ -1,5 +1,10 @@
+resource "mongodbatlas_project" "udmi" {
+  name   = var.project_name
+  org_id = var.atlasorgid
+}
+## mangodbatlas cluster  
 resource "mongodbatlas_cluster" "udmi" {
-  project_id             = var.gcp_project_id
+  project_id             = "mangodbatlas_project.udmi.id"
   name                   = var.cluster_name
   mongo_db_major_version = var.mongodb_version
   cluster_type           = "REPLICASET"

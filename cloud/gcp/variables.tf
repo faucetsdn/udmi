@@ -139,7 +139,14 @@ variable "private_key" {
   type  = string
   description = "mangodb api private key"
 }
-
+variable "project_name" {
+  type = string
+  description = "mangodb project name"
+}
+variable "atlasorgid" {
+  type = string
+  description = "atlas orgination id "
+}
 variable "cluster_name" {
   type = string 
   description = "Mongodbatlas Cluster Name"
