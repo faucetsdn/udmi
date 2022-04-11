@@ -1,37 +1,30 @@
 //
-// This message represents a DBO "buidling_config" entity snippet.
-// It could represent data either from an extraction from another system,
-// or an output of a promoted staged translation.
+// This message represents an import of an existing device mapping.
 //
-// The specific building info would be part of the message envelope.
+// Note that the building and device id are included as part of the message envelope.
 //
 {
   "version": "1.3.14",
   "timestamp": "2018-08-26T21:39:29.364Z",
-  "mapping_format": "building_config",
-  "devices": {
-    "FCU-123": {
-      "guid": "21387BBA787ADD", 
-      "translation": {
-        "zone_air_temperature_sensor": {
-          "present_value": "points.temp_1.present_value",
-          "units": {
-            "key": "pointset.points.temp_1.units",
-            "values": {
-              "degrees_celsius": "degC"
-            }
-          }
-        },
-        "supply_air_isolation_damper_command": {
-          "present_value": "points.damper_1.present_value",
-          "states": {
-            "OPEN": "1",
-            "CLOSED": [
-              "2",
-              "3"
-            ]
-          }
+  "guid": "21387BBA787ADD",
+  "translation": {
+    "zone_air_temperature_sensor": {
+      "present_value": "points.temp_1.present_value",
+      "units": {
+        "key": "pointset.points.temp_1.units",
+        "values": {
+          "degrees_celsius": "degC"
         }
+      }
+    },
+    "supply_air_isolation_damper_command": {
+      "present_value": "points.damper_1.present_value",
+      "states": {
+        "OPEN": "1",
+        "CLOSED": [
+          "2",
+          "3"
+        ]
       }
     }
   }

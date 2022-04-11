@@ -1,7 +1,8 @@
 //
 // This message represents a predictive model for a device. Includes all the
 // probabalistic information necessary for an agent (human or otherwise) to
-// specify what the actual translation should be.
+// specify what the actual translation should be. This is an intermediate
+// state that requires 'promotion' before being properly exported.
 //
 {
   "version": "1.3.14",
@@ -10,4 +11,3 @@
     // Need to include details from staged_equip_response.json
   }
 }
-
