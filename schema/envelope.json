@@ -22,6 +22,7 @@
     "subFolder": {
       "enum": [
         "update",
+        "audit",
         "discovery",
         "system",
         "gateway",

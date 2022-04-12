@@ -95,6 +95,7 @@ public class Envelope {
     public enum SubFolder {
 
         UPDATE("update"),
+        AUDIT("audit"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
         GATEWAY("gateway"),
