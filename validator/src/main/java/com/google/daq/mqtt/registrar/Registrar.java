@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Metadata;
 
 public class Registrar {
 
@@ -75,12 +76,14 @@ public class Registrar {
   private static final String SCHEMA_NAME = "UDMI";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
+  private static final String CONFIG_SUB_TYPE = "config";
+  private static final String MODEL_SUB_TYPE = "model";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
   private File siteDir;
   private File schemaBase;
-  private PubSubPusher configPusher;
+  private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
   private Map<String, LocalDevice> localDevices;
   private File summaryFile;
@@ -130,9 +133,6 @@ public class Registrar {
         case "-s":
           registrar.setSitePath(argList.remove(0));
           break;
-        case "-c":
-          registrar.setConfigTopic(argList.remove(0));
-          break;
         case "-f":
           registrar.setFeedTopic(argList.remove(0));
           break;
@@ -171,11 +171,6 @@ public class Registrar {
     if (!feedPusher.isEmpty()) {
       throw new RuntimeException("Feed is not empty, do you have enough pullers?");
     }
-  }
-
-  private void setConfigTopic(String configTopic) {
-    System.err.println("Sending updates to config topic " + configTopic);
-    configPusher = new PubSubPusher(projectId, configTopic);
   }
 
   private void writeErrors() throws Exception {
@@ -234,6 +229,10 @@ public class Registrar {
             cloudIotManager.getProjectId(),
             cloudIotManager.getCloudRegion(),
             cloudIotManager.getRegistryId()));
+
+    if (cloudIotManager.getUpdateTopic() != null) {
+      updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
+    }
   }
 
   private String getGenerationString() {
@@ -312,6 +311,7 @@ public class Registrar {
       localDevice.writeConfigFile();
       if (cloudDevices != null) {
         updateCloudIoT(localName, localDevice);
+        sendModelMessages(localDevice);
         sendConfigMessages(localDevice);
         if (cloudDevices.contains(localName)) {
           sendFeedMessage(localDevice);
@@ -434,31 +434,44 @@ public class Registrar {
     }
   }
 
-  private void sendConfigMessages(LocalDevice localDevice) {
-    if (configPusher == null) {
-      return;
+  private void sendModelMessages(LocalDevice localDevice) {
+    if (updatePusher != null) {
+      System.err.println("Sending model update for " + localDevice.getDeviceId());
+      Metadata deviceMetadata = localDevice.getMetadata();
+      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.SYSTEM, deviceMetadata.system);
+      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.POINTSET, deviceMetadata.pointset);
+      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.GATEWAY, deviceMetadata.gateway);
+      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.LOCALNET, deviceMetadata.localnet);
     }
-    System.err.println("Sending config messages for " + localDevice.getDeviceId());
-
-    Config deviceConfig = localDevice.deviceConfigObject();
-    sendConfigMessage(localDevice, SubFolder.SYSTEM, deviceConfig.system);
-    sendConfigMessage(localDevice, SubFolder.POINTSET, deviceConfig.pointset);
-    sendConfigMessage(localDevice, SubFolder.GATEWAY, deviceConfig.gateway);
-    sendConfigMessage(localDevice, SubFolder.LOCALNET, deviceConfig.localnet);
   }
 
-  private void sendConfigMessage(LocalDevice localDevice, SubFolder subFolder, Object subConfig) {
+  private void sendConfigMessages(LocalDevice localDevice) {
+    if (updatePusher != null) {
+      System.err.println("Sending config update for " + localDevice.getDeviceId());
+      Config deviceConfig = localDevice.deviceConfigObject();
+      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.SYSTEM, deviceConfig.system);
+      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.POINTSET, deviceConfig.pointset);
+      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.GATEWAY, deviceConfig.gateway);
+      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.LOCALNET, deviceConfig.localnet);
+    }
+  }
+
+  private void sendSubMessage(LocalDevice localDevice, String subType, SubFolder subFolder,
+      Object subConfig) {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("deviceId", localDevice.getDeviceId());
       attributes.put("deviceNumId", localDevice.getDeviceNumId());
       attributes.put("deviceRegistryId", cloudIotManager.getRegistryId());
       attributes.put("projectId", cloudIotManager.getProjectId());
+      attributes.put("subType", subType);
       attributes.put("subFolder", subFolder.value());
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
-      configPusher.sendMessage(attributes, messageString);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("While sending config " + subFolder, e);
+      updatePusher.sendMessage(attributes, messageString);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          String.format("Sending %s/%s messages for %s%n", subType, subFolder,
+              localDevice.getDeviceId()), e);
     }
   }
 
@@ -483,8 +496,8 @@ public class Registrar {
   }
 
   private void shutdown() {
-    if (configPusher != null) {
-      configPusher.shutdown();
+    if (updatePusher != null) {
+      updatePusher.shutdown();
     }
     if (feedPusher != null) {
       feedPusher.shutdown();

@@ -272,6 +272,10 @@ public class CloudIotManager {
     return cloudIotConfig.site_name;
   }
 
+  public String getUpdateTopic() {
+    return cloudIotConfig.update_topic;
+  }
+
   public Object getCloudRegion() {
     return cloudRegion;
   }
