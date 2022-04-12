@@ -179,7 +179,22 @@ variable "auto_scaling_min_instance_size" {
   type = string 
   description = "auto scalling min instance size when it require"
 }
-
+variable "db_username" {
+  type        = string
+  description = "MongoDB Atlas Database User Name"
+}
+variable "db_password" {
+  type        = string
+  description = "MongoDB Atlas Database User Password"
+}
+variable "database_name" {
+  type        = string
+  description = "The database in the cluster to limit the database user to, the database does not have to exist yet"
+}
+variable "db_role" {
+  type = string 
+  description = "the role where the db user can acess"
+}
 
 
 

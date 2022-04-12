@@ -25,3 +25,16 @@ resource "mongodbatlas_cluster" "udmi" {
   provider_auto_scaling_compute_max_instance_size = var.auto_scaling_max_instance_size
   provider_auto_scaling_compute_min_instance_size = var.auto_scaling_min_instance_size
 }
+
+# DATABASE USER  
+resource "mongodbatlas_database_user" "user" {
+  username           = var.db_username
+  password           = var.db_password
+  project_id         = mongodbatlas_project.udmi.id
+  auth_database_name = "admin"
+
+  roles {
+    role_name     = var.db_role
+    database_name = var.database_name 
+  }
+}
