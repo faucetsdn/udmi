@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
@@ -311,8 +312,7 @@ public class Registrar {
       localDevice.writeConfigFile();
       if (cloudDevices != null) {
         updateCloudIoT(localName, localDevice);
-        sendModelMessages(localDevice);
-        sendConfigMessages(localDevice);
+        sendUpdateMessages(localDevice);
         if (cloudDevices.contains(localName)) {
           sendFeedMessage(localDevice);
         }
@@ -434,25 +434,28 @@ public class Registrar {
     }
   }
 
-  private void sendModelMessages(LocalDevice localDevice) {
+  private void sendUpdateMessages(LocalDevice localDevice) {
     if (updatePusher != null) {
-      System.err.println("Sending model update for " + localDevice.getDeviceId());
-      Metadata deviceMetadata = localDevice.getMetadata();
-      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.SYSTEM, deviceMetadata.system);
-      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.POINTSET, deviceMetadata.pointset);
-      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.GATEWAY, deviceMetadata.gateway);
-      sendSubMessage(localDevice, MODEL_SUB_TYPE, SubFolder.LOCALNET, deviceMetadata.localnet);
+      System.err.println("Sending model/config update for " + localDevice.getDeviceId());
+      sendUpdateMessage(localDevice, SubFolder.SYSTEM);
+      sendUpdateMessage(localDevice, SubFolder.POINTSET);
+      sendUpdateMessage(localDevice, SubFolder.GATEWAY);
+      sendUpdateMessage(localDevice, SubFolder.LOCALNET);
     }
   }
 
-  private void sendConfigMessages(LocalDevice localDevice) {
-    if (updatePusher != null) {
-      System.err.println("Sending config update for " + localDevice.getDeviceId());
-      Config deviceConfig = localDevice.deviceConfigObject();
-      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.SYSTEM, deviceConfig.system);
-      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.POINTSET, deviceConfig.pointset);
-      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.GATEWAY, deviceConfig.gateway);
-      sendSubMessage(localDevice, CONFIG_SUB_TYPE, SubFolder.LOCALNET, deviceConfig.localnet);
+  private void sendUpdateMessage(LocalDevice localDevice, SubFolder subFolder) {
+    sendUpdateMessage(localDevice, MODEL_SUB_TYPE, subFolder, localDevice.getMetadata());
+    sendUpdateMessage(localDevice, CONFIG_SUB_TYPE, subFolder, localDevice.deviceConfigObject());
+  }
+
+  private void sendUpdateMessage(LocalDevice localDevice, String subType, SubFolder subfolder, Object target) {
+    String fieldName = subfolder.toString().toLowerCase();
+    try {
+      Field declaredField = target.getClass().getDeclaredField(fieldName);
+      sendSubMessage(localDevice, subType, subfolder, declaredField.get(target));
+    } catch (Exception e) {
+      throw new RuntimeException(String.format("Getting field %s from target %s%n", fieldName, target.getClass().getSimpleName()));
     }
   }
 
