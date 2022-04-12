@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FirestoreDataSink {
+public class FirestoreDataSink implements DataSink {
 
   private static final String
       VIEW_URL_FORMAT = "https://console.cloud.google.com/firestore/data/registries/?project=%s";
@@ -43,6 +43,7 @@ public class FirestoreDataSink {
     }
   }
 
+  @Override
   public void validationResult(String deviceId, String schemaId, Map<String, String> attributes,
       Object message, ErrorTree errorTree) {
     if (oldError.get() != null) {
