@@ -13,15 +13,12 @@ import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
-import com.google.cloud.pubsub.v1.SubscriptionAdminClient.ListSubscriptionsPagedResponse;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
-import com.google.pubsub.v1.ProjectName;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
-import com.google.pubsub.v1.Subscription;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,6 +27,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
+/**
+ * Message publisher that uses PubSub.
+ */
 public class PubSubClient implements MessagePublisher {
 
   private static final String CONNECT_ERROR_FORMAT = "While connecting to project %s";
@@ -53,6 +53,13 @@ public class PubSubClient implements MessagePublisher {
   private final Subscriber subscriber;
   private final Publisher publisher;
 
+  /**
+   * Create a new PubSub client.
+   *
+   * @param projectId  target project id
+   * @param registryId target registry id
+   * @param name       target subscription name
+   */
   public PubSubClient(String projectId, String registryId, String name) {
     try {
       this.projectId = projectId;
@@ -78,10 +85,20 @@ public class PubSubClient implements MessagePublisher {
     return SeekRequest.newBuilder().setSubscription(subscription).setTime(timestamp).build();
   }
 
+  /**
+   * Check if the client is active.
+   *
+   * @return true if the client is currently active
+   */
   public boolean isActive() {
     return active.get();
   }
 
+  /**
+   * Process the given message.
+   *
+   * @param handler the handler to use for processing the message
+   */
   @SuppressWarnings("unchecked")
   public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> handler) {
     try {

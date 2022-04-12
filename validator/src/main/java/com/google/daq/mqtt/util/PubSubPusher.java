@@ -44,6 +44,13 @@ public class PubSubPusher {
     }
   }
 
+  /**
+   * Send a message.
+   *
+   * @param attributes message attributes
+   * @param body       message body
+   * @return message ID of the published message
+   */
   public String sendMessage(Map<String, String> attributes, String body) {
     try {
       PubsubMessage message = PubsubMessage.newBuilder()
@@ -57,6 +64,9 @@ public class PubSubPusher {
     }
   }
 
+  /**
+   * Shutdown this pusher.
+   */
   public void shutdown() {
     try {
       publisher.publishAllOutstanding();
@@ -67,6 +77,11 @@ public class PubSubPusher {
     }
   }
 
+  /**
+   * Check if the default subscription for this topic is empty.
+   *
+   * @return true if the related subscription is empty
+   */
   public boolean isEmpty() {
     String subscriptionName = ProjectSubscriptionName.format(projectId, outTopic);
     System.err.println("Using PubSub subscription " + subscriptionName);
