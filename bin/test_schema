@@ -62,7 +62,7 @@ fi
 echo Testing against $subsets
 for subset in $subsets; do
     schemaname=${subset%.tests}.json
-    testfiles=$(cd $testdir/$subset; ls *.json)
+    testfiles=$(cd $testdir/$subset; ls *.json) || echo No json files found in $subset
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out
         testbase=$testdir/$subset

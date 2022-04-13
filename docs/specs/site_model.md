@@ -17,31 +17,11 @@ of the integration tests).
 
 At a high-level, the various constructs relevant to UDMI are (described in more detail below):
 * `cloud_iot_config.json`
-* `devices`
-
-## Registrar Tool
-
-The primary use of the site_model will be through the [registrar](../tools/registrar.md) and
-[validator](../tools/validator.md) tools. Primarily, they look for the existence of
-`device/{device_id}/metadata.json` files in the site model and process the information found there.
+* `devices/`
 
 ## `cloud_iot_config.json`
 
-```json
-{
-  "cloud_region": "us-central1",
-  "reflect_region": "europe-west1",
-  "site_name": "ZZ-TRI-FECTA",
-  "registry_id": "registrar_test"
-}
-```
-
-* `cloud_region`: The cloud region associated with this site. This is used by various tools as
-required for API calls.
-* `site_name`: The semantic name of the site, which is used for various bits of validation and
-reporting.
-* `registry_id`: The Cloud IoT Core _registry_ id for this site.
-* `reflect_region`: The cloud region used by the UDMS-REFLECT registry for UDMI tool access.
+[cloud_iot_config.json](schema) and [example](hdoo)
 
 ## `devices/`
 

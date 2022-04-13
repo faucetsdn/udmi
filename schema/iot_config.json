@@ -1,0 +1,19 @@
+{
+  "title": "IoT Config",
+  "description": "Parameters for configuring a connection to cloud systems",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "registry_id":
+    "cloud_region":
+    "reflect_region":
+    "site_name":
+    "update_topic":
+  public String alt_project;
+  public String alt_registry;
+  public boolean block_unknown;
+    "
+  }
+}
+

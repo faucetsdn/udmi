@@ -274,7 +274,6 @@ public class Validator {
 
   private void messageLoop() {
     if (client == null) {
-      System.err.println("No message publisher defined.");
       return;
     }
     System.err.println(
