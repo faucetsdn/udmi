@@ -1,22 +1,22 @@
 api:
   stage: build
   variables:
-    WORKING_DIR: udmd/api 
+    WORKING_DIR: udmif/api 
   trigger:
-    include: udmd/api/build.yml
+    include: udmif/api/build.yml
   rules:
     - changes:
-      - "udmd/api/*"
+      - "udmif/api/*"
 
 web:
   stage: build
   variables:
-    WORKING_DIR: udmd/web
+    WORKING_DIR: udmif/web
   trigger:
-    include: udmd/web/build.yml
+    include: udmif/web/build.yml
   rules:
     - changes:
-      - "udmd/web/*"
+      - "udmif/web/*"
 
 gcp:
   stage: build
