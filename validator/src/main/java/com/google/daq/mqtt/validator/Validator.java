@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -47,18 +49,26 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
+/**
+ * Class to validate streaming messages.
+ */
 public class Validator {
 
+  public static final String STATE_QUERY_TOPIC = "query/state";
+  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
+  public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
+          .enable(Feature.ALLOW_COMMENTS)
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String JSON_SUFFIX = ".json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
@@ -66,7 +76,6 @@ public class Validator {
   private static final String PUBSUB_MARKER = "pubsub";
   private static final String FILES_MARKER = "files";
   private static final String REFLECT_MARKER = "reflect";
-  private static final File OUT_BASE_FILE = new File("out");
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
@@ -77,31 +86,43 @@ public class Validator {
   private static final String DEVICES_SUBDIR = "devices";
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
-  private static final String UNKNOWN_SCHEMA_DEFAULT = "unknown";
+  private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
-  public static final String STATES_QUERY_TOPIC = "query/states";
-  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
-  public static final String NO_SITE = "--";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
-
+  private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private final String projectId;
-  private FirestoreDataSink dataSink;
-  private File schemaRoot;
-  private String schemaSpec;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
-  private CloudIotConfig cloudIotConfig;
-  public static final File METADATA_REPORT_FILE = new File(OUT_BASE_FILE, REPORT_JSON_FILENAME);
   private final Set<String> ignoredRegistries = new HashSet();
+  private File outBaseDir;
+  private File metadataReportFile;
+  private FirestoreDataSink dataSink;
+  private File schemaRoot;
+  private String schemaSpec;
+  private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
   private String deviceId;
 
+  /**
+   * Validator for streaming message validator.
+   *
+   * @param projectId Project to validate against.
+   */
+  public Validator(String projectId) {
+    this.projectId = projectId;
+  }
+
+  /**
+   * Instantiate a stream validator instance.
+   *
+   * @param args What to do!
+   */
   public static void main(String[] args) {
     if (args.length != 5) {
       throw new IllegalArgumentException("Args: [project] [schema] [target] [instance] [site]");
@@ -112,9 +133,7 @@ public class Validator {
       String targetSpec = args[2];
       String instName = args[3];
       String siteDir = args[4];
-      if (!NO_SITE.equals(siteDir)) {
-        validator.setSiteDir(siteDir);
-      }
+      validator.setSiteDir(siteDir);
       switch (targetSpec) {
         case PUBSUB_MARKER:
           validator.initializeCloudIoT();
@@ -140,16 +159,24 @@ public class Validator {
     System.exit(0);
   }
 
-  public Validator(String projectId) {
-    this.projectId = projectId;
-  }
-
   private void setSiteDir(String siteDir) {
-    this.siteDir = siteDir;
-    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig), projectId);
+    final File baseDir;
+    if (NO_SITE.equals(siteDir)) {
+      this.siteDir = null;
+      baseDir = new File(".");
+    } else {
+      this.siteDir = siteDir;
+      baseDir = new File(siteDir);
+      File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+          projectId);
+      initializeExpectedDevices(siteDir);
+    }
 
-    initializeExpectedDevices(siteDir);
+    outBaseDir = new File(baseDir, "out");
+    outBaseDir.mkdirs();
+    metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    metadataReportFile.delete();
   }
 
   private void initializeExpectedDevices(String siteDir) {
@@ -223,11 +250,11 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    Map<String, JsonSchema> schemaMap = getSchemaMap();
-    OUT_BASE_FILE.mkdirs();
-    System.err.println("Results may be in such directories as " + OUT_BASE_FILE.getAbsolutePath());
-    System.err.println("Generating report file in " + METADATA_REPORT_FILE.getAbsolutePath());
+    outBaseDir.mkdirs();
+    System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
+    System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
+    Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
   }
 
@@ -238,7 +265,7 @@ public class Validator {
   }
 
   private void validateReflector(String instName) {
-    deviceId = instName;
+    deviceId = NO_SITE.equals(instName) ? null : instName;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -247,7 +274,7 @@ public class Validator {
 
   private void messageLoop(MessagePublisher client) {
     System.err.println(
-        "Entering message loop on " + client.getSubscriptionId() + " for device " + deviceId);
+        "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     boolean initialized = false;
     while (client.isActive()) {
@@ -265,8 +292,10 @@ public class Validator {
   }
 
   private void sendInitializationQuery(MessagePublisher client) {
-    System.err.println("Sending initialization query messages");
-    client.publish(deviceId, STATES_QUERY_TOPIC, EMPTY_MESSAGE);
+    if (deviceId != null) {
+      System.err.println("Sending initialization query messages for device " + deviceId);
+      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    }
   }
 
   private Set<String> convertIgnoreSet(String ignoreSpec) {
@@ -280,9 +309,16 @@ public class Validator {
       Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
-    attributes.put(TIMESTAMP_ATTRIBUTE, getTimestamp());
     if (validateUpdate(schemaMap, message, attributes)) {
       writeDeviceMetadataReport();
+    }
+  }
+
+  private void validateMessage(JsonSchema schema, Object message) {
+    try {
+      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
     }
   }
 
@@ -305,6 +341,10 @@ public class Validator {
       return false;
     }
 
+    if (!shouldValidateMessage(attributes)) {
+      return false;
+    }
+
     try {
       String deviceId = attributes.get("deviceId");
       Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
@@ -313,7 +353,7 @@ public class Validator {
         processedDevices.add(deviceId);
       }
 
-      String schemaName = makeSchemaName(attributes);
+      String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
@@ -328,6 +368,7 @@ public class Validator {
       }
 
       sanitizeMessage(schemaName, message);
+      upgradeMessage(schemaName, message);
       File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -405,6 +446,14 @@ public class Validator {
     }
   }
 
+  private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    return subType == null
+        || SubType.EVENT.value().equals(subType)
+        || SubFolder.UPDATE.value().equals(subFolder);
+  }
+
   private File prepareDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
@@ -432,32 +481,28 @@ public class Validator {
   }
 
   private File makeDeviceDir(String deviceId) {
-    File deviceDir = new File(OUT_BASE_FILE, String.format(DEVICE_FILE_FORMAT, deviceId));
+    File deviceDir = new File(outBaseDir, String.format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
   }
 
-  private String makeSchemaName(Map<String, String> attributes) {
+  private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
 
+    if (SubFolder.UPDATE.value().equals(subFolder)) {
+      return subType;
+    }
+
     if (Strings.isNullOrEmpty(subFolder)) {
-      subFolder = UNKNOWN_SCHEMA_DEFAULT;
+      subFolder = UNKNOWN_FOLDER_DEFAULT;
     }
 
     if (Strings.isNullOrEmpty(subType)) {
-      return "event_" + subFolder;
+      subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    if (subFolder.equals("update")) {
-      if (!subType.equals("config") && !subType.equals("state")) {
-        throw new RuntimeException("Unrecognized update type " + subType);
-      }
-    } else if (!subType.endsWith("s")) {
-      throw new RuntimeException("Malformed plural subType " + subType);
-    }
-
-    return String.format("%s_%s", subType.substring(0, subType.length() - 1), subFolder);
+    return String.format("%s_%s", subType, subFolder);
   }
 
   private ReportingDevice getReportingDevice(String deviceId) {
@@ -488,22 +533,11 @@ public class Validator {
           metadataReport.missingDevices.add(deviceId);
         }
       }
-      OBJECT_MAPPER.writeValue(METADATA_REPORT_FILE, metadataReport);
+      OBJECT_MAPPER.writeValue(metadataReportFile, metadataReport);
     } catch (Exception e) {
       throw new RuntimeException(
-          "While generating metadata report file " + METADATA_REPORT_FILE.getAbsolutePath(), e);
+          "While generating metadata report file " + metadataReportFile.getAbsolutePath(), e);
     }
-  }
-
-  public static class MetadataReport {
-
-    public Date updated;
-    public Set<String> expectedDevices;
-    public Set<String> missingDevices;
-    public Set<String> extraDevices;
-    public Set<String> pointsetDevices;
-    public Set<String> base64Devices;
-    public Map<String, ReportingDevice.MetadataDiff> errorDevices;
   }
 
   private void processViolation(
@@ -582,25 +616,6 @@ public class Validator {
     }
   }
 
-  class RelativeDownloader implements URIDownloader {
-    public static final String FILE_URL_PREFIX = "file:";
-
-    @Override
-    public InputStream fetch(URI source) {
-      String url = source.toString();
-      try {
-        if (!url.startsWith(FILE_URL_PREFIX)) {
-          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
-        }
-        String new_url =
-            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-        return (InputStream) (new URL(new_url)).getContent();
-      } catch (Exception e) {
-        throw new RuntimeException("While loading URL " + url, e);
-      }
-    }
-  }
-
   private List<File> makeFileList(String prefix, String spec) {
     return makeFileList(prefix, new File(spec));
   }
@@ -625,24 +640,54 @@ public class Validator {
         .collect(Collectors.toList());
   }
 
-  private void validateMessage(JsonSchema schema, Object message) throws ProcessingException {
-    try {
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
-  }
-
   private void validateFile(
       String prefix, String targetFile, String schemaName, JsonSchema schema) {
+    final File targetOut = getTargetPath(prefix, targetFile.replace(".json", ".out"));
     try {
       File fullPath = getFullPath(prefix, new File(targetFile));
       Map<String, Object> message = OBJECT_MAPPER.readValue(fullPath, Map.class);
       sanitizeMessage(schemaName, message);
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
+      JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
+      upgradeMessage(schemaName, jsonNode);
+      OBJECT_MAPPER.writeValue(getTargetPath(prefix, targetFile), jsonNode);
+      validateJsonNode(schema, jsonNode);
+      writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
+      writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Against input " + targetFile, e);
     }
+  }
+
+  private void writeExceptionOutput(File targetOut, Exception e) {
+    try (OutputStream outputStream = new FileOutputStream(targetOut)) {
+      if (e != null) {
+        ExceptionMap.format(e, ERROR_FORMAT_INDENT).write(outputStream);
+      }
+    } catch (Exception e2) {
+      throw new RuntimeException("While writing " + targetOut, e2);
+    }
+  }
+
+  private File getTargetPath(String baseFile, String addedFile) {
+    File prefix = new File(baseFile);
+    File outBase = new File(prefix.getParentFile(), "out/tests");
+    File full = new File(outBase, addedFile);
+    full.getParentFile().mkdirs();
+    return full;
+  }
+
+  private void upgradeMessage(String schemaName, Map<String, Object> message) {
+    JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
+    upgradeMessage(schemaName, jsonNode);
+    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(jsonNode,
+        new TypeReference<>() {
+        });
+    message.clear();
+    message.putAll(objectMap);
+  }
+
+  private void upgradeMessage(String schemaName, JsonNode jsonNode) {
+    new MessageUpgrader(schemaName, jsonNode).upgrade();
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
@@ -662,6 +707,40 @@ public class Validator {
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
+  /**
+   * Report for results from processing the metadata.
+   */
+  public static class MetadataReport {
+
+    public Date updated;
+    public Set<String> expectedDevices;
+    public Set<String> missingDevices;
+    public Set<String> extraDevices;
+    public Set<String> pointsetDevices;
+    public Set<String> base64Devices;
+    public Map<String, ReportingDevice.MetadataDiff> errorDevices;
+  }
+
+  class RelativeDownloader implements URIDownloader {
+
+    public static final String FILE_URL_PREFIX = "file:";
+
+    @Override
+    public InputStream fetch(URI source) {
+      String url = source.toString();
+      try {
+        if (!url.startsWith(FILE_URL_PREFIX)) {
+          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+        }
+        String newUrl =
+            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
+        return (InputStream) (new URL(newUrl)).getContent();
+      } catch (Exception e) {
+        throw new RuntimeException("While loading URL " + url, e);
+      }
     }
   }
 }

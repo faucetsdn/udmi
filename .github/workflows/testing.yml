@@ -19,8 +19,10 @@ jobs:
           sudo apt-get install openjdk-11-jdk
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
       - name: Running unit tests
-        run: bin/test_schema
+        if: ${{ always() }}
+        run: bin/test_schema -p
       - name: Run registrar validation
+        if: ${{ always() }}
         run: bin/test_registrar
 
   ui:
@@ -54,25 +56,38 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11'
-      - name: code checks
+      - name: base setup
         run: |
           bin/setup_base
-          bin/gencode check
-          pubber/bin/build check
-          validator/bin/build check
+          bin/clone_model
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          fgrep 'RESULT ' /tmp/test_log.txt | sed -e 's/.*sequencer RESULT/RESULT/' > /tmp/results.txt
-          diff /tmp/results.txt etc/sequence.out
-      - name: validation logs
+          more /tmp/sequencer.out
+          diff -u /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
+      - name: telemetry validator
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        run: |
+          # Run after sequencer to device config starts in a known state
+          bin/test_validator $GCP_TARGET_PROJECT
+          more /tmp/validator.out
+          diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
+      - name: code checks
         if: ${{ always() }}
-        run: more `find out/devices/ -type f`
+        run: |
+          bin/gencode check
+          pubber/bin/build check
+          validator/bin/build check
+      - name: device ouput logs
+        if: ${{ always() }}
+        run: more `find udmi_site_model/out/devices/ -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          echo Pubber output logs:
           cat pubber.out || true
+          more out/*.json

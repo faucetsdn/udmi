@@ -1,9 +1,6 @@
-Validating 1 schemas
-  Validating 1 files against envelope.json
-    Against input envelope.tests/errors1.json
-      5 schema violations found
-        ECMA 262 regex "^[0-9]+$" does not match input string "921302198324X"
-        ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "fcu-1"
-        ECMA 262 regex "^[a-zA-Z][-a-zA-Z0-9._+~%]*[a-zA-Z0-9]$" does not match input string "test/registry"
-        instance value (5) not found in enum (possible values: ["event","command","state","config"])
-        object has missing required properties (["projectId","subFolder"])
+5 schema violations found
+  ECMA 262 regex "^[0-9]+$" does not match input string "921302198324X"
+  ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "fcu-1"
+  ECMA 262 regex "^[a-zA-Z][-a-zA-Z0-9._+~%]*[a-zA-Z0-9]$" does not match input string "test/registry"
+  instance value (5) not found in enum (possible values: ["event","command","state","config","model"])
+  object has missing required properties (["projectId","subFolder"])

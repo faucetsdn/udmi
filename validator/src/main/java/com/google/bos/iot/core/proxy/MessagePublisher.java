@@ -4,7 +4,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 public interface MessagePublisher {
+
   void publish(String deviceId, String topic, String data);
+
   void close();
 
   String getSubscriptionId();

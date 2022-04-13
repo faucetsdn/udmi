@@ -46,7 +46,7 @@ public class Metadata {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    public String version;
     /**
      * Generic human-readable text describing the device
      * 

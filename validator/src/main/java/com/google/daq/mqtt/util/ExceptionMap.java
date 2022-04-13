@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,10 @@ public class ExceptionMap extends RuntimeException {
 
     public void write(PrintStream err) {
       write(err, null);
+    }
+
+    public void write(OutputStream err) {
+      write(new PrintStream(err), null);
     }
 
     public void write(PrintStream err, Set<String> ignoreSet) {

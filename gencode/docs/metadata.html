@@ -88,13 +88,13 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Major version of the UDMI schema</p>
 </span>
             
 
             
-            <p><span class="badge badge-light restriction numeric-restriction" id="version_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>1</code></span></p>
+            
 
             
             </div>
@@ -1295,7 +1295,6 @@
             
 
             <h4>Each item of this array must be:</h4>
-    
     <div class="card">
         <div class="card-body items-definition" id="gateway_proxy_ids_items">
             
@@ -1321,7 +1320,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#gateway_proxy_ids_items" onclick="anchorLink('gateway_proxy_ids_items')">items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#gateway_proxy_ids_items" onclick="anchorLink('gateway_proxy_ids_items')">proxy_ids items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="gateway_proxy_ids_items_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[0-9]{1,6}$</code></span>
             
 
@@ -1330,8 +1329,7 @@
 
             
         </div>
-    </div>
-    <br/>
+    </div><br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="gateway_proxy_ids_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">[</span>
     <span class="s2">&quot;AHU-22&quot;</span>
@@ -1957,18 +1955,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionpointset_points_pattern1_writeable">
+<div class="accordion" id="accordionpointset_points_pattern1_writable">
     <div class="card">
-        <div class="card-header" id="headingpointset_points_pattern1_writeable">
+        <div class="card-header" id="headingpointset_points_pattern1_writable">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_writeable"
-                        aria-expanded="" aria-controls="pointset_points_pattern1_writeable" onclick="setAnchor('#pointset_points_pattern1_writeable')"><span class="property-name">writeable</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_writable"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_writable" onclick="setAnchor('#pointset_points_pattern1_writable')"><span class="property-name">writable</span></button>
             </h2>
         </div>
 
-        <div id="pointset_points_pattern1_writeable"
-             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_writeable"
-             data-parent="#accordionpointset_points_pattern1_writeable">
+        <div id="pointset_points_pattern1_writable"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_writable"
+             data-parent="#accordionpointset_points_pattern1_writable">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -1999,7 +1997,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1_writeable" onclick="anchorLink('pointset_points_pattern1_writeable')">writeable</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+    <a href="#pointset_points_pattern1_writable" onclick="anchorLink('pointset_points_pattern1_writable')">writable</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Indicates if this point is writable (else read-only)</p>
 </span>
             
@@ -2304,6 +2302,171 @@
 </div><div id="pointset_points_pattern1_ref_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;400070&quot;</span>
 </pre></div>
 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_min_loglevel">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_min_loglevel">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_min_loglevel"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_min_loglevel" onclick="setAnchor('#pointset_points_pattern1_min_loglevel')"><span class="property-name">min_loglevel</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_min_loglevel"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_min_loglevel"
+             data-parent="#accordionpointset_points_pattern1_min_loglevel">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_min_loglevel" onclick="anchorLink('pointset_points_pattern1_min_loglevel')">min_loglevel</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.</p>
+</span>
+            
+
+            
+            <p><span class="badge badge-light restriction numeric-restriction" id="pointset_points_pattern1_min_loglevel_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code></span></p>
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_sample_limit_sec">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_sample_limit_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_sample_limit_sec"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_sample_limit_sec" onclick="setAnchor('#pointset_points_pattern1_sample_limit_sec')"><span class="property-name">sample_limit_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_sample_limit_sec"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_sample_limit_sec"
+             data-parent="#accordionpointset_points_pattern1_sample_limit_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_sample_limit_sec" onclick="anchorLink('pointset_points_pattern1_sample_limit_sec')">sample_limit_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.</p>
+</span>
+            
+
+            
+            <p><span class="badge badge-light restriction numeric-restriction" id="pointset_points_pattern1_sample_limit_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_sample_rate_sec">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_sample_rate_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_sample_rate_sec"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_sample_rate_sec" onclick="setAnchor('#pointset_points_pattern1_sample_rate_sec')"><span class="property-name">sample_rate_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_sample_rate_sec"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_sample_rate_sec"
+             data-parent="#accordionpointset_points_pattern1_sample_rate_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_sample_rate_sec" onclick="anchorLink('pointset_points_pattern1_sample_rate_sec')">sample_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.</p>
+</span>
+            
+
+            
+            <p><span class="badge badge-light restriction numeric-restriction" id="pointset_points_pattern1_sample_rate_sec_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>86400</code></span></p>
+
+            
             </div>
         </div>
     </div>

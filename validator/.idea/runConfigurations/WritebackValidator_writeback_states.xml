@@ -1,16 +1,16 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="BaselineValidator" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+  <configuration default="false" name="WritebackValidator.writeback_states" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
     <module name="daq-validator.validator" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.daq.mqtt.validator.validations.*" />
+        <option name="PATTERN" value="com.google.daq.mqtt.validator.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.google.daq.mqtt.validator.validations" />
-    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.BaselineValidator" />
-    <option name="METHOD_NAME" value="" />
-    <option name="TEST_OBJECT" value="class" />
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.validations.WritebackValidator" />
+    <option name="METHOD_NAME" value="writeback_states" />
+    <option name="TEST_OBJECT" value="method" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <envs>
       <env name="VALIDATOR_CONFIG" value="udmi_site_model/validator/validator.json" />

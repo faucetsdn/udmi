@@ -1,0 +1,27 @@
+#!/bin/bash -e
+#
+# This script intentionally runs silent if there is no version mismatch found.
+#
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+branch=master
+origin=`git remote -v | fgrep faucetsdn/udmi | awk '{print $1}' | uniq`
+
+if [[ -z $origin ]]; then
+    echo No git origin found, adding faucetsdn...
+    git remote add faucetsdn https://github.com/faucetsdn/udmi.git
+    origin=faucetsdn
+fi
+
+git fetch $origin --tags 2>/dev/null
+upstream_ver=`git describe $origin/$branch --abbrev=0`
+current_ver=`git describe HEAD --abbrev=0 || echo unknown`
+
+if [[ $current_ver != $upstream_ver ]]; then
+    echo
+    echo Local UDMI version $current_ver does not match upstream version $upstream_ver
+    echo Please consider updating as needed.
+    echo
+fi

@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,27 +12,30 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.function.BiConsumer;
-import org.apache.http.ConnectionClosedException;
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.joda.time.DateTime;
-
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import org.apache.http.ConnectionClosedException;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -56,7 +61,7 @@ public class MqttPublisher {
 
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
   private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
-  private static final String CLIENT_ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
@@ -82,7 +87,7 @@ public class MqttPublisher {
     this.configuration = configuration;
     this.registryId = configuration.registryId;
     this.onError = onError;
-    validateCloudIoTOptions();
+    validateCloudIotOptions();
   }
 
   void publish(String deviceId, String topic, Object data) {
@@ -104,6 +109,10 @@ public class MqttPublisher {
       warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
+        if (mqttClients.isEmpty()) {
+          warn("Last client closed, shutting down publisher");
+          publisherExecutor.shutdown();
+        }
       } else {
         close();
       }
@@ -132,15 +141,11 @@ public class MqttPublisher {
       }
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
-      throw new RuntimeException("While closing publisher");
+      throw new RuntimeException("While closing publisher", e);
     }
   }
 
-  long clientCount() {
-    return mqttClients.size();
-  }
-
-  private void validateCloudIoTOptions() {
+  private void validateCloudIotOptions() {
     try {
       checkNotNull(configuration.bridgeHostname, "bridgeHostname");
       checkNotNull(configuration.bridgePort, "bridgePort");
@@ -161,7 +166,8 @@ public class MqttPublisher {
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), MQTT_QOS, SHOULD_RETAIN);
+      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), MQTT_QOS,
+          SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
     } catch (Exception e) {
@@ -221,10 +227,37 @@ public class MqttPublisher {
         .toCharArray();
   }
 
+  /**
+   * Create a Cloud IoT JWT for the given project id, signed with the given private key.
+   */
+  private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
+      throws Exception {
+    DateTime now = new DateTime();
+    // Create a JWT to authenticate this device. The device will be disconnected after the token
+    // expires, and will have to reconnect with a new token. The audience field should always be set
+    // to the GCP project id.
+    JwtBuilder jwtBuilder =
+        Jwts.builder()
+            .setIssuedAt(now.toDate())
+            .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
+            .setAudience(projectId);
+
+    if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
+      PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
+      return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
+    } else if (algorithm.equals("ES256") || algorithm.equals("ES256_X509")) {
+      PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
+      return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
+    } else {
+      throw new IllegalArgumentException(
+          "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
+    }
+  }
+
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    return String.format(CLIENT_ID_FORMAT, configuration.projectId, configuration.cloudRegion,
+    return String.format(ID_FORMAT, configuration.projectId, configuration.cloudRegion,
         registryId, deviceId);
   }
 
@@ -251,10 +284,15 @@ public class MqttPublisher {
     }
   }
 
-  public PublisherStats getStatistics() {
-    return new PublisherStats();
-  }
-
+  /**
+   * Register a message handler.
+   *
+   * @param deviceId    Device id to register with
+   * @param mqttTopic   Mqtt topic
+   * @param handler     Message received handler
+   * @param messageType Type of the message for this handler
+   * @param <T>         Param of the message type
+   */
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(String deviceId, String mqttTopic,
       Consumer<T> handler, Class<T> messageType) {
@@ -280,61 +318,6 @@ public class MqttPublisher {
 
   public void connect(String deviceId) {
     getConnectedClient(deviceId);
-  }
-
-  private class MqttCallbackHandler implements MqttCallback {
-
-    private final String deviceId;
-
-    MqttCallbackHandler(String deviceId) {
-      this.deviceId = deviceId;
-    }
-
-    /**
-     * @see MqttCallback#connectionLost(Throwable)
-     */
-    public void connectionLost(Throwable cause) {
-      warn("MQTT Connection Lost: " + cause);
-      onError.accept(new ConnectionClosedException());
-    }
-
-    /**
-     * @see MqttCallback#deliveryComplete(IMqttDeliveryToken)
-     */
-    public void deliveryComplete(IMqttDeliveryToken token) {
-    }
-
-    /**
-     * @see MqttCallback#messageArrived(String, MqttMessage)
-     */
-    public void messageArrived(String topic, MqttMessage message) {
-      synchronized (MqttPublisher.this) {
-        String messageType = getMessageType(topic);
-        String handlerKey = getHandlerKey(topic);
-        Consumer<Object> handler = handlers.get(handlerKey);
-        Class<Object> type = handlersType.get(handlerKey);
-        if (handler == null) {
-          error("Missing handler", messageType, "receive",
-              new RuntimeException("No registered handler for " + handlerKey));
-          return;
-        }
-        success("Received config", messageType, "receive");
-
-        final Object payload;
-        try {
-          if (message.toString().length() == 0) {
-            payload = null;
-          } else {
-            payload = OBJECT_MAPPER.readValue(message.toString(), type);
-          }
-        } catch (Exception e) {
-          error("Processing message", messageType, "parse", e);
-          return;
-        }
-        success("Parsed message", messageType, "parse");
-        handler.accept(payload);
-      }
-    }
   }
 
   private void success(String message, String type, String phase) {
@@ -389,11 +372,13 @@ public class MqttPublisher {
       }
       return mqttClients.computeIfAbsent(deviceId, this::connectMqttClient);
     } catch (Exception e) {
-      throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e.toString(), e);
+      throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e, e);
     }
   }
 
-  /** Load a PKCS8 encoded keyfile from the given path. */
+  /**
+   * Load a PKCS8 encoded keyfile from the given path.
+   */
   private PrivateKey loadKeyBytes(byte[] keyBytes, String algorithm) throws Exception {
     try {
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
@@ -404,46 +389,75 @@ public class MqttPublisher {
     }
   }
 
-  /** Create a Cloud IoT JWT for the given project id, signed with the given private key */
-  protected String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
-      throws Exception {
-    DateTime now = new DateTime();
-    // Create a JWT to authenticate this device. The device will be disconnected after the token
-    // expires, and will have to reconnect with a new token. The audience field should always be set
-    // to the GCP project id.
-    JwtBuilder jwtBuilder =
-        Jwts.builder()
-            .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
-            .setAudience(projectId);
-
-    if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
-      PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
-      return jwtBuilder.signWith(SignatureAlgorithm.RS256, privateKey).compact();
-    } else if (algorithm.equals("ES256") || algorithm.equals("ES256_X509")) {
-      PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "EC");
-      return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
-    } else {
-      throw new IllegalArgumentException(
-          "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
-    }
-  }
-
-  public class PublisherStats {
-    public long clientCount = mqttClients.size();
-    public int publishCount = publishCounter.getAndSet(0);
-    public int errorCount = errorCounter.getAndSet(0);
-  }
-
+  /**
+   * Exception class for errors during publishing.
+   */
   public static class PublisherException extends RuntimeException {
 
     final String type;
     final String phase;
 
+    /**
+     * Exception encountered during publishing a message.
+     *
+     * @param message Error message
+     * @param type    Type of message being published
+     * @param phase   Which phase of execution
+     * @param cause   Caouse of the exception
+     */
     public PublisherException(String message, String type, String phase, Throwable cause) {
       super(message, cause);
       this.type = type;
       this.phase = phase;
+    }
+  }
+
+  private class MqttCallbackHandler implements MqttCallback {
+
+    private final String deviceId;
+
+    MqttCallbackHandler(String deviceId) {
+      this.deviceId = deviceId;
+    }
+
+    @Override
+    public void connectionLost(Throwable cause) {
+      warn("MQTT Connection Lost: " + cause);
+      onError.accept(new ConnectionClosedException());
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) {
+      synchronized (MqttPublisher.this) {
+        String messageType = getMessageType(topic);
+        String handlerKey = getHandlerKey(topic);
+        Consumer<Object> handler = handlers.get(handlerKey);
+        Class<Object> type = handlersType.get(handlerKey);
+        if (handler == null) {
+          error("Missing handler", messageType, "receive",
+              new RuntimeException("No registered handler for " + handlerKey));
+          return;
+        }
+        success("Received config", messageType, "receive");
+
+        final Object payload;
+        try {
+          if (message.toString().length() == 0) {
+            payload = null;
+          } else {
+            payload = OBJECT_MAPPER.readValue(message.toString(), type);
+          }
+        } catch (Exception e) {
+          error("Processing message", messageType, "parse", e);
+          return;
+        }
+        success("Parsed message", messageType, "parse");
+        handler.accept(payload);
+      }
     }
   }
 }

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "id": "sneakyCASE",
+  "families": {
+    "bacnet": {
+      "id": "92E*A09"
+    },
+    "ip_v4": {
+      "addr": "192.168.1.2"
+    },
+    "mac": {
+      "group": "vlan182",
+      "id": "0E:93:32:11:04:82"
+    }
+  },
+  "points": {
+    "bad_entity_name_": {
+      "present_value": 21.30108642578125
+    }
+  }
+}

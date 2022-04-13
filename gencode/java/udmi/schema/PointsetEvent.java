@@ -41,7 +41,7 @@ public class PointsetEvent {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    public java.lang.String version;
     /**
      * Indicates if this is a partial update (only some points may be included)
      * 

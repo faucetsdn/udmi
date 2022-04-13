@@ -6,9 +6,20 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
+log_level=INFO
 
-if [ $# -lt 3 -o $# -gt 4 ]; then
-    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO]
+if [[ $1 == '-v' ]]; then
+    log_level=DEBUG
+    shift
+fi
+
+if [[ $1 == '-v' || $1 == '-vv' ]]; then
+    log_level=TRACE
+    shift
+fi
+
+if [[ $# < 3 ]]; then
+    echo Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
     false
 fi
 
@@ -18,6 +29,9 @@ device_id=$3
 shift 3
 
 serial_no=${1:-//}
+shift || true
+
+test_names="$@"
 
 cd $ROOT_DIR
 
@@ -28,15 +42,25 @@ cat <<EOF > /tmp/validator_config.json
   "site_model": "$site_path",
   "device_id": "$device_id",
   "serial_no": "$serial_no",
+  "log_level": "$log_level",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }
 EOF
 
 cat /tmp/validator_config.json
+echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-bin/loop_sequences 2>&1 | tee $TEST_LOG
+bin/loop_sequences $test_names 2>&1 | tee $TEST_LOG
 
 echo
-fgrep 'RESULT ' $TEST_LOG
+# Sort by test name (6th field)
+fgrep 'RESULT ' $TEST_LOG | sort -k 6 | tee /tmp/sequencer.out
 
-echo SUMMARY `fgrep 'RESULT ' $TEST_LOG | awk '{print $3, $2}' | sort | awk '{print $2}'`
+if [[ `wc -l < /tmp/sequencer.out` == 0 ]]; then
+    echo No test results found.
+    exit 1
+fi
+
+bin/check_version
+
+echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`

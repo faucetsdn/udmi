@@ -10,7 +10,6 @@ fi
 project_id=$1
 shift
 
-bin/clone_model
 site_path=udmi_site_model
 device_id=AHU-1
 
@@ -47,6 +46,8 @@ if [[ $i == $WAITING ]]; then
 fi
 
 bin/sequencer $site_path $project_id $device_id $serial_no
+
+sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 echo Killing pubber pids $pids

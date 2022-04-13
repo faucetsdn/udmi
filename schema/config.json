@@ -17,15 +17,16 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 1
+      "type": "string"
     },
     "system": {
       "$ref": "file:config_system.json#"
     },
     "gateway": {
       "$ref": "file:config_gateway.json#"
+    },
+    "discovery": {
+      "$ref": "file:config_discovery.json#"
     },
     "localnet": {
       "$ref": "file:config_localnet.json#"

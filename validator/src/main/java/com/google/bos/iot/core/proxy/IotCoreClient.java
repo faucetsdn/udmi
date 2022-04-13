@@ -40,14 +40,17 @@ public class IotCoreClient implements MessagePublisher {
       byte[] keyBytes = getFileBytes(keyFile);
       siteName = iotConfig.registry_id;
       this.projectId = projectId;
-      mqttPublisher = new MqttPublisher(projectId, iotConfig.cloud_region, UDMS_REFLECT,
+      String cloudRegion =
+          iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
+      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
           siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
       subscriptionId =
-          String.format("%s/%s/%s/%s", projectId, iotConfig.cloud_region, UDMS_REFLECT,
+          String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT,
               iotConfig.registry_id);
       active = true;
     } catch (Exception e) {
-      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(), e);
+      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
+          e);
     }
   }
 
@@ -60,11 +63,15 @@ public class IotCoreClient implements MessagePublisher {
     try {
       byte[] rawData = payload.getBytes();
       boolean base64 = rawData[0] != '{';
-      attributes.put(WAS_BASE_64, "" + base64);
-
-      final String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
-      asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
       String category = parseMessageTopic(topic, attributes);
+
+      if ("null".equals(payload)) {
+        asMap = null;
+      } else {
+        String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
+        attributes.put(WAS_BASE_64, "" + base64);
+        asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+      }
       if (!"commands".equals(category)) {
         return;
       }
@@ -87,7 +94,7 @@ public class IotCoreClient implements MessagePublisher {
     attributes.put("deviceRegistryId", siteName);
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
-      attributes.put( "deviceId", parts[4]);
+      attributes.put("deviceId", parts[4]);
       attributes.put("subType", parts[5]);
       attributes.put("subFolder", parts[6]);
       assert parts.length == 7;
@@ -143,11 +150,13 @@ public class IotCoreClient implements MessagePublisher {
   }
 
   static class MessageBundle {
+
     Map<String, Object> message;
     Map<String, String> attributes;
   }
 
   static class ErrorContainer extends TreeMap<String, Object> {
+
     ErrorContainer(Exception e, String topic, String message) {
       put("exception", e.toString());
       put("topic", topic);

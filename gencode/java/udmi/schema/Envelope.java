@@ -64,11 +64,6 @@ public class Envelope {
      */
     @JsonProperty("subFolder")
     public Envelope.SubFolder subFolder;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("subType")
     public Envelope.SubType subType;
 
@@ -99,11 +94,11 @@ public class Envelope {
     @Generated("jsonschema2pojo")
     public enum SubFolder {
 
+        UPDATE("update"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
         GATEWAY("gateway"),
         LOCALNET("localnet"),
-        METADATA("metadata"),
         POINTSET("pointset"),
         BLOBSET("blobset");
         private final String value;
@@ -147,7 +142,8 @@ public class Envelope {
         EVENT("event"),
         COMMAND("command"),
         STATE("state"),
-        CONFIG("config");
+        CONFIG("config"),
+        MODEL("model");
         private final String value;
         private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();
 

@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.validator;
 
 /**
  * Specific exception used to indicate when a test is intentionally skipped (not failed).

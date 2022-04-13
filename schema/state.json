@@ -18,15 +18,16 @@
     },
     "version": {
       "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "default": 1,
-      "const": 1
+      "type": "string"
     },
     "system": {
       "$ref": "file:state_system.json#"
     },
     "gateway": {
       "$ref": "file:state_gateway.json#"
+    },
+    "discovery": {
+      "$ref": "file:state_discovery.json#"
     },
     "blobset": {
       "$ref": "file:state_blobset.json#"

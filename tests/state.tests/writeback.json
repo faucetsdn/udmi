@@ -25,8 +25,8 @@
       "entryway_lock": {
         "value_state": "failure",
         "status": {
-          "message": "Failure to confirm point",
-          "category": "state.pointset.points.config.failure",
+          "message": "Point entryway_lock failed to confirm",
+          "category": "pointset.points.set_value.failure",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 600
         }
@@ -34,8 +34,8 @@
       "scale_sensor": {
         "value_state": "invalid",
         "status": {
-          "message": "Point is not writable",
-          "category": "state.pointset.points.config.invalid",
+          "message": "Point scale_sensor is not writeable",
+          "category": "pointset.points.set_value.invalid",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 600
         }
