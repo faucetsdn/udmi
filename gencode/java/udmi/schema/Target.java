@@ -4,6 +4,7 @@ package udmi.schema;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,9 +15,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class Target {
 
+    /**
+     * Original folder (system, pointset, etc...) of validated message
+     * 
+     */
     @JsonProperty("subFolder")
+    @JsonPropertyDescription("Original folder (system, pointset, etc...) of validated message")
     public String subFolder;
+    /**
+     * Original subType (config, event, etc...) of validated message
+     * 
+     */
     @JsonProperty("subType")
+    @JsonPropertyDescription("Original subType (config, event, etc...) of validated message")
     public String subType;
 
     @Override

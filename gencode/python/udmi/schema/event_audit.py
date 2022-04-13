@@ -1,7 +1,7 @@
 """Generated class for event_audit.json"""
 
 
-class Object5404EA82:
+class Object0C54FB6D:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,7 +12,7 @@ class Object5404EA82:
   def from_dict(source):
     if not source:
       return None
-    result = Object5404EA82()
+    result = Object0C54FB6D()
     result.subFolder = source.get('subFolder')
     result.subType = source.get('subType')
     return result
@@ -23,7 +23,7 @@ class Object5404EA82:
       return None
     result = {}
     for key in source:
-      result[key] = Object5404EA82.from_dict(source[key])
+      result[key] = Object0C54FB6D.from_dict(source[key])
     return result
 
   @staticmethod
@@ -59,7 +59,7 @@ class AuditEvent:
     result = AuditEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.target = Object5404EA82.from_dict(source.get('target'))
+    result.target = Object0C54FB6D.from_dict(source.get('target'))
     result.status = Entry.from_dict(source.get('status'))
     return result
 
