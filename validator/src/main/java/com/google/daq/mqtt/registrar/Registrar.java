@@ -455,7 +455,7 @@ public class Registrar {
       Field declaredField = target.getClass().getDeclaredField(fieldName);
       sendSubMessage(localDevice, subType, subfolder, declaredField.get(target));
     } catch (Exception e) {
-      throw new RuntimeException(String.format("Getting field %s from target %s%n", fieldName, target.getClass().getSimpleName()));
+      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName, target.getClass().getSimpleName()));
     }
   }
 
