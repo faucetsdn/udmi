@@ -364,7 +364,6 @@ public class Validator {
       String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
       if (!reportingDevice.markMessageType(schemaName)) {
-        sendValidationResult(deviceId, schemaName, attributes, message, null);
         return false;
       }
 
