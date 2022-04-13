@@ -1,5 +1,5 @@
 {
-  "name": "udmd",
+  "name": "udmif",
   "version": "1.0.0",
   "description": "simple package allowing us to run both sub projects with a single command",
   "scripts": {

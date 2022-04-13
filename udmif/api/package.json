@@ -1,5 +1,5 @@
 {
-  "name": "udmd-api",
+  "name": "udmif-api",
   "version": "1.0.0",
   "description": "API for the Universal Device Management Dashboard",
   "author": "Buildings IOT",
@@ -33,7 +33,7 @@
     "start": "ts-node src/app.ts",
     "test": "NODE_ENV=test jest --runInBand",
     "testInteractive": "NODE_ENV=test jest --runInBand --watchAll",
-    "postinstall": "cd ../.. && husky install udmd/api/.husky"
+    "postinstall": "cd ../.. && husky install udmif/api/.husky"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"

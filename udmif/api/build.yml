@@ -1,7 +1,7 @@
 cache:
   key: api-${CI_COMMIT_REF_SLUG}
   paths:
-    - udmd/api/node_modules/
+    - udmif/api/node_modules/
 
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
@@ -27,7 +27,7 @@ scan-docker:
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
-    DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmd-api
+    DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-api
 
 deploy-staging:
   extends: .gks-deploy
@@ -36,7 +36,7 @@ deploy-staging:
   variables:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
-    HELM_REPO: udmd/helm
+    HELM_REPO: udmif/helm
     CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
 
 deploy-lab:
@@ -46,7 +46,7 @@ deploy-lab:
   variables:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
-    HELM_REPO: udmd/helm
+    HELM_REPO: udmif/helm
     CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
   rules:
       - if: $CI_COMMIT_BRANCH == "master"

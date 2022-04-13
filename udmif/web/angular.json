@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "udmd-web": {
+    "udmif-web": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/udmd-web",
+            "outputPath": "dist/udmif-web",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -76,10 +76,10 @@
           },
           "configurations": {
             "production": {
-              "browserTarget": "udmd-web:build:production"
+              "browserTarget": "udmif-web:build:production"
             },
             "development": {
-              "browserTarget": "udmd-web:build:development"
+              "browserTarget": "udmif-web:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -87,7 +87,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "udmd-web:build"
+            "browserTarget": "udmif-web:build"
           }
         },
         "test": {
@@ -112,5 +112,5 @@
       }
     }
   },
-  "defaultProject": "udmd-web"
+  "defaultProject": "udmif-web"
 }
