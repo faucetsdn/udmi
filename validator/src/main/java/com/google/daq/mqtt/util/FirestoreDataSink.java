@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.util;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
@@ -13,6 +12,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Class managing a firestore link for validation results.
+ */
 public class FirestoreDataSink implements DataSink {
 
   private static final String
@@ -26,6 +28,11 @@ public class FirestoreDataSink implements DataSink {
   private final AtomicReference<RuntimeException> oldError = new AtomicReference<>();
   private final String projectId;
 
+  /**
+   * Create a data sink instance that saves results to Firestore.
+   *
+   * @param projectId target cloud project
+   */
   public FirestoreDataSink(String projectId) {
     this.projectId = projectId;
     try {
@@ -72,14 +79,15 @@ public class FirestoreDataSink implements DataSink {
     }
   }
 
+  public String getViewUrl() {
+    return String.format(VIEW_URL_FORMAT, projectId);
+  }
+
   static class PojoBundle {
+
     public String validated;
     public ErrorTree errorTree;
     public Object message;
     public Map<String, String> attributes;
-  }
-
-  public String getViewUrl() {
-    return String.format(VIEW_URL_FORMAT, projectId);
   }
 }
