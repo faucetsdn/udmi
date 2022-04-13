@@ -20,9 +20,11 @@
       "additionalProperties": false,
       "properties": {
         "subFolder": {
+          "description": "Original folder (system, pointset, etc...) of validated message",
           "type": "string"
         },
         "subType": {
+          "description": "Original subType (config, event, etc...) of validated message",
           "type": "string"
         }
       }
