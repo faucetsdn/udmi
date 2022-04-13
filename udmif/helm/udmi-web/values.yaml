@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: registry.gitlab.com/buildings-iot/udmi/udmd-web
+  repository: registry.gitlab.com/buildings-iot/udmi/udmif-web
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -15,7 +15,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 gitlab:
-    registry: registry.gitlab.com/buildings-iot/udmi/udmd-web
+    registry: registry.gitlab.com/buildings-iot/udmi/udmif-web
     username: "gitlab"
     accessToken: <<Defined in CI/CD as GITLAB_REGISTRY_TOKEN>>
 

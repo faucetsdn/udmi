@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install curl -y
 
 WORKDIR /usr/src/app
 
-COPY udmd/api/package*.json ./
-COPY udmd/api/tsconfig.json .
-COPY udmd/api/.npmrc .
-COPY udmd/api/src src
+COPY udmif/api/package*.json ./
+COPY udmif/api/tsconfig.json .
+COPY udmif/api/.npmrc .
+COPY udmif/api/src src
 
 RUN npm install
 
