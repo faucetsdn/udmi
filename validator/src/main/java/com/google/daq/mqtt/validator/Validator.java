@@ -108,6 +108,7 @@ public class Validator {
   private CloudIotManager cloudIotManager;
   private String siteDir;
   private String deviceId;
+  private MessagePublisher client;
 
   /**
    * Validator for streaming message validator.
@@ -149,6 +150,7 @@ public class Validator {
         default:
           throw new RuntimeException("Unknown target spec " + targetSpec);
       }
+      validator.messageLoop();
     } catch (ExceptionMap processingException) {
       System.exit(2);
     } catch (Exception e) {
@@ -260,19 +262,21 @@ public class Validator {
 
   private void validatePubSub(String instName) {
     String registryId = cloudIotConfig.registry_id;
-    PubSubClient client = new PubSubClient(projectId, registryId, instName);
-    messageLoop(client);
+    client = new PubSubClient(projectId, registryId, instName);
   }
 
   private void validateReflector(String instName) {
     deviceId = NO_SITE.equals(instName) ? null : instName;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    IotCoreClient client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
-    messageLoop(client);
+    client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
   }
 
-  private void messageLoop(MessagePublisher client) {
+  private void messageLoop() {
+    if (client == null) {
+      System.err.println("No message publisher defined.");
+      return;
+    }
     System.err.println(
         "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
@@ -281,7 +285,7 @@ public class Validator {
       try {
         if (!initialized) {
           initialized = true;
-          sendInitializationQuery(client);
+          sendInitializationQuery();
         }
         client.processMessage(validator);
       } catch (Exception e) {
@@ -291,7 +295,7 @@ public class Validator {
     System.err.println("Message loop complete");
   }
 
-  private void sendInitializationQuery(MessagePublisher client) {
+  private void sendInitializationQuery() {
     if (deviceId != null) {
       System.err.println("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
