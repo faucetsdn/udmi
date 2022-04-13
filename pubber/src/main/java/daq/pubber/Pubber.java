@@ -388,7 +388,6 @@ public class Pubber {
     if (scheduledFuture != null) {
       try {
         scheduledFuture.cancel(false);
-        scheduledFuture.get();
       } catch (Exception e) {
         throw new RuntimeException("While cancelling executor", e);
       } finally {

@@ -25,8 +25,8 @@ fi
 auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
 echo Application default credentials auth type ${auth_type:-unknown}
 
-echo Cleaning output directory out/
-rm -rf out/
+echo Cleaning output directory $sitepath/out/
+rm -rf $sitepath/out/
 
 echo Executing validator $schema $target...
 

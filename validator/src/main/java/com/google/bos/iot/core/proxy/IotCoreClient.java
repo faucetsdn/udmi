@@ -63,11 +63,15 @@ public class IotCoreClient implements MessagePublisher {
     try {
       byte[] rawData = payload.getBytes();
       boolean base64 = rawData[0] != '{';
-      attributes.put(WAS_BASE_64, "" + base64);
-
-      final String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
-      asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
       String category = parseMessageTopic(topic, attributes);
+
+      if ("null".equals(payload)) {
+        asMap = null;
+      } else {
+        String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
+        attributes.put(WAS_BASE_64, "" + base64);
+        asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+      }
       if (!"commands".equals(category)) {
         return;
       }
