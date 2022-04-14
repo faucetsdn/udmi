@@ -6,6 +6,7 @@ class GatewayMetadata:
 
   def __init__(self):
     self.gateway_id = None
+    self.family = None
     self.proxy_ids = None
 
   @staticmethod
@@ -14,6 +15,7 @@ class GatewayMetadata:
       return None
     result = GatewayMetadata()
     result.gateway_id = source.get('gateway_id')
+    result.family = source.get('family')
     result.proxy_ids = source.get('proxy_ids')
     return result
 
@@ -37,6 +39,8 @@ class GatewayMetadata:
     result = {}
     if self.gateway_id:
       result['gateway_id'] = self.gateway_id # 5
+    if self.family:
+      result['family'] = self.family # 5
     if self.proxy_ids:
       result['proxy_ids'] = self.proxy_ids # 1
     return result
