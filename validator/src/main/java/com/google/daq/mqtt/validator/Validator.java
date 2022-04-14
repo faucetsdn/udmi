@@ -22,10 +22,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.DataSink;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FirestoreDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.PubSubDataSink;
+import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -101,7 +104,7 @@ public class Validator {
   private final Set<String> ignoredRegistries = new HashSet();
   private File outBaseDir;
   private File metadataReportFile;
-  private FirestoreDataSink dataSink;
+  private DataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
   private CloudIotConfig cloudIotConfig;
@@ -263,6 +266,7 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
+    dataSink = new PubSubDataSink(projectId, cloudIotConfig.update_topic);
   }
 
   private void validateReflector(String instName) {
@@ -400,9 +404,7 @@ public class Validator {
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);
-          if (dataSink != null) {
-            dataSink.validationResult(deviceId, schemaName, attributes, message, null);
-          }
+          sendValidationResult(deviceId, schemaName, attributes, message, null);
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorOut, e);
@@ -552,10 +554,15 @@ public class Validator {
       PrintStream errorOut,
       Exception e) {
     ErrorTree errorTree = ExceptionMap.format(e, ERROR_FORMAT_INDENT);
+    sendValidationResult(deviceId, schemaId, attributes, message, errorTree);
+    errorTree.write(errorOut);
+  }
+
+  private void sendValidationResult(String deviceId, String schemaId,
+      Map<String, String> attributes, Map<String, Object> message, ErrorTree errorTree) {
     if (dataSink != null) {
       dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
     }
-    errorTree.write(errorOut);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
@@ -703,15 +710,6 @@ public class Validator {
 
   private File getFullPath(String prefix, File targetFile) {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
-  }
-
-  private String getTimestamp() {
-    try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
   }
 
   /**

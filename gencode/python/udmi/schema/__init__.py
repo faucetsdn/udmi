@@ -11,6 +11,7 @@ from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .envelope import Envelope
 from .event import Event
+from .event_audit import AuditEvent
 from .event_discovery import DiscoveryEvent
 from .event_discovery_blob import BlobEnumerationEvent
 from .event_discovery_family import FamilyDiscoveryEvent
