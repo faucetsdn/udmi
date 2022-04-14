@@ -69,7 +69,7 @@ that would be possible (including manually, which is the baseline default).
   * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }, and public key `XYZZYZ`"
 2. **[Discovery Event](../../tests/event_discovery.tests/enumeration.json)** from _Node_ wraps up the device info into a UDMI-normalized format
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
-3. **[Mapping Event](../../tests/event_mapping.tests/building_config.json)** from the _Mapper_ (recieved by both _Sink_ and _Agent_)
+3. **Mapping Event** from the _Mapper_ (recieved by both _Sink_ and _Agent_)
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 5. **(Cloud Provision)** from _Agent_ sets up the _Cloud_ layer using the IoT Core API.
   * "Device `AHU-183` exists and has public key `XYZZYZ`"
