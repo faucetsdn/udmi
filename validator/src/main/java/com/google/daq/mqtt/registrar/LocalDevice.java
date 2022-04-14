@@ -500,7 +500,7 @@ class LocalDevice {
 
   private LocalnetConfig getDeviceLocalnetConfig() {
     LocalnetConfig localnetConfig = new LocalnetConfig();
-    localnetConfig.subsystem = metadata.localnet.subsystem;
+    localnetConfig.families = metadata.localnet.families;
     return localnetConfig;
   }
 
