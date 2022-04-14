@@ -45,9 +45,6 @@
         "timestamp",
         "level"
       ]
-    },
-    "families": {
-      "enum": [ "bacnet", "ipv4", "ipv6" ]
     }
   }
 }

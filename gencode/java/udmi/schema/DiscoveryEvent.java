@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,8 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "generation",
     "status",
     "families",
-    "points",
-    "blobs"
+    "points"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryEvent {
@@ -76,19 +74,11 @@ public class DiscoveryEvent {
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of data points available for this device.")
     public Map<String, PointEnumerationEvent> points;
-    /**
-     * Collection of data blobs recognized by this device.
-     * 
-     */
-    @JsonProperty("blobs")
-    @JsonPropertyDescription("Collection of data blobs recognized by this device.")
-    public HashMap<String, BlobEnumerationEvent> blobs;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.blobs == null)? 0 :this.blobs.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -106,7 +96,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return ((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return (((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

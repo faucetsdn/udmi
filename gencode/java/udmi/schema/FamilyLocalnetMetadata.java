@@ -9,31 +9,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Subsystem Localnet Metadata
+ * Family Localnet Metadata
  * <p>
  * The type of network
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "local_id"
+    "id"
 })
 @Generated("jsonschema2pojo")
-public class SubsystemLocalnetMetadata {
+public class FamilyLocalnetMetadata {
 
     /**
      * The address of a device on the local network
      * (Required)
      * 
      */
-    @JsonProperty("local_id")
+    @JsonProperty("id")
     @JsonPropertyDescription("The address of a device on the local network")
-    public String local_id;
+    public String id;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.local_id == null)? 0 :this.local_id.hashCode()));
+        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
         return result;
     }
 
@@ -42,11 +42,11 @@ public class SubsystemLocalnetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SubsystemLocalnetMetadata) == false) {
+        if ((other instanceof FamilyLocalnetMetadata) == false) {
             return false;
         }
-        SubsystemLocalnetMetadata rhs = ((SubsystemLocalnetMetadata) other);
-        return ((this.local_id == rhs.local_id)||((this.local_id!= null)&&this.local_id.equals(rhs.local_id)));
+        FamilyLocalnetMetadata rhs = ((FamilyLocalnetMetadata) other);
+        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
     }
 
 }
