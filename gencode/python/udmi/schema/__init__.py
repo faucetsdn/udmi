@@ -1,3 +1,4 @@
+from .command_discovery import DiscoveryCommand
 from .common import Common
 from .config import Config
 from .config_blobset import BlobsetConfig

@@ -12,10 +12,8 @@
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
-      "description": "Major version of the UDMI schema",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 1
+      "description": "Version of the UDMI schema",
+      "type": "string"
     },
     "state_etag": {
       "description": "An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. [Additional information on implementation](../docs/specs/sequences/writeback.md)",

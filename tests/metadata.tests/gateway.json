@@ -32,7 +32,7 @@
     }
   },
   "localnet": {
-    "subsystem": {
+    "families": {
       "bacnet": {
         "local_id": "0x991132ec"
       }

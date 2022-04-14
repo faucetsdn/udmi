@@ -37,12 +37,12 @@ public class PointsetConfig {
     @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
     public Date timestamp;
     /**
-     * Major version of the UDMI schema
+     * Version of the UDMI schema
      * 
      */
     @JsonProperty("version")
-    @JsonPropertyDescription("Major version of the UDMI schema")
-    public Integer version;
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public java.lang.String version;
     /**
      * The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)
      * 

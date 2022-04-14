@@ -1,4 +1,5 @@
-5 schema violations found
+6 schema violations found
+  instance type (integer) does not match any allowed primitive type (allowed: ["string"])
   instance type (string) does not match any allowed primitive type (allowed: ["integer"])
   object instance has properties which are not allowed by the schema: ["config_etag","id","properties"]
   object instance has properties which are not allowed by the schema: ["object_type"]
