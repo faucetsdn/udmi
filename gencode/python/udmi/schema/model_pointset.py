@@ -1,19 +1,19 @@
-"""Generated class for model_localnet.json"""
-from .model_localnet_family import FamilyLocalnetMetadata
+"""Generated class for model_pointset.json"""
+from .model_pointset_point import PointPointsetMetadata
 
 
-class LocalnetMetadata:
+class PointsetMetadata:
   """Generated schema class"""
 
   def __init__(self):
-    self.families = None
+    self.points = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetMetadata()
-    result.families = FamilyLocalnetMetadata.map_from(source.get('families'))
+    result = PointsetMetadata()
+    result.points = PointPointsetMetadata.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -22,7 +22,7 @@ class LocalnetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetMetadata.from_dict(source[key])
+      result[key] = PointsetMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +34,6 @@ class LocalnetMetadata:
 
   def to_dict(self):
     result = {}
-    if self.families:
-      result['families'] = FamilyLocalnetMetadata.expand_dict(self.families) # 2
+    if self.points:
+      result['points'] = PointPointsetMetadata.expand_dict(self.points) # 2
     return result

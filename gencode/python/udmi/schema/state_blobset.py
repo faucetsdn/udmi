@@ -1,19 +1,21 @@
-"""Generated class for model_localnet.json"""
-from .model_localnet_family import FamilyLocalnetMetadata
+"""Generated class for state_blobset.json"""
+from .state_blobset_blob import BlobBlobsetState
 
 
-class LocalnetMetadata:
+class BlobsetState:
   """Generated schema class"""
 
   def __init__(self):
-    self.families = None
+    self.state_etag = None
+    self.blobs = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetMetadata()
-    result.families = FamilyLocalnetMetadata.map_from(source.get('families'))
+    result = BlobsetState()
+    result.state_etag = source.get('state_etag')
+    result.blobs = BlobBlobsetState.map_from(source.get('blobs'))
     return result
 
   @staticmethod
@@ -22,7 +24,7 @@ class LocalnetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetMetadata.from_dict(source[key])
+      result[key] = BlobsetState.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +36,8 @@ class LocalnetMetadata:
 
   def to_dict(self):
     result = {}
-    if self.families:
-      result['families'] = FamilyLocalnetMetadata.expand_dict(self.families) # 2
+    if self.state_etag:
+      result['state_etag'] = self.state_etag # 5
+    if self.blobs:
+      result['blobs'] = BlobBlobsetState.expand_dict(self.blobs) # 2
     return result
