@@ -679,6 +679,7 @@ public class Registrar {
     }
 
     try {
+      System.err.printf("Loading " + SITE_METADATA_JSON + "\n");
       this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
