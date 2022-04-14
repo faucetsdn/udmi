@@ -7,7 +7,7 @@
   "localnet": {
     "families": {
       "bacnet": {
-        "local_id": "78ce19"
+        "id": "78ce19"
       }
     }
   },

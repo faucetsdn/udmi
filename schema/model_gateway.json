@@ -11,6 +11,10 @@
       "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$",
       "examples": ["GAT-100"]
     },
+    "family": {
+      "description": "Protocol family used for connecting to the proxy device",
+      "type": "string"
+    },
     "proxy_ids": {
       "description": "An array of all the device IDs which are bound to the device",
       "type": "array",

@@ -24,7 +24,7 @@
   "localnet": {
     "families": {
       "bacnet": {
-        "local_id": "82eecd"
+        "id": "82eecd"
       }
     }
   },
