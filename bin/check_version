@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # This script intentionally runs silent if there is no version mismatch found.
 #
