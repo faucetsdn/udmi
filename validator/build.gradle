@@ -31,7 +31,7 @@ sourceSets {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 61
+    maxWarnings = 47
 }
 checkstyleMain.source = 'src/main/java'
 
