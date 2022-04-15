@@ -91,7 +91,7 @@ public class Pubber {
   );
   private static final int MESSAGE_REPORT_INTERVAL = 100;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
-      Level.TRACE, LOG::info,  // TODO: Need better way to make debug/trace programmatically visible.
+      Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
       Level.DEBUG, LOG::info,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
@@ -810,6 +810,7 @@ public class Pubber {
   private void info(String message) {
     cloudLog(message, Level.INFO);
   }
+
   private void warn(String message) {
     cloudLog(message, Level.WARNING);
   }
