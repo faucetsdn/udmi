@@ -1,0 +1,13 @@
+{
+  "timestamp" : "2021-11-02T12:22:14Z",
+  "gateway" : {
+    "proxy_ids" : [ "TRHC-26" ]
+  },
+  "localnet" : {
+    "subsystem" : {
+      "bacnet" : {
+        "local_id" : "1010112"
+      }
+    }
+  }
+}
