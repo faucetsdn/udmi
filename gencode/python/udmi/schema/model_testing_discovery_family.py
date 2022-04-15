@@ -1,20 +1,17 @@
-"""Generated class for model_testing_target.json"""
+"""Generated class for model_testing_discovery_family.json"""
 
 
-class TargetTestingModel:
+class FamilyDiscoveryTestingModel:
   """Generated schema class"""
 
   def __init__(self):
-    self.target_point = None
-    self.target_value = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = TargetTestingModel()
-    result.target_point = source.get('target_point')
-    result.target_value = source.get('target_value')
+    result = FamilyDiscoveryTestingModel()
     return result
 
   @staticmethod
@@ -23,7 +20,7 @@ class TargetTestingModel:
       return None
     result = {}
     for key in source:
-      result[key] = TargetTestingModel.from_dict(source[key])
+      result[key] = FamilyDiscoveryTestingModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,8 +32,4 @@ class TargetTestingModel:
 
   def to_dict(self):
     result = {}
-    if self.target_point:
-      result['target_point'] = self.target_point # 5
-    if self.target_value:
-      result['target_value'] = self.target_value # 5
     return result

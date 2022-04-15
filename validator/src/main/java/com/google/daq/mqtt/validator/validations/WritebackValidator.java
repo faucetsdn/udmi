@@ -4,7 +4,7 @@ import com.google.daq.mqtt.validator.PointValidator;
 import java.util.Objects;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
-import udmi.schema.TargetTestingMetadata;
+import udmi.schema.TargetTestingModel;
 
 /**
  * Validate UDMI writeback capabilities.
@@ -35,9 +35,9 @@ public class WritebackValidator extends PointValidator {
 
   @Test
   public void writeback_states() {
-    TargetTestingMetadata invalidTarget = getTarget(INVALID_STATE);
-    TargetTestingMetadata failureTarget = getTarget(FAILURE_STATE);
-    TargetTestingMetadata appliedTarget = getTarget(APPLIED_STATE);
+    TargetTestingModel invalidTarget = getTarget(INVALID_STATE);
+    TargetTestingModel failureTarget = getTarget(FAILURE_STATE);
+    TargetTestingModel appliedTarget = getTarget(APPLIED_STATE);
 
     String invalidPoint = invalidTarget.target_point;
     String failurePoint = failureTarget.target_point;

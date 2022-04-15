@@ -9,30 +9,29 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Testing Metadata
+ * Testing Model
  * <p>
  * Testing target parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "targets"
+    "targets",
+    "discovery"
 })
 @Generated("jsonschema2pojo")
-public class TestingMetadata {
+public class TestingModel {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("targets")
-    public HashMap<String, TargetTestingMetadata> targets;
+    public HashMap<String, TargetTestingModel> targets;
+    @JsonProperty("discovery")
+    public Discovery discovery;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.targets == null)? 0 :this.targets.hashCode()));
+        result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         return result;
     }
 
@@ -41,11 +40,11 @@ public class TestingMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof TestingMetadata) == false) {
+        if ((other instanceof TestingModel) == false) {
             return false;
         }
-        TestingMetadata rhs = ((TestingMetadata) other);
-        return ((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)));
+        TestingModel rhs = ((TestingModel) other);
+        return (((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))));
     }
 
 }

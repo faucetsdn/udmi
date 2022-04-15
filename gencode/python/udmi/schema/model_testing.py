@@ -1,19 +1,21 @@
 """Generated class for model_testing.json"""
-from .model_testing_target import TargetTestingMetadata
+from .model_testing_target import TargetTestingModel
 
 
-class TestingMetadata:
+class TestingModel:
   """Generated schema class"""
 
   def __init__(self):
     self.targets = None
+    self.discovery = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = TestingMetadata()
-    result.targets = TargetTestingMetadata.map_from(source.get('targets'))
+    result = TestingModel()
+    result.targets = TargetTestingModel.map_from(source.get('targets'))
+    result.discovery = source.get('discovery')
     return result
 
   @staticmethod
@@ -22,7 +24,7 @@ class TestingMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = TestingMetadata.from_dict(source[key])
+      result[key] = TestingModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,5 +37,7 @@ class TestingMetadata:
   def to_dict(self):
     result = {}
     if self.targets:
-      result['targets'] = TargetTestingMetadata.expand_dict(self.targets) # 2
+      result['targets'] = TargetTestingModel.expand_dict(self.targets) # 2
+    if self.discovery:
+      result['discovery'] = self.discovery # 5
     return result

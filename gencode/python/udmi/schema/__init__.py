@@ -28,8 +28,9 @@ from .model_localnet_family import FamilyLocalnetMetadata
 from .model_pointset import PointsetMetadata
 from .model_pointset_point import PointPointsetMetadata
 from .model_system import SystemMetadata
-from .model_testing import TestingMetadata
-from .model_testing_target import TargetTestingMetadata
+from .model_testing import TestingModel
+from .model_testing_discovery_family import FamilyDiscoveryTestingModel
+from .model_testing_target import TargetTestingModel
 from .properties import Properties
 from .state import State
 from .state_blobset import BlobsetState

@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.junit.Before;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
-import udmi.schema.TargetTestingMetadata;
+import udmi.schema.TargetTestingModel;
 
 /**
  * Class used for validating test about sequences with points.
@@ -37,13 +37,13 @@ public abstract class PointValidator extends SequenceValidator {
     }
   }
 
-  protected TargetTestingMetadata getTarget(String target) {
+  protected TargetTestingModel getTarget(String target) {
     if (deviceMetadata.testing == null
         || deviceMetadata.testing.targets == null
         || !deviceMetadata.testing.targets.containsKey(target)) {
       throw new SkipTest(String.format("Missing '%s' target specification", target));
     }
-    TargetTestingMetadata testingMetadata = deviceMetadata.testing.targets.get(target);
+    TargetTestingModel testingMetadata = deviceMetadata.testing.targets.get(target);
     if (deviceMetadata.pointset == null || deviceMetadata.pointset.points == null) {
       info("No metadata pointset points defined, I hope you know what you're doing");
     } else if (!deviceMetadata.pointset.points.containsKey(testingMetadata.target_point)) {

@@ -66,7 +66,7 @@ public class DiscoveryEvent {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family results for a scan. Not included for device enumeration messages.")
-    public Families families;
+    public Map<String, FamilyDiscoveryEvent> families;
     /**
      * Collection of data points available for this device.
      * 

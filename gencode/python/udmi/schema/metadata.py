@@ -3,7 +3,7 @@ from .model_cloud import CloudMetadata
 from .model_system import SystemMetadata
 from .model_gateway import GatewayMetadata
 from .model_localnet import LocalnetMetadata
-from .model_testing import TestingMetadata
+from .model_testing import TestingModel
 from .model_pointset import PointsetMetadata
 
 
@@ -35,7 +35,7 @@ class Metadata:
     result.system = SystemMetadata.from_dict(source.get('system'))
     result.gateway = GatewayMetadata.from_dict(source.get('gateway'))
     result.localnet = LocalnetMetadata.from_dict(source.get('localnet'))
-    result.testing = TestingMetadata.from_dict(source.get('testing'))
+    result.testing = TestingModel.from_dict(source.get('testing'))
     result.pointset = PointsetMetadata.from_dict(source.get('pointset'))
     return result
 
