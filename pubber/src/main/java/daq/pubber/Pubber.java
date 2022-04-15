@@ -2,6 +2,7 @@ package daq.pubber;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +61,7 @@ public class Pubber {
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+      .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -89,8 +91,8 @@ public class Pubber {
   );
   private static final int MESSAGE_REPORT_INTERVAL = 100;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
-      Level.TRACE, LOG::trace,
-      Level.DEBUG, LOG::debug,
+      Level.TRACE, LOG::info,  // TODO: Need better way to make debug/trace programmatically visible.
+      Level.DEBUG, LOG::info,
       Level.INFO, LOG::info,
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
@@ -583,6 +585,7 @@ public class Pubber {
       File configOut = new File(OUT_DIR, "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
+        debug("New config:\n" + OBJECT_MAPPER.writeValueAsString(config));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -740,6 +743,11 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     stateDirty = false;
+    try {
+      debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting new device state", e);
+    }
     publishDeviceMessage(deviceState);
     lastStateTimeMs = System.currentTimeMillis();
   }
@@ -791,14 +799,17 @@ public class Pubber {
     LOG_MAP.get(level).accept(logMessage);
   }
 
-  private void info(String message) {
-    cloudLog(message, Level.INFO);
-  }
-
   private void trace(String message) {
     cloudLog(message, Level.TRACE);
   }
 
+  private void debug(String message) {
+    cloudLog(message, Level.DEBUG);
+  }
+
+  private void info(String message) {
+    cloudLog(message, Level.INFO);
+  }
   private void warn(String message) {
     cloudLog(message, Level.WARNING);
   }
