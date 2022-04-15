@@ -31,7 +31,11 @@ To increase the logging verbosity add a `-v` at the beginning of the command opt
 another `-v` or just `-vv` to add even more details.
 
 Adding a specific test names (e.g. `broken_config`) to the end will trigger just those explicitly
-specified tests.
+specified tests:
+
+```
+username@hostname:~/udmi$ bin/sequencer -vv udmi_site_model bos-udmi-proto AHU-1 broken_config
+```
 
 ## Example Output
 
