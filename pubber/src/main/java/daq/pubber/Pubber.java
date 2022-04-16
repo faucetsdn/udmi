@@ -40,6 +40,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -121,7 +122,7 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
-  private Date lastDiscoveryGeneration = new Date();
+  private final Date DEVICE_START_TIME = new Date();
 
   /**
    * Start an instance from a configuration file.
@@ -615,16 +616,30 @@ public class Pubber {
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
-    if (discovery == null || discovery.enumeration == null) {
+    if (discovery == null) {
       deviceState.discovery = null;
       return;
     }
-    Date enumerationGeneration = discovery.enumeration.generation;
-    if (!enumerationGeneration.after(lastDiscoveryGeneration)) {
+    if (deviceState.discovery == null) {
+      deviceState.discovery = new DiscoveryState();
+    }
+    if (discovery.enumeration != null) {
+      updateDiscoveryEnumeration(discovery.enumeration);
+    }
+    if (discovery.families != null) {
+      updateDiscoveryScan(discovery.families);
+    }
+  }
+
+  private void updateDiscoveryEnumeration(FamilyDiscoveryConfig enumeration) {
+    if (deviceState.discovery.enumeration == null) {
+      deviceState.discovery.enumeration = new FamilyDiscoveryState();
+      deviceState.discovery.enumeration.generation = DEVICE_START_TIME;
+    }
+    Date enumerationGeneration = enumeration.generation;
+    if (!enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
       return;
     }
-    lastDiscoveryGeneration = enumerationGeneration;
-    deviceState.discovery = new DiscoveryState();
     deviceState.discovery.enumeration = new FamilyDiscoveryState();
     deviceState.discovery.enumeration.generation = enumerationGeneration;
     info("Discovery enumeration generation " + isoConvert(enumerationGeneration));
@@ -633,6 +648,35 @@ public class Pubber {
     discoveryEvent.points = allPoints.stream().collect(Collectors.toMap(AbstractPoint::getName,
         AbstractPoint::enumerate));
     publishDeviceMessage(discoveryEvent);
+  }
+
+  private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> families) {
+    if (deviceState.discovery.families == null) {
+      deviceState.discovery.families = new HashMap<>();
+    }
+    families.keySet().forEach(family -> {
+      FamilyDiscoveryConfig familyDiscoveryConfig = families.get(family);
+      Date configGeneration = familyDiscoveryConfig.generation;
+      if (configGeneration == null) {
+        deviceState.discovery.families.remove(family);
+        return;
+      }
+
+      FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.computeIfAbsent(
+          family, key -> {
+            FamilyDiscoveryState newState = new FamilyDiscoveryState();
+            newState.generation = DEVICE_START_TIME;
+            return newState;
+          });
+
+      if (configGeneration.before(familyDiscoveryState.generation)) {
+        return;
+      }
+
+      info("Discovery scan generation " + family + " " + isoConvert(configGeneration));
+      familyDiscoveryState.generation = configGeneration;
+      familyDiscoveryState.active = true;
+    });
   }
 
   private String stackTraceString(Throwable e) {

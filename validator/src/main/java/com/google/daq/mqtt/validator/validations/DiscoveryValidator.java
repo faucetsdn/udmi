@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator.validations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.daq.mqtt.validator.CleanDateFormat;
@@ -11,7 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
@@ -27,7 +28,7 @@ public class DiscoveryValidator extends SequenceValidator {
 
   @Test
   public void self_enumeration() {
-    if (!safeTrue(() -> deviceMetadata.pointset.points != null)) {
+    if (!caughtAsFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
     }
     untilUntrue(() -> deviceState.discovery.enumeration.active, "enumeration not active");
@@ -53,7 +54,7 @@ public class DiscoveryValidator extends SequenceValidator {
 
   @Test
   public void single_scan() {
-    if (!safeTrue(() -> deviceMetadata.testing.discovery.families.size() > 0)) {
+    if (!caughtAsFalse(() -> deviceMetadata.testing.discovery.families.size() > 0)) {
       throw new SkipTest("No discovery families configured");
     }
     Set<String> families = deviceMetadata.testing.discovery.families.keySet();
@@ -63,34 +64,31 @@ public class DiscoveryValidator extends SequenceValidator {
         deviceConfig.discovery.families.computeIfAbsent(family,
             adding -> new FamilyDiscoveryConfig()));
     updateConfig();
-    untilUntrue(
-        () -> deviceState.discovery.families.values().stream().noneMatch(family -> family.active),
+    untilTrue(
+        () -> families.stream().noneMatch(familyScanActivated(new Date())),
         "all scans not active");
     Date startTime = Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
     families.forEach(family -> deviceConfig.discovery.families.get(family).generation = startTime);
     updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
-    untilTrue(() -> families.stream()
-        .allMatch(family -> deviceState.discovery.families.get(family).active &&
-            CleanDateFormat.dateEquals(deviceState.discovery.families.get(family).generation,
-                startTime)), "all scans active");
-    untilTrue(() -> families.stream()
-            .noneMatch(family -> deviceState.discovery.families.get(family).active),
-        "all scans not active");
+    untilTrue(() -> families.stream().anyMatch(familyScanActivated(startTime))
+            || !deviceState.timestamp.before(startTime), "scheduled scan start");
+    assertFalse("premature activation", deviceState.timestamp.before(startTime));
+    untilTrue(() -> families.stream().allMatch(familyScanActivated(startTime)), "scan activation");
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
-
     Set<String> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
     assertTrue("all requested families present", eventFamilies.containsAll(families));
   }
 
-  private boolean safeTrue(Supplier<Boolean> evaluator) {
-    try {
-      return evaluator.get();
-    } catch (Exception e) {
-      return false;
-    }
+  private Predicate<String> familyScanActivated(Date startTime) {
+    return family -> caughtAsFalse(() -> {
+      return deviceState.discovery.families.get(family).active ||
+          (startTime != null && !deviceState.discovery.families.get(family).generation.before(
+              startTime));
+    });
   }
+
 }

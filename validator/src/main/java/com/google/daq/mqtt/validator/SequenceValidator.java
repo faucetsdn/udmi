@@ -164,6 +164,7 @@ public abstract class SequenceValidator {
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
+  protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
   private String waitingCondition;
@@ -509,9 +510,6 @@ public abstract class SequenceValidator {
       if (updated) {
         debug(String.format("updating %s state", subFolder));
         T state = OBJECT_MAPPER.readValue(messageString, target);
-        if (deviceState == null) {
-          deviceState = new State();
-        }
         handler.accept(state);
       }
       return updated;
@@ -521,13 +519,28 @@ public abstract class SequenceValidator {
   }
 
   private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
-    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
-        state -> deviceState.system = state);
-    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
-        state -> deviceState.pointset = state);
-    updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message,
-        state -> deviceState.discovery = state);
-    validSerialNo();
+    try {
+      if (deviceState == null) {
+        deviceState = new State();
+      }
+      updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
+          state -> deviceState.system = state);
+      updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
+          state -> deviceState.pointset = state);
+      updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message,
+          state -> deviceState.discovery = state);
+      validSerialNo();
+    } catch (Exception e) {
+      throw new RuntimeException("While handling state message", e);
+    }
+  }
+
+  private State deviceStateCopy() {
+    try {
+      return OBJECT_MAPPER.readValue(OBJECT_MAPPER.writeValueAsString(deviceState), State.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While making a clean object copy", e);
+    }
   }
 
   protected boolean validSerialNo() {
@@ -545,7 +558,7 @@ public abstract class SequenceValidator {
     return serialValid;
   }
 
-  private boolean caughtAsFalse(Supplier<Boolean> evaluator) {
+  protected boolean caughtAsFalse(Supplier<Boolean> evaluator) {
     try {
       return evaluator.get();
     } catch (Exception e) {
@@ -673,6 +686,8 @@ public abstract class SequenceValidator {
       info("Updated config with timestamp " + getTimestamp(config.timestamp));
       recordDeviceConfig();
     } else if (converted instanceof State) {
+      deviceState.version = ((State) converted).version;
+      deviceState.timestamp = ((State) converted).timestamp;
       info("Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
     } else {
       warning("Unknown update type " + converted.getClass().getSimpleName());
