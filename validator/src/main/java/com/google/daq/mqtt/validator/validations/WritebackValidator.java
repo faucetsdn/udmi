@@ -42,21 +42,27 @@ public class WritebackValidator extends PointValidator {
     String invalidPoint = invalidTarget.target_point;
     String failurePoint = failureTarget.target_point;
     String appliedPoint = appliedTarget.target_point;
-    untilTrue(() -> valueStateIs(invalidPoint, DEFAULT_STATE),
-        expectedValueState(invalidPoint, DEFAULT_STATE));
-    untilTrue(() -> valueStateIs(failurePoint, DEFAULT_STATE),
-        expectedValueState(failurePoint, DEFAULT_STATE));
-    untilTrue(() -> valueStateIs(appliedPoint, DEFAULT_STATE),
-        expectedValueState(appliedPoint, DEFAULT_STATE));
+    untilTrue(expectedValueState(invalidPoint, DEFAULT_STATE),
+        () -> valueStateIs(invalidPoint, DEFAULT_STATE)
+    );
+    untilTrue(expectedValueState(failurePoint, DEFAULT_STATE),
+        () -> valueStateIs(failurePoint, DEFAULT_STATE)
+    );
+    untilTrue(expectedValueState(appliedPoint, DEFAULT_STATE),
+        () -> valueStateIs(appliedPoint, DEFAULT_STATE)
+    );
     deviceConfig.pointset.points.get(invalidPoint).set_value = invalidTarget.target_value;
     deviceConfig.pointset.points.get(failurePoint).set_value = failureTarget.target_value;
     deviceConfig.pointset.points.get(appliedPoint).set_value = appliedTarget.target_value;
     updateConfig();
-    untilTrue(() -> valueStateIs(invalidPoint, INVALID_STATE),
-        expectedValueState(invalidPoint, INVALID_STATE));
-    untilTrue(() -> valueStateIs(failurePoint, FAILURE_STATE),
-        expectedValueState(invalidPoint, FAILURE_STATE));
-    untilTrue(() -> valueStateIs(appliedPoint, APPLIED_STATE),
-        expectedValueState(invalidPoint, APPLIED_STATE));
+    untilTrue(expectedValueState(invalidPoint, INVALID_STATE),
+        () -> valueStateIs(invalidPoint, INVALID_STATE)
+    );
+    untilTrue(expectedValueState(invalidPoint, FAILURE_STATE),
+        () -> valueStateIs(failurePoint, FAILURE_STATE)
+    );
+    untilTrue(expectedValueState(invalidPoint, APPLIED_STATE),
+        () -> valueStateIs(appliedPoint, APPLIED_STATE)
+    );
   }
 }

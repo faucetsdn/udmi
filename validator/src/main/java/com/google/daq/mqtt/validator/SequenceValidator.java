@@ -290,7 +290,8 @@ public abstract class SequenceValidator {
 
     syncConfig();
 
-    untilTrue(() -> deviceState != null, "device state update");
+    untilTrue("device state update", () -> deviceState != null);
+    // TODO: Add flag to start message capture
   }
 
   protected void resetConfig() {
@@ -299,13 +300,13 @@ public abstract class SequenceValidator {
     sentConfig.clear();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    untilTrue(this::configUpdateComplete, "device config reset");
+    untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
   }
 
   private Date syncConfig() {
     updateConfig();
-    untilTrue(this::configUpdateComplete, "device config sync");
+    untilTrue("device config sync", this::configUpdateComplete);
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
@@ -431,8 +432,9 @@ public abstract class SequenceValidator {
    */
   @After
   public void tearDown() {
+    // TODO: Add flag to supress message saving now
     if (traceLogLevel()) {
-      warning("Not resetting config b/c trace is enabled.");
+      warning("Not resetting config@ b/c trace is enabled.");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
@@ -558,13 +560,18 @@ public abstract class SequenceValidator {
     return serialValid;
   }
 
-  protected boolean caughtAsFalse(Supplier<Boolean> evaluator) {
+  protected boolean catchToFalse(Supplier<Boolean> evaluator) {
+    Boolean value = catchToNull(evaluator);
+    return value != null && value;
+  }
+
+  protected <T> T catchToNull(Supplier<T> evaluator) {
     try {
       return evaluator.get();
     } catch (Exception e) {
       debug("Suppressing exception: " + e);
       trace(stackTraceString(e));
-      return false;
+      return null;
     }
   }
 
@@ -583,7 +590,7 @@ public abstract class SequenceValidator {
   }
 
   protected void hasLogged(String category, Level level) {
-    untilTrue(() -> {
+    untilTrue("waiting for log message " + category + " level " + level, () -> {
       List<Map<String, Object>> messages = receivedEvents.get(SubFolder.SYSTEM);
       if (messages == null) {
         return false;
@@ -603,7 +610,7 @@ public abstract class SequenceValidator {
         }
       }
       return false;
-    }, "waiting for log message " + category + " level " + level);
+    });
   }
 
   protected void hasNotLogged(String category, Level level) {
@@ -621,12 +628,12 @@ public abstract class SequenceValidator {
     waitingCondition = null;
   }
 
-  protected void untilTrue(Supplier<Boolean> evaluator, String description) {
-    untilLoop(() -> !caughtAsFalse(evaluator), description);
+  protected void untilTrue(String description, Supplier<Boolean> evaluator) {
+    untilLoop(() -> !catchToFalse(evaluator), description);
   }
 
   protected void untilUntrue(Supplier<Boolean> evaluator, String description) {
-    untilLoop(() -> caughtAsFalse(evaluator), description);
+    untilLoop(() -> catchToFalse(evaluator), description);
   }
 
   private void receiveMessage() {

@@ -674,8 +674,9 @@ public class Pubber {
       }
 
       info("Discovery scan generation " + family + " " + isoConvert(configGeneration));
-      familyDiscoveryState.generation = configGeneration;
-      familyDiscoveryState.active = true;
+      //familyDiscoveryState.generation = new Date();
+      //familyDiscoveryState.generation = configGeneration;
+      //familyDiscoveryState.active = true;
     });
   }
 
