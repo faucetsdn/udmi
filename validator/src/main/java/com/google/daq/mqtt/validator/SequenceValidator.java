@@ -228,6 +228,7 @@ public abstract class SequenceValidator {
     }
   };
   private String lastSerialNo;
+  private boolean recordMessages;
 
   private static Metadata readDeviceMetadata() {
     File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
@@ -274,11 +275,12 @@ public abstract class SequenceValidator {
    */
   @Before
   public void setUp() {
-    deviceState = null;
+    deviceState = new State();
     receivedState.clear();
     receivedEvents.clear();
-    waitingCondition = null;
+    waitingCondition = "startup";
     enforceSerial = false;
+    recordMessages = true;
 
     resetConfig();
 
@@ -291,7 +293,6 @@ public abstract class SequenceValidator {
     syncConfig();
 
     untilTrue("device state update", () -> deviceState != null);
-    // TODO: Add flag to start message capture
   }
 
   protected void resetConfig() {
@@ -364,6 +365,10 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Map<String, Object> message, String messageBase) {
+    if (!recordMessages) {
+      return;
+    }
+
     String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
@@ -379,6 +384,10 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     }
+  }
+
+  private boolean debugLogLevel() {
+    return logLevel <= Level.DEBUG.value();
   }
 
   private boolean traceLogLevel() {
@@ -432,9 +441,9 @@ public abstract class SequenceValidator {
    */
   @After
   public void tearDown() {
-    // TODO: Add flag to supress message saving now
-    if (traceLogLevel()) {
-      warning("Not resetting config@ b/c trace is enabled.");
+    recordMessages = false;
+    if (debugLogLevel()) {
+      warning("Not resetting config@ b/c debug is enabled.");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
@@ -522,9 +531,6 @@ public abstract class SequenceValidator {
 
   private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
     try {
-      if (deviceState == null) {
-        deviceState = new State();
-      }
       updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
           state -> deviceState.system = state);
       updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
@@ -625,7 +631,7 @@ public abstract class SequenceValidator {
       receiveMessage();
     }
     info("finished " + waitingCondition);
-    waitingCondition = null;
+    waitingCondition = "nothing";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {

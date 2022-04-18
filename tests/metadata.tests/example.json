@@ -42,7 +42,7 @@
   },
   "testing": {
     "discovery": {
-      "famililes": {
+      "families": {
         "bacnet": {
         }
       }

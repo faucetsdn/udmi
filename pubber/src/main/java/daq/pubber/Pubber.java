@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.util.CatchingExecutors;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -18,6 +19,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,14 +61,13 @@ import udmi.schema.SystemState;
 public class Pubber {
 
   public static final String UDMI_VERSION = "1.3.14";
+  public static final int SCAN_DURATION_SEC = 10;
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-
   private static final String POINTSET_TOPIC = "events/pointset";
   private static final String SYSTEM_TOPIC = "events/system";
   private static final String STATE_TOPIC = "state";
@@ -98,14 +99,12 @@ public class Pubber {
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-
   private static final Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetMetadata(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadata(false)
   );
-
-  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private final CatchingExecutors.CatchingScheduledExecutorService executor = CatchingExecutors.newSingleThreadScheduledExecutor();
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
@@ -113,6 +112,7 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
+  private final Date DEVICE_START_TIME = new Date();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -122,7 +122,6 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
-  private final Date DEVICE_START_TIME = new Date();
 
   /**
    * Start an instance from a configuration file.
@@ -634,7 +633,6 @@ public class Pubber {
   private void updateDiscoveryEnumeration(FamilyDiscoveryConfig enumeration) {
     if (deviceState.discovery.enumeration == null) {
       deviceState.discovery.enumeration = new FamilyDiscoveryState();
-      deviceState.discovery.enumeration.generation = DEVICE_START_TIME;
     }
     Date enumerationGeneration = enumeration.generation;
     if (!enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
@@ -642,7 +640,7 @@ public class Pubber {
     }
     deviceState.discovery.enumeration = new FamilyDiscoveryState();
     deviceState.discovery.enumeration.generation = enumerationGeneration;
-    info("Discovery enumeration generation " + isoConvert(enumerationGeneration));
+    info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
     discoveryEvent.points = allPoints.stream().collect(Collectors.toMap(AbstractPoint::getName,
@@ -662,22 +660,55 @@ public class Pubber {
         return;
       }
 
-      FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.computeIfAbsent(
-          family, key -> {
-            FamilyDiscoveryState newState = new FamilyDiscoveryState();
-            newState.generation = DEVICE_START_TIME;
-            return newState;
-          });
-
-      if (configGeneration.before(familyDiscoveryState.generation)) {
+      Date previousGeneration = getFamilyDiscoveryState(family).generation;
+      if (configGeneration.before(
+          previousGeneration == null ? DEVICE_START_TIME : previousGeneration)) {
         return;
       }
 
-      info("Discovery scan generation " + family + " " + isoConvert(configGeneration));
-      //familyDiscoveryState.generation = new Date();
-      //familyDiscoveryState.generation = configGeneration;
-      //familyDiscoveryState.active = true;
+      info("Discovery scan generation " + family + " is " + isoConvert(configGeneration));
+      long delay = scheduleFuture(configGeneration, () -> checkDiscoveryScan(family, configGeneration));
+      info("Waiting until start: " + delay);
     });
+  }
+
+  private FamilyDiscoveryState getFamilyDiscoveryState(String family) {
+    return deviceState.discovery.families.computeIfAbsent(
+        family, key -> new FamilyDiscoveryState());
+  }
+
+  private long scheduleFuture(Date futureTime, Runnable futureTask) {
+    long delay = futureTime.getTime() - new Date().getTime();
+    executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
+    return delay;
+  }
+
+  private void checkDiscoveryScan(String family, Date configGeneration) {
+    try {
+      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
+      if (familyDiscoveryState.generation == null || familyDiscoveryState.generation.before(configGeneration)) {
+        info("Discovery scan starting " + family + " as " + isoConvert(configGeneration));
+        familyDiscoveryState.generation = configGeneration;
+        familyDiscoveryState.active = true;
+        Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
+        long delay = scheduleFuture(stopTime, () -> discoveryScanComplete(family, configGeneration));
+        info("Waiting until cancel: " + delay);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While checking for discovery scan start", e);
+    }
+  }
+
+  private void discoveryScanComplete(String family, Date configGeneration) {
+    try {
+      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
+      if (configGeneration.equals(familyDiscoveryState.generation)) {
+        info("Discovery scan stopping " + family + " from " + isoConvert(configGeneration));
+        familyDiscoveryState.active = false;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While checking for discovery scan complete", e);
+    }
   }
 
   private String stackTraceString(Throwable e) {

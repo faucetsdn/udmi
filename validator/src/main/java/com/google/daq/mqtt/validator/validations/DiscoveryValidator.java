@@ -75,15 +75,17 @@ public class DiscoveryValidator extends SequenceValidator {
     updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
     untilTrue("scheduled scan start", () -> families.stream().anyMatch(familyScanActivated(startTime))
-        || !families.stream().allMatch(family -> stateGenerationSame(family, previousGenerations))
+        || families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations))
         || !deviceState.timestamp.before(startTime));
     if (deviceState.timestamp.before(startTime)) {
+      warning("scan started before activation: " + deviceState.timestamp + " < " + startTime);
       assertFalse("premature activation", families.stream().anyMatch(familyScanActivated(startTime)));
-      assertTrue("premature generation",
-          families.stream().allMatch(family -> stateGenerationSame(family, previousGenerations)));
+      assertFalse("premature generation",
+          families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations)));
       fail("unknown reason");
     }
     untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
+    untilTrue("scan completed", () -> families.stream().noneMatch(familyScanActive(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
     Set<String> eventFamilies = receivedEvents.stream()
@@ -91,6 +93,8 @@ public class DiscoveryValidator extends SequenceValidator {
         .collect(Collectors.toSet());
     assertTrue("all requested families present", eventFamilies.containsAll(families));
   }
+
+  // TODO: Add test for current timestamp generation not starting a scan
 
   private FamilyDiscoveryConfig getConfigFamily(String family) {
     return deviceConfig.discovery.families.computeIfAbsent(family,
@@ -102,17 +106,28 @@ public class DiscoveryValidator extends SequenceValidator {
   }
 
   private boolean stateGenerationSame(String family, Map<String, Date> previousGenerations) {
-    return Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
+    Date previous = previousGenerations.get(family);
+    Date current = getStateFamilyGeneration(family);
+    System.err.println("generation match " + previous + " " + current);
+    return Objects.equals(previous, current);
   }
 
   private FamilyDiscoveryState getStateFamily(String family) {
     return deviceState.discovery.families.get(family);
   }
 
+  private Predicate<String> familyScanActive(Date startTime) {
+    return family -> catchToFalse(() -> getStateFamily(family).active &&
+        CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
+  }
+
   private Predicate<String> familyScanActivated(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active ||
-        (startTime != null && !getStateFamily(family).generation.before(
-            startTime)));
+    return family -> catchToFalse(() -> {
+      System.err.println(
+          "time check: " + getStateFamily(family).generation + " " + startTime);
+      return getStateFamily(family).active ||
+          CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime);
+    });
   }
 
 }

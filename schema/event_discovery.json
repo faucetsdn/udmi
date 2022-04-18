@@ -24,6 +24,12 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
+    "scan_family": {
+      "type": "string"
+    },
+    "scan_id": {
+      "type": "string"
+    },
     "families": {
       "description": "Address family results for a scan. Not included for device enumeration messages.",
       "type": "object",
