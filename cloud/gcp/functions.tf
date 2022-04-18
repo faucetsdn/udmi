@@ -2,8 +2,8 @@ resource "google_storage_bucket" "function-bucket" {
   name               = "${var.gcp_project_name}-${var.function_name}"
   project            = var.gcp_project_id
   force_destroy      = true
-  storage_class      = "STANDARD"
-  location           = "US"
+  storage_class      = var.storage_class 
+  location           = var.bucket_location
   versioning {
     enabled = true
   }
