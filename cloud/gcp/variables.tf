@@ -114,6 +114,14 @@ variable "function_name" {
     type = string
     description = "functions name"
 }
+variable "storage_class" {
+  type =string
+  description = "storage class name for function bucket"
+}
+variable "bucket_location" {
+  type = string
+  description = "gcp function bucket location"   
+}
 variable "function_memory" {
     type = number
     description = "The amount of memory in megabytes allotted for the function to use."
