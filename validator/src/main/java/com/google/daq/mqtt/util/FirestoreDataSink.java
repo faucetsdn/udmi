@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.util;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
@@ -13,7 +12,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FirestoreDataSink {
+/**
+ * Class managing a firestore link for validation results.
+ */
+public class FirestoreDataSink implements DataSink {
 
   private static final String
       VIEW_URL_FORMAT = "https://console.cloud.google.com/firestore/data/registries/?project=%s";
@@ -26,6 +28,11 @@ public class FirestoreDataSink {
   private final AtomicReference<RuntimeException> oldError = new AtomicReference<>();
   private final String projectId;
 
+  /**
+   * Create a data sink instance that saves results to Firestore.
+   *
+   * @param projectId target cloud project
+   */
   public FirestoreDataSink(String projectId) {
     this.projectId = projectId;
     try {
@@ -43,6 +50,7 @@ public class FirestoreDataSink {
     }
   }
 
+  @Override
   public void validationResult(String deviceId, String schemaId, Map<String, String> attributes,
       Object message, ErrorTree errorTree) {
     if (oldError.get() != null) {
@@ -71,14 +79,15 @@ public class FirestoreDataSink {
     }
   }
 
+  public String getViewUrl() {
+    return String.format(VIEW_URL_FORMAT, projectId);
+  }
+
   static class PojoBundle {
+
     public String validated;
     public ErrorTree errorTree;
     public Object message;
     public Map<String, String> attributes;
-  }
-
-  public String getViewUrl() {
-    return String.format(VIEW_URL_FORMAT, projectId);
   }
 }

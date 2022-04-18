@@ -1,19 +1,48 @@
 #!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
+cd ${ROOT_DIR}
 
 bin/clone_model
 
 TEST_SITE=udmi_site_model
 
-bin/registrar $TEST_SITE
+bin/registrar ${TEST_SITE}
 
-cat $TEST_SITE/registration_summary.json
+cat "${TEST_SITE}/registration_summary.json"
 echo
 
-devices=$(fgrep 'Z"' $TEST_SITE/registration_summary.json | wc -l)
+devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
 
-echo Found $devices clean devices.
+exit_status=0
 
-[ "$devices" == 4 ]
+echo Found ${devices} clean devices.
+[ "${devices}" == 4 ] || exit_status=1
+
+if [[ -f ${TEST_SITE}/site_metadata.json ]]; then
+
+  # Test site_metadata settings for system.location.site.
+  site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
+
+  sm_devices=0
+  for name in ${TEST_SITE}/devices/* ; do
+    if [[ -f ${name}/out/metadata_norm.json ]]; then
+      supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
+      # If no site value is supplied in per-device metadata, expect default.
+      if [[ "${supplied_site}" == "null" ]]; then
+        jq -e ".system.location.site == \"${site}\"" \
+            ${name}/out/metadata_norm.json > /dev/null \
+            && sm_devices=$[sm_devices+1]
+      else
+        jq -e ".system.location.site == \"${supplied_site}\"" \
+            ${name}/out/metadata_norm.json > /dev/null \
+            && sm_devices=$[sm_devices+1]
+      fi
+    fi
+  done
+
+  echo Found ${sm_devices} devices with correct site_metadata values.
+  [ "${sm_devices}" == "${devices}" ] || exit_status=1
+fi
+
+exit $exit_status

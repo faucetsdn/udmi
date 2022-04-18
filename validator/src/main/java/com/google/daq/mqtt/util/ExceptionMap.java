@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -90,6 +91,14 @@ public class ExceptionMap extends RuntimeException {
     public String message;
     public ErrorTree child;
     public Map<String, ErrorTree> children = new TreeMap<>();
+
+    public String asString() {
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      try (PrintStream printStream = new PrintStream(byteArrayOutputStream)) {
+        write(printStream);
+      }
+      return byteArrayOutputStream.toString();
+    }
 
     public void write(PrintStream err) {
       write(err, null);
