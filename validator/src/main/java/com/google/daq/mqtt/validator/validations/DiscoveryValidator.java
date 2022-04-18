@@ -71,6 +71,7 @@ public class DiscoveryValidator extends SequenceValidator {
     Map<String, Date> previousGenerations = new HashMap<>();
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
     Date startTime = Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
+    info("Scan start scheduled for " + startTime);
     families.forEach(family -> getConfigFamily(family).generation = startTime);
     updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events

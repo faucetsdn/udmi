@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.util.CatchingExecutors;
+import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -27,9 +27,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -104,7 +104,7 @@ public class Pubber {
       "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadata(false)
   );
-  private final CatchingExecutors.CatchingScheduledExecutorService executor = CatchingExecutors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);

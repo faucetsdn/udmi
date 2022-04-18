@@ -683,27 +683,34 @@ public abstract class SequenceValidator {
 
   private synchronized void handleReflectorMessage(String subFolderRaw,
       Map<String, Object> message) {
-    Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
-    receivedUpdates.put(subFolderRaw, converted);
-    if (converted instanceof Config) {
-      String extraField = getExtraField(message);
-      if ("reset_config".equals(extraField)) {
-        debug("Update with config reset");
-      } else if ("break_json".equals(extraField)) {
-        notice("Ignoring broken json");
-        return;
+    try {
+      Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
+      receivedUpdates.put(subFolderRaw, converted);
+      if (converted instanceof Config) {
+        String extraField = getExtraField(message);
+        if ("reset_config".equals(extraField)) {
+          debug("Update with config reset");
+        } else if ("break_json".equals(extraField)) {
+          notice("Ignoring broken json");
+          return;
+        }
+        Config config = (Config) converted;
+        deviceConfig.timestamp = config.timestamp;
+        deviceConfig.version = config.version;
+        info("Updated config with timestamp " + getTimestamp(config.timestamp));
+        debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        recordDeviceConfig();
+      } else if (converted instanceof State) {
+        deviceState.version = ((State) converted).version;
+        deviceState.timestamp = ((State) converted).timestamp;
+        info("Updated state has last_config " + getTimestamp(
+            ((State) converted).system.last_config));
+        debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+      } else {
+        warning("Unknown update type " + converted.getClass().getSimpleName());
       }
-      Config config = (Config) converted;
-      deviceConfig.timestamp = config.timestamp;
-      deviceConfig.version = config.version;
-      info("Updated config with timestamp " + getTimestamp(config.timestamp));
-      recordDeviceConfig();
-    } else if (converted instanceof State) {
-      deviceState.version = ((State) converted).version;
-      deviceState.timestamp = ((State) converted).timestamp;
-      info("Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
-    } else {
-      warning("Unknown update type " + converted.getClass().getSimpleName());
+    } catch (Exception e) {
+      throw new RuntimeException("While handling reflector message", e);
     }
   }
 
