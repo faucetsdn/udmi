@@ -1,0 +1,65 @@
+{
+  "timestamp" : "2021-11-02T12:22:14Z",
+  "localnet" : {
+    "subsystem" : {
+      "bacnet" : {
+        "local_id" : "1010112"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "cooling_water_valve_percentage_command" : {
+        "ref" : "AO1104.Present_Value"
+      },
+      "cooling_water_valve_percentage_sensor" : {
+        "ref" : "AI1108.Present_Value"
+      },
+      "discharge_fan_fault_status" : {
+        "ref" : "BI1107.Present_Value"
+      },
+      "discharge_fan_percentage_command" : {
+        "ref" : "AO1106.Present_Value"
+      },
+      "fabric_protection_status" : {
+        "ref" : "BV108.Present_Value"
+      },
+      "fire_alarm_status" : {
+        "ref" : "BV1001.Present_Value"
+      },
+      "heating_water_valve_percentage_command" : {
+        "ref" : "AO1102.Present_Value"
+      },
+      "heating_water_valve_percentage_sensor" : {
+        "ref" : "AI1103.Present_Value"
+      },
+      "occupancy_status" : {
+        "ref" : "BV1002.Present_Value"
+      },
+      "optimum_start_status" : {
+        "ref" : "BV1004.Present_Value"
+      },
+      "zone_air_control_temperature_sensor" : {
+        "ref" : "AV119.Present_Value"
+      },
+      "zone_air_cooling_temperature_setpoint" : {
+        "ref" : "AV2.Present_Value"
+      },
+      "zone_air_heating_temperature_setpoint" : {
+        "ref" : "AV1.Present_Value"
+      },
+      "zone_air_temperature_alarm" : {
+        "ref" : "BV203.Present_Value"
+      },
+      "zone_air_temperature_high_alarm" : {
+        "ref" : "BV202.Present_Value"
+      },
+      "zone_air_temperature_low_alarm" : {
+        "ref" : "BV201.Present_Value"
+      },
+      "zone_air_temperature_setpoint" : {
+        "ref" : "AV3.Present_Value"
+      }
+    }
+  }
+}
