@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Target Testing Metadata
+ * Target Testing Model
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "target_value"
 })
 @Generated("jsonschema2pojo")
-public class TargetTestingMetadata {
+public class TargetTestingModel {
 
     /**
      * Point name used for testing
@@ -50,10 +50,10 @@ public class TargetTestingMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof TargetTestingMetadata) == false) {
+        if ((other instanceof TargetTestingModel) == false) {
             return false;
         }
-        TargetTestingMetadata rhs = ((TargetTestingMetadata) other);
+        TargetTestingModel rhs = ((TargetTestingModel) other);
         return (((this.target_point == rhs.target_point)||((this.target_point!= null)&&this.target_point.equals(rhs.target_point)))&&((this.target_value == rhs.target_value)||((this.target_value!= null)&&this.target_value.equals(rhs.target_value))));
     }
 

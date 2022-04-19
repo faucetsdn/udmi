@@ -1,7 +1,7 @@
-"""Generated class for metadata_testing_target.json"""
+"""Generated class for model_testing_target.json"""
 
 
-class TargetTestingMetadata:
+class TargetTestingModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,7 +12,7 @@ class TargetTestingMetadata:
   def from_dict(source):
     if not source:
       return None
-    result = TargetTestingMetadata()
+    result = TargetTestingModel()
     result.target_point = source.get('target_point')
     result.target_value = source.get('target_value')
     return result
@@ -23,7 +23,7 @@ class TargetTestingMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = TargetTestingMetadata.from_dict(source[key])
+      result[key] = TargetTestingModel.from_dict(source[key])
     return result
 
   @staticmethod

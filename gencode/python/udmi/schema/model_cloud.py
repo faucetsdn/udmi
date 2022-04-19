@@ -1,4 +1,4 @@
-"""Generated class for metadata_cloud.json"""
+"""Generated class for model_cloud.json"""
 
 
 class CloudMetadata:

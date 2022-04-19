@@ -1,5 +1,5 @@
 {
-  "title": "Testing Metadata",
+  "title": "Testing Model",
   "description": "Testing target parameters",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
@@ -7,16 +7,12 @@
   "properties": {
     "targets": {
       "additionalProperties": false,
-      "maxProperties": 150,
-      "existingJavaType": "java.util.HashMap<String, TargetTestingMetadata>",
+      "existingJavaType": "java.util.HashMap<String, TargetTestingModel>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:metadata_testing_target.json#"
+          "$ref": "file:model_testing_target.json#"
         }
       }
     }
-  },
-  "required": [
-    "targets"
-  ]
+  }
 }

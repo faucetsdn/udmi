@@ -1,18 +1,19 @@
-"""Generated class for metadata_localnet_subsystem.json"""
+"""Generated class for model_pointset.json"""
+from .model_pointset_point import PointPointsetMetadata
 
 
-class SubsystemLocalnetMetadata:
+class PointsetMetadata:
   """Generated schema class"""
 
   def __init__(self):
-    self.local_id = None
+    self.points = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = SubsystemLocalnetMetadata()
-    result.local_id = source.get('local_id')
+    result = PointsetMetadata()
+    result.points = PointPointsetMetadata.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -21,7 +22,7 @@ class SubsystemLocalnetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = SubsystemLocalnetMetadata.from_dict(source[key])
+      result[key] = PointsetMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -33,6 +34,6 @@ class SubsystemLocalnetMetadata:
 
   def to_dict(self):
     result = {}
-    if self.local_id:
-      result['local_id'] = self.local_id # 5
+    if self.points:
+      result['points'] = PointPointsetMetadata.expand_dict(self.points) # 2
     return result

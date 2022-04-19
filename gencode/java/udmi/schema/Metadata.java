@@ -99,14 +99,14 @@ public class Metadata {
     @JsonPropertyDescription("Used to describe device local network parameters")
     public LocalnetMetadata localnet;
     /**
-     * Testing Metadata
+     * Testing Model
      * <p>
      * Testing target parameters
      * 
      */
     @JsonProperty("testing")
     @JsonPropertyDescription("Testing target parameters")
-    public TestingMetadata testing;
+    public TestingModel testing;
     /**
      * Pointset Metadata
      * <p>

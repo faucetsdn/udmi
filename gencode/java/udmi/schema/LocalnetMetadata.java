@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "subsystem"
+    "families"
 })
 @Generated("jsonschema2pojo")
 public class LocalnetMetadata {
@@ -26,13 +26,13 @@ public class LocalnetMetadata {
      * (Required)
      * 
      */
-    @JsonProperty("subsystem")
-    public HashMap<String, SubsystemLocalnetMetadata> subsystem;
+    @JsonProperty("families")
+    public HashMap<String, FamilyLocalnetMetadata> families;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.subsystem == null)? 0 :this.subsystem.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
 
@@ -45,7 +45,7 @@ public class LocalnetMetadata {
             return false;
         }
         LocalnetMetadata rhs = ((LocalnetMetadata) other);
-        return ((this.subsystem == rhs.subsystem)||((this.subsystem!= null)&&this.subsystem.equals(rhs.subsystem)));
+        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
     }
 
 }

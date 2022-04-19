@@ -1,38 +1,39 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Testing Metadata
+ * Family Localnet Metadata
  * <p>
- * Testing target parameters
+ * The type of network
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "targets"
+    "id"
 })
 @Generated("jsonschema2pojo")
-public class TestingMetadata {
+public class FamilyLocalnetMetadata {
 
     /**
-     * 
+     * The address of a device on the local network
      * (Required)
      * 
      */
-    @JsonProperty("targets")
-    public HashMap<String, TargetTestingMetadata> targets;
+    @JsonProperty("id")
+    @JsonPropertyDescription("The address of a device on the local network")
+    public String id;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.targets == null)? 0 :this.targets.hashCode()));
+        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
         return result;
     }
 
@@ -41,11 +42,11 @@ public class TestingMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof TestingMetadata) == false) {
+        if ((other instanceof FamilyLocalnetMetadata) == false) {
             return false;
         }
-        TestingMetadata rhs = ((TestingMetadata) other);
-        return ((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)));
+        FamilyLocalnetMetadata rhs = ((FamilyLocalnetMetadata) other);
+        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
     }
 
 }

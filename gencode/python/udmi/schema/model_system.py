@@ -1,4 +1,4 @@
-"""Generated class for metadata_system.json"""
+"""Generated class for model_system.json"""
 
 
 class Object2CCE4FC0:
