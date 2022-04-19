@@ -30,22 +30,22 @@
       "pattern": "^[0-9a-z]{8}$"
     },
     "cloud": {
-      "$ref": "file:metadata_cloud.json#"
+      "$ref": "file:model_cloud.json#"
     },
     "system": {
-      "$ref": "file:metadata_system.json#"
+      "$ref": "file:model_system.json#"
     },
     "gateway": {
-      "$ref": "file:metadata_gateway.json#"
+      "$ref": "file:model_gateway.json#"
     },
     "localnet": {
-      "$ref": "file:metadata_localnet.json#"
+      "$ref": "file:model_localnet.json#"
     },
     "testing": {
-      "$ref": "file:metadata_testing.json#"
+      "$ref": "file:model_testing.json#"
     },
     "pointset": {
-      "$ref": "file:metadata_pointset.json#"
+      "$ref": "file:model_pointset.json#"
     }
   }
 }

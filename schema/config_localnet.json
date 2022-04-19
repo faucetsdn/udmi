@@ -5,29 +5,29 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "subsystem": {
-      "title": "Subsystem Reference",
+    "families": {
+      "title": "Family Reference",
       "patternProperties": {
         "^[a-z0-9-]+$": {
           "additionalProperties": false,
           "type": "object",
-          "description": "The type of network",
-          "examples": ["bacnet", "modbus"],
+          "description": "The network family",
+          "examples": ["bacnet", "ipv4"],
           "properties": {
-            "local_id": {
+            "id": {
               "description": "The address of a device on the local network",
               "examples": ["4148893"],
               "type": "string"
             }
           },
           "required": [
-            "local_id"
+            "id"
           ]
         }
       }
     }
   },
   "required": [
-    "subsystem"
+    "families"
   ]
 }

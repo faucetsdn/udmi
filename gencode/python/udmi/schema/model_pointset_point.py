@@ -1,4 +1,4 @@
-"""Generated class for metadata_pointset_point.json"""
+"""Generated class for model_pointset_point.json"""
 
 
 class PointPointsetMetadata:

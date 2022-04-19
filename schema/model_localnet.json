@@ -5,17 +5,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "subsystem": {
+    "families": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, SubsystemLocalnetMetadata>",
+      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetMetadata>",
       "patternProperties": {
         "^[a-z0-9-]+$": {
-          "$ref": "file:metadata_localnet_subsystem.json"
+          "$ref": "file:model_localnet_family.json"
         }
       }
     }
   },
   "required": [
-    "subsystem"
+    "families"
   ]
 }

@@ -12,7 +12,7 @@
       "existingJavaType": "java.util.HashMap<String, PointPointsetMetadata>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:metadata_pointset_point.json#"
+          "$ref": "file:model_pointset_point.json#"
         }
       }
     }

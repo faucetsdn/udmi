@@ -1,19 +1,18 @@
-"""Generated class for metadata_localnet.json"""
-from .metadata_localnet_subsystem import SubsystemLocalnetMetadata
+"""Generated class for model_localnet_family.json"""
 
 
-class LocalnetMetadata:
+class FamilyLocalnetMetadata:
   """Generated schema class"""
 
   def __init__(self):
-    self.subsystem = None
+    self.id = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetMetadata()
-    result.subsystem = SubsystemLocalnetMetadata.map_from(source.get('subsystem'))
+    result = FamilyLocalnetMetadata()
+    result.id = source.get('id')
     return result
 
   @staticmethod
@@ -22,7 +21,7 @@ class LocalnetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetMetadata.from_dict(source[key])
+      result[key] = FamilyLocalnetMetadata.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +33,6 @@ class LocalnetMetadata:
 
   def to_dict(self):
     result = {}
-    if self.subsystem:
-      result['subsystem'] = SubsystemLocalnetMetadata.expand_dict(self.subsystem) # 2
+    if self.id:
+      result['id'] = self.id # 5
     return result

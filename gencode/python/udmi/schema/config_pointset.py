@@ -6,6 +6,8 @@ class PointsetConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.state_etag = None
     self.set_value_expiry = None
     self.sample_limit_sec = None
@@ -17,6 +19,8 @@ class PointsetConfig:
     if not source:
       return None
     result = PointsetConfig()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.state_etag = source.get('state_etag')
     result.set_value_expiry = source.get('set_value_expiry')
     result.sample_limit_sec = source.get('sample_limit_sec')
@@ -42,6 +46,10 @@ class PointsetConfig:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.state_etag:
       result['state_etag'] = self.state_etag # 5
     if self.set_value_expiry:

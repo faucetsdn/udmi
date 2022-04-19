@@ -1,5 +1,5 @@
 {
-  "title": "Target Testing Metadata",
+  "title": "Target Testing Model",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,

@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,32 +9,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Localnet Config
+ * Testing Model
  * <p>
- * Used to describe device local network parameters
+ * Testing target parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "families"
+    "targets"
 })
 @Generated("jsonschema2pojo")
-public class LocalnetConfig {
+public class TestingModel {
 
-    /**
-     * Family Reference
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("families")
-    public Object families;
+    @JsonProperty("targets")
+    public HashMap<String, TargetTestingModel> targets;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.targets == null)? 0 :this.targets.hashCode()));
         return result;
     }
 
@@ -42,11 +36,11 @@ public class LocalnetConfig {
         if (other == this) {
             return true;
         }
-        if ((other instanceof LocalnetConfig) == false) {
+        if ((other instanceof TestingModel) == false) {
             return false;
         }
-        LocalnetConfig rhs = ((LocalnetConfig) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        TestingModel rhs = ((TestingModel) other);
+        return ((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)));
     }
 
 }
