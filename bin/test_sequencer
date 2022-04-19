@@ -47,7 +47,7 @@ for i in `seq 1 $WAITING`; do
     sleep 2
 done
 
-if [[ $i == $WAITING ]]; then
+if [[ $i -eq $WAITING ]]; then
     echo pubber startup failed:
     cat $PUBBER_OUT
     false
