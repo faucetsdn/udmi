@@ -16,7 +16,6 @@ from .event_discovery import DiscoveryEvent
 from .event_discovery_blob import BlobEnumerationEvent
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
-from .event_mapping import DiscoveryEvent
 from .event_pointset import PointsetEvent
 from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent
