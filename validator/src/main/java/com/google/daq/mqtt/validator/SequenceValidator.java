@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.proxy.IotCoreClient;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +41,8 @@ import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
+import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -89,9 +93,11 @@ public abstract class SequenceValidator {
   private static final IotCoreClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
-  private static final Map<SubFolder, Class<?>> expectedEvents = ImmutableMap.of(
-      SubFolder.SYSTEM, SystemEvent.class,
-      SubFolder.POINTSET, PointsetEvent.class
+
+  private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
+      SystemEvent.class, SubFolder.SYSTEM,
+      PointsetEvent.class, SubFolder.POINTSET,
+      DiscoveryEvent.class, SubFolder.DISCOVERY
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
       "config", Config.class,
@@ -158,6 +164,7 @@ public abstract class SequenceValidator {
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
+  protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
   private String waitingCondition;
@@ -221,6 +228,7 @@ public abstract class SequenceValidator {
     }
   };
   private String lastSerialNo;
+  private boolean recordMessages;
 
   private static Metadata readDeviceMetadata() {
     File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
@@ -267,11 +275,12 @@ public abstract class SequenceValidator {
    */
   @Before
   public void setUp() {
-    deviceState = null;
+    deviceState = new State();
     receivedState.clear();
     receivedEvents.clear();
-    waitingCondition = null;
+    waitingCondition = "startup";
     enforceSerial = false;
+    recordMessages = true;
 
     resetConfig();
 
@@ -283,7 +292,7 @@ public abstract class SequenceValidator {
 
     syncConfig();
 
-    untilTrue(() -> deviceState != null, "device state update");
+    untilTrue("device state update", () -> deviceState != null);
   }
 
   protected void resetConfig() {
@@ -292,13 +301,13 @@ public abstract class SequenceValidator {
     sentConfig.clear();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    untilTrue(this::configUpdateComplete, "device config reset");
+    untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
   }
 
   private Date syncConfig() {
     updateConfig();
-    untilTrue(this::configUpdateComplete, "device config sync");
+    untilTrue("device config sync", this::configUpdateComplete);
     debug("config synced to " + getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
@@ -356,6 +365,10 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Map<String, Object> message, String messageBase) {
+    if (!recordMessages) {
+      return;
+    }
+
     String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
     testOutDir.mkdirs();
@@ -371,6 +384,10 @@ public abstract class SequenceValidator {
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     }
+  }
+
+  private boolean debugLogLevel() {
+    return logLevel <= Level.DEBUG.value();
   }
 
   private boolean traceLogLevel() {
@@ -424,8 +441,9 @@ public abstract class SequenceValidator {
    */
   @After
   public void tearDown() {
-    if (traceLogLevel()) {
-      warning("Not resetting config b/c trace is enabled.");
+    recordMessages = false;
+    if (debugLogLevel()) {
+      warning("Not resetting config@ b/c debug is enabled.");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
@@ -442,6 +460,7 @@ public abstract class SequenceValidator {
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
+    updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     recordDeviceConfig();
   }
 
@@ -489,47 +508,25 @@ public abstract class SequenceValidator {
     }
   }
 
-  private <T> T messageConvert(Class<T> target, Map<String, Object> message) {
-    try {
-      String timestamp = (String) message.remove("timestamp");
-      String messageString = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(messageString, target);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting object type " + target.getName(), e);
-    }
-  }
-
   private <T> boolean updateState(SubFolder subFolder, SubFolder expected, Class<T> target,
       Map<String, Object> message, Consumer<T> handler) {
     try {
       if (!expected.equals(subFolder)) {
         return false;
       }
-      // TODO: Handle null message
-      String timestamp = (String) message.remove("timestamp");
-      String version = (String) message.remove("version");
+      message.remove("timestamp");
+      message.remove("version");
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
         debug(String.format("updating %s state", subFolder));
         T state = OBJECT_MAPPER.readValue(messageString, target);
-        if (deviceState == null) {
-          deviceState = new State();
-        }
         handler.accept(state);
       }
       return updated;
     } catch (Exception e) {
       throw new RuntimeException("While converting state type " + subFolder, e);
     }
-  }
-
-  private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
-    updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
-        state -> deviceState.system = state);
-    updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
-        state -> deviceState.pointset = state);
-    validSerialNo();
   }
 
   protected boolean validSerialNo() {
@@ -547,13 +544,18 @@ public abstract class SequenceValidator {
     return serialValid;
   }
 
-  private boolean caughtAsFalse(Supplier<Boolean> evaluator) {
+  protected boolean catchToFalse(Supplier<Boolean> evaluator) {
+    Boolean value = catchToNull(evaluator);
+    return value != null && value;
+  }
+
+  protected <T> T catchToNull(Supplier<T> evaluator) {
     try {
       return evaluator.get();
     } catch (Exception e) {
       debug("Suppressing exception: " + e);
       trace(stackTraceString(e));
-      return false;
+      return null;
     }
   }
 
@@ -572,7 +574,7 @@ public abstract class SequenceValidator {
   }
 
   protected void hasLogged(String category, Level level) {
-    untilTrue(() -> {
+    untilTrue("waiting for log message " + category + " level " + level, () -> {
       List<Map<String, Object>> messages = receivedEvents.get(SubFolder.SYSTEM);
       if (messages == null) {
         return false;
@@ -592,22 +594,30 @@ public abstract class SequenceValidator {
         }
       }
       return false;
-    }, "waiting for log message " + category + " level " + level);
+    });
   }
 
   protected void hasNotLogged(String category, Level level) {
     warning("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
-  protected void untilTrue(Supplier<Boolean> evaluator, String description) {
+  private void untilLoop(Supplier<Boolean> evaluator, String description) {
     updateConfig();
     waitingCondition = "waiting for " + description;
     info("start " + waitingCondition);
-    while (!caughtAsFalse(evaluator)) {
+    while (evaluator.get()) {
       receiveMessage();
     }
     info("finished " + waitingCondition);
-    waitingCondition = null;
+    waitingCondition = "nothing";
+  }
+
+  protected void untilTrue(String description, Supplier<Boolean> evaluator) {
+    untilLoop(() -> !catchToFalse(evaluator), description);
+  }
+
+  protected void untilUntrue(Supplier<Boolean> evaluator, String description) {
+    untilLoop(() -> catchToFalse(evaluator), description);
   }
 
   private void receiveMessage() {
@@ -639,7 +649,7 @@ public abstract class SequenceValidator {
         // These are echos of sent config messages, so do nothing.
         break;
       case STATE:
-        handleStateMessage(subFolder, message);
+        // State updates are handled as a monolithic block with a state reflector update.
         break;
       case EVENT:
         handleEventMessage(subFolder, message);
@@ -651,25 +661,34 @@ public abstract class SequenceValidator {
 
   private synchronized void handleReflectorMessage(String subFolderRaw,
       Map<String, Object> message) {
-    Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
-    receivedUpdates.put(subFolderRaw, converted);
-    if (converted instanceof Config) {
-      String extraField = getExtraField(message);
-      if ("reset_config".equals(extraField)) {
-        debug("Update with config reset");
-      } else if ("break_json".equals(extraField)) {
-        notice("Ignoring broken json");
-        return;
+    try {
+      Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
+      receivedUpdates.put(subFolderRaw, converted);
+      if (converted instanceof Config) {
+        String extraField = getExtraField(message);
+        if ("reset_config".equals(extraField)) {
+          debug("Update with config reset");
+        } else if ("break_json".equals(extraField)) {
+          notice("Ignoring broken json");
+          return;
+        }
+        Config config = (Config) converted;
+        deviceConfig.timestamp = config.timestamp;
+        deviceConfig.version = config.version;
+        info("Updated config with timestamp " + getTimestamp(config.timestamp));
+        debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        recordDeviceConfig();
+      } else if (converted instanceof State) {
+        debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        deviceState = (State) converted;
+        validSerialNo();
+        info("Updated state has last_config " + getTimestamp(
+            ((State) converted).system.last_config));
+      } else {
+        warning("Unknown update type " + converted.getClass().getSimpleName());
       }
-      Config config = (Config) converted;
-      deviceConfig.timestamp = config.timestamp;
-      deviceConfig.version = config.version;
-      info("Updated config with timestamp " + getTimestamp(config.timestamp));
-      recordDeviceConfig();
-    } else if (converted instanceof State) {
-      info("Updated state has last_config " + getTimestamp(((State) converted).system.last_config));
-    } else {
-      warning("Unknown update type " + converted.getClass().getSimpleName());
+    } catch (Exception e) {
+      throw new RuntimeException("While handling reflector message", e);
     }
   }
 
@@ -685,6 +704,14 @@ public abstract class SequenceValidator {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(convertTo(SystemEvent.class, message));
+    }
+  }
+
+  protected String toJsonString(Object message) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(message);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying message", e);
     }
   }
 
@@ -742,5 +769,14 @@ public abstract class SequenceValidator {
     if (logEntry.level >= logLevel) {
       System.err.println(entry);
     }
+  }
+
+  protected <T> List<T> getReceivedEvents(Class<T> clazz) {
+    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
+    List<Map<String, Object>> events = receivedEvents.remove(subFolder);
+    if (events == null) {
+      return ImmutableList.of();
+    }
+    return events.stream().map(message -> convertTo(clazz, message)).collect(Collectors.toList());
   }
 }

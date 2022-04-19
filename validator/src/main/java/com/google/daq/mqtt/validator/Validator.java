@@ -58,7 +58,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
 /**
- * Class to validate streaming messages.
+ * Core class for running site-level validations of data streams.
  */
 public class Validator {
 
@@ -114,18 +114,18 @@ public class Validator {
   private MessagePublisher client;
 
   /**
-   * Validator for streaming message validator.
+   * Create validator for the given project id.
    *
-   * @param projectId Project to validate against.
+   * @param projectId Target cloud project id
    */
   public Validator(String projectId) {
     this.projectId = projectId;
   }
 
   /**
-   * Instantiate a stream validator instance.
+   * Let's go.
    *
-   * @param args What to do!
+   * @param args This is the way
    */
   public static void main(String[] args) {
     if (args.length != 5) {
@@ -259,7 +259,7 @@ public class Validator {
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
-    Map<String, JsonSchema> schemaMap = getSchemaMap();
+    final Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
   }
 
@@ -278,7 +278,6 @@ public class Validator {
 
   private void messageLoop() {
     if (client == null) {
-      System.err.println("No message publisher defined.");
       return;
     }
     System.err.println(
@@ -728,7 +727,7 @@ public class Validator {
 
   class RelativeDownloader implements URIDownloader {
 
-    public static final String FILE_URL_PREFIX = "file:";
+    private static final String FILE_URL_PREFIX = "file:";
 
     @Override
     public InputStream fetch(URI source) {

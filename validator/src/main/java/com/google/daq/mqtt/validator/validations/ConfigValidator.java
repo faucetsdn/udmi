@@ -24,34 +24,34 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void system_last_update() {
     deviceConfig.system.min_loglevel = 400;
-    untilTrue(() -> {
+    untilTrue("state last_config match", () -> {
       Date expectedConfig = deviceConfig.timestamp;
       Date lastConfig = deviceState.system.last_config;
       debug("date match  " + getTimestamp(cleanDate(expectedConfig)) + " "
           + getTimestamp(cleanDate(lastConfig)));
       return dateEquals(expectedConfig, lastConfig);
-    }, "state last_config match");
+    });
   }
 
   @Test
   public void broken_config() {
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
-    untilTrue(() -> deviceState.system.status == null, "state no status");
+    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("last_config not null", () -> deviceState.system.last_config != null);
+    untilTrue("state no status", () -> deviceState.system.status == null);
     clearLogs();
-    untilTrue(() -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config),
-        "previous config/state synced");
+    untilTrue("previous config/state synced", () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)
+    );
     extraField = "break_json";
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
     AtomicReference<Date> stableConfig = new AtomicReference<>(null);
-    untilTrue(() -> {
+    untilTrue("state has status", () -> {
       boolean hasStatus = deviceState.system.status != null;
       if (!hasStatus) {
         stableConfig.set(deviceState.system.last_config);
       }
       return hasStatus;
-    }, "state has status");
+    });
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     info("Error detail: " + stateStatus.detail);
@@ -68,9 +68,9 @@ public class ConfigValidator extends SequenceValidator {
     resetConfig();
     extraField = null;
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-    untilTrue(() -> deviceState.system.status == null, "state no status");
-    untilTrue(() -> !dateEquals(matchedConfig, deviceState.system.last_config),
-        "last_config updated");
+    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("last_config updated", () -> !dateEquals(matchedConfig, deviceState.system.last_config)
+    );
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
     hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
@@ -78,27 +78,27 @@ public class ConfigValidator extends SequenceValidator {
 
   @Test
   public void extra_config() {
-    untilTrue(() -> deviceState.system.last_config != null, "last_config not null");
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> deviceState.system.status == null, "state no status");
+    untilTrue("last_config not null", () -> deviceState.system.last_config != null);
+    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("state no status", () -> deviceState.system.status == null);
     clearLogs();
     final Date prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-    untilTrue(() -> !deviceState.system.last_config.equals(prevConfig), "last_config updated");
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> deviceState.system.status == null, "state no status");
+    untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
+    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("state no status", () -> deviceState.system.status == null);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
     hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
     final Date updatedConfig = deviceState.system.last_config;
     extraField = null;
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-    untilTrue(() -> !deviceState.system.last_config.equals(updatedConfig),
-        "last_config updated again");
-    untilTrue(() -> deviceState.system.operational, "system operational");
-    untilTrue(() -> deviceState.system.status == null, "state no status");
+    untilTrue("last_config updated again", () -> !deviceState.system.last_config.equals(updatedConfig)
+    );
+    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("state no status", () -> deviceState.system.status == null);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
     hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
   }
