@@ -49,11 +49,9 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
-import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemState;
 
 /**
  * Validate a device using a sequence of message exchanges.
@@ -443,7 +441,7 @@ public abstract class SequenceValidator {
   public void tearDown() {
     recordMessages = false;
     if (debugLogLevel()) {
-      warning("Not resetting config@ b/c debug is enabled.");
+      warning("Not resetting config because debug is enabled.");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
