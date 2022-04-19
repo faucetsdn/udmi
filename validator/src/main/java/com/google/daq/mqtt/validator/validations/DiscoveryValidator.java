@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
@@ -70,17 +69,21 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
     Map<String, Date> previousGenerations = new HashMap<>();
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
-    Date startTime = CleanDateFormat.cleanDate(Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
+    Date startTime = CleanDateFormat.cleanDate(
+        Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
     info("Scan start scheduled for " + startTime);
     families.forEach(family -> getConfigFamily(family).generation = startTime);
     updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
-    untilTrue("scheduled scan start", () -> families.stream().anyMatch(familyScanActivated(startTime))
-        || families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations))
-        || !deviceState.timestamp.before(startTime));
+    untilTrue("scheduled scan start",
+        () -> families.stream().anyMatch(familyScanActivated(startTime))
+            || families.stream()
+            .anyMatch(family -> !stateGenerationSame(family, previousGenerations))
+            || !deviceState.timestamp.before(startTime));
     if (deviceState.timestamp.before(startTime)) {
       warning("scan started before activation: " + deviceState.timestamp + " < " + startTime);
-      assertFalse("premature activation", families.stream().anyMatch(familyScanActivated(startTime)));
+      assertFalse("premature activation",
+          families.stream().anyMatch(familyScanActivated(startTime)));
       assertFalse("premature generation",
           families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations)));
       fail("unknown reason");
@@ -118,15 +121,17 @@ public class DiscoveryValidator extends SequenceValidator {
   }
 
   private Predicate<String> familyScanActive(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active &&
-        CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
+    return family -> catchToFalse(() -> getStateFamily(family).active
+        && CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
   }
 
   private Predicate<String> familyScanActivated(Date startTime) {
     return family -> catchToFalse(() -> {
-      System.err.println(getStateFamily(family).active + " time check: " + getStateFamily(family).generation + " " + startTime);
-      return getStateFamily(family).active ||
-          CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime);
+      System.err.println(
+          getStateFamily(family).active + " time check: " + getStateFamily(family).generation + " "
+              + startTime);
+      return getStateFamily(family).active
+          || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime);
     });
   }
 
