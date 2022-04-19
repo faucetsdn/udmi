@@ -42,18 +42,15 @@ import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
-import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemState;
 
 /**
  * Validate a device using a sequence of message exchanges.
