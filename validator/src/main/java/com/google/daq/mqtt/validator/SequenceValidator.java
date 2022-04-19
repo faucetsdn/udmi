@@ -440,7 +440,7 @@ public abstract class SequenceValidator {
   public void tearDown() {
     recordMessages = false;
     if (debugLogLevel()) {
-      warning("Not resetting config because debug is enabled.");
+      warning("Not resetting config to enable post-execution debugging");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
@@ -682,7 +682,7 @@ public abstract class SequenceValidator {
         info("Updated state has last_config " + getTimestamp(
             ((State) converted).system.last_config));
       } else {
-        warning("Unknown update type " + converted.getClass().getSimpleName());
+        error("Unknown update type " + converted.getClass().getSimpleName());
       }
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
