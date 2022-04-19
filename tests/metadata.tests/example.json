@@ -41,12 +41,6 @@
     }
   },
   "testing": {
-    "discovery": {
-      "families": {
-        "bacnet": {
-        }
-      }
-    },
     "targets": {
       "invalid": {
         "target_point": "return_air_temperature_sensor",

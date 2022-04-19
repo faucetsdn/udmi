@@ -18,7 +18,7 @@ Pointset is represented in four locations
 
 ## Metadata
 
-- **Schema Definition:** [metadata_pointset.json](../../schema/metadata_pointset.json)
+- **Schema Definition:** [model_pointset.json](../../schema/model_pointset.json)
  ([_🧬View_](../../gencode/docs/metadata.html#pointset))
 - [Working `metadata` Example](../../tests/metadata.tests/example.json)
 

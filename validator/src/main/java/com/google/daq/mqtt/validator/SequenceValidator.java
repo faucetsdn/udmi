@@ -443,7 +443,7 @@ public abstract class SequenceValidator {
   public void tearDown() {
     recordMessages = false;
     if (debugLogLevel()) {
-      warning("Not resetting config@ b/c debug is enabled.");
+      warning("Not resetting config because debug is enabled.");
     } else {
       // Restore the config to a canonical state.
       resetConfig();
