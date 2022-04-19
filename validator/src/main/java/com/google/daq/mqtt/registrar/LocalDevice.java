@@ -571,9 +571,6 @@ class LocalDevice {
     if (Boolean.TRUE.equals(metadata.writable)) {
       pointConfig.set_value = metadata.baseline_value;
     }
-    pointConfig.min_loglevel = metadata.min_loglevel;
-    pointConfig.sample_limit_sec = metadata.sample_limit_sec;
-    pointConfig.sample_rate_sec = metadata.sample_rate_sec;
     return pointConfig;
   }
 
