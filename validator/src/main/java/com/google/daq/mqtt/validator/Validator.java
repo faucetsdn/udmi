@@ -125,7 +125,7 @@ public class Validator {
   /**
    * Let's go.
    *
-   * @param args This is the way
+   * @param args Arguments for program execution
    */
   public static void main(String[] args) {
     if (args.length != 5) {
