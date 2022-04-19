@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -43,6 +42,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -62,6 +62,7 @@ public class Pubber {
 
   public static final String UDMI_VERSION = "1.3.14";
   public static final int SCAN_DURATION_SEC = 10;
+  public static final String DISCOVERY_ID = "RANDOM_ID";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -104,6 +105,8 @@ public class Pubber {
       "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetMetadata(false)
   );
+  private static final long VERY_LONG_TIME_SEC = 1234567890;
+  private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -113,6 +116,7 @@ public class Pubber {
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
   private final Date DEVICE_START_TIME = new Date();
+  private final Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -615,27 +619,24 @@ public class Pubber {
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
-    if (discovery == null) {
-      deviceState.discovery = null;
-      return;
-    }
+    DiscoveryConfig discoveryConfig = discovery == null ? new DiscoveryConfig() : discovery;
     if (deviceState.discovery == null) {
       deviceState.discovery = new DiscoveryState();
     }
-    if (discovery.enumeration != null) {
-      updateDiscoveryEnumeration(discovery.enumeration);
-    }
-    if (discovery.families != null) {
-      updateDiscoveryScan(discovery.families);
-    }
+    updateDiscoveryEnumeration(discoveryConfig.enumeration);
+    updateDiscoveryScan(discoveryConfig.families);
   }
 
   private void updateDiscoveryEnumeration(FamilyDiscoveryConfig enumeration) {
+    if (enumeration == null) {
+      return;
+    }
     if (deviceState.discovery.enumeration == null) {
       deviceState.discovery.enumeration = new FamilyDiscoveryState();
     }
     Date enumerationGeneration = enumeration.generation;
-    if (!enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
+    if (enumerationGeneration == null ||
+        !enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
       return;
     }
     deviceState.discovery.enumeration = new FamilyDiscoveryState();
@@ -648,10 +649,22 @@ public class Pubber {
     publishDeviceMessage(discoveryEvent);
   }
 
-  private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> families) {
+  private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> familiesRaw) {
+    HashMap<String, FamilyDiscoveryConfig> families =
+        familiesRaw == null ? new HashMap<>() : familiesRaw;
     if (deviceState.discovery.families == null) {
       deviceState.discovery.families = new HashMap<>();
     }
+
+    deviceState.discovery.families.keySet().forEach(family -> {
+      if (!families.containsKey(family)) {
+            FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.get(family);
+        if (familyDiscoveryState.generation != null) {
+          info("Clearing scheduled discovery family " + family);
+          familyDiscoveryState.generation = null;
+          familyDiscoveryState.active = null;
+        }
+      }});
     families.keySet().forEach(family -> {
       FamilyDiscoveryConfig familyDiscoveryConfig = families.get(family);
       Date configGeneration = familyDiscoveryConfig.generation;
@@ -667,9 +680,14 @@ public class Pubber {
       }
 
       info("Discovery scan generation " + family + " is " + isoConvert(configGeneration));
-      long delay = scheduleFuture(configGeneration, () -> checkDiscoveryScan(family, configGeneration));
+      long delay = scheduleFuture(configGeneration,
+          () -> checkDiscoveryScan(family, configGeneration));
       info("Waiting until start: " + delay);
     });
+
+    if (deviceState.discovery.families.isEmpty()) {
+      deviceState.discovery = null;
+    }
   }
 
   private FamilyDiscoveryState getFamilyDiscoveryState(String family) {
@@ -686,16 +704,37 @@ public class Pubber {
   private void checkDiscoveryScan(String family, Date configGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (familyDiscoveryState.generation == null || familyDiscoveryState.generation.before(configGeneration)) {
+      if (familyDiscoveryState.generation == null
+          || familyDiscoveryState.generation.before(configGeneration)) {
         info("Discovery scan starting " + family + " as " + isoConvert(configGeneration));
+        Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
+        long delay = scheduleFuture(stopTime,
+            () -> discoveryScanComplete(family, configGeneration));
+        info("Waiting until cancel: " + delay);
         familyDiscoveryState.generation = configGeneration;
         familyDiscoveryState.active = true;
-        Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
-        long delay = scheduleFuture(stopTime, () -> discoveryScanComplete(family, configGeneration));
-        info("Waiting until cancel: " + delay);
+        publishStateMessage();
+        Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
+        scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, configGeneration));
       }
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan start", e);
+    }
+  }
+
+  private void sendDiscoveryEvent(String family, Date configGeneration) {
+    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
+    if (configGeneration.equals(familyDiscoveryState.generation) &&
+        familyDiscoveryState.active) {
+      info("Sending discovery event " + family + " for " + configGeneration);
+      DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+      discoveryEvent.timestamp = new Date();
+      discoveryEvent.version = UDMI_VERSION;
+      discoveryEvent.families = new HashMap<>();
+      FamilyDiscoveryEvent familyDiscoveryEvent = discoveryEvent.families.computeIfAbsent(family,
+          key -> new FamilyDiscoveryEvent());
+      familyDiscoveryEvent.id = DISCOVERY_ID;
+      publishDeviceMessage(discoveryEvent);
     }
   }
 
@@ -705,6 +744,7 @@ public class Pubber {
       if (configGeneration.equals(familyDiscoveryState.generation)) {
         info("Discovery scan stopping " + family + " from " + isoConvert(configGeneration));
         familyDiscoveryState.active = false;
+        publishStateMessage();
       }
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan complete", e);

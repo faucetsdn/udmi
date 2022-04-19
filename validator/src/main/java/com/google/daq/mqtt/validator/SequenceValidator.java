@@ -529,28 +529,6 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void handleStateMessage(SubFolder subFolder, Map<String, Object> message) {
-    try {
-      updateState(subFolder, SubFolder.SYSTEM, SystemState.class, message,
-          state -> deviceState.system = state);
-      updateState(subFolder, SubFolder.POINTSET, PointsetState.class, message,
-          state -> deviceState.pointset = state);
-      updateState(subFolder, SubFolder.DISCOVERY, DiscoveryState.class, message,
-          state -> deviceState.discovery = state);
-      validSerialNo();
-    } catch (Exception e) {
-      throw new RuntimeException("While handling state message", e);
-    }
-  }
-
-  private State deviceStateCopy() {
-    try {
-      return OBJECT_MAPPER.readValue(OBJECT_MAPPER.writeValueAsString(deviceState), State.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While making a clean object copy", e);
-    }
-  }
-
   protected boolean validSerialNo() {
     String deviceSerial = deviceState == null ? null
         : deviceState.system == null ? null : deviceState.system.serial_no;
@@ -671,7 +649,7 @@ public abstract class SequenceValidator {
         // These are echos of sent config messages, so do nothing.
         break;
       case STATE:
-        handleStateMessage(subFolder, message);
+        // State updates are handled as a monolithic block with a state reflector update.
         break;
       case EVENT:
         handleEventMessage(subFolder, message);
@@ -701,11 +679,11 @@ public abstract class SequenceValidator {
         debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
         recordDeviceConfig();
       } else if (converted instanceof State) {
-        deviceState.version = ((State) converted).version;
-        deviceState.timestamp = ((State) converted).timestamp;
+        debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        deviceState = (State) converted;
+        validSerialNo();
         info("Updated state has last_config " + getTimestamp(
             ((State) converted).system.last_config));
-        debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
       } else {
         warning("Unknown update type " + converted.getClass().getSimpleName());
       }

@@ -70,7 +70,7 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
     Map<String, Date> previousGenerations = new HashMap<>();
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
-    Date startTime = Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC));
+    Date startTime = CleanDateFormat.cleanDate(Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
     info("Scan start scheduled for " + startTime);
     families.forEach(family -> getConfigFamily(family).generation = startTime);
     updateConfig();
@@ -124,8 +124,7 @@ public class DiscoveryValidator extends SequenceValidator {
 
   private Predicate<String> familyScanActivated(Date startTime) {
     return family -> catchToFalse(() -> {
-      System.err.println(
-          "time check: " + getStateFamily(family).generation + " " + startTime);
+      System.err.println(getStateFamily(family).active + " time check: " + getStateFamily(family).generation + " " + startTime);
       return getStateFamily(family).active ||
           CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime);
     });
