@@ -5,8 +5,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+/**
+ * Thread executor wrapper that does a better job of exposing exceptions during execution.
+ */
 public class CatchingScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
+  /**
+   * Create a new executor.
+   *
+   * @param corePoolSize number of threads to utilize
+   */
   public CatchingScheduledThreadPoolExecutor(int corePoolSize) {
     super(corePoolSize);
   }

@@ -107,6 +107,7 @@ public class Pubber {
   );
   private static final long VERY_LONG_TIME_SEC = 1234567890;
   private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
+  private static final Date DEVICE_START_TIME = new Date();
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -115,7 +116,6 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
-  private final Date DEVICE_START_TIME = new Date();
   private final Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -635,8 +635,8 @@ public class Pubber {
       deviceState.discovery.enumeration = new FamilyDiscoveryState();
     }
     Date enumerationGeneration = enumeration.generation;
-    if (enumerationGeneration == null ||
-        !enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
+    if (enumerationGeneration == null
+        || !enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
       return;
     }
     deviceState.discovery.enumeration = new FamilyDiscoveryState();
@@ -658,13 +658,14 @@ public class Pubber {
 
     deviceState.discovery.families.keySet().forEach(family -> {
       if (!families.containsKey(family)) {
-            FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.get(family);
+        FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.get(family);
         if (familyDiscoveryState.generation != null) {
           info("Clearing scheduled discovery family " + family);
           familyDiscoveryState.generation = null;
           familyDiscoveryState.active = null;
         }
-      }});
+      }
+    });
     families.keySet().forEach(family -> {
       FamilyDiscoveryConfig familyDiscoveryConfig = families.get(family);
       Date configGeneration = familyDiscoveryConfig.generation;
@@ -724,8 +725,8 @@ public class Pubber {
 
   private void sendDiscoveryEvent(String family, Date configGeneration) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    if (configGeneration.equals(familyDiscoveryState.generation) &&
-        familyDiscoveryState.active) {
+    if (configGeneration.equals(familyDiscoveryState.generation)
+        && familyDiscoveryState.active) {
       info("Sending discovery event " + family + " for " + configGeneration);
       DiscoveryEvent discoveryEvent = new DiscoveryEvent();
       discoveryEvent.timestamp = new Date();
