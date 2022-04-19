@@ -83,7 +83,7 @@ jobs:
           bin/gencode check
           pubber/bin/build check
           validator/bin/build check
-      - name: device ouput logs
+      - name: device output logs
         if: ${{ always() }}
         run: more `find udmi_site_model/out/devices/ -type f`
       - name: pubber logs
