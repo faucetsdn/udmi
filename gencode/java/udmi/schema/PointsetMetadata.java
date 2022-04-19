@@ -17,7 +17,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "points"
+    "points",
+    "sample_limit_sec",
+    "sample_rate_sec"
 })
 @Generated("jsonschema2pojo")
 public class PointsetMetadata {
@@ -30,10 +32,26 @@ public class PointsetMetadata {
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
     public HashMap<String, PointPointsetMetadata> points;
+    /**
+     * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
+     * 
+     */
+    @JsonProperty("sample_limit_sec")
+    @JsonPropertyDescription("Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.")
+    public Integer sample_limit_sec;
+    /**
+     * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.
+     * 
+     */
+    @JsonProperty("sample_rate_sec")
+    @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.")
+    public Integer sample_rate_sec;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.sample_rate_sec == null)? 0 :this.sample_rate_sec.hashCode()));
+        result = ((result* 31)+((this.sample_limit_sec == null)? 0 :this.sample_limit_sec.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
@@ -47,7 +65,7 @@ public class PointsetMetadata {
             return false;
         }
         PointsetMetadata rhs = ((PointsetMetadata) other);
-        return ((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points)));
+        return ((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

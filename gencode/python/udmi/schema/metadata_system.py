@@ -217,6 +217,7 @@ class SystemMetadata:
     self.location = None
     self.physical_tag = None
     self.aux = None
+    self.min_loglevel = None
 
   @staticmethod
   def from_dict(source):
@@ -226,6 +227,7 @@ class SystemMetadata:
     result.location = Object683EF6A1.from_dict(source.get('location'))
     result.physical_tag = Object45E20BB3.from_dict(source.get('physical_tag'))
     result.aux = ObjectCA9644FB.from_dict(source.get('aux'))
+    result.min_loglevel = source.get('min_loglevel')
     return result
 
   @staticmethod
@@ -252,4 +254,6 @@ class SystemMetadata:
       result['physical_tag'] = self.physical_tag.to_dict() # 4
     if self.aux:
       result['aux'] = self.aux.to_dict() # 4
+    if self.min_loglevel:
+      result['min_loglevel'] = self.min_loglevel # 5
     return result

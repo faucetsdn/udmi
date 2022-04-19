@@ -7,6 +7,8 @@ class PointsetMetadata:
 
   def __init__(self):
     self.points = None
+    self.sample_limit_sec = None
+    self.sample_rate_sec = None
 
   @staticmethod
   def from_dict(source):
@@ -14,6 +16,8 @@ class PointsetMetadata:
       return None
     result = PointsetMetadata()
     result.points = PointPointsetMetadata.map_from(source.get('points'))
+    result.sample_limit_sec = source.get('sample_limit_sec')
+    result.sample_rate_sec = source.get('sample_rate_sec')
     return result
 
   @staticmethod
@@ -36,4 +40,8 @@ class PointsetMetadata:
     result = {}
     if self.points:
       result['points'] = PointPointsetMetadata.expand_dict(self.points) # 2
+    if self.sample_limit_sec:
+      result['sample_limit_sec'] = self.sample_limit_sec # 5
+    if self.sample_rate_sec:
+      result['sample_rate_sec'] = self.sample_rate_sec # 5
     return result
