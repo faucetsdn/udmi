@@ -42,7 +42,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -614,7 +613,7 @@ public abstract class SequenceValidator {
     untilLoop(() -> !catchToFalse(evaluator), description);
   }
 
-  protected void untilUntrue(Supplier<Boolean> evaluator, String description) {
+  protected void untilUntrue(String description, Supplier<Boolean> evaluator) {
     untilLoop(() -> catchToFalse(evaluator), description);
   }
 

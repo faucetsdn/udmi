@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -29,13 +30,16 @@ import udmi.schema.FamilyDiscoveryState;
 public class DiscoveryValidator extends SequenceValidator {
 
   public static final int SCAN_START_DELAY_SEC = 10;
+  private static final int SCAN_ITERATIONS = 2;
+  private HashMap<String, Date> previousGenerations;
+  private Set<String> families;
 
   @Test
   public void self_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
     }
-    untilUntrue(() -> deviceState.discovery.enumeration.active, "enumeration not active");
+    untilUntrue("enumeration not active", () -> deviceState.discovery.enumeration.active);
     Date startTime = CleanDateFormat.cleanDate();
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
@@ -45,7 +49,7 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("enumeration generation",
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );
-    untilUntrue(() -> deviceState.discovery.enumeration.active, "enumeration still not active");
+    untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
     List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
     assertEquals("one event received", 1, events.size());
     DiscoveryEvent discoveryEvent = events.get(0);
@@ -59,22 +63,10 @@ public class DiscoveryValidator extends SequenceValidator {
 
   @Test
   public void single_scan() {
-    Set<String> families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
-    if (families == null || families.isEmpty()) {
-      throw new SkipTest("No discovery families configured");
-    }
-    deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.families = new HashMap<>();
-    updateConfig();
-    untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
-    Map<String, Date> previousGenerations = new HashMap<>();
-    families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
+    initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
         Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
-    info("Scan start scheduled for " + startTime);
-    families.forEach(family -> getConfigFamily(family).generation = startTime);
-    updateConfig();
-    getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
+    scheduleScan(startTime, null);
     untilTrue("scheduled scan start",
         () -> families.stream().anyMatch(familyScanActivated(startTime))
             || families.stream()
@@ -89,7 +81,7 @@ public class DiscoveryValidator extends SequenceValidator {
       fail("unknown reason");
     }
     untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
-    untilTrue("scan completed", () -> families.stream().noneMatch(familyScanActive(startTime)));
+    untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
     Set<String> eventFamilies = receivedEvents.stream()
@@ -98,7 +90,42 @@ public class DiscoveryValidator extends SequenceValidator {
     assertTrue("all requested families present", eventFamilies.containsAll(families));
   }
 
-  // TODO: Add test for current timestamp generation not starting a scan
+  @Test
+  public void continuous_scan() {
+    initializeDiscovery();
+    Date startTime = CleanDateFormat.cleanDate();
+    scheduleScan(startTime, SCAN_START_DELAY_SEC);
+    Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
+    untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
+    String oneFamily = families.iterator().next();
+    Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
+    assertTrue("premature termination", families.stream().noneMatch(familyScanComplete(finishTime)));
+    List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
+    assertEquals("number responses received", SCAN_ITERATIONS * families.size(), receivedEvents.size());
+  }
+
+  private void initializeDiscovery() {
+    families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
+    if (families == null || families.isEmpty()) {
+      throw new SkipTest("No discovery families configured");
+    }
+    deviceConfig.discovery = new DiscoveryConfig();
+    deviceConfig.discovery.families = new HashMap<>();
+    updateConfig();
+    untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
+    previousGenerations = new HashMap<>();
+    families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
+  }
+
+  private void scheduleScan(Date startTime, Integer scanIntervalSec) {
+    info("Scan start scheduled for " + startTime);
+    families.forEach(family -> {
+      getConfigFamily(family).generation = startTime;
+      getConfigFamily(family).scan_interval_sec = scanIntervalSec;
+    });
+    updateConfig();
+    getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
+  }
 
   private FamilyDiscoveryConfig getConfigFamily(String family) {
     return deviceConfig.discovery.families.computeIfAbsent(family,
@@ -110,10 +137,7 @@ public class DiscoveryValidator extends SequenceValidator {
   }
 
   private boolean stateGenerationSame(String family, Map<String, Date> previousGenerations) {
-    Date previous = previousGenerations.get(family);
-    Date current = getStateFamilyGeneration(family);
-    System.err.println("generation match " + previous + " " + current);
-    return Objects.equals(previous, current);
+    return Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
   }
 
   private FamilyDiscoveryState getStateFamily(String family) {
@@ -126,13 +150,11 @@ public class DiscoveryValidator extends SequenceValidator {
   }
 
   private Predicate<String> familyScanActivated(Date startTime) {
-    return family -> catchToFalse(() -> {
-      System.err.println(
-          getStateFamily(family).active + " time check: " + getStateFamily(family).generation + " "
-              + startTime);
-      return getStateFamily(family).active
-          || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime);
-    });
+    return family -> catchToFalse(() -> getStateFamily(family).active
+        || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
   }
 
+  private Predicate<? super String> familyScanComplete(Date startTime) {
+    return familyScanActivated(startTime).and(familyScanActive(startTime).negate());
+  }
 }

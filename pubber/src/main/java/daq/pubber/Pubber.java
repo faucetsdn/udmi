@@ -116,7 +116,7 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
-  private final Config deviceConfig = new Config();
+  private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
@@ -606,6 +606,7 @@ public class Pubber {
   private void processConfigUpdate(Config config) {
     final int actualInterval;
     if (config != null) {
+      deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updateSystemConfig(config.pointset);
@@ -676,14 +677,25 @@ public class Pubber {
       }
 
       Date previousGeneration = getFamilyDiscoveryState(family).generation;
-      if (configGeneration.before(
-          previousGeneration == null ? DEVICE_START_TIME : previousGeneration)) {
-        return;
+      Date baseGeneration = previousGeneration == null ? DEVICE_START_TIME : previousGeneration;
+      final Date startGeneration;
+      if (configGeneration.before(baseGeneration)) {
+        int interval = getScanInterval(family);
+        if (interval > 0) {
+          long deltaSec = (baseGeneration.getTime() - configGeneration.getTime() + 999) / 1000;
+          long intervals = (deltaSec + interval - 1) / interval;
+          startGeneration = Date.from(
+              configGeneration.toInstant().plusSeconds(intervals * interval));
+        } else {
+          return;
+        }
+      } else {
+        startGeneration = configGeneration;
       }
 
-      info("Discovery scan generation " + family + " is " + isoConvert(configGeneration));
-      long delay = scheduleFuture(configGeneration,
-          () -> checkDiscoveryScan(family, configGeneration));
+      info("Discovery scan generation " + family + " is " + isoConvert(startGeneration));
+      long delay = scheduleFuture(startGeneration,
+          () -> checkDiscoveryScan(family, startGeneration));
       info("Waiting until start: " + delay);
     });
 
@@ -703,32 +715,35 @@ public class Pubber {
     return delay;
   }
 
-  private void checkDiscoveryScan(String family, Date configGeneration) {
+  private void checkDiscoveryScan(String family, Date scanGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
       if (familyDiscoveryState.generation == null
-          || familyDiscoveryState.generation.before(configGeneration)) {
-        info("Discovery scan starting " + family + " as " + isoConvert(configGeneration));
-        Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
-        long delay = scheduleFuture(stopTime,
-            () -> discoveryScanComplete(family, configGeneration));
-        info("Waiting until cancel: " + delay);
-        familyDiscoveryState.generation = configGeneration;
-        familyDiscoveryState.active = true;
-        publishStateMessage();
-        Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
-        scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, configGeneration));
+          || familyDiscoveryState.generation.before(scanGeneration)) {
+        scheduleDiscoveryScan(family, scanGeneration);
       }
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan start", e);
     }
   }
 
-  private void sendDiscoveryEvent(String family, Date configGeneration) {
+  private void scheduleDiscoveryScan(String family, Date scanGeneration) {
+    info("Discovery scan starting " + family + " as " + isoConvert(scanGeneration));
+    Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    if (configGeneration.equals(familyDiscoveryState.generation)
+    scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
+    familyDiscoveryState.generation = scanGeneration;
+    familyDiscoveryState.active = true;
+    publishStateMessage();
+    Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
+    scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
+  }
+
+  private void sendDiscoveryEvent(String family, Date scanGeneration) {
+    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
+    if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
-      info("Sending discovery event " + family + " for " + configGeneration);
+      info("Sending discovery event " + family + " for " + scanGeneration);
       DiscoveryEvent discoveryEvent = new DiscoveryEvent();
       discoveryEvent.timestamp = new Date();
       discoveryEvent.version = UDMI_VERSION;
@@ -740,16 +755,30 @@ public class Pubber {
     }
   }
 
-  private void discoveryScanComplete(String family, Date configGeneration) {
+  private void discoveryScanComplete(String family, Date scanGeneration) {
     try {
       FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (configGeneration.equals(familyDiscoveryState.generation)) {
-        info("Discovery scan stopping " + family + " from " + isoConvert(configGeneration));
-        familyDiscoveryState.active = false;
-        publishStateMessage();
+      if (scanGeneration.equals(familyDiscoveryState.generation)) {
+        int interval = getScanInterval(family);
+        if (interval > 0) {
+          Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
+          scheduleDiscoveryScan(family, newGeneration);
+          publishStateMessage();
+        } else {
+          info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
+          familyDiscoveryState.active = false;
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan complete", e);
+    }
+  }
+
+  private int getScanInterval(String family) {
+    try {
+      return deviceConfig.discovery.families.get(family).scan_interval_sec;
+    } catch (Exception e) {
+      return 0;
     }
   }
 
