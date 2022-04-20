@@ -10,7 +10,7 @@ import { firstValueFrom, map, take } from 'rxjs';
 const uri = '/api';
 export function createApollo(httpLink: HttpLink, authService: SocialAuthService): ApolloClientOptions<any> {
   const auth = setContext(async (operation, context) => {
-    const token = await firstValueFrom(
+    const idToken = await firstValueFrom(
       authService.authState.pipe(
         map((authState) => authState?.idToken),
         take(1)
@@ -20,12 +20,12 @@ export function createApollo(httpLink: HttpLink, authService: SocialAuthService)
     // If refreshToken needs to be used see:
     // https://apollo-angular.com/docs/recipes/authentication/#waiting-for-a-refreshed-token
 
-    if (!token) {
+    if (!idToken) {
       return {};
     } else {
       return {
         headers: {
-          Authorization: `Bearer ${token}`,
+          idToken,
         },
       };
     }
