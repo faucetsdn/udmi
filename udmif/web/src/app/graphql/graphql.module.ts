@@ -12,13 +12,13 @@ export function createApollo(httpLink: HttpLink, authService: SocialAuthService)
   const auth = setContext(async (operation, context) => {
     const token = await firstValueFrom(
       authService.authState.pipe(
-        map((authState) => authState?.authToken),
+        map((authState) => authState?.idToken),
         take(1)
       )
     );
 
-    // TODO:: check refreshToken,
-    // see: https://apollo-angular.com/docs/recipes/authentication/#waiting-for-a-refreshed-token
+    // If refreshToken needs to be used see:
+    // https://apollo-angular.com/docs/recipes/authentication/#waiting-for-a-refreshed-token
 
     if (!token) {
       return {};
