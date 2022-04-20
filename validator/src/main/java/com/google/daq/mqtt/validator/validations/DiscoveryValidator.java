@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -99,9 +98,11 @@ public class DiscoveryValidator extends SequenceValidator {
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     String oneFamily = families.iterator().next();
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
-    assertTrue("premature termination", families.stream().noneMatch(familyScanComplete(finishTime)));
+    assertTrue("premature termination",
+        families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
-    assertEquals("number responses received", SCAN_ITERATIONS * families.size(), receivedEvents.size());
+    assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
+        receivedEvents.size());
   }
 
   private void initializeDiscovery() {

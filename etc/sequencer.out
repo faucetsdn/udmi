@@ -1,4 +1,5 @@
 RESULT pass broken_config Sequence complete
+RESULT pass continuous_scan Sequence complete
 RESULT pass extra_config Sequence complete
 RESULT pass self_enumeration Sequence complete
 RESULT skip single_scan No discovery families configured
