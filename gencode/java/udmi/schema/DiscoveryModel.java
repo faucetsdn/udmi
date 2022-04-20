@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,30 +8,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Localnet Metadata
+ * Discovery Model
  * <p>
- * Used to describe device local network parameters
+ * Discovery target parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "families"
+    "discovery"
 })
 @Generated("jsonschema2pojo")
-public class LocalnetMetadata {
+public class DiscoveryModel {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("families")
-    public HashMap<String, FamilyLocalnetMetadata> families;
+    @JsonProperty("discovery")
+    public Discovery discovery;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         return result;
     }
 
@@ -41,11 +35,11 @@ public class LocalnetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof LocalnetMetadata) == false) {
+        if ((other instanceof DiscoveryModel) == false) {
             return false;
         }
-        LocalnetMetadata rhs = ((LocalnetMetadata) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        DiscoveryModel rhs = ((DiscoveryModel) other);
+        return ((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery)));
     }
 
 }

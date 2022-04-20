@@ -13,19 +13,6 @@
           "$ref": "file:model_testing_target.json#"
         }
       }
-    },
-    "discovery": {
-      "additionalProperties": false,
-      "properties": {
-        "families": {
-          "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryTestingModel>",
-          "patternProperties": {
-            "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-              "$ref": "file:model_testing_discovery_family.json#"
-            }
-          }
-        }
-      }
     }
   }
 }

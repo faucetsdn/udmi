@@ -633,6 +633,7 @@ public class Pubber {
     }
     if (deviceState.discovery.enumeration == null) {
       deviceState.discovery.enumeration = new FamilyDiscoveryState();
+      deviceState.discovery.enumeration.generation = DEVICE_START_TIME;
     }
     Date enumerationGeneration = enumeration.generation;
     if (enumerationGeneration == null

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Gateway Metadata
+ * Gateway Model
  * <p>
  * [Gateway Documentation](../docs/specs/gateway.md)
  * 
@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "proxy_ids"
 })
 @Generated("jsonschema2pojo")
-public class GatewayMetadata {
+public class GatewayModel {
 
     /**
      * The device ID of the gateway the device is bound to
@@ -61,10 +61,10 @@ public class GatewayMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof GatewayMetadata) == false) {
+        if ((other instanceof GatewayModel) == false) {
             return false;
         }
-        GatewayMetadata rhs = ((GatewayMetadata) other);
+        GatewayModel rhs = ((GatewayModel) other);
         return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))));
     }
 

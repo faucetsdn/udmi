@@ -1,17 +1,18 @@
-"""Generated class for model_testing_discovery_family.json"""
+"""Generated class for model_discovery.json"""
 
 
-class FamilyDiscoveryTestingModel:
+class DiscoveryModel:
   """Generated schema class"""
 
   def __init__(self):
-    pass
+    self.discovery = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryTestingModel()
+    result = DiscoveryModel()
+    result.discovery = source.get('discovery')
     return result
 
   @staticmethod
@@ -20,7 +21,7 @@ class FamilyDiscoveryTestingModel:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryTestingModel.from_dict(source[key])
+      result[key] = DiscoveryModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -32,4 +33,6 @@ class FamilyDiscoveryTestingModel:
 
   def to_dict(self):
     result = {}
+    if self.discovery:
+      result['discovery'] = self.discovery # 5
     return result

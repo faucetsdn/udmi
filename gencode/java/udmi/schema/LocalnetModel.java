@@ -1,39 +1,38 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Localnet Metadata
+ * Localnet Model
  * <p>
- * The type of network
+ * Used to describe device local network parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id"
+    "families"
 })
 @Generated("jsonschema2pojo")
-public class FamilyLocalnetMetadata {
+public class LocalnetModel {
 
     /**
-     * The address of a device on the local network
+     * 
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    @JsonPropertyDescription("The address of a device on the local network")
-    public String id;
+    @JsonProperty("families")
+    public HashMap<String, FamilyLocalnetModel> families;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
 
@@ -42,11 +41,11 @@ public class FamilyLocalnetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyLocalnetMetadata) == false) {
+        if ((other instanceof LocalnetModel) == false) {
             return false;
         }
-        FamilyLocalnetMetadata rhs = ((FamilyLocalnetMetadata) other);
-        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
+        LocalnetModel rhs = ((LocalnetModel) other);
+        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
     }
 
 }

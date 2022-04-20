@@ -1,19 +1,17 @@
-"""Generated class for model_testing.json"""
-from .model_testing_target import TargetTestingModel
+"""Generated class for model_discovery_family.json"""
 
 
-class TestingModel:
+class FamilyDiscoveryTestingModel:
   """Generated schema class"""
 
   def __init__(self):
-    self.targets = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = TestingModel()
-    result.targets = TargetTestingModel.map_from(source.get('targets'))
+    result = FamilyDiscoveryTestingModel()
     return result
 
   @staticmethod
@@ -22,7 +20,7 @@ class TestingModel:
       return None
     result = {}
     for key in source:
-      result[key] = TestingModel.from_dict(source[key])
+      result[key] = FamilyDiscoveryTestingModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -34,6 +32,4 @@ class TestingModel:
 
   def to_dict(self):
     result = {}
-    if self.targets:
-      result['targets'] = TargetTestingModel.expand_dict(self.targets) # 2
     return result

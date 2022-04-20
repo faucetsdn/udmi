@@ -1,7 +1,7 @@
 """Generated class for model_cloud.json"""
 
 
-class CloudMetadata:
+class CloudModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class CloudMetadata:
   def from_dict(source):
     if not source:
       return None
-    result = CloudMetadata()
+    result = CloudModel()
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
     result.is_gateway = source.get('is_gateway')
@@ -25,7 +25,7 @@ class CloudMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = CloudMetadata.from_dict(source[key])
+      result[key] = CloudModel.from_dict(source[key])
     return result
 
   @staticmethod
