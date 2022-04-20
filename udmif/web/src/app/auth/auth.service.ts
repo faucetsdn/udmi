@@ -18,17 +18,14 @@ export class AuthService {
     });
   }
 
-  loginWithGoogle(): void {
-    this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID).then(() => {
-      // TODO:: try option {ux_mode: 'redirect'}
-      this.router.navigateByUrl('/devices');
-    });
+  async loginWithGoogle(): Promise<void> {
+    await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID); // TODO:: try option {ux_mode: 'redirect'}
+    this.router.navigateByUrl('/devices');
   }
 
-  logout(): void {
-    this.socialAuthService.signOut().then(() => {
-      this.router.navigateByUrl('/login');
-      this.apollo.client.clearStore(); // clear apollo cache
-    });
+  async logout(): Promise<void> {
+    await this.socialAuthService.signOut();
+    this.router.navigateByUrl('/login');
+    this.apollo.client.clearStore(); // clear apollo cache
   }
 }
