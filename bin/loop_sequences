@@ -63,8 +63,8 @@ for test_name in $test_names; do
     target=$test_class$test_prefix$test_name
     CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
-    timeout 5m $JAVA_CMD $CLASS
-    result=$?
+    result=0
+    timeout 5m $JAVA_CMD $CLASS || result=$?
 
     if [[ $result == 2 ]]; then
         echo Sequence test $target found no matching tests.
@@ -72,7 +72,7 @@ for test_name in $test_names; do
         echo Sequence test $target exited with error code $result.
         exit_code=$result
     elif [[ $exit_code == 2 ]]; then
-        exit_code=0;
+        exit_code=0
     fi
   done
 done
