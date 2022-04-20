@@ -63,7 +63,7 @@ import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 
 class LocalDevice {
@@ -565,7 +565,7 @@ class LocalDevice {
     return pointsetConfig;
   }
 
-  PointPointsetConfig configFromMetadata(PointPointsetMetadata metadata) {
+  PointPointsetConfig configFromMetadata(PointPointsetModel metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
     pointConfig.ref = metadata.ref;
     if (Boolean.TRUE.equals(metadata.writable)) {

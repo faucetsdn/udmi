@@ -1,18 +1,19 @@
 """Generated class for model_discovery.json"""
+from .model_discovery_family import FamilyDiscoveryTestingModel
 
 
 class DiscoveryModel:
   """Generated schema class"""
 
   def __init__(self):
-    self.discovery = None
+    self.families = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = DiscoveryModel()
-    result.discovery = source.get('discovery')
+    result.families = FamilyDiscoveryTestingModel.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -33,6 +34,6 @@ class DiscoveryModel:
 
   def to_dict(self):
     result = {}
-    if self.discovery:
-      result['discovery'] = self.discovery # 5
+    if self.families:
+      result['families'] = FamilyDiscoveryTestingModel.expand_dict(self.families) # 2
     return result

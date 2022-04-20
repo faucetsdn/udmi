@@ -59,7 +59,7 @@ public class DiscoveryValidator extends SequenceValidator {
 
   @Test
   public void single_scan() {
-    Set<String> families = catchToNull(() -> deviceMetadata.testing.discovery.families.keySet());
+    Set<String> families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (families == null || families.isEmpty()) {
       throw new SkipTest("No discovery families configured");
     }

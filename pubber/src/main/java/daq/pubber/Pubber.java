@@ -47,7 +47,7 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -100,10 +100,10 @@ public class Pubber {
       Level.WARNING, LOG::warn,
       Level.ERROR, LOG::error
   );
-  private static final Map<String, PointPointsetMetadata> DEFAULT_POINTS = ImmutableMap.of(
-      "recalcitrant_angle", makePointPointsetMetadata(true, 50, 50, "Celsius"),
-      "faulty_finding", makePointPointsetMetadata(true, 40, 0, "deg"),
-      "superimposition_reading", makePointPointsetMetadata(false)
+  private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
+      "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
+      "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
+      "superimposition_reading", makePointPointsetModel(false)
   );
   private static final long VERY_LONG_TIME_SEC = 1234567890;
   private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
@@ -161,9 +161,9 @@ public class Pubber {
     }
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadata(boolean writable, int value,
+  private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
       double tolerance, String units) {
-    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+    PointPointsetModel pointMetadata = new PointPointsetModel();
     pointMetadata.writable = writable;
     pointMetadata.baseline_value = value;
     pointMetadata.baseline_tolerance = tolerance;
@@ -171,8 +171,8 @@ public class Pubber {
     return pointMetadata;
   }
 
-  private static PointPointsetMetadata makePointPointsetMetadata(boolean writable) {
-    PointPointsetMetadata pointMetadata = new PointPointsetMetadata();
+  private static PointPointsetModel makePointPointsetModel(boolean writable) {
+    PointPointsetModel pointMetadata = new PointPointsetModel();
     return pointMetadata;
   }
 
@@ -264,12 +264,12 @@ public class Pubber {
       info("Configuring with key type " + configuration.algorithm);
     }
 
-    Map<String, PointPointsetMetadata> points =
+    Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
-  private AbstractPoint makePoint(String name, PointPointsetMetadata point) {
+  private AbstractPoint makePoint(String name, PointPointsetModel point) {
     boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
       return new RandomBoolean(name, writable);
