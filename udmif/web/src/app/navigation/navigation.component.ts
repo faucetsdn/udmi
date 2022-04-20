@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { map, Observable, of, take } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -7,14 +8,15 @@ import { AuthService } from '../auth/auth.service';
   styleUrls: ['./navigation.component.scss'],
 })
 export class NavigationComponent {
-  constructor(private authService: AuthService) {}
+  displayName: Observable<string | undefined> = of();
+  isLoggedIn: Observable<boolean | null> = of(null);
 
-  get displayName(): string | undefined {
-    return this.authService.user?.name;
-  }
-
-  get isLoggedin(): boolean | undefined {
-    return this.authService.isLoggedin;
+  constructor(private authService: AuthService) {
+    this.isLoggedIn = this.authService.isLoggedIn$;
+    this.displayName = this.authService.user$.pipe(
+      map((user) => user?.name),
+      take(1)
+    );
   }
 
   logout(): void {
