@@ -51,6 +51,7 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 rm -rf $site_model/out/devices/$device_id
 
 test_srces=`cd validator/src/main/java/com/google/daq/mqtt/validator/validations; ls *.java`
+echo Processing test sources $test_srces
 
 exit_code=2
 for test_name in $test_names; do
