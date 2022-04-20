@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import udmi.schema.Entry;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
@@ -126,6 +128,7 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
+  private Map<String, Metadata> allMetadata;
 
   /**
    * Start an instance from a configuration file.
@@ -243,15 +246,26 @@ public class Pubber {
     }
   }
 
-  private void loadDeviceMetadata() {
+  private Set<String> getAllDevices() {
     Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
-    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
     File devicesFile = new File(new File(configuration.sitePath), "devices");
-    File deviceDir = new File(devicesFile, configuration.deviceId);
+    File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
+    return Arrays.stream(files).map(File::getName).collect(Collectors.toSet());
+  }
+
+  private void loadDeviceMetadata() {
+    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
+    allMetadata = getAllDevices().stream().collect(Collectors.toMap(deviceId -> deviceId, deviceId -> getDeviceMetadata(deviceId)));
+    processDeviceMetadata(allMetadata.get(configuration.deviceId));
+  }
+
+  private Metadata getDeviceMetadata(String deviceId) {
+    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
+    File devicesFile = new File(new File(configuration.sitePath), "devices");
+    File deviceDir = new File(devicesFile, deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
-      Metadata metadata = OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-      processDeviceMetadata(metadata);
+      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
@@ -743,15 +757,39 @@ public class Pubber {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
-      info("Sending discovery event " + family + " for " + scanGeneration);
-      DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-      discoveryEvent.timestamp = new Date();
-      discoveryEvent.version = UDMI_VERSION;
-      discoveryEvent.families = new HashMap<>();
-      FamilyDiscoveryEvent familyDiscoveryEvent = discoveryEvent.families.computeIfAbsent(family,
-          key -> new FamilyDiscoveryEvent());
-      familyDiscoveryEvent.id = DISCOVERY_ID;
-      publishDeviceMessage(discoveryEvent);
+      AtomicInteger events = new AtomicInteger();
+      allMetadata.entrySet().forEach(entry -> {
+        Metadata targetMetadata = entry.getValue();
+        FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
+        if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
+          String familyId = familyLocalnetModel.id;
+          DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+          discoveryEvent.timestamp = new Date();
+          discoveryEvent.version = UDMI_VERSION;
+          discoveryEvent.scan_family = family;
+          discoveryEvent.scan_id = familyId;
+          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream().collect(Collectors.toMap(
+              Map.Entry::getKey, this::eventForTarget));
+          discoveryEvent.families.computeIfAbsent("iot", key -> new FamilyDiscoveryEvent()).id = entry.getKey();
+          publishDeviceMessage(discoveryEvent);
+          events.incrementAndGet();
+        }
+      });
+      info("Sent " + events.get() + " discovery events from " + family + " for " + scanGeneration);
+    }
+  }
+
+  private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
+    FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
+    event.id = target.getValue().id;
+    return event;
+  }
+
+  private FamilyLocalnetModel getFamilyLocalnetModel(String family, Metadata targetMetadata) {
+    try {
+      return targetMetadata.localnet.families.get(family);
+    } catch (Exception e) {
+      return null;
     }
   }
 
