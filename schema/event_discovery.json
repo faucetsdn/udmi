@@ -25,9 +25,7 @@
       "$ref": "file:common.json#/definitions/entry"
     },
     "scan_family": {
-      "type": "string"
-    },
-    "scan_id": {
+      "description": "The primary scan discovery address family",
       "type": "string"
     },
     "families": {

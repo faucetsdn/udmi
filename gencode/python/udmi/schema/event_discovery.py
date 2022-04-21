@@ -13,7 +13,6 @@ class DiscoveryEvent:
     self.generation = None
     self.status = None
     self.scan_family = None
-    self.scan_id = None
     self.families = None
     self.points = None
 
@@ -27,7 +26,6 @@ class DiscoveryEvent:
     result.generation = source.get('generation')
     result.status = Entry.from_dict(source.get('status'))
     result.scan_family = source.get('scan_family')
-    result.scan_id = source.get('scan_id')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.points = PointEnumerationEvent.map_from(source.get('points'))
     return result
@@ -60,8 +58,6 @@ class DiscoveryEvent:
       result['status'] = self.status.to_dict() # 4
     if self.scan_family:
       result['scan_family'] = self.scan_family # 5
-    if self.scan_id:
-      result['scan_id'] = self.scan_id # 5
     if self.families:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
     if self.points:

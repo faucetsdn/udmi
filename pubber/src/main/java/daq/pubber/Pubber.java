@@ -779,12 +779,10 @@ public class Pubber {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           final String deviceId = entry.getKey();
-          final String familyId = familyLocalnetModel.id;
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.timestamp = new Date();
           discoveryEvent.version = UDMI_VERSION;
           discoveryEvent.scan_family = family;
-          discoveryEvent.scan_id = familyId;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
