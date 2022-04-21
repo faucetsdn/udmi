@@ -54,7 +54,6 @@ public class DiscoveryValidator extends SequenceValidator {
     DiscoveryEvent discoveryEvent = events.get(0);
     info("Received discovery generation " + getTimestamp(discoveryEvent.generation));
     assertEquals("matching event generation", startTime, discoveryEvent.generation);
-    discoveryEvent.points.values().forEach(point -> System.err.println(toJsonString(point)));
     int discoveredPoints = discoveryEvent.points == null ? 0 : discoveryEvent.points.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
         discoveredPoints);
@@ -83,7 +82,7 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
-    assertTrue("enumerated points", receivedEvents.stream()
+    assertTrue("no enumerated points", receivedEvents.stream()
         .noneMatch(event -> event.points != null && !event.points.isEmpty()));
     Set<String> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
@@ -103,7 +102,7 @@ public class DiscoveryValidator extends SequenceValidator {
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("enumerated points",
+    assertTrue("has enumerated points",
         receivedEvents.stream().allMatch(event -> event.points != null && !event.points.isEmpty()));
     assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
         receivedEvents.size());
@@ -111,12 +110,6 @@ public class DiscoveryValidator extends SequenceValidator {
 
   private void initializeDiscovery() {
     families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
-    try {
-      System.err.println(
-          "TAP device metadata: " + OBJECT_MAPPER.writeValueAsString(deviceMetadata));
-    } catch (Exception e) {
-      throw new RuntimeException("While writing device metadata", e);
-    }
     if (families == null || families.isEmpty()) {
       throw new SkipTest("No discovery families configured");
     }
