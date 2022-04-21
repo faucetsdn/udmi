@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,9 +67,9 @@ import udmi.schema.SystemState;
  */
 public class Pubber {
 
-  public static final String UDMI_VERSION = "1.3.14";
   public static final int SCAN_DURATION_SEC = 10;
   public static final String DISCOVERY_ID = "RANDOM_ID";
+  private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -779,8 +780,7 @@ public class Pubber {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-          discoveryEvent.timestamp = new Date();
-          discoveryEvent.version = UDMI_VERSION;
+          discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
@@ -917,11 +917,8 @@ public class Pubber {
   }
 
   private void sendDeviceMessage() {
-    devicePoints.version = UDMI_VERSION;
-    devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
-          deviceMessageCount));
+      info(String.format("%s sending test message #%d", getTimestamp(), deviceMessageCount));
     }
     publishDeviceMessage(devicePoints);
   }
@@ -937,8 +934,6 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     SystemEvent systemEvent = new SystemEvent();
-    systemEvent.version = UDMI_VERSION;
-    systemEvent.timestamp = new Date();
     systemEvent.logentries.add(report);
     publishDeviceMessage(systemEvent);
   }
@@ -974,6 +969,7 @@ public class Pubber {
       error("Unknown message class " + message.getClass());
       return;
     }
+    augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topic, message);
 
     String fileName = topic.replace("/", "_") + ".json";
@@ -982,6 +978,19 @@ public class Pubber {
       OBJECT_MAPPER.writeValue(stateOut, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+    }
+  }
+
+  private void augmentDeviceMessage(Object message) {
+    try {
+      Field version = message.getClass().getField("version");
+      assert version.get(message) == null;
+      version.set(message, UDMI_VERSION);
+      Field timestamp = message.getClass().getField("timestamp");
+      assert timestamp.get(message) == null;
+      timestamp.set(message, new Date());
+    } catch (Exception e) {
+      throw new RuntimeException("While augmenting device message", e);
     }
   }
 

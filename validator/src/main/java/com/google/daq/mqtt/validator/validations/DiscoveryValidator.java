@@ -64,7 +64,8 @@ public class DiscoveryValidator extends SequenceValidator {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
         Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
-    scheduleScan(startTime, null, false);
+    boolean shouldEnumerate = true;
+    scheduleScan(startTime, null, shouldEnumerate);
     untilTrue("scheduled scan start",
         () -> families.stream().anyMatch(familyScanActivated(startTime))
             || families.stream()
@@ -82,19 +83,29 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
-    assertTrue("no enumerated points", receivedEvents.stream()
-        .noneMatch(event -> event.points != null && !event.points.isEmpty()));
+    checkEnumeration(receivedEvents, shouldEnumerate);
     Set<String> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
     assertTrue("all requested families present", eventFamilies.containsAll(families));
   }
 
+  private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
+    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null
+        && !event.points.isEmpty();
+    if (shouldEnumerate) {
+      assertTrue("with enumeration", receivedEvents.stream().allMatch(hasPoints));
+    } else {
+      assertTrue("sans enumeration", receivedEvents.stream().noneMatch(hasPoints));
+    }
+  }
+
   @Test
-  public void continuous_scan() {
+  public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
-    scheduleScan(startTime, SCAN_START_DELAY_SEC, true);
+    boolean shouldEnumerate = true;
+    scheduleScan(startTime, SCAN_START_DELAY_SEC, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     String oneFamily = families.iterator().next();
@@ -102,8 +113,7 @@ public class DiscoveryValidator extends SequenceValidator {
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("has enumerated points",
-        receivedEvents.stream().allMatch(event -> event.points != null && !event.points.isEmpty()));
+    checkEnumeration(receivedEvents, shouldEnumerate);
     assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
         receivedEvents.size());
   }
