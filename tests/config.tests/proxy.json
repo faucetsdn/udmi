@@ -5,9 +5,9 @@
     "min_loglevel": 500
   },
   "localnet": {
-    "subsystem": {
+    "families": {
       "bacnet": {
-        "local_id": "0x78ce1900"
+        "id": "78ce19"
       }
     }
   },

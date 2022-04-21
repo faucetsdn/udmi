@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import udmi.schema.PointEnumerationEvent;
+
 /**
  * Represents a randomly generated numerical point.
  */
@@ -8,6 +10,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   private final String name;
   private final double min;
   private final double max;
+  private final String units;
 
   /**
    * Creates a random point generator for data simulation.
@@ -23,6 +26,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
     this.name = name;
     this.min = min;
     this.max = max;
+    this.units = units;
   }
 
   @Override
@@ -41,5 +45,10 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
       return value >= min && value <= max;
     }
     return false;
+  }
+
+  @Override
+  protected void populateEnumeration(PointEnumerationEvent point) {
+    point.units = units;
   }
 }

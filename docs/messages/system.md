@@ -21,6 +21,6 @@ Primarily used for things like logging, general status, firmware management, etc
 
 ## Metadata
 
-- **Schema Definition:** [metadata_system.json](../../schema/metadata_system.json)
+- **Schema Definition:** [model_system.json](../../schema/model_system.json)
  ([_🧬View_](../../gencode/docs/metadata.html#system))
 - [Working `metadata` Example](../../tests/metadata.tests/example.json)

@@ -10,6 +10,7 @@
     },
     "families": {
       "description": "Address family results for a scan. Not included for device enumeration messages.",
+      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {

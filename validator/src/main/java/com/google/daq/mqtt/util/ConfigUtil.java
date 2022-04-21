@@ -1,11 +1,14 @@
 package com.google.daq.mqtt.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -14,8 +17,11 @@ public class ConfigUtil {
 
   public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   public static final String EXCEPTIONS_JSON = "exceptions.json";
+  public static final String UDMI_VERSION = "1.3.14";
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+      .setDateFormat(new ISO8601DateFormat());
 
   public static CloudIotConfig readCloudIotConfig(File configFile) {
     try {
@@ -60,6 +66,15 @@ public class ConfigUtil {
     }
   }
 
+  public static String getTimestamp() {
+    try {
+      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
+      return dateString.substring(1, dateString.length() - 1);
+    } catch (Exception e) {
+      throw new RuntimeException("Creating timestamp", e);
+    }
+  }
+
   public static class AllDeviceExceptions extends HashMap<String, DeviceExceptions> {
 
   }
@@ -68,4 +83,5 @@ public class ConfigUtil {
 
     public List<Pattern> patterns = new ArrayList<>();
   }
+
 }

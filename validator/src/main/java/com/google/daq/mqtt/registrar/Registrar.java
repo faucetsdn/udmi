@@ -25,6 +25,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -74,6 +75,7 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
+  private static final String SITE_METADATA_JSON = "site_metadata.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
   private static final int RUNNER_THREADS = 25;
@@ -93,6 +95,7 @@ public class Registrar {
   private boolean updateCloudIoT;
   private Duration idleLimit;
   private Set<String> cloudDevices;
+  private Metadata siteMetadata;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -103,6 +106,8 @@ public class Registrar {
       if (registrar.schemaBase == null) {
         registrar.setToolRoot(null);
       }
+
+      registrar.loadSiteMetadata();
 
       if (processAllDevices) {
         registrar.processDevices();
@@ -618,7 +623,8 @@ public class Registrar {
         LocalDevice localDevice =
             localDevices.computeIfAbsent(
                 deviceName,
-                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation));
+                keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
+                    siteMetadata));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -673,6 +679,30 @@ public class Registrar {
       schemas.put(key, schema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void loadSiteMetadata() {
+    this.siteMetadata = null;
+
+    if (!schemas.containsKey(METADATA_JSON)) {
+      return;
+    }
+
+    File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
+    try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
+      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+    } catch (FileNotFoundException e) {
+      return;
+    } catch (Exception e) {
+      throw new RuntimeException("While validating " + SITE_METADATA_JSON, e);
+    }
+
+    try {
+      System.err.printf("Loading " + SITE_METADATA_JSON + "\n");
+      this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
     }
   }
 
