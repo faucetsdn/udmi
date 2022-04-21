@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Cloud Metadata
+ * Cloud Model
  * <p>
  * Information specific to how the device communicates with the cloud.
  * 
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "is_gateway"
 })
 @Generated("jsonschema2pojo")
-public class CloudMetadata {
+public class CloudModel {
 
     /**
      * The key type used for cloud communication.
@@ -34,7 +34,7 @@ public class CloudMetadata {
      */
     @JsonProperty("auth_type")
     @JsonPropertyDescription("The key type used for cloud communication.")
-    public CloudMetadata.Auth_type auth_type;
+    public CloudModel.Auth_type auth_type;
     /**
      * Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway
      * 
@@ -64,10 +64,10 @@ public class CloudMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof CloudMetadata) == false) {
+        if ((other instanceof CloudModel) == false) {
             return false;
         }
-        CloudMetadata rhs = ((CloudMetadata) other);
+        CloudModel rhs = ((CloudModel) other);
         return ((((this.is_gateway == rhs.is_gateway)||((this.is_gateway!= null)&&this.is_gateway.equals(rhs.is_gateway)))&&((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type))))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))));
     }
 
@@ -84,10 +84,10 @@ public class CloudMetadata {
         RS_256("RS256"),
         RS_256_X_509("RS256_X509");
         private final String value;
-        private final static Map<String, CloudMetadata.Auth_type> CONSTANTS = new HashMap<String, CloudMetadata.Auth_type>();
+        private final static Map<String, CloudModel.Auth_type> CONSTANTS = new HashMap<String, CloudModel.Auth_type>();
 
         static {
-            for (CloudMetadata.Auth_type c: values()) {
+            for (CloudModel.Auth_type c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
@@ -107,8 +107,8 @@ public class CloudMetadata {
         }
 
         @JsonCreator
-        public static CloudMetadata.Auth_type fromValue(String value) {
-            CloudMetadata.Auth_type constant = CONSTANTS.get(value);
+        public static CloudModel.Auth_type fromValue(String value) {
+            CloudModel.Auth_type constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

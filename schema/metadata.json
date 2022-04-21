@@ -11,7 +11,7 @@
   ],
   "properties": {
     "timestamp": {
-      "description": "RFC 3339 timestamp the metadata was generated",
+      "description": "RFC 3339 timestamp the message was generated",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
@@ -37,6 +37,9 @@
     },
     "gateway": {
       "$ref": "file:model_gateway.json#"
+    },
+    "discovery": {
+      "$ref": "file:model_discovery.json#"
     },
     "localnet": {
       "$ref": "file:model_localnet.json#"

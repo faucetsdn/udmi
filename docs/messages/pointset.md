@@ -25,8 +25,7 @@ Pointset is represented in four locations
 The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
 expected points that a device holds, along with, if the field is numeric, the expected units of those points.
-The general structure of a `pointset` block exists inside of a complete
-metadata message
+The general structure of a `pointset` block exists inside of a complete metadata message
 
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.

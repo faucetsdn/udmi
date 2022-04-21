@@ -1,7 +1,5 @@
-"""Generated class for event_discovery.json"""
+"""Generated class for event_mapping.json"""
 from .common import Entry
-from .event_discovery_family import FamilyDiscoveryEvent
-from .event_discovery_point import PointEnumerationEvent
 
 
 class DiscoveryEvent:
@@ -10,11 +8,7 @@ class DiscoveryEvent:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.generation = None
     self.status = None
-    self.scan_family = None
-    self.families = None
-    self.points = None
 
   @staticmethod
   def from_dict(source):
@@ -23,11 +17,7 @@ class DiscoveryEvent:
     result = DiscoveryEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.generation = source.get('generation')
     result.status = Entry.from_dict(source.get('status'))
-    result.scan_family = source.get('scan_family')
-    result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
-    result.points = PointEnumerationEvent.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -52,14 +42,6 @@ class DiscoveryEvent:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.generation:
-      result['generation'] = self.generation # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.scan_family:
-      result['scan_family'] = self.scan_family # 5
-    if self.families:
-      result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
-    if self.points:
-      result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
     return result

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Pointset Metadata
+ * Pointset Model
  * <p>
  * Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
  * 
@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "points"
 })
 @Generated("jsonschema2pojo")
-public class PointsetMetadata {
+public class PointsetModel {
 
     /**
      * Information about a specific point name of the device.
@@ -29,7 +29,7 @@ public class PointsetMetadata {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
-    public HashMap<String, PointPointsetMetadata> points;
+    public HashMap<String, PointPointsetModel> points;
 
     @Override
     public int hashCode() {
@@ -43,10 +43,10 @@ public class PointsetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointsetMetadata) == false) {
+        if ((other instanceof PointsetModel) == false) {
             return false;
         }
-        PointsetMetadata rhs = ((PointsetMetadata) other);
+        PointsetModel rhs = ((PointsetModel) other);
         return ((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points)));
     }
 

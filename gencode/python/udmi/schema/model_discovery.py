@@ -1,8 +1,8 @@
-"""Generated class for model_localnet.json"""
-from .model_localnet_family import FamilyLocalnetModel
+"""Generated class for model_discovery.json"""
+from .model_discovery_family import FamilyDiscoveryTestingModel
 
 
-class LocalnetModel:
+class DiscoveryModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,8 +12,8 @@ class LocalnetModel:
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetModel()
-    result.families = FamilyLocalnetModel.map_from(source.get('families'))
+    result = DiscoveryModel()
+    result.families = FamilyDiscoveryTestingModel.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -22,7 +22,7 @@ class LocalnetModel:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetModel.from_dict(source[key])
+      result[key] = DiscoveryModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,5 +35,5 @@ class LocalnetModel:
   def to_dict(self):
     result = {}
     if self.families:
-      result['families'] = FamilyLocalnetModel.expand_dict(self.families) # 2
+      result['families'] = FamilyDiscoveryTestingModel.expand_dict(self.families) # 2
     return result

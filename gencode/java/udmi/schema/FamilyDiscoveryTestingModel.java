@@ -7,7 +7,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Address family results for a scan. Not included for device enumeration messages.
+ * Family Discovery Testing Model
+ * <p>
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -15,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 })
 @Generated("jsonschema2pojo")
-public class Families {
+public class FamilyDiscoveryTestingModel {
 
 
     @Override
@@ -29,10 +31,10 @@ public class Families {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Families) == false) {
+        if ((other instanceof FamilyDiscoveryTestingModel) == false) {
             return false;
         }
-        Families rhs = ((Families) other);
+        FamilyDiscoveryTestingModel rhs = ((FamilyDiscoveryTestingModel) other);
         return true;
     }
 

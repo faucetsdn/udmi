@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Point Pointset Metadata
+ * Point Pointset Model
  * <p>
  * Information about a specific point name of the device.
  * 
@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "sample_rate_sec"
 })
 @Generated("jsonschema2pojo")
-public class PointPointsetMetadata {
+public class PointPointsetModel {
 
     /**
      * Expected unit configuration for the point
@@ -68,7 +68,7 @@ public class PointPointsetMetadata {
      */
     @JsonProperty("baseline_state")
     @JsonPropertyDescription("Expected state when `baseline_value` is set as the `set_value` for this point the config message")
-    public PointPointsetMetadata.Baseline_state baseline_state;
+    public PointPointsetModel.Baseline_state baseline_state;
     /**
      * Triggering threshold for partial cov update publishing
      * 
@@ -126,10 +126,10 @@ public class PointPointsetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointPointsetMetadata) == false) {
+        if ((other instanceof PointPointsetModel) == false) {
             return false;
         }
-        PointPointsetMetadata rhs = ((PointPointsetMetadata) other);
+        PointPointsetModel rhs = ((PointPointsetModel) other);
         return (((((((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))));
     }
 
@@ -147,10 +147,10 @@ public class PointPointsetMetadata {
         INVALID("invalid"),
         FAILURE("failure");
         private final String value;
-        private final static Map<String, PointPointsetMetadata.Baseline_state> CONSTANTS = new HashMap<String, PointPointsetMetadata.Baseline_state>();
+        private final static Map<String, PointPointsetModel.Baseline_state> CONSTANTS = new HashMap<String, PointPointsetModel.Baseline_state>();
 
         static {
-            for (PointPointsetMetadata.Baseline_state c: values()) {
+            for (PointPointsetModel.Baseline_state c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
@@ -170,8 +170,8 @@ public class PointPointsetMetadata {
         }
 
         @JsonCreator
-        public static PointPointsetMetadata.Baseline_state fromValue(String value) {
-            PointPointsetMetadata.Baseline_state constant = CONSTANTS.get(value);
+        public static PointPointsetModel.Baseline_state fromValue(String value) {
+            PointPointsetModel.Baseline_state constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

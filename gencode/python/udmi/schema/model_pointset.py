@@ -1,8 +1,8 @@
 """Generated class for model_pointset.json"""
-from .model_pointset_point import PointPointsetMetadata
+from .model_pointset_point import PointPointsetModel
 
 
-class PointsetMetadata:
+class PointsetModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,8 +12,8 @@ class PointsetMetadata:
   def from_dict(source):
     if not source:
       return None
-    result = PointsetMetadata()
-    result.points = PointPointsetMetadata.map_from(source.get('points'))
+    result = PointsetModel()
+    result.points = PointPointsetModel.map_from(source.get('points'))
     return result
 
   @staticmethod
@@ -22,7 +22,7 @@ class PointsetMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = PointsetMetadata.from_dict(source[key])
+      result[key] = PointsetModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,5 +35,5 @@ class PointsetMetadata:
   def to_dict(self):
     result = {}
     if self.points:
-      result['points'] = PointPointsetMetadata.expand_dict(self.points) # 2
+      result['points'] = PointPointsetModel.expand_dict(self.points) # 2
     return result

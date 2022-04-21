@@ -24,11 +24,15 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
+    "scan_family": {
+      "description": "The primary scan discovery address family",
+      "type": "string"
+    },
     "families": {
       "description": "Address family results for a scan. Not included for device enumeration messages.",
       "type": "object",
       "additionalProperties": false,
-      "$explanation": "The json schema validator used doesn't support propertyNames, so use a regex instead.",
+      "existingJavaType": "java.util.Map<String, FamilyDiscoveryEvent>",
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {
           "$ref": "file:event_discovery_family.json"
@@ -42,16 +46,6 @@
       "patternProperties": {
         "^[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$": {
           "$ref": "file:event_discovery_point.json#"
-        }
-      }
-    },
-    "blobs": {
-      "description": "Collection of data blobs recognized by this device.",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, BlobEnumerationEvent>",
-      "patternProperties": {
-        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:event_discovery_blob.json#"
         }
       }
     }

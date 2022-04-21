@@ -1,7 +1,7 @@
 """Generated class for model_gateway.json"""
 
 
-class GatewayMetadata:
+class GatewayModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class GatewayMetadata:
   def from_dict(source):
     if not source:
       return None
-    result = GatewayMetadata()
+    result = GatewayModel()
     result.gateway_id = source.get('gateway_id')
     result.family = source.get('family')
     result.proxy_ids = source.get('proxy_ids')
@@ -25,7 +25,7 @@ class GatewayMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = GatewayMetadata.from_dict(source[key])
+      result[key] = GatewayModel.from_dict(source[key])
     return result
 
   @staticmethod

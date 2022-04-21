@@ -1,20 +1,20 @@
-"""Generated class for event_discovery_blob.json"""
+"""Generated class for command_discovery.json"""
 
 
-class BlobEnumerationEvent:
+class DiscoveryCommand:
   """Generated schema class"""
 
   def __init__(self):
-    self.description = None
-    self.firmware_set = None
+    self.timestamp = None
+    self.version = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = BlobEnumerationEvent()
-    result.description = source.get('description')
-    result.firmware_set = source.get('firmware_set')
+    result = DiscoveryCommand()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     return result
 
   @staticmethod
@@ -23,7 +23,7 @@ class BlobEnumerationEvent:
       return None
     result = {}
     for key in source:
-      result[key] = BlobEnumerationEvent.from_dict(source[key])
+      result[key] = DiscoveryCommand.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,8 +35,8 @@ class BlobEnumerationEvent:
 
   def to_dict(self):
     result = {}
-    if self.description:
-      result['description'] = self.description # 5
-    if self.firmware_set:
-      result['firmware_set'] = self.firmware_set # 5
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     return result

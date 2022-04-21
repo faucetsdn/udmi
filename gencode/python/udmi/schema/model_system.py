@@ -210,7 +210,7 @@ class ObjectCA9644FB:
     return result
 
 
-class SystemMetadata:
+class SystemModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -222,7 +222,7 @@ class SystemMetadata:
   def from_dict(source):
     if not source:
       return None
-    result = SystemMetadata()
+    result = SystemModel()
     result.location = Object683EF6A1.from_dict(source.get('location'))
     result.physical_tag = Object45E20BB3.from_dict(source.get('physical_tag'))
     result.aux = ObjectCA9644FB.from_dict(source.get('aux'))
@@ -234,7 +234,7 @@ class SystemMetadata:
       return None
     result = {}
     for key in source:
-      result[key] = SystemMetadata.from_dict(source[key])
+      result[key] = SystemModel.from_dict(source[key])
     return result
 
   @staticmethod

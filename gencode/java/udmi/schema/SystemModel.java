@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * System Metadata
+ * System Model
  * <p>
- * High-level system information about the device. [System Metadata Documentation](../docs/messages/system.md)
+ * High-level system information about the device. [System Model Documentation](../docs/messages/system.md)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "aux"
 })
 @Generated("jsonschema2pojo")
-public class SystemMetadata {
+public class SystemModel {
 
     /**
      * Properties the expected physical location of the device.
@@ -56,10 +56,10 @@ public class SystemMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SystemMetadata) == false) {
+        if ((other instanceof SystemModel) == false) {
             return false;
         }
-        SystemMetadata rhs = ((SystemMetadata) other);
+        SystemModel rhs = ((SystemModel) other);
         return ((((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location)))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))));
     }
 

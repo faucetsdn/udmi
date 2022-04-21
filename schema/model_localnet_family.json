@@ -1,5 +1,5 @@
 {
-  "title": "Family Localnet Metadata",
+  "title": "Family Localnet Model",
   "type": "object",
   "description": "The type of network",
   "examples": ["bacnet", "modbus"],

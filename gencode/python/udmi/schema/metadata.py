@@ -1,10 +1,11 @@
 """Generated class for metadata.json"""
-from .model_cloud import CloudMetadata
-from .model_system import SystemMetadata
-from .model_gateway import GatewayMetadata
-from .model_localnet import LocalnetMetadata
+from .model_cloud import CloudModel
+from .model_system import SystemModel
+from .model_gateway import GatewayModel
+from .model_discovery import DiscoveryModel
+from .model_localnet import LocalnetModel
 from .model_testing import TestingModel
-from .model_pointset import PointsetMetadata
+from .model_pointset import PointsetModel
 
 
 class Metadata:
@@ -18,6 +19,7 @@ class Metadata:
     self.cloud = None
     self.system = None
     self.gateway = None
+    self.discovery = None
     self.localnet = None
     self.testing = None
     self.pointset = None
@@ -31,12 +33,13 @@ class Metadata:
     result.version = source.get('version')
     result.description = source.get('description')
     result.hash = source.get('hash')
-    result.cloud = CloudMetadata.from_dict(source.get('cloud'))
-    result.system = SystemMetadata.from_dict(source.get('system'))
-    result.gateway = GatewayMetadata.from_dict(source.get('gateway'))
-    result.localnet = LocalnetMetadata.from_dict(source.get('localnet'))
+    result.cloud = CloudModel.from_dict(source.get('cloud'))
+    result.system = SystemModel.from_dict(source.get('system'))
+    result.gateway = GatewayModel.from_dict(source.get('gateway'))
+    result.discovery = DiscoveryModel.from_dict(source.get('discovery'))
+    result.localnet = LocalnetModel.from_dict(source.get('localnet'))
     result.testing = TestingModel.from_dict(source.get('testing'))
-    result.pointset = PointsetMetadata.from_dict(source.get('pointset'))
+    result.pointset = PointsetModel.from_dict(source.get('pointset'))
     return result
 
   @staticmethod
@@ -71,6 +74,8 @@ class Metadata:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:
       result['gateway'] = self.gateway.to_dict() # 4
+    if self.discovery:
+      result['discovery'] = self.discovery.to_dict() # 4
     if self.localnet:
       result['localnet'] = self.localnet.to_dict() # 4
     if self.testing:

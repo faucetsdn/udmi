@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Localnet Metadata
+ * Discovery Model
  * <p>
- * Used to describe device local network parameters
+ * Discovery target parameters
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,15 +19,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "families"
 })
 @Generated("jsonschema2pojo")
-public class LocalnetMetadata {
+public class DiscoveryModel {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("families")
-    public HashMap<String, FamilyLocalnetMetadata> families;
+    public HashMap<String, FamilyDiscoveryTestingModel> families;
 
     @Override
     public int hashCode() {
@@ -41,10 +36,10 @@ public class LocalnetMetadata {
         if (other == this) {
             return true;
         }
-        if ((other instanceof LocalnetMetadata) == false) {
+        if ((other instanceof DiscoveryModel) == false) {
             return false;
         }
-        LocalnetMetadata rhs = ((LocalnetMetadata) other);
+        DiscoveryModel rhs = ((DiscoveryModel) other);
         return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
     }
 
