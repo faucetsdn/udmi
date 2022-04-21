@@ -24,12 +24,12 @@ variable "gcp_auth_file" {
 
 variable "tf-state-bucket-name" {
   type        = string
-  description = "The name of the Google Storage Bucket to create to store the Terraform state"
+  description = "The name of the Google Storage Bucket to store the Terraform state"
 }
 
 variable "tf-state-storage-class" {
   type        = string
-  description = "The storage class of the Storage Bucket to create to store the Terraform state"
+  description = "The storage class of the Storage Bucket to store the Terraform state"
 }
 
 variable "gcp_access_group" {
@@ -43,7 +43,7 @@ variable "log_level" {
   description = "Log level"
 }
 
-##GKE variables##
+## GKE variables ##
 variable "gke_num_nodes" {
     type = number
     default = 1
@@ -58,7 +58,7 @@ variable "gke_node_locations" {
 variable "gke_initial_node_count" {
   type = number
   default = 0
-  description = "The number of nodes to create in this cluster"
+  description = "The number of nodes to create in this cluster's default node pool"
 }
 
 variable "gke_cluster_name" {
@@ -69,7 +69,7 @@ variable "gke_cluster_name" {
 
 variable "gke_node_pool_name" {
   type = string
-  default = "udmi"
+  default = "udmi-pool"
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
@@ -80,12 +80,12 @@ variable "gke_cluster_location" {
 variable "gke_machine_type" {
   type = string
   default = "e2-standard-2"
-  description = "Type of machine"
+  description = "The name of a Google Compute Engine machine type"
 }
 #cloud DNS variables
 variable "dns_name" {
   type = string
-  description = "DNS name"
+  description = "The DNS name of the udmi managed zone"
 }
 #ssl variable
 variable "ssl_domains" {
@@ -113,6 +113,14 @@ variable "create_vpc" {
 variable "function_name" {
     type = string
     description = "functions name"
+}
+variable "storage_class" {
+  type =string
+  description = "storage class name for function bucket"
+}
+variable "bucket_location" {
+  type = string
+  description = "gcp function bucket location"   
 }
 variable "function_memory" {
     type = number

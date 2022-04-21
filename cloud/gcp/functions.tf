@@ -1,26 +1,26 @@
 resource "google_storage_bucket" "function-bucket" {
-  name     = "${var.gcp_project_name}-${var.function_name}"
-  project = var.gcp_project_id
-  force_destroy = true
-  storage_class = "STANDARD"
-  location = "US"
+  name               = "${var.gcp_project_name}-${var.function_name}"
+  project            = var.gcp_project_id
+  force_destroy      = true
+  storage_class      = var.storage_class 
+  location           = var.bucket_location
   versioning {
     enabled = true
   }
 }
-
+# Generates an archive of the source code compressed as a .zip file.
 data "archive_file" "source" {
-  type = "zip"
+  type        = "zip"
   source_dir  = "./src"
-  output_path = "./function.zip"
+  output_path = "./src/function.zip"
 }
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
   # We can avoid unnecessary redeployments by validating the code is unchanged, and forcing
   # a redeployment when it has!
-  name   = "index.zip"
-  bucket = google_storage_bucket.function-bucket.name
-  source = data.archive_file.source.output_path
+  name        = "index.zip"
+  bucket      = google_storage_bucket.function-bucket.name
+  source      = data.archive_file.source.output_path
   lifecycle {
     ignore_changes = [detect_md5hash] 
   }
@@ -50,7 +50,6 @@ resource "google_cloudfunctions_function_iam_member" "invoker" {
   project        = google_cloudfunctions_function.enventHandlerFunction.project
   region         = google_cloudfunctions_function.enventHandlerFunction.region
   cloud_function = google_cloudfunctions_function.enventHandlerFunction.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = var.gcp_access_group
+  role           = "roles/cloudfunctions.invoker"
+  member         = var.gcp_access_group
 }
