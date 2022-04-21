@@ -136,13 +136,7 @@ public abstract class SequenceValidator {
     deviceMetadata = readDeviceMetadata();
 
     deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
-    try {
-      deviceOutputDir.mkdirs();
-      File testsOutputDir = new File(deviceOutputDir, TESTS_OUT_DIR);
-      FileUtils.deleteDirectory(testsOutputDir);
-    } catch (Exception e) {
-      throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
-    }
+    deviceOutputDir.mkdirs();
 
     resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
     resultSummary.delete();
@@ -171,8 +165,15 @@ public abstract class SequenceValidator {
   public TestWatcher testWatcher = new TestWatcher() {
     @Override
     protected void starting(Description description) {
-      testName = description.getMethodName();
-      notice("starting test " + testName);
+      try {
+        testName = description.getMethodName();
+        File testsOutputDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
+        FileUtils.deleteDirectory(testsOutputDir);
+        testsOutputDir.mkdirs();
+        notice("starting test " + testName);
+      } catch (Exception e) {
+        throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
+      }
     }
 
     @Override
@@ -368,7 +369,6 @@ public abstract class SequenceValidator {
 
     String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
-    testOutDir.mkdirs();
 
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
@@ -418,7 +418,6 @@ public abstract class SequenceValidator {
 
     String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
-    testOutDir.mkdirs();
 
     File logFile = new File(testOutDir, filename);
     try (PrintWriter logAppend = new PrintWriter(new FileOutputStream(logFile, true))) {
