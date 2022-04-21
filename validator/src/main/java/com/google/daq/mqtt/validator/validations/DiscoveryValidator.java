@@ -83,7 +83,8 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
-    assertTrue("enumerated points", receivedEvents.stream().noneMatch(event -> event.points != null && !event.points.isEmpty()));
+    assertTrue("enumerated points", receivedEvents.stream()
+        .noneMatch(event -> event.points != null && !event.points.isEmpty()));
     Set<String> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
@@ -102,7 +103,8 @@ public class DiscoveryValidator extends SequenceValidator {
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("enumerated points", receivedEvents.stream().allMatch(event -> event.points != null && !event.points.isEmpty()));
+    assertTrue("enumerated points",
+        receivedEvents.stream().allMatch(event -> event.points != null && !event.points.isEmpty()));
     assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
         receivedEvents.size());
   }
