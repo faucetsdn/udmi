@@ -726,9 +726,7 @@ public class Pubber {
       }
 
       info("Discovery scan generation " + family + " is " + isoConvert(startGeneration));
-      long delay = scheduleFuture(startGeneration,
-          () -> checkDiscoveryScan(family, startGeneration));
-      info("Waiting until start: " + delay);
+      scheduleFuture(startGeneration, () -> checkDiscoveryScan(family, startGeneration));
     });
 
     if (deviceState.discovery.families.isEmpty()) {
