@@ -7,8 +7,7 @@
   "version": 1,
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T22:00:13Z",
-  "scan_family": "bacnet",
-  "scan_id": "92EA09",
+  "scan_family": "ipv6",
   "families": {
     "ipv4": {
       "id": "192.168.1.2"

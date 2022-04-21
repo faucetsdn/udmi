@@ -11,7 +11,6 @@
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T21:37:12Z",
   "scan_family": "iot",
-  "scan_id": "AHU-1",
   "points": {
     "sup_flow_actual_avo_1": {
       "status": {

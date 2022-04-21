@@ -8,10 +8,12 @@
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
   "scan_family": "bacnet",
-  "scan_id": "92EA09",
   "families": {
     "ipv4": {
       "id": "192.168.1.2"
+    },
+    "bacnet": {
+      "id": "872849"
     },
     "ipv6": {
       "id": "FE80::D05C:1A90:DD9E:A582"
