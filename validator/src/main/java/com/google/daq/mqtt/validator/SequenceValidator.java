@@ -73,7 +73,7 @@ public abstract class SequenceValidator {
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

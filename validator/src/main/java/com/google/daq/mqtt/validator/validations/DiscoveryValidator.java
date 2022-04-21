@@ -111,6 +111,7 @@ public class DiscoveryValidator extends SequenceValidator {
 
   private void initializeDiscovery() {
     families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
+    System.err.println("TAP device metadata: " + OBJECT_MAPPER.writeValueAsString(deviceMetadata));
     if (families == null || families.isEmpty()) {
       throw new SkipTest("No discovery families configured");
     }
