@@ -65,7 +65,7 @@ public class DiscoveryValidator extends SequenceValidator {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
         Date.from(Instant.now().plusSeconds(SCAN_START_DELAY_SEC)));
-    scheduleScan(startTime, null);
+    scheduleScan(startTime, null, false);
     untilTrue("scheduled scan start",
         () -> families.stream().anyMatch(familyScanActivated(startTime))
             || families.stream()
@@ -83,6 +83,7 @@ public class DiscoveryValidator extends SequenceValidator {
     untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(
         DiscoveryEvent.class);
+    assertTrue("enumerated points", receivedEvents.stream().noneMatch(event -> event.points != null && !event.points.isEmpty()));
     Set<String> eventFamilies = receivedEvents.stream()
         .flatMap(event -> event.families.keySet().stream())
         .collect(Collectors.toSet());
@@ -93,7 +94,7 @@ public class DiscoveryValidator extends SequenceValidator {
   public void continuous_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
-    scheduleScan(startTime, SCAN_START_DELAY_SEC);
+    scheduleScan(startTime, SCAN_START_DELAY_SEC, true);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     String oneFamily = families.iterator().next();
@@ -101,6 +102,7 @@ public class DiscoveryValidator extends SequenceValidator {
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
+    assertTrue("enumerated points", receivedEvents.stream().allMatch(event -> event.points != null && !event.points.isEmpty()));
     assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
         receivedEvents.size());
   }
@@ -118,10 +120,11 @@ public class DiscoveryValidator extends SequenceValidator {
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
   }
 
-  private void scheduleScan(Date startTime, Integer scanIntervalSec) {
+  private void scheduleScan(Date startTime, Integer scanIntervalSec, boolean enumerate) {
     info("Scan start scheduled for " + startTime);
     families.forEach(family -> {
       getConfigFamily(family).generation = startTime;
+      getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });
     updateConfig();

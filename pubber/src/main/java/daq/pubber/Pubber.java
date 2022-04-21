@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -48,6 +50,7 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
@@ -255,7 +258,8 @@ public class Pubber {
 
   private void loadDeviceMetadata() {
     Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
-    allMetadata = getAllDevices().stream().collect(Collectors.toMap(deviceId -> deviceId, deviceId -> getDeviceMetadata(deviceId)));
+    allMetadata = getAllDevices().stream()
+        .collect(toMap(deviceId -> deviceId, deviceId -> getDeviceMetadata(deviceId)));
     processDeviceMetadata(allMetadata.get(configuration.deviceId));
   }
 
@@ -660,9 +664,23 @@ public class Pubber {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.points = allPoints.stream().collect(Collectors.toMap(AbstractPoint::getName,
-        AbstractPoint::enumerate));
+    discoveryEvent.points = enumeratePoints(configuration.deviceId);
     publishDeviceMessage(discoveryEvent);
+  }
+
+  private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
+    return allMetadata.get(deviceId).pointset.points.entrySet().stream().collect(
+        Collectors.toMap(Map.Entry::getKey, this::getPointEnumerationEvent));
+  }
+
+  private PointEnumerationEvent getPointEnumerationEvent(
+      Map.Entry<String, PointPointsetModel> entry) {
+    PointEnumerationEvent pointEnumerationEvent = new PointEnumerationEvent();
+    PointPointsetModel model = entry.getValue();
+    pointEnumerationEvent.writable = model.writable;
+    pointEnumerationEvent.units = model.units;
+    pointEnumerationEvent.ref = model.ref;
+    return pointEnumerationEvent;
   }
 
   private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> familiesRaw) {
@@ -762,15 +780,20 @@ public class Pubber {
         Metadata targetMetadata = entry.getValue();
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
-          String familyId = familyLocalnetModel.id;
+          final String deviceId = entry.getKey();
+          final String familyId = familyLocalnetModel.id;
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.timestamp = new Date();
           discoveryEvent.version = UDMI_VERSION;
           discoveryEvent.scan_family = family;
           discoveryEvent.scan_id = familyId;
-          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream().collect(Collectors.toMap(
-              Map.Entry::getKey, this::eventForTarget));
-          discoveryEvent.families.computeIfAbsent("iot", key -> new FamilyDiscoveryEvent()).id = entry.getKey();
+          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
+              .collect(toMap(Map.Entry::getKey, this::eventForTarget));
+          discoveryEvent.families.computeIfAbsent("iot",
+              key -> new FamilyDiscoveryEvent()).id = deviceId;
+          if (Boolean.TRUE.equals(deviceConfig.discovery.families.get(family).enumerate)) {
+            discoveryEvent.points = enumeratePoints(deviceId);
+          }
           publishDeviceMessage(discoveryEvent);
           events.incrementAndGet();
         }
