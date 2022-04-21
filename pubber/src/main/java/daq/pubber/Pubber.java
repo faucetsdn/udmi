@@ -35,6 +35,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
@@ -773,12 +774,10 @@ public class Pubber {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
-      AtomicInteger events = new AtomicInteger();
-      allMetadata.entrySet().forEach(entry -> {
-        Metadata targetMetadata = entry.getValue();
+      AtomicInteger sentEvents = new AtomicInteger();
+      allMetadata.forEach((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
-          final String deviceId = entry.getKey();
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.timestamp = new Date();
           discoveryEvent.version = UDMI_VERSION;
@@ -787,14 +786,22 @@ public class Pubber {
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).id = deviceId;
-          if (Boolean.TRUE.equals(deviceConfig.discovery.families.get(family).enumerate)) {
+          if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.points = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
-          events.incrementAndGet();
+          sentEvents.incrementAndGet();
         }
       });
-      info("Sent " + events.get() + " discovery events from " + family + " for " + scanGeneration);
+      info("Sent " + sentEvents.get() + " discovery events from " + family + " for " + scanGeneration);
+    }
+  }
+
+  private boolean isTrue(Supplier<Boolean> target) {
+    try {
+      return target.get();
+    } catch (Exception e) {
+      return false;
     }
   }
 
@@ -820,10 +827,10 @@ public class Pubber {
         if (interval > 0) {
           Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
           scheduleDiscoveryScan(family, newGeneration);
-          publishStateMessage();
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
+          publishStateMessage();
         }
       }
     } catch (Exception e) {

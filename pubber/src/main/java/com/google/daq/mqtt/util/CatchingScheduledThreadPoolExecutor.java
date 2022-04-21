@@ -36,7 +36,7 @@ public class CatchingScheduledThreadPoolExecutor extends ScheduledThreadPoolExec
       }
     }
     if (t != null) {
-      System.err.println(t);
+      System.err.println("Scheduled: " + t);
     }
   }
 }
