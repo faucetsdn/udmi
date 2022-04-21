@@ -1,0 +1,14 @@
+@import '../../styles/variables';
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+
+  a {
+    color: $accent;
+  }
+
+  .mat-icon {
+    color: $text-secondary;
+  }
+}

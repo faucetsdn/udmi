@@ -4,6 +4,7 @@ udmi_site_model/
 gcp_reflect_key.pkcs8
 workspace.xml
 codegen/
+.DS_Store
 tmp/
 check_links.out
 .gradle/
@@ -24,6 +25,8 @@ firebase-debug.log
 /local/
 .pubber.pid
 __pycache__/
+
+.vscode
 
 cloud/gcp/terraform.tfvars
 cloud/gcp/udmi-sites.tf
