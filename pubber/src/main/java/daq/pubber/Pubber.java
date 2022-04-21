@@ -793,7 +793,8 @@ public class Pubber {
           sentEvents.incrementAndGet();
         }
       });
-      info("Sent " + sentEvents.get() + " discovery events from " + family + " for " + scanGeneration);
+      info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
+          + scanGeneration);
     }
   }
 
