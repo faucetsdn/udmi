@@ -465,11 +465,11 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
-        Object augmentedData = augmentData(data);
-        String augmentedMessage = OBJECT_MAPPER.writeValueAsString(augmentedData);
-        recordRawMessage(augmentedData, "local_" + subBlock.value());
-        debug(String.format("update %s_%s", "config", subBlock));
+        final Object augmentedData = augmentData(data);
         sentConfig.put(subBlock, messageData);
+        recordRawMessage(augmentedData, "local_" + subBlock.value());
+        String augmentedMessage = OBJECT_MAPPER.writeValueAsString(augmentedData);
+        debug(String.format("update %s_%s", "config", subBlock));
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
         // Delay so the backend can process the update before others arrive.
