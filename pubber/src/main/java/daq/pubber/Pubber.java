@@ -957,7 +957,6 @@ public class Pubber {
       return;
     }
     deviceState.timestamp = new Date();
-    String deviceId = configuration.deviceId;
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
@@ -966,11 +965,18 @@ public class Pubber {
       throw new RuntimeException("While converting new device state", e);
     }
     stateDirty.set(false);
-    publishDeviceMessage(deviceState);
-    lastStateTimeMs = System.currentTimeMillis();
+    // TODO: Make this block until the callback is actually called.
+    lastStateTimeMs = System.currentTimeMillis() + STATE_THROTTLE_MS;
+    publishDeviceMessage(deviceState, () -> {
+      lastStateTimeMs = System.currentTimeMillis();
+    });
   }
 
   private void publishDeviceMessage(Object message) {
+    publishDeviceMessage(message, null);
+  }
+
+  private void publishDeviceMessage(Object message, Runnable callback) {
     if (mqttPublisher == null) {
       warn("Ignoring publish message b/c connection is shutdown");
       return;
@@ -981,7 +987,7 @@ public class Pubber {
       return;
     }
     augmentDeviceMessage(message);
-    mqttPublisher.publish(configuration.deviceId, topic, message);
+    mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
     String fileName = topic.replace("/", "_") + ".json";
     File stateOut = new File(OUT_DIR, fileName);

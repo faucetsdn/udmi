@@ -68,17 +68,17 @@ public abstract class SequenceValidator {
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int UDMI_TEST_TIMEOUT_SEC = 60;
   protected static final Metadata deviceMetadata;
-  private static final String EMPTY_MESSAGE = "{}";
-  private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
-  private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
-  private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new CleanDateFormat())
       .setSerializationInclusion(Include.NON_NULL);
+  private static final String EMPTY_MESSAGE = "{}";
+  private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
+  private static final String RESULT_LOG_FILE = "RESULT.log";
+  private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
+  private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String projectId;
   private static final String deviceId;
   private static final String siteModel;

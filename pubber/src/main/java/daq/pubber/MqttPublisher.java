@@ -90,21 +90,25 @@ public class MqttPublisher {
     validateCloudIotOptions();
   }
 
-  void publish(String deviceId, String topic, Object data) {
+  void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     if (publisherExecutor.isShutdown()) {
       warn("Publisher is shutdown, dropping message");
       return;
     }
     debug("Publishing in background " + topic);
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+    publisherExecutor.submit(() -> publishCore(deviceId, topic, data, callback));
   }
 
-  private synchronized void publishCore(String deviceId, String topic, Object data) {
+  private synchronized void publishCore(String deviceId, String topic, Object data,
+      Runnable callback) {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
+      debug("Sending message to " + topic);
       sendMessage(deviceId, getMessageTopic(deviceId, topic), payload.getBytes());
-      debug("Publishing complete " + registryId + "/" + deviceId);
+      if (callback != null) {
+        callback.run();
+      }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
       e.printStackTrace();
@@ -347,7 +351,6 @@ public class MqttPublisher {
 
   private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
-    debug("Sending message to " + mqttTopic);
     checkAuthentication(deviceId);
     MqttClient connectedClient = getConnectedClient(deviceId);
     connectedClient.publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
