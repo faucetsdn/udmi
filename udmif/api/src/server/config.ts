@@ -10,6 +10,8 @@ export interface Configuration {
   mongoPassword: string;
   mongoHost: string;
   mongoDatabase: string;
+  authClientId: string;
+  clientIds: string[];
 }
 
 export function loadConfig(): Configuration {
@@ -23,5 +25,7 @@ export function loadConfig(): Configuration {
     mongoPassword: process.env.MONGO_PASSWORD,
     mongoHost: process.env.MONGO_HOST,
     mongoDatabase: process.env.MONGO_DATABASE,
+    authClientId: process.env.AUTH_CLIENT_ID,
+    clientIds: process.env.CLIENT_IDS.split(','),
   };
 }

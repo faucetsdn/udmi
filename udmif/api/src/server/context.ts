@@ -3,18 +3,27 @@ import { Context, ContextFunction } from 'apollo-server-core';
 import { ExpressContext } from 'apollo-server-express/dist/ApolloServer';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../common/logger';
+import { authenticateIdToken } from './google';
 
-export async function getDefaultContextProcessor(): Promise<ContextFunction<ExpressContext, Context> | Context> {
+export async function getDefaultContextProcessor(
+  clientIds: string[]
+): Promise<ContextFunction<ExpressContext, Context> | Context> {
   // bind the public key endpoint to our context function so that it can be referenced on each call
-  const contextProcessor = new ContextProcessor();
+  const contextProcessor = new ContextProcessor(clientIds);
   return contextProcessor.processRequest.bind(contextProcessor);
 }
 
 export class ContextProcessor {
-  constructor() {}
+  constructor(private clientIds: string[]) {}
 
   // This function is called on every incoming graphql request.
   public async processRequest({ req }: ExpressContext): Promise<Context<any>> {
+    if (!req.headers) {
+      throw new Error('Invalid Headers');
+    }
+
+    await authenticateIdToken(req.headers.idtoken, this.clientIds);
+
     // initialize the context
     const context: Context<any> = {};
 

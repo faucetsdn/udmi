@@ -32,6 +32,8 @@ describe('getMongoDb', () => {
       mongoProtocol,
       mongoHost,
       mongoDatabase: '',
+      authClientId: '',
+      clientIds: [''],
     };
   });
 
