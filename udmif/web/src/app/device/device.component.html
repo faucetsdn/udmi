@@ -1,0 +1,18 @@
+<app-breadcrumb></app-breadcrumb>
+<mat-card class="summary">
+  <div class="item" *ngFor="let field of fields">
+    <span class="mat-body-2">{{ field | capitalize }}</span>
+    <p>{{ device?.[field] ?? '-' }}</p>
+  </div>
+</mat-card>
+
+<nav mat-tab-nav-bar [tabPanel]="tabPanel">
+  <a mat-tab-link routerLink="points" routerLinkActive="active" #rla="routerLinkActive" [active]="rla.isActive"
+    >Points</a
+  >
+</nav>
+<mat-tab-nav-panel #tabPanel>
+  <div class="container">
+    <router-outlet name="deviceTabs"></router-outlet>
+  </div>
+</mat-tab-nav-panel>

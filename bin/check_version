@@ -16,7 +16,8 @@ if [[ -z $origin ]]; then
 fi
 
 git fetch $origin --tags 2>/dev/null
-upstream_ver=`git describe $origin/$branch --abbrev=0`
+
+upstream_ver=`git describe $origin/$branch --abbrev=0 || echo unknown`
 current_ver=`git describe HEAD --abbrev=0 || echo unknown`
 
 if [[ $current_ver != $upstream_ver ]]; then

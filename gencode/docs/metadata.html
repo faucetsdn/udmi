@@ -51,7 +51,7 @@
             />
         </svg>
     <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>RFC 3339 timestamp the metadata was generated</p>
+<span class="description"><p>RFC 3339 timestamp the message was generated</p>
 </span>
             
 
@@ -353,7 +353,7 @@
             />
         </svg>
     <a href="#system" onclick="anchorLink('system')">system</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>High-level system information about the device. <a href="../../docs/messages/system.md">System Metadata Documentation</a></p>
+<span class="description"><p>High-level system information about the device. <a href="../../docs/messages/system.md">System Model Documentation</a></p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1202,7 +1202,7 @@
             />
         </svg>
     <a href="#gateway_gateway_id" onclick="anchorLink('gateway_gateway_id')">gateway_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Present in devices which are proxied by a gateway, this identifies the device ID of the gateway the device is bound to</p>
+<span class="description"><p>The device ID of the gateway the device is bound to</p>
 </span><span class="pattern-value" id="gateway_gateway_id_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[0-9]{1,6}$</code></span>
             
 
@@ -1218,18 +1218,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordiongateway_subsystem">
+<div class="accordion" id="accordiongateway_family">
     <div class="card">
-        <div class="card-header" id="headinggateway_subsystem">
+        <div class="card-header" id="headinggateway_family">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_subsystem"
-                        aria-expanded="" aria-controls="gateway_subsystem" onclick="setAnchor('#gateway_subsystem')"><span class="property-name">subsystem</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_family"
+                        aria-expanded="" aria-controls="gateway_family" onclick="setAnchor('#gateway_family')"><span class="property-name">family</span></button>
             </h2>
         </div>
 
-        <div id="gateway_subsystem"
-             class="collapse property-definition-div" aria-labelledby="headinggateway_subsystem"
-             data-parent="#accordiongateway_subsystem">
+        <div id="gateway_family"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_family"
+             data-parent="#accordiongateway_family">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -1246,8 +1246,9 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#gateway_subsystem" onclick="anchorLink('gateway_subsystem')">subsystem</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="pattern-value" id="gateway_subsystem_pattern">Must match regular expression: <code>^[a-z0-9-]+$</code></span>
+    <a href="#gateway_family" onclick="anchorLink('gateway_family')">family</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Protocol family used for connecting to the proxy device</p>
+</span>
             
 
             
@@ -1287,7 +1288,7 @@
             />
         </svg>
     <a href="#gateway_proxy_ids" onclick="anchorLink('gateway_proxy_ids')">proxy_ids</a></div><span class="badge badge-dark value-type">Type: array of string</span><br/>
-<span class="description"><p>Present in devices which are IoT gateways, this is an array of all the device IDs which are bound to the device</p>
+<span class="description"><p>An array of all the device IDs which are bound to the device</p>
 </span>
             
 
@@ -1344,6 +1345,136 @@
         </div>
     </div>
 </div>
+<div class="accordion" id="accordiondiscovery">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery"
+                        aria-expanded="" aria-controls="discovery" onclick="setAnchor('#discovery')"><span class="property-name">discovery</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery"
+             data-parent="#accordiondiscovery">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Discovery target parameters</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordiondiscovery_families">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families"
+                        aria-expanded="" aria-controls="discovery_families" onclick="setAnchor('#discovery_families')"><span class="property-name">families</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families"
+             data-parent="#accordiondiscovery_families">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordiondiscovery_families_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1"
+                        aria-expanded="" aria-controls="discovery_families_pattern1" onclick="setAnchor('#discovery_families_pattern1')"><span class="property-name">^[a-z][a-z0-9]*(_[a-z0-9]+)*$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1"
+             data-parent="#accordiondiscovery_families_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">model_discovery_family.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+    
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="accordion" id="accordionlocalnet">
     <div class="card">
         <div class="card-header" id="headinglocalnet">
@@ -1376,18 +1507,18 @@
             
 
             
-<div class="accordion" id="accordionlocalnet_subsystem">
+<div class="accordion" id="accordionlocalnet_families">
     <div class="card">
-        <div class="card-header" id="headinglocalnet_subsystem">
+        <div class="card-header" id="headinglocalnet_families">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_subsystem"
-                        aria-expanded="" aria-controls="localnet_subsystem" onclick="setAnchor('#localnet_subsystem')"><span class="property-name">subsystem</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_families"
+                        aria-expanded="" aria-controls="localnet_families" onclick="setAnchor('#localnet_families')"><span class="property-name">families</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="localnet_subsystem"
-             class="collapse property-definition-div" aria-labelledby="headinglocalnet_subsystem"
-             data-parent="#accordionlocalnet_subsystem">
+        <div id="localnet_families"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet_families"
+             data-parent="#accordionlocalnet_families">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -1404,7 +1535,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem" onclick="anchorLink('localnet_subsystem')">subsystem</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
             
 
@@ -1412,18 +1543,18 @@
             
 
             
-<div class="accordion" id="accordionlocalnet_subsystem_pattern1">
+<div class="accordion" id="accordionlocalnet_families_pattern1">
     <div class="card">
-        <div class="card-header" id="headinglocalnet_subsystem_pattern1">
+        <div class="card-header" id="headinglocalnet_families_pattern1">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_subsystem_pattern1"
-                        aria-expanded="" aria-controls="localnet_subsystem_pattern1" onclick="setAnchor('#localnet_subsystem_pattern1')"><span class="property-name">^[a-z0-9-]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_families_pattern1"
+                        aria-expanded="" aria-controls="localnet_families_pattern1" onclick="setAnchor('#localnet_families_pattern1')"><span class="property-name">^[a-z0-9-]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
-        <div id="localnet_subsystem_pattern1"
-             class="collapse property-definition-div" aria-labelledby="headinglocalnet_subsystem_pattern1"
-             data-parent="#accordionlocalnet_subsystem_pattern1">
+        <div id="localnet_families_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet_families_pattern1"
+             data-parent="#accordionlocalnet_families_pattern1">
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
@@ -1445,14 +1576,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem" onclick="anchorLink('localnet_subsystem')">subsystem</a>
+    <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem_pattern1" onclick="anchorLink('localnet_subsystem_pattern1')">metadata_localnet_subsystem.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#localnet_families_pattern1" onclick="anchorLink('localnet_families_pattern1')">model_localnet_family.json</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>The type of network</p>
 </span>
 
@@ -1464,23 +1595,23 @@
 
             <br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="localnet_subsystem_pattern1_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;bacnet&quot;</span>
+<br/><div id="localnet_families_pattern1_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;bacnet&quot;</span>
 </pre></div>
-</div><div id="localnet_subsystem_pattern1_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;modbus&quot;</span>
+</div><div id="localnet_families_pattern1_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;modbus&quot;</span>
 </pre></div>
 </div>
-<div class="accordion" id="accordionlocalnet_subsystem_pattern1_local_id">
+<div class="accordion" id="accordionlocalnet_families_pattern1_id">
     <div class="card">
-        <div class="card-header" id="headinglocalnet_subsystem_pattern1_local_id">
+        <div class="card-header" id="headinglocalnet_families_pattern1_id">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_subsystem_pattern1_local_id"
-                        aria-expanded="" aria-controls="localnet_subsystem_pattern1_local_id" onclick="setAnchor('#localnet_subsystem_pattern1_local_id')"><span class="property-name">local_id</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_families_pattern1_id"
+                        aria-expanded="" aria-controls="localnet_families_pattern1_id" onclick="setAnchor('#localnet_families_pattern1_id')"><span class="property-name">id</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="localnet_subsystem_pattern1_local_id"
-             class="collapse property-definition-div" aria-labelledby="headinglocalnet_subsystem_pattern1_local_id"
-             data-parent="#accordionlocalnet_subsystem_pattern1_local_id">
+        <div id="localnet_families_pattern1_id"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet_families_pattern1_id"
+             data-parent="#accordionlocalnet_families_pattern1_id">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -1497,21 +1628,21 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem" onclick="anchorLink('localnet_subsystem')">subsystem</a>
+    <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem_pattern1" onclick="anchorLink('localnet_subsystem_pattern1')">Subsystem Localnet Metadata</a>
+    <a href="#localnet_families_pattern1" onclick="anchorLink('localnet_families_pattern1')">Family Localnet Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#localnet_subsystem_pattern1_local_id" onclick="anchorLink('localnet_subsystem_pattern1_local_id')">local_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#localnet_families_pattern1_id" onclick="anchorLink('localnet_families_pattern1_id')">id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The address of a device on the local network</p>
 </span>
             
@@ -1521,7 +1652,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="localnet_subsystem_pattern1_local_id_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;4148893&quot;</span>
+<br/><div id="localnet_families_pattern1_id_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;4148893&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -1577,7 +1708,7 @@
         <div class="card-header" id="headingtesting_targets">
             <h2 class="mb-0">
                 <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#testing_targets"
-                        aria-expanded="" aria-controls="testing_targets" onclick="setAnchor('#testing_targets')"><span class="property-name">targets</span> <span class="badge badge-warning required-property">Required</span></button>
+                        aria-expanded="" aria-controls="testing_targets" onclick="setAnchor('#testing_targets')"><span class="property-name">targets</span></button>
             </h2>
         </div>
 
@@ -1648,7 +1779,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">metadata_testing_target.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">model_testing_target.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -1693,7 +1824,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">Target Testing Metadata</a>
+    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">Target Testing Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -1748,7 +1879,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">Target Testing Metadata</a>
+    <a href="#testing_targets_pattern1" onclick="anchorLink('testing_targets_pattern1')">Target Testing Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -1889,7 +2020,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">metadata_pointset_point.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">model_pointset_point.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Information about a specific point name of the device.</p>
 </span>
 
@@ -1935,7 +2066,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -1990,7 +2121,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2045,7 +2176,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2104,7 +2235,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2163,7 +2294,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2221,7 +2352,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2280,7 +2411,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2341,7 +2472,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2396,7 +2527,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
@@ -2451,7 +2582,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Metadata</a>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Model</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"

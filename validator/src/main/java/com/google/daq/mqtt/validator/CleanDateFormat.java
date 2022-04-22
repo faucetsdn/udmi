@@ -23,7 +23,7 @@ public class CleanDateFormat extends ISO8601DateFormat {
     return parsedDate;
   }
 
-  static Date cleanDate() {
+  public static Date cleanDate() {
     return cleanDate(new Date());
   }
 

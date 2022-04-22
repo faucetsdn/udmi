@@ -1,0 +1,83 @@
+input SearchOptions {
+  # the number of records to retrieve
+  batchSize: Int!
+  # the records to start at
+  offset: Int
+  # the search options
+  sortOptions: SortOptions
+  # the search filter
+  filter: String
+}
+
+input SortOptions {
+  # the direction the data should be sorted
+  direction: SORT_DIRECTION
+  # the field that the sorting should be applied to
+  field: String!
+}
+
+enum SORT_DIRECTION {
+  # Descending
+  DESC
+  # Ascending
+  ASC
+}
+
+type DevicesResponse {
+  # the devices that matched the search options
+  devices: [Device!]!
+  # the total number of devices in the system
+  totalCount: Int!
+  # the total number of devices after the filter in the search options has been applied
+  totalFilteredCount: Int!
+}
+
+
+type Point{
+  # the ID of the point
+  id: ID!
+  # the name of the point
+  name: String!
+  # the value of the point
+  value: String!
+  # the units of the point
+  units: String!
+  # the name of the point
+  state: String!
+}
+
+type Device {
+  # the ID of the device
+  id: ID!
+  # the name of the device
+  name: String!
+  # the make of the device
+  make: String
+  # the model of the device
+  model: String
+  # the site where the device is installed
+  site: String
+  # the section within the site where the device is installed
+  section: String
+  # the date of last payload received for the device
+  lastPayload: String
+  # the operational state of the device
+  operational: Boolean
+  # the firmware version fo the device
+  firmware: String
+  # the serial number of the device
+  serialNumber: String
+  # the tags assigned to a device
+  tags: [String!]!
+  # the points on a device
+  points: [Point!]!
+}
+
+type Query {
+  # Get the devices matching the search options
+  devices( searchOptions: SearchOptions! ): DevicesResponse
+  # Get a device by ID
+  device( id: ID! ): Device
+  # Get points by a Device ID
+  points( deviceId: ID!) : [Point!]!
+}

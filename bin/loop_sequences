@@ -50,17 +50,21 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
 
 rm -rf $site_model/out/devices/$device_id
 
+test_srces=`cd validator/src/main/java/com/google/daq/mqtt/validator/validations; ls *.java`
+echo Processing test sources $test_srces
+
 exit_code=2
 for test_name in $test_names; do
   if [[ $test_name == . ]]; then
     test_name=
   fi
-  for test_class in ConfigValidator WritebackValidator; do
+  for test_src in $test_srces; do
+    test_class=${test_src%.java}
     target=$test_class$test_prefix$test_name
     CLASS=com.google.daq.mqtt.validator.validations.$target
     echo $JAVA_CMD $CLASS
-    timeout 5m $JAVA_CMD $CLASS
-    result=$?
+    result=0
+    timeout 5m $JAVA_CMD $CLASS || result=$?
 
     if [[ $result == 2 ]]; then
         echo Sequence test $target found no matching tests.
@@ -68,7 +72,7 @@ for test_name in $test_names; do
         echo Sequence test $target exited with error code $result.
         exit_code=$result
     elif [[ $exit_code == 2 ]]; then
-        exit_code=0;
+        exit_code=0
     fi
   done
 done

@@ -22,9 +22,9 @@
     }
   },
   "localnet": {
-    "subsystem": {
+    "families": {
       "bacnet": {
-        "local_id": "0x82eecd"
+        "id": "82eecd"
       }
     }
   },
@@ -37,7 +37,7 @@
     }
   },
   "gateway": {
-    "subsystem": "bacnet",
+    "family": "bacnet",
     "gateway_id": "LTGW-123"
   }
 }
