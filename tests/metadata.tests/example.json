@@ -40,6 +40,12 @@
       }
     }
   },
+  "discovery": {
+    "families": {
+      "bacnet": {
+      }
+    }
+  },
   "testing": {
     "targets": {
       "invalid": {

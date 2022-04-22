@@ -1,0 +1,4 @@
+3 schema violations found
+  object has missing required properties (["families"])
+  object has missing required properties (["version"])
+  object instance has properties which are not allowed by the schema: ["subsystem"]

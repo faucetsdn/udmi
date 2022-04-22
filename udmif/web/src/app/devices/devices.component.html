@@ -1,0 +1,26 @@
+<app-search-filter [data]="searchFilterOptions" [handleFilterChange]="filterData"></app-search-filter>
+<div class="table-controls">
+  <span class="mat-small">{{ totalCount }} Devices</span>
+  <mat-paginator
+    [length]="totalFilteredCount"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="pageChanged($event)"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
+<mat-table [dataSource]="devices" matSort (matSortChange)="sortData($event)" aria-label="List of devices">
+  <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
+    <mat-header-cell *matHeaderCellDef mat-sort-header="{{ columnName }}">{{
+      columnName | capitalize
+    }}</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="row.id">
+    <mat-row></mat-row>
+  </a>
+</mat-table>

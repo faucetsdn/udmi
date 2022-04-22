@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,14 +31,14 @@ public class DiscoveryConfig {
      */
     @JsonProperty("enumeration")
     @JsonPropertyDescription("Configuration for [discovery](../docs/specs/discovery.md)")
-    public FamilyDiscoveryConfig enumeration;
+    public udmi.schema.FamilyDiscoveryConfig enumeration;
     /**
      * Address family results for a scan. Not included for device enumeration messages.
      * 
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family results for a scan. Not included for device enumeration messages.")
-    public Object families;
+    public HashMap<String, FamilyDiscoveryConfig> families;
 
     @Override
     public int hashCode() {

@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,14 +31,14 @@ public class DiscoveryState {
      */
     @JsonProperty("enumeration")
     @JsonPropertyDescription("State for [discovery](../docs/specs/discovery.md)")
-    public FamilyDiscoveryState enumeration;
+    public udmi.schema.FamilyDiscoveryState enumeration;
     /**
      * Discovery protocol families
      * 
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Discovery protocol families")
-    public Object families;
+    public HashMap<String, FamilyDiscoveryState> families;
 
     @Override
     public int hashCode() {

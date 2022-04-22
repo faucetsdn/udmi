@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvent;
-import udmi.schema.PointPointsetMetadata;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetEvent;
 
 /**
@@ -128,7 +128,7 @@ public class ReportingDevice {
     return message.points == null ? ImmutableMap.of() : message.points;
   }
 
-  private Map<String, PointPointsetMetadata> getPoints(Metadata metadata) {
+  private Map<String, PointPointsetModel> getPoints(Metadata metadata) {
     if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
       return ImmutableMap.of();
     }

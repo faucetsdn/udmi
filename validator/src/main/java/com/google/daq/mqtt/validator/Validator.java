@@ -22,10 +22,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.DataSink;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
-import com.google.daq.mqtt.util.FirestoreDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.PubSubDataSink;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -55,7 +56,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 
 /**
- * Class to validate streaming messages.
+ * Core class for running site-level validations of data streams.
  */
 public class Validator {
 
@@ -101,7 +102,7 @@ public class Validator {
   private final Set<String> ignoredRegistries = new HashSet();
   private File outBaseDir;
   private File metadataReportFile;
-  private FirestoreDataSink dataSink;
+  private DataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
   private CloudIotConfig cloudIotConfig;
@@ -111,18 +112,18 @@ public class Validator {
   private MessagePublisher client;
 
   /**
-   * Validator for streaming message validator.
+   * Create validator for the given project id.
    *
-   * @param projectId Project to validate against.
+   * @param projectId Target cloud project id
    */
   public Validator(String projectId) {
     this.projectId = projectId;
   }
 
   /**
-   * Instantiate a stream validator instance.
+   * Let's go.
    *
-   * @param args What to do!
+   * @param args Arguments for program execution
    */
   public static void main(String[] args) {
     if (args.length != 5) {
@@ -256,13 +257,14 @@ public class Validator {
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
-    Map<String, JsonSchema> schemaMap = getSchemaMap();
+    final Map<String, JsonSchema> schemaMap = getSchemaMap();
     return (message, attributes) -> validateMessage(schemaMap, message, attributes);
   }
 
   private void validatePubSub(String instName) {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
+    dataSink = new PubSubDataSink(projectId, cloudIotConfig.update_topic);
   }
 
   private void validateReflector(String instName) {
@@ -399,9 +401,7 @@ public class Validator {
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);
-          if (dataSink != null) {
-            dataSink.validationResult(deviceId, schemaName, attributes, message, null);
-          }
+          sendValidationResult(deviceId, schemaName, attributes, message, null);
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorOut, e);
@@ -551,10 +551,15 @@ public class Validator {
       PrintStream errorOut,
       Exception e) {
     ErrorTree errorTree = ExceptionMap.format(e, ERROR_FORMAT_INDENT);
+    sendValidationResult(deviceId, schemaId, attributes, message, errorTree);
+    errorTree.write(errorOut);
+  }
+
+  private void sendValidationResult(String deviceId, String schemaId,
+      Map<String, String> attributes, Map<String, Object> message, ErrorTree errorTree) {
     if (dataSink != null) {
       dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
     }
-    errorTree.write(errorOut);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
@@ -704,15 +709,6 @@ public class Validator {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
   }
 
-  private String getTimestamp() {
-    try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
   /**
    * Report for results from processing the metadata.
    */
@@ -729,7 +725,7 @@ public class Validator {
 
   class RelativeDownloader implements URIDownloader {
 
-    public static final String FILE_URL_PREFIX = "file:";
+    private static final String FILE_URL_PREFIX = "file:";
 
     @Override
     public InputStream fetch(URI source) {

@@ -18,15 +18,14 @@ Pointset is represented in four locations
 
 ## Metadata
 
-- **Schema Definition:** [metadata_pointset.json](../../schema/metadata_pointset.json)
+- **Schema Definition:** [model_pointset.json](../../schema/model_pointset.json)
  ([_🧬View_](../../gencode/docs/metadata.html#pointset))
 - [Working `metadata` Example](../../tests/metadata.tests/example.json)
 
 The `metadata.pointset` subblock represents the abstract system expectation for what the device
 _should_ be doing, and how it _should_ be configured and operated. This block specifies the
 expected points that a device holds, along with, if the field is numeric, the expected units of those points.
-The general structure of a `pointset` block exists inside of a complete
-metadata message
+The general structure of a `pointset` block exists inside of a complete metadata message
 
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.

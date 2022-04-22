@@ -7,6 +7,8 @@ class PointsetState:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.state_etag = None
     self.status = None
     self.points = None
@@ -16,6 +18,8 @@ class PointsetState:
     if not source:
       return None
     result = PointsetState()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.state_etag = source.get('state_etag')
     result.status = Entry.from_dict(source.get('status'))
     result.points = PointPointsetState.map_from(source.get('points'))
@@ -39,6 +43,10 @@ class PointsetState:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.state_etag:
       result['state_etag'] = self.state_etag # 5
     if self.status:

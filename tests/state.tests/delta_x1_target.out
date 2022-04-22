@@ -1,0 +1,3 @@
+2 schema violations found
+  object has missing required properties (["serial_no"])
+  object instance has properties which are not allowed by the schema: ["vendor_name"]
