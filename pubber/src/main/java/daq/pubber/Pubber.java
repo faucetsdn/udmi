@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -123,13 +124,12 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
+  private final AtomicBoolean stateDirty = new AtomicBoolean();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
-  private int sendCount;
-  private boolean stateDirty;
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
@@ -358,7 +358,14 @@ public class Pubber {
     deviceState.system.software.put("firmware", "v1");
     devicePoints.extraField = configuration.extraField;
 
-    stateDirty = true;
+    markStateDirty(0);
+  }
+
+  private void markStateDirty(long delayMs) {
+    stateDirty.set(true);
+    if (delayMs >= 0) {
+      executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+    }
   }
 
   private void pullDeviceMessage() {
@@ -433,13 +440,16 @@ public class Pubber {
     try {
       updatePoints();
       sendDeviceMessage();
-      if (stateDirty) {
-        publishStateMessage();
-      }
-      sendCount++;
+      flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
+    }
+  }
+
+  private void flushDirtyState() {
+    if (stateDirty.get()) {
+      publishStateMessage();
     }
   }
 
@@ -453,7 +463,7 @@ public class Pubber {
   private void updateState(AbstractPoint point) {
     if (point.isDirty()) {
       deviceState.pointset.points.put(point.getName(), point.getState());
-      stateDirty = true;
+      markStateDirty(-1);
     }
   }
 
@@ -606,6 +616,7 @@ public class Pubber {
 
   private void configHandler(Config config) {
     try {
+      info("Config handler");
       File configOut = new File(OUT_DIR, "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
@@ -942,19 +953,19 @@ public class Pubber {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(String.format("defer state update %d", delay));
-      stateDirty = true;
+      markStateDirty(delay);
       return;
     }
     deviceState.timestamp = new Date();
     String deviceId = configuration.deviceId;
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
-    stateDirty = false;
     try {
       debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
+    stateDirty.set(false);
     publishDeviceMessage(deviceState);
     lastStateTimeMs = System.currentTimeMillis();
   }

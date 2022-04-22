@@ -65,7 +65,7 @@ public abstract class SequenceValidator {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
-  public static final int CONFIG_UPDATE_DELAY_MS = 1000;
+  public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int UDMI_TEST_TIMEOUT_SEC = 60;
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
@@ -465,15 +465,36 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(data);
       boolean updated = !messageData.equals(sentConfig.get(subBlock));
       if (updated) {
-        recordRawMessage(data, "local_" + subBlock.value());
+        Object augmentedData = augmentData(data);
+        String augmentedMessage = OBJECT_MAPPER.writeValueAsString(augmentedData);
+        recordRawMessage(augmentedData, "local_" + subBlock.value());
         debug(String.format("update %s_%s", "config", subBlock));
         sentConfig.put(subBlock, messageData);
         String topic = subBlock + "/config";
-        client.publish(deviceId, topic, messageData);
+        client.publish(deviceId, topic, augmentedMessage);
+        // Delay so the backend can process the update before others arrive.
         Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
+    }
+  }
+
+  private Object augmentData(Object data) {
+    try {
+      if (data == null) {
+        return null;
+      }
+      if (traceLogLevel()) {
+        String messageData = OBJECT_MAPPER.writeValueAsString(data);
+        Map<String, Long> map = OBJECT_MAPPER.readValue(messageData, Map.class);
+        map.put("nonce", System.currentTimeMillis());
+        return map;
+      } else {
+        return data;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While augmenting data message", e);
     }
   }
 

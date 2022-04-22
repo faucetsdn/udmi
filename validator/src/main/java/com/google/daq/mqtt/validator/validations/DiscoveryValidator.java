@@ -114,8 +114,9 @@ public class DiscoveryValidator extends SequenceValidator {
         families.stream().noneMatch(familyScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    assertEquals("number responses received", SCAN_ITERATIONS * families.size(),
-        receivedEvents.size());
+    int expected = SCAN_ITERATIONS * families.size();
+    int received = receivedEvents.size();
+    assertTrue("number responses received", received >= expected && received <= expected + 1);
   }
 
   private void initializeDiscovery() {

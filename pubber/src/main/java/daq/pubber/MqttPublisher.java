@@ -93,19 +93,21 @@ public class MqttPublisher {
   void publish(String deviceId, String topic, Object data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     if (publisherExecutor.isShutdown()) {
+      warn("Publisher is shutdown, dropping message");
       return;
     }
-    debug("Publishing in background " + registryId + "/" + deviceId);
+    debug("Publishing in background " + topic);
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
   }
 
-  private void publishCore(String deviceId, String topic, Object data) {
+  private synchronized void publishCore(String deviceId, String topic, Object data) {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
       sendMessage(deviceId, getMessageTopic(deviceId, topic), payload.getBytes());
       debug("Publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
       errorCounter.incrementAndGet();
+      e.printStackTrace();
       warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
@@ -135,6 +137,7 @@ public class MqttPublisher {
 
   void close() {
     try {
+      warn("Closing publisher connection");
       publisherExecutor.shutdown();
       if (!publisherExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
         throw new RuntimeException("Could not terminate executor");
@@ -274,6 +277,7 @@ public class MqttPublisher {
   private void subscribeToUpdates(MqttClient client, String deviceId) {
     subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId));
     subscribeTopic(client, String.format(ERRORS_TOPIC_FMT, deviceId));
+    info("Updates subscribed");
   }
 
   private void subscribeTopic(MqttClient client, String updateTopic) {
@@ -345,12 +349,14 @@ public class MqttPublisher {
       byte[] mqttMessage) throws Exception {
     debug("Sending message to " + mqttTopic);
     checkAuthentication(deviceId);
-    getConnectedClient(deviceId).publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
+    MqttClient connectedClient = getConnectedClient(deviceId);
+    connectedClient.publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
   }
 
   private void checkAuthentication(String deviceId) {
-    if (Instant.now().isBefore(reauthTimes.get(deviceId))) {
+    Instant reauthTime = reauthTimes.get(deviceId);
+    if (reauthTime != null && Instant.now().isBefore(reauthTime)) {
       return;
     }
     warn("Authentication retry time reached for " + deviceId);
@@ -364,7 +370,7 @@ public class MqttPublisher {
     }
   }
 
-  private MqttClient getConnectedClient(String deviceId) {
+  private synchronized MqttClient getConnectedClient(String deviceId) {
     try {
       String gatewayId = configuration.gatewayId;
       if (gatewayId != null && !gatewayId.equals(deviceId)) {
