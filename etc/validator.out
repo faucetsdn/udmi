@@ -1,7 +1,1 @@
-::::::::::::::
-udmi_site_model/out/devices/AHU-1/state.out
-::::::::::::::
-While converting to json node: 2 schema violations found
-  2 schema violations found
-    object has missing required properties (["last_config"])
-    object has missing required properties (["version"])
+
