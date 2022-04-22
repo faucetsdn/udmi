@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -66,9 +68,9 @@ import udmi.schema.SystemState;
  */
 public class Pubber {
 
-  public static final String UDMI_VERSION = "1.3.14";
   public static final int SCAN_DURATION_SEC = 10;
   public static final String DISCOVERY_ID = "RANDOM_ID";
+  private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -122,13 +124,12 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicInteger logMessageCount = new AtomicInteger(0);
+  private final AtomicBoolean stateDirty = new AtomicBoolean();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
-  private int sendCount;
-  private boolean stateDirty;
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
@@ -357,7 +358,14 @@ public class Pubber {
     deviceState.system.software.put("firmware", "v1");
     devicePoints.extraField = configuration.extraField;
 
-    stateDirty = true;
+    markStateDirty(0);
+  }
+
+  private void markStateDirty(long delayMs) {
+    stateDirty.set(true);
+    if (delayMs >= 0) {
+      executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+    }
   }
 
   private void pullDeviceMessage() {
@@ -441,13 +449,16 @@ public class Pubber {
     try {
       updatePoints();
       sendDeviceMessage();
-      if (stateDirty) {
-        publishStateMessage();
-      }
-      sendCount++;
+      flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
+    }
+  }
+
+  private void flushDirtyState() {
+    if (stateDirty.get()) {
+      publishStateMessage();
     }
   }
 
@@ -461,7 +472,7 @@ public class Pubber {
   private void updateState(AbstractPoint point) {
     if (point.isDirty()) {
       deviceState.pointset.points.put(point.getName(), point.getState());
-      stateDirty = true;
+      markStateDirty(-1);
     }
   }
 
@@ -614,6 +625,7 @@ public class Pubber {
 
   private void configHandler(Config config) {
     try {
+      info("Config handler");
       File configOut = new File(OUT_DIR, "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
@@ -788,8 +800,7 @@ public class Pubber {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
-          discoveryEvent.timestamp = new Date();
-          discoveryEvent.version = UDMI_VERSION;
+          discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
@@ -926,11 +937,8 @@ public class Pubber {
   }
 
   private void sendDeviceMessage() {
-    devicePoints.version = UDMI_VERSION;
-    devicePoints.timestamp = new Date();
     if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", isoConvert(devicePoints.timestamp),
-          deviceMessageCount));
+      info(String.format("%s sending test message #%d", getTimestamp(), deviceMessageCount));
     }
     publishDeviceMessage(devicePoints);
   }
@@ -946,8 +954,6 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     SystemEvent systemEvent = new SystemEvent();
-    systemEvent.version = UDMI_VERSION;
-    systemEvent.timestamp = new Date();
     systemEvent.logentries.add(report);
     publishDeviceMessage(systemEvent);
   }
@@ -956,24 +962,30 @@ public class Pubber {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(String.format("defer state update %d", delay));
-      stateDirty = true;
+      markStateDirty(delay);
       return;
     }
     deviceState.timestamp = new Date();
-    String deviceId = configuration.deviceId;
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
-    stateDirty = false;
     try {
       debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
-    publishDeviceMessage(deviceState);
-    lastStateTimeMs = System.currentTimeMillis();
+    stateDirty.set(false);
+    // TODO: Make this block until the callback is actually called.
+    lastStateTimeMs = System.currentTimeMillis() + STATE_THROTTLE_MS;
+    publishDeviceMessage(deviceState, () -> {
+      lastStateTimeMs = System.currentTimeMillis();
+    });
   }
 
   private void publishDeviceMessage(Object message) {
+    publishDeviceMessage(message, null);
+  }
+
+  private void publishDeviceMessage(Object message, Runnable callback) {
     if (mqttPublisher == null) {
       warn("Ignoring publish message b/c connection is shutdown");
       return;
@@ -983,7 +995,8 @@ public class Pubber {
       error("Unknown message class " + message.getClass());
       return;
     }
-    mqttPublisher.publish(configuration.deviceId, topic, message);
+    augmentDeviceMessage(message);
+    mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
     String fileName = topic.replace("/", "_") + ".json";
     File stateOut = new File(OUT_DIR, fileName);
@@ -991,6 +1004,19 @@ public class Pubber {
       OBJECT_MAPPER.writeValue(stateOut, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+    }
+  }
+
+  private void augmentDeviceMessage(Object message) {
+    try {
+      Field version = message.getClass().getField("version");
+      assert version.get(message) == null;
+      version.set(message, UDMI_VERSION);
+      Field timestamp = message.getClass().getField("timestamp");
+      assert timestamp.get(message) == null;
+      timestamp.set(message, new Date());
+    } catch (Exception e) {
+      throw new RuntimeException("While augmenting device message", e);
     }
   }
 

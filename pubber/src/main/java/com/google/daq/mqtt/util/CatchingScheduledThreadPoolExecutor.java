@@ -20,23 +20,10 @@ public class CatchingScheduledThreadPoolExecutor extends ScheduledThreadPoolExec
   }
 
   protected void afterExecute(Runnable r, Throwable t) {
-    super.afterExecute(r, t);
-    if (t == null && r instanceof Future<?>) {
-      try {
-        Future<?> future = (Future<?>) r;
-        if (future.isDone()) {
-          future.get();
-        }
-      } catch (CancellationException ce) {
-        t = ce;
-      } catch (ExecutionException ee) {
-        t = ee.getCause();
-      } catch (InterruptedException ie) {
-        Thread.currentThread().interrupt();
-      }
-    }
     if (t != null) {
-      System.err.println("Scheduled: " + t);
+      System.err.println("Exception during scheduled execution:");
+      t.printStackTrace();
     }
+    super.afterExecute(r, null);
   }
 }
