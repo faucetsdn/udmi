@@ -26,13 +26,13 @@ scan-docker:
 
 build-docker:
   variables: 
-    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/api
 
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
     DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-api
-    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/api
 
 deploy-staging:
   extends: .gks-deploy
