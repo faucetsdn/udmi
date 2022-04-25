@@ -7,7 +7,8 @@ import { resolvers } from '../../device/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
 
 let testServer: ApolloServer;
-const context = getDefaultContextProcessor();
+const clientIds: string[] = ['', ''];
+const context = getDefaultContextProcessor(clientIds);
 
 const QUERY_DEVICES = gql`
   query {
