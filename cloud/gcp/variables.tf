@@ -69,7 +69,7 @@ variable "gke_cluster_name" {
 
 variable "gke_node_pool_name" {
   type = string
-  default = "udmi"
+  default = "udmi-pool"
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
@@ -80,23 +80,23 @@ variable "gke_cluster_location" {
 variable "gke_machine_type" {
   type = string
   default = "e2-standard-2"
-  description = "Type of machine"
+  description = "The name of a Google Compute Engine machine type"
 }
 #cloud DNS variables
 variable "dns_name" {
   type = string
-  description = "DNS name"
+  description = "The DNS name of this managed zone, for instance"
 }
 #ssl variable
 variable "ssl_domains" {
   type = list(string)
-  description = "list of domain names"
+  description = "Domains for which a managed SSL certificate will be valid"
 }
 ##vpc variables##
 variable "gcp_vpc_name" {
     type = string
     default = "udmi"
-    description = "vpc name"
+    description = "Name of the VPC will be created"
 }
 variable "ip_cidr_range" {
   type = string
