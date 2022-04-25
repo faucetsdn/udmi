@@ -90,13 +90,13 @@ variable "dns_name" {
 #ssl variable
 variable "ssl_domains" {
   type = list(string)
-  description = "list of domain names"
+  description = "Domains for which a managed SSL certificate will be valid"
 }
 ##vpc variables##
 variable "gcp_vpc_name" {
     type = string
     default = "udmi"
-    description = "vpc name"
+    description = "Name of the VPC will be created"
 }
 variable "ip_cidr_range" {
   type = string
