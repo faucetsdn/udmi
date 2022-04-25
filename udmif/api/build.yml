@@ -22,12 +22,17 @@ sonarqube-scan:
 
 scan-docker:
   rules:
-    - when: never
-    
+    - when: never 
+
+build-docker:
+  variables: 
+    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
+
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
     DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-api
+    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
 
 deploy-staging:
   extends: .gks-deploy

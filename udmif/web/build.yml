@@ -30,13 +30,16 @@ sonarqube-scan:
 scan-docker:
   rules:
     - when: never
-    
+
+build-docker:
+  variables: 
+    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
+
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
     DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-web
-
-
+    DOCKER_EXTRA_ARGS: '--context-sub-path $WORKING_DIR'
     
 test-node:
   stage: test
