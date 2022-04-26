@@ -25,7 +25,9 @@ then
    helpFunction
 fi
 
-
-docker build -t udmif-api:$tag.
-docker tag udmif-api:$tag gcr.io/$projectId/udmif-api:$tag
-docker push gcr.io/$projectId/udmif-api:$tag
+npm install
+npm install -g @angular/cli
+npm run build
+docker build -t udmif-web:$tag .
+docker tag udmif-web:$tag gcr.io/$projectId/udmif-web:$tag
+docker push gcr.io/$projectId/udmif-web:$tag
