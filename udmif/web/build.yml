@@ -30,11 +30,16 @@ sonarqube-scan:
 scan-docker:
   rules:
     - when: never
-    
+
+build-docker:
+  variables: 
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/web
+
 publish-docker:
   variables: 
     VERSION: $CI_PIPELINE_IID
     DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-web
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/web
     
 test-node:
   stage: test
@@ -49,7 +54,7 @@ deploy-staging:
     NAMESPACE: udmi
     CHART_NAME: udmi-web
     HELM_REPO: udmif/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository="registry.gitlab.com/buildings-iot/udmi/udmif-web" --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true
 
 deploy-ingress-staging:
   extends: .gks-deploy
@@ -71,7 +76,7 @@ deploy-lab:
     NAMESPACE: udmi
     CHART_NAME: udmi-web
     HELM_REPO: udmif/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set gitlab.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository="registry.gitlab.com/buildings-iot/udmi/udmif-web" --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true
   rules:
       - if: $CI_COMMIT_BRANCH == "master"
         when: manual  
