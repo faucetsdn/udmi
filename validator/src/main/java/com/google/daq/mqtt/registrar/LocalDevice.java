@@ -546,6 +546,10 @@ class LocalDevice {
     if (metadata.localnet != null) {
       config.localnet = getDeviceLocalnetConfig();
     }
+    // Copy selected MetadataSystem properties into device config.
+    if (metadata.system.min_loglevel != null) {
+      config.system.min_loglevel = metadata.system.min_loglevel;
+    }
     return config;
   }
 
@@ -562,6 +566,14 @@ class LocalDevice {
         (metadataKey, value) ->
             pointsetConfig.points.computeIfAbsent(
                 metadataKey, configKey -> configFromMetadata(value)));
+
+    // Copy selected MetadataPointset properties into PointsetConfig.
+    if (metadata.pointset.sample_limit_sec != null) {
+      pointsetConfig.sample_limit_sec = metadata.pointset.sample_limit_sec;
+    }
+    if (metadata.pointset.sample_rate_sec != null) {
+      pointsetConfig.sample_rate_sec = metadata.pointset.sample_rate_sec;
+    }
     return pointsetConfig;
   }
 
