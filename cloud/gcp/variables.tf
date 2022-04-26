@@ -110,40 +110,7 @@ variable "create_vpc" {
 }
 
 ## function variables 
-variable "bucket_name" {
-  type = string
-  description = "functions name"
-}
-variable "storage_class" {
-  type =string
-  description = "storage class name for function bucket"
-}
-variable "bucket_location" {
-  type = string
-  description = "gcp function bucket location"   
-}
 
-## function variables 
-variable "function_name" {
-  type = string
-  description = "functions name"
-}
-variable "function_memory" {
-  type = number
-  description = "The amount of memory in megabytes allotted for the function to use."
-}
-variable "function_runtime" {
-  type = string 
-  description = "The runtime in which the function will be executed."
-}
-variable "function_entry_point" {
-  type = string
-  description = "The name of a method in the function source which will be invoked when the function is executed."
-}
-variable "function_environment_variables" {
-  type        = map(string)
-  description = "A set of key/value environment variable pairs to assign to the function."
-}
 ## Mongodb variables
 variable "public_key" {
   type  = string
@@ -210,6 +177,20 @@ variable "db_role" {
   description = "Name of the role to grant."
 }
 
-
+## function variables
+variable "eventHandler_functions" {
+  type = map(object({
+    name                  = string 
+    runtime               = string
+    available_memory_mb   = number
+    entry_point           = string 
+    project               = string
+    region                = string
+    storage_class         = string
+    location              = string
+    environment_variables = map(string)
+  }))
+  description = ""
+}
 
 
