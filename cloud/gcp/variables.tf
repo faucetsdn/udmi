@@ -110,7 +110,20 @@ variable "create_vpc" {
 }
 
 ## function variables 
-
+variable "eventHandler_functions" {
+  type = map(object({
+    name                  = string 
+    runtime               = string
+    available_memory_mb   = number
+    entry_point           = string 
+    project               = string
+    region                = string
+    storage_class         = string
+    location              = string
+    environment_variables = map(string)
+  }))
+  description = "eventHandler function values"
+}
 ## Mongodb variables
 variable "public_key" {
   type  = string
@@ -122,7 +135,7 @@ variable "private_key" {
 }
 variable "project_name" {
   type = string
-  description = "The name of the project udmi want to create"
+  description = "The name of the project udmi wants to create"
 }
 variable "atlas_org_id" {
   type = string
@@ -177,20 +190,5 @@ variable "db_role" {
   description = "Name of the role to grant."
 }
 
-## function variables
-variable "eventHandler_functions" {
-  type = map(object({
-    name                  = string 
-    runtime               = string
-    available_memory_mb   = number
-    entry_point           = string 
-    project               = string
-    region                = string
-    storage_class         = string
-    location              = string
-    environment_variables = map(string)
-  }))
-  description = ""
-}
 
 
