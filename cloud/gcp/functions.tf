@@ -34,7 +34,7 @@ resource "google_cloudfunctions_function" "eventHandlerFunction" {
   name                  = each.value.name
   project               = each.value.project
   region                = each.value.region
-  runtime               = each.value.entry_point
+  runtime               = each.value.runtime
    event_trigger  {
       event_type = "providers/cloud.pubsub/eventTypes/topic.publish"
       resource   = "udmi_target"
