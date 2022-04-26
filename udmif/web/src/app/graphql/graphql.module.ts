@@ -8,7 +8,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { firstValueFrom, map, take } from 'rxjs';
 
 const uri = '/api';
-export function createApollo(httpLink: HttpLink, authService: SocialAuthService): ApolloClientOptions<any> {
+export function ApolloFactory(httpLink: HttpLink, authService: SocialAuthService): ApolloClientOptions<any> {
   const auth = setContext(async (operation, context) => {
     const idToken = await firstValueFrom(
       authService.authState.pipe(
@@ -42,7 +42,7 @@ export function createApollo(httpLink: HttpLink, authService: SocialAuthService)
   providers: [
     {
       provide: APOLLO_OPTIONS,
-      useFactory: createApollo,
+      useFactory: ApolloFactory,
       deps: [HttpLink, SocialAuthService],
     },
   ],

@@ -14,6 +14,14 @@ COPY $BUILD_DIR $WEB_DIR
 # with the replaced docker runtime env variables.
 COPY prod/nginx.conf /etc/nginx
 
+# Copy the docker entrypoint file to the root.
+COPY prod/docker-entrypoint.sh /
 
+# Just in case the file mode was not properly set in Git.
+RUN chmod +x /docker-entrypoint.sh
 
+# Use our own entrypoint.
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
+# Launch nginx.
+CMD ["nginx", "-g", "daemon off;"]
