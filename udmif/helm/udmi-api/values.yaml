@@ -5,21 +5,24 @@
 replicaCount: 1
 
 image:
-  repository: gcr.io/@GCP_PROJECT_ID@//udmif-api
+  repository: gcr.io/@GCP_PROJECT_ID@/udmif-api
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1226"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
 
 dockerSecret:
   create: false
   registry: ""
   username: ""
   accessToken: ""
+
+env:
+  AUTH_CLIENT_ID: <<Injected via CI/CD variable>>
+  CLIENT_IDS: <<Injected via CI/CD variable>>
 
 serviceAccount:
   # Specifies whether a service account should be created
