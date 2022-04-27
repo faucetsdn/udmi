@@ -10,6 +10,7 @@ resource "google_project_iam_member" "gke_gcr_binding" {
 }
 #GKE CLUSTER
 resource "google_container_cluster" "udmi" {
+    project = var.gcp_project_id
     name     = var.gke_cluster_name
     location = var.gke_cluster_location
     node_locations = var.gke_node_locations
@@ -28,6 +29,7 @@ resource "google_container_cluster" "udmi" {
 
 # Separately Managed Node Pool
 resource "google_container_node_pool" "node_pool" {
+  project = var.gcp_project_id
   name       = var.gke_node_pool_name
   location   = var.gke_cluster_location
   cluster    = google_container_cluster.udmi.name
