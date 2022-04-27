@@ -41,11 +41,9 @@ There are some pre-requisites that need to be satisfied in order to build and de
    ```
    helm upgrade udmi-api  udmi-api --install --debug --namespace udmi --create-namespace --set image.tag=<imag tag>
    ```
-3. Deploy ingress using below commands. Note that you will need to update values.yaml file for both API & Web with proper host name.
+3. Deploy ingress using below commands. Please note that, HOST_NAME need to be updated [`ingress.yaml`](udmi/udmif/ingress.yaml) before running below command.
 
- [`ingress.yaml`](udmi/udmif/ingress.yaml) we have to update @HOST_NAME@ then run below command
-
-
+ [`ingress.yaml`](udmi/udmif/ingress.yaml)
 ```
 kubectl apply -f ingress.yaml -n udmi
 ```
