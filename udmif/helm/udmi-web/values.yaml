@@ -8,7 +8,7 @@ image:
   repository: gcr.io/@GCP_PROJECT_ID@/udmif-web
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1227"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
