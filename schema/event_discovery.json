@@ -12,7 +12,7 @@
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
-      "description": "Major version of the UDMI schema",
+      "description": "Version of the UDMI schema",
       "type": "string"
     },
     "generation": {
