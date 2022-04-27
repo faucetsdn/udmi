@@ -42,7 +42,7 @@ deploy-staging:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
     HELM_REPO: udmif/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true --set env.AUTH_CLIENT_ID=$AUTH_CLIENT_ID --set env.CLIENT_IDS=$CLIENT_IDS
 
 deploy-lab:
   extends: .gks-deploy
@@ -52,7 +52,7 @@ deploy-lab:
     NAMESPACE: udmi
     CHART_NAME: udmi-api
     HELM_REPO: udmif/helm
-    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true --set env.AUTH_CLIENT_ID=$AUTH_CLIENT_ID --set env.CLIENT_IDS=$CLIENT_IDS
   rules:
       - if: $CI_COMMIT_BRANCH == "master"
         when: manual  

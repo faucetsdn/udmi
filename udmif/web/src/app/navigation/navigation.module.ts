@@ -6,7 +6,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { AppRoutingModule } from '../app-routing.module';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../auth/auth.service';
 
 @NgModule({
   declarations: [NavigationComponent],

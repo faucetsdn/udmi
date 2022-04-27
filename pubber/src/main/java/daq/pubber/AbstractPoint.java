@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
@@ -20,4 +21,6 @@ public interface AbstractPoint {
   PointPointsetState getState();
 
   void setConfig(PointPointsetConfig config);
+
+  PointEnumerationEvent enumerate();
 }

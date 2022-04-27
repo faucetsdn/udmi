@@ -1,0 +1,18 @@
+{
+  "title": "Discovery Model",
+  "description": "Discovery target parameters",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "families": {
+      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryTestingModel>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:model_discovery_family.json#"
+        }
+      }
+    }
+  }
+}
+

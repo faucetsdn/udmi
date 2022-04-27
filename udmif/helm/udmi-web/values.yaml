@@ -8,7 +8,7 @@ image:
   repository: gcr.io/@GCP_PROJECT_ID@/udmif-web
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1227"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -20,6 +20,10 @@ dockerSecret:
   username: ""
   accessToken: ""
 
+env:
+  API_URI: /api
+  GOOGLE_CLIENT_ID: <<Injected via CI/CD variable>>
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -28,7 +32,6 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
-
 
 podAnnotations: {}
 
