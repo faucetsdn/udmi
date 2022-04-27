@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { assign } from 'lodash-es';
 import { EnvService } from './env.service';
 
-export function EnvFactory() {
+export function EnvFactory(): EnvService {
   const env = new EnvService();
 
   // Assign environment variables from browser window to env

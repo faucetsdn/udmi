@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { GoogleLoginProvider, SocialAuthServiceConfig, SocialLoginModule } from '@abacritt/angularx-social-login';
 import { EnvService } from '../env/env.service';
 
-export function SocialAuthFactory(env: EnvService) {
+export function SocialAuthFactory(env: EnvService): SocialAuthServiceConfig {
   const config: SocialAuthServiceConfig = {
     autoLogin: true,
     providers: [
