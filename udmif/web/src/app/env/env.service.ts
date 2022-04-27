@@ -10,5 +10,8 @@ export class EnvService {
   // Google client id
   public googleClientId = '';
 
+  // Api
+  public apiUri = '/api';
+
   constructor() {}
 }

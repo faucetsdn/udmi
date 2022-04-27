@@ -4,6 +4,9 @@ The project uses [Angular](https://angular.io/cli) and it's CLI. The CLI depends
 
 ---
 
+### Config
+Copy the `env.template.js` file in the `/src` folder and rename the copy to `env.js`. Populate with the appropriate values obtained from a teammate.
+
 ### Running the Project
 
 1.  Optional: if you just want to spin up the app, skip this step. If you plan to use some of the Angular CLI commands but don't have the Angular CLI installed yet, install it globally on your machine;
