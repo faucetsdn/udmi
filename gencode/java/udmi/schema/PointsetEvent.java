@@ -35,12 +35,12 @@ public class PointsetEvent {
     @JsonPropertyDescription("RFC 3339 timestamp the telemetry event was generated")
     public Date timestamp;
     /**
-     * Major version of the UDMI schema
+     * Version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
-    @JsonPropertyDescription("Major version of the UDMI schema")
+    @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
      * Indicates if this is a partial update (only some points may be included)

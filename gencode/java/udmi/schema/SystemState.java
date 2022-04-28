@@ -30,12 +30,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class SystemState {
 
     /**
-     * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).
+     * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)
      * (Required)
      * 
      */
     @JsonProperty("last_config")
-    @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).")
+    @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)")
     public Date last_config;
     /**
      * 
@@ -53,18 +53,22 @@ public class SystemState {
     @JsonPropertyDescription("The serial number of the physical device")
     public java.lang.String serial_no;
     /**
-     * 
+     * Hardware
+     * <p>
+     * A collection of fields which describe the physical hardware of the device.
      * (Required)
      * 
      */
     @JsonProperty("hardware")
-    public Map<String, String> hardware;
+    @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
+    public Hardware hardware;
     /**
-     * 
+     * A collection of items which can be used to describe version of software running on a device
      * (Required)
      * 
      */
     @JsonProperty("software")
+    @JsonPropertyDescription("A collection of items which can be used to describe version of software running on a device")
     public Map<String, String> software;
     @JsonProperty("params")
     public Map<String, String> params;

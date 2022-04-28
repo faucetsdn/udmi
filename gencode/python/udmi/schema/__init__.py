@@ -42,3 +42,4 @@ from .state_gateway import GatewayState
 from .state_pointset import PointsetState
 from .state_pointset_point import PointPointsetState
 from .state_system import SystemState
+from .state_system_hardware import Hardware

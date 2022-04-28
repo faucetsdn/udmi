@@ -351,9 +351,8 @@ public class Pubber {
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
-    deviceState.system.hardware = new HashMap<>();
-    deviceState.system.hardware.put("make", "BOS");
-    deviceState.system.hardware.put("model", "pubber");
+    deviceState.system.hardware.make = "BOS";
+    deviceState.system.hardware.model = "pubber";
     deviceState.system.software = new HashMap<>();
     deviceState.system.software.put("firmware", "v1");
     devicePoints.extraField = configuration.extraField;
