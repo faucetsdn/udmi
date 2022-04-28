@@ -16,7 +16,7 @@
       ]
     },
     "version": {
-      "description": "Major version of the UDMI schema",
+      "description": "Version of the UDMI schema",
       "type": "string"
     },
     "connect": {
