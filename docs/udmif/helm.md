@@ -2,7 +2,7 @@
 
 # UDMIF API & Web Build and Deployment
 
-The UDMIF [`API`](udmi/udmif/api/build.sh) and [`Web`](udmi/udmif/web/build.sh) source code present in udmif folder and helm charts for these two applications are under [`helm`](udmi/udmif/helm) folder. In this document helps to build UDMIF API & Web and deploy in GKE.
+The UDMIF [`API`](../../udmif/api) and [`Web`](../../udmif/web) source code present in udmif folder and helm charts for these two applications are under [`helm`](../../udmif/helm) folder. In this document helps to build UDMIF API & Web and deploy in GKE.
 
 ## Pre-requisites
 There are some pre-requisites that need to be satisfied in order to build and deploy API and Web applications. 
@@ -21,8 +21,8 @@ There are some pre-requisites that need to be satisfied in order to build and de
  ```
  ./build.sh -p <projectId> -t <image-tag>
  ```
-- projectId - Google projectId
-- tag - Docker image tag
+   - projectId - Google projectId
+   - tag - Docker image tag
 
 #### 2. Deploy Helm chart in GKE
 
@@ -34,17 +34,16 @@ There are some pre-requisites that need to be satisfied in order to build and de
    gcloud container clusters get-credentials udmi-swarm --region=us-central1-f
    ```
 
-2. Deploy helm chart using below commands
+2. Deploy helm chart using below commands, GCP_PROJECT_ID need to be updated in values.yaml for [`API`](../../udmif/helm/udmi-api) and [`Web`](../../udmif/helm/udmi-web) helm charts before running below commands.
    ```
-   helm upgrade udmi-web  udmi-web --install --debug --namespace udmi --create-namespace --set image.tag=<imag tag>
+   helm upgrade udmi-web  udmi-web --install --debug --namespace udmi --create-namespace --set image.tag=<imag tag> --set env.GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
    ```
    ```
-   helm upgrade udmi-api  udmi-api --install --debug --namespace udmi --create-namespace --set image.tag=<imag tag>
+   helm upgrade udmi-api  udmi-api --install --debug --namespace udmi --create-namespace --set image.tag=<imag tag> --set env.AUTH_CLIENT_ID=$AUTH_CLIENT_ID --set env.CLIENT_IDS=$CLIENT_IDS
    ```
-3. Deploy ingress using below commands. Please note that, HOST_NAME need to be updated [`ingress.yaml`](udmi/udmif/ingress.yaml) before running below command.
+3. Deploy ingress using below commands. Please note that, HOST_NAME need to be updated [`ingress.yaml`](../../udmif/ingress.yaml) before running below command.
 
- [`ingress.yaml`](udmi/udmif/ingress.yaml)
-```
-kubectl apply -f ingress.yaml -n udmi
-```
+   ```
+   kubectl apply -f ingress.yaml -n udmi
+   ```
 
