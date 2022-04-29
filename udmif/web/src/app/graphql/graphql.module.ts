@@ -6,9 +6,13 @@ import { InMemoryCache, ApolloClientOptions, ApolloLink } from '@apollo/client/c
 import { setContext } from '@apollo/client/link/context';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { firstValueFrom, map, take } from 'rxjs';
+import { EnvService } from '../env/env.service';
 
-const uri = '/api';
-export function createApollo(httpLink: HttpLink, authService: SocialAuthService): ApolloClientOptions<any> {
+export function ApolloFactory(
+  httpLink: HttpLink,
+  authService: SocialAuthService,
+  env: EnvService
+): ApolloClientOptions<any> {
   const auth = setContext(async (operation, context) => {
     const idToken = await firstValueFrom(
       authService.authState.pipe(
@@ -32,7 +36,7 @@ export function createApollo(httpLink: HttpLink, authService: SocialAuthService)
   });
 
   return {
-    link: ApolloLink.from([auth, httpLink.create({ uri })]),
+    link: ApolloLink.from([auth, httpLink.create({ uri: env.apiUri })]),
     cache: new InMemoryCache(),
   };
 }
@@ -42,8 +46,8 @@ export function createApollo(httpLink: HttpLink, authService: SocialAuthService)
   providers: [
     {
       provide: APOLLO_OPTIONS,
-      useFactory: createApollo,
-      deps: [HttpLink, SocialAuthService],
+      useFactory: ApolloFactory,
+      deps: [HttpLink, SocialAuthService, EnvService],
     },
   ],
 })
