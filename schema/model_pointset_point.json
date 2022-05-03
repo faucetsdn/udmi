@@ -1,0 +1,46 @@
+{
+  "title": "Point Pointset Model",
+  "description": "Information about a specific point name of the device.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "units": {
+      "description": "Expected unit configuration for the point",
+      "type": "string"
+    },
+    "writable": {
+      "description": "Indicates if this point is writable (else read-only)",
+      "type": "boolean"
+    },
+    "baseline_value": {
+      "description": "Represents the expected baseline value of the point",
+      "examples": [22]
+    },
+    "baseline_tolerance": {
+      "type": "number",
+      "description": "Maximum deviation from `baseline_value`",
+      "examples": [2]
+    },
+    "baseline_state": {
+      "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
+      "enum": [
+        "applied",
+        "updating",
+        "overridden",
+        "invalid",
+        "failure"
+      ]
+    },
+    "cov_increment": {
+      "description": "Triggering threshold for partial cov update publishing",
+      "examples": [1],  
+      "type": "number"
+    },
+    "ref": {
+      "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
+      "type": "string",
+      "examples": ["AI3.Present_Value", "400070"]
+    }
+  }
+}

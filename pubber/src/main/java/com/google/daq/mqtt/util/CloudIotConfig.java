@@ -9,4 +9,5 @@ public class CloudIotConfig {
   public String cloud_region;
   public String site_name;
   public String update_topic;
+  public String reflect_region;
 }
