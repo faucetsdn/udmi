@@ -76,7 +76,7 @@ def check_links(file_path):
                 link_path, link_anchor = split_link_fragment(link)
                 dir_name = os.path.dirname(os.path.realpath(file_path))
 
-                # Links are relative to the file they were found in 
+                # Links are relative to the file they were found in
                 resolved_path = os.path.realpath(os.path.join(dir_name, link_path))
 
                 if not os.path.exists(resolved_path):
