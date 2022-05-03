@@ -12,7 +12,7 @@ describe('AuthService', () => {
   let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
-    mockSocialAuthService = jasmine.createSpyObj(SocialAuthService, ['signIn', 'signOut']);
+    mockSocialAuthService = jasmine.createSpyObj(SocialAuthService, ['signIn', 'signOut', 'refreshAuthToken']);
     mockApollo = jasmine.createSpyObj(Apollo, ['client']);
     mockRouter = jasmine.createSpyObj(Router, ['navigateByUrl']);
 
@@ -33,21 +33,56 @@ describe('AuthService', () => {
   it('should route the user back into the app after login', async () => {
     const user: SocialUser = {} as SocialUser;
 
-    mockApollo.client.clearStore = jasmine.createSpy();
-    mockSocialAuthService.signIn.and.returnValue(new Promise((resolve, reject) => resolve(user)));
+    mockSocialAuthService.signIn.and.resolveTo(user);
 
     await service.loginWithGoogle();
 
     expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/devices');
   });
 
+  it('should not do anything when logging in fails', async () => {
+    mockSocialAuthService.signIn.and.rejectWith();
+
+    await service.loginWithGoogle();
+
+    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it('should route the user to the login page and should clear the cache after logout', async () => {
     mockApollo.client.clearStore = jasmine.createSpy();
-    mockSocialAuthService.signOut.and.returnValue(new Promise((resolve, reject) => resolve()));
+    mockSocialAuthService.signOut.and.resolveTo();
 
     await service.logout();
 
     expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/login');
     expect(mockApollo.client.clearStore).toHaveBeenCalled();
+  });
+
+  it('should not do anything when logging out fails', async () => {
+    mockApollo.client.clearStore = jasmine.createSpy();
+    mockSocialAuthService.signOut.and.rejectWith();
+
+    await service.logout();
+
+    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
+    expect(mockApollo.client.clearStore).not.toHaveBeenCalled();
+  });
+
+  it('should logout when refreshing the token fails', async () => {
+    spyOn(service, 'logout');
+    mockSocialAuthService.refreshAuthToken.and.rejectWith();
+
+    await service.refreshToken();
+
+    expect(service.logout).toHaveBeenCalled();
+  });
+
+  it('should not logout when refreshing the token succeeds', async () => {
+    spyOn(service, 'logout');
+    mockSocialAuthService.refreshAuthToken.and.resolveTo();
+
+    await service.refreshToken();
+
+    expect(service.logout).not.toHaveBeenCalled();
   });
 });
