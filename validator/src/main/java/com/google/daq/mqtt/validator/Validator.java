@@ -89,7 +89,7 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
-  private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
+  private static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_public.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
