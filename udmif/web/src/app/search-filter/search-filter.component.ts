@@ -1,20 +1,21 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase, findIndex } from 'lodash-es';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { startCase, findIndex, some } from 'lodash-es';
+import { iif, Observable, of } from 'rxjs';
+import { map, startWith, switchMap } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
 import { MatChipInputEvent } from '@angular/material/chips';
+import { SearchFilterService } from './search-filter.service';
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['data', 'handleFilterChange'],
+  inputs: ['fields', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
-  data: Record<string, string[]> = {};
+  fields: string[] = [];
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
@@ -28,15 +29,31 @@ export class SearchFilterComponent implements OnInit {
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
 
-  constructor() {
+  constructor(private searchFilter: SearchFilterService) {
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
       startWith(null),
-      map((item: string | null) => (item ? this._filter(item) : this.allItems.slice()))
+      switchMap((term) =>
+        iif(
+          () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
+          // Grab auto-complete values when we've chosen the equals operator.
+          this.searchFilter.getAutocompleteSuggestions('devices', this.filterEntry.field, term, 5).pipe(
+            map(({ data }) => {
+              this.allItems =
+                data.autocompleteSuggestions?.map(
+                  (suggestion: string): ChipItem => ({ label: suggestion, value: suggestion })
+                ) || [];
+              return this.allItems;
+            })
+          ),
+          // Else grab the auto-complete options for the field names.
+          of(term ? this._filter(term) : this.allItems)
+        )
+      )
     );
   }
 
   ngOnInit(): void {
-    this.allItems = Object.keys(this.data).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
+    this.allItems = this.fields.map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
     this.fieldItems = this.allItems;
   }
 
@@ -99,10 +116,7 @@ export class SearchFilterComponent implements OnInit {
         this.filterEntry.field = chipValue; // store the field
         break;
       case 2:
-        this.allItems =
-          chipValue === '~'
-            ? []
-            : this.data[this.items[this.items.length - 2].value].map((cv) => ({ label: cv, value: cv })); // select the fields options when operator is not contains (~)
+        this.allItems = []; // can clear the items, the api will handle filtering user input above in observable
         this.placeholder = 'Select value...';
         this.filterEntry.operator = chipValue; // store the operator
         this._combineLastTwoChips();

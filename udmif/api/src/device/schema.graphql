@@ -9,6 +9,7 @@ input SearchOptions {
   filter: String
 }
 
+<<<<<<< HEAD
 input DeviceNamesSearchOptions {
   # the string to search for
   search: String
@@ -41,6 +42,12 @@ input SectionsSearchOptions {
   # the string to search for
   search: String
   # the number of values to return, defaults to 10
+=======
+input AutocompleteOptions {
+  entity: String!
+  field: String!
+  term: String
+>>>>>>> #756-setup front-end to supply needed params to backend to generate proper suggestions
   limit: Int
 }
 

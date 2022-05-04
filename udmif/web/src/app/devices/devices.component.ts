@@ -30,21 +30,7 @@ export class DevicesComponent implements OnInit {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   sortOptions: SortOptions | undefined;
   filter: string | undefined;
-
-  //TODO:: Pass along proper options to search filter.
-  searchFilterOptions = {
-    site: ['site1', 'site2', 'site3'],
-    make: [
-      'Cisco',
-      'BitBox USA',
-      'Automated Logic',
-      'Enlightened',
-      'Tridium',
-      'Delta Controls',
-      'Acquisuite',
-      'Schneider Electric / APC',
-    ],
-  };
+  searchFields: string[] = ['name', 'make', 'model', 'site', 'section'];
 
   constructor(private devicesService: DevicesService) {}
 

@@ -12,3 +12,18 @@ export interface ChipItem {
   label: string;
   value: string;
 }
+
+export interface AutocompleteOptions {
+  entity: string;
+  field: string;
+  term?: string;
+  limit?: number;
+}
+
+export type AutocompleteSuggestionsQueryResponse = {
+  autocompleteSuggestions: string[] | null;
+};
+
+export type AutocompleteSuggestionsQueryVariables = {
+  autocompleteOptions: AutocompleteOptions;
+};
