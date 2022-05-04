@@ -26,6 +26,6 @@ then
 fi
 
 
-docker build -t udmif-api:$tag.
+docker build -t udmif-api:$tag .
 docker tag udmif-api:$tag gcr.io/$projectId/udmif-api:$tag
 docker push gcr.io/$projectId/udmif-api:$tag
