@@ -2,12 +2,17 @@ import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testin
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ApolloQueryResult } from '@apollo/client/core';
+import { of } from 'rxjs';
+import { AutocompleteSuggestionsQueryResponse } from './search-filter';
 import { SearchFilterComponent } from './search-filter.component';
 import { SearchFilterModule } from './search-filter.module';
+import { SearchFilterService } from './search-filter.service';
 
 describe('SearchFilterComponent', () => {
   let component: SearchFilterComponent;
   let fixture: ComponentFixture<SearchFilterComponent>;
+  let mockSearchFilterService: jasmine.SpyObj<SearchFilterService>;
 
   function injectViewValue(value: string): void {
     let e: MatAutocompleteSelectedEvent = {
@@ -21,18 +26,30 @@ describe('SearchFilterComponent', () => {
   }
 
   beforeEach(async () => {
+    mockSearchFilterService = jasmine.createSpyObj(SearchFilterService, ['getAutocompleteSuggestions']);
+    mockSearchFilterService.getAutocompleteSuggestions.and.returnValue(
+      of(<ApolloQueryResult<AutocompleteSuggestionsQueryResponse>>{
+        data: {
+          autocompleteSuggestions: ['CDS-1', 'AHU-2', 'CDS-3'],
+        },
+      })
+    );
+
     await TestBed.configureTestingModule({
       imports: [SearchFilterModule, BrowserAnimationsModule],
+      providers: [{ provide: SearchFilterService, useValue: mockSearchFilterService }],
     }).compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SearchFilterComponent);
     component = fixture.componentInstance;
-    component.data = {
-      name: ['CDS-1', 'AHU-2', 'CDS-3'],
-      make: ['make-1', 'make-2', 'make-3'],
-    };
+    component.fields = ['name', 'make'];
+
+    //  name: ['CDS-1', 'AHU-2', 'CDS-3'],
+    //make: ['make-1', 'make-2', 'make-3'],
+    //};
+
     fixture.detectChanges();
   });
 
@@ -66,9 +83,7 @@ describe('SearchFilterComponent', () => {
 
     expect(component.items).toContain({ label: 'Name =', value: 'Name =' });
     expect(component.filterIndex).toEqual(2);
-    expect(component.allItems).toContain({ label: 'CDS-1', value: 'CDS-1' });
-    expect(component.allItems).toContain({ label: 'AHU-2', value: 'AHU-2' });
-    expect(component.allItems).toContain({ label: 'CDS-3', value: 'CDS-3' });
+    expect(component.allItems).toEqual([]);
     expect(component.placeholder).toEqual('Select value...');
     expect(component.filterEntry.field).toEqual('name');
     expect(component.filterEntry.operator).toEqual('=');

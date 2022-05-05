@@ -10,6 +10,7 @@ import { DevicesQueryResponse, SortOptions } from './devices';
 import { SearchFilterItem } from '../search-filter/search-filter';
 import { Device } from '../device/device';
 import { ApolloQueryResult } from '@apollo/client/core';
+import { SearchFilterService } from '../search-filter/search-filter.service';
 
 describe('DevicesComponent', () => {
   let component: DevicesComponent;
@@ -40,7 +41,10 @@ describe('DevicesComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [DevicesModule, BrowserAnimationsModule],
-      providers: [{ provide: DevicesService, useValue: mockDevicesService }],
+      providers: [
+        { provide: DevicesService, useValue: mockDevicesService },
+        { provide: SearchFilterService, useValue: {} },
+      ],
     }).compileComponents();
   });
 
