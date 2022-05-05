@@ -39,7 +39,7 @@ export class SearchFilterComponent implements OnInit {
           this.searchFilter.getAutocompleteSuggestions('devices', this.filterEntry.field, term, 5).pipe(
             map(({ data }) => {
               this.allItems =
-                data.autocompleteSuggestions?.map(
+                data.autocompleteSuggestions.map(
                   (suggestion: string): ChipItem => ({ label: suggestion, value: suggestion })
                 ) || [];
               return this.allItems;

@@ -21,7 +21,7 @@ export interface AutocompleteOptions {
 }
 
 export type AutocompleteSuggestionsQueryResponse = {
-  autocompleteSuggestions: string[] | null;
+  autocompleteSuggestions: string[];
 };
 
 export type AutocompleteSuggestionsQueryVariables = {

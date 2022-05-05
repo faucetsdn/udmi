@@ -1,18 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
-import { GET_DEVICE } from './device.gql';
-import { DeviceQueryResponse } from './device';
-import { DeviceService } from './search-filter.service';
+import { GET_AUTOCOMPLETE_SUGGESTIONS } from './search-filter.gql';
+import { AutocompleteSuggestionsQueryResponse } from './search-filter';
+import { SearchFilterService } from './search-filter.service';
 
-describe('DeviceService', () => {
-  let service: DeviceService;
+describe('SearchFilterService', () => {
+  let service: SearchFilterService;
   let controller: ApolloTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ApolloTestingModule],
     });
-    service = TestBed.inject(DeviceService);
+    service = TestBed.inject(SearchFilterService);
     controller = TestBed.inject(ApolloTestingController);
   });
 
@@ -25,24 +25,12 @@ describe('DeviceService', () => {
   });
 
   xit('should return the device', (done) => {
-    const mockDeviceResponse: DeviceQueryResponse = {
-      device: {
-        id: '123',
-        name: 'device one',
-        make: 'Mitr',
-        model: 'MTR 1',
-        site: 'ABC',
-        section: 'ABC 3',
-        lastPayload: '2022-01-03',
-        operational: false,
-        serialNumber: 's123',
-        firmware: 'V3',
-        tags: [],
-      },
+    const mockDeviceResponse: AutocompleteSuggestionsQueryResponse = {
+      autocompleteSuggestions: ['City A'],
     };
 
     // Make some assertion about the result for once it's fulfilled.
-    service.getDevice('123').subscribe(({ data }) => {
+    service.getAutocompleteSuggestions('device', 'site', 'ci', 10).subscribe(({ data }) => {
       expect(data).toEqual(mockDeviceResponse);
       done();
     });
@@ -50,11 +38,16 @@ describe('DeviceService', () => {
     // The following `expectOne()` will match the operation's document.
     // If no requests or multiple requests matched that document
     // `expectOne()` would throw.
-    const op = controller.expectOne(GET_DEVICE);
+    const op = controller.expectOne(GET_AUTOCOMPLETE_SUGGESTIONS);
 
-    // Assert the correct search options were sent.
+    // Assert the correct variables were sent.
     expect(op.operation.variables).toEqual({
-      id: '123',
+      autocompleteOptions: {
+        entity: 'device',
+        field: 'site',
+        term: 'ci',
+        limit: 10,
+      },
     });
 
     // Respond with mock data, causing Observable to resolve.
