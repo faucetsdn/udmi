@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
-cd $ROOT_DIR
+mkdir -p $ROOT_DIR/sites
+cd $ROOT_DIR/sites 
 
 MODEL_DIR=udmi_site_model
 MODEL_VER=1.7
