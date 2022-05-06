@@ -7,7 +7,7 @@ management and operation of physical IoT systems. This data is typically exchang
 with a cloud entity that can maintain a "digital twin" or "shadow device" in the cloud.
 
 * [Core UDMI documentation](http://faucetsdn.github.io/udmi/docs/) for tools and specifications
-* [Message schema definition](https://github.com/faucetsdn/udmi/tree/master/schema) with ([_🧬Interactive Viewer_](http://faucetsdn.github.io/udmi/gencode/docs/)
+* [Message schema definition](https://github.com/faucetsdn/udmi/tree/master/schema) with ([_🧬Interactive Viewer_](http://faucetsdn.github.io/udmi/gencode/docs/))
 * [udmi-discuss@googlegroups.com](https://groups.google.com/forum/#!forum/udmi-discuss) email discussion list
 * Bi-weekly _UDMI Discuss_ video meeting open to all (join the mailing list to get an invite)
 
@@ -19,14 +19,14 @@ By design, this schema is intended to be:
 * **M**anagement: Focus on device _management_, rather than command & control.
 * **I**nterface: Define an interface specification, rather than a client-library or RPC mechanism.
 
-See the associated [UDMI Tech Stack](http://faucetsdn.github.io/udmi/docs/specs/tech_stack.md) for details about transport mechanism
+See the associated [UDMI Tech Stack](http://faucetsdn.github.io/udmi/docs/specs/tech_stack) for details about transport mechanism
 outside of the core schema definition. Nominally meant for use with
 [Google's Cloud IoT Core](https://cloud.google.com/iot/docs/), it can be applied to any set
 of data or hosting setup.
 
 ## Recommended Workflow
 
-The [recommended workflow](http://faucetsdn.github.io/udmi/docs/guides/workflow.md) for UDMI covers using the _registrar_ and
+The [recommended workflow](http://faucetsdn.github.io/udmi/docs/guides) for UDMI covers using the _registrar_ and
 _validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool
 is instrumental in setting up and testing the system independent of actual device setup.
 
@@ -40,7 +40,7 @@ manual operation (aren't automated), and increase the security exposure of the s
 
 UDMI is intended to support a few primary use-cases:
 * _Telemetry Ingestion_: Ingest device data points in a standardized format.
-* [_Gateway Proxy_](http://faucetsdn.github.io/udmi/docs/specs/gateway.md): Proxy data/connection for non-UDMI devices,
+* [_Gateway Proxy_](http://faucetsdn.github.io/udmi/docs/specs/gateway): Proxy data/connection for non-UDMI devices,
 allowing adaptation to legacy systems.
 * _On-Prem Actuation_: Ability to effect on-prem device behavior.
 * _Device Testability_: e.g. Trigger a fake alarm to test reporting mechanisms.
@@ -83,10 +83,10 @@ very large structures or high-bandwidth streams.
 UDMI provides a means to multiplex multiple functional subsystems through the same shared
 communication channel. There are a number of subsystems that make up the core UDMI spec:
 
-* Core [_system_](http://faucetsdn.github.io/udmi/docs/messages/system.md) messages about the base device itself.
-* Device [_pointset_](http://faucetsdn.github.io/udmi/docs/messages/pointset.md) for device telemetry organized by points.
-* Optional [_gateway_](http://faucetsdn.github.io/udmi/docs/specs/gateway.md) functionality for proxying device/MQTT connections.
-* Local [_discover_](http://faucetsdn.github.io/udmi/docs/specs/discovery.md) for discovering device and network capabilities.
+* Core [_system_](http://faucetsdn.github.io/udmi/docs/messages/system) messages about the base device itself.
+* Device [_pointset_](http://faucetsdn.github.io/udmi/docs/messages/pointset) for device telemetry organized by points.
+* Optional [_gateway_](http://faucetsdn.github.io/udmi/docs/specs/gateway) functionality for proxying device/MQTT connections.
+* Local [_discover_](http://faucetsdn.github.io/udmi/docs/specs/discovery) for discovering device and network capabilities.
 
 ## Schema Structure
 
@@ -120,6 +120,6 @@ An interactive view of the schema is available on [https://faucetsdn.github.io/u
 ### Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device and server implementations, but also
-properly registering and validating device configuration. The [registrar](https://faucetsdn.github.io/udmi/docs/tools/registrar.md)
-tool and [validator](https://faucetsdn.github.io/udmi/docs/tools/validator.md) tool provide a means to configure and check site
+properly registering and validating device configuration. The [registrar](https://faucetsdn.github.io/udmi/docs/tools/registrar)
+tool and [validator](https://faucetsdn.github.io/udmi/docs/tools/validator) tool provide a means to configure and check site
 installations, respectively.
