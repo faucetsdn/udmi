@@ -23,10 +23,11 @@ export class MongoDeviceDAO implements DeviceDAO {
   async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
     return this.db
       .collection<Device>('device')
-      .find(this.getFilter(searchOptions))
+      .aggregate(this.getAggregate(searchOptions))
       .sort(this.getSort(searchOptions))
       .skip(searchOptions.offset)
       .limit(searchOptions.batchSize)
+      .map((device) => <Device>device)
       .toArray();
   }
 
@@ -72,7 +73,28 @@ export class MongoDeviceDAO implements DeviceDAO {
   }
 
   private getSort(searchOptions: SearchOptions): any {
-    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
+    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : { _id: 1 };
+  }
+
+  private getAggregate(searchOptions: SearchOptions): any {
+    const aggregate: any[] = [{ $match: this.getFilter(searchOptions) }];
+
+    // Return unique results based on a certain field.
+    return searchOptions.uniqueBy
+      ? aggregate.concat(
+          {
+            $group: {
+              _id: `$${searchOptions.uniqueBy}`,
+              doc: { $first: '$$ROOT' },
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: '$doc',
+            },
+          }
+        )
+      : aggregate;
   }
 
   private async getDistinct(field: string, searchOptions: ValidatedCommonSearchOptions): Promise<string[]> {

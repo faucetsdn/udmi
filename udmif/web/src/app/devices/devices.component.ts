@@ -38,8 +38,8 @@ export class DevicesComponent implements OnInit {
     this.devicesService.getDevices(0, this.pageSize).subscribe(({ data, loading }) => {
       this.loading = loading;
       this.devices = data.devices?.devices ?? [];
-      this.totalCount = data.devices?.totalCount;
-      this.totalFilteredCount = data.devices?.totalFilteredCount;
+      this.totalCount = data.devices?.totalCount ?? 0;
+      this.totalFilteredCount = data.devices?.totalFilteredCount ?? 0;
     }); // start off on first page, i.e. offset 0
 
     //TODO:: Keep observable alive after error.

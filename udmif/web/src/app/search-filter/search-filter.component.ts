@@ -1,18 +1,20 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase, findIndex, some } from 'lodash-es';
+import { startCase, findIndex, some, uniqBy } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { SearchFilterService } from './search-filter.service';
+import { DevicesService } from '../devices/devices.service';
+import { Device } from '../device/device';
 
 @Component({
   selector: 'app-search-filter',
   inputs: ['fields', 'entity', 'limit', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
+  providers: [DevicesService], // scoped instances
 })
 export class SearchFilterComponent implements OnInit {
   fields!: string[];
@@ -31,22 +33,38 @@ export class SearchFilterComponent implements OnInit {
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
 
-  constructor(private searchFilter: SearchFilterService) {
+  constructor(private devicesService: DevicesService) {
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
       startWith(null),
       switchMap((term) =>
         iif(
           () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
-          this.searchFilter.getAutocompleteSuggestions(this.entity, this.filterEntry.field, term, this.limit).pipe(
-            map(({ data }) => {
-              this.allItems =
-                data.autocompleteSuggestions.map(
-                  (suggestion: string): ChipItem => ({ label: suggestion, value: suggestion })
-                ) || [];
-              return this.allItems;
-            })
-          ),
+          this.devicesService
+            .getDevices(
+              0,
+              this.limit,
+              { direction: 'ASC', field: this.filterEntry.field },
+              JSON.stringify([
+                {
+                  field: this.filterEntry.field,
+                  operator: '~', // contains
+                  value: term,
+                },
+              ]),
+              this.filterEntry.field
+            )
+            .pipe(
+              map(({ data }) => {
+                this.allItems =
+                  data.devices?.devices?.map((device: Device): ChipItem => {
+                    const value: string = (<any>device)?.[this.filterEntry.field];
+
+                    return { label: value, value };
+                  }) || [];
+                return this.allItems;
+              })
+            ),
           // Else auto-complete on the field names or equals(=)/contains(~).
           of(term ? this._filter(term) : this.allItems)
         )
@@ -142,7 +160,7 @@ export class SearchFilterComponent implements OnInit {
   private _focusItemInput(): void {
     // Clear the input.
     this.itemInput.nativeElement.value = '';
-    this.itemCtrl.setValue(null);
+    this.itemCtrl.setValue('');
 
     setTimeout(() => {
       this.itemInput.nativeElement.blur();

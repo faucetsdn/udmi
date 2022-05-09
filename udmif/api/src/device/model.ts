@@ -9,6 +9,7 @@ export interface SearchOptions {
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;
+  uniqueBy?: string;
 }
 
 export interface ValidatedCommonSearchOptions {

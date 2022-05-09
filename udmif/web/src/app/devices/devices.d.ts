@@ -5,6 +5,7 @@ export interface SearchOptions {
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;
+  uniqueBy?: string;
 }
 
 export interface SortOptions {
@@ -12,14 +13,12 @@ export interface SortOptions {
   field: string;
 }
 
-export type DevicesResponse = {
-  devices: Device[] | null;
-  totalCount: number;
-  totalFilteredCount: number;
-};
-
 export type DevicesQueryResponse = {
-  devices: DevicesResponse;
+  devices: {
+    devices: Device[] | null;
+    totalCount: number;
+    totalFilteredCount: number;
+  } | null;
 };
 
 export type DevicesQueryVariables = {

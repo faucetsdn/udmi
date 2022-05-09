@@ -13,13 +13,11 @@ interface DeviceModel {
   points: string[];
 }
 
-export type Device = Partial<DeviceModel> | null;
+export type Device = Partial<DeviceModel>;
 
-export type DeviceResponse = {
-  device: Device;
+export type DeviceQueryResponse = {
+  device: Device | null;
 };
-
-export type DeviceQueryResponse = DeviceResponse;
 
 export type DeviceQueryVariables = {
   id: string;

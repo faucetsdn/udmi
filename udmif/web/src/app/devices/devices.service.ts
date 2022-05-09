@@ -18,7 +18,8 @@ export class DevicesService {
     offset?: number,
     batchSize: number = 10,
     sortOptions?: SortOptions,
-    filter?: string
+    filter?: string,
+    uniqueBy?: string
   ): Observable<ApolloQueryResult<DevicesQueryResponse>> {
     this.devicesQuery = this.apollo.watchQuery<DevicesQueryResponse, DevicesQueryVariables>({
       notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
@@ -30,6 +31,7 @@ export class DevicesService {
           batchSize,
           sortOptions,
           filter,
+          uniqueBy,
         },
       },
     });

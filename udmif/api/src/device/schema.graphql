@@ -7,6 +7,8 @@ input SearchOptions {
   sortOptions: SortOptions
   # the search filter
   filter: String
+  # the field to consider uniqueness on
+  uniqueBy: String
 }
 
 input DeviceNamesSearchOptions {
