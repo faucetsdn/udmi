@@ -5,13 +5,14 @@
 {
   "version": "1.3.14",
   "timestamp": "2018-08-26T21:39:29.364Z",
-  "hardware": {
-    "make": "ACME",
-    "model": "Bird Trap"
-  },
-  "software": {
-    "firmware": "3.2a"
-  },
+  "system": {
+    "hardware": {
+      "make": "ACME",
+      "model": "Bird Trap"
+    },
+    "software": {
+      "firmware": "3.2a"
+    },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
     "operational": true
