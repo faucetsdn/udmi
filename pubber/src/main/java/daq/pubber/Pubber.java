@@ -51,6 +51,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
+import udmi.schema.Hardware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointEnumerationEvent;
@@ -334,6 +335,7 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
+    deviceState.system.hardware = new Hardware();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
