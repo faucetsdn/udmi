@@ -10,12 +10,14 @@ import { SearchFilterService } from './search-filter.service';
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['fields', 'handleFilterChange'],
+  inputs: ['fields', 'entity', 'limit', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
-  fields: string[] = [];
+  fields!: string[];
+  entity!: string;
+  limit: number = 5;
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
@@ -35,8 +37,8 @@ export class SearchFilterComponent implements OnInit {
       switchMap((term) =>
         iif(
           () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
-          // Grab auto-complete values when we've chosen the equals operator.
-          this.searchFilter.getAutocompleteSuggestions('devices', this.filterEntry.field, term, 5).pipe(
+          // Auto-complete on suggested values when we've chosen the equals operator on a field.
+          this.searchFilter.getAutocompleteSuggestions(this.entity, this.filterEntry.field, term, this.limit).pipe(
             map(({ data }) => {
               this.allItems =
                 data.autocompleteSuggestions.map(
@@ -45,7 +47,7 @@ export class SearchFilterComponent implements OnInit {
               return this.allItems;
             })
           ),
-          // Else grab the auto-complete options for the field names.
+          // Else auto-complete on the field names or equals(=)/contains(~).
           of(term ? this._filter(term) : this.allItems)
         )
       )

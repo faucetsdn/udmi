@@ -1,4 +1,9 @@
-<app-search-filter [fields]="searchFields" [handleFilterChange]="filterData"></app-search-filter>
+<app-search-filter
+  [fields]="searchFields"
+  entity="device"
+  [limit]="15"
+  [handleFilterChange]="filterData"
+></app-search-filter>
 <div class="table-controls">
   <span class="mat-small">{{ totalCount }} Devices</span>
   <mat-paginator

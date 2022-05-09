@@ -45,11 +45,6 @@ describe('SearchFilterComponent', () => {
     fixture = TestBed.createComponent(SearchFilterComponent);
     component = fixture.componentInstance;
     component.fields = ['name', 'make'];
-
-    //  name: ['CDS-1', 'AHU-2', 'CDS-3'],
-    //make: ['make-1', 'make-2', 'make-3'],
-    //};
-
     fixture.detectChanges();
   });
 
