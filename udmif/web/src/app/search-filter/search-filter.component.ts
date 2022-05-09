@@ -1,24 +1,29 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Injector, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase, findIndex, some, uniqBy } from 'lodash-es';
+import { startCase, findIndex, some, get } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { DevicesService } from '../devices/devices.service';
-import { Device } from '../device/device';
+
+const services: any = {
+  DevicesService,
+};
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['fields', 'entity', 'limit', 'handleFilterChange'],
+  inputs: ['serviceName', 'serviceMethod', 'fields', 'itemsPath', 'limit', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
   providers: [DevicesService], // scoped instances
 })
 export class SearchFilterComponent implements OnInit {
+  serviceName!: string;
+  serviceMethod!: string;
   fields!: string[];
-  entity!: string;
+  itemsPath!: string;
   limit: number = 5;
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
@@ -33,15 +38,16 @@ export class SearchFilterComponent implements OnInit {
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
 
-  constructor(private devicesService: DevicesService) {
+  constructor(private injector: Injector) {
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
       startWith(null),
       switchMap((term) =>
         iif(
           () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
-          this.devicesService
-            .getDevices(
+          <Observable<any>>this.injector
+            .get<any>(services[this.serviceName])
+            [this.serviceMethod](
               0,
               this.limit,
               { direction: 'ASC', field: this.filterEntry.field },
@@ -57,8 +63,8 @@ export class SearchFilterComponent implements OnInit {
             .pipe(
               map(({ data }) => {
                 this.allItems =
-                  data.devices?.devices?.map((device: Device): ChipItem => {
-                    const value: string = (<any>device)?.[this.filterEntry.field];
+                  get(data, this.itemsPath)?.map((item: any): ChipItem => {
+                    const value: string = item?.[this.filterEntry.field];
 
                     return { label: value, value };
                   }) || [];

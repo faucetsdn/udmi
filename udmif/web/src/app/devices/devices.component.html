@@ -1,6 +1,8 @@
 <app-search-filter
+  serviceName="DevicesService"
+  serviceMethod="getDevices"
   [fields]="searchFields"
-  entity="device"
+  itemsPath="devices.devices"
   [limit]="15"
   [handleFilterChange]="filterData"
 ></app-search-filter>
