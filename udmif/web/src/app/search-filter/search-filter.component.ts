@@ -40,7 +40,7 @@ export class SearchFilterComponent implements OnInit {
 
   constructor(private injector: Injector) {
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
-      startWith(null),
+      startWith(''),
       switchMap((term) =>
         iif(
           () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
