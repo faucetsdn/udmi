@@ -30,7 +30,13 @@ export class DevicesComponent implements OnInit {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   sortOptions: SortOptions | undefined;
   filter: string | undefined;
-  searchFields: string[] = ['name', 'make', 'model', 'site', 'section'];
+  searchFields: Record<string, string> = {
+    name: 'getDeviceNames',
+    make: 'getDeviceMakes',
+    model: 'getDeviceModels',
+    site: 'getDeviceSites',
+    section: 'getDeviceSections',
+  };
 
   constructor(private devicesService: DevicesService) {}
 

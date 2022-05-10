@@ -5,7 +5,6 @@ export interface SearchOptions {
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;
-  uniqueBy?: string;
 }
 
 export interface SortOptions {
@@ -23,4 +22,33 @@ export type DevicesQueryResponse = {
 
 export type DevicesQueryVariables = {
   searchOptions: SearchOptions;
+};
+
+export type DeviceNamesQueryResponse = {
+  deviceNames: string[];
+};
+
+export type DeviceMakesQueryResponse = {
+  deviceMakes: string[];
+};
+
+export type DeviceModelsQueryResponse = {
+  deviceModels: string[];
+};
+
+export type DeviceSitesQueryResponse = {
+  deviceSites: string[];
+};
+
+export type DeviceSectionsQueryResponse = {
+  deviceSections: string[];
+};
+
+export type DeviceDistinctQueryVariables = {
+  term?: string;
+  limit?: number;
+};
+
+export type DeviceDistinctQueryResult = {
+  values: string[];
 };

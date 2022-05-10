@@ -14,7 +14,7 @@ const services: any = {
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['serviceName', 'serviceMethod', 'fields', 'itemsPath', 'limit', 'handleFilterChange'],
+  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
   providers: [DevicesService], // scoped instances
@@ -22,8 +22,7 @@ const services: any = {
 export class SearchFilterComponent implements OnInit {
   serviceName!: string;
   serviceMethod!: string;
-  fields!: string[];
-  itemsPath!: string;
+  fields!: Record<string, string>;
   limit: number = 5;
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
@@ -45,29 +44,12 @@ export class SearchFilterComponent implements OnInit {
         iif(
           () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
-          <Observable<any>>this.injector
+          <Observable<ChipItem[]>>this.injector
             .get<any>(services[this.serviceName])
-            [this.serviceMethod](
-              0,
-              this.limit,
-              { direction: 'ASC', field: this.filterEntry.field },
-              JSON.stringify([
-                {
-                  field: this.filterEntry.field,
-                  operator: '~', // contains
-                  value: term,
-                },
-              ]),
-              this.filterEntry.field
-            )
+            [this.fields[this.filterEntry.field]]?.(term, this.limit)
             .pipe(
-              map(({ data }) => {
-                this.allItems =
-                  get(data, this.itemsPath)?.map((item: any): ChipItem => {
-                    const value: string = item?.[this.filterEntry.field];
-
-                    return { label: value, value };
-                  }) || [];
+              map(({ values }) => {
+                this.allItems = values.map((value: string): ChipItem => ({ label: value, value }));
                 return this.allItems;
               })
             ),
@@ -79,7 +61,7 @@ export class SearchFilterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.allItems = this.fields.map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
+    this.allItems = Object.keys(this.fields).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
     this.fieldItems = this.allItems;
   }
 
