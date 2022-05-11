@@ -10,13 +10,17 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
 
 * _system_: Basic system operation
   * _base_: Baseline system operational messages
-    * _start_: System is in the process of (re)starting and essentially offline
-    * _ready_: System is fully ready for operation
+    * _start_ (**NOTICE**): System is in the process of (re)starting and essentially offline
+    * _shutdown_ (**NOTICE**): System is shutting down
+    * _ready_: (**NOTICE**): System is fully ready for operation
     * _comms_: Baseline message handling
   * _config_: Configuration message handling
-    * _receive_: Receiving a config message
-    * _parse_: Parsing a receved message
-    * _apply_: Application of a parsed config message
+    * _receive_: (**DEBUG**) Receiving a config message
+    * _parse_: (**DEBUG**) Parsing a received message
+    * _apply_: (**NOTICE**) Application of a parsed config message
+  * _network_: Network (IP) message handling
+    * _connect_: (**NOTICE**) Connected to the network
+    * _disconnect_: (**NOTICE**) Disconnected from a network
 * _pointset_: Handling managing data point conditions
   * _point_: Conditions relating to a specific point, the entry `message` field should
   start with "Point _pointname_" followed by descriptive information.
