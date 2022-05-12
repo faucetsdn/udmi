@@ -68,7 +68,7 @@ public class SystemModel {
         if ((other instanceof SystemModel) == false) {
             return false;
         }
-        SystemMetadata rhs = ((SystemMetadata) other);
+        SystemModel rhs = ((SystemModel) other);
         return (((((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location)))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))));
     }
 

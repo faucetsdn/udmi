@@ -31,7 +31,7 @@ public class PointsetModel {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
-    public HashMap<String, PointPointsetMetadata> points;
+    public HashMap<String, PointPointsetModel> points;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
      * 
@@ -64,7 +64,7 @@ public class PointsetModel {
         if ((other instanceof PointsetModel) == false) {
             return false;
         }
-        PointsetMetadata rhs = ((PointsetMetadata) other);
+        PointsetModel rhs = ((PointsetModel) other);
         return ((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
