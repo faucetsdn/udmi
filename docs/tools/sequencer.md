@@ -25,6 +25,20 @@ an optional device serial number:
 ~/udmi/bin/sequence ${GCP_PROJECT_NAME} ${TARGET_DEVICE} ${SERIAL_NUMBER}
 ```
 
+## Supported Tests
+
+Sequencor currently includes the following tests:
+*   broken_config
+*   extra_config
+*   periodic_scan
+*   self_enumeration
+*   single_scan
+*   system_last_update
+*   valid_serial_no
+*   valid_serial_no
+*   valid_serial_no
+*   writeback_states
+
 ## Troubleshooting
 
 To increase the logging verbosity add a `-v` at the beginning of the command options, or add
