@@ -11,7 +11,14 @@ import {
   SitesSearchOptions,
 } from './model';
 import { DeviceDAO } from './dao/DeviceDAO';
-import { validate } from './SearchOptionsValidator';
+import {
+  validate,
+  validateDeviceMakesSearchOptions,
+  validateDeviceModelsSearchOptions,
+  validateDeviceNamesSearchOptions,
+  validateSectionsSearchOptions,
+  validateSitesSearchOptions,
+} from './SearchOptionsValidator';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DeviceDAO) {
@@ -41,22 +48,27 @@ export class DeviceDataSource extends GraphQLDataSource {
   }
 
   async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<String[]> {
-    return this.deviceDAO.getDeviceNames(searchOptions);
+    const validatedSearchOptions: DeviceNamesSearchOptions = validateDeviceNamesSearchOptions(searchOptions);
+    return this.deviceDAO.getDeviceNames(validatedSearchOptions);
   }
 
   async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<String[]> {
-    return this.deviceDAO.getDeviceMakes(searchOptions);
+    const validatedSearchOptions: DeviceMakesSearchOptions = validateDeviceMakesSearchOptions(searchOptions);
+    return this.deviceDAO.getDeviceMakes(validatedSearchOptions);
   }
 
   async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<String[]> {
-    return this.deviceDAO.getDeviceModels(searchOptions);
+    const validatedSearchOptions: DeviceModelsSearchOptions = validateDeviceModelsSearchOptions(searchOptions);
+    return this.deviceDAO.getDeviceModels(validatedSearchOptions);
   }
 
   async getSites(searchOptions: SitesSearchOptions): Promise<String[]> {
-    return this.deviceDAO.getSites(searchOptions);
+    const validatedSearchOptions: SitesSearchOptions = validateSitesSearchOptions(searchOptions);
+    return this.deviceDAO.getSites(validatedSearchOptions);
   }
 
   async getSections(searchOptions: SectionsSearchOptions): Promise<String[]> {
-    return this.deviceDAO.getSections(searchOptions);
+    const validatedSearchOptions: SectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
+    return this.deviceDAO.getSections(validatedSearchOptions);
   }
 }
