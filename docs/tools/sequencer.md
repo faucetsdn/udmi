@@ -27,7 +27,7 @@ an optional device serial number:
 
 ## Supported Tests
 
-Sequencor currently includes the following tests:
+Sequencer includes the following tests:
 *   broken_config
 *   extra_config
 *   periodic_scan
