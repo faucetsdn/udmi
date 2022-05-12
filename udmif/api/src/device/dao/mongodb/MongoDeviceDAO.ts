@@ -1,4 +1,13 @@
-import { SearchOptions, Device, Point } from '../../model';
+import {
+  SearchOptions,
+  Device,
+  Point,
+  DeviceNamesSearchOptions,
+  DeviceMakesSearchOptions,
+  DeviceModelsSearchOptions,
+  SitesSearchOptions,
+  SectionsSearchOptions,
+} from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { Db, Filter } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
@@ -36,11 +45,53 @@ export class MongoDeviceDAO implements DeviceDAO {
     return device ? device.points : [];
   }
 
+  async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<String[]> {
+    return this.getDistinct('name', searchOptions.search, searchOptions.limit);
+  }
+
+  async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<String[]> {
+    return this.getDistinct('make', searchOptions.search, searchOptions.limit);
+  }
+
+  async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<String[]> {
+    return this.getDistinct('model', searchOptions.search, searchOptions.limit);
+  }
+
+  async getSites(searchOptions: SitesSearchOptions): Promise<String[]> {
+    return this.getDistinct('site', searchOptions.search, searchOptions.limit);
+  }
+
+  async getSections(searchOptions: SectionsSearchOptions): Promise<String[]> {
+    return this.getDistinct('section', searchOptions.search, searchOptions.limit);
+  }
+
   private getFilter(searchOptions: SearchOptions): Filter<Device> {
     return searchOptions.filter ? getFilter(fromString(searchOptions.filter)) : {};
   }
 
   private getSort(searchOptions: SearchOptions): any {
-    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
+    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : { _id: 1 };
+  }
+
+  private async getDistinct(field: string, search?: string, limit?: number): Promise<string[]> {
+    try {
+      return this.db
+        .collection<Device>('device')
+        .aggregate([
+          { $match: { [field]: { $in: [new RegExp(search, 'i')] } } },
+          { $group: { _id: `$${field}`, distinct_doc: { $first: '$$ROOT' } } },
+          {
+            $replaceRoot: {
+              newRoot: '$distinct_doc',
+            },
+          },
+          { $limit: limit },
+          { $sort: { [field]: 1 } },
+        ])
+        .map((device: Device) => device[field])
+        .toArray();
+    } catch {
+      return [];
+    }
   }
 }

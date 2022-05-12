@@ -11,6 +11,31 @@ export interface SearchOptions {
   filter?: string;
 }
 
+export interface DeviceNamesSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
+export interface DeviceMakesSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
+export interface DeviceModelsSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
+export interface SitesSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
+export interface SectionsSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
 export interface Point {
   id: string;
   name: string;
