@@ -16,7 +16,9 @@ globalConfig.json
 .DS_Store
 
 # environment variables
-.env
+setupEnv.sh
 
 # mongo output
 .mongodb
+
+dist/

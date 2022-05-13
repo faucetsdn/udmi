@@ -29,7 +29,7 @@ npm run watch
 1. Send an event to the local server using curl
 
 ```
-curl -d "@devicePointSetStatesEvent.json" \
+curl -d "@sample.json" \
   -X POST \
   -H "Ce-Type: true" \
   -H "Ce-Specversion: true" \
