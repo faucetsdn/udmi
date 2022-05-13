@@ -1,5 +1,6 @@
 import { logger } from '../common/logger';
 import {
+  CommonSearchOptions,
   DeviceMakesSearchOptions,
   DeviceModelsSearchOptions,
   DeviceNamesSearchOptions,
@@ -27,57 +28,40 @@ export function validate(searchOptions: SearchOptions): SearchOptions {
 }
 
 export function validateDeviceNamesSearchOptions(searchOptions: DeviceNamesSearchOptions): DeviceNamesSearchOptions {
-  const limit = validateLimitSearchOption(searchOptions.limit);
-
   return {
-    ...searchOptions,
-    limit,
+    ...validateCommonSearchOptions(searchOptions),
   };
 }
 
 export function validateDeviceMakesSearchOptions(searchOptions: DeviceMakesSearchOptions): DeviceMakesSearchOptions {
-  const limit = validateLimitSearchOption(searchOptions.limit);
-
   return {
-    ...searchOptions,
-    limit,
+    ...validateCommonSearchOptions(searchOptions),
   };
 }
 
 export function validateDeviceModelsSearchOptions(searchOptions: DeviceModelsSearchOptions): DeviceModelsSearchOptions {
-  const limit = validateLimitSearchOption(searchOptions.limit);
-
   return {
-    ...searchOptions,
-    limit,
+    ...validateCommonSearchOptions(searchOptions),
   };
 }
 
 export function validateSitesSearchOptions(searchOptions: SitesSearchOptions): SitesSearchOptions {
-  const limit = validateLimitSearchOption(searchOptions.limit);
-
   return {
-    ...searchOptions,
-    limit,
+    ...validateCommonSearchOptions(searchOptions),
   };
 }
 
 export function validateSectionsSearchOptions(searchOptions: SectionsSearchOptions): SectionsSearchOptions {
-  const limit = validateLimitSearchOption(searchOptions.limit);
-
   return {
-    ...searchOptions,
-    limit,
+    ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-function validateLimitSearchOption(limit?: number): number {
-  let validatedLimit: number = limit;
+function validateCommonSearchOptions(searchOptions: CommonSearchOptions): CommonSearchOptions {
+  const { search, limit } = searchOptions;
 
-  if (!limit) {
-    logger.warn('A limit was not provided, defaulting to 10');
-    validatedLimit = 10;
-  }
-
-  return validatedLimit;
+  return {
+    limit: limit ?? 10, // default to 10
+    search,
+  };
 }
