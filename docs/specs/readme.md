@@ -6,13 +6,12 @@
 - [UDMI Compliance](compliance.md)
 
 ## Device 
-- [Discovery](discovery.md)
 - [Messages](../messages/)
 - [Connection Models](connecting.md)
+- [Discovery](discovery.md)
 - [IoT Gateway](gateway.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
-- [Proxy](proxy.md)
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
 - [Log/Status Entries](entries.md)
@@ -25,3 +24,4 @@
 ## Cloud Environment
 - [Message Walk](message_walk.md)
 - [Tech Stack](tech_stack.md)
+- [Proxy](proxy.md)
