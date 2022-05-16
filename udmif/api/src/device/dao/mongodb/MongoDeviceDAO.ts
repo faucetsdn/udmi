@@ -2,17 +2,19 @@ import {
   SearchOptions,
   Device,
   Point,
-  DeviceNamesSearchOptions,
-  DeviceMakesSearchOptions,
-  DeviceModelsSearchOptions,
-  SitesSearchOptions,
-  SectionsSearchOptions,
+  ValidatedCommonSearchOptions,
+  ValidatedSectionsSearchOptions,
+  ValidatedDeviceNamesSearchOptions,
+  ValidatedDeviceMakesSearchOptions,
+  ValidatedDeviceModelsSearchOptions,
+  ValidatedSitesSearchOptions,
 } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { Db, Filter } from 'mongodb';
 import { fromString } from '../../../device/FilterParser';
 import { getFilter } from './MongoFilterBuilder';
 import { getSort } from './MongoSortBuilder';
+import { getAggregate } from './MongoAggregateBuilder';
 
 // this class exists to return sorted, and filtered data from MongoDB
 export class MongoDeviceDAO implements DeviceDAO {
@@ -45,24 +47,24 @@ export class MongoDeviceDAO implements DeviceDAO {
     return device ? device.points : [];
   }
 
-  async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<String[]> {
-    return this.getDistinct('name', searchOptions.search, searchOptions.limit);
+  async getDeviceNames(searchOptions: ValidatedDeviceNamesSearchOptions): Promise<string[]> {
+    return this.getDistinct('name', searchOptions);
   }
 
-  async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<String[]> {
-    return this.getDistinct('make', searchOptions.search, searchOptions.limit);
+  async getDeviceMakes(searchOptions: ValidatedDeviceMakesSearchOptions): Promise<string[]> {
+    return this.getDistinct('make', searchOptions);
   }
 
-  async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<String[]> {
-    return this.getDistinct('model', searchOptions.search, searchOptions.limit);
+  async getDeviceModels(searchOptions: ValidatedDeviceModelsSearchOptions): Promise<string[]> {
+    return this.getDistinct('model', searchOptions);
   }
 
-  async getSites(searchOptions: SitesSearchOptions): Promise<String[]> {
-    return this.getDistinct('site', searchOptions.search, searchOptions.limit);
+  async getSites(searchOptions: ValidatedSitesSearchOptions): Promise<string[]> {
+    return this.getDistinct('site', searchOptions);
   }
 
-  async getSections(searchOptions: SectionsSearchOptions): Promise<String[]> {
-    return this.getDistinct('section', searchOptions.search, searchOptions.limit);
+  async getSections(searchOptions: ValidatedSectionsSearchOptions): Promise<string[]> {
+    return this.getDistinct('section', searchOptions);
   }
 
   private getFilter(searchOptions: SearchOptions): Filter<Device> {
@@ -70,28 +72,14 @@ export class MongoDeviceDAO implements DeviceDAO {
   }
 
   private getSort(searchOptions: SearchOptions): any {
-    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : { _id: 1 };
+    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
   }
 
-  private async getDistinct(field: string, search?: string, limit?: number): Promise<string[]> {
-    try {
-      return this.db
-        .collection<Device>('device')
-        .aggregate([
-          { $match: { [field]: { $in: [new RegExp(search, 'i')] } } },
-          { $group: { _id: `$${field}`, distinct_doc: { $first: '$$ROOT' } } },
-          {
-            $replaceRoot: {
-              newRoot: '$distinct_doc',
-            },
-          },
-          { $limit: limit },
-          { $sort: { [field]: 1 } },
-        ])
-        .map((device: Device) => device[field])
-        .toArray();
-    } catch {
-      return [];
-    }
+  private async getDistinct(field: string, searchOptions: ValidatedCommonSearchOptions): Promise<string[]> {
+    return this.db
+      .collection<Device>('device')
+      .aggregate(getAggregate(field, searchOptions.limit, searchOptions.search))
+      .map((device: Device) => device[field])
+      .toArray();
   }
 }

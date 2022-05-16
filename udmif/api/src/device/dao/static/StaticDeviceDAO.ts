@@ -82,23 +82,23 @@ export class StaticDeviceDAO implements DeviceDAO {
     return filteredDevices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
   }
 
-  public async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<String[]> {
+  public async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<string[]> {
     return this.getDistinct('name', searchOptions.search, searchOptions.limit);
   }
 
-  public async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<String[]> {
+  public async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<string[]> {
     return this.getDistinct('make', searchOptions.search, searchOptions.limit);
   }
 
-  public async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<String[]> {
+  public async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<string[]> {
     return this.getDistinct('model', searchOptions.search, searchOptions.limit);
   }
 
-  public async getSites(searchOptions: SitesSearchOptions): Promise<String[]> {
+  public async getSites(searchOptions: SitesSearchOptions): Promise<string[]> {
     return this.getDistinct('site', searchOptions.search, searchOptions.limit);
   }
 
-  public async getSections(searchOptions: SectionsSearchOptions): Promise<String[]> {
+  public async getSections(searchOptions: SectionsSearchOptions): Promise<string[]> {
     return this.getDistinct('section', searchOptions.search, searchOptions.limit);
   }
 

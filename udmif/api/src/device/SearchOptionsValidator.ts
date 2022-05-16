@@ -7,6 +7,12 @@ import {
   SearchOptions,
   SectionsSearchOptions,
   SitesSearchOptions,
+  ValidatedCommonSearchOptions,
+  ValidatedDeviceMakesSearchOptions,
+  ValidatedDeviceModelsSearchOptions,
+  ValidatedDeviceNamesSearchOptions,
+  ValidatedSectionsSearchOptions,
+  ValidatedSitesSearchOptions,
 } from './model';
 
 export function validate(searchOptions: SearchOptions): SearchOptions {
@@ -27,38 +33,44 @@ export function validate(searchOptions: SearchOptions): SearchOptions {
   return validatedSearchOption;
 }
 
-export function validateDeviceNamesSearchOptions(searchOptions: DeviceNamesSearchOptions): DeviceNamesSearchOptions {
+export function validateDeviceNamesSearchOptions(
+  searchOptions?: DeviceNamesSearchOptions
+): ValidatedDeviceNamesSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-export function validateDeviceMakesSearchOptions(searchOptions: DeviceMakesSearchOptions): DeviceMakesSearchOptions {
+export function validateDeviceMakesSearchOptions(
+  searchOptions?: DeviceMakesSearchOptions
+): ValidatedDeviceMakesSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-export function validateDeviceModelsSearchOptions(searchOptions: DeviceModelsSearchOptions): DeviceModelsSearchOptions {
+export function validateDeviceModelsSearchOptions(
+  searchOptions?: DeviceModelsSearchOptions
+): ValidatedDeviceModelsSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-export function validateSitesSearchOptions(searchOptions: SitesSearchOptions): SitesSearchOptions {
+export function validateSitesSearchOptions(searchOptions?: SitesSearchOptions): ValidatedSitesSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-export function validateSectionsSearchOptions(searchOptions: SectionsSearchOptions): SectionsSearchOptions {
+export function validateSectionsSearchOptions(searchOptions?: SectionsSearchOptions): ValidatedSectionsSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };
 }
 
-function validateCommonSearchOptions(searchOptions: CommonSearchOptions): CommonSearchOptions {
-  const { search, limit } = searchOptions;
+function validateCommonSearchOptions(searchOptions?: CommonSearchOptions): ValidatedCommonSearchOptions {
+  const { search, limit } = searchOptions ?? {};
 
   return {
     limit: limit ?? 10, // default to 10

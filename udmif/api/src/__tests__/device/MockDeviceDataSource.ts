@@ -23,4 +23,24 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
   async getPoints(deviceId: string): Promise<Point[]> {
     return createDevices(1)[0].points;
   }
+
+  async getDeviceNames(): Promise<string[]> {
+    return createDevices(10).map((d) => d.name);
+  }
+
+  async getDeviceMakes(): Promise<string[]> {
+    return createDevices(10).map((d) => d.make);
+  }
+
+  async getDeviceModels(): Promise<string[]> {
+    return createDevices(10).map((d) => d.model);
+  }
+
+  async getSites(): Promise<string[]> {
+    return createDevices(10).map((d) => d.site);
+  }
+
+  async getSections(): Promise<string[]> {
+    return createDevices(10).map((d) => d.section);
+  }
 }

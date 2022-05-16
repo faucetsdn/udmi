@@ -116,13 +116,13 @@ type Query {
   # Get points by a Device ID
   points( deviceId: ID!) : [Point!]!
   # Get a list of device names
-  deviceNames(searchOptions: DeviceNamesSearchOptions!) : [String!]!
+  deviceNames(searchOptions: DeviceNamesSearchOptions) : [String!]!
   # Get a list of device makes
-  deviceMakes(searchOptions: DeviceMakesSearchOptions!) : [String!]!
+  deviceMakes(searchOptions: DeviceMakesSearchOptions) : [String!]!
   # Get a list of device models
-  deviceModels(searchOptions: DeviceModelsSearchOptions!) : [String!]!
+  deviceModels(searchOptions: DeviceModelsSearchOptions) : [String!]!
   # Get a list of sites
-  sites(searchOptions: SitesSearchOptions!) : [String!]!
+  sites(searchOptions: SitesSearchOptions) : [String!]!
   # Get a list of sections
-  sections(searchOptions: SectionsSearchOptions!) : [String!]!
+  sections(searchOptions: SectionsSearchOptions) : [String!]!
 }

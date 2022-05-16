@@ -414,6 +414,136 @@ Object {
 }
 `;
 
+exports[`Devices getDeviceMakes 1`] = `
+Object {
+  "data": Object {
+    "deviceMakes": Array [
+      "make-1",
+      "make-2",
+      "make-3",
+      "make-4",
+      "make-5",
+      "make-6",
+      "make-7",
+      "make-8",
+      "make-9",
+      "make-10",
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
+exports[`Devices getDeviceModels 1`] = `
+Object {
+  "data": Object {
+    "deviceModels": Array [
+      "BBBB-1",
+      "BBBB-2",
+      "AAAA-3",
+      "BBBB-4",
+      "BBBB-5",
+      "AAAA-6",
+      "BBBB-7",
+      "BBBB-8",
+      "AAAA-9",
+      "BBBB-10",
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
+exports[`Devices getDeviceNames 1`] = `
+Object {
+  "data": Object {
+    "deviceNames": Array [
+      "CDS-1",
+      "AHU-2",
+      "CDS-3",
+      "AHU-4",
+      "CDS-5",
+      "AHU-6",
+      "CDS-7",
+      "AHU-8",
+      "CDS-9",
+      "AHU-10",
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
+exports[`Devices getSections 1`] = `
+Object {
+  "data": Object {
+    "sections": Array [
+      "SIN-MBC1",
+      "SIN-MBC2",
+      "SIN-MBC3",
+      "SIN-MBC4",
+      "SIN-MBC5",
+      "SIN-MBC6",
+      "SIN-MBC7",
+      "SIN-MBC8",
+      "SIN-MBC9",
+      "SIN-MBC10",
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
+exports[`Devices getSites 1`] = `
+Object {
+  "data": Object {
+    "sites": Array [
+      "SG-SIN-MBC1",
+      "SG-SIN-MBC2",
+      "SG-SIN-MBC3",
+      "SG-SIN-MBC4",
+      "SG-SIN-MBC5",
+      "SG-SIN-MBC6",
+      "SG-SIN-MBC7",
+      "SG-SIN-MBC8",
+      "SG-SIN-MBC9",
+      "SG-SIN-MBC10",
+    ],
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
 exports[`Devices points 1`] = `
 Object {
   "data": Object {

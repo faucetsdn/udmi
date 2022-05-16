@@ -9,6 +9,11 @@ import {
   SearchOptions,
   SectionsSearchOptions,
   SitesSearchOptions,
+  ValidatedDeviceMakesSearchOptions,
+  ValidatedDeviceModelsSearchOptions,
+  ValidatedDeviceNamesSearchOptions,
+  ValidatedSectionsSearchOptions,
+  ValidatedSitesSearchOptions,
 } from './model';
 import { DeviceDAO } from './dao/DeviceDAO';
 import {
@@ -47,28 +52,28 @@ export class DeviceDataSource extends GraphQLDataSource {
     return this.deviceDAO.getPoints(deviceId);
   }
 
-  async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<String[]> {
-    const validatedSearchOptions: DeviceNamesSearchOptions = validateDeviceNamesSearchOptions(searchOptions);
+  async getDeviceNames(searchOptions?: DeviceNamesSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDeviceNamesSearchOptions = validateDeviceNamesSearchOptions(searchOptions);
     return this.deviceDAO.getDeviceNames(validatedSearchOptions);
   }
 
-  async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<String[]> {
-    const validatedSearchOptions: DeviceMakesSearchOptions = validateDeviceMakesSearchOptions(searchOptions);
+  async getDeviceMakes(searchOptions?: DeviceMakesSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDeviceMakesSearchOptions = validateDeviceMakesSearchOptions(searchOptions);
     return this.deviceDAO.getDeviceMakes(validatedSearchOptions);
   }
 
-  async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<String[]> {
-    const validatedSearchOptions: DeviceModelsSearchOptions = validateDeviceModelsSearchOptions(searchOptions);
+  async getDeviceModels(searchOptions?: DeviceModelsSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDeviceModelsSearchOptions = validateDeviceModelsSearchOptions(searchOptions);
     return this.deviceDAO.getDeviceModels(validatedSearchOptions);
   }
 
-  async getSites(searchOptions: SitesSearchOptions): Promise<String[]> {
-    const validatedSearchOptions: SitesSearchOptions = validateSitesSearchOptions(searchOptions);
+  async getSites(searchOptions?: SitesSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedSitesSearchOptions = validateSitesSearchOptions(searchOptions);
     return this.deviceDAO.getSites(validatedSearchOptions);
   }
 
-  async getSections(searchOptions: SectionsSearchOptions): Promise<String[]> {
-    const validatedSearchOptions: SectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
+  async getSections(searchOptions?: SectionsSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedSectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
     return this.deviceDAO.getSections(validatedSearchOptions);
   }
 }

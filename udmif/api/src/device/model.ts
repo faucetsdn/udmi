@@ -11,6 +11,17 @@ export interface SearchOptions {
   filter?: string;
 }
 
+export interface ValidatedCommonSearchOptions {
+  search?: string;
+  limit: number;
+}
+
+export interface ValidatedDeviceNamesSearchOptions extends ValidatedCommonSearchOptions {}
+export interface ValidatedDeviceMakesSearchOptions extends ValidatedCommonSearchOptions {}
+export interface ValidatedDeviceModelsSearchOptions extends ValidatedCommonSearchOptions {}
+export interface ValidatedSitesSearchOptions extends ValidatedCommonSearchOptions {}
+export interface ValidatedSectionsSearchOptions extends ValidatedCommonSearchOptions {}
+
 export interface CommonSearchOptions {
   search?: string;
   limit?: number;
