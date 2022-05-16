@@ -18,8 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "location",
     "physical_tag",
-    "aux",
-    "min_loglevel"
+    "aux"
 })
 @Generated("jsonschema2pojo")
 public class SystemModel {
@@ -42,13 +41,6 @@ public class SystemModel {
     public Physical_tag physical_tag;
     @JsonProperty("aux")
     public Aux aux;
-    /**
-     * The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.
-     * 
-     */
-    @JsonProperty("min_loglevel")
-    @JsonPropertyDescription("The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.")
-    public Integer min_loglevel = 300;
 
     @Override
     public int hashCode() {
@@ -56,7 +48,6 @@ public class SystemModel {
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.physical_tag == null)? 0 :this.physical_tag.hashCode()));
         result = ((result* 31)+((this.aux == null)? 0 :this.aux.hashCode()));
-        result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
         return result;
     }
 
@@ -69,7 +60,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return (((((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location)))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))));
+        return ((((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location)))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))));
     }
 
 }

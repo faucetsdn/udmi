@@ -334,6 +334,7 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
+    deviceState.system.hardware = new Hardware();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
