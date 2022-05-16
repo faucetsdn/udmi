@@ -73,7 +73,6 @@ export class DevicesService {
   getDeviceNames(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceNamesQueryResponse, DeviceNamesQueryVariables>({
-        notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_NAMES,
         fetchPolicy: 'network-only',
         variables: {
@@ -93,7 +92,6 @@ export class DevicesService {
   getDeviceMakes(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceMakesQueryResponse, DeviceMakesQueryVariables>({
-        notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_MAKES,
         fetchPolicy: 'network-only',
         variables: {
@@ -113,7 +111,6 @@ export class DevicesService {
   getDeviceModels(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceModelsQueryResponse, DeviceModelsQueryVariables>({
-        notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_MODELS,
         fetchPolicy: 'network-only',
         variables: {
@@ -133,7 +130,6 @@ export class DevicesService {
   getDeviceSites(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceSitesQueryResponse, DeviceSitesQueryVariables>({
-        notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_SITES,
         fetchPolicy: 'network-only',
         variables: {
@@ -153,7 +149,6 @@ export class DevicesService {
   getDeviceSections(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceSectionsQueryResponse, DeviceSectionsQueryVariables>({
-        notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_SECTIONS,
         fetchPolicy: 'network-only',
         variables: {
