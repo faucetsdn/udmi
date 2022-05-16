@@ -1,4 +1,4 @@
-import UdmiMessageHandler, { getDocumentKey } from '../UdmiMessageHandler';
+import UdmiMessageHandler, { getDeviceKey } from '../UdmiMessageHandler';
 
 describe('UdmiMessageHandler', () => {
   const event = {
@@ -53,19 +53,22 @@ describe('getDocumentKey', () => {
         deviceId,
         deviceNumId,
       },
+      data: {},
     };
 
-    expect(getDocumentKey(event)).toEqual({ name: deviceId, id: deviceNumId });
+    expect(getDeviceKey(event)).toEqual({ name: deviceId, id: deviceNumId });
   });
 
   test('throws an exception if the deviceId is missing', () => {
     const event = {
       attributes: {
+        deviceId: null,
         deviceNumId,
       },
+      data: {},
     };
     expect(() => {
-      getDocumentKey(event);
+      getDeviceKey(event);
     }).toThrowError('An invalid device name or id was submitted');
   });
 
@@ -73,10 +76,12 @@ describe('getDocumentKey', () => {
     const event = {
       attributes: {
         deviceId,
+        deviceNumId: null,
       },
+      data: {},
     };
     expect(() => {
-      getDocumentKey(event);
+      getDeviceKey(event);
     }).toThrowError('An invalid device name or id was submitted');
   });
 });

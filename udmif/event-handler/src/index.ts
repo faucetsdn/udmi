@@ -10,7 +10,7 @@ let messageHandler: UdmiMessageHandler;
  * @param {!Object} event Event payload.
  * @param {!Object} context Metadata for the event.
  */
-export const handleUdmiEvent: EventFunction = async (event, context) => {
+export const handleUdmiEvent: EventFunction = async (event: any, context: any) => {
   try {
     if (!messageHandler) {
       console.log('Creating Message Handler');

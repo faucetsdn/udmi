@@ -15,3 +15,24 @@ export interface DeviceDocument {
   section?: string;
   site?: string;
 }
+
+export interface UdmiMessage {
+  attributes: {
+    deviceId: string;
+    deviceNumId: string;
+  };
+  data: {
+    hardware?: {
+      make: string;
+      model: string;
+    };
+    location?: {
+      section: string;
+      site: string;
+    };
+    software?: any;
+    operational?: string;
+    serial_no?: string;
+    timestamp?: string;
+  };
+}

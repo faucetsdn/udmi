@@ -1,6 +1,6 @@
 # UDMI Event Handler
 
-The project uses Google Cloud Functions Infrastructure to allow faster iteration of a GCP Node Cloud function.
+The Typescript project uses Google Cloud Functions Infrastructure to allow faster iteration of a GCP Node Cloud function.
 
 ---
 
@@ -37,6 +37,20 @@ curl -d "@sample.json" \
   -H "Ce-Id: true" \
   -H "Content-Type: application/json" \
   http://localhost:8080
+```
+
+---
+
+## Testing the code
+
+```
+npm run test
+```
+
+or
+
+```
+npm run testInteractive
 ```
 
 ---

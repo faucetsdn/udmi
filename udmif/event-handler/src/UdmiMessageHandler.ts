@@ -1,35 +1,34 @@
 import { DeviceDao } from './DeviceDao';
-import { buildDeviceDocument } from './DeviceDocumentBuilder';
-import { DeviceDocument, DeviceKey } from './model';
+import { createDeviceDocument } from './DeviceDocumentFactory';
+import { DeviceDocument, DeviceKey, UdmiMessage } from './model';
 
 export default class UdmiMessageHandler {
   constructor(private deviceDao: DeviceDao) {}
 
-  handleUdmiEvent(event) {
+  handleUdmiEvent(event: any) {
     try {
-      const message = decodeEventData(event);
-      const documentKey = getDocumentKey(message);
-      const document = buildDeviceDocument(message);
-      this.writeDocument(documentKey, document);
+      const message: UdmiMessage = decodeEventData(event);
+      const deviceKey: DeviceKey = getDeviceKey(message);
+      const document: DeviceDocument = createDeviceDocument(message);
+      this.writeDocument(deviceKey, document);
     } catch (e) {
       console.error('An unexpected error occurred: ', e);
     }
   }
 
   private async writeDocument(key: DeviceKey, document: DeviceDocument) {
-    // we're using upsert which will allow document updates if it already exists and a document insertion if it does not
     await this.deviceDao.upsert(key, document);
   }
 }
 
-export function decodeEventData(event) {
+export function decodeEventData(event: any): UdmiMessage {
   const stringData = Buffer.from(event.data, 'base64').toString();
   event.data = JSON.parse(stringData);
   console.debug('Decoded event: ', JSON.stringify(event));
   return event;
 }
 
-export function getDocumentKey(message): DeviceKey {
+export function getDeviceKey(message: UdmiMessage): DeviceKey {
   if (!message.attributes.deviceId || !message.attributes.deviceNumId) {
     throw new Error('An invalid device name or id was submitted');
   }

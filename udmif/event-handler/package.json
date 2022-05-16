@@ -28,7 +28,7 @@
     "dev": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:6329  src/index.ts",
     "start": "functions-framework --source=dist/ --target=handleUdmiEvent --signature-type=event",
     "watch": "concurrently \"tsc -w\" \"nodemon --watch ./build/ --exec npm run start\"",
-    "test": "NODE_ENV=test jest --runInBand --silent",
+    "test": "NODE_ENV=test jest --runInBand --silent --detectOpenHandles",
     "testInteractive": "NODE_ENV=test jest --runInBand --silent --watchAll",
     "postinstall": "cd ../.. && husky install udmif/event-handler/.husky",
     "build": "tsc -p ."

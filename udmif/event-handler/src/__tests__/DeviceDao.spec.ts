@@ -4,12 +4,19 @@ import { DeviceDocument, DeviceKey } from '../model';
 
 // mongo collection
 let deviceCollection: Collection;
+let connection: MongoClient;
+let db: Db;
 
 beforeAll(async () => {
   // in memory mongo
-  const connection: MongoClient = await MongoClient.connect(process.env.MONGO_URL);
-  const db: Db = await connection.db('tmp');
+  connection = await MongoClient.connect(process.env.MONGO_URL);
+  db = connection.db('tmp');
   deviceCollection = db.collection('device');
+});
+
+afterAll(async () => {
+  // make sure we close it before the test completely finish
+  await connection.close();
 });
 
 describe('DeviceDao.upsert', () => {
