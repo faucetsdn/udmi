@@ -59,7 +59,7 @@ describe('DeviceDataSource.getPoints()', () => {
 });
 
 describe('DeviceDataSource.getDeviceNames()', () => {
-  test('return device names', async () => {
+  test('returns device names', async () => {
     const deviceNames: string[] = await deviceDS.getDeviceNames();
     expect(deviceNames.length).toBeGreaterThanOrEqual(1);
   });
@@ -71,7 +71,7 @@ describe('DeviceDataSource.getDeviceNames()', () => {
 });
 
 describe('DeviceDataSource.getDeviceMakes()', () => {
-  test('return device makes', async () => {
+  test('returns device makes', async () => {
     const deviceMakes: string[] = await deviceDS.getDeviceMakes();
     expect(deviceMakes.length).toBeGreaterThanOrEqual(1);
   });
@@ -83,7 +83,7 @@ describe('DeviceDataSource.getDeviceMakes()', () => {
 });
 
 describe('DeviceDataSource.getDeviceModels()', () => {
-  test('return device models', async () => {
+  test('returns device models', async () => {
     const deviceModels: string[] = await deviceDS.getDeviceModels();
     expect(deviceModels.length).toBeGreaterThanOrEqual(1);
   });
@@ -95,7 +95,7 @@ describe('DeviceDataSource.getDeviceModels()', () => {
 });
 
 describe('DeviceDataSource.getSites()', () => {
-  test('return sites', async () => {
+  test('returns sites', async () => {
     const sites: string[] = await deviceDS.getSites();
     expect(sites.length).toBeGreaterThanOrEqual(1);
   });
@@ -107,7 +107,7 @@ describe('DeviceDataSource.getSites()', () => {
 });
 
 describe('DeviceDataSource.getSections()', () => {
-  test('return sections', async () => {
+  test('returns sections', async () => {
     const sections: string[] = await deviceDS.getSections();
     expect(sections.length).toBeGreaterThanOrEqual(1);
   });
