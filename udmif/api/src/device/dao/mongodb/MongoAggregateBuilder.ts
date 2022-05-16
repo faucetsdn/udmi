@@ -1,3 +1,4 @@
+// Builds a query which will return distinct strings based on a field of interest.
 export function getAggregate(field: string, limit: number, search?: string): any {
   return [
     { $match: { [field]: { $in: [new RegExp(search, 'i')] } } },

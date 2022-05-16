@@ -419,6 +419,7 @@ Object {
   "data": Object {
     "deviceMakes": Array [
       "make-1",
+      "make-10",
       "make-2",
       "make-3",
       "make-4",
@@ -427,7 +428,6 @@ Object {
       "make-7",
       "make-8",
       "make-9",
-      "make-10",
     ],
   },
   "errors": undefined,
@@ -444,16 +444,16 @@ exports[`Devices getDeviceModels 1`] = `
 Object {
   "data": Object {
     "deviceModels": Array [
-      "BBBB-1",
-      "BBBB-2",
       "AAAA-3",
+      "AAAA-6",
+      "AAAA-9",
+      "BBBB-1",
+      "BBBB-10",
+      "BBBB-2",
       "BBBB-4",
       "BBBB-5",
-      "AAAA-6",
       "BBBB-7",
       "BBBB-8",
-      "AAAA-9",
-      "BBBB-10",
     ],
   },
   "errors": undefined,
@@ -470,16 +470,16 @@ exports[`Devices getDeviceNames 1`] = `
 Object {
   "data": Object {
     "deviceNames": Array [
-      "CDS-1",
-      "AHU-2",
-      "CDS-3",
-      "AHU-4",
-      "CDS-5",
-      "AHU-6",
-      "CDS-7",
-      "AHU-8",
-      "CDS-9",
       "AHU-10",
+      "AHU-2",
+      "AHU-4",
+      "AHU-6",
+      "AHU-8",
+      "CDS-1",
+      "CDS-3",
+      "CDS-5",
+      "CDS-7",
+      "CDS-9",
     ],
   },
   "errors": undefined,
@@ -497,6 +497,7 @@ Object {
   "data": Object {
     "sections": Array [
       "SIN-MBC1",
+      "SIN-MBC10",
       "SIN-MBC2",
       "SIN-MBC3",
       "SIN-MBC4",
@@ -505,7 +506,6 @@ Object {
       "SIN-MBC7",
       "SIN-MBC8",
       "SIN-MBC9",
-      "SIN-MBC10",
     ],
   },
   "errors": undefined,
@@ -523,6 +523,7 @@ Object {
   "data": Object {
     "sites": Array [
       "SG-SIN-MBC1",
+      "SG-SIN-MBC10",
       "SG-SIN-MBC2",
       "SG-SIN-MBC3",
       "SG-SIN-MBC4",
@@ -531,7 +532,6 @@ Object {
       "SG-SIN-MBC7",
       "SG-SIN-MBC8",
       "SG-SIN-MBC9",
-      "SG-SIN-MBC10",
     ],
   },
   "errors": undefined,
