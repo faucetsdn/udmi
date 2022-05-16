@@ -1,0 +1,64 @@
+cache:
+  key: api-${CI_COMMIT_REF_SLUG}
+  paths:
+    - udmif/api/node_modules/
+
+include:
+  - project: 'buildings-iot/templates/cicd_pipelines'
+    ref: main
+    file: node.yml
+
+stages:
+  - build
+  - test
+  - static-scan
+  - publish-docker
+  - deploy-staging
+  - deploy-lab
+
+sonarqube-scan:
+  rules:
+    - when: never
+
+scan-docker:
+  rules:
+    - when: never 
+
+build-docker:
+  variables: 
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/api
+
+publish-docker:
+  variables: 
+    VERSION: $CI_PIPELINE_IID
+    DOCKER_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/udmif-api
+    BUILD_DIR: $CI_PROJECT_DIR/udmif/api
+
+deploy-staging:
+  extends: .gks-deploy
+  stage: deploy-staging
+  environment: staging
+  variables:
+    NAMESPACE: udmi
+    CHART_NAME: udmi-api
+    HELM_REPO: udmif/helm
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true --set env.AUTH_CLIENT_ID=$AUTH_CLIENT_ID --set env.CLIENT_IDS=$CLIENT_IDS
+
+deploy-lab:
+  extends: .gks-deploy
+  stage: deploy-lab
+  environment: lab
+  variables:
+    NAMESPACE: udmi
+    CHART_NAME: udmi-api
+    HELM_REPO: udmif/helm
+    CHART_VALUES: --set image.tag=$CI_PIPELINE_IID --set image.repository=registry.gitlab.com/buildings-iot/udmi/udmif-api --set dockerSecret.accessToken=$GITLAB_REGISTRY_TOKEN --create-namespace --set dockerSecret.registry=$GITLAB_REGISTRY_URL --set dockerSecret.username=gitlab --set dockerSecret.create=true --set env.AUTH_CLIENT_ID=$AUTH_CLIENT_ID --set env.CLIENT_IDS=$CLIENT_IDS
+  rules:
+      - if: $CI_COMMIT_BRANCH == "master"
+        when: manual  
+
+
+
+    
+    
+

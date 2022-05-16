@@ -24,12 +24,12 @@ variable "gcp_auth_file" {
 
 variable "tf-state-bucket-name" {
   type        = string
-  description = "The name of the Google Storage Bucket to create to store the Terraform state"
+  description = "The name of the Google Storage Bucket to store the Terraform state"
 }
 
 variable "tf-state-storage-class" {
   type        = string
-  description = "The storage class of the Storage Bucket to create to store the Terraform state"
+  description = "The storage class of the Storage Bucket to store the Terraform state"
 }
 
 variable "gcp_access_group" {
@@ -43,7 +43,7 @@ variable "log_level" {
   description = "Log level"
 }
 
-##GKE variables##
+## GKE variables ##
 variable "gke_num_nodes" {
     type = number
     default = 1
@@ -58,7 +58,7 @@ variable "gke_node_locations" {
 variable "gke_initial_node_count" {
   type = number
   default = 0
-  description = "The number of nodes to create in this cluster"
+  description = "The number of nodes to create in this cluster's default node pool"
 }
 
 variable "gke_cluster_name" {
@@ -69,7 +69,7 @@ variable "gke_cluster_name" {
 
 variable "gke_node_pool_name" {
   type = string
-  default = "udmi"
+  default = "udmi-pool"
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
@@ -80,23 +80,23 @@ variable "gke_cluster_location" {
 variable "gke_machine_type" {
   type = string
   default = "e2-standard-2"
-  description = "Type of machine"
+  description = "The name of a Google Compute Engine machine type"
 }
 #cloud DNS variables
 variable "dns_name" {
   type = string
-  description = "DNS name"
+  description = "The DNS name of the udmi managed zone"
 }
 #ssl variable
 variable "ssl_domains" {
   type = list(string)
-  description = "list of domain names"
+  description = "Domains for which a managed SSL certificate will be valid"
 }
 ##vpc variables##
 variable "gcp_vpc_name" {
     type = string
     default = "udmi"
-    description = "vpc name"
+    description = "Name of the VPC will be created"
 }
 variable "ip_cidr_range" {
   type = string
@@ -110,66 +110,60 @@ variable "create_vpc" {
 }
 
 ## function variables 
-variable "function_name" {
-    type = string
-    description = "functions name"
-}
-variable "function_memory" {
-    type = number
-    description = "The amount of memory in megabytes allotted for the function to use."
-}
-variable "function_runtime" {
-    type = string 
-    description = "The runtime in which the function will be executed."
-}
-variable "function_entry_point" {
-     type = string
-     description = "The name of a method in the function source which will be invoked when the function is executed."
-}
-variable "function_environment_variables" {
-  type        = map(string)
-  description = "A set of key/value environment variable pairs to assign to the function."
+variable "eventHandler_functions" {
+  type = map(object({
+    name                  = string 
+    runtime               = string
+    available_memory_mb   = number
+    entry_point           = string 
+    project               = string
+    region                = string
+    storage_class         = string
+    location              = string
+    environment_variables = map(string)
+  }))
+  description = "eventHandler function values"
 }
 ## Mongodb variables
 variable "public_key" {
   type  = string
-  description = "mangodb api public key"
+  description = "This is the public key of udmi MongoDB Atlas API key pair."
 }
 variable "private_key" {
   type  = string
-  description = "mangodb api private key"
+  description = "This is the private key of udmi MongoDB Atlas key pair."
 }
 variable "project_name" {
   type = string
-  description = "mangodb project name"
+  description = "The name of the project udmi wants to create"
 }
 variable "atlas_org_id" {
   type = string
-  description = "atlas orgination id "
+  description = "The ID of the organization udmi want to create the project within."
 }
 variable "cluster_name" {
   type = string 
-  description = "Mongodbatlas Cluster Name"
+  description = "Name of the cluster as it appears in Atlas. Once the cluster is created, its name cannot be changed."
 }
 variable "mongodb_version" {
   type = string 
-  description = "Mongodbatlas version"
+  description = "Version of the cluster to deploy."
 }
 variable "cluster_region" {
   type = string 
-  description = "Mongodbatlas cluster region"
+  description = "Physical location of your MongoDB cluster."
 }
 variable "provider_name" {
   type = string 
-  description = "Mongodbatlas cloud provider"
+  description = "Cloud service provider on which the servers are provisioned."
 }
 variable "disk_size_gb" {
   type = string 
-  description = "mongodb space were we are using for this project"
+  description = "mongodb space were we are using for udmi project"
 }
 variable "instance_size_name" {
   type = string 
-  description = "mongodb space name were we are using for this project"
+  description = "mongodb space name were we are using for udmi project"
 }
 variable "auto_scaling_max_instance_size" {
   type = string 
@@ -181,21 +175,20 @@ variable "auto_scaling_min_instance_size" {
 }
 variable "db_username" {
   type        = string
-  description = "MongoDB Atlas Database User Name"
+  description = "Username for authenticating to MongoDB."
 }
 variable "db_password" {
   type        = string
-  description = "MongoDB Atlas Database User Password"
+  description = "User's initial password. A value is required to create the database user"
 }
 variable "database_name" {
   type        = string
-  description = "The database in the cluster to limit the database user to, the database does not have to exist yet"
+  description = "Database on which the user has the specified role."
 }
 variable "db_role" {
   type = string 
-  description = "the role where the db user can acess"
+  description = "Name of the role to grant."
 }
-
 
 
 
