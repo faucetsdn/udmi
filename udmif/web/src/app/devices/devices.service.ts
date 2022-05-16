@@ -11,12 +11,16 @@ import {
 import { QueryRef } from 'apollo-angular';
 import {
   DeviceDistinctQueryResult,
-  DeviceDistinctQueryVariables,
   DeviceMakesQueryResponse,
+  DeviceMakesQueryVariables,
   DeviceModelsQueryResponse,
+  DeviceModelsQueryVariables,
   DeviceNamesQueryResponse,
+  DeviceNamesQueryVariables,
   DeviceSectionsQueryResponse,
+  DeviceSectionsQueryVariables,
   DeviceSitesQueryResponse,
+  DeviceSitesQueryVariables,
   DevicesQueryResponse,
   DevicesQueryVariables,
   SortOptions,
@@ -66,15 +70,17 @@ export class DevicesService {
     });
   }
 
-  getDeviceNames(term?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceNames(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
-      .watchQuery<DeviceNamesQueryResponse, DeviceDistinctQueryVariables>({
+      .watchQuery<DeviceNamesQueryResponse, DeviceNamesQueryVariables>({
         notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_NAMES,
         fetchPolicy: 'network-only',
         variables: {
-          term,
-          limit,
+          searchOptions: {
+            search,
+            limit,
+          },
         },
       })
       .valueChanges.pipe(
@@ -84,15 +90,17 @@ export class DevicesService {
       );
   }
 
-  getDeviceMakes(term?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceMakes(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
-      .watchQuery<DeviceMakesQueryResponse, DeviceDistinctQueryVariables>({
+      .watchQuery<DeviceMakesQueryResponse, DeviceMakesQueryVariables>({
         notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_MAKES,
         fetchPolicy: 'network-only',
         variables: {
-          term,
-          limit,
+          searchOptions: {
+            search,
+            limit,
+          },
         },
       })
       .valueChanges.pipe(
@@ -102,15 +110,17 @@ export class DevicesService {
       );
   }
 
-  getDeviceModels(term?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceModels(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
-      .watchQuery<DeviceModelsQueryResponse, DeviceDistinctQueryVariables>({
+      .watchQuery<DeviceModelsQueryResponse, DeviceModelsQueryVariables>({
         notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_MODELS,
         fetchPolicy: 'network-only',
         variables: {
-          term,
-          limit,
+          searchOptions: {
+            search,
+            limit,
+          },
         },
       })
       .valueChanges.pipe(
@@ -120,38 +130,42 @@ export class DevicesService {
       );
   }
 
-  getDeviceSites(term?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceSites(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
-      .watchQuery<DeviceSitesQueryResponse, DeviceDistinctQueryVariables>({
+      .watchQuery<DeviceSitesQueryResponse, DeviceSitesQueryVariables>({
         notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_SITES,
         fetchPolicy: 'network-only',
         variables: {
-          term,
-          limit,
+          searchOptions: {
+            search,
+            limit,
+          },
         },
       })
       .valueChanges.pipe(
         map(({ data }) => {
-          return { values: data.deviceSites };
+          return { values: data.sites };
         })
       );
   }
 
-  getDeviceSections(term?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceSections(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
     return this.apollo
-      .watchQuery<DeviceSectionsQueryResponse, DeviceDistinctQueryVariables>({
+      .watchQuery<DeviceSectionsQueryResponse, DeviceSectionsQueryVariables>({
         notifyOnNetworkStatusChange: true, // to update the loading flag on next batch fetched
         query: GET_DEVICE_SECTIONS,
         fetchPolicy: 'network-only',
         variables: {
-          term,
-          limit,
+          searchOptions: {
+            search,
+            limit,
+          },
         },
       })
       .valueChanges.pipe(
         map(({ data }) => {
-          return { values: data.deviceSections };
+          return { values: data.sections };
         })
       );
   }

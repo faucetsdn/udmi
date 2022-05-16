@@ -72,7 +72,7 @@ export class MongoDeviceDAO implements DeviceDAO {
   }
 
   private getSort(searchOptions: SearchOptions): any {
-    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : { _id: 1 };
+    return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
   }
 
   private async getDistinct(field: string, searchOptions: ValidatedCommonSearchOptions): Promise<string[]> {

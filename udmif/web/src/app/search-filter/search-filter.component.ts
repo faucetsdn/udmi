@@ -21,7 +21,6 @@ const services: any = {
 })
 export class SearchFilterComponent implements OnInit {
   serviceName!: string;
-  serviceMethod!: string;
   fields!: Record<string, string>;
   limit: number = 5;
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};

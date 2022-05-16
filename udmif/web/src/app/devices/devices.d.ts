@@ -24,30 +24,44 @@ export type DevicesQueryVariables = {
   searchOptions: SearchOptions;
 };
 
+export interface CommonSearchOptions {
+  search?: string;
+  limit?: number;
+}
+
+export interface CommonSearchQueryVariables {
+  searchOptions: CommonSearchOptions;
+}
+
 export type DeviceNamesQueryResponse = {
   deviceNames: string[];
 };
+
+export interface DeviceNamesQueryVariables extends CommonSearchQueryVariables {}
 
 export type DeviceMakesQueryResponse = {
   deviceMakes: string[];
 };
 
+export interface DeviceMakesQueryVariables extends CommonSearchQueryVariables {}
+
 export type DeviceModelsQueryResponse = {
   deviceModels: string[];
 };
 
+export interface DeviceModelsQueryVariables extends CommonSearchQueryVariables {}
+
 export type DeviceSitesQueryResponse = {
-  deviceSites: string[];
+  sites: string[];
 };
+
+export interface DeviceSitesQueryVariables extends CommonSearchQueryVariables {}
 
 export type DeviceSectionsQueryResponse = {
-  deviceSections: string[];
+  sections: string[];
 };
 
-export type DeviceDistinctQueryVariables = {
-  term?: string;
-  limit?: number;
-};
+export interface DeviceSectionsQueryVariables extends CommonSearchQueryVariables {}
 
 export type DeviceDistinctQueryResult = {
   values: string[];

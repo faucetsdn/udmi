@@ -15,31 +15,31 @@ export const GET_DEVICES = gql`
 `;
 
 export const GET_DEVICE_NAMES = gql`
-  query GetDeviceNames($term: String, $limit: Int) {
-    deviceNames(term: $term, limit: $limit)
+  query GetDeviceNames($searchOptions: DeviceNamesSearchOptions) {
+    deviceNames(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_MAKES = gql`
-  query GetDeviceMakes($term: String, $limit: Int) {
-    deviceMakes(term: $term, limit: $limit)
+  query GetDeviceMakes($searchOptions: DeviceMakesSearchOptions) {
+    deviceMakes(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_MODELS = gql`
-  query GetDeviceModels($term: String, $limit: Int) {
-    deviceModels(term: $term, limit: $limit)
+  query GetDeviceModels($searchOptions: DeviceModelsSearchOptions) {
+    deviceModels(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_SITES = gql`
-  query GetDeviceSites($term: String, $limit: Int) {
-    deviceSites(term: $term, limit: $limit)
+  query GetDeviceSites($searchOptions: SitesSearchOptions) {
+    sites(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_SECTIONS = gql`
-  query GetDeviceSections($term: String, $limit: Int) {
-    deviceSections(term: $term, limit: $limit)
+  query GetDeviceSections($searchOptions: SectionsSearchOptions) {
+    sections(searchOptions: $searchOptions)
   }
 `;

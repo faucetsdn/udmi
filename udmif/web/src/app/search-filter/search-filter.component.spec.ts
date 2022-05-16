@@ -2,17 +2,16 @@ import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testin
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ApolloQueryResult } from '@apollo/client/core';
 import { of } from 'rxjs';
-import { AutocompleteSuggestionsQueryResponse } from './search-filter';
+import { DeviceDistinctQueryResult } from '../devices/devices';
+import { DevicesService } from '../devices/devices.service';
 import { SearchFilterComponent } from './search-filter.component';
 import { SearchFilterModule } from './search-filter.module';
-import { SearchFilterService } from './search-filter.service';
 
 describe('SearchFilterComponent', () => {
   let component: SearchFilterComponent;
   let fixture: ComponentFixture<SearchFilterComponent>;
-  let mockSearchFilterService: jasmine.SpyObj<SearchFilterService>;
+  let mockDevicesService: jasmine.SpyObj<DevicesService>;
 
   function injectViewValue(value: string): void {
     let e: MatAutocompleteSelectedEvent = {
@@ -26,25 +25,29 @@ describe('SearchFilterComponent', () => {
   }
 
   beforeEach(async () => {
-    mockSearchFilterService = jasmine.createSpyObj(SearchFilterService, ['getAutocompleteSuggestions']);
-    mockSearchFilterService.getAutocompleteSuggestions.and.returnValue(
-      of(<ApolloQueryResult<AutocompleteSuggestionsQueryResponse>>{
-        data: {
-          autocompleteSuggestions: ['CDS-1', 'AHU-2', 'CDS-3'],
-        },
+    mockDevicesService = jasmine.createSpyObj(DevicesService, ['getDeviceNames', 'getDeviceMakes']);
+    mockDevicesService.getDeviceNames.and.returnValue(
+      of(<DeviceDistinctQueryResult>{
+        values: ['CDS-1', 'AHU-2', 'CDS-3'],
+      })
+    );
+    mockDevicesService.getDeviceMakes.and.returnValue(
+      of(<DeviceDistinctQueryResult>{
+        values: [],
       })
     );
 
     await TestBed.configureTestingModule({
       imports: [SearchFilterModule, BrowserAnimationsModule],
-      providers: [{ provide: SearchFilterService, useValue: mockSearchFilterService }],
+      providers: [{ provide: DevicesService, useValue: mockDevicesService }],
     }).compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SearchFilterComponent);
     component = fixture.componentInstance;
-    component.fields = ['name', 'make'];
+    component.fields = { name: 'getDeviceNames', make: 'getDeviceMakes' };
+    component.serviceName = 'DevicesService';
     fixture.detectChanges();
   });
 
@@ -72,7 +75,7 @@ describe('SearchFilterComponent', () => {
     expect(component.filterEntry.value).not.toBeDefined();
     expect(component.filterEntry.field).toEqual('name');
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
 
     injectViewValue('=');
 
@@ -84,7 +87,7 @@ describe('SearchFilterComponent', () => {
     expect(component.filterEntry.operator).toEqual('=');
     expect(component.filterEntry.value).not.toBeDefined();
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
 
     injectViewValue('AHU-2');
 
@@ -98,7 +101,7 @@ describe('SearchFilterComponent', () => {
     expect(component.filterEntry.value).not.toBeDefined();
     expect(component.handleFilterChange).toHaveBeenCalledWith([{ field: 'name', operator: '=', value: 'AHU-2' }]);
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
 
     // Confirm we refocused.
     fixture.whenStable().then(() => {
@@ -118,7 +121,7 @@ describe('SearchFilterComponent', () => {
     expect(component.handleFilterChange).toHaveBeenCalledTimes(2); // once with the filter, once without
     expect(component.handleFilterChange).toHaveBeenCalledWith([]); // next with it removed
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
 
     // Confirm we refocused.
     fixture.whenStable().then(() => {
@@ -145,7 +148,7 @@ describe('SearchFilterComponent', () => {
     expect(component.filterEntry.operator).not.toBeDefined();
     expect(component.filterEntry.value).not.toBeDefined();
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
     expect(component.handleFilterChange).toHaveBeenCalledTimes(1); // once to add the filter
 
     // Confirm we refocused.
@@ -176,7 +179,7 @@ describe('SearchFilterComponent', () => {
     expect(component.filterEntry.value).not.toBeDefined();
     expect(component.handleFilterChange).toHaveBeenCalledWith([{ field: 'name', operator: '~', value: 'vaV' }]);
     expect(component.itemInput.nativeElement.value).toEqual('');
-    expect(component.itemCtrl.setValue).toHaveBeenCalledWith(null);
+    expect(component.itemCtrl.setValue).toHaveBeenCalledWith('');
 
     // Confirm we refocused.
     fixture.whenStable().then(() => {
