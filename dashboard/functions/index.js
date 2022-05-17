@@ -394,7 +394,7 @@ function consolidate_config(registryId, deviceId, subFolder) {
   const cloudRegion = registry_regions[registryId];
   const reg_doc = firestore.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
-  const configs = dev_doc.collection('configs');
+  const configs = dev_doc.collection(CONFIG_TYPE);
 
   if (subFolder == UPDATE_FOLDER) {
     return;
