@@ -19,7 +19,7 @@ data "archive_file" "source" {
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
   for_each    = var.eventHandler_functions
-  name        = "index.zip"
+  name        = "dist.zip"
   bucket      = google_storage_bucket.function-bucket[each.key].name
   source      = data.archive_file.source.output_path
   lifecycle {
