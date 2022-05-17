@@ -21,4 +21,4 @@ setupEnv.sh
 # mongo output
 .mongodb
 
-dist/
+#dist/
