@@ -67,7 +67,6 @@ type DevicesResponse {
   totalFilteredCount: Int!
 }
 
-
 type Point{
   # the ID of the point
   id: ID!
