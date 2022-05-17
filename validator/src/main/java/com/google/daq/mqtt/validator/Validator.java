@@ -265,7 +265,7 @@ public class Validator {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
     if (cloudIotManager.getUpdateTopic() != null) {
-      dataSink = new PubSubDataSink(projectId, cloudIotConfig.update_topic);
+      dataSink = new PubSubDataSink(projectId, cloudIotManager.getUpdateTopic());
     }
   }
 
