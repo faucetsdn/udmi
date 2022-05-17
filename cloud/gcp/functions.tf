@@ -14,7 +14,7 @@ resource "google_storage_bucket" "function-bucket" {
 data "archive_file" "source" {
   type        = "zip"
   source_dir  = "../../udmif/event-handler/dist"
-  output_path = "../../udmif/event-handler/index.zip"
+  output_path = "../../udmif/event-handler/dist/dist.zip"
 }
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
