@@ -21,7 +21,7 @@ resource "google_storage_bucket_object" "function-object" {
   for_each    = var.eventHandler_functions
   name        = "index.zip"
   bucket      = google_storage_bucket.function-bucket[each.key].name
-  source      = "data.archive_file.source.output_path"
+  source      = data.archive_file.source.output_path
   lifecycle {
     ignore_changes = [detect_md5hash] 
   }
