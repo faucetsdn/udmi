@@ -21,7 +21,12 @@
     <mat-header-cell *matHeaderCellDef mat-sort-header="{{ columnName }}">{{
       columnName | capitalize
     }}</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+    <div *ngIf="columnName === 'lastPayload'; else elseBlock">
+      <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+    </div>
+    <ng-template #elseBlock
+      ><mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell></ng-template
+    >
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
