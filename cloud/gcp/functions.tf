@@ -13,7 +13,7 @@ resource "google_storage_bucket" "function-bucket" {
 # Generates an archive of the source code compressed as a .zip file.
 data "archive_file" "source" {
   type        = "zip"
-  source_dir  = "../../udmif/event-handler/dist"
+  source_dir  = "../../udmif/event-handler/src"
   output_path = "../../udmif/event-handler/dist.zip"
 }
 # Add the zipped file to the bucket.
