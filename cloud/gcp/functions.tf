@@ -15,6 +15,7 @@ data "archive_file" "source" {
   type        = "zip"
   source_dir  = "../../udmif/event-handler/dist"
   output_path = "../../udmif/event-handler/index.zip"
+  excludes    = [ "../../udmif/event-handler/dist/__tests__" ]
 }
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
