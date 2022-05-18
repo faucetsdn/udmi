@@ -14,13 +14,18 @@ resource "google_storage_bucket" "function-bucket" {
 data "archive_file" "source" {
   type        = "zip"
   source_dir  = "../../udmif/event-handler/dist"
-  output_path = "../../udmif/event-handler/index.zip"
+  output_path = "../../udmif/event-handler/index-1.zip"
   excludes    = [ "../../udmif/event-handler/dist/__tests__" ]
 }
 # Add the zipped file to the bucket.
+resource "random_string" "random" {
+  length           = 4
+  special          = false
+}
+
 resource "google_storage_bucket_object" "function-object" {
   for_each    = var.eventHandler_functions
-  name        = "index.zip"
+  name        = "index-1.zip"
   bucket      = google_storage_bucket.function-bucket[each.key].name
   source      = data.archive_file.source.output_path
   lifecycle {
