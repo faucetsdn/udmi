@@ -1,3 +1,5 @@
-export MONGO_PROTOCOL=mongodb
-export MONGO_HOST=localhost
-export MONGO_DATABASE=device
+# Locally transpille the typescript code so terraform can deploy it properly.
+
+rm -rf dist
+rm index.zip
+npm run build
