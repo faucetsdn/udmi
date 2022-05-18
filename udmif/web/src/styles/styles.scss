@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+@import './variables';
 
 html,
 body {
@@ -11,4 +12,8 @@ body {
 }
 a {
   text-decoration: none;
+}
+.mat-cell,
+.mat-header-cell {
+  padding: 0 $spacing;
 }
