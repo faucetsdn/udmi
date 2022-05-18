@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
 @import './variables';
 
 html,
@@ -7,13 +8,37 @@ body {
 }
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background-color: #fafafa;
 }
 a {
   text-decoration: none;
 }
-.mat-cell,
+
+// Table overrides.
+.mat-cell {
+  padding: $spacing;
+}
 .mat-header-cell {
   padding: 0 $spacing;
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
+}
+.mat-cell {
+  color: $text-secondary;
+  min-height: auto;
+}
+
+// Pagination overrides.
+.mat-paginator,
+.mat-paginator-page-size .mat-select-trigger {
+  font-size: inherit;
+}
+.mat-paginator-page-size,
+.mat-paginator-range-label {
+  color: $text-primary;
+}
+
+// Form field overrides.
+.mat-form-field-label {
+  color: $text-primary;
 }
