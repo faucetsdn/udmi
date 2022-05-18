@@ -1,0 +1,18 @@
+cache:
+  key: event-handler-${CI_COMMIT_REF_SLUG}
+  paths:
+    - udmif/event-handler/node_modules/
+
+include:
+  - project: 'buildings-iot/templates/cicd_pipelines'
+    ref: main
+    file: node.yml
+
+stages:
+  - build
+
+build-node:
+  script:
+    - npm install
+    - npm install -g @angular/cli
+    - npm run build
