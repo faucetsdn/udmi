@@ -14,12 +14,12 @@ resource "google_storage_bucket" "function-bucket" {
 data "archive_file" "source" {
   type        = "zip"
   source_dir  = "../../udmif/event-handler/dist"
-  output_path = "../../udmif/event-handler/dist/dist.zip"
+  output_path = "../../udmif/event-handler/index.zip"
 }
 # Add the zipped file to the bucket.
 resource "google_storage_bucket_object" "function-object" {
   for_each    = var.eventHandler_functions
-  name        = "dist.zip"
+  name        = "index.zip"
   bucket      = google_storage_bucket.function-bucket[each.key].name
   source      = data.archive_file.source.output_path
   lifecycle {
