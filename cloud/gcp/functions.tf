@@ -18,11 +18,6 @@ data "archive_file" "source" {
   excludes    = [ "../../udmif/event-handler/dist/__tests__" ]
 }
 # Add the zipped file to the bucket.
-resource "random_string" "random" {
-  length           = 4
-  special          = false
-}
-
 resource "google_storage_bucket_object" "function-object" {
   for_each    = var.eventHandler_functions
   name        = "index-1.zip"

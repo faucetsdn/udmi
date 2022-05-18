@@ -22,4 +22,4 @@ setupEnv.sh
 .mongodb
 
 dist/
-index.zip
+index*.zip
