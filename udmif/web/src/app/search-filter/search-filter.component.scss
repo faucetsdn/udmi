@@ -1,7 +1,13 @@
+@import '../../styles/variables';
+
 .search-filter {
   width: 100%;
 
-  .spacer {
-    height: 40px;
+  input::placeholder {
+    color: $text-primary;
+  }
+
+  .filter-icon {
+    color: $icon-default;
   }
 }
