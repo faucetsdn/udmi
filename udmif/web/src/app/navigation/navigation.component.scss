@@ -1,11 +1,16 @@
+@import '../../styles/variables';
+
 .mat-toolbar.mat-primary {
   position: sticky;
   top: 0;
   z-index: 1;
 
-  .mat-button-base {
-    margin-left: 8px;
-    min-width: unset;
+  nav {
+    padding-left: $gutter-width;
+
+    a {
+      min-width: unset;
+    }
   }
 }
 
@@ -24,5 +29,7 @@
 }
 
 .active {
-  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 2px white;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }

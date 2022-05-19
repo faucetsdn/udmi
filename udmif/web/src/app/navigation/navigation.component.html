@@ -1,9 +1,9 @@
 <mat-toolbar color="primary" *ngIf="isLoggedIn | async">
-  <span class="title"><b>UDMI</b> Device Management Console</span>
-  <span class="spacer"></span>
+  <h1>UDMI</h1>
   <nav role="navigation" aria-label="Main navigation">
     <a mat-button routerLink="/devices" routerLinkActive="active">Devices</a>
   </nav>
+  <span class="spacer"></span>
   <button mat-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
     <span>{{ displayName | async }}</span>
     <mat-icon class="drop-down-icon">arrow_drop_down</mat-icon>
