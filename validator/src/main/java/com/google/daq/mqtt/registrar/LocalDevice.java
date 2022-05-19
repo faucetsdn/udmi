@@ -65,6 +65,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
+import udmi.schema.SystemConfig;
 
 class LocalDevice {
 
@@ -548,6 +549,8 @@ class LocalDevice {
     }
     // Copy selected MetadataSystem properties into device config.
     if (metadata.system.min_loglevel != null) {
+      if (config.system == null)
+        config.system = new SystemConfig();
       config.system.min_loglevel = metadata.system.min_loglevel;
     }
     return config;
