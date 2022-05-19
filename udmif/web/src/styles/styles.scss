@@ -42,3 +42,7 @@ a {
 .mat-form-field-label {
   color: $text-primary;
 }
+.mat-form-field-appearance-outline .mat-form-field-outline {
+  color: inherit;
+  background-color: white;
+}

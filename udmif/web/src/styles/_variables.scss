@@ -10,6 +10,7 @@ $primary: mat.get-color-from-palette($primary-palette);
 $accent: mat.get-color-from-palette($accent-palette);
 $text-primary: rgba(0, 0, 0, 0.87);
 $text-secondary: mat.get-color-from-palette($text-secondary-palette, 700);
+$icon-default: rgba(0, 0, 0, 0.54);
 
 // Spacing
 $spacing: 8px;
