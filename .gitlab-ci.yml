@@ -6,7 +6,7 @@ api:
     include: udmif/api/build.yml
   rules:
     - changes:
-      - "udmif/api/*"
+      - "udmif/api/**/*"
 
 web:
   stage: build
@@ -16,7 +16,7 @@ web:
     include: udmif/web/build.yml
   rules:
     - changes:
-      - "udmif/web/*"
+      - "udmif/web/**/*"
 
 gcp:
   stage: build
@@ -24,5 +24,5 @@ gcp:
     include: cloud/gcp/build.yml
   rules:
     - changes:
-      - "cloud/gcp/*"
+      - "cloud/gcp/**/*"
     
