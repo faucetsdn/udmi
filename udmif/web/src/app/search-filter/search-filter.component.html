@@ -1,5 +1,5 @@
-<mat-form-field class="search-filter" appearance="fill" [floatLabel]="'always'">
-  <mat-label>Filter Devices</mat-label>
+<mat-form-field class="search-filter" appearance="outline">
+  <mat-label>Filter devices</mat-label>
   <mat-chip-list #chipList aria-label="Device filters">
     <mat-chip *ngFor="let item of items" (removed)="remove(item)">
       {{ item.label }}
@@ -7,7 +7,6 @@
         <mat-icon>cancel</mat-icon>
       </button>
     </mat-chip>
-    <span class="spacer"></span>
     <input
       placeholder="{{ placeholder }}"
       #itemInput
@@ -17,6 +16,7 @@
       (matChipInputTokenEnd)="add($event)"
     />
   </mat-chip-list>
+  <mat-icon matSuffix class="filter-icon">filter_list</mat-icon>
   <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)" autoActiveFirstOption>
     <mat-option *ngFor="let item of filteredItems | async" [value]="item.value">
       {{ item.label }}
