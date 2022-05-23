@@ -7,8 +7,11 @@ if [[ $# != 1 ]]; then
     echo Usage: $0 PROJECT_ID
     false
 fi
+
 project_id=$1
 shift
+
+echo 'Using target project (base64):' $(echo =$project_id | base64)
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
