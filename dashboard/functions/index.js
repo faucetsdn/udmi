@@ -163,6 +163,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
+  console.log('TAP subFolder', attributes.subFolder);
   const parts = attributes.subFolder.split('/');
 
   attributes.deviceRegistryId = attributes.deviceId;
