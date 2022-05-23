@@ -149,6 +149,10 @@ public class IotCoreClient implements MessagePublisher {
     mqttPublisher.close();
   }
 
+  public void setReflectorState(String stateData) {
+    mqttPublisher.publish(siteName, "state", stateData);
+  }
+
   static class MessageBundle {
 
     Map<String, Object> message;

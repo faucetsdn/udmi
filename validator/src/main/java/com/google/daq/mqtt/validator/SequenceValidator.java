@@ -48,6 +48,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
+import udmi.schema.ReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -144,6 +145,19 @@ public abstract class SequenceValidator {
 
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
+    setReflectorState();
+  }
+
+  private static void setReflectorState() {
+    ReflectorState reflectorState = new ReflectorState();
+    reflectorState.version = System.getenv("UDMI_VERSION");
+    reflectorState.user = System.getenv("USER");
+    reflectorState.timestamp = getTimestamp();
+    try {
+      client.setReflectorState(OBJECT_MAPPER.writeValueAsString(reflectorState));
+    } catch (Exception e) {
+      throw new RuntimeException("Could not set reflector state", e);
+    }
   }
 
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
@@ -251,7 +265,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  protected String getTimestamp() {
+  protected static String getTimestamp() {
     return getTimestamp(CleanDateFormat.cleanDate());
   }
 

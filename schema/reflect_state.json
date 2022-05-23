@@ -1,0 +1,21 @@
+{
+  "title": "Reflector State",
+  "description": "State of a reflector client",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "user": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "version"
+  ]
+}
