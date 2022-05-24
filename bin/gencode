@@ -24,6 +24,8 @@ if [[ -n $check ]]; then
     grep gencode/docs/config.html /tmp/gencode.hash
     echo JRAND 2
     grep gencode/docs/config.html .gencode_hash.txt
+    echo JRAND 2a
+    gzip -c gencode/docs/config.html | base64
     echo JRAND 3
     diff /tmp/gencode.hash .gencode_hash.txt
     echo JRAND 4
