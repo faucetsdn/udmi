@@ -48,7 +48,6 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
-import udmi.schema.ReflectorReflectorState;
 import udmi.schema.ReflectorState;
 import udmi.schema.SetupReflectorState;
 import udmi.schema.State;

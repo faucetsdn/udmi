@@ -190,7 +190,7 @@ function udmi_reflector_state(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = {
-    'last_state': msgObject.timestamp;
+    'last_state': msgObject.timestamp
   };
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, SETUP_FOLDER, subContents, startTime);
