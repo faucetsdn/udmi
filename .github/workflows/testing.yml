@@ -58,6 +58,7 @@ jobs:
           java-version: '11'
       - name: base setup
         run: |
+          git fetch --tags && git describe
           bin/setup_base
           bin/clone_model
       - name: sequence tests
