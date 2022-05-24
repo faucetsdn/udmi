@@ -48,6 +48,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
+import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
 import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
@@ -102,6 +103,9 @@ public abstract class SequenceValidator {
       "config", Config.class,
       "state", State.class
   );
+  private static final String UDMI_VERSION = Objects.requireNonNullElse(
+      System.getenv("UDMI_VERSION"), "unknown");
+  private static Date stateTimestamp;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -147,19 +151,6 @@ public abstract class SequenceValidator {
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
     client = new IotCoreClient(projectId, cloudIotConfig, key_file);
     setReflectorState();
-  }
-
-  private static void setReflectorState() {
-    ReflectorState reflectorState = new ReflectorState();
-    reflectorState.timestamp = new Date();
-    reflectorState.version = System.getenv("UDMI_VERSION");
-    reflectorState.setup = new SetupReflectorState();
-    reflectorState.setup.user = System.getenv("USER");
-    try {
-      client.setReflectorState(OBJECT_MAPPER.writeValueAsString(reflectorState));
-    } catch (Exception e) {
-      throw new RuntimeException("Could not set reflector state", e);
-    }
   }
 
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
@@ -243,6 +234,22 @@ public abstract class SequenceValidator {
   };
   private String lastSerialNo;
   private boolean recordMessages;
+
+  private static void setReflectorState() {
+    ReflectorState reflectorState = new ReflectorState();
+    stateTimestamp = new Date();
+    reflectorState.timestamp = stateTimestamp;
+    reflectorState.version = UDMI_VERSION;
+    reflectorState.setup = new SetupReflectorState();
+    reflectorState.setup.user = System.getenv("USER");
+    try {
+      System.err.printf("Setting state version %s timestamp %s%n",
+          UDMI_VERSION, getTimestamp(stateTimestamp));
+      client.setReflectorState(OBJECT_MAPPER.writeValueAsString(reflectorState));
+    } catch (Exception e) {
+      throw new RuntimeException("Could not set reflector state", e);
+    }
+  }
 
   private static Metadata readDeviceMetadata() {
     File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
@@ -658,19 +665,41 @@ public abstract class SequenceValidator {
       throw new RuntimeException("Trying to receive message from inactive client");
     }
     client.processMessage((message, attributes) -> {
-      if (!deviceId.equals(attributes.get("deviceId"))) {
-        return;
-      }
-      recordRawMessage(message, attributes);
-      String subFolderRaw = attributes.get("subFolder");
-      String subTypeRaw = attributes.get("subType");
-
-      if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-        handleReflectorMessage(subTypeRaw, message);
-      } else {
-        handleDeviceMessage(message, subFolderRaw, subTypeRaw);
+      String category = attributes.get("category");
+      if ("commands".equals(category)) {
+        processCommand(message, attributes);
+      } else if ("config".equals(category)) {
+        processConfig(message, attributes);
       }
     });
+  }
+
+  private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
+    ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
+    Date lastState = reflectorConfig.setup.last_state;
+    if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
+      info("Cloud UDMI version " + reflectorConfig.version);
+      if (!UDMI_VERSION.equals(reflectorConfig.version)) {
+        warning("Local/cloud UDMI version mismatch!");
+      }
+    } else {
+      info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
+    }
+  }
+
+  private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
+    if (!deviceId.equals(attributes.get("deviceId"))) {
+      return;
+    }
+    recordRawMessage(message, attributes);
+    String subFolderRaw = attributes.get("subFolder");
+    String subTypeRaw = attributes.get("subType");
+
+    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      handleReflectorMessage(subTypeRaw, message);
+    } else {
+      handleDeviceMessage(message, subFolderRaw, subTypeRaw);
+    }
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
