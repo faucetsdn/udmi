@@ -1,18 +1,20 @@
-"""Generated class for reflect_state.json"""
+"""Generated class for reflect_config.json"""
 
 
-class SetupReflectorState:
+class SetupReflectorConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.user = None
+    self.last_state = None
+    self.deployed_at = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = SetupReflectorState()
-    result.user = source.get('user')
+    result = SetupReflectorConfig()
+    result.last_state = source.get('last_state')
+    result.deployed_at = source.get('deployed_at')
     return result
 
   @staticmethod
@@ -21,7 +23,7 @@ class SetupReflectorState:
       return None
     result = {}
     for key in source:
-      result[key] = SetupReflectorState.from_dict(source[key])
+      result[key] = SetupReflectorConfig.from_dict(source[key])
     return result
 
   @staticmethod
@@ -33,12 +35,14 @@ class SetupReflectorState:
 
   def to_dict(self):
     result = {}
-    if self.user:
-      result['user'] = self.user # 5
+    if self.last_state:
+      result['last_state'] = self.last_state # 5
+    if self.deployed_at:
+      result['deployed_at'] = self.deployed_at # 5
     return result
 
 
-class ReflectorState:
+class ReflectorConfig:
   """Generated schema class"""
 
   def __init__(self):
@@ -50,10 +54,10 @@ class ReflectorState:
   def from_dict(source):
     if not source:
       return None
-    result = ReflectorState()
+    result = ReflectorConfig()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.setup = SetupReflectorState.from_dict(source.get('setup'))
+    result.setup = SetupReflectorConfig.from_dict(source.get('setup'))
     return result
 
   @staticmethod
@@ -62,7 +66,7 @@ class ReflectorState:
       return None
     result = {}
     for key in source:
-      result[key] = ReflectorState.from_dict(source[key])
+      result[key] = ReflectorConfig.from_dict(source[key])
     return result
 
   @staticmethod

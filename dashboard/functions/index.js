@@ -24,6 +24,7 @@ const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 const UPDATE_FOLDER = 'update';
 const QUERY_FOLDER = 'query';
+const SETUP_FOLDER = 'setup';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -163,9 +164,11 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  console.log('TAP subFolder', attributes.subFolder);
-  const parts = attributes.subFolder.split('/');
+  if (!attributes.subFolder) {
+    return udmi_reflector_state(attributes, msgObject);
+  }
 
+  const parts = attributes.subFolder.split('/');
   attributes.deviceRegistryId = attributes.deviceId;
   attributes.deviceId = parts[1];
   attributes.subFolder = parts[2];
@@ -181,6 +184,17 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     return publishPubsubMessage(target, attributes, msgObject);
   });
 });
+
+function udmi_reflector_state(attributes, msgObject) {
+  console.log('Processing reflector state change', attributes, msgObject);
+  const registryId = attributes.deviceRegistryId;
+  const deviceId = attributes.deviceId;
+  const subContents = {
+    'last_state': msgObject.timestamp;
+  };
+  const startTime = currentTimestamp();
+  return modify_device_config(registryId, deviceId, SETUP_FOLDER, subContents, startTime);
+}
 
 function udmi_query_event(attributes, msgObject) {
   const subType = attributes.subType;
@@ -277,7 +291,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   if (useFirestore) {
     console.info('Deferring to firestore trigger for IoT Core modification.');
   } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, currentTimestamp(), msgObject));
+    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp()));
   }
 
   return Promise.all(promises);
@@ -297,7 +311,7 @@ function parse_old_config(oldConfig, resetConfig) {
   }
 }
 
-async function modify_device_config(registryId, deviceId, subFolder, startTime, subContents) {
+async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
 
   const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
@@ -332,7 +346,7 @@ async function modify_device_config(registryId, deviceId, subFolder, startTime, 
       console.log('Config accepted version', subFolder, version, startTime);
     }).catch(e => {
       console.log('Config update rejected', subFolder, version, startTime);
-      return modify_device_config(registryId, deviceId, subFolder, startTime, subContents);
+      return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
     })
 }
 

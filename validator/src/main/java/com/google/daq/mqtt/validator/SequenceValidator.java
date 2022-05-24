@@ -48,7 +48,9 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
+import udmi.schema.ReflectorReflectorState;
 import udmi.schema.ReflectorState;
+import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -150,9 +152,10 @@ public abstract class SequenceValidator {
 
   private static void setReflectorState() {
     ReflectorState reflectorState = new ReflectorState();
+    reflectorState.timestamp = new Date();
     reflectorState.version = System.getenv("UDMI_VERSION");
-    reflectorState.user = System.getenv("USER");
-    reflectorState.timestamp = getTimestamp();
+    reflectorState.setup = new SetupReflectorState();
+    reflectorState.setup.user = System.getenv("USER");
     try {
       client.setReflectorState(OBJECT_MAPPER.writeValueAsString(reflectorState));
     } catch (Exception e) {

@@ -1,6 +1,6 @@
 {
-  "title": "Reflector State",
-  "description": "State of a reflector client",
+  "title": "Reflector Config",
+  "description": "Config for a reflector client",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -16,11 +16,16 @@
       "type": "string"
     },
     "setup": {
-      "title": "Setup Reflector State",
+      "title": "Setup Reflector Config",
       "type": "object",
       "properties": {
-        "user": {
-          "type": "string"
+        "last_state": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deployed_at": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }

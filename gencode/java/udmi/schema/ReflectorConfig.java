@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Reflector State
+ * Reflector Config
  * <p>
- * State of a reflector client
+ * Config for a reflector client
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "setup"
 })
 @Generated("jsonschema2pojo")
-public class ReflectorState {
+public class ReflectorConfig {
 
     /**
      * RFC 3339 Timestamp the state payload was generated
@@ -39,13 +39,13 @@ public class ReflectorState {
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     /**
-     * Setup Reflector State
+     * Setup Reflector Config
      * <p>
      * 
      * 
      */
     @JsonProperty("setup")
-    public SetupReflectorState setup;
+    public SetupReflectorConfig setup;
 
     @Override
     public int hashCode() {
@@ -61,10 +61,10 @@ public class ReflectorState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ReflectorState) == false) {
+        if ((other instanceof ReflectorConfig) == false) {
             return false;
         }
-        ReflectorState rhs = ((ReflectorState) other);
+        ReflectorConfig rhs = ((ReflectorConfig) other);
         return ((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
