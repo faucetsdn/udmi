@@ -19,7 +19,7 @@ else
     echo Executing specific tests $test_names
 fi
 
-export UDMI_VERSION=`git describe --dirty`
+export UDMI_VERSION=`git describe --always --dirty`
 
 echo Parsing $VALIDATOR_CONFIG:
 cat $VALIDATOR_CONFIG
