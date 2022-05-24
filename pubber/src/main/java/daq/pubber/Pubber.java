@@ -359,6 +359,9 @@ public class Pubber {
     deviceState.system.software.put("firmware", "v1");
     devicePoints.extraField = configuration.extraField;
 
+    if(configuration.extraPoint!= null && !configuration.extraPoint.isEmpty()){
+      addPoint(makePoint(configuration.extraPoint, makePointPointsetModel(true, 50, 50, "Celsius")));
+    }
     markStateDirty(0);
   }
 
