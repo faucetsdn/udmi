@@ -17,6 +17,7 @@ if [[ -n $check ]]; then
     bin/gencode_docs check_links
 
     echo Checking gencode hash...
+    echo JRAND 0...
     files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
     diff /tmp/gencode.hash .gencode_hash.txt
