@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
@@ -285,6 +286,14 @@ public class Pubber {
       info("Configuring with key type " + configuration.algorithm);
     }
 
+    if (metadata.gateway != null) {
+      configuration.gatewayId = metadata.gateway.gateway_id;
+      Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
+      if (authType != null) {
+        configuration.algorithm = authType.value();
+      }
+    }
+
     Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
@@ -519,8 +528,9 @@ public class Pubber {
 
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
+      String keyDevice = configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
-          configuration.deviceId, getDeviceKeyPrefix());
+          keyDevice, getDeviceKeyPrefix());
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
@@ -848,7 +858,7 @@ public class Pubber {
         int interval = getScanInterval(family);
         if (interval > 0) {
           Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
-          scheduleDiscoveryScan(family, newGeneration);
+          scheduleFuture(newGeneration, () -> checkDiscoveryScan(family, newGeneration));
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
