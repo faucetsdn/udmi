@@ -37,20 +37,23 @@ else
         fi
     done
 
-    extra_field="${options[extra_field]}"    
-    extra_point="${options[extra_point]}"
-
+    extra_point="${options[extra_point]}"    
+    
+    if [ -n "${options[extra_field]}" ]; then
+        printf -v extra_field '"extraField": "%s",' "${options[extra_field]}"
+    fi
+    
     cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
     
     cat <<EOF > /tmp/pubber_config.json
 {
+    $extra_field
+    "extraPoint": "$extra_point",
     "projectId": "$project_id",
     "sitePath": "$site_path",
     "cloudRegion": "$cloud_region",
     "deviceId": "$device_id",
-    "serialNo": "$serial",
-    "extraField": "$extra_field",
-    "extraPoint": "$extra_point"
+    "serialNo": "$serial"
 }
 EOF
     $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json
