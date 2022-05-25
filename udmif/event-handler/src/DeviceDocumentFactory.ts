@@ -1,65 +1,133 @@
-import { DeviceDocument, UdmiMessage } from './model';
-
-const POINTSET_SUB_FOLDER = 'pointset';
-const SYSTEM_SUB_FOLDER = 'system';
-const MODEL = 'model';
-const STATE = 'state';
+import { DeviceDocumentBuilder, DeviceDocument } from './DeviceDocument';
+import {
+  isPointset,
+  isPointsetConfig,
+  isPointsetModel,
+  isPointsetState,
+  isSystemModel,
+  isSystemState,
+} from './DocumentTypeUtil';
+import { UdmiMessage } from './UdmiMessage';
+import { PointBuilder, Point } from './Point';
 
 export function createDeviceDocument(message: UdmiMessage): DeviceDocument {
+  const builder: DeviceDocumentBuilder = new DeviceDocumentBuilder();
+
+  builder.id(message.attributes.deviceNumId).name(message.attributes.deviceId);
+
   if (isSystemState(message)) {
-    return createSystemStateDocument(message);
+    return createDeviceDocumentFromSystemStateDocument(message, builder);
   } else if (isSystemModel(message)) {
-    return createSystemModelDocument(message);
+    return createDeviceDocumentFromSystemModelDocument(message, builder);
+  } else if (isPointset(message)) {
+    return createDeviceDocumentFromPointset(message, builder);
+  } else if (isPointsetModel(message)) {
+    return createDeviceDocumentFromPointsetModel(message, builder);
+  } else if (isPointsetState(message)) {
+    return createDeviceDocumentFromPointsetState(message, builder);
+  } else if (isPointsetConfig(message)) {
+    return createDeviceDocumentFromPointsetConfig(message, builder);
   } else {
-    return createDefaultDeviceDocument(message);
+    return createDeviceDocumentFromDefaultDeviceDocument(message, builder);
   }
 }
 
-function createSystemModelDocument(message: UdmiMessage): DeviceDocument {
-  const deviceDocument: DeviceDocument = createDefaultDeviceDocument(message);
-
-  deviceDocument.section = message.data.location.section;
-  deviceDocument.site = message.data.location.site;
-
-  return deviceDocument;
+function createDeviceDocumentFromSystemModelDocument(
+  message: UdmiMessage,
+  builder: DeviceDocumentBuilder
+): DeviceDocument {
+  return builder.section(message.data.location.section).site(message.data.location.site).build();
 }
 
-function createSystemStateDocument(message: UdmiMessage): DeviceDocument {
-  const deviceDocument: DeviceDocument = createDefaultDeviceDocument(message);
-
-  deviceDocument.make = message.data.hardware.make;
-  deviceDocument.model = message.data.hardware.model;
-  deviceDocument.operational = message.data.operational;
-  deviceDocument.serialNumber = message.data.serial_no;
-  deviceDocument.firmware = message.data.software.firmware;
-
-  return deviceDocument;
+function createDeviceDocumentFromSystemStateDocument(
+  message: UdmiMessage,
+  builder: DeviceDocumentBuilder
+): DeviceDocument {
+  return builder
+    .lastPayload(message.data.timestamp)
+    .operational(message.data.operational)
+    .serialNumber(message.data.serial_no)
+    .make(message.data.hardware.make)
+    .model(message.data.hardware.model)
+    .firmware(message.data.software.firmware)
+    .build();
 }
 
-function createDefaultDeviceDocument(message: UdmiMessage): DeviceDocument {
-  const deviceDocument: DeviceDocument = {
-    name: message.attributes.deviceId,
-    id: message.attributes.deviceNumId,
-  };
+function createDeviceDocumentFromDefaultDeviceDocument(
+  message: UdmiMessage,
+  builder: DeviceDocumentBuilder
+): DeviceDocument {
+  return builder.lastPayload(message.data.timestamp).build();
+}
 
-  if (message.data.timestamp) {
-    deviceDocument.lastPayload = message.data.timestamp;
+function createDeviceDocumentFromPointset(message: UdmiMessage, deviceBuilder: DeviceDocumentBuilder): DeviceDocument {
+  const points: Point[] = [];
+
+  for (var pointObject in message.data.points) {
+    const pointValue = message.data.points[pointObject];
+    const value: number = pointValue['present_value'];
+    const pointSetBuilder: PointBuilder = new PointBuilder();
+    const point: Point = pointSetBuilder
+      .id(pointObject)
+      .name(pointObject)
+      .value(value.toString())
+      .metaCode(pointObject)
+      .build();
+    points.push(point);
   }
-  return deviceDocument;
+
+  return deviceBuilder.points(points).build();
 }
 
-export function isSystemState(message): boolean {
-  return isSubFolder(message, SYSTEM_SUB_FOLDER) && isSubType(message, STATE);
+function createDeviceDocumentFromPointsetModel(
+  message: UdmiMessage,
+  deviceBuilder: DeviceDocumentBuilder
+): DeviceDocument {
+  const points: Point[] = [];
+
+  for (var pointObject in message.data.points) {
+    const pointValue = message.data.points[pointObject];
+    const units: string = pointValue['units'];
+    const pointSetBuilder: PointBuilder = new PointBuilder();
+    const point: Point = pointSetBuilder
+      .id(pointObject)
+      .name(pointObject)
+      .units(units)
+      .metaUnit(units)
+      .metaCode(pointObject)
+      .build();
+    points.push(point);
+  }
+
+  return deviceBuilder.points(points).build();
 }
 
-export function isSystemModel(message): boolean {
-  return isSubFolder(message, SYSTEM_SUB_FOLDER) && isSubType(message, MODEL);
+function createDeviceDocumentFromPointsetState(
+  message: UdmiMessage,
+  deviceBuilder: DeviceDocumentBuilder
+): DeviceDocument {
+  const points: Point[] = [];
+
+  for (var pointObject in message.data.points) {
+    const pointSetBuilder: PointBuilder = new PointBuilder();
+    const point: Point = pointSetBuilder.id(pointObject).name(pointObject).metaCode(pointObject).build();
+    points.push(point);
+  }
+
+  return deviceBuilder.points(points).build();
 }
 
-export function isSubFolder(message, folderName: string): boolean {
-  return message.attributes.subFolder === folderName;
-}
+function createDeviceDocumentFromPointsetConfig(
+  message: UdmiMessage,
+  deviceBuilder: DeviceDocumentBuilder
+): DeviceDocument {
+  const points: Point[] = [];
 
-export function isSubType(message, type: string): boolean {
-  return message.attributes.subType === type;
+  for (var pointObject in message.data.points) {
+    const pointSetBuilder: PointBuilder = new PointBuilder();
+    const point: Point = pointSetBuilder.id(pointObject).name(pointObject).metaCode(pointObject).build();
+    points.push(point);
+  }
+
+  return deviceBuilder.points(points).build();
 }
