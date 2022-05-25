@@ -382,6 +382,9 @@ public class MqttPublisher {
     warn("Authentication retry time reached for " + authId);
     reauthTimes.remove(authId);
     MqttClient client = mqttClients.remove(authId);
+    if (client == null) {
+      return;
+    }
     Set<String> removeSet = mqttClients.entrySet().stream()
         .filter(entry -> entry.getValue() == client).map(Entry::getKey).collect(Collectors.toSet());
     removeSet.forEach(mqttClients::remove);
