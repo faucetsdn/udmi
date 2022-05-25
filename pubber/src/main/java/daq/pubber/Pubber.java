@@ -346,10 +346,10 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.extraField,
-        configuration.gatewayId));
+        configuration.gatewayId,
+        configuration.options.keySet()));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
@@ -357,14 +357,16 @@ public class Pubber {
     deviceState.system.hardware.model = "pubber";
     deviceState.system.software = new HashMap<>();
     deviceState.system.software.put("firmware", "v1");
-    devicePoints.extraField = configuration.extraField;
+    
+    // Pubber runtime options
+    devicePoints.extraField = configuration.options.get("extra_field");
 
-    if (configuration.extraPoint != null && !configuration.extraPoint.isEmpty()) {
-      addPoint(makePoint(configuration.extraPoint,
+    if (configuration.options.get("extra_point") != null) {
+      addPoint(makePoint(configuration.options.get("extra_point"),
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
-    if (configuration.noHardware != null && !configuration.noHardware.isEmpty()) {
+    if (configuration.options.get("no_hardware") != null) {
       deviceState.system.hardware = null;
     }
 

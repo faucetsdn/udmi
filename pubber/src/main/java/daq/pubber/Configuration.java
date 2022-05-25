@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import java.util.HashMap;
+
 /**
  * General bucket of pubber configuration information.
  */
@@ -15,9 +17,7 @@ public class Configuration {
   public String keyFile = "local/rsa_private.pkcs8";
   public byte[] keyBytes;
   public String algorithm = "RS256";
-  public Object extraField;
   public String serialNo;
   public String macAddr;
-  public String extraPoint;
-  public String noHardware;
+  public HashMap<String, String> options = new HashMap<>();
 }
