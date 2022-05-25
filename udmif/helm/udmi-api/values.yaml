@@ -23,6 +23,11 @@ dockerSecret:
 env:
   AUTH_CLIENT_ID: <<Injected via CI/CD variable>>
   CLIENT_IDS: <<Injected via CI/CD variable>>
+  MONGO_PROTOCOL: <<Injected via CI/CD variable>>
+  MONGO_USER: <<Injected via CI/CD variable>>
+  MONGO_PWD: <<Injected via CI/CD variable>>
+  MONGO_HOST: <<Injected via CI/CD variable>>
+  MONGO_DB: <<Injected via CI/CD variable>>
 
 serviceAccount:
   # Specifies whether a service account should be created
