@@ -29,6 +29,8 @@ The following parameters are currently supported from the CLI:
   (will trigger validation schema error)
 * `extra_point` - adds an extra point to the device which does not exist in
   device's metadata (will trigger validation additional point error)
+* `no_hardware` - omits the `system.hardware` field from state messages (will
+  trigger validation error, missing required field)
 
 Values can be assigned to the parameters e.g. 
 `bin/pubber SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO extra_point=name_of_point`
