@@ -122,7 +122,6 @@ public class Pubber {
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  private final CountDownLatch gatewayLatch = new CountDownLatch(1);
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
@@ -561,10 +560,6 @@ public class Pubber {
 
   private void connect() {
     try {
-      if (configuration.gatewayId != null) {
-        mqttPublisher.connect(configuration.gatewayId);
-        gatewayLatch.await();
-      }
       mqttPublisher.connect(configuration.deviceId);
       info("Connection complete.");
     } catch (Exception e) {
@@ -637,7 +632,6 @@ public class Pubber {
 
   private void gatewayHandler(Config config) {
     info(String.format("%s gateway config %s", getTimestamp(), isoConvert(config.timestamp)));
-    gatewayLatch.countDown();
   }
 
   private void configHandler(Config config) {

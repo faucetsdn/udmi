@@ -12,7 +12,6 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.opencensus.stats.Aggregation.Count;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -68,6 +67,7 @@ public class MqttPublisher {
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
+  private static final long CONFIG_WAIT_TIME_MS = 10000;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -82,6 +82,7 @@ public class MqttPublisher {
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
+  private final CountDownLatch gatewayLatch = new CountDownLatch(1);
   private final Map<String, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
@@ -173,6 +174,10 @@ public class MqttPublisher {
       String gatewayId = configuration.gatewayId;
       debug("Connecting through gateway " + gatewayId);
       MqttClient mqttClient = getConnectedClient(gatewayId);
+      if (!gatewayLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS)) {
+        throw new RuntimeException("Timeout waiting for gateway startup process");
+      }
+      gatewayLatch.await();
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
@@ -327,6 +332,11 @@ public class MqttPublisher {
     return topic.split("/")[3];
   }
 
+  private String getDeviceId(String topic) {
+    // {site}/devices/{device}/{type}
+    return topic.split("/")[2];
+  }
+
   public void connect(String deviceId) {
     getConnectedClient(deviceId);
   }
@@ -379,7 +389,7 @@ public class MqttPublisher {
     }
   }
 
-  private synchronized MqttClient getConnectedClient(String deviceId) {
+  private MqttClient getConnectedClient(String deviceId) {
     try {
       if (isProxyDevice(deviceId)) {
         return mqttClients.computeIfAbsent(deviceId, this::newBoundClient);
@@ -454,6 +464,10 @@ public class MqttPublisher {
       synchronized (MqttPublisher.this) {
         String messageType = getMessageType(topic);
         String handlerKey = getHandlerKey(topic);
+        String deviceId = getDeviceId(topic);
+        if (deviceId.equals(configuration.gatewayId)) {
+          gatewayLatch.countDown();
+        }
         Consumer<Object> handler = handlers.get(handlerKey);
         Class<Object> type = handlersType.get(handlerKey);
         if (handler == null) {
