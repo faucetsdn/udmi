@@ -2,72 +2,138 @@
 
 # Pubber Reference Client
 
-The _Pubber_ reference client is a sample implementation of a client-side 'device' that implements
-the UDMI schema. It's not intended to be any sort of production-worthy code or library, rather just
-a proof-of-concept of what needs to happen.
+The _Pubber_ reference client is a sample implementation of a client-side
+'device' that implements the UDMI schema. It is used to simulate  devices
+registered in the [UDMI site model](../specs/site_model.md). 
 
-## Build Pubber
+It's not intended to be any sort of production-worthy code or library, rather
+just a proof-of-concept of what needs to happen.
 
-<pre>
-~/daq$ <b>pubber/bin/build</b>
-Running in /home/peringknife/daq/pubber
+## Running Pubber
 
-> Task :compileJava
-&hellip;
+Pubber is run from the CLI within the UDMI directory.
 
-BUILD SUCCESSFUL in 2s
-2 actionable tasks: 1 executed, 1 up-to-date
-</pre>
+`bin/pubber SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO [options]`
 
-## Key Generation
+* `SITE_PATH` - path to site model
+* `PROJECT_ID` - GCP project ID
+* `DEVICE_ID` - device ID to simulate (the device must exist in the site model
+  and be registered)
+* `SERIAL_NO` - serial number to use (can be any alphanumeric string)
+* `[options]` - optional configuration parameters which change pubber behavior
 
-<pre>
-~/daq$ <b>bin/keygen RS256_X509 local</b>
-Generating a 2048 bit RSA private key
-............+++
-......................................+++
-writing new private key to 'local/rsa_private.pem'
------
-~/daq$ <b>ls -l local/rsa_*</b>
--rw-r--r-- 1 user primarygroup 1094 Nov 19 18:56 local/rsa_cert.pem
--rw------- 1 user primarygroup 1704 Nov 19 18:56 local/rsa_private.pem
--rw-r--r-- 1 user primarygroup 1216 Nov 19 18:56 local/rsa_private.pkcs8
-</pre>
+### Options
 
-After generating the key pair, you'll have to upload/associate the `rsa_cert.pem` public certificate
-with the device entry in the cloud console as an _RS256_cert_. (This can be done when the device is
-created, or anytime after.)
+The following parameters are currently supported from the CLI:
+* `extra_field` - adds an extra schema invalidating field to pointset events
+  (will trigger validation schema error)
+* `extra_point` - adds an extra point to the device which does not exist in
+  device's metadata (will trigger validation additional point error)
 
-## Configuration
+Values can be assigned to the parameters e.g. 
+`bin/pubber SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO extra_point=name_of_point`
 
-The `local/pubber.json` file configures the key cloud parameters needed for operation
-(the actual values in the file should match your GCP setup):
-<pre>
-~/daq$ <b>cat local/pubber.json</b>
-{
-  "projectId": "gcp-account",
-  "cloudRegion": "us-central1",
-  "registryId": "sensor_hub",
-  "deviceId": "AHU-1"
-}
-</pre>
+More advanced options can be set by by calling pubber directly with the path a
+configuration file: `pubber/bin/run path/to/config.json`
 
 ## Operation
 
-<pre>
-~/daq$ <b>pubber/bin/run</b>
-[main] INFO daq.pubber.Pubber - Reading configuration from /home/user/daq/local/pubber.json
-[main] INFO daq.pubber.Pubber - Starting instance for registry sensor_hub
-[main] INFO daq.pubber.MqttPublisher - Creating new publisher-client for GAT-001
-[main] INFO daq.pubber.MqttPublisher - Attempting connection to sensor_hub:GAT-001
-[MQTT Call: projects/gcp-account/locations/us-central1/registries/sensor_hub/devices/GAT-001] INFO daq.pubber.Pubber - Received new config daq.udmi.Message$Config@209307c7
-[MQTT Call: projects/gcp-account/locations/us-central1/registries/sensor_hub/devices/GAT-001] INFO daq.pubber.Pubber - Starting executor with send message delay 2000
-[main] INFO daq.pubber.Pubber - synchronized start config result true
-[MQTT Call: projects/gcp-account/locations/us-central1/registries/sensor_hub/devices/GAT-001] INFO daq.pubber.Pubber - Sending state message for device GAT-001
-&hellip;
-[pool-1-thread-1] INFO daq.pubber.Pubber - Sending test message for sensor_hub/GAT-001
-[pool-1-thread-1] INFO daq.pubber.Pubber - Sending test message for sensor_hub/GAT-001
-</pre>
+```
+user@machine:~/udmi$ bin/pubber sites/udmi_site_model project_id AHU-1 123
+Building pubber...
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Running tools version 1.3.8-242-g9652916
+INFO daq.pubber.Pubber - 2022-05-24T15:26:19Z Configuring with key type RS256
+INFO daq.pubber.Pubber - 2022-05-24T15:26:19Z Starting pubber AHU-1, serial 123, mac null, extra null, gateway null
+INFO daq.pubber.Pubber - 2022-05-24T15:26:19Z Loading device key bytes from sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+INFO daq.pubber.Pubber - 2022-05-24T15:26:19Z update state 2022-05-24T15:26:19Z last_config null
+INFO daq.pubber.MqttPublisher - Creating new mqtt client for projects/project_id/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.Pubber - 2022-05-24T15:26:19Z State update:
+{
+  "timestamp" : "2022-05-24T15:26:19Z",
+  "system" : {
+    "operational" : true,
+    "serial_no" : "123",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.MqttPublisher - Attempting connection to projects/project_id/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.MqttPublisher - Password hash 38269d117e7d818bd1cb47274e6eaf1a788cf36f96a83430e595d2e560e570f9
+INFO daq.pubber.MqttPublisher - Updates subscribed
+INFO daq.pubber.Pubber - 2022-05-24T15:26:21Z Connection complete.
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z system.config.receive success
+WARN daq.pubber.Pubber - 2022-05-24T15:26:22Z defer state update 1866
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z system.config.parse success
+WARN daq.pubber.Pubber - 2022-05-24T15:26:22Z defer state update 1822
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z Config handler
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z New config:
+{
+  "timestamp" : "2022-05-10T15:43:37Z",
+  "version" : "1.3.14",
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z 2022-05-24T15:26:22Z received config 2022-05-10T15:43:37Z
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z Starting executor with send message delay 10000
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z system.config.apply success
+INFO daq.pubber.Pubber - 2022-05-24T15:26:22Z synchronized start config result true
+INFO daq.pubber.Pubber - Done with main
+WARN daq.pubber.Pubber - 2022-05-24T15:26:22Z defer state update 1792
+WARN daq.pubber.Pubber - 2022-05-24T15:26:22Z defer state update 1787
+INFO daq.pubber.Pubber - 2022-05-24T15:26:23Z update state 2022-05-24T15:26:23Z last_config 2022-05-10T15:43:37Z
+INFO daq.pubber.Pubber - 2022-05-24T15:26:23Z State update:
+{
+  "timestamp" : "2022-05-24T15:26:23Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-05-10T15:43:37Z",
+    "operational" : true,
+    "serial_no" : "123",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-05-24T15:26:32Z 2022-05-24T15:26:32Z sending test message #0
+```
 
 
 ## Cloud Setup

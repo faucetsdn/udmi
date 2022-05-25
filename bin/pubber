@@ -2,8 +2,8 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-if [ $# != 4 ]; then
-    echo $0 SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO
+if (( $# < 4 )); then
+    echo $0 SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO [options] ...
     false
 fi
 
@@ -23,4 +23,38 @@ $ROOT_DIR/pubber/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-$ROOT_DIR/pubber/bin/run $project_id $site_path $device_id $serial_no
+if (($# == 0)); then  
+    $ROOT_DIR/pubber/bin/run $project_id $site_path $device_id $serial_no
+else
+    declare -A options
+    for option in $*; do
+        if [[ $option == *"="* ]]; then
+            k=$(echo $option | cut -d'=' -f1)
+            v=$(echo $option | cut -d'=' -f2)
+            options[$k]=$v
+        else
+            options[$option]=$option
+        fi
+    done
+
+    extra_point="${options[extra_point]}"    
+    
+    if [ -n "${options[extra_field]}" ]; then
+        printf -v extra_field '"extraField": "%s",' "${options[extra_field]}"
+    fi
+    
+    cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
+    
+    cat <<EOF > /tmp/pubber_config.json
+{
+    $extra_field
+    "extraPoint": "$extra_point",
+    "projectId": "$project_id",
+    "sitePath": "$site_path",
+    "cloudRegion": "$cloud_region",
+    "deviceId": "$device_id",
+    "serialNo": "$serial"
+}
+EOF
+    $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json
+fi
