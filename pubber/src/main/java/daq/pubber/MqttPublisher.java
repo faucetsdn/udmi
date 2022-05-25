@@ -108,7 +108,7 @@ public class MqttPublisher {
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data, callback));
   }
 
-  private synchronized void publishCore(String deviceId, String topic, Object data,
+  private void publishCore(String deviceId, String topic, Object data,
       Runnable callback) {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
@@ -366,7 +366,7 @@ public class MqttPublisher {
     LOG.debug(message);
   }
 
-  private synchronized void sendMessage(String deviceId, String mqttTopic,
+  private void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     checkAuthentication(deviceId);
     MqttClient connectedClient = getConnectedClient(deviceId);
