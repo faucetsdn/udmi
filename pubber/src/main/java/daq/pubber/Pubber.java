@@ -51,6 +51,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
+import udmi.schema.Hardware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointEnumerationEvent;
