@@ -67,7 +67,7 @@ public class MqttPublisher {
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
-  private static final int TOKEN_EXPIRY_MINUTES = 1;
+  private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
   private static final long CONFIG_WAIT_TIME_MS = 10000;
