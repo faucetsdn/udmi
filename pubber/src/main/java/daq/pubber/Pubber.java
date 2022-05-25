@@ -528,7 +528,8 @@ public class Pubber {
 
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
-      String keyDevice = configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
+      String keyDevice =
+          configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
           keyDevice, getDeviceKeyPrefix());
     }
