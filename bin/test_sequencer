@@ -11,7 +11,7 @@ fi
 project_id=$1
 shift
 
-echo 'Using target project (base64):' $(echo =$project_id | base64)
+echo 'Using target project (rot13):' $(echo $project_id | rot13)
 
 site_path=sites/udmi_site_model
 device_id=AHU-1

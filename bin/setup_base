@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt-get install hxtools
+
 python3 -m venv venv
 
 venv/bin/pip3 install -r etc/requirements.txt
