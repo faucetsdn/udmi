@@ -1,5 +1,6 @@
 import { Collection } from 'mongodb';
-import { DeviceKey, DeviceDocument } from './model';
+import { DeviceDocument } from './DeviceDocument';
+import { DeviceKey } from './DeviceKey';
 
 const options = { upsert: true };
 

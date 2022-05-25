@@ -4,29 +4,33 @@ The Typescript project uses Google Cloud Functions Infrastructure to allow faste
 
 ---
 
-## Setup the Poject
+## Datasource
 
-1.  Run the build script
-
-```
-npm install
-```  
+In order to properly run the cloud function, it requires MongoDB to be up and running.  You will need to configure the connection parameters in your buildDev.sh file if they are different from a standard install.
 
 ---
 
-## Run the Simple Cloud Function Server
+## Install dependencies and transpile code into JS.
 
-1.  Run the project, which will bind to port 8080;
+Installs all the npm dependencies and transpiles code into JS
 
 ```
-npm run watch
+./buildDev.sh
+```
+
+## Run the Simple Cloud Function Server
+
+Run the project, which will bind to port 8080;
+
+```
+./runDev.sh
 ```
 
 ---
 
 ## Submit a Pub Sub style Event
 
-1. Send an event to the local server using curl
+Send an event to the local server using curl.  Example events can be found in the sample_messages folder.
 
 ```
 curl -d "@sample.json" \
@@ -62,5 +66,9 @@ TBD
 ---
 
 ## Notes
--- Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs)
--- The data inside the json is expected to be base64 encoded
+
+* Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs) \
+* The data inside the json is expected to be base64 encoded, to decode it (on macos) copy the base64 string and execute the following command in your terminal:
+   ```
+   pbpaste | base64 --decode && echo -e
+   ```

@@ -1,6 +1,7 @@
 import { DefaultDeviceDao, DeviceDao } from '../DeviceDao';
 import { Collection, MongoClient, Db } from 'mongodb';
-import { DeviceDocument, DeviceKey } from '../model';
+import { DeviceKey } from '../DeviceKey';
+import { DeviceDocument } from '../DeviceDocument';
 
 // mongo collection
 let deviceCollection: Collection;
