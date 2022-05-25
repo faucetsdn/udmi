@@ -18,6 +18,8 @@ import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +28,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
+import org.checkerframework.checker.units.qual.C;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -64,7 +68,7 @@ public class MqttPublisher {
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
-  private static final int TOKEN_EXPIRY_MINUTES = 60;
+  private static final int TOKEN_EXPIRY_MINUTES = 1;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
   private static final long CONFIG_WAIT_TIME_MS = 10000;
@@ -82,10 +86,10 @@ public class MqttPublisher {
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
-  private final CountDownLatch gatewayLatch = new CountDownLatch(1);
   private final Map<String, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
   private final Consumer<Exception> onError;
+  private CountDownLatch gatewayLatch;
 
   MqttPublisher(Configuration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
@@ -173,11 +177,11 @@ public class MqttPublisher {
     try {
       String gatewayId = configuration.gatewayId;
       debug("Connecting through gateway " + gatewayId);
+      gatewayLatch = new CountDownLatch(1);
       MqttClient mqttClient = getConnectedClient(gatewayId);
       if (!gatewayLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS)) {
-        throw new RuntimeException("Timeout waiting for gateway startup process");
+        throw new RuntimeException("Timeout waiting for gateway startup exchange");
       }
-      gatewayLatch.await();
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
@@ -364,23 +368,24 @@ public class MqttPublisher {
 
   private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
-    checkAuthentication(isProxyDevice(deviceId) ? configuration.gatewayId : deviceId);
+    checkAuthentication(deviceId);
     MqttClient connectedClient = getConnectedClient(deviceId);
     connectedClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
   }
 
   private void checkAuthentication(String deviceId) {
-    Instant reauthTime = reauthTimes.get(deviceId);
+    String authId = isProxyDevice(deviceId) ? configuration.gatewayId : deviceId;
+    Instant reauthTime = reauthTimes.get(authId);
     if (reauthTime != null && Instant.now().isBefore(reauthTime)) {
       return;
     }
-    warn("Authentication retry time reached for " + deviceId);
-    if (deviceId.equals(configuration.gatewayId)) {
-      throw new RuntimeException("Oh boy. Need to reconstruction connection");
-    }
-    reauthTimes.remove(deviceId);
-    MqttClient client = mqttClients.remove(deviceId);
+    warn("Authentication retry time reached for " + authId);
+    reauthTimes.remove(authId);
+    MqttClient client = mqttClients.remove(authId);
+    Set<String> removeSet = mqttClients.entrySet().stream()
+        .filter(entry -> entry.getValue() == client).map(Entry::getKey).collect(Collectors.toSet());
+    removeSet.forEach(mqttClients::remove);
     try {
       client.disconnect();
       client.close();
