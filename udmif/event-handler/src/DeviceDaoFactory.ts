@@ -1,4 +1,4 @@
-import { DeviceDao, DefaultDeviceDao } from './DeviceDAO';
+import { DeviceDao, DefaultDeviceDao } from './DeviceDao';
 import { Collection, MongoClient } from 'mongodb';
 
 const COLLECTION_NAME: string = 'device';

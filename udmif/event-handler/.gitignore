@@ -21,5 +21,6 @@ setupEnv.sh
 # mongo output
 .mongodb
 
+#Build specific files
 dist/
-index*.zip
+credentials.json

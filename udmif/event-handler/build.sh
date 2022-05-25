@@ -1,13 +1,13 @@
-# Locally transpille the typescript code so terraform can deploy it properly.
+ #!/bin/bash line
+# Locally transpille the typescript code so it can be deployed to GCP properly.
 
 export MONGO_PROTOCOL=mongodb
 export MONGO_HOST=localhost
 export MONGO_DATABASE=device 
 
 rm -rf dist
-rm index.zip
-
 mkdir dist
-cp package.json dist
+
+cp prod-package.json dist/package.json
 npm install
 npm run build
