@@ -38,7 +38,8 @@ else
     done
 
     extra_point="${options[extra_point]}"    
-    
+    no_hardware="${options[no_hardware]}"  
+
     if [ -n "${options[extra_field]}" ]; then
         printf -v extra_field '"extraField": "%s",' "${options[extra_field]}"
     fi
@@ -49,6 +50,7 @@ else
 {
     $extra_field
     "extraPoint": "$extra_point",
+    "noHardware": "$no_hardware",
     "projectId": "$project_id",
     "sitePath": "$site_path",
     "cloudRegion": "$cloud_region",

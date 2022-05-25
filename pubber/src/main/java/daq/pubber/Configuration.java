@@ -19,4 +19,5 @@ public class Configuration {
   public String serialNo;
   public String macAddr;
   public String extraPoint;
+  public String noHardware;
 }

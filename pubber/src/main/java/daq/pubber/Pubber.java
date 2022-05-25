@@ -363,6 +363,11 @@ public class Pubber {
       addPoint(makePoint(configuration.extraPoint,
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
+
+    if (configuration.noHardware != null && !configuration.noHardware.isEmpty()) {
+      deviceState.system.hardware = null;
+    }
+
     markStateDirty(0);
   }
 
