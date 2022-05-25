@@ -11,3 +11,4 @@ mkdir dist
 cp prod-package.json dist/package.json
 npm install
 npm run build
+rm -rf dist/*test*
