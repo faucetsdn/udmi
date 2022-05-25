@@ -12,6 +12,7 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.opencensus.stats.Aggregation.Count;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -19,6 +20,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -53,7 +55,6 @@ public class MqttPublisher {
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
 
-  private static final int MQTT_QOS = 1;
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERRORS_TOPIC_FMT = "/devices/%s/errors";
   private static final String UNUSED_ACCOUNT_NAME = "unused";
@@ -65,6 +66,8 @@ public class MqttPublisher {
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
+  private static final int QOS_AT_MOST_ONCE = 0;
+  private static final int QOS_AT_LEAST_ONCE = 1;
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -173,7 +176,7 @@ public class MqttPublisher {
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
-      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), MQTT_QOS,
+      mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), QOS_AT_LEAST_ONCE,
           SHOULD_RETAIN);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
@@ -279,14 +282,14 @@ public class MqttPublisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId));
-    subscribeTopic(client, String.format(ERRORS_TOPIC_FMT, deviceId));
+    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), QOS_AT_LEAST_ONCE);
+    subscribeTopic(client, String.format(ERRORS_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
     info("Updates subscribed");
   }
 
-  private void subscribeTopic(MqttClient client, String updateTopic) {
+  private void subscribeTopic(MqttClient client, String updateTopic, int mqttQos) {
     try {
-      client.subscribe(updateTopic);
+      client.subscribe(updateTopic, mqttQos);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
     }
@@ -351,9 +354,9 @@ public class MqttPublisher {
 
   private synchronized void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
-    checkAuthentication(deviceId);
+    checkAuthentication(isProxyDevice(deviceId) ? configuration.gatewayId : deviceId);
     MqttClient connectedClient = getConnectedClient(deviceId);
-    connectedClient.publish(mqttTopic, mqttMessage, MQTT_QOS, SHOULD_RETAIN);
+    connectedClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
   }
 
@@ -363,6 +366,9 @@ public class MqttPublisher {
       return;
     }
     warn("Authentication retry time reached for " + deviceId);
+    if (deviceId.equals(configuration.gatewayId)) {
+      throw new RuntimeException("Oh boy. Need to reconstruction connection");
+    }
     reauthTimes.remove(deviceId);
     MqttClient client = mqttClients.remove(deviceId);
     try {
@@ -375,14 +381,18 @@ public class MqttPublisher {
 
   private synchronized MqttClient getConnectedClient(String deviceId) {
     try {
-      String gatewayId = configuration.gatewayId;
-      if (gatewayId != null && !gatewayId.equals(deviceId)) {
+      if (isProxyDevice(deviceId)) {
         return mqttClients.computeIfAbsent(deviceId, this::newBoundClient);
       }
       return mqttClients.computeIfAbsent(deviceId, this::connectMqttClient);
     } catch (Exception e) {
       throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e, e);
     }
+  }
+
+  private boolean isProxyDevice(String deviceId) {
+    String gatewayId = configuration.gatewayId;
+    return gatewayId != null && !gatewayId.equals(deviceId);
   }
 
   /**
@@ -412,7 +422,7 @@ public class MqttPublisher {
      * @param message Error message
      * @param type    Type of message being published
      * @param phase   Which phase of execution
-     * @param cause   Caouse of the exception
+     * @param cause   Cause of the exception
      */
     public PublisherException(String message, String type, String phase, Throwable cause) {
       super(message, cause);
