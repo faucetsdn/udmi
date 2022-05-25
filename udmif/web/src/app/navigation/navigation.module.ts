@@ -5,10 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { AppRoutingModule } from '../app-routing.module';
 import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [NavigationComponent],
-  imports: [AppRoutingModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [AppRoutingModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, CommonModule],
   exports: [NavigationComponent],
 })
 export class NavigationModule {}

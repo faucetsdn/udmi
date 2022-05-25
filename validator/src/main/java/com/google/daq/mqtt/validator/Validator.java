@@ -264,7 +264,9 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
-    dataSink = new PubSubDataSink(projectId, cloudIotConfig.update_topic);
+    if (cloudIotManager.getUpdateTopic() != null) {
+      dataSink = new PubSubDataSink(projectId, cloudIotManager.getUpdateTopic());
+    }
   }
 
   private void validateReflector(String instName) {

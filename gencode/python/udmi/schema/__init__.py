@@ -33,6 +33,8 @@ from .model_system import SystemModel
 from .model_testing import TestingModel
 from .model_testing_target import TargetTestingModel
 from .properties import Properties
+from .reflect_config import ReflectorConfig
+from .reflect_state import ReflectorState
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState

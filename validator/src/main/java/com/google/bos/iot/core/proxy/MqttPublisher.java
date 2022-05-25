@@ -127,7 +127,7 @@ class MqttPublisher implements MessagePublisher {
 
   private synchronized void delayStateUpdate(String deviceId) {
     long now = System.currentTimeMillis();
-    long last = lastStateTime.get(deviceId);
+    long last = lastStateTime.getOrDefault(deviceId, now);
     long delta = now - last;
     long delay = STATE_RATE_LIMIT_MS - delta;
     if (delay > 0) {

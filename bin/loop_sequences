@@ -19,6 +19,8 @@ else
     echo Executing specific tests $test_names
 fi
 
+export UDMI_VERSION=`git describe --always --dirty`
+
 echo Parsing $VALIDATOR_CONFIG:
 cat $VALIDATOR_CONFIG
 project_id=`jq -r .project_id $VALIDATOR_CONFIG`
@@ -29,6 +31,7 @@ echo Target project $project_id
 echo Site model $site_model
 echo Target device $device_id
 echo Device serial $serial_no
+echo UDMI version $UDMI_VERSION
 
 if [[ ! -d $site_model ]]; then
     echo Site model $site_model not found.
