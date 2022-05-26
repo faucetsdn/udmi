@@ -9,7 +9,7 @@ gcloud auth activate-service-account --key-file ../credentials.json
 gcloud config set project udmi-staging
 
 echo "Deploying cloud function..."
-gcloud functions deploy transform-event-handler \
+gcloud functions deploy udmif_event_handler \
       --runtime=nodejs16 \
       --entry-point=handleUdmiEvent \
       --region=us-central1 \
