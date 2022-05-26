@@ -109,21 +109,6 @@ variable "create_vpc" {
   description = "we can use default vpc or new vpc"
 }
 
-## function variables 
-variable "eventHandler_functions" {
-  type = map(object({
-    name                  = string 
-    runtime               = string
-    available_memory_mb   = number
-    entry_point           = string 
-    project               = string
-    region                = string
-    storage_class         = string
-    location              = string
-    environment_variables = map(string)
-  }))
-  description = "eventHandler function values"
-}
 ## Mongodb variables
 variable "public_key" {
   type        = string
