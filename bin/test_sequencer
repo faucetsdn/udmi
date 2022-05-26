@@ -12,6 +12,7 @@ project_id=$1
 shift
 
 if [[ -n `which rot13` ]]; then
+   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
    echo 'Using target project (rot13):' $(echo $project_id | rot13)
 else
    echo 'Using target project:' $project_id

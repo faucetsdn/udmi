@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt-get install hxtools
+sudo apt-get install -y hxtools
 
 python3 -m venv venv
 
