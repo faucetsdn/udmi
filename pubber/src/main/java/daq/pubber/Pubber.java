@@ -366,6 +366,7 @@ public class Pubber {
     deviceState.system.hardware.model = "pubber";
     deviceState.system.software = new HashMap<>();
     deviceState.system.software.put("firmware", "v1");
+    deviceState.system.last_config = new Date(0);
     devicePoints.extraField = configuration.extraField;
 
     if (configuration.extraPoint != null && !configuration.extraPoint.isEmpty()) {
