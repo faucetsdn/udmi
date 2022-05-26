@@ -2,11 +2,13 @@
   "projectId": "bos-udmi-hub",
   "cloudRegion": "us-central1",
   "registryId": "ZZ-TRI-FECTA",
-  "extraField": 1234,
   "serialNo": "test_aux-16132",
   "macAddr": "3c5ab41e8f0a",
   "keyFile": "./udmi_site_model/devices/GAT-123/ec_private.pkcs8",
   "algorithm": "ES256",
   "gatewayId": "GAT-123",
-  "deviceId": "SNS-4"
+  "deviceId": "SNS-4",
+  "options": {
+    "extra_field": 1234
+  }
 }
