@@ -288,9 +288,11 @@ public class Pubber {
 
     if (metadata.gateway != null) {
       configuration.gatewayId = metadata.gateway.gateway_id;
-      Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
-      if (authType != null) {
-        configuration.algorithm = authType.value();
+      if (configuration.gatewayId != null) {
+        Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
+        if (authType != null) {
+          configuration.algorithm = authType.value();
+        }
       }
     }
 
