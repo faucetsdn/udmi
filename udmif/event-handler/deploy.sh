@@ -14,4 +14,4 @@ gcloud functions deploy udmif_event_handler \
       --entry-point=handleUdmiEvent \
       --region=us-central1 \
       --trigger-topic=udmi_target \
-      --set-env-vars=MONGO_DB=udmi,MONGO_PROTOCOL=mongodb+srv,MONGO_USER=UDMIDBUSER,MONGO_PWD=p@sscode123biot,MONGO_HOST=preprod.imvgx.mongodb.net/udmi?retryWrites=true&w=majority
+      --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
