@@ -4,7 +4,6 @@
   "description": "Cloud Function that Receives Events and Writes Device Documents to MongoDB",
   "author": "Buildings IOT",
   "main": "dist/index.js",
-  "license": "ISC",
   "dependencies": {
     "mongodb": "^4.4.1"
   },

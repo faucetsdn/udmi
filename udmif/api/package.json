@@ -4,7 +4,6 @@
   "description": "API for the Universal Device Management Dashboard",
   "author": "Buildings IOT",
   "main": "dist/app.js",
-  "license": "UNLICENSED",
   "dependencies": {
     "apollo-datasource-graphql": "^1.3.2",
     "apollo-server": "^3.6.2",

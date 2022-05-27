@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "UDMI Device Management Console UI",
   "author": "Buildings IOT",
-  "license": "UNLICENSED",
   "scripts": {
     "postinstall": "cd ../.. && husky install udmif/web/.husky",
     "ng": "ng",
