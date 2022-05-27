@@ -100,8 +100,7 @@ public class MqttPublisher {
   void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     if (publisherExecutor.isShutdown()) {
-      warn("Publisher is shutdown, dropping message");
-      return;
+      throw new RuntimeException("Publisher shutdown.");
     }
     debug("Publishing in background " + topic);
     publisherExecutor.submit(() -> publishCore(deviceId, topic, data, callback));
@@ -150,12 +149,9 @@ public class MqttPublisher {
     try {
       warn("Closing publisher connection");
       publisherExecutor.shutdown();
-      if (!publisherExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
-        throw new RuntimeException("Could not terminate executor");
-      }
       mqttClients.keySet().forEach(this::closeMqttClient);
     } catch (Exception e) {
-      throw new RuntimeException("While closing publisher", e);
+      error("While closing publisher", null, "close", e);
     }
   }
 
@@ -381,27 +377,32 @@ public class MqttPublisher {
     }
     warn("Authentication retry time reached for " + authId);
     reauthTimes.remove(authId);
-    MqttClient client = mqttClients.remove(authId);
-    if (client == null) {
-      return;
-    }
-    Set<String> removeSet = mqttClients.entrySet().stream()
-        .filter(entry -> entry.getValue() == client).map(Entry::getKey).collect(Collectors.toSet());
-    removeSet.forEach(mqttClients::remove);
-    try {
-      client.disconnect();
-      client.close();
-    } catch (Exception e) {
-      throw new RuntimeException("While trying to reconnect mqtt client", e);
+    synchronized (mqttClients) {
+      MqttClient client = mqttClients.remove(authId);
+      if (client == null) {
+        return;
+      }
+      Set<String> removeSet = mqttClients.entrySet().stream()
+          .filter(entry -> entry.getValue() == client).map(Entry::getKey)
+          .collect(Collectors.toSet());
+      removeSet.forEach(mqttClients::remove);
+      try {
+        client.disconnect();
+        client.close();
+      } catch (Exception e) {
+        throw new RuntimeException("While trying to reconnect mqtt client", e);
+      }
     }
   }
 
   private MqttClient getConnectedClient(String deviceId) {
     try {
-      if (isProxyDevice(deviceId)) {
-        return mqttClients.computeIfAbsent(deviceId, this::newBoundClient);
+      synchronized (mqttClients) {
+        if (isProxyDevice(deviceId)) {
+          return mqttClients.computeIfAbsent(deviceId, this::newBoundClient);
+        }
+        return mqttClients.computeIfAbsent(deviceId, this::connectMqttClient);
       }
-      return mqttClients.computeIfAbsent(deviceId, this::connectMqttClient);
     } catch (Exception e) {
       throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e, e);
     }

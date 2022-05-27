@@ -102,7 +102,7 @@ public class Pubber {
       ExtraPointsetEvent.class, "events/pointset",
       DiscoveryEvent.class, "events/discovery"
   );
-  private static final int MESSAGE_REPORT_INTERVAL = 100;
+  private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
       Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
       Level.DEBUG, LOG::info,
@@ -436,13 +436,13 @@ public class Pubber {
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
     if (scheduledFuture == null || intervalMs != messageDelayMs.get()) {
-      cancelExecutor();
+      cancelPeriodicSend();
       messageDelayMs.set(intervalMs);
-      startExecutor();
+      startPeriodicSend();
     }
   }
 
-  private synchronized void startExecutor() {
+  private synchronized void startPeriodicSend() {
     Preconditions.checkState(scheduledFuture == null);
     int delay = messageDelayMs.get();
     info("Starting executor with send message delay " + delay);
@@ -450,7 +450,7 @@ public class Pubber {
         .scheduleAtFixedRate(this::sendMessages, delay, delay, TimeUnit.MILLISECONDS);
   }
 
-  private synchronized void cancelExecutor() {
+  private synchronized void cancelPeriodicSend() {
     if (scheduledFuture != null) {
       try {
         scheduledFuture.cancel(false);
@@ -496,8 +496,11 @@ public class Pubber {
   private void terminate() {
     try {
       info("Terminating");
-      mqttPublisher.close();
-      cancelExecutor();
+      if (mqttPublisher != null) {
+        mqttPublisher.close();
+        mqttPublisher = null;
+      }
+      cancelPeriodicSend();
       executor.shutdown();
     } catch (Exception e) {
       info("Error terminating: " + e.getMessage());
@@ -509,7 +512,7 @@ public class Pubber {
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
     info("synchronized start config result " + result);
-    if (!result) {
+    if (!result && mqttPublisher != null) {
       mqttPublisher.close();
     }
   }
@@ -1050,6 +1053,9 @@ public class Pubber {
     try {
       publishingLog = true;
       pubberLogMessage(message, level, timestamp);
+    } catch (Exception e) {
+      mqttPublisher = null;
+      localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
     } finally {
       publishingLog = false;
     }
