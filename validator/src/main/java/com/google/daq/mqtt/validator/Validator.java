@@ -89,11 +89,12 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
-  private static final String GCP_REFLECT_KEY_PKCS8 = "gcp_reflect_key.pkcs8";
+  private static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
+  private static final String CONFIG_CATEGORY = "config";
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -264,7 +265,9 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
-    dataSink = new PubSubDataSink(projectId, cloudIotConfig.update_topic);
+    if (cloudIotManager.getUpdateTopic() != null) {
+      dataSink = new PubSubDataSink(projectId, cloudIotManager.getUpdateTopic());
+    }
   }
 
   private void validateReflector(String instName) {
@@ -450,11 +453,13 @@ public class Validator {
   }
 
   private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String category = attributes.get("category");
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    return subType == null
+    boolean interestingFolderType = subType == null
         || SubType.EVENT.value().equals(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
+    return !CONFIG_CATEGORY.equals(category) && interestingFolderType;
   }
 
   private File prepareDeviceOutDir(

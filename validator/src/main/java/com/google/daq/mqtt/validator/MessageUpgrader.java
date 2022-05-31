@@ -32,7 +32,8 @@ public class MessageUpgrader {
         version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
             : "1";
 
-    String[] parts = verStr.split("\\.", 4);
+    String[] components = verStr.split("-", 2);
+    String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
     minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
     patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;

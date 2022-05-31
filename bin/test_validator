@@ -13,7 +13,7 @@ fi
 project_id=$1
 shift
 
-site_path=udmi_site_model
+site_path=sites/udmi_site_model
 device_id=AHU-1
 
 serial_no=validator-$RANDOM
@@ -30,7 +30,8 @@ fi
 rm -rf $site_path/out/devices
 
 # Prepare auth key used by reflector
-cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/gcp_reflect_key.pkcs8
+mkdir -p $site_path/validator
+cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
 bin/validator $site_path $project_id &
 vpid=$!

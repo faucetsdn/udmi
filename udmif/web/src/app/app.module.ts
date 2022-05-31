@@ -21,4 +21,4 @@ import { EnvModule } from './env/env.module';
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

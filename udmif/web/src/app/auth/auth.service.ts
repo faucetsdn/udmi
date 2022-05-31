@@ -24,7 +24,7 @@ export class AuthService {
     try {
       await this.socialAuth.signIn(GoogleLoginProvider.PROVIDER_ID);
       this.router.navigateByUrl('/devices');
-    } catch {}
+    } catch { }
   }
 
   async logout(): Promise<void> {
@@ -35,7 +35,7 @@ export class AuthService {
       // and the AuthService needs to makes use of the Apollo service,
       // we need to use the injector.get pattern to avoid circular dep issue.
       this.injector.get<Apollo>(Apollo).client.clearStore();
-    } catch {}
+    } catch { }
   }
 
   async refreshToken(): Promise<void> {

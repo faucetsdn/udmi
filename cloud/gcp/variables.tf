@@ -56,8 +56,13 @@ variable "gke_node_locations" {
 }
 
 variable "gke_initial_node_count" {
+<<<<<<< HEAD
   type        = number
   default     = 0
+=======
+  type = number
+  default = 0
+>>>>>>> upstream/master
   description = "The number of nodes to create in this cluster's default node pool"
 }
 
@@ -68,8 +73,13 @@ variable "gke_cluster_name" {
 }
 
 variable "gke_node_pool_name" {
+<<<<<<< HEAD
   type        = string
   default     = "udmi-pool"
+=======
+  type = string
+  default = "udmi-pool"
+>>>>>>> upstream/master
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
@@ -78,24 +88,42 @@ variable "gke_cluster_location" {
   description = "The location (region or zone) of the cluster"
 }
 variable "gke_machine_type" {
+<<<<<<< HEAD
   type        = string
   default     = "e2-standard-2"
+=======
+  type = string
+  default = "e2-standard-2"
+>>>>>>> upstream/master
   description = "The name of a Google Compute Engine machine type"
 }
 #cloud DNS variables
 variable "dns_name" {
+<<<<<<< HEAD
   type        = string
+=======
+  type = string
+>>>>>>> upstream/master
   description = "The DNS name of the udmi managed zone"
 }
 #ssl variable
 variable "ssl_domains" {
+<<<<<<< HEAD
   type        = list(string)
+=======
+  type = list(string)
+>>>>>>> upstream/master
   description = "Domains for which a managed SSL certificate will be valid"
 }
 ##vpc variables##
 variable "gcp_vpc_name" {
+<<<<<<< HEAD
     type        = string
     default     = "udmi"
+=======
+    type = string
+    default = "udmi"
+>>>>>>> upstream/master
     description = "Name of the VPC will be created"
 }
 variable "ip_cidr_range" {
@@ -109,6 +137,7 @@ variable "create_vpc" {
   description = "we can use default vpc or new vpc"
 }
 
+<<<<<<< HEAD
 ## Mongodb variables
 variable "public_key" {
   type        = string
@@ -148,6 +177,62 @@ variable "disk_size_gb" {
 }
 variable "instance_size_name" {
   type        = string 
+=======
+## function variables 
+variable "eventHandler_functions" {
+  type = map(object({
+    name                  = string 
+    runtime               = string
+    available_memory_mb   = number
+    entry_point           = string 
+    project               = string
+    region                = string
+    storage_class         = string
+    location              = string
+    environment_variables = map(string)
+  }))
+  description = "eventHandler function values"
+}
+## Mongodb variables
+variable "public_key" {
+  type  = string
+  description = "This is the public key of udmi MongoDB Atlas API key pair."
+}
+variable "private_key" {
+  type  = string
+  description = "This is the private key of udmi MongoDB Atlas key pair."
+}
+variable "project_name" {
+  type = string
+  description = "The name of the project udmi wants to create"
+}
+variable "atlas_org_id" {
+  type = string
+  description = "The ID of the organization udmi want to create the project within."
+}
+variable "cluster_name" {
+  type = string 
+  description = "Name of the cluster as it appears in Atlas. Once the cluster is created, its name cannot be changed."
+}
+variable "mongodb_version" {
+  type = string 
+  description = "Version of the cluster to deploy."
+}
+variable "cluster_region" {
+  type = string 
+  description = "Physical location of your MongoDB cluster."
+}
+variable "provider_name" {
+  type = string 
+  description = "Cloud service provider on which the servers are provisioned."
+}
+variable "disk_size_gb" {
+  type = string 
+  description = "mongodb space were we are using for udmi project"
+}
+variable "instance_size_name" {
+  type = string 
+>>>>>>> upstream/master
   description = "mongodb space name were we are using for udmi project"
 }
 variable "auto_scaling_max_instance_size" {
@@ -171,7 +256,11 @@ variable "database_name" {
   description = "Database on which the user has the specified role."
 }
 variable "db_role" {
+<<<<<<< HEAD
   type        = string 
+=======
+  type = string 
+>>>>>>> upstream/master
   description = "Name of the role to grant."
 }
 

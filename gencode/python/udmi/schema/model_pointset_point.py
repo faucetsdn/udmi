@@ -12,9 +12,6 @@ class PointPointsetModel:
     self.baseline_state = None
     self.cov_increment = None
     self.ref = None
-    self.min_loglevel = None
-    self.sample_limit_sec = None
-    self.sample_rate_sec = None
 
   @staticmethod
   def from_dict(source):
@@ -28,9 +25,6 @@ class PointPointsetModel:
     result.baseline_state = source.get('baseline_state')
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
-    result.min_loglevel = source.get('min_loglevel')
-    result.sample_limit_sec = source.get('sample_limit_sec')
-    result.sample_rate_sec = source.get('sample_rate_sec')
     return result
 
   @staticmethod
@@ -65,10 +59,4 @@ class PointPointsetModel:
       result['cov_increment'] = self.cov_increment # 5
     if self.ref:
       result['ref'] = self.ref # 5
-    if self.min_loglevel:
-      result['min_loglevel'] = self.min_loglevel # 5
-    if self.sample_limit_sec:
-      result['sample_limit_sec'] = self.sample_limit_sec # 5
-    if self.sample_rate_sec:
-      result['sample_rate_sec'] = self.sample_rate_sec # 5
     return result

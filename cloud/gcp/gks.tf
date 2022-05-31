@@ -1,7 +1,11 @@
 resource "google_service_account" "gke" {
   account_id   = "gkeuser"
   display_name = "GKE Service Account"
+<<<<<<< HEAD
   project      = var.gcp_project_id
+=======
+  project = var.gcp_project_id
+>>>>>>> upstream/master
 }
 resource "google_project_iam_member" "gke_gcr_binding" {
   project = var.gcp_project_id
@@ -10,9 +14,15 @@ resource "google_project_iam_member" "gke_gcr_binding" {
 }
 #GKE CLUSTER
 resource "google_container_cluster" "udmi" {
+<<<<<<< HEAD
     project        = var.gcp_project_id
     name           = var.gke_cluster_name
     location       = var.gke_cluster_location
+=======
+    project = var.gcp_project_id
+    name     = var.gke_cluster_name
+    location = var.gke_cluster_location
+>>>>>>> upstream/master
     node_locations = var.gke_node_locations
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -20,6 +30,10 @@ resource "google_container_cluster" "udmi" {
   # node pool and immediately delete it.
 
   remove_default_node_pool = true
+<<<<<<< HEAD
+=======
+
+>>>>>>> upstream/master
   initial_node_count       = var.gke_initial_node_count
   network    = var.create_vpc ? google_compute_network.vpc[0].name : null
   subnetwork = var.create_vpc ? google_compute_subnetwork.subnet[0].name : null
@@ -27,7 +41,11 @@ resource "google_container_cluster" "udmi" {
 
 # Separately Managed Node Pool
 resource "google_container_node_pool" "node_pool" {
+<<<<<<< HEAD
   project    = var.gcp_project_id
+=======
+  project = var.gcp_project_id
+>>>>>>> upstream/master
   name       = var.gke_node_pool_name
   location   = var.gke_cluster_location
   cluster    = google_container_cluster.udmi.name
