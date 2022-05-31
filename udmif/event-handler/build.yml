@@ -11,8 +11,12 @@ include:
 stages:
   - build
 
+
 build-node:
   script:
     - npm install
     - npm install -g @angular/cli
     - npm run build
+  
+
+
