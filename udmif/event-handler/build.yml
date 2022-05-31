@@ -2,7 +2,6 @@ cache:
   key: event-handler-${CI_COMMIT_REF_SLUG}
   paths:
     - udmif/event-handler/node_modules/
-    - udmif/event-handler/dist/
 
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
@@ -11,48 +10,13 @@ include:
 
 stages:
   - build
-  - deploy-staging
-  - deploy-lab
 
 
 build-node:
   script:
     - npm install
+    - npm install -g @angular/cli
     - npm run build
-    - rm -rf dist
-    - mkdir dist
-    - cp prod-package.json dist/package.json
-    - rm -rf dist/*test*
-
-deploy-staging:
-  extends: .gks-deploy
-  stage: deploy-staging
-  environment: staging
-  before_script:
-    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> auth/credentials.json 
-    - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
-  script:
-    - echo gcloud functions deploy udmif_event_handler \
-       --runtime=nodejs16 \
-       --entry-point=handleUdmiEvent \
-       --region=us-central1 \
-       --trigger-topic=udmi_target \
-       --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
-    
   
-deploy-lab:
-  extends: .gks-deploy
-  stage: deploy-lab
-  environment: lab
-  before_script:
-    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> auth/credentials.json 
-    - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
-  script:
-    - echo gcloud functions deploy udmif_event_handler \
-       --runtime=nodejs16 \
-       --entry-point=handleUdmiEvent \
-       --region=us-central1 \
-       --trigger-topic=udmi_target \
-       --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
 
 
