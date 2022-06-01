@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
 repo=$1
 shift
 
 for tag in `git tag`; do
+    # A bad tag is one that does not have a common parent with master branch.
     merge=`git merge-base $tag master`
     if [[ -z $merge ]]; then
         git tag -d $tag
