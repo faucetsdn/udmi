@@ -18,6 +18,16 @@ web:
     - changes:
       - "udmif/web/**/*"
 
+event-handler:
+  stage: build
+  variables:
+    WORKING_DIR: udmif/event-handler
+  trigger:
+    include: udmif/event-handler/build.yml
+  rules:
+    - changes:
+      - "udmif/event-handler/**/*"
+
 gcp:
   stage: build
   trigger:
