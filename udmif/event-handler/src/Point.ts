@@ -75,7 +75,6 @@ export class PointBuilder {
 
     if (code) {
       this._document.meta.code = code;
-      this._document.name = code;
     }
     return this;
   }
@@ -85,7 +84,6 @@ export class PointBuilder {
 
     if (units) {
       this._document.meta.units = units;
-      this._document.units = units;
     }
     return this;
   }

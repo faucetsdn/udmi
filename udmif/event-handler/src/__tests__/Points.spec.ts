@@ -33,7 +33,7 @@ describe('Points.PointBuilder', () => {
     expect(builder.build()).toEqual({ id, name, state, units, value });
   });
   test('Builder allows optional meta attributes', () => {
-    builder.id(id).name(name).metaCode('filter_alarm_pressure_status').metaUnit('Degrees-Celsius');
+    builder.id(id).name('filter_alarm_pressure_status').units('Degrees-Celsius').metaCode('filter_alarm_pressure_status').metaUnit('Degrees-Celsius');
     expect(builder.build()).toEqual({
       id,
       name: 'filter_alarm_pressure_status',

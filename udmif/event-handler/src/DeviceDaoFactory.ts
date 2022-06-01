@@ -1,5 +1,6 @@
 import { DeviceDao, DefaultDeviceDao } from './DeviceDao';
 import { Collection, MongoClient } from 'mongodb';
+import { DeviceDocument } from './DeviceDocument';
 
 const COLLECTION_NAME: string = 'device';
 
@@ -7,13 +8,13 @@ export async function getDeviceDAO(): Promise<DeviceDao> {
   return new DefaultDeviceDao(await getMongoCollection());
 }
 
-async function getMongoCollection(): Promise<Collection> {
+async function getMongoCollection(): Promise<Collection<DeviceDocument>> {
   const client = await MongoClient.connect(getUri(), {});
 
   // get the collection
   const db = process.env.MONGO_DATABASE;
   console.log(`Getting the Mongo Collection for db: ${db} collection: ${COLLECTION_NAME}`);
-  return client.db(db).collection(COLLECTION_NAME);
+  return client.db(db).collection<DeviceDocument>(COLLECTION_NAME);
 }
 
 export function getUri(): string {

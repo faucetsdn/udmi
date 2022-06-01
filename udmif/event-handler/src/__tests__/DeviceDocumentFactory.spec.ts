@@ -2,13 +2,6 @@ import { createDeviceDocument } from '../DeviceDocumentFactory';
 import { DeviceDocument } from '../DeviceDocument';
 import {
   CONFIG,
-  isPointset,
-  isPointsetConfig,
-  isPointsetModel,
-  isPointsetState,
-  isSubFolder,
-  isSystemModel,
-  isSystemState,
   MODEL,
   POINTSET_SUB_FOLDER,
   STATE,
@@ -26,14 +19,14 @@ describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
   test('creates a default device document', () => {
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
     const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id' };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
     const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', lastPayload: timestamp };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
 
@@ -55,7 +48,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
       },
     };
     const expectedDeviceDocument: DeviceDocument = { name, id, make, model, operational, serialNumber, firmware };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
   test('creates a device document with system model', () => {
@@ -69,16 +62,25 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
       },
     };
     const expectedDeviceDocument: DeviceDocument = { name, id, section, site };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
 
 describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
+  const NO_UNITS = 'No-units';
   const faps = 'filter_alarm_pressure_status';
   const fdpsp = 'filter_differential_pressure_setpoint';
   const fdps = 'filter_differential_pressure_sensor';
 
+  let existingPoints: Point[];
+
+  beforeEach(() => {
+    existingPoints = [];
+  })
+
   test('creates a device document with pointset', () => {
+
+    // arrange
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
@@ -91,23 +93,26 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
       },
     };
 
-    const points: Point[] = [
+    const expectedPoints: Point[] = [
       { name: faps, id: faps, value: '78', meta: { code: faps } },
       { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp } },
       { name: fdps, id: fdps, value: '82', meta: { code: fdps } },
     ];
 
-    const expectedDeviceDocument: DeviceDocument = { name, id, points };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
 
   test('creates a device document with pointset model', () => {
+
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: MODEL },
       data: {
         points: {
           [faps]: {
-            units: 'No-units',
+            units: NO_UNITS,
             ref: 'BV11.present_value',
           },
           [fdpsp]: {
@@ -121,17 +126,20 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
       },
     };
 
-    const points: Point[] = [
-      { name: faps, id: faps, units: 'No-units', meta: { code: faps, units: 'No-units' } },
+    const expectedPoints: Point[] = [
+      { name: faps, id: faps, units: NO_UNITS, meta: { code: faps, units: NO_UNITS } },
       { name: fdpsp, id: fdpsp, units: 'Bars', meta: { code: fdpsp, units: 'Bars' } },
       { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' } },
     ];
 
-    const expectedDeviceDocument: DeviceDocument = { name, id, points };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
 
   test('creates a device document with pointset state', () => {
+    // arrange
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: STATE },
       data: {
@@ -144,16 +152,19 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
       },
     };
 
-    const points: Point[] = [
+    const expectedPoints: Point[] = [
       { name: faps, id: faps, meta: { code: faps } },
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp } },
       { name: fdps, id: fdps, meta: { code: fdps } },
     ];
-    const expectedDeviceDocument: DeviceDocument = { name, id, points };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
 
   test('creates a device document with pointset config', () => {
+    // arrange
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: CONFIG },
       data: {
@@ -165,63 +176,48 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
       },
     };
 
-    const points: Point[] = [
+    const expectedPoints: Point[] = [
       { name: faps, id: faps, meta: { code: faps } },
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp } },
       { name: fdps, id: fdps, meta: { code: fdps } },
     ];
-    const expectedDeviceDocument: DeviceDocument = { name, id, points };
-    expect(createDeviceDocument(inputMessage)).toEqual(expectedDeviceDocument);
+    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
+
+  test('merges a device document with pointset', () => {
+
+    // existing point has units and a value
+    existingPoints.push(
+      { name: faps, id: faps, value: '70', units: 'Bars', meta: { code: faps, units: 'Bars' } }
+    )
+
+    // arrange
+    const inputMessage: UdmiMessage = {
+      attributes: { ...BASIC_POINTSET_ATTRIBUTES },
+      data: {
+        timestamp: '2022-04-25T17:00:26Z',
+        points: {
+          [faps]: { present_value: 78 },
+          [fdpsp]: { present_value: 71 },
+          [fdps]: { present_value: 82 },
+        },
+      },
+    };
+
+    const expectedPoints: Point[] = [
+      { name: faps, id: faps, value: '78', units: 'Bars', meta: { code: faps, units: 'Bars' } },
+      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp } },
+      { name: fdps, id: fdps, value: '82', meta: { code: fdps } },
+    ];
+
+    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+  });
+
 });
 
-describe('DeviceDocumentFactory.isSystemState', () => {
-  test('is a system state', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: STATE }, data: {} };
-    expect(isSystemState(inputMessage)).toEqual(true);
-  });
-
-  test('is not a system state', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: 'garbage' }, data: {} };
-    expect(isSystemState(inputMessage)).toEqual(false);
-  });
-});
-
-describe('DeviceDocumentFactory.isSystemModel', () => {
-  test('is a system model', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: MODEL }, data: {} };
-    expect(isSystemModel(inputMessage)).toEqual(true);
-  });
-
-  test('is not a system model', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: 'garbage' }, data: {} };
-    expect(isSystemModel(inputMessage)).toEqual(false);
-  });
-});
-
-describe('DeviceDocumentFactory.isPointset...', () => {
-  test('is a pointset sub folder', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_POINTSET_ATTRIBUTES }, data: {} };
-    expect(isSubFolder(inputMessage, POINTSET_SUB_FOLDER)).toEqual(true);
-  });
-
-  test('is a pointset message', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_POINTSET_ATTRIBUTES }, data: {} };
-    expect(isPointset(inputMessage)).toEqual(true);
-  });
-
-  test('is a pointset model message', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: MODEL }, data: {} };
-    expect(isPointsetModel(inputMessage)).toEqual(true);
-  });
-
-  test('is a pointset state message', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: STATE }, data: {} };
-    expect(isPointsetState(inputMessage)).toEqual(true);
-  });
-
-  test('is a pointset config message', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: CONFIG }, data: {} };
-    expect(isPointsetConfig(inputMessage)).toEqual(true);
-  });
-});

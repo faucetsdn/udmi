@@ -5,12 +5,13 @@ import { UdmiMessage } from './UdmiMessage';
 import { DeviceKey } from './DeviceKey';
 
 export default class UdmiMessageHandler {
-  constructor(private deviceDao: DeviceDao) {}
+  constructor(private deviceDao: DeviceDao) { }
 
-  handleUdmiEvent(message: UdmiMessage) {
+  async handleUdmiEvent(udmiMessage: UdmiMessage) {
     try {
-      const deviceKey: DeviceKey = getDeviceKey(message);
-      const document: DeviceDocument = createDeviceDocument(message);
+      const deviceKey: DeviceKey = getDeviceKey(udmiMessage);
+      const existingDeviceDocument: DeviceDocument = await this.deviceDao.get(deviceKey);
+      const document: DeviceDocument = createDeviceDocument(udmiMessage, existingDeviceDocument?.points || []);
       this.deviceDao.upsert(deviceKey, document);
     } catch (e) {
       console.error('An unexpected error occurred: ', e);

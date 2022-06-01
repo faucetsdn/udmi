@@ -10,6 +10,7 @@ const mockClient = jest.fn().mockImplementation(() => {
 });
 
 beforeEach(() => {
+  jest.resetModules();
   jest.clearAllMocks();
   //mock the static MongoClient.connect here
   MongoClient.connect = mockClient;
@@ -22,13 +23,20 @@ describe('DeviceDaoFactory.getDeviceDAO()', () => {
 });
 
 describe('DeviceDaoFactory.getUri()', () => {
+
+  // take a backup of the environment prior to running the tests
+  const ENV_BACKUP = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...ENV_BACKUP }; // Restore old environment
+  });
+
   test('returns a uri with a host', async () => {
     process.env.MONGO_HOST = 'host:8001';
     await expect(getUri()).toEqual('undefined://host:8001');
   });
   test('returns a uri with a protocol', async () => {
     process.env.MONGO_PROTOCOL = 'mongodb';
-    process.env.MONGO_HOST = undefined;
     await expect(getUri()).toEqual('mongodb://undefined');
   });
   test('returns a uri with a user and password', async () => {

@@ -1,133 +1,73 @@
 import { DeviceDocumentBuilder, DeviceDocument } from './DeviceDocument';
 import {
   isPointset,
-  isPointsetConfig,
-  isPointsetModel,
-  isPointsetState,
-  isSystemModel,
-  isSystemState,
+  isSystem,
 } from './DocumentTypeUtil';
 import { UdmiMessage } from './UdmiMessage';
 import { PointBuilder, Point } from './Point';
 
-export function createDeviceDocument(message: UdmiMessage): DeviceDocument {
+export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): DeviceDocument {
   const builder: DeviceDocumentBuilder = new DeviceDocumentBuilder();
+  builder
+    .id(udmiMessage.attributes.deviceNumId)
+    .name(udmiMessage.attributes.deviceId);
 
-  builder.id(message.attributes.deviceNumId).name(message.attributes.deviceId);
-
-  if (isSystemState(message)) {
-    return createDeviceDocumentFromSystemStateDocument(message, builder);
-  } else if (isSystemModel(message)) {
-    return createDeviceDocumentFromSystemModelDocument(message, builder);
-  } else if (isPointset(message)) {
-    return createDeviceDocumentFromPointset(message, builder);
-  } else if (isPointsetModel(message)) {
-    return createDeviceDocumentFromPointsetModel(message, builder);
-  } else if (isPointsetState(message)) {
-    return createDeviceDocumentFromPointsetState(message, builder);
-  } else if (isPointsetConfig(message)) {
-    return createDeviceDocumentFromPointsetConfig(message, builder);
-  } else {
-    return createDeviceDocumentFromDefaultDeviceDocument(message, builder);
+  if (isSystem(udmiMessage)) {
+    return buildDeviceDocumentFromSystem(udmiMessage, builder);
+  } else if (isPointset(udmiMessage)) {
+    return buildDeviceDocumentFromPointset(udmiMessage, existingPoints, builder);
   }
 }
 
-function createDeviceDocumentFromSystemModelDocument(
-  message: UdmiMessage,
-  builder: DeviceDocumentBuilder
-): DeviceDocument {
-  return builder.section(message.data.location.section).site(message.data.location.site).build();
-}
-
-function createDeviceDocumentFromSystemStateDocument(
-  message: UdmiMessage,
+function buildDeviceDocumentFromSystem(
+  udmiMessage: UdmiMessage,
   builder: DeviceDocumentBuilder
 ): DeviceDocument {
   return builder
-    .lastPayload(message.data.timestamp)
-    .operational(message.data.operational)
-    .serialNumber(message.data.serial_no)
-    .make(message.data.hardware.make)
-    .model(message.data.hardware.model)
-    .firmware(message.data.software.firmware)
+    .lastPayload(udmiMessage.data.timestamp)
+    .operational(udmiMessage.data.operational)
+    .serialNumber(udmiMessage.data.serial_no)
+    .make(udmiMessage.data.hardware?.make)
+    .model(udmiMessage.data.hardware?.model)
+    .firmware(udmiMessage.data.software?.firmware)
+    .section(udmiMessage.data.location?.section)
+    .site(udmiMessage.data.location?.site)
     .build();
 }
 
-function createDeviceDocumentFromDefaultDeviceDocument(
-  message: UdmiMessage,
-  builder: DeviceDocumentBuilder
-): DeviceDocument {
-  return builder.lastPayload(message.data.timestamp).build();
-}
-
-function createDeviceDocumentFromPointset(message: UdmiMessage, deviceBuilder: DeviceDocumentBuilder): DeviceDocument {
-  const points: Point[] = [];
-
-  for (var pointObject in message.data.points) {
-    const pointValue = message.data.points[pointObject];
-    const value: number = pointValue['present_value'];
-    const pointSetBuilder: PointBuilder = new PointBuilder();
-    const point: Point = pointSetBuilder
-      .id(pointObject)
-      .name(pointObject)
-      .value(value.toString())
-      .metaCode(pointObject)
-      .build();
-    points.push(point);
-  }
-
-  return deviceBuilder.points(points).build();
-}
-
-function createDeviceDocumentFromPointsetModel(
-  message: UdmiMessage,
+function buildDeviceDocumentFromPointset(
+  udmiMessage: UdmiMessage,
+  existingPoints: Point[],
   deviceBuilder: DeviceDocumentBuilder
 ): DeviceDocument {
   const points: Point[] = [];
 
-  for (var pointObject in message.data.points) {
-    const pointValue = message.data.points[pointObject];
-    const units: string = pointValue['units'];
-    const pointSetBuilder: PointBuilder = new PointBuilder();
-    const point: Point = pointSetBuilder
-      .id(pointObject)
-      .name(pointObject)
-      .units(units)
-      .metaUnit(units)
-      .metaCode(pointObject)
-      .build();
+  for (var pointCode in udmiMessage.data.points) {
+    const existingPoint = existingPoints.find(point => point.name === pointCode);
+    const point: Point = buildPoint(udmiMessage, existingPoint, pointCode);
     points.push(point);
   }
 
   return deviceBuilder.points(points).build();
 }
 
-function createDeviceDocumentFromPointsetState(
-  message: UdmiMessage,
-  deviceBuilder: DeviceDocumentBuilder
-): DeviceDocument {
-  const points: Point[] = [];
+function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
 
-  for (var pointObject in message.data.points) {
-    const pointSetBuilder: PointBuilder = new PointBuilder();
-    const point: Point = pointSetBuilder.id(pointObject).name(pointObject).metaCode(pointObject).build();
-    points.push(point);
-  }
+  const pointValue = udmiMessage.data.points[pointCode];
 
-  return deviceBuilder.points(points).build();
+  // we get the value from either the message or the existing point
+  const value: number = pointValue.present_value ?? existingPoint?.value;
+
+  // we get the units from either the message or the existing point
+  const units: string = pointValue.units ?? existingPoint?.units;
+
+  return new PointBuilder()
+    .id(pointCode)
+    .name(pointCode)
+    .units(units)
+    .value(value?.toString())
+    .metaUnit(units)
+    .metaCode(pointCode)
+    .build();
 }
 
-function createDeviceDocumentFromPointsetConfig(
-  message: UdmiMessage,
-  deviceBuilder: DeviceDocumentBuilder
-): DeviceDocument {
-  const points: Point[] = [];
-
-  for (var pointObject in message.data.points) {
-    const pointSetBuilder: PointBuilder = new PointBuilder();
-    const point: Point = pointSetBuilder.id(pointObject).name(pointObject).metaCode(pointObject).build();
-    points.push(point);
-  }
-
-  return deviceBuilder.points(points).build();
-}

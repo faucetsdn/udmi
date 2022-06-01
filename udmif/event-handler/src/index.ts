@@ -18,7 +18,7 @@ export const handleUdmiEvent: EventFunction = async (event: any, context: any) =
       messageHandler = new UdmiMessageHandler(await getDeviceDAO());
     }
     const udmiMessage: UdmiMessage = decodeEventData(event);
-    messageHandler.handleUdmiEvent(udmiMessage);
+    await messageHandler.handleUdmiEvent(udmiMessage);
   } catch (e) {
     console.error('An unexpected error occurred: ', e);
   }

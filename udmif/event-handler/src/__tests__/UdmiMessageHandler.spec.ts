@@ -19,14 +19,16 @@ describe('UdmiMessageHandler', () => {
 
   let udmiMessageHandler: UdmiMessageHandler;
   const upsertMock = jest.fn();
+  const getMock = jest.fn();
 
   beforeEach(() => {
-    udmiMessageHandler = new UdmiMessageHandler({ upsert: upsertMock });
+    udmiMessageHandler = new UdmiMessageHandler({ upsert: upsertMock, get: getMock });
   });
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
     await udmiMessageHandler.handleUdmiEvent(event);
 
+    expect(getMock).toHaveBeenCalled();
     expect(upsertMock).toHaveBeenCalled();
   });
 
