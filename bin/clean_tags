@@ -1,0 +1,14 @@
+#!/bin/bash
+
+repo=$1
+shift
+
+for tag in `git tag`; do
+    merge=`git merge-base $tag master`
+    if [[ -z $merge ]]; then
+        git tag -d $tag
+        if [[ -n $repo ]]; then
+            git push $repo :$tag
+        fi
+    fi
+done
