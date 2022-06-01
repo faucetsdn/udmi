@@ -1,11 +1,15 @@
 #!/bin/bash -e
 
 repo=$1
-shift
+shift || true
+
+if [[ -n $repo ]]; then
+    git fetch $repo --tags
+fi
 
 for tag in `git tag`; do
     # A bad tag is one that does not have a common parent with master branch.
-    merge=`git merge-base $tag master`
+    merge=`git merge-base $tag master` || true
     if [[ -z $merge ]]; then
         git tag -d $tag
         if [[ -n $repo ]]; then
