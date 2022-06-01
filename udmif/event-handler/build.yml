@@ -47,7 +47,7 @@ deploy-staging:
   stage: deploy-staging
   environment: staging
   before_script:
-    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../cloud/gcp/auth/credentials.json 
+    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../credentials.json 
     - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
   script:
     - echo gcloud functions deploy udmif_event_handler \
@@ -64,7 +64,7 @@ deploy-lab:
   stage: deploy-lab
   environment: lab
   before_script:
-    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../cloud/gcp/auth/credentials.json  
+    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../credentials.json  
     - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
   script:
     - echo gcloud functions deploy udmif_event_handler \
