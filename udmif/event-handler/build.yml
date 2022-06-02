@@ -46,17 +46,15 @@ build-node:
 deploy-staging:
   stage: deploy-staging
   environment: staging
-  before_script:
+  script:
     - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../credentials.json 
     - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
-  script:
     - echo gcloud functions deploy udmif_event_handler \
        --runtime=nodejs16 \
        --entry-point=handleUdmiEvent \
        --region=us-central1 \
        --trigger-topic=udmi_target \
        --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
-       --update-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
   rules:
       - if: $CI_COMMIT_BRANCH == "master"
         
