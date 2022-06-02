@@ -58,8 +58,7 @@ deploy-staging:
        --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
   rules:
       - if: $CI_COMMIT_BRANCH == "master"
-        when: manual 
-  
+        
 deploy-lab:
   stage: deploy-lab
   environment: lab
