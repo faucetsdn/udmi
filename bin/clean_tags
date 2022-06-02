@@ -18,9 +18,6 @@ if [[ -n $1 ]]; then
     git fetch $repo --tags
 fi
 
-echo repo = $repo
-exit 1
-
 for tag in $(git tag); do
     # A bad tag is one that does not have a common parent with master branch.
     merge=$(git merge-base $tag master || true)
