@@ -1,5 +1,15 @@
 #!/bin/bash -e
 
+dryrun=""
+
+while getopts "n" options; do 
+  case "${options}" in
+    n)
+      dryrun="echo"
+      ;;
+  esac
+done
+
 if [[ -n $1 ]]; then
     repo=$1
     shift
@@ -10,9 +20,9 @@ for tag in $(git tag); do
     # A bad tag is one that does not have a common parent with master branch.
     merge=$(git merge-base $tag master || true)
     if [[ -z $merge ]]; then
-        git tag -d $tag
+        ${dryrun} git tag -d $tag
         if [[ -n $repo ]]; then
-            git push $repo :$tag
+            ${dryrun} git push $repo :$tag
         fi
     fi
 done
