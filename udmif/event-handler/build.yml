@@ -38,8 +38,6 @@ build-node:
     - npm install
     - npm install -g @angular/cli
     - npm run build
-    - rm -rf dist
-    - mkdir dist
     - cp prod-package.json dist/package.json
     - rm -rf dist/*test*
 
