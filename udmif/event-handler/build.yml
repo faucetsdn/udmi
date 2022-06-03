@@ -46,10 +46,12 @@ build-node:
 deploy-staging:
   stage: deploy-staging
   environment: staging
+  before-script:
+    - echo "$GCP_CREDENTIALS" >> ../credentials.json
   script:
-    - echo gcloud auth activate-service-account --key-file "$GCP_CREDENTIALS" >> ../credentials.json 
-    - echo gcloud config set project "$GCP_PROJECT_ID" >> gcp_project_id
-    - echo gcloud functions deploy udmif_event_handler \
+    - gcloud auth activate-service-account --key-file ../credentials.json 
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud functions deploy udmif_event_handler \
        --runtime=nodejs16 \
        --entry-point=handleUdmiEvent \
        --region=us-central1 \
