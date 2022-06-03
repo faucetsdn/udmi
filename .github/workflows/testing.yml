@@ -24,6 +24,9 @@ jobs:
       - name: Run registrar validation
         if: ${{ always() }}
         run: bin/test_registrar
+      - name: Validator unit tests
+        if: ${{ always() }}
+        run: cd validator; ./gradlew test
 
   ui:
     name: UI Tests

@@ -95,6 +95,7 @@ public class Validator {
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private static final String CONFIG_CATEGORY = "config";
+  public static final String UNKNOWN_DEVICE_ID = "!unknown";
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -111,6 +112,7 @@ public class Validator {
   private String siteDir;
   private String deviceId;
   private MessagePublisher client;
+  private Map<String, JsonSchema> schemaMap;
 
   /**
    * Create validator for the given project id.
@@ -163,7 +165,7 @@ public class Validator {
     System.exit(0);
   }
 
-  private void setSiteDir(String siteDir) {
+  public void setSiteDir(String siteDir) {
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
       this.siteDir = null;
@@ -180,6 +182,7 @@ public class Validator {
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
     metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
     metadataReportFile.delete();
   }
 
@@ -225,7 +228,7 @@ public class Validator {
     //    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
   }
 
-  private void setSchemaSpec(String schemaPath) {
+  public void setSchemaSpec(String schemaPath) {
     File schemaFile = new File(schemaPath).getAbsoluteFile();
     if (schemaFile.isFile()) {
       schemaRoot = schemaFile.getParentFile();
@@ -236,6 +239,7 @@ public class Validator {
     } else {
       throw new RuntimeException("Schema directory/file not found: " + schemaFile);
     }
+    schemaMap = getSchemaMap();
   }
 
   private Map<String, JsonSchema> getSchemaMap() {
@@ -258,8 +262,7 @@ public class Validator {
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
-    final Map<String, JsonSchema> schemaMap = getSchemaMap();
-    return (message, attributes) -> validateMessage(schemaMap, message, attributes);
+    return (message, attributes) -> validateMessage(message, attributes);
   }
 
   private void validatePubSub(String instName) {
@@ -313,8 +316,11 @@ public class Validator {
     return Arrays.stream(ignoreSpec.split(",")).collect(Collectors.toSet());
   }
 
+  protected void validateMessage(MessageBundle bundle) {
+    validateMessage(bundle.message, bundle.attributes);
+  }
+
   private void validateMessage(
-      Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
     if (validateUpdate(schemaMap, message, attributes)) {
@@ -353,10 +359,10 @@ public class Validator {
       return false;
     }
 
-    try {
-      String deviceId = attributes.get("deviceId");
-      Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
+    String deviceId = attributes.get("deviceId");
+    Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
 
+    try {
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
       }
@@ -371,7 +377,7 @@ public class Validator {
           "Processing device #%d/%d: %s/%s%n",
           processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
 
-      if (attributes.get("wasBase64").equals("true")) {
+      if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
 
@@ -447,8 +453,8 @@ public class Validator {
 
       return updated;
     } catch (Exception e) {
-      e.printStackTrace();
-      return false;
+      getReportingDevice(deviceId).addError(e);
+      return true;
     }
   }
 
@@ -746,5 +752,11 @@ public class Validator {
         throw new RuntimeException("While loading URL " + url, e);
       }
     }
+  }
+
+  static class MessageBundle {
+
+    public Map<String, Object> message;
+    public Map<String, String> attributes;
   }
 }
