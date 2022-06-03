@@ -95,7 +95,6 @@ public class Validator {
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
   private static final String CONFIG_CATEGORY = "config";
-  public static final String UNKNOWN_DEVICE_ID = "!unknown";
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
