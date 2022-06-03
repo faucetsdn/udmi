@@ -7,6 +7,7 @@ Sequences are defined device behavior which are formulated from a series of even
 ## Defined Sequences
 
 - [Config and State](config.md)
+- [Discovery](discovery.md)
 - [Writeback](writeback.md)
 
 ## Validation

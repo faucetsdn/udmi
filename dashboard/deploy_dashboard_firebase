@@ -15,6 +15,12 @@ version=`git describe --dirty`
 echo Deploying version $version to $PROJECT
 echo "const udmi_deploy_version = '$version';" > public/deploy_version.js
 
+cat <<EOF > functions/version.js
+module.exports = {
+  udmis: '$version'
+}
+EOF
+
 firebase use $PROJECT
 
 only="functions:udmi_target"

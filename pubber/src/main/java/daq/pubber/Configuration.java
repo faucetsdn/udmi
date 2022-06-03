@@ -18,4 +18,5 @@ public class Configuration {
   public Object extraField;
   public String serialNo;
   public String macAddr;
+  public String extraPoint;
 }
