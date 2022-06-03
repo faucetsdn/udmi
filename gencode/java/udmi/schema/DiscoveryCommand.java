@@ -32,12 +32,12 @@ public class DiscoveryCommand {
     @JsonPropertyDescription("RFC 3339 timestamp the discover telemetry event was generated")
     public Date timestamp;
     /**
-     * Major version of the UDMI schema
+     * Version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
-    @JsonPropertyDescription("Major version of the UDMI schema")
+    @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
 
     @Override

@@ -10,21 +10,26 @@ if (!process.env.GCLOUD_PROJECT) {
   process.env.GCLOUD_PROJECT = PROJECT_ID;
 }
 
+const version = require('./version');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { PubSub } = require(`@google-cloud/pubsub`);
-const iot = require('@google-cloud/iot');
 const pubsub = new PubSub();
+const iot = require('@google-cloud/iot');
+
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
-const UDMI_VERSION = '1.3.14';
+const UDMI_VERSION = version.udmis;
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 const UPDATE_FOLDER = 'update';
 const QUERY_FOLDER = 'query';
+const SETUP_FOLDER = 'setup';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
+
+console.log('Using UDMI version ' + UDMI_VERSION);
 
 if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
@@ -159,8 +164,11 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  const parts = attributes.subFolder.split('/');
+  if (!attributes.subFolder) {
+    return udmi_reflector_state(attributes, msgObject);
+  }
 
+  const parts = attributes.subFolder.split('/');
   attributes.deviceRegistryId = attributes.deviceId;
   attributes.deviceId = parts[1];
   attributes.subFolder = parts[2];
@@ -177,8 +185,20 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   });
 });
 
+function udmi_reflector_state(attributes, msgObject) {
+  console.log('Processing reflector state change', attributes, msgObject);
+  const registryId = attributes.deviceRegistryId;
+  const deviceId = attributes.deviceId;
+  const subContents = {
+    'last_state': msgObject.timestamp
+  };
+  const startTime = currentTimestamp();
+  return modify_device_config(registryId, deviceId, SETUP_FOLDER, subContents, startTime);
+}
+
 function udmi_query_event(attributes, msgObject) {
-  if (attributes.subType == STATE_TYPE) {
+  const subType = attributes.subType;
+  if (subType == STATE_TYPE) {
     return udmi_query_states(attributes);
   }
   throw 'Unknown query type ' + attributes.subType;
@@ -271,7 +291,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   if (useFirestore) {
     console.info('Deferring to firestore trigger for IoT Core modification.');
   } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, currentTimestamp(), msgObject));
+    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp()));
   }
 
   return Promise.all(promises);
@@ -291,7 +311,7 @@ function parse_old_config(oldConfig, resetConfig) {
   }
 }
 
-async function modify_device_config(registryId, deviceId, subFolder, startTime, subContents) {
+async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
 
   const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
@@ -326,7 +346,7 @@ async function modify_device_config(registryId, deviceId, subFolder, startTime, 
       console.log('Config accepted version', subFolder, version, startTime);
     }).catch(e => {
       console.log('Config update rejected', subFolder, version, startTime);
-      return modify_device_config(registryId, deviceId, subFolder, startTime, subContents);
+      return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
     })
 }
 
@@ -394,7 +414,7 @@ function consolidate_config(registryId, deviceId, subFolder) {
   const cloudRegion = registry_regions[registryId];
   const reg_doc = firestore.collection('registries').doc(registryId);
   const dev_doc = reg_doc.collection('devices').doc(deviceId);
-  const configs = dev_doc.collection('configs');
+  const configs = dev_doc.collection(CONFIG_TYPE);
 
   if (subFolder == UPDATE_FOLDER) {
     return;

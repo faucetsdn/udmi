@@ -1,0 +1,33 @@
+{
+  "title": "Reflector Config",
+  "description": "Config for a reflector client",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 Timestamp the state payload was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "setup": {
+      "title": "Setup Reflector Config",
+      "type": "object",
+      "properties": {
+        "last_state": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deployed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

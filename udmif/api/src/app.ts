@@ -13,7 +13,7 @@ import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
   const config: Configuration = loadConfig();
 
   // required context processor
-  const context = await getDefaultContextProcessor();
+  const context = await getDefaultContextProcessor(config.clientIds);
 
   const deviceDAO: DeviceDAO = await getDeviceDAO(config);
 

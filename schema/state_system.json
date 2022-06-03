@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "properties": {
     "last_config": {
-      "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed).",
+      "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
@@ -21,17 +21,12 @@
       "examples": ["A1B2C3D4", "00001"]
     },
     "hardware": {
-      "type": "object",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, String>",
-      "patternProperties": {
-        "^make|model|sku|rev$": {
-          "type": "string"
-        }
-      }
+      "$ref": "file:state_system_hardware.json"
     },
     "software": {
       "additionalProperties": false,
+      "description": "A collection of items which can be used to describe version of software running on a device",
+      "examples": ["firmware", "os", "driver"],
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {

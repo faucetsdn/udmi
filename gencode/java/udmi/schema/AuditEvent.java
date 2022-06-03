@@ -34,12 +34,12 @@ public class AuditEvent {
     @JsonPropertyDescription("RFC 3339 timestamp the telemetry event was generated")
     public Date timestamp;
     /**
-     * Major version of the UDMI schema
+     * Version of the UDMI schema
      * (Required)
      * 
      */
     @JsonProperty("version")
-    @JsonPropertyDescription("Major version of the UDMI schema")
+    @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     /**
      * 

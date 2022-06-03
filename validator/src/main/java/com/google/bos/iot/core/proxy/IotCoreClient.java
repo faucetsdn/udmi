@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import java.io.File;
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -26,6 +28,7 @@ public class IotCoreClient implements MessagePublisher {
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
   private static final String WAS_BASE_64 = "wasBase64";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
+  private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
 
   private final BlockingQueue<MessageBundle> messages = new LinkedBlockingDeque<>();
 
@@ -72,7 +75,7 @@ public class IotCoreClient implements MessagePublisher {
         attributes.put(WAS_BASE_64, "" + base64);
         asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
       }
-      if (!"commands".equals(category)) {
+      if (!EXPECTED_CATEGORIES.contains(category)) {
         return;
       }
     } catch (Exception e) {
@@ -91,18 +94,19 @@ public class IotCoreClient implements MessagePublisher {
     assert "devices".equals(parts[0]);
     assert siteName.equals(parts[1]);
     String messageCategory = parts[2];
+    attributes.put("category", messageCategory);
     attributes.put("deviceRegistryId", siteName);
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
       attributes.put("deviceId", parts[4]);
       attributes.put("subType", parts[5]);
       attributes.put("subFolder", parts[6]);
+      attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
       assert parts.length == 7;
     } else {
       assert parts.length == 3;
     }
     attributes.put("projectId", projectId);
-    attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return messageCategory;
   }
 
@@ -147,6 +151,10 @@ public class IotCoreClient implements MessagePublisher {
   public void close() {
     active = false;
     mqttPublisher.close();
+  }
+
+  public void setReflectorState(String stateData) {
+    mqttPublisher.publish(siteName, "state", stateData);
   }
 
   static class MessageBundle {

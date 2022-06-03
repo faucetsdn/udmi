@@ -8,6 +8,8 @@ import glob
 import re
 import os
 
+HOSTED_GITHUB_PAGES = r'^https?:\/\/faucetsdn\.github\.io\/udmi\/'
+HOSTED_GITHUB = r'^https?:\/\/(?:www\.)?github\.com\/faucetsdn\/udmi\/(?:blob|tree)\/master\/'
 
 def split_link_fragment(link):
     """ Splits a link into the path and the fragment.
@@ -26,10 +28,28 @@ def split_link_fragment(link):
     return matches.groups()
 
 
+
+def blank_regex_substitutions(string, *args):
+    """
+        Applies multiple blank regex substitutions on a string and returns the result
+
+        Arguments
+            string to substitute in
+            *args regex for substitution
+
+        Returns
+            string with all regex substitutions applied
+    """
+    for regex in args:
+        string = re.sub(regex, '', string)
+    return string
+
+
 def check_links(file_path):
     """
-        Checks if inline markdown links within the given file_path
-        resolve
+        Checks if inline markdown links within the given file_path resolve to a
+        valid file or directory, or to a hosted (Github or Github Pages) copy of
+        the repository
 
         Arguments:
             file_path:  file to check links within
@@ -45,27 +65,41 @@ def check_links(file_path):
         if file_path.endswith('.md'):
             file_lines = file_data.split('\n', 2)
             # TODO: Make this more comprehensive and check actual path.
-            if not re.match('^\[\*\*UDMI.*\]\(\#\)$', file_lines[0]):
+            if not re.search('^\[\*\*UDMI.*\]\(\#\)$', file_lines[0]):
                 failing_links.append((file_path, 'header', file_lines[0]))
             if file_lines[1]:
                 failing_links.append((file_path, 'missing blank', ''))
-        links = re.findall(r'\[.*\]\(([^\)]*)\)', file_data)
+        links = re.findall(r'\[(?:[^\]]*)\]\(([^\)]*)\)', file_data)
         for link in links:
-            if not re.match('https?://', link):
+
+            if not re.search('^https?://', link):
                 link_path, link_anchor = split_link_fragment(link)
                 dir_name = os.path.dirname(os.path.realpath(file_path))
 
-                # Links are relative to the file they were found in 
+                # Links are relative to the file they were found in
                 resolved_path = os.path.realpath(os.path.join(dir_name, link_path))
 
                 if not os.path.exists(resolved_path):
                     failing_links.append((file_path, 'link', link))
-    
+            else:
+                # Rewrite hosted links (e.g. github pages) to local by subtracting the web host
+                rewritten_link = blank_regex_substitutions(link, HOSTED_GITHUB, HOSTED_GITHUB_PAGES)
+
+                if not re.search('^https?://', rewritten_link):
+                    # The modified link now directs to a local path
+                    resolved_path = os.path.realpath(rewritten_link)
+                    # Append .md to any files without extensions (assumed from github pages links)
+                    root, ext = os.path.splitext(resolved_path)
+                    if not ext and not os.path.isdir(root):
+                        resolved_path = f'{resolved_path}.md'
+
+                    if not os.path.exists(resolved_path):
+                        failing_links.append((file_path, 'link', link))
+
     return failing_links
 
 
 if __name__ == "__main__":
-
     check_paths = ['*.md', 'docs/**/*.md', 'schema/*.json']
     for check_path in check_paths:
         file_paths = glob.glob(check_path, recursive=True)
