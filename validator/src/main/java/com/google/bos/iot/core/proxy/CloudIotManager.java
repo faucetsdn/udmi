@@ -124,6 +124,12 @@ public class CloudIotManager {
     }
   }
 
+  /**
+   * Set the cloud device configuration entry.
+   *
+   * @param deviceId target device id
+   * @param data     configuration data blob
+   */
   public void setDeviceConfig(String deviceId, String data) {
     try {
       final String registryPath = String.format("projects/%s/locations/%s/registries/%s",
