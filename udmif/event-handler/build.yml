@@ -46,6 +46,7 @@ build-node:
 deploy-staging:
   stage: deploy-staging
   environment: staging
+  image: google/cloud-sdk
   before_script:
     - echo "$GCP_CREDENTIALS" >> ../credentials.json
   script:
@@ -63,6 +64,7 @@ deploy-staging:
 deploy-lab:
   stage: deploy-lab
   environment: lab
+  image: google/cloud-sdk
   before_script:
     - echo "$GCP_CREDENTIALS" >> ../credentials.json
   script:
