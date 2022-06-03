@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
 
+/**
+ * Unit test suite for the validator.
+ */
 public class ValidatorTest {
 
   private static final ObjectMapper OBJECT_MAPPER =

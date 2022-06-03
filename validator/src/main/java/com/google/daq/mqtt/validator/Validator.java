@@ -164,6 +164,11 @@ public class Validator {
     System.exit(0);
   }
 
+  /**
+   * Set the site directory to use for this validation run.
+   *
+   * @param siteDir site model directory
+   */
   public void setSiteDir(String siteDir) {
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
@@ -227,6 +232,11 @@ public class Validator {
     //    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
   }
 
+  /**
+   * Set the schema specification directory.
+   *
+   * @param schemaPath schema specification directory
+   */
   public void setSchemaSpec(String schemaPath) {
     File schemaFile = new File(schemaPath).getAbsoluteFile();
     if (schemaFile.isFile()) {
