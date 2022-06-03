@@ -63,7 +63,7 @@ deploy-staging:
 deploy-lab:
   stage: deploy-lab
   environment: lab
- before_script:
+  before_script:
     - echo "$GCP_CREDENTIALS" >> ../credentials.json
   script:
     - gcloud auth activate-service-account --key-file ../credentials.json 
