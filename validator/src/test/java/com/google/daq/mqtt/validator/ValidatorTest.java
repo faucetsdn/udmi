@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.junit.Test;
 import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
 
 /**
  * Unit test suite for the validator.
@@ -53,7 +55,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("One error device", report.errorDevices.size(), 1);
+    assertEquals("One error device", 1, report.errorDevices.size());
   }
 
   @Test
@@ -62,7 +64,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", report.errorDevices.size(), 0);
+    assertEquals("No error devices", 0, report.errorDevices.size());
   }
 
   @Test
@@ -72,22 +74,22 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", report.errorDevices.size(), 1);
+    assertEquals("No error devices", 1, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
-    assertEquals("Missing one point", missingPoints.size(), 1);
+    assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
 
   @Test
   public void missingPointsetState() {
-    PointsetEvent messageObject = basePointsetEvent();
+    PointsetState messageObject = basePointsetState();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle("state", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", report.errorDevices.size(), 1);
+    assertEquals("No error devices", 1, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
-    assertEquals("Missing one point", missingPoints.size(), 1);
+    assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
 
@@ -96,14 +98,30 @@ public class ValidatorTest {
     pointsetEvent.timestamp = new Date();
     pointsetEvent.version = UDMI_VERSION;
     HashMap<String, PointPointsetEvent> points = new HashMap<>();
-    points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetPoint(Boolean.TRUE));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetPoint(20));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetPoint("yes"));
+    points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventPoint(Boolean.TRUE));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventPoint(20));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventPoint("yes"));
     pointsetEvent.points = points;
     return pointsetEvent;
   }
 
-  private PointPointsetEvent pointsetPoint(Object present_value) {
+  private PointsetState basePointsetState() {
+    PointsetState pointsetState = new PointsetState();
+    pointsetState.timestamp = new Date();
+    pointsetState.version = UDMI_VERSION;
+    HashMap<String, PointPointsetState> points = new HashMap<>();
+    pointsetState.points = points;
+    points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetStatePoint());
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetStatePoint());
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetStatePoint());
+    return pointsetState;
+  }
+
+  private PointPointsetState pointsetStatePoint() {
+    return new PointPointsetState();
+  }
+
+  private PointPointsetEvent pointsetEventPoint(Object present_value) {
     PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
     pointPointsetEvent.present_value = present_value;
     return pointPointsetEvent;

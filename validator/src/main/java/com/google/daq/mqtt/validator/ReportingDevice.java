@@ -11,7 +11,9 @@ import java.util.TreeSet;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
 
 /**
  * Encapsulation of device data for a basic reporting device.
@@ -104,11 +106,21 @@ public class ReportingDevice {
   }
 
   /**
-   * Validate a pointset message against the device's metadata.
+   * Validate a message against expectations (outside of base schema).
    *
    * @param message Message to validate
    */
-  public void validateMetadata(PointsetEvent message) {
+  public void validateMessage(Object message) {
+    if (message instanceof PointsetEvent) {
+      validateMessage((PointsetEvent) message);
+    } if (message instanceof PointsetState) {
+      validateMessage((PointsetState) message);
+    } else {
+      throw new RuntimeException("Unknown message type " + message.getClass().getName());
+    }
+  }
+
+  private void validateMessage(PointsetEvent message) {
     Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
     Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
@@ -124,7 +136,23 @@ public class ReportingDevice {
     }
   }
 
+  private void validateMessage(PointsetState message) {
+    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
+    Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
+    metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
+    metadataDiff.extraPoints.removeAll(expectedPoints);
+    metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
+    metadataDiff.missingPoints.removeAll(deliveredPoints);
+    if (hasMetadataDiff()) {
+      throw new RuntimeException("Metadata validation failed: " + metadataMessage());
+    }
+  }
+
   private Map<String, PointPointsetEvent> getPoints(PointsetEvent message) {
+    return message.points == null ? ImmutableMap.of() : message.points;
+  }
+
+  private Map<String, PointPointsetState> getPoints(PointsetState message) {
     return message.points == null ? ImmutableMap.of() : message.points;
   }
 
