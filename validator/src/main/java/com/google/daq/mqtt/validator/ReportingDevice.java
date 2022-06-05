@@ -113,7 +113,7 @@ public class ReportingDevice {
   public void validateMessage(Object message) {
     if (message instanceof PointsetEvent) {
       validateMessage((PointsetEvent) message);
-    } if (message instanceof PointsetState) {
+    } else if (message instanceof PointsetState) {
       validateMessage((PointsetState) message);
     } else {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
