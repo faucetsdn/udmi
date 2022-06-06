@@ -59,11 +59,6 @@ npm run testInteractive
 
 ---
 
-## Deploying to GCP
-
-TBD
-
----
 
 ## Notes
 
