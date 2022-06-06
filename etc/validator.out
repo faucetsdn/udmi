@@ -1,0 +1,6 @@
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_system.out
+::::::::::::::
+While converting to json node: 1 schema violations found
+  1 schema violations found
+    object instance has properties which are not allowed by the schema: ["version"]
