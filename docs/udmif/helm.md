@@ -29,8 +29,6 @@ There are some pre-requisites that need to be satisfied in order to build and de
 1. Configure local kube_config with below commands.
    ```
    gcloud container clusters get-credentials udmi-staging-gke --region=us-central1-b
-   ```
-   ```
    gcloud container clusters get-credentials udmi-swarm --region=us-central1-f
    ```
 
