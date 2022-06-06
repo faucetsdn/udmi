@@ -19,7 +19,7 @@ export class DefaultDeviceDao implements DeviceDao {
    */
   async upsert(deviceKey: DeviceKey, deviceDocument: DeviceDocument): Promise<void> {
     // we're using upsert which will allow document updates if it already exists and a document cretion if it does not
-    console.debug('Attempting to write the following device document: ' + JSON.stringify(deviceDocument));
+    console.log('Attempting to write the following device document: ' + JSON.stringify(deviceDocument));
 
     const result = await this.collection.updateOne(deviceKey, { $set: deviceDocument }, options);
 
