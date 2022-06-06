@@ -31,7 +31,7 @@ resource "mongodbatlas_database_user" "user" {
   username           = var.db_username
   password           = var.db_password
   project_id         = mongodbatlas_project.udmi.id
-  auth_database_name = "admin"
+  auth_database_name = "udmi"
 
   roles {
     role_name     = var.db_role
