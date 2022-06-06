@@ -59,11 +59,11 @@ npm run testInteractive
 
 ---
 
-
 ## Notes
 
 * Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs) \
 * The data inside the json is expected to be base64 encoded, to decode it (on macos) copy the base64 string and execute the following command in your terminal:
+
    ```
    pbpaste | base64 --decode && echo -e
    ```
