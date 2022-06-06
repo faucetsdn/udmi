@@ -26,16 +26,8 @@ echo Running tools version `(cd $ROOT_DIR; git describe)`
 if (($# == 0)); then  
     $ROOT_DIR/pubber/bin/run $project_id $site_path $device_id $serial_no
 else
-    declare -A options
     for option in $*; do
-        if [[ $option == *"="* ]]; then
-            k=$(echo $option | cut -d'=' -f1)
-            v=$(echo $option | cut -d'=' -f2)
-        else
-            k=$option
-            v=$option
-        fi
-        printf -v options_json '%s"%s":"%s",' "$options_json" "$k" "$v"
+        printf -v options_json '%s"%s":%s,' "$options_json" "$option" "true"
     done
 
     options_json="{${options_json%?}}"
@@ -47,7 +39,7 @@ else
     "sitePath": "$site_path",
     "cloudRegion": "$cloud_region",
     "deviceId": "$device_id",
-    "serialNo": "$serial",
+    "serialNo": "$serial_no",
     "options": $options_json
 }
 EOF

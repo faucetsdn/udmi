@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import java.util.HashMap;
 
 /**
  * General bucket of pubber configuration information.
@@ -19,5 +18,5 @@ public class Configuration {
   public String algorithm = "RS256";
   public String serialNo;
   public String macAddr;
-  public HashMap<String, String> options = new HashMap<>();
+  public ConfigurationOptions options = new ConfigurationOptions();
 }

@@ -3,6 +3,7 @@ package daq.pubber;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -145,6 +146,8 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+    } catch (UnrecognizedPropertyException e) {
+       throw new RuntimeException("Invalid Pubber arguments or options provided: " + e.getMessage());
     } catch (Exception e) {
       throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
     }
@@ -346,10 +349,10 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options %s",
+    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options:%s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId,
-        configuration.options.keySet()));
+        configuration.options));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
@@ -359,14 +362,16 @@ public class Pubber {
     deviceState.system.software.put("firmware", "v1");
     
     // Pubber runtime options
-    devicePoints.extraField = configuration.options.get("extra_field");
+    if (configuration.options.extraField) {
+          devicePoints.extraField = "extra_field";
+    }
 
-    if (configuration.options.get("extra_point") != null) {
-      addPoint(makePoint(configuration.options.get("extra_point"),
+    if (configuration.options.extraPoint) {
+      addPoint(makePoint("extra_point",
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
-    if (configuration.options.get("no_hardware") != null) {
+    if (configuration.options.noHardware != null) {
       deviceState.system.hardware = null;
     }
 
