@@ -28,6 +28,7 @@ env:
   MONGO_PWD: <<Injected via CI/CD variable>>
   MONGO_HOST: <<Injected via CI/CD variable>>
   MONGO_DATABASE: <<Injected via CI/CD variable>>
+  DATASOURCE: <<Injected via CI/CD variable>>
 
 serviceAccount:
   # Specifies whether a service account should be created
