@@ -373,7 +373,7 @@ public class Pubber {
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
-    if (configuration.options.noHardware != null) {
+    if (!configuration.options.noHardware) {
       deviceState.system.hardware = null;
     }
 
