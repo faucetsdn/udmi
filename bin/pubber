@@ -31,6 +31,9 @@ else
         if [[ $option == *"="* ]]; then
             k=$(echo $option | cut -d'=' -f1)
             v=$(echo $option | cut -d'=' -f2)
+            if ! [[ $v =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+                v="\"$v\""
+            fi
         else
             k=$option
             v=true
