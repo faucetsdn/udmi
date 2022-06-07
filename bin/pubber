@@ -26,10 +26,17 @@ echo Running tools version `(cd $ROOT_DIR; git describe)`
 if (($# == 0)); then  
     $ROOT_DIR/pubber/bin/run $project_id $site_path $device_id $serial_no
 else
+    declare -A options
     for option in $*; do
-        printf -v options_json '%s"%s":%s,' "$options_json" "$option" "true"
+        if [[ $option == *"="* ]]; then
+            k=$(echo $option | cut -d'=' -f1)
+            v=$(echo $option | cut -d'=' -f2)
+        else
+            k=$option
+            v=true
+        fi
+        printf -v options_json '%s"%s":%s,' "$options_json" "$k" "$v"
     done
-
     options_json="{${options_json%?}}"
     cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
     
