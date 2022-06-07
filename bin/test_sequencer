@@ -11,7 +11,12 @@ fi
 project_id=$1
 shift
 
-echo 'Using target project (base64):' $(echo =$project_id | base64)
+if [[ -n `which rot13` ]]; then
+   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
+   echo 'Using target project (rot13):' $(echo $project_id | rot13)
+else
+   echo 'Using target project:' $project_id
+fi
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
@@ -42,7 +47,7 @@ for i in `seq 1 $WAITING`; do
     sleep 2
 done
 
-if [[ $i == $WAITING ]]; then
+if [[ $i -eq $WAITING ]]; then
     echo pubber startup failed:
     cat $PUBBER_OUT
     false

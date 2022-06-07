@@ -16,24 +16,6 @@
     "set_value": {
       "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
       "examples": [22.4]
-    },
-    "min_loglevel": {
-      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.",
-      "type": "integer",
-      "minimum": 100,
-      "maximum": 800
-    },
-    "sample_limit_sec": {
-      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.",
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 86400
-    },
-    "sample_rate_sec": {
-      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 86400
     }
   }
 }

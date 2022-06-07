@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
@@ -104,7 +105,7 @@ public class Pubber {
       ExtraPointsetEvent.class, "events/pointset",
       DiscoveryEvent.class, "events/discovery"
   );
-  private static final int MESSAGE_REPORT_INTERVAL = 100;
+  private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
       Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
       Level.DEBUG, LOG::info,
@@ -290,6 +291,16 @@ public class Pubber {
       info("Configuring with key type " + configuration.algorithm);
     }
 
+    if (metadata.gateway != null) {
+      configuration.gatewayId = metadata.gateway.gateway_id;
+      if (configuration.gatewayId != null) {
+        Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
+        if (authType != null) {
+          configuration.algorithm = authType.value();
+        }
+      }
+    }
+
     Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
@@ -360,8 +371,9 @@ public class Pubber {
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
     deviceState.system.software = new HashMap<>();
-    deviceState.system.software.put("firmware", "v1");
-    
+    deviceState.system.software.put("firmware", "v1");    
+    deviceState.system.last_config = new Date(0);
+
     // Pubber runtime options
     if (configuration.options.extraField) {
           devicePoints.extraField = "extra_field";
@@ -437,13 +449,13 @@ public class Pubber {
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
     if (scheduledFuture == null || intervalMs != messageDelayMs.get()) {
-      cancelExecutor();
+      cancelPeriodicSend();
       messageDelayMs.set(intervalMs);
-      startExecutor();
+      startPeriodicSend();
     }
   }
 
-  private synchronized void startExecutor() {
+  private synchronized void startPeriodicSend() {
     Preconditions.checkState(scheduledFuture == null);
     int delay = messageDelayMs.get();
     info("Starting executor with send message delay " + delay);
@@ -451,7 +463,7 @@ public class Pubber {
         .scheduleAtFixedRate(this::sendMessages, delay, delay, TimeUnit.MILLISECONDS);
   }
 
-  private synchronized void cancelExecutor() {
+  private synchronized void cancelPeriodicSend() {
     if (scheduledFuture != null) {
       try {
         scheduledFuture.cancel(false);
@@ -497,8 +509,11 @@ public class Pubber {
   private void terminate() {
     try {
       info("Terminating");
-      mqttPublisher.close();
-      cancelExecutor();
+      if (mqttPublisher != null) {
+        mqttPublisher.close();
+        mqttPublisher = null;
+      }
+      cancelPeriodicSend();
       executor.shutdown();
     } catch (Exception e) {
       info("Error terminating: " + e.getMessage());
@@ -510,7 +525,7 @@ public class Pubber {
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
     info("synchronized start config result " + result);
-    if (!result) {
+    if (!result && mqttPublisher != null) {
       mqttPublisher.close();
     }
   }
@@ -536,8 +551,10 @@ public class Pubber {
 
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
+      String keyDevice =
+          configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
       configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
-          configuration.deviceId, getDeviceKeyPrefix());
+          keyDevice, getDeviceKeyPrefix());
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
@@ -865,7 +882,7 @@ public class Pubber {
         int interval = getScanInterval(family);
         if (interval > 0) {
           Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
-          scheduleDiscoveryScan(family, newGeneration);
+          scheduleFuture(newGeneration, () -> checkDiscoveryScan(family, newGeneration));
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
@@ -1049,6 +1066,9 @@ public class Pubber {
     try {
       publishingLog = true;
       pubberLogMessage(message, level, timestamp);
+    } catch (Exception e) {
+      mqttPublisher = null;
+      localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
     } finally {
       publishingLog = false;
     }
