@@ -28,28 +28,6 @@ jobs:
         if: ${{ always() }}
         run: cd validator; ./gradlew test
 
-  ui:
-    name: UI Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v2.3.4
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - name: Install Chrome & ChromeDriver
-        run: bin/setup_chromedriver
-      - name: Install dependencies
-        run: cd udms && npm install
-      - name: Install angular command line
-        run: cd udms && npm install -g @angular/cli firebase-tools
-      - name: Running lint
-        run: cd udms && ng lint
-      - name: Running unit tests
-        run: cd udms && ng test --browsers ChromeHeadless --code-coverage=true --watch=false
-      - name: Running e2e
-        run: cd udms && npm run e2e 
-
   udmi:
     name: Sequence tests
     runs-on: ubuntu-latest
