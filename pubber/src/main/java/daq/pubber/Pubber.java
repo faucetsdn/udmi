@@ -3,8 +3,8 @@ package daq.pubber;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -376,7 +376,7 @@ public class Pubber {
 
     // Pubber runtime options
     if (configuration.options.extraField) {
-          devicePoints.extraField = "extra_field";
+      devicePoints.extraField = "extra_field";
     }
 
     if (configuration.options.extraPoint) {
