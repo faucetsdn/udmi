@@ -56,7 +56,7 @@ echo
 # Sort by test name (6th field)
 fgrep 'RESULT ' $TEST_LOG | sort -k 6 | tee /tmp/sequencer.out
 
-if [[ `wc -l < /tmp/sequencer.out` == 0 ]]; then
+if [[ `wc -l < /tmp/sequencer.out` -eq 0 ]]; then
     echo No test results found.
     exit 1
 fi

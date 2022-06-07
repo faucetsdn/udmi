@@ -18,34 +18,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install openjdk-11-jdk
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
-      - name: Running unit tests
+      - name: Schema unit tests
         if: ${{ always() }}
         run: bin/test_schema -p
-      - name: Run registrar validation
+      - name: Registrar validation
         if: ${{ always() }}
         run: bin/test_registrar
-
-  ui:
-    name: UI Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v2.3.4
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - name: Install Chrome & ChromeDriver
-        run: bin/setup_chromedriver
-      - name: Install dependencies
-        run: cd udms && npm install
-      - name: Install angular command line
-        run: cd udms && npm install -g @angular/cli firebase-tools
-      - name: Running lint
-        run: cd udms && ng lint
-      - name: Running unit tests
-        run: cd udms && ng test --browsers ChromeHeadless --code-coverage=true --watch=false
-      - name: Running e2e
-        run: cd udms && npm run e2e 
+      - name: Validator unit tests
+        if: ${{ always() }}
+        run: cd validator; ./gradlew test
 
   udmi:
     name: Sequence tests

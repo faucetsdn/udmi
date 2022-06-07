@@ -18,6 +18,7 @@ import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
@@ -54,6 +55,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
+import udmi.schema.PointsetState;
 
 /**
  * Core class for running site-level validations of data streams.
@@ -89,11 +91,20 @@ public class Validator {
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
+  private static final String STATE_POINTSET = "state_pointset";
   private static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
+  private static final String CONFIG_CATEGORY = "config";
+  private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
+      SubType.EVENT.value(),
+      SubType.STATE.value());
+  private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
+      EVENT_POINTSET, PointsetEvent.class,
+      STATE_POINTSET, PointsetState.class
+  );
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -110,6 +121,7 @@ public class Validator {
   private String siteDir;
   private String deviceId;
   private MessagePublisher client;
+  private Map<String, JsonSchema> schemaMap;
 
   /**
    * Create validator for the given project id.
@@ -162,7 +174,12 @@ public class Validator {
     System.exit(0);
   }
 
-  private void setSiteDir(String siteDir) {
+  /**
+   * Set the site directory to use for this validation run.
+   *
+   * @param siteDir site model directory
+   */
+  public void setSiteDir(String siteDir) {
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
       this.siteDir = null;
@@ -179,6 +196,7 @@ public class Validator {
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
     metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
     metadataReportFile.delete();
   }
 
@@ -224,7 +242,12 @@ public class Validator {
     //    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
   }
 
-  private void setSchemaSpec(String schemaPath) {
+  /**
+   * Set the schema specification directory.
+   *
+   * @param schemaPath schema specification directory
+   */
+  public void setSchemaSpec(String schemaPath) {
     File schemaFile = new File(schemaPath).getAbsoluteFile();
     if (schemaFile.isFile()) {
       schemaRoot = schemaFile.getParentFile();
@@ -235,6 +258,7 @@ public class Validator {
     } else {
       throw new RuntimeException("Schema directory/file not found: " + schemaFile);
     }
+    schemaMap = getSchemaMap();
   }
 
   private Map<String, JsonSchema> getSchemaMap() {
@@ -257,8 +281,7 @@ public class Validator {
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
 
-    final Map<String, JsonSchema> schemaMap = getSchemaMap();
-    return (message, attributes) -> validateMessage(schemaMap, message, attributes);
+    return (message, attributes) -> validateMessage(message, attributes);
   }
 
   private void validatePubSub(String instName) {
@@ -312,8 +335,11 @@ public class Validator {
     return Arrays.stream(ignoreSpec.split(",")).collect(Collectors.toSet());
   }
 
+  protected void validateMessage(MessageBundle bundle) {
+    validateMessage(bundle.message, bundle.attributes);
+  }
+
   private void validateMessage(
-      Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
     if (validateUpdate(schemaMap, message, attributes)) {
@@ -352,16 +378,17 @@ public class Validator {
       return false;
     }
 
-    try {
-      String deviceId = attributes.get("deviceId");
-      Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
+    String deviceId = attributes.get("deviceId");
+    Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
 
+    try {
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
       }
 
       String schemaName = messageSchema(attributes);
       final ReportingDevice reportingDevice = getReportingDevice(deviceId);
+      boolean updated = false;
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
       }
@@ -370,7 +397,7 @@ public class Validator {
           "Processing device #%d/%d: %s/%s%n",
           processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
 
-      if (attributes.get("wasBase64").equals("true")) {
+      if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
 
@@ -390,7 +417,9 @@ public class Validator {
         System.err.println(e.getMessage());
         errorOut.println(e.getMessage());
         reportingDevice.addError(e);
+        updated = true;
       }
+
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
@@ -398,6 +427,7 @@ public class Validator {
         System.err.println("Error validating attributes: " + e.getMessage());
         processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorOut, e);
         reportingDevice.addError(e);
+        updated = true;
       }
 
       if (schemaMap.containsKey(schemaName)) {
@@ -408,25 +438,25 @@ public class Validator {
           System.err.println("Error validating schema: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
+          updated = true;
         }
       }
-
-      boolean updated = false;
 
       if (expectedDevices.isEmpty()) {
         // No devices configured, so don't check metadata.
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
-          if (EVENT_POINTSET.equals(schemaName)) {
-            PointsetEvent pointsetMessage =
-                OBJECT_MAPPER.convertValue(message, PointsetEvent.class);
-            updated = !reportingDevice.hasBeenValidated();
-            reportingDevice.validateMetadata(pointsetMessage);
+          if (CONTENT_VALIDATORS.containsKey(schemaName)) {
+            updated |= !reportingDevice.hasBeenValidated();
+            Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
+            Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
+            reportingDevice.validateMessage(messageObject);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
           processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
+          updated = true;
         }
       } else if (extraDevices.add(deviceId)) {
         updated = true;
@@ -446,17 +476,19 @@ public class Validator {
 
       return updated;
     } catch (Exception e) {
-      e.printStackTrace();
-      return false;
+      getReportingDevice(deviceId).addError(e);
+      return true;
     }
   }
 
   private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String category = attributes.get("category");
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    return subType == null
-        || SubType.EVENT.value().equals(subType)
+    boolean interestingFolderType = subType == null
+        || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
+    return !CONFIG_CATEGORY.equals(category) && interestingFolderType;
   }
 
   private File prepareDeviceOutDir(
@@ -723,6 +755,12 @@ public class Validator {
     public Set<String> pointsetDevices;
     public Set<String> base64Devices;
     public Map<String, ReportingDevice.MetadataDiff> errorDevices;
+  }
+
+  static class MessageBundle {
+
+    public Map<String, Object> message;
+    public Map<String, String> attributes;
   }
 
   class RelativeDownloader implements URIDownloader {
