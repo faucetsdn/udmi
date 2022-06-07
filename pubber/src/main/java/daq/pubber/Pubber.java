@@ -3,10 +3,10 @@ package daq.pubber;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -149,7 +149,7 @@ public class Pubber {
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
     } catch (UnrecognizedPropertyException e) {
-       throw new RuntimeException("Invalid Pubber arguments or options provided: " + e.getMessage());
+      throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
     } catch (Exception e) {
       throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
     }
@@ -351,10 +351,9 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options:%s",
+    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId,
-        configuration.options));
+        configuration.gatewayId));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
