@@ -36,7 +36,7 @@ describe('config.loadConfig', () => {
   });
 
   test('config has a mongo protocol entry', () => {
-    process.env.MONGO_PASSWORD = 'pwd';
+    process.env.MONGO_PWD = 'pwd';
     expect(loadConfig().mongoPassword).toBe('pwd');
   });
 

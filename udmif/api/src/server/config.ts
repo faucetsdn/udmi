@@ -22,7 +22,7 @@ export function loadConfig(): Configuration {
     logLevel: process.env.LOG_LEVEL,
     mongoProtocol: process.env.MONGO_PROTOCOL,
     mongoUsername: process.env.MONGO_USERNAME,
-    mongoPassword: process.env.MONGO_PASSWORD,
+    mongoPassword: process.env.MONGO_PWD,
     mongoHost: process.env.MONGO_HOST,
     mongoDatabase: process.env.MONGO_DATABASE,
     authClientId: process.env.AUTH_CLIENT_ID,
