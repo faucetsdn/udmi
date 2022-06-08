@@ -162,7 +162,7 @@ public abstract class SequenceValidator {
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
-  protected String configAcked;
+  protected boolean configAcked;
   protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
@@ -298,7 +298,7 @@ public abstract class SequenceValidator {
   @Before
   public void setUp() {
     deviceState = new State();
-    configAcked = null;
+    configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = "startup";
@@ -453,7 +453,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void queryState() {
+  protected void queryState() {
     client.publish(deviceId, Validator.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
@@ -473,7 +473,7 @@ public abstract class SequenceValidator {
     }
     deviceConfig = null;
     deviceState = null;
-    configAcked = null;
+    configAcked = false;
   }
 
   protected void updateConfig() {
@@ -761,7 +761,7 @@ public abstract class SequenceValidator {
     // The configAcked field is only defined if this state update comes from an
     // explicit query, otherwise it'll be null (which means 'unknown').
     if (converted.configAcked != null) {
-      configAcked = converted.configAcked;
+      configAcked = "true".equals(converted.configAcked);
     }
   }
 
