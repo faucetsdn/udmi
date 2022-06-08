@@ -1,5 +1,5 @@
 @use '@angular/material' as mat;
-@import 'variables';
+@use 'variables' as *;
 
 @include mat.core();
 
