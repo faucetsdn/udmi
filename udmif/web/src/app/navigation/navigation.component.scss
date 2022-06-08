@@ -1,4 +1,4 @@
-@import '../../styles/variables';
+@use '../../styles/variables' as *;
 
 .mat-toolbar.mat-primary {
   position: sticky;
