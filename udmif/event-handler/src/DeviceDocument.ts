@@ -28,7 +28,7 @@ export interface DeviceDocument {
   operational?: string;
   serialNumber?: string;
   firmware?: string;
-  tags?: [];
+  tags?: string[];
   points?: Point[];
 }
 
@@ -39,6 +39,8 @@ export class DeviceDocumentBuilder {
     this._document = {
       id: '',
       name: '',
+      tags: [],
+      points: [],
     };
   }
 

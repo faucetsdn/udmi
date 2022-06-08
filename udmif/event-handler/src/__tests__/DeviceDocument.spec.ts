@@ -12,6 +12,7 @@ const section: string = 'section';
 const site: string = 'site';
 const serialNumber: string = 'serialNumber';
 const points: Point[] = [];
+const tags: string[] = [];
 
 describe('DeviceDocument.DeviceDocumentBuilder', () => {
   let builder: DeviceDocumentBuilder;
@@ -32,7 +33,7 @@ describe('DeviceDocument.DeviceDocumentBuilder', () => {
   });
   test('Builder creates Device Document with id and name', () => {
     builder.id(id).name(name);
-    expect(builder.build()).toEqual({ id, name });
+    expect(builder.build()).toEqual({ id, name, tags, points });
   });
   test('Builder allows optional attributes', () => {
     builder
@@ -59,6 +60,7 @@ describe('DeviceDocument.DeviceDocumentBuilder', () => {
       site,
       serialNumber,
       points,
+      tags
     });
   });
 });

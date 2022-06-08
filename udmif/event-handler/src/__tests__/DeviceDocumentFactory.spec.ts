@@ -16,21 +16,28 @@ const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceNumId: id, subFolder: SY
 const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceNumId: id, subFolder: POINTSET_SUB_FOLDER };
 
 describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
+
+  const points: Point[] = [];
+  const tags: string[] = [];
+
   test('creates a default device document', () => {
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id' };
+    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', tags, points };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
-    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', lastPayload: timestamp };
+    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', lastPayload: timestamp, tags, points };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
 
 describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
+  const tags: string[] = [];
+  const points: Point[] = [];
+
   test('creates a device document with system state', () => {
     const make: string = 'make-a';
     const model: string = 'model-a';
@@ -47,7 +54,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
         serial_no: serialNumber,
       },
     };
-    const expectedDeviceDocument: DeviceDocument = { name, id, make, model, operational, serialNumber, firmware };
+    const expectedDeviceDocument: DeviceDocument = { name, id, make, model, operational, serialNumber, firmware, tags, points };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
@@ -61,7 +68,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
         location: { section, site },
       },
     };
-    const expectedDeviceDocument: DeviceDocument = { name, id, section, site };
+    const expectedDeviceDocument: DeviceDocument = { name, id, section, site, tags, points };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
@@ -73,6 +80,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
   const fdps = 'filter_differential_pressure_sensor';
 
   let existingPoints: Point[];
+  const state: string = '';
 
   beforeEach(() => {
     existingPoints = [];
@@ -94,12 +102,12 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, value: '78', meta: { code: faps } },
-      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp } },
-      { name: fdps, id: fdps, value: '82', meta: { code: fdps } },
+      { name: faps, id: faps, value: '78', meta: { code: faps }, state },
+      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp }, state },
+      { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+    const expectedDeviceDocument: DeviceDocument = { name, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
@@ -127,12 +135,12 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, units: NO_UNITS, meta: { code: faps, units: NO_UNITS } },
-      { name: fdpsp, id: fdpsp, units: 'Bars', meta: { code: fdpsp, units: 'Bars' } },
-      { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' } },
+      { name: faps, id: faps, units: NO_UNITS, meta: { code: faps, units: NO_UNITS }, state },
+      { name: fdpsp, id: fdpsp, units: 'Bars', meta: { code: fdpsp, units: 'Bars' }, state },
+      { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' }, state },
     ];
 
-    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+    const expectedDeviceDocument: DeviceDocument = { name, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
@@ -153,11 +161,11 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, meta: { code: faps } },
-      { name: fdpsp, id: fdpsp, meta: { code: fdpsp } },
-      { name: fdps, id: fdps, meta: { code: fdps } },
+      { name: faps, id: faps, meta: { code: faps }, state },
+      { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
+      { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+    const expectedDeviceDocument: DeviceDocument = { name, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
@@ -177,11 +185,11 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, meta: { code: faps } },
-      { name: fdpsp, id: fdpsp, meta: { code: fdpsp } },
-      { name: fdps, id: fdps, meta: { code: fdps } },
+      { name: faps, id: faps, meta: { code: faps }, state },
+      { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
+      { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+    const expectedDeviceDocument: DeviceDocument = { name, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
@@ -208,12 +216,12 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, value: '78', units: 'Bars', meta: { code: faps, units: 'Bars' } },
-      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp } },
-      { name: fdps, id: fdps, value: '82', meta: { code: fdps } },
+      { name: faps, id: faps, value: '78', units: 'Bars', meta: { code: faps, units: 'Bars' }, state },
+      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp }, state },
+      { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDeviceDocument: DeviceDocument = { name, id, points: expectedPoints };
+    const expectedDeviceDocument: DeviceDocument = { name, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);

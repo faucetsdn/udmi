@@ -26,7 +26,7 @@ describe('Points.PointBuilder', () => {
   });
   test('Builder creates Device Document with id and name', () => {
     builder.id(id).name(name);
-    expect(builder.build()).toEqual({ id, name });
+    expect(builder.build()).toEqual({ id, name, state: '' });
   });
   test('Builder allows optional attributes', () => {
     builder.id(id).name(name).state(state).units(units).value(value);
@@ -39,6 +39,7 @@ describe('Points.PointBuilder', () => {
       name: 'filter_alarm_pressure_status',
       units: 'Degrees-Celsius',
       meta: { code: 'filter_alarm_pressure_status', units: 'Degrees-Celsius' },
+      state: ''
     });
   });
 });

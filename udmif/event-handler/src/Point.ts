@@ -31,6 +31,7 @@ export class PointBuilder {
     this._document = {
       id: '',
       name: '',
+      state: '',
     };
   }
 
