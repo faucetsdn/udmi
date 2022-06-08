@@ -31,6 +31,9 @@ public class ConfigValidator extends SequenceValidator {
           + getTimestamp(cleanDate(lastConfig)));
       return dateEquals(expectedConfig, lastConfig);
     });
+    untilTrue("config acked", () -> {
+      return "true".equals(deviceState.configAcked);
+    });
   }
 
   @Test

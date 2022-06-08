@@ -13,7 +13,7 @@
     <option name="TEST_OBJECT" value="method" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <envs>
-      <env name="VALIDATOR_CONFIG" value="udmi_site_model/validator/validator.json" />
+      <env name="VALIDATOR_CONFIG" value="/tmp/validator_config.json" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />

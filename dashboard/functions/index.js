@@ -227,18 +227,21 @@ function udmi_query_states(attributes) {
     name: formattedName
   };
 
-  return iotClient.listDeviceConfigVersions(request).then(deviceConfigs => {
-    const lastConfig = deviceConfigs[0].deviceConfigs[0];
+  const queries = [
+    iotClient.listDeviceConfigVersions(request),
+    iotClient.getDevice(request)
+  ];
+
+  return Promise.all(queries).then(([config, device]) => {
+    const lastConfig = config[0].deviceConfigs[0];
     const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
     const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
-    attributes.configAcked = String(deviceAckTime >= cloudUpdateTime);
-    console.log('TAP', cloudUpdateTime, deviceAckTime, attributes.configAcked);
-    return iotClient.getDevice(request).then(deviceData => {
-      const stateBinaryData = deviceData[0].state.binaryData;
-      const stateString = stateBinaryData.toString();
-      const msgObject = JSON.parse(stateString);
-      return process_state_update(attributes, msgObject);
-    });
+    const stateBinaryData = device[0].state.binaryData;
+    const stateString = stateBinaryData.toString();
+    const msgObject = JSON.parse(stateString);
+    msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
+    console.log('TAP', JSON.stringify(msgObject));
+    return process_state_update(attributes, msgObject);
   });
 }
 

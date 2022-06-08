@@ -101,7 +101,7 @@ public abstract class SequenceValidator {
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
       "config", Config.class,
-      "state", State.class
+      "state", AugmentedState.class
   );
   private static final String UDMI_VERSION = Objects.requireNonNullElse(
       System.getenv("UDMI_VERSION"), "unknown");
@@ -161,7 +161,7 @@ public abstract class SequenceValidator {
   public Timeout globalTimeout = new Timeout(UDMI_TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
-  protected State deviceState;
+  protected AugmentedState deviceState;
   protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
@@ -296,7 +296,7 @@ public abstract class SequenceValidator {
    */
   @Before
   public void setUp() {
-    deviceState = new State();
+    deviceState = new AugmentedState();
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = "startup";
@@ -740,9 +740,9 @@ public abstract class SequenceValidator {
         info("Updated config with timestamp " + getTimestamp(config.timestamp));
         debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
         recordDeviceConfig();
-      } else if (converted instanceof State) {
+      } else if (converted instanceof AugmentedState) {
         debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
-        deviceState = (State) converted;
+        deviceState = (AugmentedState) converted;
         validSerialNo();
         info("Updated state has last_config " + getTimestamp(
             ((State) converted).system.last_config));
