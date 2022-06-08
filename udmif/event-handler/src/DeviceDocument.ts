@@ -40,7 +40,6 @@ export class DeviceDocumentBuilder {
       id: '',
       name: '',
       tags: [],
-      points: [],
     };
   }
 

@@ -22,14 +22,14 @@ describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
 
   test('creates a default device document', () => {
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', tags, points };
+    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', tags };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
-    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', lastPayload: timestamp, tags, points };
+    const expectedDeviceDocument: DeviceDocument = { name: 'name', id: 'id', lastPayload: timestamp, tags };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
@@ -54,7 +54,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
         serial_no: serialNumber,
       },
     };
-    const expectedDeviceDocument: DeviceDocument = { name, id, make, model, operational, serialNumber, firmware, tags, points };
+    const expectedDeviceDocument: DeviceDocument = { name, id, make, model, operational, serialNumber, firmware, tags };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 
@@ -68,7 +68,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
         location: { section, site },
       },
     };
-    const expectedDeviceDocument: DeviceDocument = { name, id, section, site, tags, points };
+    const expectedDeviceDocument: DeviceDocument = { name, id, section, site, tags };
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
   });
 });
