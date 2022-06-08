@@ -161,7 +161,8 @@ public abstract class SequenceValidator {
   public Timeout globalTimeout = new Timeout(UDMI_TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
   protected String extraField;
   protected Config deviceConfig;
-  protected AugmentedState deviceState;
+  protected State deviceState;
+  protected String configAcked;
   protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
@@ -296,7 +297,8 @@ public abstract class SequenceValidator {
    */
   @Before
   public void setUp() {
-    deviceState = new AugmentedState();
+    deviceState = new State();
+    configAcked = null;
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = "startup";
@@ -471,6 +473,7 @@ public abstract class SequenceValidator {
     }
     deviceConfig = null;
     deviceState = null;
+    configAcked = null;
   }
 
   protected void updateConfig() {
@@ -742,15 +745,23 @@ public abstract class SequenceValidator {
         recordDeviceConfig();
       } else if (converted instanceof AugmentedState) {
         debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
-        deviceState = (AugmentedState) converted;
+        deviceState = (State) converted;
+        updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        info("Updated state has last_config " + getTimestamp(
-            ((State) converted).system.last_config));
+        info("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
+    }
+  }
+
+  private void updateConfigAcked(AugmentedState converted) {
+    // The configAcked field is only defined if this state update comes from an
+    // explicit query, otherwise it'll be null (which means 'unknown').
+    if (converted.configAcked != null) {
+      configAcked = converted.configAcked;
     }
   }
 
