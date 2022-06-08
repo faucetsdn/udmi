@@ -173,10 +173,14 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   attributes.deviceId = parts[1];
   attributes.subFolder = parts[2];
   attributes.subType = parts[3];
-  console.log('Reflect', attributes.deviceId, attributes.subType, attributes.subFolder);
+  console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType, attributes.subFolder);
 
   return registry_promise.then(() => {
     attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
+    if (!attributes.cloudRegion) {
+      console.log('No cloud region found for target registry', attributes.deviceRegistryId);
+      return null;
+    }
     if (attributes.subFolder == QUERY_FOLDER) {
       return udmi_query_event(attributes, msgObject);
     }
@@ -223,11 +227,18 @@ function udmi_query_states(attributes) {
     name: formattedName
   };
 
-  return iotClient.getDevice(request).then(deviceData => {
-    const stateBinaryData = deviceData[0].state.binaryData;
-    const stateString = stateBinaryData.toString();
-    const msgObject = JSON.parse(stateString);
-    return process_state_update(attributes, msgObject);
+  return iotClient.listDeviceConfigVersions(request).then(deviceConfigs => {
+    const lastConfig = deviceConfigs[0].deviceConfigs[0];
+    const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
+    const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
+    attributes.configAcked = String(deviceAckTime >= cloudUpdateTime);
+    console.log('TAP', cloudUpdateTime, deviceAckTime, attributes.configAcked);
+    return iotClient.getDevice(request).then(deviceData => {
+      const stateBinaryData = deviceData[0].state.binaryData;
+      const stateString = stateBinaryData.toString();
+      const msgObject = JSON.parse(stateString);
+      return process_state_update(attributes, msgObject);
+    });
   });
 }
 

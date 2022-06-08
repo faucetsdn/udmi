@@ -7,8 +7,6 @@ class SystemState:
   """Generated schema class"""
 
   def __init__(self):
-    self.timestamp = None
-    self.version = None
     self.last_config = None
     self.operational = None
     self.serial_no = None
@@ -22,8 +20,6 @@ class SystemState:
     if not source:
       return None
     result = SystemState()
-    result.timestamp = source.get('timestamp')
-    result.version = source.get('version')
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
     result.serial_no = source.get('serial_no')
@@ -51,10 +47,6 @@ class SystemState:
 
   def to_dict(self):
     result = {}
-    if self.timestamp:
-      result['timestamp'] = self.timestamp # 5
-    if self.version:
-      result['version'] = self.version # 5
     if self.last_config:
       result['last_config'] = self.last_config # 5
     if self.operational:

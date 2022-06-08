@@ -5,16 +5,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "timestamp": {
-      "description": "RFC 3339 timestamp the configuration was generated",
-      "type": "string",
-      "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
-    },
-    "version": {
-      "description": "Version of the UDMI schema",
-      "type": "string"
-    },
     "last_config": {
       "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)",
       "type": "string",
