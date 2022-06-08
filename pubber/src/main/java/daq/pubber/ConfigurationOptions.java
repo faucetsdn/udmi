@@ -5,7 +5,7 @@ package daq.pubber;
  */
 public class ConfigurationOptions {
   public Boolean noHardware = false;
-  public Boolean extraPoint = false;
-  public Boolean extraField = false;
+  public String extraPoint = "";
+  public String extraField = "";
 
 }

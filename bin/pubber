@@ -30,17 +30,15 @@ else
     for option in $*; do
         if [[ $option == *"="* ]]; then
             k=$(echo $option | cut -d'=' -f1)
-            v=$(echo $option | cut -d'=' -f2)
-            if ! [[ $v =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-                v="\"$v\""
-            fi
+            v="\"$(echo $option | cut -d'=' -f2)\""
         else
             k=$option
             v=true
         fi
         printf -v options_json '%s"%s":%s,' "$options_json" "$k" "$v"
     done
-    options_json="{${options_json%?}}"
+    options_json="{${options_json%,}}" 
+
     cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
     
     cat <<EOF > /tmp/pubber_config.json

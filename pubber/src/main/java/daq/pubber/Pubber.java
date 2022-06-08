@@ -3,7 +3,6 @@ package daq.pubber;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -77,7 +76,6 @@ public class Pubber {
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -375,12 +373,12 @@ public class Pubber {
     deviceState.system.last_config = new Date(0);
 
     // Pubber runtime options
-    if (configuration.options.extraField) {
-      devicePoints.extraField = "extra_field";
+    if (!configuration.options.extraField.isEmpty()) {
+      devicePoints.extraField = configuration.options.extraField;
     }
 
-    if (configuration.options.extraPoint) {
-      addPoint(makePoint("extra_point",
+    if (!configuration.options.extraPoint.isEmpty()) {
+      addPoint(makePoint(configuration.options.extraPoint,
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
