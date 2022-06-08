@@ -31,7 +31,7 @@ describe('config.loadConfig', () => {
   });
 
   test('config has a mongo protocol entry', () => {
-    process.env.MONGO_USERNAME = 'name';
+    process.env.MONGO_USER = 'name';
     expect(loadConfig().mongoUsername).toBe('name');
   });
 
