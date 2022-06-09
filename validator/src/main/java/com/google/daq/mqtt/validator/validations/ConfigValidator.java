@@ -31,9 +31,10 @@ public class ConfigValidator extends SequenceValidator {
           + getTimestamp(cleanDate(lastConfig)));
       return dateEquals(expectedConfig, lastConfig);
     });
+  }
 
-    // The configAcked update only comes from an explicit state query.
-    queryState();
+  @Test
+  public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
