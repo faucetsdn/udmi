@@ -20,9 +20,13 @@ describe('config.loadConfig', () => {
     expect(loadConfig().projectId).toBe('test');
   });
 
-  test('config has a log level entry', () => {
-    process.env.LOG_LEVEL = 'info';
+  test('config has a default log level entry of info', () => {
     expect(loadConfig().logLevel).toBe('info');
+  });
+
+  test('config has a log level entry', () => {
+    process.env.LOG_LEVEL = 'debug';
+    expect(loadConfig().logLevel).toBe('debug');
   });
 
   test('config has a mongo protocol entry', () => {
@@ -48,5 +52,14 @@ describe('config.loadConfig', () => {
   test('config has a mongo protocol entry', () => {
     process.env.MONGO_DATABASE = 'db';
     expect(loadConfig().mongoDatabase).toBe('db');
+  });
+
+  test('config has default client ids of empty array', () => {
+    expect(loadConfig().clientIds).toEqual([]);
+  });
+
+  test('config has a client ids with values', () => {
+    process.env.CLIENT_IDS = '1,2,3';
+    expect(loadConfig().clientIds).toEqual(['1', '2', '3']);
   });
 });
