@@ -369,7 +369,7 @@ public class Pubber {
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
     deviceState.system.software = new HashMap<>();
-    deviceState.system.software.put("firmware", "v1");    
+    deviceState.system.software.put("firmware", "v1");
     deviceState.system.last_config = new Date(0);
 
     // Pubber runtime options
