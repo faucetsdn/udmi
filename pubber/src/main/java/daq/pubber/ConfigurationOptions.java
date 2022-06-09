@@ -8,6 +8,6 @@ public class ConfigurationOptions {
   public Boolean noConfigAck = false;
   public String extraPoint = "";
   public String extraField = "";
-  public String missingPoint = ""
+  public String missingPoint = "";
 
 }
