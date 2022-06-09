@@ -18,6 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "timestamp",
+    "version",
     "last_config",
     "operational",
     "serial_no",
@@ -29,6 +31,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class SystemState {
 
+    /**
+     * RFC 3339 timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public java.lang.String version;
     /**
      * Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)
      * (Required)
@@ -87,7 +103,9 @@ public class SystemState {
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
         result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.last_config == null)? 0 :this.last_config.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
@@ -103,7 +121,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }
