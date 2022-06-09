@@ -81,7 +81,7 @@ public class Registrar {
   private static final int RUNNER_THREADS = 25;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
-  private final Map<String, JsonSchema> schemas = new HashMap<>();
+  protected final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
   private File siteDir;
@@ -218,7 +218,7 @@ public class Registrar {
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
   }
 
-  private void setSitePath(String sitePath) {
+  protected void setSitePath(String sitePath) {
     Preconditions.checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
     summaryFile = new File(siteDir, REGISTRATION_SUMMARY_JSON);
@@ -645,7 +645,7 @@ public class Registrar {
     return localDevices;
   }
 
-  private void setProjectId(String projectId) {
+  protected void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
     }
@@ -653,7 +653,7 @@ public class Registrar {
     initializeCloudProject();
   }
 
-  private void setToolRoot(String toolRoot) {
+  protected void setToolRoot(String toolRoot) {
     schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
