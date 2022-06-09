@@ -27,8 +27,10 @@ import udmi.schema.PointsetState;
 public class ValidatorTest {
 
   public static final String FILTER_ALARM_PRESSURE_STATUS = "filter_alarm_pressure_status";
-  public static final String FILTER_DIFF_PRESS_SETPOINT = "filter_differential_pressure_setpoint";
-  public static final String FILTER_DIFF_PRESS_SENSOR = "filter_differential_pressure_sensor";
+  public static final String FILTER_DIFFERENTIAL_PRESSURE_SETPOINT =
+      "filter_differential_pressure_setpoint";
+  public static final String FILTER_DIFFERENTIAL_PRESSURE_SENSOR =
+      "filter_differential_pressure_sensor";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
@@ -99,8 +101,8 @@ public class ValidatorTest {
     pointsetEvent.version = UDMI_VERSION;
     HashMap<String, PointPointsetEvent> points = new HashMap<>();
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventPoint(Boolean.TRUE));
-    points.put(FILTER_DIFF_PRESS_SETPOINT, pointsetEventPoint(20));
-    points.put(FILTER_DIFF_PRESS_SENSOR, pointsetEventPoint("yes"));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventPoint(20));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventPoint("yes"));
     pointsetEvent.points = points;
     return pointsetEvent;
   }
@@ -112,8 +114,8 @@ public class ValidatorTest {
     HashMap<String, PointPointsetState> points = new HashMap<>();
     pointsetState.points = points;
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetStatePoint());
-    points.put(FILTER_DIFF_PRESS_SETPOINT, pointsetStatePoint());
-    points.put(FILTER_DIFF_PRESS_SENSOR, pointsetStatePoint());
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetStatePoint());
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetStatePoint());
     return pointsetState;
   }
 
