@@ -27,8 +27,10 @@ import udmi.schema.PointsetState;
 public class ValidatorTest {
 
   public static final String FILTER_ALARM_PRESSURE_STATUS = "filter_alarm_pressure_status";
-  public static final String FILTER_DIFFERENTIAL_PRESSURE_SETPOINT = "filter_differential_pressure_setpoint";
-  public static final String FILTER_DIFFERENTIAL_PRESSURE_SENSOR = "filter_differential_pressure_sensor";
+  public static final String FILTER_DIFFERENTIAL_PRESSURE_SETPOINT =
+      "filter_differential_pressure_setpoint";
+  public static final String FILTER_DIFFERENTIAL_PRESSURE_SENSOR =
+      "filter_differential_pressure_sensor";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
@@ -121,6 +123,7 @@ public class ValidatorTest {
     return new PointPointsetState();
   }
 
+  @SuppressWarnings("ParameterName")
   private PointPointsetEvent pointsetEventPoint(Object present_value) {
     PointPointsetEvent pointPointsetEvent = new PointPointsetEvent();
     pointPointsetEvent.present_value = present_value;
