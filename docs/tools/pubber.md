@@ -25,15 +25,19 @@ Pubber is run from the CLI within the UDMI directory.
 ### Options
 
 The following parameters are currently supported from the CLI:
-* `extra_field` - adds an extra schema invalidating field to pointset events
+* `extraField=<name>` - adds an extra schema invalidating field to pointset events
   (will trigger validation schema error)
-* `extra_point` - adds an extra point to the device which does not exist in
-  device's metadata (will trigger validation additional point error)
-* `no_hardware` - omits the `system.hardware` field from state messages (will
+* `extraPoint=<name>` - adds an extra point with the given name to the device
+  which does not exist in device's metadata with a random value (will trigger
+  validation additional point error)
+* `missingPoint=<name>` - removes the point with the given name (if exists) from
+  the device's active pointset at initialization  (will trigger validation
+  missing point)
+* `noHardware` - omits the `system.hardware` field from state messages (will
   trigger validation error, missing required field)
+* `noConfigAck` - subscribes to the `config` topic with a QoS of 0, therefore
+  will not send PUBACK's for config messages
 
-Values can be assigned to the parameters e.g. 
-`bin/pubber SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO extra_point=name_of_point`
 
 More advanced options can be set by by calling pubber directly with the path a
 configuration file: `pubber/bin/run path/to/config.json`
