@@ -373,16 +373,16 @@ public class Pubber {
     deviceState.system.last_config = new Date(0);
 
     // Pubber runtime options
-    if (!configuration.options.extraField.isEmpty()) {
+    if (configuration.options.extraField != null) {
       devicePoints.extraField = configuration.options.extraField;
     }
 
-    if (!configuration.options.extraPoint.isEmpty()) {
+    if (configuration.options.extraPoint != null) {
       addPoint(makePoint(configuration.options.extraPoint,
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
-    if (configuration.options.noHardware) {
+    if (!configuration.options.noHardware) {
       deviceState.system.hardware = null;
     }
 
