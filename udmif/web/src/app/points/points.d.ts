@@ -9,7 +9,7 @@ export interface PointModel {
 export type Point = Partial<PointModel>;
 
 export type PointsQueryResponse = {
-  points: Point[] | null;
+  points?: Point[];
 };
 
 export type PointsQueryVariables = {

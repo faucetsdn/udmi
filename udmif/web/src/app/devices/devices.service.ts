@@ -41,8 +41,7 @@ export class DevicesService {
   ): QueryRef<DevicesQueryResponse, DevicesQueryVariables> {
     return this.apollo.watchQuery<DevicesQueryResponse, DevicesQueryVariables>({
       query: GET_DEVICES,
-      fetchPolicy: 'network-only',
-      returnPartialData: true,
+      fetchPolicy: 'cache-and-network',
       variables: {
         searchOptions: {
           offset,

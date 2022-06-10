@@ -16,7 +16,7 @@ interface DeviceModel {
 export type Device = Partial<DeviceModel>;
 
 export type DeviceQueryResponse = {
-  device: Device | null;
+  device?: Device;
 };
 
 export type DeviceQueryVariables = {
