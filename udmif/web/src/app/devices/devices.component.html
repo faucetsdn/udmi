@@ -5,7 +5,15 @@
   [handleFilterChange]="filterData"
 ></app-search-filter>
 <div class="table-controls">
-  <span>{{ totalCount }} Devices</span>
+  <span>{{ totalFilteredCount | i18nPlural: { '=0': 'No Devices', '=1': '# Device', other: '# Devices' } }}</span>
+  <span class="grow"></span>
+  <mat-icon
+    *ngIf="filter"
+    class="filter-icon"
+    [matBadge]="filterCount"
+    matTooltip="{{ filterCount | i18nPlural: { '=1': '# filter applied', other: '# filters applied' } }}"
+    >filter_list</mat-icon
+  >
   <mat-paginator
     [length]="totalFilteredCount"
     [pageSize]="pageSize"

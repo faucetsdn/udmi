@@ -31,8 +31,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
   currentPage: number = 0;
   pageSize: number = 10;
   pageSizeOptions: number[] = [10, 25, 50, 100];
-  sortOptions: SortOptions | undefined;
-  filter: string | undefined;
+  sortOptions?: SortOptions;
+  filter?: string;
+  filterCount: number = 0;
   searchFields: Record<string, string> = {
     name: 'getDeviceNames',
     make: 'getDeviceMakes',
@@ -77,7 +78,8 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
   filterData = (filters: SearchFilterItem[]): void => {
     // arrow to hold onto this
-    this.filter = filters.length ? JSON.stringify(filters) : undefined; // don't send filter field if no filter
+    this.filterCount = filters.length;
+    this.filter = this.filterCount ? JSON.stringify(filters) : undefined; // don't send filter field if no filter
 
     this._refetch();
   };

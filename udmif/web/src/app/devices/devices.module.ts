@@ -8,6 +8,9 @@ import { MatSortModule } from '@angular/material/sort';
 import { SearchFilterModule } from '../search-filter/search-filter.module';
 import { MatButtonModule } from '@angular/material/button';
 import { PipesModule } from '../common/pipes/pipes.module';
+import { MatIconModule } from '@angular/material/icon';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   declarations: [DevicesComponent],
@@ -20,6 +23,9 @@ import { PipesModule } from '../common/pipes/pipes.module';
     SearchFilterModule,
     MatButtonModule,
     PipesModule,
+    MatIconModule,
+    MatBadgeModule,
+    MatTooltipModule,
   ],
 })
 export class DevicesModule {}

@@ -29,6 +29,16 @@ a {
 }
 
 // Pagination overrides.
+.mat-paginator {
+  background: transparent;
+
+  .mat-paginator-container {
+    padding: 0 0 0 $spacing * 2;
+  }
+  .mat-paginator-range-label {
+    margin: 0 $spacing;
+  }
+}
 .mat-paginator,
 .mat-paginator-page-size .mat-select-trigger {
   font-size: inherit;
