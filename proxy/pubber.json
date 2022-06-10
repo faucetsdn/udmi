@@ -9,6 +9,6 @@
   "gatewayId": "GAT-123",
   "deviceId": "SNS-4",
   "options": {
-    "extraField": true
+    "extraField": "1234"
   }
 }
