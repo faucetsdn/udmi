@@ -13,7 +13,6 @@ Copy the `env.template.js` file in the `/src` folder and rename the copy to `env
     ```
     npm install -g @angular/cli
     ```
-
 2.  Install the project dependencies;
     ```
     npm install

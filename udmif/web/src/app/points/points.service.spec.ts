@@ -24,15 +24,22 @@ describe('PointsService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should return the points', (done) => {
-    const mockDeviceResponse: PointsQueryResponse = {
-      points: [],
+  it('should return the points', () => {
+    const mockPointsResponse: PointsQueryResponse = {
+      points: [
+        {
+          id: '123',
+          name: 'Zone Temperature',
+          value: '74.93932',
+          units: '°C',
+          state: '',
+        },
+      ],
     };
 
     // Make some assertion about the result for once it's fulfilled.
-    service.getPoints('123').subscribe(({ data }) => {
-      expect(data).toEqual(mockDeviceResponse);
-      done();
+    service.getPoints('device-id-123').subscribe(({ data }) => {
+      expect(data).toEqual(mockPointsResponse);
     });
 
     // The following `expectOne()` will match the operation's document.
@@ -42,12 +49,12 @@ describe('PointsService', () => {
 
     // Assert the correct search options were sent.
     expect(op.operation.variables).toEqual({
-      id: '123',
+      deviceId: 'device-id-123',
     });
 
     // Respond with mock data, causing Observable to resolve.
     op.flush({
-      data: mockDeviceResponse,
+      data: mockPointsResponse,
     });
   });
 });

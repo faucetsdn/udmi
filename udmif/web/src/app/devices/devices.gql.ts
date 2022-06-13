@@ -1,17 +1,25 @@
 import { gql } from 'apollo-angular';
-import { fragments } from '../device/device.gql';
 
 export const GET_DEVICES = gql`
   query GetDevices($searchOptions: SearchOptions!) {
     devices(searchOptions: $searchOptions) {
       devices {
-        ...Device
+        id
+        name
+        make
+        model
+        site
+        section
+        lastPayload
+        operational
+        firmware
+        serialNumber
+        tags
       }
       totalCount
       totalFilteredCount
     }
   }
-  ${fragments.device}
 `;
 
 export const GET_DEVICE_NAMES = gql`

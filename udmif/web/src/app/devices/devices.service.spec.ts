@@ -24,7 +24,7 @@ describe('DevicesService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should return the devices', (done) => {
+  it('should return the devices', () => {
     const mockDevicesResponse: DevicesQueryResponse = {
       devices: {
         devices: [
@@ -48,9 +48,8 @@ describe('DevicesService', () => {
     };
 
     // Make some assertion about the result for once it's fulfilled.
-    service.getDevices().subscribe(({ data }) => {
+    service.getDevices().valueChanges.subscribe(({ data }) => {
       expect(data).toEqual(mockDevicesResponse);
-      done();
     });
 
     // The following `expectOne()` will match the operation's document.
@@ -61,8 +60,10 @@ describe('DevicesService', () => {
     // Assert the correct search options were sent.
     expect(op.operation.variables).toEqual({
       searchOptions: {
+        offset: undefined,
         batchSize: 10,
-        offset: 0,
+        sortOptions: undefined,
+        filter: undefined,
       },
     });
 

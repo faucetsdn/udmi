@@ -12,12 +12,14 @@ export interface SortOptions {
   field: string;
 }
 
+export interface DevicesResponse {
+  devices?: Device[];
+  totalCount: number;
+  totalFilteredCount: number;
+}
+
 export type DevicesQueryResponse = {
-  devices: {
-    devices: Device[] | null;
-    totalCount: number;
-    totalFilteredCount: number;
-  } | null;
+  devices?: DevicesResponse;
 };
 
 export type DevicesQueryVariables = {

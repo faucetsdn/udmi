@@ -1,7 +1,7 @@
 import { Component, ElementRef, Injector, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { startCase, findIndex, some, get } from 'lodash-es';
+import { startCase, findIndex, some } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
@@ -17,7 +17,6 @@ const services: any = {
   inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
-  providers: [DevicesService], // scoped instances
 })
 export class SearchFilterComponent implements OnInit {
   serviceName!: string;
@@ -41,7 +40,7 @@ export class SearchFilterComponent implements OnInit {
       startWith(''),
       switchMap((term) =>
         iif(
-          () => this.filterEntry.operator === '=' && !some(this.allItems, (item) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
+          () => this.filterEntry.operator === '=' && !some(this.allItems, (item: ChipItem) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
           <Observable<ChipItem[]>>this.injector
             .get<any>(services[this.serviceName])
