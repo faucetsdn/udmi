@@ -1,15 +1,15 @@
+@use '../../styles/variables' as *;
+
 .table-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
-  .mat-paginator {
-    display: inline-block;
-    background: transparent;
+  .grow {
+    flex: 1;
   }
 
-  .mat-paginator-container {
-    padding-right: 0;
+  .filter-icon {
+    color: $icon-default;
   }
 }
 
