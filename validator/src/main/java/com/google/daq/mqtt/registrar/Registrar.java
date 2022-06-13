@@ -49,7 +49,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 
@@ -550,11 +549,16 @@ public class Registrar {
 
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
     Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
+    initializeSettings(localDevices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     return localDevices;
+  }
+
+  private void initializeSettings(Map<String, LocalDevice> localDevices) {
+    localDevices.values().forEach(LocalDevice::initializeSettings);
   }
 
   private void validateSamples(Map<String, LocalDevice> localDevices) {

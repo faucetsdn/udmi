@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -178,6 +179,7 @@ class LocalDevice {
 
   public static final String INVALID_METADATA_HASH = "INVALID";
 
+  public static final String EXCEPTION_INITIALIZING = "Initializing";
   public static final String EXCEPTION_VALIDATING = "Validating";
   public static final String EXCEPTION_LOADING = "Loading";
   public static final String EXCEPTION_READING = "Reading";
@@ -458,17 +460,17 @@ class LocalDevice {
   }
 
   CloudDeviceSettings getSettings() {
-    try {
-      if (settings != null) {
-        return settings;
-      }
+    return Preconditions.checkNotNull(settings, "Device settings not initialized");
+  }
 
+  void initializeSettings() {
+    try {
       settings = new CloudDeviceSettings();
       settings.credentials = deviceCredentials;
       settings.generation = generation;
 
       if (metadata == null) {
-        return settings;
+        return;
       }
 
       settings.updated = getUpdatedTimestamp();
@@ -477,9 +479,8 @@ class LocalDevice {
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
-      return settings;
     } catch (Exception e) {
-      throw new RuntimeException("While getting settings for device " + deviceId, e);
+      captureError(EXCEPTION_INITIALIZING, e);
     }
   }
 
@@ -526,8 +527,9 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      Config config = deviceConfigObject();
-      return OBJECT_MAPPER.writeValueAsString(config);
+      JsonNode configJson = OBJECT_MAPPER.valueToTree(deviceConfigObject());
+      new MessageDowngrader("config", configJson).downgrade(metadata.version);
+      return OBJECT_MAPPER.writeValueAsString(configJson);
     } catch (Exception e) {
       throw new RuntimeException("While converting device config to string", e);
     }
@@ -728,12 +730,15 @@ class LocalDevice {
   }
 
   public void writeConfigFile() {
-    File configFile = new File(outDir, GENERATED_CONFIG_JSON);
-    try (OutputStream outputStream = new FileOutputStream(configFile)) {
-      outputStream.write(getSettings().config.getBytes());
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
+    String config = getSettings().config;
+    if (config != null) {
+      File configFile = new File(outDir, GENERATED_CONFIG_JSON);
+      try (OutputStream outputStream = new FileOutputStream(configFile)) {
+        outputStream.write(config.getBytes());
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
+      }
     }
   }
 
