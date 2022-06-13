@@ -1,5 +1,5 @@
 <mat-toolbar color="primary" *ngIf="isLoggedIn | async">
-  <h2>UDMI</h2>
+  <h1>UDMI</h1>
   <nav role="navigation" aria-label="Main navigation">
     <a mat-button routerLink="/devices" routerLinkActive="active">Devices</a>
   </nav>
@@ -8,7 +8,7 @@
     <span>{{ displayName | async }}</span>
     <mat-icon class="drop-down-icon">arrow_drop_down</mat-icon>
   </button>
-  <mat-menu #userMenu="matMenu">
+  <mat-menu #userMenu="matMenu" xPosition="before">
     <button (click)="logout()" mat-menu-item>
       <mat-icon>power_settings_new</mat-icon>
       <span>Logout</span>
