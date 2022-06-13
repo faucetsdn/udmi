@@ -30,6 +30,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.MessageUpgrader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -204,6 +205,7 @@ class LocalDevice {
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
+  private JsonNode baseVersion;
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
@@ -293,18 +295,28 @@ class LocalDevice {
 
   private Metadata readMetadata() {
     File metadataFile = new File(deviceDir, METADATA_JSON);
+    final JsonNode instance;
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
-      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
-    } catch (ProcessingException | ValidationException e) {
-      exceptionMap.put(EXCEPTION_VALIDATING, e);
+      instance = OBJECT_MAPPER.readTree(targetStream);
+      baseVersion = instance.get("version");
+      new MessageUpgrader("metadata", instance).upgrade();
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
+      return null;
     }
+
     try {
+      schemas.get(METADATA_JSON).validate(instance);
+    } catch (ProcessingException | ValidationException e) {
+      exceptionMap.put(EXCEPTION_VALIDATING, e);
+    }
+
+    try {
+      String intermediary = OBJECT_MAPPER.writeValueAsString(instance);
       if (siteMetadata == null) {
-        return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
+        return OBJECT_MAPPER.readValue(intermediary, Metadata.class);
       } else {
-        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(metadataFile,
+        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(intermediary,
             TreeMap.class);
         deepMergeDefaults(metadataBase, siteMetadata);
         return OBJECT_MAPPER.convertValue(metadataBase, Metadata.class);
@@ -528,10 +540,10 @@ class LocalDevice {
   private String deviceConfigString() {
     try {
       JsonNode configJson = OBJECT_MAPPER.valueToTree(deviceConfigObject());
-      new MessageDowngrader("config", configJson).downgrade(metadata.version);
+      new MessageDowngrader("config", configJson).downgrade(baseVersion);
       return OBJECT_MAPPER.writeValueAsString(configJson);
     } catch (Exception e) {
-      throw new RuntimeException("While converting device config to string", e);
+      throw new RuntimeException("While converting device config", e);
     }
   }
 

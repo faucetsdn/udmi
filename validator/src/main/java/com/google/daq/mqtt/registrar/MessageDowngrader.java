@@ -1,10 +1,11 @@
 package com.google.daq.mqtt.registrar;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class MessageDowngrader {
 
-  private final JsonNode message;
+  private final ObjectNode message;
   private int major;
   private int minor;
   private int patch;
@@ -13,10 +14,11 @@ public class MessageDowngrader {
     if (!"config".equals(schemaName)) {
       throw new IllegalArgumentException("Can only downgrade config messages");
     }
-    this.message = configJson;
+    this.message = (ObjectNode) configJson;
   }
 
-  public void downgrade(String version) {
+  public void downgrade(JsonNode versionNode) {
+    final String version = convertVersion(versionNode);
     String[] components = version.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
@@ -31,6 +33,32 @@ public class MessageDowngrader {
       return;
     }
 
-    throw new RuntimeException("Downgrading config to " + version);
+    downgradeLocalnet();
+
+    message.set("version", versionNode);
+  }
+
+  private String convertVersion(JsonNode versionNode) {
+    if (versionNode == null) {
+      return "1";
+    }
+    if (versionNode.isTextual()) {
+      return versionNode.asText();
+    }
+    if (versionNode.isIntegralNumber()) {
+      return Integer.toString(versionNode.asInt());
+    }
+    throw new IllegalStateException("Unrecognized version node " + versionNode.asText());
+  }
+
+  private void downgradeLocalnet() {
+    ObjectNode localnet = (ObjectNode) message.get("localnet");
+    if (localnet == null) {
+      return;
+    }
+    JsonNode families = localnet.remove("families");
+    if (families != null) {
+      localnet.set("subsystem", families);
+    }
   }
 }
