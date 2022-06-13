@@ -7,10 +7,16 @@
 
   nav {
     padding-left: $gutter-width;
+    height: 100%;
+  }
 
-    a {
-      min-width: unset;
-    }
+  a,
+  button {
+    min-width: unset;
+    border-radius: 0;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -29,7 +35,5 @@
 }
 
 .active {
-  box-shadow: 0px 2px white;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
+  box-shadow: inset 0px -4px $accent;
 }
