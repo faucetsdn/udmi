@@ -86,30 +86,32 @@ export class SearchFilterComponent implements OnInit {
 
     this.items.splice(index, 1); // remove the chip
 
-    // Check if we're deleting an exisitng filter, or one we are halfway done building.
+    // Check if we're deleting an exisitng chip,
+    // or one we are halfway done building.
     if (index === this.filters.length) {
-      // We're deleting a half built filter.
-      this.allItems = this.fieldItems; // select field
+      // We're deleting a partially built chip.
+      this.allItems = this.fieldItems;
       this.filterIndex = 0;
-      this.filterEntry = {}; // clear the chip cache
+      this.filterEntry = {};
       this._resetInput();
       this._closePanel();
     } else {
-      // We're deleting a built filter.
+      // We're deleting a fully built chip.
       this.filters.splice(index, 1); // remove the filter
       this.handleFilterChange(this.filters);
 
       if (this.filterIndex) {
-        // Keep the panel open when we're still building a filter,
-        // but deleted one previous to it.
+        // Keep the panel open when we're still building a chip
+        // but deleting one next to it.
         this._closePanel();
         this._openPanel();
       } else if (this.itemInput.nativeElement.value !== '') {
-        // We've typed something before deleting a previous chip,
+        // We've typed something before deleting chip next to this one,
         // so reopen the panel in the right position.
         this._closePanel();
         this._openPanel();
       } else {
+        // We've typed nothing, so don't keep the panel open.
         this._closePanel();
       }
     }
@@ -135,9 +137,6 @@ export class SearchFilterComponent implements OnInit {
     this.filterIndex++;
 
     switch (this.filterIndex) {
-      case 0:
-        this.allItems = this.fieldItems; // select field
-        break;
       case 1:
         this.allItems = [
           { label: '(=) Equals', value: '=' },
