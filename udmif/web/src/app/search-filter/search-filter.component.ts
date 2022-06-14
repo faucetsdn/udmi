@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostBinding, Injector, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { startCase, findIndex, some } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
@@ -33,6 +33,7 @@ export class SearchFilterComponent implements OnInit {
   fieldItems: ChipItem[] = []; // hardcoded fields we can filter on, set by the input 'fields'
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
+  @ViewChild(MatAutocompleteTrigger) triggerAutocompleteInput!: MatAutocompleteTrigger;
   @HostBinding('className') componentClass: string;
 
   constructor(private injector: Injector) {
@@ -82,6 +83,7 @@ export class SearchFilterComponent implements OnInit {
 
   remove(item: ChipItem): void {
     const index: number = findIndex(this.items, { value: item.value });
+    console.log(index);
 
     this.items.splice(index, 1); // remove the chip
 
@@ -91,14 +93,20 @@ export class SearchFilterComponent implements OnInit {
       this.allItems = this.fieldItems; // select field
       this.filterIndex = 0;
       this.filterEntry = {}; // clear the chip cache
+      this._resetInput();
+      this._closePanel();
     } else {
       // We're deleting a built filter.
       this.filters.splice(index, 1); // remove the filter
       this.handleFilterChange(this.filters);
-    }
 
-    // Show the auto-complete options panel.
-    this._focusItemInput();
+      if (this.filterIndex) {
+        // Keep the panel open when we're still building a filter,
+        // but deleted one previous to it.
+        this._closePanel();
+        this._openPanel();
+      }
+    }
   }
 
   clear(): void {
@@ -108,7 +116,8 @@ export class SearchFilterComponent implements OnInit {
     this.filterIndex = 0;
     this.filterEntry = {}; // clear the chip cache
 
-    this.itemCtrl.reset();
+    this._resetInput();
+    this._closePanel();
     this.handleFilterChange(this.filters);
   }
 
@@ -129,11 +138,15 @@ export class SearchFilterComponent implements OnInit {
           { label: '(~) Contains', value: '~' },
         ]; // select operator
         this.filterEntry.field = chipValue; // store the field
+        this._resetInput();
+        this._openPanel();
         break;
       case 2:
         this.allItems = []; // can clear the items, the api will handle filtering user input above in observable
         this.filterEntry.operator = chipValue; // store the operator
         this._combineLastTwoChips();
+        this._resetInput();
+        this._openPanel();
         break;
       default:
         this.allItems = this.fieldItems; // reset
@@ -142,22 +155,26 @@ export class SearchFilterComponent implements OnInit {
         this.filters.push(this.filterEntry);
         this.filterEntry = {}; // clear the chip cache
         this._combineLastTwoChips();
+        this._resetInput();
         this.handleFilterChange(this.filters);
         break;
     }
-
-    // Show the auto-complete options panel.
-    this._focusItemInput();
   }
 
-  private _focusItemInput(): void {
-    // Clear the input.
+  private _resetInput(): void {
     this.itemInput.nativeElement.value = '';
     this.itemCtrl.setValue('');
+  }
 
+  private _openPanel(): void {
     setTimeout(() => {
-      this.itemInput.nativeElement.blur();
-      this.itemInput.nativeElement.focus();
+      this.triggerAutocompleteInput.openPanel();
+    });
+  }
+
+  private _closePanel(): void {
+    setTimeout(() => {
+      this.triggerAutocompleteInput.closePanel();
     });
   }
 
