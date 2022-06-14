@@ -1,0 +1,29 @@
+Credential
+java.lang.RuntimeException: While loading credentials for local device DWN-2
+	at com.google.daq.mqtt.registrar.LocalDevice.loadCredentials(LocalDevice.java:394)
+	at com.google.daq.mqtt.registrar.Registrar.loadDevices(Registrar.java:633)
+	at com.google.daq.mqtt.registrar.Registrar.loadLocalDevices(Registrar.java:551)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:262)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:254)
+	at com.google.daq.mqtt.registrar.Registrar.main(Registrar.java:112)
+Caused by: java.lang.RuntimeException: Credential cloud.auth_type definition missing
+	at com.google.daq.mqtt.registrar.LocalDevice.loadCredentials(LocalDevice.java:376)
+	... 5 more
+Initializing
+java.lang.RuntimeException: Invalid auth type null
+	at com.google.daq.mqtt.registrar.LocalDevice.getKeyBytes(LocalDevice.java:493)
+	at com.google.daq.mqtt.registrar.LocalDevice.initializeSettings(LocalDevice.java:480)
+	at java.base/java.util.HashMap$Values.forEach(HashMap.java:977)
+	at com.google.daq.mqtt.registrar.Registrar.initializeSettings(Registrar.java:561)
+	at com.google.daq.mqtt.registrar.Registrar.loadLocalDevices(Registrar.java:552)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:262)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:254)
+	at com.google.daq.mqtt.registrar.Registrar.main(Registrar.java:112)
+Files
+com.google.daq.mqtt.util.ExceptionMap: devices/DWN-2
+	at com.google.daq.mqtt.registrar.LocalDevice.validateExpected(LocalDevice.java:239)
+	at com.google.daq.mqtt.registrar.Registrar.validateExpected(Registrar.java:577)
+	at com.google.daq.mqtt.registrar.Registrar.loadLocalDevices(Registrar.java:555)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:262)
+	at com.google.daq.mqtt.registrar.Registrar.processDevices(Registrar.java:254)
+	at com.google.daq.mqtt.registrar.Registrar.main(Registrar.java:112)

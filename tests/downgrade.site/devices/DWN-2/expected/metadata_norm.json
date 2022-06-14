@@ -1,7 +1,7 @@
 {
-  "timestamp": "2022-06-13T23:59:08Z",
+  "timestamp": "2022-06-14T00:39:34Z",
   "version": "1.3.14",
-  "hash": "58083196",
+  "hash": "05607181",
   "system": {
     "location": {
       "site": "AA-TEST-SITE",
@@ -13,13 +13,7 @@
     },
     "min_loglevel": 300
   },
-  "localnet": {
-    "families": {
-      "virtual": {
-        "id": "0x65"
-      }
-    }
-  },
+  "localnet": { },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {

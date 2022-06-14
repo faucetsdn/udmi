@@ -1,0 +1,36 @@
+{
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "units": "No-units",
+        "ref": "BV11.present_value"
+      },
+      "filter_differential_pressure_sensor": {
+        "units": "Degrees-Celsius",
+        "ref": "AV12.present_value"
+      },
+      "filter_differential_pressure": {
+        "units": "Bars"
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C",
+      "position": {
+        "x": -111.0,
+        "y": 102.3
+      }
+    }
+  },
+  "localnet": {
+    "subsystem": {
+      "virtual": {
+        "id": "0x65"
+      }
+    }
+  },
+  "version": "1.3.14",
+  "timestamp": "2020-05-01T13:39:07Z",
+  "hash": "da852d15"
+}
