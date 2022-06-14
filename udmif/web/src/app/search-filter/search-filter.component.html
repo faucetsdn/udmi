@@ -9,7 +9,7 @@
     <input
       matAutocompleteOrigin
       #origin="matAutocompleteOrigin"
-      placeholder="{{ items.length ? '' : 'Search' }}"
+      placeholder="{{ items.length ? '' : 'Search or filter results...' }}"
       #itemInput
       [formControl]="itemCtrl"
       [matAutocomplete]="auto"
@@ -18,7 +18,7 @@
       [matAutocompleteConnectedTo]="origin"
     />
   </mat-chip-list>
-  <button *ngIf="filters.length" matSuffix mat-icon-button aria-label="Clear all filters">
+  <button *ngIf="items.length" matSuffix mat-icon-button aria-label="Clear all filters" (click)="clear()">
     <mat-icon>clear</mat-icon>
   </button>
   <mat-autocomplete

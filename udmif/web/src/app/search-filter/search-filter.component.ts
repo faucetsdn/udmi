@@ -26,11 +26,11 @@ export class SearchFilterComponent implements OnInit {
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
   itemCtrl = new FormControl();
-  filteredItems: Observable<ChipItem[]>;
-  items: ChipItem[] = [];
-  allItems: ChipItem[] = [];
-  filterIndex: number = 0;
-  fieldItems: ChipItem[] = [];
+  filteredItems: Observable<ChipItem[]>; // the autocomplete list of options, filtered based on users input
+  items: ChipItem[] = []; // list of chips
+  allItems: ChipItem[] = []; // list of options, options will switch based on filterIndex
+  filterIndex: number = 0; // position in the current chip we are building
+  fieldItems: ChipItem[] = []; // hardcoded fields we can filter on, set by the input 'fields'
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
   @HostBinding('className') componentClass: string;
@@ -99,6 +99,17 @@ export class SearchFilterComponent implements OnInit {
 
     // Show the auto-complete options panel.
     this._focusItemInput();
+  }
+
+  clear(): void {
+    this.items = [];
+    this.filters = [];
+    this.allItems = this.fieldItems;
+    this.filterIndex = 0;
+    this.filterEntry = {}; // clear the chip cache
+
+    this.itemCtrl.reset();
+    this.handleFilterChange(this.filters);
   }
 
   selected(event: MatAutocompleteSelectedEvent): void {
