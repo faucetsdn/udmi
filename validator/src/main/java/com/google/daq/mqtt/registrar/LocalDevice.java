@@ -126,6 +126,7 @@ class LocalDevice {
   private static final String SAMPLES_DIR = "samples";
   private static final String AUX_DIR = "aux";
   private static final String OUT_DIR = "out";
+  private static final String EXPECTED_DIR = "expected";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
   private static final Set<String> RSA_PRIVATE_KEY_FILES =
@@ -156,6 +157,7 @@ class LocalDevice {
           ES3_PUBLIC_PEM,
           SAMPLES_DIR,
           AUX_DIR,
+          EXPECTED_DIR,
           OUT_DIR);
   private static final Set<String> OUT_FILES =
       ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);

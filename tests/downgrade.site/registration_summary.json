@@ -7,11 +7,7 @@
     "DWN-1" : "devices/DWN-1",
     "DWN-2" : "devices/DWN-2"
   },
-  "Initializing" : {
-    "DWN-1" : "Invalid auth type null",
-    "DWN-2" : "Invalid auth type null"
-  },
   "Version" : {
-    "main" : "1.3.13-81-g06a02323"
+    "main" : "1.3.13-82-g05938e25"
   }
 }

@@ -30,6 +30,9 @@
       }
     }
   },
+  "cloud": {
+    "auth_type": "RS256"
+  },
   "version": "1",
   "timestamp": "2020-05-01T13:39:07Z",
   "hash": "da852d15"

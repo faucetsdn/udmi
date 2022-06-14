@@ -26,21 +26,8 @@ done
 
 subsets=$(cd $testdir; ls -d *.site)
 
-rm -rf out/sites
-mkdir -p out/sites
-
 echo Testing against $subsets
 for subset in $subsets; do
-    echo $subset
-    outsite=out/sites/$subset
-    mkdir -p $outsite
-    devicesdir=$testdir/$subset/devices
-    devices=$(cd $devicesdir; ls -d *)
-    for device in $devices; do
-        mkdir -p $outsite/$device
-        cp -a $devicesdir/$device/out/*.json $outsite/$device/
-        rm -rf $devicesdir/$device/out
-    done
     bin/registrar $testdir/$subset
 done
 
