@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostBinding, Injector, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { startCase, findIndex, some } from 'lodash-es';
@@ -30,12 +30,13 @@ export class SearchFilterComponent implements OnInit {
   items: ChipItem[] = [];
   allItems: ChipItem[] = [];
   filterIndex: number = 0;
-  placeholder: string = 'Select field...';
   fieldItems: ChipItem[] = [];
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
+  @HostBinding('className') componentClass: string;
 
   constructor(private injector: Injector) {
+    this.componentClass = 'app-search-filter';
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
       startWith(''),
       switchMap((term) =>
@@ -88,7 +89,6 @@ export class SearchFilterComponent implements OnInit {
     if (index === this.filters.length) {
       // We're deleting a half built filter.
       this.allItems = this.fieldItems; // select field
-      this.placeholder = 'Select field...';
       this.filterIndex = 0;
       this.filterEntry = {}; // clear the chip cache
     } else {
@@ -111,25 +111,21 @@ export class SearchFilterComponent implements OnInit {
     switch (this.filterIndex) {
       case 0:
         this.allItems = this.fieldItems; // select field
-        this.placeholder = 'Select field...';
         break;
       case 1:
         this.allItems = [
           { label: '(=) Equals', value: '=' },
           { label: '(~) Contains', value: '~' },
         ]; // select operator
-        this.placeholder = 'Select operator...';
         this.filterEntry.field = chipValue; // store the field
         break;
       case 2:
         this.allItems = []; // can clear the items, the api will handle filtering user input above in observable
-        this.placeholder = 'Select value...';
         this.filterEntry.operator = chipValue; // store the operator
         this._combineLastTwoChips();
         break;
       default:
         this.allItems = this.fieldItems; // reset
-        this.placeholder = 'Select field...';
         this.filterIndex = 0; // reset
         this.filterEntry.value = chipValue; // store the value
         this.filters.push(this.filterEntry);
