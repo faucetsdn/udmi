@@ -2,32 +2,23 @@ package com.google.daq.mqtt.registrar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import static org.junit.Assert.fail;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.daq.mqtt.registrar.Registrar.RelativeDownloader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import org.junit.Test;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import udmi.schema.Asset;
-import udmi.schema.Location;
 import udmi.schema.Metadata;
-import udmi.schema.Physical_tag;
-import udmi.schema.SystemModel;
 
 public class RegistrarTest {
 
@@ -43,20 +34,51 @@ public class RegistrarTest {
 
   public class RegistrarUnderTest extends Registrar {
     protected JsonSchema getJsonSchema(String schemaName) {
-      return schemas.get(schemaName);
+      return getSchemas().get(schemaName);
     }
   }
 
-  @Test public void emptyTest() {
-    Registrar registrar = getRegistrarUnderTest();
-    assertEquals(1, 1);
+  private InputStream getTestFileStream(String filename) throws FileNotFoundException {
+    File f = new File("/home/jrand/src/johnrandolph/udmi/tests/metadata.tests/", filename);
+    return new FileInputStream(f);
   }
 
-  @Test public void metadataTest() throws JsonProcessingException, ProcessingException {
+  private Metadata getTestMetadataValue() throws IOException {
+    return mapper.readValue(getTestFileStream("example.json"), Metadata.class);
+  }
+
+  private JsonNode getTestMetadataTree() throws IOException {
+    return mapper.readTree(getTestFileStream("example.json"));
+  }
+
+  private JsonNode getMetadataAsJsonNode(Metadata metadata) throws JsonProcessingException {
+    return mapper.readTree(mapper.writeValueAsString(metadata));
+  }
+
+  private void assertSuccessReport(ProcessingReport report) {
+    if (!report.isSuccess()) {
+      for (ProcessingMessage msg : report) {
+        if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
+          int i = 0;
+          fail(msg.getMessage().toString());
+        }
+      }
+    }
+  }
+
+  @Test public void metadataTest() throws IOException, ProcessingException, FileNotFoundException {
     RegistrarUnderTest registrar = getRegistrarUnderTest();
-    String metadata = getTestMetadataAsString();
     JsonSchema validator = registrar.getJsonSchema(METADATA_JSON);
-    validator.validate(mapper.readTree(metadata));
+
+    ProcessingReport report = registrar.getSchemas().get(METADATA_JSON).validate(getTestMetadataTree());
+    assertSuccessReport(report);
+
+    Metadata metadata = getTestMetadataValue();
+    metadata.system = null;
+    JsonNode n = getMetadataAsJsonNode(metadata);
+
+    report = registrar.getSchemas().get(METADATA_JSON).validate(n);
+    assertSuccessReport(report);
   }
 
   private RegistrarUnderTest getRegistrarUnderTest() {
@@ -65,24 +87,6 @@ public class RegistrarTest {
     registrar.setProjectId(PROJECT_ID);
     registrar.setToolRoot(TOOL_ROOT);
     return registrar;
-  }
-
-  private Metadata getTestMetadata() {
-    Metadata metadata = new Metadata();
-    metadata.system = new SystemModel();
-    /*
-    metadata.system.location = new Location();
-    metadata.system.location.site = SYSTEM_LOCATION_SITE;
-    */
-    metadata.system.physical_tag = new Physical_tag();
-    metadata.system.physical_tag.asset = new Asset();
-    metadata.system.physical_tag.asset.name = DEVICE_NAME;
-    metadata.description = "Test Metadata";
-    return metadata;
-  }
-
-  private String getTestMetadataAsString() throws JsonProcessingException {
-    return mapper.writeValueAsString(getTestMetadata());
   }
 
 }

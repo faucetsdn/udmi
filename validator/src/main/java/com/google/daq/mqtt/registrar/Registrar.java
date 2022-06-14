@@ -81,7 +81,7 @@ public class Registrar {
   private static final int RUNNER_THREADS = 25;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
-  protected final Map<String, JsonSchema> schemas = new HashMap<>();
+  private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
   private File siteDir;
@@ -704,6 +704,10 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
     }
+  }
+
+  protected Map<String, JsonSchema> getSchemas() {
+    return schemas;
   }
 
   class RelativeDownloader implements URIDownloader {
