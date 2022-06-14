@@ -1,0 +1,36 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+errorfile=`mktemp`
+rm -f $errorfile
+
+build=y
+force=n
+
+schemadir=schema
+testdir=tests
+
+while getopts "d:" opt; do
+    case $opt in
+        d)
+            testdir=${OPTARG}
+            ;;
+        \?)
+            echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
+            exit -1
+            ;;
+    esac
+done
+
+subsets=$(cd $testdir; ls -d *.site)
+
+echo Testing against $subsets
+for subset in $subsets; do
+    echo $subset
+done
+
+echo
+
+echo Done with site tests

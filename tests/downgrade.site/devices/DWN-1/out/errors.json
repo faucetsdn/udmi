@@ -1,0 +1,6 @@
+Exceptions for DWN-1
+  While loading credentials for local device DWN-1
+    Credential cloud.auth_type definition missing
+  devices/DWN-1
+    Extra out files: [exceptions.txt]
+  Invalid auth type null

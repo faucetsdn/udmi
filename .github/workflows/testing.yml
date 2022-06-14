@@ -21,6 +21,9 @@ jobs:
       - name: Schema unit tests
         if: ${{ always() }}
         run: bin/test_schema -p
+      - name: Site unit tests
+        if: ${{ always() }}
+        run: bin/test_sites
       - name: Registrar validation
         if: ${{ always() }}
         run: bin/test_registrar

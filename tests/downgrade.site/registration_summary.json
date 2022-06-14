@@ -1,0 +1,14 @@
+{
+  "Credential" : {
+    "DWN-1" : "While loading credentials for local device DWN-1"
+  },
+  "Files" : {
+    "DWN-1" : "devices/DWN-1"
+  },
+  "Initializing" : {
+    "DWN-1" : "Invalid auth type null"
+  },
+  "Version" : {
+    "main" : "1.3.13-79-geafa5df1"
+  }
+}
