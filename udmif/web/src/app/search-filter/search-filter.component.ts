@@ -83,7 +83,6 @@ export class SearchFilterComponent implements OnInit {
 
   remove(item: ChipItem): void {
     const index: number = findIndex(this.items, { value: item.value });
-    console.log(index);
 
     this.items.splice(index, 1); // remove the chip
 
@@ -105,6 +104,13 @@ export class SearchFilterComponent implements OnInit {
         // but deleted one previous to it.
         this._closePanel();
         this._openPanel();
+      } else if (this.itemInput.nativeElement.value !== '') {
+        // We've typed something before deleting a previous chip,
+        // so reopen the panel in the right position.
+        this._closePanel();
+        this._openPanel();
+      } else {
+        this._closePanel();
       }
     }
   }
@@ -156,6 +162,7 @@ export class SearchFilterComponent implements OnInit {
         this.filterEntry = {}; // clear the chip cache
         this._combineLastTwoChips();
         this._resetInput();
+        this._closePanel();
         this.handleFilterChange(this.filters);
         break;
     }
