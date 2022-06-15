@@ -57,7 +57,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("One error device", 1, report.errorDevices.size());
+    assertEquals("Error devices", 2, report.errorDevices.size());
   }
 
   @Test
@@ -66,7 +66,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 0, report.errorDevices.size());
+    assertEquals("Error devices", 1, report.errorDevices.size());
   }
 
   @Test
@@ -76,7 +76,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 1, report.errorDevices.size());
+    assertEquals("Error devices", 2, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
@@ -89,7 +89,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("state", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 1, report.errorDevices.size());
+    assertEquals("Error devices", 2, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
