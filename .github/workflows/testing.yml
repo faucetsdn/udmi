@@ -34,9 +34,6 @@ jobs:
         run: |
           bin/test_registrar
           bin/test_sites
-      - name: Validtor unit tests
-        if: ${{ always() }}
-        run: cd validator; ./gradlew test
 
   udmi:
     name: Sequence tests
