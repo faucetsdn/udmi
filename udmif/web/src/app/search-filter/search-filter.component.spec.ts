@@ -55,7 +55,6 @@ describe('SearchFilterComponent', () => {
     spyOn(component, 'handleFilterChange');
     spyOn(component.itemCtrl, 'setValue');
     spyOn(component.triggerAutocompleteInput, 'closePanel');
-    spyOn(component.triggerAutocompleteInput, 'openPanel');
   });
 
   it('should create', () => {
