@@ -69,7 +69,6 @@ describe('SearchFilterComponent', () => {
     expect(component.filterIndex).toEqual(1);
     expect(component.allItems).toContain({ label: '(~) Contains', value: '~' });
     expect(component.allItems).toContain({ label: '(=) Equals', value: '=' });
-    expect(component.placeholder).toEqual('Select operator...');
     expect(component.filterEntry.field).toEqual('name');
     expect(component.filterEntry.operator).not.toBeDefined();
     expect(component.filterEntry.value).not.toBeDefined();
@@ -82,7 +81,6 @@ describe('SearchFilterComponent', () => {
     expect(component.items).toContain({ label: 'Name =', value: 'Name =' });
     expect(component.filterIndex).toEqual(2);
     expect(component.allItems).toEqual([]);
-    expect(component.placeholder).toEqual('Select value...');
     expect(component.filterEntry.field).toEqual('name');
     expect(component.filterEntry.operator).toEqual('=');
     expect(component.filterEntry.value).not.toBeDefined();
@@ -95,7 +93,6 @@ describe('SearchFilterComponent', () => {
     expect(component.filterIndex).toEqual(0);
     expect(component.allItems).toContain({ label: 'Name', value: 'name' });
     expect(component.allItems).toContain({ label: 'Make', value: 'make' });
-    expect(component.placeholder).toEqual('Select field...');
     expect(component.filterEntry.field).not.toBeDefined();
     expect(component.filterEntry.operator).not.toBeDefined();
     expect(component.filterEntry.value).not.toBeDefined();
@@ -143,7 +140,6 @@ describe('SearchFilterComponent', () => {
     expect(component.filterIndex).toEqual(0);
     expect(component.allItems).toContain({ label: 'Name', value: 'name' });
     expect(component.allItems).toContain({ label: 'Make', value: 'make' });
-    expect(component.placeholder).toEqual('Select field...');
     expect(component.filterEntry.field).not.toBeDefined();
     expect(component.filterEntry.operator).not.toBeDefined();
     expect(component.filterEntry.value).not.toBeDefined();
@@ -173,7 +169,6 @@ describe('SearchFilterComponent', () => {
     expect(component.filterIndex).toEqual(0);
     expect(component.allItems).toContain({ label: 'Name', value: 'name' });
     expect(component.allItems).toContain({ label: 'Make', value: 'make' });
-    expect(component.placeholder).toEqual('Select field...');
     expect(component.filterEntry.field).not.toBeDefined();
     expect(component.filterEntry.operator).not.toBeDefined();
     expect(component.filterEntry.value).not.toBeDefined();
