@@ -1,15 +1,9 @@
-@use '../../styles/variables' as *;
-
 .table-controls {
   display: flex;
   align-items: center;
 
   .grow {
     flex: 1;
-  }
-
-  .filter-icon {
-    color: $icon-default;
   }
 }
 
