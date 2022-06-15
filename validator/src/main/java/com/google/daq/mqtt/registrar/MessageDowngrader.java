@@ -3,6 +3,9 @@ package com.google.daq.mqtt.registrar;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * Downgrade a message to a previous UDMI schema version.
+ */
 public class MessageDowngrader {
 
   private final ObjectNode message;
@@ -10,13 +13,24 @@ public class MessageDowngrader {
   private int minor;
   private int patch;
 
-  public MessageDowngrader(String schemaName, JsonNode configJson) {
+  /**
+   * Create message downgrader.
+   *
+   * @param schemaName  schema to downgrade
+   * @param messageJson message json
+   */
+  public MessageDowngrader(String schemaName, JsonNode messageJson) {
     if (!"config".equals(schemaName)) {
       throw new IllegalArgumentException("Can only downgrade config messages");
     }
-    this.message = (ObjectNode) configJson;
+    this.message = (ObjectNode) messageJson;
   }
 
+  /**
+   * Downgrade a message to a target version.
+   *
+   * @param versionNode target downgrade version (as a JsonNode)
+   */
   public void downgrade(JsonNode versionNode) {
     final String version = convertVersion(versionNode);
     String[] components = version.split("-", 2);
