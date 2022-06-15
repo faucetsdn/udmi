@@ -18,15 +18,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install openjdk-11-jdk
           sudo update-alternatives --set java /usr/lib/jvm/adoptopenjdk-11-hotspot-amd64/bin/java
-      - name: Schema unit tests
+      - name: code checks
+        if: ${{ always() }}
+        run: |
+          bin/gencode check
+          pubber/bin/build check
+          validator/bin/build check
+      - name: Schema conformance tests
         if: ${{ always() }}
         run: bin/test_schema -p
-      - name: Registrar validation
+      - name: Registrar tests
         if: ${{ always() }}
         run: |
           bin/test_registrar
           bin/test_sites
-      - name: Validator unit tests
+      - name: Validtor unit tests
         if: ${{ always() }}
         run: cd validator; ./gradlew test
 
@@ -60,12 +66,6 @@ jobs:
           bin/test_validator $GCP_TARGET_PROJECT
           more /tmp/validator.out
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
-      - name: code checks
-        if: ${{ always() }}
-        run: |
-          bin/gencode check
-          pubber/bin/build check
-          validator/bin/build check
       - name: device output logs
         if: ${{ always() }}
         run: more `find udmi_site_model/out/devices/ -type f`
