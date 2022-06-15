@@ -709,14 +709,14 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
+    metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();
-    String writeHash = metadataHash();
-    if (normalized.hash != null && normalized.hash.equals(writeHash)) {
+    String metadataHash = metadataHash();
+    if (normalized.hash != null && normalized.hash.equals(metadataHash)) {
       metadata.timestamp = normalized.timestamp;
       return;
     }
-    metadata.timestamp = new Date();
-    metadata.hash = writeHash;
+    metadata.hash = metadataHash;
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
     try (OutputStream outputStream = new FileOutputStream(metadataFile)) {
       // Super annoying, but can't set this on the global static instance.

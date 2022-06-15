@@ -28,7 +28,17 @@ subsets=$(cd $testdir; ls -d *.site)
 
 echo Testing against $subsets
 for subset in $subsets; do
+    echo Testing site $subset
+    devicesdir=$testdir/$subset/devices
+    rm -rf $devicesdir/*/out
+    devices=$(cd $devicesdir; ls -d *)
+    
     bin/registrar $testdir/$subset
+    
+    for device in $devices; do
+        # This is probably way to sesnsitive and will likely need a redact function
+        diff -r $devicesdir/$device/out $devicesdir/$device/expected
+    done
 done
 
 echo

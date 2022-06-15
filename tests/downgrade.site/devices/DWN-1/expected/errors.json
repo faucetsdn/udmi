@@ -1,6 +1,6 @@
 Exceptions for DWN-1
   While loading credentials for local device DWN-1
-    Credential cloud.auth_type definition missing
+    Found 0 credentials
   devices/DWN-1
+    Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
     Extra out files: [exceptions.txt]
-  Invalid auth type null
