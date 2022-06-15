@@ -19,6 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           bin/setup_base
+          bin/clone_model
       - name: code checks
         if: ${{ always() }}
         run: |
