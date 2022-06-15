@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -58,19 +57,16 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("Error devices", 2, report.errorDevices.size());
+    assertEquals("One error device", 1, report.errorDevices.size());
   }
 
   @Test
-  public void validPointsetEvent() throws JsonProcessingException {
+  public void validPointsetEvent() {
     PointsetEvent messageObject = basePointsetEvent();
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    System.err.println("TAPTAP");
-    System.err.println(OBJECT_MAPPER.writeValueAsString(bundle.message));
-    System.err.println(OBJECT_MAPPER.writeValueAsString(report));
-    assertEquals("Error devices", 1, report.errorDevices.size());
+    assertEquals("No error devices", 0, report.errorDevices.size());
   }
 
   @Test
@@ -80,7 +76,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("Error devices", 2, report.errorDevices.size());
+    assertEquals("No error devices", 1, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
@@ -93,7 +89,7 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("state", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
-    assertEquals("Error devices", 2, report.errorDevices.size());
+    assertEquals("No error devices", 1, report.errorDevices.size());
     Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
