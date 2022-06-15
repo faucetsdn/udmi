@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.io.File;
 import org.junit.Test;
 
+/**
+ * Unit tests for MessageDowngrader.
+ */
 public class MessageDowngraderTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
