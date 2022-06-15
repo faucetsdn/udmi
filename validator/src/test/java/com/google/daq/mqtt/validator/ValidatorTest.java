@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -61,11 +62,14 @@ public class ValidatorTest {
   }
 
   @Test
-  public void validPointsetEvent() {
+  public void validPointsetEvent() throws JsonProcessingException {
     PointsetEvent messageObject = basePointsetEvent();
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
     MetadataReport report = getMetadataReport();
+    System.err.println("TAPTAP");
+    System.err.println(OBJECT_MAPPER.writeValueAsString(bundle.message));
+    System.err.println(OBJECT_MAPPER.writeValueAsString(report));
     assertEquals("Error devices", 1, report.errorDevices.size());
   }
 
