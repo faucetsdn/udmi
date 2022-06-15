@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.3.14",
-  "hash": "387675d3",
+  "hash": "1064d284",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -16,7 +16,13 @@
     },
     "min_loglevel": 300
   },
-  "localnet": { },
+  "localnet": {
+    "families": {
+      "virtual": {
+        "id": "0x65"
+      }
+    }
+  },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {

@@ -24,7 +24,7 @@
     }
   },
   "localnet": {
-    "subsystem": {
+    "families": {
       "virtual": {
         "id": "0x65"
       }

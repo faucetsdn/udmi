@@ -26,6 +26,12 @@ done
 
 subsets=$(cd $testdir; ls -d *.site)
 
+function redact_files {
+    for file in $@; do
+        sed -E -i -e '/at .*\(.*\.java:[0-9]+\)/d' $file
+    done
+}
+
 echo Testing against $subsets
 for subset in $subsets; do
     echo Testing site $subset
@@ -36,7 +42,7 @@ for subset in $subsets; do
     bin/registrar $testdir/$subset
     
     for device in $devices; do
-        # This is probably way to sesnsitive and will likely need a redact function
+        redact_files $devicesdir/$device/out/*
         diff -r $devicesdir/$device/out $devicesdir/$device/expected
     done
 done

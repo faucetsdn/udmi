@@ -5,7 +5,13 @@
     "min_loglevel" : 300,
     "metrics_rate_sec" : 600
   },
-  "localnet" : { },
+  "localnet" : {
+    "families" : {
+      "virtual" : {
+        "id" : "0x65"
+      }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
