@@ -10,10 +10,10 @@ resource "google_project_iam_member" "gke_gcr_binding" {
 }
 #GKE CLUSTER
 resource "google_container_cluster" "udmi" {
-    project        = var.gcp_project_id
-    name           = var.gke_cluster_name
-    location       = var.gke_cluster_location
-    node_locations = var.gke_node_locations
+  project        = var.gcp_project_id
+  name           = var.gke_cluster_name
+  location       = var.gke_cluster_location
+  node_locations = var.gke_node_locations
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default
@@ -21,8 +21,8 @@ resource "google_container_cluster" "udmi" {
 
   remove_default_node_pool = true
   initial_node_count       = var.gke_initial_node_count
-  network    = var.create_vpc ? google_compute_network.vpc[0].name : null
-  subnetwork = var.create_vpc ? google_compute_subnetwork.subnet[0].name : null
+  network                  = var.create_vpc ? google_compute_network.vpc[0].name : null
+  subnetwork               = var.create_vpc ? google_compute_subnetwork.subnet[0].name : null
 }
 
 # Separately Managed Node Pool
@@ -40,7 +40,7 @@ resource "google_container_node_pool" "node_pool" {
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = google_service_account.gke.email
-    oauth_scopes    = [
+    oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring"
@@ -52,9 +52,9 @@ resource "google_container_node_pool" "node_pool" {
 }
 
 #This resource creates static IP
-resource "google_compute_global_address" "udmi_global_address"{
- name    = "udmi-global-address"
- project = var.gcp_project_id
+resource "google_compute_global_address" "udmi_global_address" {
+  name    = "udmi-global-address"
+  project = var.gcp_project_id
 }
 
 #This resource creates clouddns entry
