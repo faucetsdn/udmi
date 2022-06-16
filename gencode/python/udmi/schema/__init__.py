@@ -1,3 +1,4 @@
+from .ancillary_properties import AncillaryProperties
 from .command_discovery import DiscoveryCommand
 from .common import Common
 from .config import Config

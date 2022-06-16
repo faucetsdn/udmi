@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -36,28 +37,28 @@ public class PointEnumerationEvent {
      */
     @JsonProperty("possible_values")
     @JsonPropertyDescription("List of possible enumerated values for the point")
-    public List<String> possible_values = new ArrayList<String>();
+    public List<java.lang.String> possible_values = new ArrayList<java.lang.String>();
     /**
      * Current or default unit for this point
      * 
      */
     @JsonProperty("units")
     @JsonPropertyDescription("Current or default unit for this point")
-    public String units;
+    public java.lang.String units;
     /**
      * Current or default type for this point
      * 
      */
     @JsonProperty("type")
     @JsonPropertyDescription("Current or default type for this point")
-    public String type;
+    public java.lang.String type;
     /**
      * Reference parameter for this point (e.g. BACnet object)
      * 
      */
     @JsonProperty("ref")
     @JsonPropertyDescription("Reference parameter for this point (e.g. BACnet object)")
-    public String ref;
+    public java.lang.String ref;
     /**
      * Indicates if this point is writable or not
      * 
@@ -71,7 +72,7 @@ public class PointEnumerationEvent {
      */
     @JsonProperty("description")
     @JsonPropertyDescription("Human-readable description of this point")
-    public String description;
+    public java.lang.String description;
     /**
      * Entry
      * <p>
@@ -81,12 +82,14 @@ public class PointEnumerationEvent {
     @JsonProperty("status")
     public Entry status;
     /**
+     * Ancillary Properties
+     * <p>
      * Arbitrary blob of json associated with this point
      * 
      */
     @JsonProperty("ancillary")
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
-    public Ancillary__2 ancillary;
+    public HashMap<String, Object> ancillary;
 
     @Override
     public int hashCode() {
@@ -103,7 +106,7 @@ public class PointEnumerationEvent {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }

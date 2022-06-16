@@ -2,40 +2,7 @@
 from .common import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
-
-
-class ObjectAA5FBE4A:
-  """Generated schema class"""
-
-  def __init__(self):
-    pass
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ObjectAA5FBE4A()
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ObjectAA5FBE4A.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    return result
+from .ancillary_properties import AncillaryProperties
 from .state_system_hardware import Hardware
 
 
@@ -65,7 +32,7 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.points = PointEnumerationEvent.map_from(source.get('points'))
-    result.ancillary = ObjectAA5FBE4A.from_dict(source.get('ancillary'))
+    result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     result.hardware = Hardware.from_dict(source.get('hardware'))
     return result
 

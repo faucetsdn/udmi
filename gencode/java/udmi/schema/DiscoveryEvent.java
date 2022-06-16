@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -85,12 +86,14 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("Collection of data points available for this device.")
     public Map<String, PointEnumerationEvent> points;
     /**
-     * Arbitrary blob of json associated with this device
+     * Ancillary Properties
+     * <p>
+     * Arbitrary blob of json associated with this point
      * 
      */
     @JsonProperty("ancillary")
-    @JsonPropertyDescription("Arbitrary blob of json associated with this device")
-    public Ancillary ancillary;
+    @JsonPropertyDescription("Arbitrary blob of json associated with this point")
+    public HashMap<String, Object> ancillary;
     /**
      * Hardware
      * <p>
@@ -117,7 +120,7 @@ public class DiscoveryEvent {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }
