@@ -49,7 +49,7 @@
         }
       }
     },
-    "anciliary": {
+    "ancillary": {
       "description": "Arbitrary blob of json associated with this device",
       "type": "object"
     },
