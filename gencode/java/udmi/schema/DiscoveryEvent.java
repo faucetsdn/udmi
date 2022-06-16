@@ -24,7 +24,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "status",
     "scan_family",
     "families",
-    "points"
+    "points",
+    "ancillary",
+    "hardware"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryEvent {
@@ -82,6 +84,22 @@ public class DiscoveryEvent {
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of data points available for this device.")
     public Map<String, PointEnumerationEvent> points;
+    /**
+     * Arbitrary blob of json associated with this device
+     * 
+     */
+    @JsonProperty("ancillary")
+    @JsonPropertyDescription("Arbitrary blob of json associated with this device")
+    public Ancillary ancillary;
+    /**
+     * Hardware
+     * <p>
+     * A collection of fields which describe the physical hardware of the device.
+     * 
+     */
+    @JsonProperty("hardware")
+    @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
+    public Hardware hardware;
 
     @Override
     public int hashCode() {
@@ -89,10 +107,12 @@ public class DiscoveryEvent {
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.ancillary == null)? 0 :this.ancillary.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
+        result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         return result;
     }
 
@@ -105,7 +125,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return ((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }

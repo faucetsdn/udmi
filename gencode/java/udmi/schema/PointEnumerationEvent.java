@@ -86,7 +86,7 @@ public class PointEnumerationEvent {
      */
     @JsonProperty("ancillary")
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
-    public Ancillary ancillary;
+    public Ancillary__2 ancillary;
 
     @Override
     public int hashCode() {

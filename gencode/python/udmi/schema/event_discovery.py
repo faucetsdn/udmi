@@ -4,6 +4,41 @@ from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 
 
+class ObjectAA5FBE4A:
+  """Generated schema class"""
+
+  def __init__(self):
+    pass
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ObjectAA5FBE4A()
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ObjectAA5FBE4A.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    return result
+from .state_system_hardware import Hardware
+
+
 class DiscoveryEvent:
   """Generated schema class"""
 
@@ -15,6 +50,8 @@ class DiscoveryEvent:
     self.scan_family = None
     self.families = None
     self.points = None
+    self.ancillary = None
+    self.hardware = None
 
   @staticmethod
   def from_dict(source):
@@ -28,6 +65,8 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.points = PointEnumerationEvent.map_from(source.get('points'))
+    result.ancillary = ObjectAA5FBE4A.from_dict(source.get('ancillary'))
+    result.hardware = Hardware.from_dict(source.get('hardware'))
     return result
 
   @staticmethod
@@ -62,4 +101,8 @@ class DiscoveryEvent:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
     if self.points:
       result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
+    if self.ancillary:
+      result['ancillary'] = self.ancillary.to_dict() # 4
+    if self.hardware:
+      result['hardware'] = self.hardware.to_dict() # 4
     return result

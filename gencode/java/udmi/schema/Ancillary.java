@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Arbitrary blob of json associated with this point
+ * Arbitrary blob of json associated with this device
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
