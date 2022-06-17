@@ -18,11 +18,13 @@ while getopts "d:" opt; do
             testdir=${OPTARG}
             ;;
         \?)
-            echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR]"
+            echo "Usage: $0 [-d TEST_DATA_DIR]"
             exit -1
             ;;
     esac
 done
+
+shift $((OPTIND-1))
 
 subsets=$(cd $testdir; ls -d *.site)
 
