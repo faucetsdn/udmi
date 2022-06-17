@@ -48,6 +48,12 @@
           "$ref": "file:event_discovery_point.json#"
         }
       }
+    },
+    "ancillary": {
+      "$ref": "file:ancillary_properties.json"
+    },
+    "hardware": {
+      "$ref": "file:state_system_hardware.json"
     }
   },
   "required": [
