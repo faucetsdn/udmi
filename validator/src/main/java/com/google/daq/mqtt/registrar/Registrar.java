@@ -49,10 +49,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 
+/**
+ * Validate devices' static metadata and register them in the cloud.
+ */
 public class Registrar {
 
   public static final String SCHEMA_BASE_PATH = "schema";
@@ -97,6 +99,11 @@ public class Registrar {
   private Set<String> cloudDevices;
   private Metadata siteMetadata;
 
+  /**
+   * Main entry point for registrar.
+   *
+   * @param args Standard command line arguments
+   */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     Registrar registrar = new Registrar();
@@ -459,13 +466,15 @@ public class Registrar {
     sendUpdateMessage(localDevice, CONFIG_SUB_TYPE, subFolder, localDevice.deviceConfigObject());
   }
 
-  private void sendUpdateMessage(LocalDevice localDevice, String subType, SubFolder subfolder, Object target) {
+  private void sendUpdateMessage(LocalDevice localDevice, String subType, SubFolder subfolder,
+      Object target) {
     String fieldName = subfolder.toString().toLowerCase();
     try {
       Field declaredField = target.getClass().getDeclaredField(fieldName);
       sendSubMessage(localDevice, subType, subfolder, declaredField.get(target));
     } catch (Exception e) {
-      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName, target.getClass().getSimpleName()));
+      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName,
+          target.getClass().getSimpleName()));
     }
   }
 
@@ -550,11 +559,16 @@ public class Registrar {
 
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
     Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
+    initializeSettings(localDevices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     return localDevices;
+  }
+
+  private void initializeSettings(Map<String, LocalDevice> localDevices) {
+    localDevices.values().forEach(LocalDevice::initializeSettings);
   }
 
   private void validateSamples(Map<String, LocalDevice> localDevices) {
