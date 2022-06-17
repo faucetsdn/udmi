@@ -1,7 +1,6 @@
 //
-// This message represents a DBO "buidling_config" entity snippet.
-// It could represent data either from an extraction from another system,
-// or an output of a promoted staged translation.
+// This message represents an output from the mapper expressing the mapping
+// for a particular device.
 //
 // The specific building and device id would be part of the message envelope.
 //

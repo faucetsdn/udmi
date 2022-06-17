@@ -1,16 +1,19 @@
 //
-// This message represents the entire high-level state of a mapping recommendation.
-// Specific details (i.e., the actual recommendations) are enapsulated in a separate
-// message.
+// This message represents the entire high-level state of a recommendation,
+// as given by the mapping component. It therefore reflects the internal state
+// of the mapper as might be of interest to the outside world.
 //
 // Note that building id is defined as part of the message envelope.
 //
-// Gendral gendral workflow is:
+// General workflow is (not all steps will always be present):
 // 1. Import: Existing mappings can be imported from an external source
 // 2. Discovery: Mapper receives discovery message
 // 3. Prediction: Internal algorithm predicts what it might be and gives options
 // 4. Promotion: Some process for promoting a single option based on prediction
 // 5. Export: Result of promotion are exported for external consumption
+//
+// Comparison of timestamps with the related config block would trigger action by the mapper:
+//   requested > exported: The mapper should export (send event) the indicated mapping
 //
 {
   "version": "1.3.14",
