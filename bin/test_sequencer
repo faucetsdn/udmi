@@ -58,5 +58,10 @@ bin/sequencer $site_path $project_id $device_id $serial_no
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-echo Killing pubber pids $pids
-kill $pids
+if [[ -n $pids ]]; then
+    echo Killing pubber pids $pids
+    kill $pids
+else
+    echo No pubber pids found, likely due to premature termination.
+    false
+fi

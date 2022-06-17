@@ -101,7 +101,7 @@ public abstract class SequenceValidator {
   );
   private static final Map<String, Class<?>> expectedUpdates = ImmutableMap.of(
       "config", Config.class,
-      "state", State.class
+      "state", AugmentedState.class
   );
   private static final String UDMI_VERSION = Objects.requireNonNullElse(
       System.getenv("UDMI_VERSION"), "unknown");
@@ -162,6 +162,7 @@ public abstract class SequenceValidator {
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
+  protected boolean configAcked;
   protected State previousState;
   private String sentDeviceConfig;
   private Date lastLog;
@@ -297,6 +298,7 @@ public abstract class SequenceValidator {
   @Before
   public void setUp() {
     deviceState = new State();
+    configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
     waitingCondition = "startup";
@@ -451,7 +453,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private void queryState() {
+  protected void queryState() {
     client.publish(deviceId, Validator.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
@@ -471,6 +473,7 @@ public abstract class SequenceValidator {
     }
     deviceConfig = null;
     deviceState = null;
+    configAcked = false;
   }
 
   protected void updateConfig() {
@@ -740,17 +743,25 @@ public abstract class SequenceValidator {
         info("Updated config with timestamp " + getTimestamp(config.timestamp));
         debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
         recordDeviceConfig();
-      } else if (converted instanceof State) {
+      } else if (converted instanceof AugmentedState) {
         debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
         deviceState = (State) converted;
+        updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        info("Updated state has last_config " + getTimestamp(
-            ((State) converted).system.last_config));
+        info("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
+    }
+  }
+
+  private void updateConfigAcked(AugmentedState converted) {
+    // The configAcked field is only defined if this state update comes from an
+    // explicit query, otherwise it'll be null (which means 'unknown').
+    if (converted.configAcked != null) {
+      configAcked = "true".equals(converted.configAcked);
     }
   }
 
