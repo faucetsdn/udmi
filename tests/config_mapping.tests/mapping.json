@@ -11,18 +11,16 @@
 {
   "version": "1.3.14",
   "timestamp": "2018-08-28T21:39:29.364Z",
-  "mapping": {
-    "devices": {
-      "FCU-123": {
-        "guid": "21387BBA787ADD",
-        "applied": "2018-08-27T22:39:12.364Z",  // Last time a promotion was successfully applied externally
-        "requested": "2018-08-27T22:39:12.364Z",  // Timestamp of requested model export
-        "status": {
-          "message": "Update in progress",
-          "category": "mapping.apply.start",
-          "timestamp": "2018-08-28T21:39:30.364Z",
-          "level": 500
-        }
+  "devices": {
+    "FCU-123": {
+      "guid": "21387BBA787ADD",
+      "applied": "2018-08-27T22:39:12.364Z",  // Last time a promotion was successfully applied externally
+      "requested": "2018-08-27T22:39:12.364Z",  // Timestamp of requested model export
+      "status": {
+        "message": "Update in progress",
+        "category": "mapping.apply.start",
+        "timestamp": "2018-08-28T21:39:30.364Z",
+        "level": 500
       }
     }
   }
