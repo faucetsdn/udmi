@@ -36,8 +36,7 @@
       "$ref": "file:common.json#/definitions/entry"
     },
     "ancillary": {
-      "description": "Arbitrary blob of json associated with this point",
-      "type": "object"
+      "$ref": "file:ancillary_properties.json"
     }
   }
 }

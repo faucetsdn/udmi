@@ -2,6 +2,8 @@
 from .common import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
+from .ancillary_properties import AncillaryProperties
+from .state_system_hardware import Hardware
 
 
 class DiscoveryEvent:
@@ -15,6 +17,8 @@ class DiscoveryEvent:
     self.scan_family = None
     self.families = None
     self.points = None
+    self.ancillary = None
+    self.hardware = None
 
   @staticmethod
   def from_dict(source):
@@ -28,6 +32,8 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.points = PointEnumerationEvent.map_from(source.get('points'))
+    result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
+    result.hardware = Hardware.from_dict(source.get('hardware'))
     return result
 
   @staticmethod
@@ -62,4 +68,8 @@ class DiscoveryEvent:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
     if self.points:
       result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
+    if self.ancillary:
+      result['ancillary'] = self.ancillary.to_dict() # 4
+    if self.hardware:
+      result['hardware'] = self.hardware.to_dict() # 4
     return result
