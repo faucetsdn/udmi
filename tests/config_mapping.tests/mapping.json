@@ -1,7 +1,7 @@
 //
 // This message represents the entire high-level config of a recommendation model,
 // as given to the mapping component. It therefore reflects the external (to mapper)
-// understanding of everything.
+// view of what has happened outside of the mapper itself.
 //
 // The building id is defined by the message envelope.
 //

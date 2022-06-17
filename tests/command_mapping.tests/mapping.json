@@ -1,5 +1,5 @@
 //
-// This message represents an import of an existing device mapping.
+// This message represents an import of an existing device mapping into the mapper.
 //
 // Note that the building and device id are included as part of the message envelope.
 //
