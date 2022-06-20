@@ -287,7 +287,7 @@ public class MqttPublisher {
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
     Integer configQOS = QOS_AT_LEAST_ONCE; // Defaults to QoS 1
-    if (configuration.options.noConfigAck) {
+    if (configuration.options.noConfigAck != null && configuration.options.noConfigAck) {
       configQOS = QOS_AT_MOST_ONCE;
     }
     subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), configQOS);
