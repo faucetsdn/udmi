@@ -301,6 +301,15 @@ public class Pubber {
 
     Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+
+    if (configuration.options.missingPoint != null) {
+      if (points.contains(configuration.options.missingPoint)) {
+        points.remove(configuration.options.missingPoint);
+      } else {
+        throw new RuntimeException("missingPoint not in pointset");
+      }
+    } 
+
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
