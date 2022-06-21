@@ -360,9 +360,9 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId));
+        configuration.gatewayId, configuration.options));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
