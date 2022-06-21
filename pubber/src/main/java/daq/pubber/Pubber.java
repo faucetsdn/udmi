@@ -360,7 +360,7 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s, options %s",
+    info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, configuration.options));
 
