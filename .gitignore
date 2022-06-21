@@ -25,6 +25,7 @@ firebase-debug.log
 /local/
 .pubber.pid
 __pycache__/
+/tests/downgrade.site/devices/*/out/
 
 .vscode
 

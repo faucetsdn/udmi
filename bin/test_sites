@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+errorfile=`mktemp`
+rm -f $errorfile
+
+build=y
+force=n
+
+schemadir=schema
+testdir=tests
+
+while getopts "d:" opt; do
+    case $opt in
+        d)
+            testdir=${OPTARG}
+            ;;
+        \?)
+            echo "Usage: $0 [-d TEST_DATA_DIR]"
+            exit -1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+subsets=$(cd $testdir; ls -d *.site)
+
+function redact_files {
+    for file in $@; do
+        sed -E -i -e '/at .*\(.*\.java:[0-9]+\)/d' $file
+    done
+}
+
+echo Testing against $subsets
+for subset in $subsets; do
+    echo Testing site $subset
+    devicesdir=$testdir/$subset/devices
+    rm -rf $devicesdir/*/out
+    devices=$(cd $devicesdir; ls -d *)
+    
+    bin/registrar $testdir/$subset
+    
+    for device in $devices; do
+        redact_files $devicesdir/$device/out/*
+        diff -r $devicesdir/$device/out $devicesdir/$device/expected
+    done
+done
+
+echo
+
+echo Done with site tests
