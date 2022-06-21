@@ -32,7 +32,7 @@ public class ConfigurationOptions {
         throw new RuntimeException(e);
       }
     }
-  return String.join(" ", options);
-}
+    return String.join(" ", options);
+  }
 
 }
