@@ -17,6 +17,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 import org.junit.Test;
 import udmi.schema.Metadata;
 
@@ -38,17 +41,19 @@ public class RegistrarTest {
     }
   }
 
+
+  /*
   private InputStream getTestFileStream(String filename) throws FileNotFoundException {
     File f = new File("/home/jrand/src/johnrandolph/udmi/tests/metadata.tests/", filename);
     return new FileInputStream(f);
   }
 
-  private Metadata getTestMetadataValue() throws IOException {
-    return mapper.readValue(getTestFileStream("example.json"), Metadata.class);
+  private Metadata getTestMetadataValue(String filename) throws IOException {
+    return mapper.readValue(getTestFileStream(filename), Metadata.class);
   }
 
-  private JsonNode getTestMetadataTree() throws IOException {
-    return mapper.readTree(getTestFileStream("example.json"));
+  private JsonNode getTestMetadataTree(String filename) throws IOException {
+    return mapper.readTree(getTestFileStream(filename));
   }
 
   private JsonNode getMetadataAsJsonNode(Metadata metadata) throws JsonProcessingException {
@@ -66,19 +71,35 @@ public class RegistrarTest {
     }
   }
 
-  @Test public void metadataTest() throws IOException, ProcessingException, FileNotFoundException {
+  private void assertFailReport(ProcessingReport report, String message) {
+    if (!report.isSuccess()) {
+      for (ProcessingMessage msg : report) {
+        if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
+          if (msg.getMessage().contains(message)) {
+            return;
+          }
+          fail(msg.getMessage().toString());
+        }
+      }
+    }
+    fail("ProcessingReport had no errors or no matching message");
+  }
+  */
+
+  private void assertErrorSummarySuccess(Map<String, Map<String, String>> summary) {
+    if (summary.get("Validating").size() == 0) {
+      return;
+    }
+    fail(summary.get("Validating").toString());
+  }
+
+  @Test public void metadataValidateSuccessTest() {
     RegistrarUnderTest registrar = getRegistrarUnderTest();
-    JsonSchema validator = registrar.getJsonSchema(METADATA_JSON);
-
-    ProcessingReport report = registrar.getSchemas().get(METADATA_JSON).validate(getTestMetadataTree());
-    assertSuccessReport(report);
-
-    Metadata metadata = getTestMetadataValue();
-    metadata.system = null;
-    JsonNode n = getMetadataAsJsonNode(metadata);
-
-    report = registrar.getSchemas().get(METADATA_JSON).validate(n);
-    assertSuccessReport(report);
+    ArrayList<String> argList = new ArrayList<String>();
+    argList.add("-s");
+    argList.add("/home/jrand/src/johnrandolph/udmi_site_model");
+    registrar.executeWithRegistrar(registrar, argList);
+    assertErrorSummarySuccess(registrar.getLastErrorSummary());
   }
 
   private RegistrarUnderTest getRegistrarUnderTest() {

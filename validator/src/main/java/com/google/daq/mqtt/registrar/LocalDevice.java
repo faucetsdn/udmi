@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
@@ -198,6 +200,7 @@ class LocalDevice {
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
   private final TreeMap<String, Object> siteMetadata;
+  private final Boolean validateMetadata;
 
   private String deviceNumId;
 
@@ -211,6 +214,7 @@ class LocalDevice {
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
+      this.validateMetadata = true;
       if (siteMetadata != null) {
         this.siteMetadata = OBJECT_MAPPER.convertValue(siteMetadata, TreeMap.class);
       } else {
@@ -230,6 +234,18 @@ class LocalDevice {
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
       String generation) {
     this(siteDir, devicesDir, deviceId, schemas, generation, null);
+  }
+
+  public static void parseMetadataValidateProcessingReport(ProcessingReport report) throws ValidationException {
+    if (report.isSuccess()) {
+      return;
+    }
+
+    for (ProcessingMessage msg : report) {
+      if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
+        throw ValidationException.fromProcessingReport(report);
+      }
+    }
   }
 
   private void prepareOutDir() {
@@ -273,6 +289,7 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
+
   private void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
     for (String key : source.keySet()) {
       Object value2 = source.get(key);
@@ -289,10 +306,13 @@ class LocalDevice {
     }
   }
 
-  private Metadata readMetadata() {
+  private Metadata readMetadataWithValidation(Boolean validate) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
-      schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+      ProcessingReport report = schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+      if (validate) {
+        parseMetadataValidateProcessingReport(report);
+      }
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     } catch (IOException ioException) {
@@ -311,6 +331,10 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_READING, e);
     }
     return null;
+  }
+
+  private Metadata readMetadata() {
+    return readMetadataWithValidation(this.validateMetadata);
   }
 
   private Metadata readNormalized() {

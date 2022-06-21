@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.api.services.cloudiot.v1.model.Device;
@@ -29,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
@@ -96,10 +98,15 @@ public class Registrar {
   private Duration idleLimit;
   private Set<String> cloudDevices;
   private Metadata siteMetadata;
+  private Map<String, Map<String, String>> lastErrorSummary;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     Registrar registrar = new Registrar();
+    executeWithRegistrar(registrar, argList);
+  }
+
+  public static void executeWithRegistrar(Registrar registrar, ArrayList<String> argList) {
     try {
       boolean processAllDevices = processArgs(argList, registrar);
 
@@ -179,6 +186,10 @@ public class Registrar {
     }
   }
 
+  protected Map<String, Map<String, String>> getLastErrorSummary() {
+    return lastErrorSummary;
+  }
+
   private void writeErrors() throws Exception {
     Map<String, Map<String, String>> errorSummary = new TreeMap<>();
     DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
@@ -216,6 +227,7 @@ public class Registrar {
     String version = Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
     errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, version));
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
+    lastErrorSummary = errorSummary;
   }
 
   protected void setSitePath(String sitePath) {
@@ -691,6 +703,9 @@ public class Registrar {
 
     File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
+      // At this time, do not validate the Metadata schema because, by its nature of being
+      // a partial overlay on each device Metadata, this Metadata will likely be incomplete
+      // and fail validation.
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
