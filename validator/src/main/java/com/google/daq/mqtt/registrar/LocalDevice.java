@@ -287,7 +287,6 @@ class LocalDevice {
     exceptionMap.throwIfNotEmpty();
   }
 
-
   private void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
     for (String key : source.keySet()) {
       Object value2 = source.get(key);

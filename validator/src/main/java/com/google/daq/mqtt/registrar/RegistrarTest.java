@@ -25,7 +25,7 @@ import udmi.schema.Metadata;
 
 public class RegistrarTest {
 
-  public static final String SCHEMA_BASE_PATH = "schema";
+  private static final String SCHEMA_BASE_PATH = "schema";
   private static final String METADATA_JSON = "metadata.json";
   private static final String PROJECT_ID = "unit-testing";
   private static final String SITE_PATH = "../sites/udmi_site_model";
@@ -42,13 +42,8 @@ public class RegistrarTest {
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
-    if (summary == null) {
-      return;
-    }
-    if (summary.get("Validating") == null) {
-      return;
-    }
-    if (summary.get("Validating").size() == 0) {
+    if ((summary == null) || (summary.get("Validating") == null) ||
+        (summary.get("Validating").size() == 0)) {
       return;
     }
     fail(summary.get("Validating").toString());
