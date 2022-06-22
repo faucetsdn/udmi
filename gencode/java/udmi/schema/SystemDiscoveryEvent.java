@@ -41,14 +41,14 @@ public class SystemDiscoveryEvent {
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
     public HashMap<String, Object> ancillary;
     /**
-     * Hardware
+     * SystemHardware
      * <p>
      * A collection of fields which describe the physical hardware of the device.
      * 
      */
     @JsonProperty("hardware")
     @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
-    public Hardware hardware;
+    public SystemHardware hardware;
 
     @Override
     public int hashCode() {
