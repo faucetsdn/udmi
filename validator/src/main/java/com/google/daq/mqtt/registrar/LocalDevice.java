@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -26,11 +27,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.MessageUpgrader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -71,8 +74,18 @@ import udmi.schema.SystemConfig;
 
 class LocalDevice {
 
+  public static final String INVALID_METADATA_HASH = "INVALID";
+  public static final String EXCEPTION_INITIALIZING = "Initializing";
+  public static final String EXCEPTION_VALIDATING = "Validating";
+  public static final String EXCEPTION_LOADING = "Loading";
+  public static final String EXCEPTION_READING = "Reading";
+  public static final String EXCEPTION_WRITING = "Writing";
+  public static final String EXCEPTION_FILES = "Files";
+  public static final String EXCEPTION_REGISTERING = "Registering";
+  public static final String EXCEPTION_CREDENTIALS = "Credential";
+  public static final String EXCEPTION_ENVELOPE = "Envelope";
+  public static final String EXCEPTION_SAMPLES = "Samples";
   private static final PrettyPrinter PROPER_PRETTY_PRINTER_POLICY = new ProperPrettyPrinterPolicy();
-
   private static final ObjectMapper OBJECT_MAPPER_RAW =
       new ObjectMapper()
           .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
@@ -81,13 +94,11 @@ class LocalDevice {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-
   private static final ObjectMapper OBJECT_MAPPER =
       OBJECT_MAPPER_RAW
           .copy()
           .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .enable(SerializationFeature.INDENT_OUTPUT);
-
   private static final String RSA_AUTH_TYPE = "RS256";
   private static final String RSA_CERT_TYPE = "RS256_X509";
   private static final String RSA_KEY_FORMAT = "RSA_PEM";
@@ -98,7 +109,6 @@ class LocalDevice {
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
-
   private static final String ES_AUTH_TYPE = "ES256";
   private static final String ES_CERT_TYPE = "ES256_X509";
   private static final String ES_KEY_FORMAT = "ES256_PEM";
@@ -109,14 +119,18 @@ class LocalDevice {
   private static final String ES_CERT_PEM = "ec_cert.pem";
   private static final String ES_PRIVATE_PEM = "ec_private.pem";
   private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
-
+  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
+      ImmutableMap.of(
+          RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
+          RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
+          ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
+          ES_CERT_TYPE, ES_PRIVATE_PKCS8);
   private static final String SAMPLES_DIR = "samples";
   private static final String AUX_DIR = "aux";
   private static final String OUT_DIR = "out";
+  private static final String EXPECTED_DIR = "expected";
   private static final String EXCEPTION_LOG_FILE = "exceptions.txt";
-
   private static final Set<String> DEVICE_FILES = ImmutableSet.of(METADATA_JSON);
-
   private static final Set<String> RSA_PRIVATE_KEY_FILES =
       ImmutableSet.of(RSA_PRIVATE_PEM, RSA_PRIVATE_PKCS8);
   private static final Set<String> ES_PRIVATE_KEY_FILES =
@@ -127,14 +141,6 @@ class LocalDevice {
           RSA_CERT_TYPE, RSA_PRIVATE_KEY_FILES,
           ES_AUTH_TYPE, ES_PRIVATE_KEY_FILES,
           ES_CERT_TYPE, ES_PRIVATE_KEY_FILES);
-
-  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
-      ImmutableMap.of(
-          RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
-          RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
-          ES_AUTH_TYPE, ES_PRIVATE_PKCS8,
-          ES_CERT_TYPE, ES_PRIVATE_PKCS8);
-
   private static final Map<String, String> PUBLIC_KEY_FILE_MAP =
       ImmutableMap.of(
           RSA_AUTH_TYPE, RSA_PUBLIC_PEM,
@@ -153,11 +159,10 @@ class LocalDevice {
           ES3_PUBLIC_PEM,
           SAMPLES_DIR,
           AUX_DIR,
+          EXPECTED_DIR,
           OUT_DIR);
-
   private static final Set<String> OUT_FILES =
       ImmutableSet.of(GENERATED_CONFIG_JSON, DEVICE_ERRORS_JSON, NORMALIZED_JSON);
-
   private static final Set<String> ALL_KEY_FILES =
       ImmutableSet.of(
           RSA_PUBLIC_PEM,
@@ -173,23 +178,9 @@ class LocalDevice {
           RSA_CERT_TYPE, RSA_CERT_FORMAT,
           ES_AUTH_TYPE, ES_KEY_FORMAT,
           ES_CERT_TYPE, ES_CERT_FILE);
-
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
   private static final String UDMI_VERSION = "1.3.14";
-
-  public static final String INVALID_METADATA_HASH = "INVALID";
-
-  public static final String EXCEPTION_VALIDATING = "Validating";
-  public static final String EXCEPTION_LOADING = "Loading";
-  public static final String EXCEPTION_READING = "Reading";
-  public static final String EXCEPTION_WRITING = "Writing";
-  public static final String EXCEPTION_FILES = "Files";
-  public static final String EXCEPTION_REGISTERING = "Registering";
-  public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_ENVELOPE = "Envelope";
-  public static final String EXCEPTION_SAMPLES = "Samples";
-
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;
@@ -205,6 +196,7 @@ class LocalDevice {
   private String deviceNumId;
 
   private CloudDeviceSettings settings;
+  private JsonNode baseVersion;
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
@@ -261,7 +253,7 @@ class LocalDevice {
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     exceptionLog.delete();
   }
-
+  
   static boolean deviceExists(File devicesDir, String deviceName) {
     return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
   }
@@ -314,8 +306,12 @@ class LocalDevice {
 
   private Metadata readMetadataWithValidation(boolean validate) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
+    final JsonNode instance;
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
-      ProcessingReport report = schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
+      instance = OBJECT_MAPPER.readTree(targetStream);
+      baseVersion = instance.get("version");
+      new MessageUpgrader("metadata", instance).upgrade();
+      ProcessingReport report = schemas.get(METADATA_JSON).validate(instance);
       if (validate) {
         parseMetadataValidateProcessingReport(report);
       }
@@ -323,12 +319,21 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
+      return null;
     }
+
     try {
+      schemas.get(METADATA_JSON).validate(instance);
+    } catch (ProcessingException | ValidationException e) {
+      exceptionMap.put(EXCEPTION_VALIDATING, e);
+    }
+
+    try {
+      String intermediary = OBJECT_MAPPER.writeValueAsString(instance);
       if (siteMetadata == null) {
-        return OBJECT_MAPPER.readValue(metadataFile, Metadata.class);
+        return OBJECT_MAPPER.readValue(intermediary, Metadata.class);
       } else {
-        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(metadataFile,
+        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(intermediary,
             TreeMap.class);
         deepMergeDefaults(metadataBase, siteMetadata);
         return OBJECT_MAPPER.convertValue(metadataBase, Metadata.class);
@@ -376,7 +381,8 @@ class LocalDevice {
   }
 
   private String getAuthType() {
-    return metadata.cloud == null ? null : metadata.cloud.auth_type.value();
+    return metadata.cloud == null ? null
+        : metadata.cloud.auth_type == null ? null : metadata.cloud.auth_type.value();
   }
 
   private boolean isDeviceKeySource() {
@@ -443,9 +449,10 @@ class LocalDevice {
     String keyFile = getPublicKeyFile();
     Set<String> publicKeyFiles = keyFile != null ? Set.of(keyFile) : Set.of();
     Set<String> privateKeyFiles = getPrivateKeyFiles();
-    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
-        ? Sets.union(Sets.union(publicKeyFiles, certFile), privateKeyFiles)
-        : Sets.union(publicKeyFiles, privateKeyFiles);
+    SetView<String> combined = Sets.union(publicKeyFiles, privateKeyFiles);
+    boolean addCertFile =
+        authType != null && (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE));
+    return addCertFile ? Sets.union(combined, certFile) : combined;
   }
 
   private Set<String> getPrivateKeyFiles() {
@@ -488,17 +495,17 @@ class LocalDevice {
   }
 
   CloudDeviceSettings getSettings() {
-    try {
-      if (settings != null) {
-        return settings;
-      }
+    return Preconditions.checkNotNull(settings, "Device settings not initialized");
+  }
 
+  void initializeSettings() {
+    try {
       settings = new CloudDeviceSettings();
       settings.credentials = deviceCredentials;
       settings.generation = generation;
 
       if (metadata == null) {
-        return settings;
+        return;
       }
 
       settings.updated = getUpdatedTimestamp();
@@ -507,9 +514,8 @@ class LocalDevice {
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
-      return settings;
     } catch (Exception e) {
-      throw new RuntimeException("While getting settings for device " + deviceId, e);
+      captureError(EXCEPTION_INITIALIZING, e);
     }
   }
 
@@ -556,10 +562,11 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      Config config = deviceConfigObject();
-      return OBJECT_MAPPER.writeValueAsString(config);
+      JsonNode configJson = OBJECT_MAPPER.valueToTree(deviceConfigObject());
+      new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      return OBJECT_MAPPER.writeValueAsString(configJson);
     } catch (Exception e) {
-      throw new RuntimeException("While converting device config to string", e);
+      throw new RuntimeException("While converting device config", e);
     }
   }
 
@@ -735,14 +742,14 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
+    metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();
-    String writeHash = metadataHash();
-    if (normalized.hash != null && normalized.hash.equals(writeHash)) {
+    String metadataHash = metadataHash();
+    if (normalized.hash != null && normalized.hash.equals(metadataHash)) {
       metadata.timestamp = normalized.timestamp;
       return;
     }
-    metadata.timestamp = new Date();
-    metadata.hash = writeHash;
+    metadata.hash = metadataHash;
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
     try (OutputStream outputStream = new FileOutputStream(metadataFile)) {
       // Super annoying, but can't set this on the global static instance.
@@ -758,12 +765,15 @@ class LocalDevice {
   }
 
   public void writeConfigFile() {
-    File configFile = new File(outDir, GENERATED_CONFIG_JSON);
-    try (OutputStream outputStream = new FileOutputStream(configFile)) {
-      outputStream.write(getSettings().config.getBytes());
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
+    String config = getSettings().config;
+    if (config != null) {
+      File configFile = new File(outDir, GENERATED_CONFIG_JSON);
+      try (OutputStream outputStream = new FileOutputStream(configFile)) {
+        outputStream.write(config.getBytes());
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException("While writing " + configFile.getAbsolutePath(), e);
+      }
     }
   }
 
