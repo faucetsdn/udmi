@@ -200,7 +200,7 @@ class LocalDevice {
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
   private final TreeMap<String, Object> siteMetadata;
-  private final Boolean validateMetadata;
+  private final boolean validateMetadata;
 
   private String deviceNumId;
 
@@ -208,13 +208,13 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata) {
+      String generation, Metadata siteMetadata, boolean validateMetadata) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
-      this.validateMetadata = true;
+      this.validateMetadata = validateMetadata;
       if (siteMetadata != null) {
         this.siteMetadata = OBJECT_MAPPER.convertValue(siteMetadata, TreeMap.class);
       } else {
@@ -228,6 +228,12 @@ class LocalDevice {
     } catch (Exception e) {
       throw new RuntimeException("While loading local device " + deviceId, e);
     }
+  }
+
+  LocalDevice(
+      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+      String generation, Metadata siteMetadata) {
+    this(siteDir, devicesDir, deviceId, schemas, generation, siteMetadata, false);
   }
 
   LocalDevice(
@@ -306,7 +312,7 @@ class LocalDevice {
     }
   }
 
-  private Metadata readMetadataWithValidation(Boolean validate) {
+  private Metadata readMetadataWithValidation(boolean validate) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       ProcessingReport report = schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));

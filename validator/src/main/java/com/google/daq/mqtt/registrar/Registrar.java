@@ -99,6 +99,7 @@ public class Registrar {
   private Set<String> cloudDevices;
   private Metadata siteMetadata;
   private Map<String, Map<String, String>> lastErrorSummary;
+  private boolean validateMetadata = false;
 
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -155,6 +156,9 @@ public class Registrar {
         case "-l":
           registrar.setIdleLimit(argList.remove(0));
           break;
+        case "-t":
+          registrar.setValidateMetadata(true);
+          break;
         case "--":
           return false;
         default:
@@ -175,6 +179,10 @@ public class Registrar {
 
   private void setUpdateFlag(boolean update) {
     updateCloudIoT = update;
+  }
+
+  private void setValidateMetadata(boolean validateMetadata) {
+    this.validateMetadata = validateMetadata;
   }
 
   private void setFeedTopic(String feedTopic) {
@@ -636,7 +644,7 @@ public class Registrar {
             localDevices.computeIfAbsent(
                 deviceName,
                 keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
-                    siteMetadata));
+                    siteMetadata, validateMetadata));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {

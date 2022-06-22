@@ -41,65 +41,26 @@ public class RegistrarTest {
     }
   }
 
-
-  /*
-  private InputStream getTestFileStream(String filename) throws FileNotFoundException {
-    File f = new File("/home/jrand/src/johnrandolph/udmi/tests/metadata.tests/", filename);
-    return new FileInputStream(f);
-  }
-
-  private Metadata getTestMetadataValue(String filename) throws IOException {
-    return mapper.readValue(getTestFileStream(filename), Metadata.class);
-  }
-
-  private JsonNode getTestMetadataTree(String filename) throws IOException {
-    return mapper.readTree(getTestFileStream(filename));
-  }
-
-  private JsonNode getMetadataAsJsonNode(Metadata metadata) throws JsonProcessingException {
-    return mapper.readTree(mapper.writeValueAsString(metadata));
-  }
-
-  private void assertSuccessReport(ProcessingReport report) {
-    if (!report.isSuccess()) {
-      for (ProcessingMessage msg : report) {
-        if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-          int i = 0;
-          fail(msg.getMessage().toString());
-        }
-      }
+  private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
+    if (summary == null) {
+      return;
     }
-  }
-
-  private void assertFailReport(ProcessingReport report, String message) {
-    if (!report.isSuccess()) {
-      for (ProcessingMessage msg : report) {
-        if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-          if (msg.getMessage().contains(message)) {
-            return;
-          }
-          fail(msg.getMessage().toString());
-        }
-      }
+    if (summary.get("Validating") == null) {
+      return;
     }
-    fail("ProcessingReport had no errors or no matching message");
-  }
-  */
-
-  private void assertErrorSummarySuccess(Map<String, Map<String, String>> summary) {
     if (summary.get("Validating").size() == 0) {
       return;
     }
     fail(summary.get("Validating").toString());
   }
 
-  @Test public void metadataValidateSuccessTest() {
-    RegistrarUnderTest registrar = getRegistrarUnderTest();
-    ArrayList<String> argList = new ArrayList<String>();
-    argList.add("-s");
-    argList.add("/home/jrand/src/johnrandolph/udmi_site_model");
-    registrar.executeWithRegistrar(registrar, argList);
-    assertErrorSummarySuccess(registrar.getLastErrorSummary());
+  private void assertErrorSummaryValidateFailure(Map<String, Map<String, String>> summary) {
+    if ((summary == null) || (summary.get("Validating") == null)) {
+      fail("Error summary for Validating key is null");
+    }
+    if (summary.get("Validating").size()==0) {
+      fail("Error summary for Validating key is size 0");
+    }
   }
 
   private RegistrarUnderTest getRegistrarUnderTest() {
@@ -108,6 +69,27 @@ public class RegistrarTest {
     registrar.setProjectId(PROJECT_ID);
     registrar.setToolRoot(TOOL_ROOT);
     return registrar;
+  }
+
+  @Test public void metadataValidateSuccessTest() {
+    RegistrarUnderTest registrar = getRegistrarUnderTest();
+
+    ArrayList<String> argList = new ArrayList<String>();
+    argList.add("-s");
+    argList.add(SITE_PATH);
+    registrar.executeWithRegistrar(registrar, argList);
+    assertErrorSummaryValidateSuccess(registrar.getLastErrorSummary());
+  }
+
+  @Test public void metadataValidateFailureTest() {
+    RegistrarUnderTest registrar = getRegistrarUnderTest();
+
+    ArrayList<String> argList = new ArrayList<String>();
+    argList.add("-t");
+    argList.add("-s");
+    argList.add(SITE_PATH);
+    registrar.executeWithRegistrar(registrar, argList);
+    assertErrorSummaryValidateFailure(registrar.getLastErrorSummary());
   }
 
 }
