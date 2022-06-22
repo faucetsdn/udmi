@@ -311,19 +311,16 @@ class LocalDevice {
       instance = OBJECT_MAPPER.readTree(targetStream);
       baseVersion = instance.get("version");
       new MessageUpgrader("metadata", instance).upgrade();
-      ProcessingReport report = schemas.get(METADATA_JSON).validate(instance);
-      if (validate) {
-        parseMetadataValidateProcessingReport(report);
-      }
-    } catch (ProcessingException | ValidationException e) {
-      exceptionMap.put(EXCEPTION_VALIDATING, e);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
       return null;
     }
 
     try {
-      schemas.get(METADATA_JSON).validate(instance);
+      ProcessingReport report = schemas.get(METADATA_JSON).validate(instance);
+      if (validate) {
+        parseMetadataValidateProcessingReport(report);
+      }
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
