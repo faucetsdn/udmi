@@ -53,6 +53,15 @@ public class ValidatorTest {
   }
 
   @Test
+  public void emptySystemBlock() {
+    MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
+    bundle.message.remove("system");
+    validator.validateMessage(bundle);
+    MetadataReport report = getMetadataReport();
+    assertEquals("One error device", 1, report.errorDevices.size());
+  }
+
+  @Test
   public void emptyPointsetEvent() {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
