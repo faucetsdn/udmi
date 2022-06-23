@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
@@ -189,6 +191,7 @@ class LocalDevice {
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
   private final TreeMap<String, Object> siteMetadata;
+  private final boolean validateMetadata;
 
   private String deviceNumId;
 
@@ -197,12 +200,13 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, Metadata siteMetadata) {
+      String generation, Metadata siteMetadata, boolean validateMetadata) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteDir = siteDir;
+      this.validateMetadata = validateMetadata;
       if (siteMetadata != null) {
         this.siteMetadata = OBJECT_MAPPER.convertValue(siteMetadata, TreeMap.class);
       } else {
@@ -220,12 +224,27 @@ class LocalDevice {
 
   LocalDevice(
       File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
+      String generation, Metadata siteMetadata) {
+    this(siteDir, devicesDir, deviceId, schemas, generation, siteMetadata, false);
+  }
+
+  LocalDevice(
+      File siteDir, File devicesDir, String deviceId, Map<String, JsonSchema> schemas,
       String generation) {
     this(siteDir, devicesDir, deviceId, schemas, generation, null);
   }
 
-  static boolean deviceExists(File devicesDir, String deviceName) {
-    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
+  public static void parseMetadataValidateProcessingReport(ProcessingReport report)
+      throws ValidationException {
+    if (report.isSuccess()) {
+      return;
+    }
+
+    for (ProcessingMessage msg : report) {
+      if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
+        throw ValidationException.fromProcessingReport(report);
+      }
+    }
   }
 
   private void prepareOutDir() {
@@ -234,6 +253,10 @@ class LocalDevice {
     }
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     exceptionLog.delete();
+  }
+  
+  static boolean deviceExists(File devicesDir, String deviceName) {
+    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
   }
 
   public void validateExpected() {
@@ -281,7 +304,7 @@ class LocalDevice {
     }
   }
 
-  private Metadata readMetadata() {
+  private Metadata readMetadataWithValidation(boolean validate) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     final JsonNode instance;
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
@@ -294,7 +317,10 @@ class LocalDevice {
     }
 
     try {
-      schemas.get(METADATA_JSON).validate(instance);
+      ProcessingReport report = schemas.get(METADATA_JSON).validate(instance);
+      if (validate) {
+        parseMetadataValidateProcessingReport(report);
+      }
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
@@ -313,6 +339,10 @@ class LocalDevice {
       exceptionMap.put(EXCEPTION_READING, e);
     }
     return null;
+  }
+
+  private Metadata readMetadata() {
+    return readMetadataWithValidation(this.validateMetadata);
   }
 
   private Metadata readNormalized() {
