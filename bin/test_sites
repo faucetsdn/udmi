@@ -30,7 +30,10 @@ subsets=$(cd $testdir; ls -d *.site)
 
 function redact_files {
     for file in $@; do
-        sed -E -i -e '/at .*\(.*\.java:[0-9]+\)/d' $file
+        sed -E -i \
+            -e '/at .*\(.*\.java:[0-9]+\)/d' \
+            -e '/\.\.\. [0-9]+ more/d' \
+            $file
     done
 }
 
