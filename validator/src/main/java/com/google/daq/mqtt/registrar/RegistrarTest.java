@@ -43,8 +43,8 @@ public class RegistrarTest {
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
-    if ((summary == null) || (summary.get("Validating") == null) ||
-        (summary.get("Validating").size() == 0)) {
+    if ((summary == null) || (summary.get("Validating") == null)
+        || (summary.get("Validating").size() == 0)) {
       return;
     }
     fail(summary.get("Validating").toString());
@@ -54,7 +54,7 @@ public class RegistrarTest {
     if ((summary == null) || (summary.get("Validating") == null)) {
       fail("Error summary for Validating key is null");
     }
-    if (summary.get("Validating").size()==0) {
+    if (summary.get("Validating").size() == 0) {
       fail("Error summary for Validating key is size 0");
     }
   }
@@ -68,7 +68,7 @@ public class RegistrarTest {
   }
 
   @Test public void metadataValidateSuccessTest() {
-    RegistrarUnderTest registrar = getRegistrarUnderTest();
+    final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
     ArrayList<String> argList = new ArrayList<String>();
     argList.add("-s");
@@ -79,7 +79,7 @@ public class RegistrarTest {
   }
 
   @Test public void metadataValidateFailureTest() {
-    RegistrarUnderTest registrar = getRegistrarUnderTest();
+    final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
     ArrayList<String> argList = new ArrayList<String>();
     argList.add("-t");

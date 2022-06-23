@@ -234,7 +234,8 @@ class LocalDevice {
     this(siteDir, devicesDir, deviceId, schemas, generation, null);
   }
 
-  public static void parseMetadataValidateProcessingReport(ProcessingReport report) throws ValidationException {
+  public static void parseMetadataValidateProcessingReport(ProcessingReport report)
+      throws ValidationException {
     if (report.isSuccess()) {
       return;
     }
