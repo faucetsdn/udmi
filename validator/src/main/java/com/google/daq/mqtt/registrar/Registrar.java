@@ -102,6 +102,7 @@ public class Registrar {
   private Metadata siteMetadata;
   private Map<String, Map<String, String>> lastErrorSummary;
   private boolean validateMetadata = false;
+  private List<String> deviceList;
 
   /**
    * Main entry point for registrar.
@@ -111,37 +112,11 @@ public class Registrar {
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     Registrar registrar = new Registrar();
-    executeWithRegistrar(registrar, argList);
+    processArgs(argList, registrar);
+    registrar.execute();
   }
 
-  public static void executeWithRegistrar(Registrar registrar, ArrayList<String> argList) {
-    try {
-      boolean processAllDevices = processArgs(argList, registrar);
-
-      if (registrar.schemaBase == null) {
-        registrar.setToolRoot(null);
-      }
-
-      registrar.loadSiteMetadata();
-
-      if (processAllDevices) {
-        registrar.processDevices();
-      } else {
-        registrar.processDevices(argList);
-      }
-
-      registrar.writeErrors();
-      registrar.shutdown();
-    } catch (ExceptionMap em) {
-      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
-      throw new RuntimeException("mapped exceptions", em);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      throw new RuntimeException("main exception", ex);
-    }
-  }
-
-  private static boolean processArgs(List<String> argList, Registrar registrar) {
+  public static void processArgs(List<String> argList, Registrar registrar) {
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
@@ -167,16 +142,35 @@ public class Registrar {
           registrar.setValidateMetadata(true);
           break;
         case "--":
-          return false;
+          break;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
           }
+          // Add the current non-option back into the list and use it as device names list.
           argList.add(0, option);
-          return false;
+          registrar.setDeviceList(argList);
+          return;
       }
     }
-    return true;
+  }
+
+  public void execute() {
+    try {
+      if (schemaBase == null) {
+        setToolRoot(null);
+      }
+      loadSiteMetadata();
+      processDevices();
+      writeErrors();
+      shutdown();
+    } catch (ExceptionMap em) {
+      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
+      throw new RuntimeException("mapped exceptions", em);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      throw new RuntimeException("main exception", ex);
+    }
   }
 
   private void setIdleLimit(String option) {
@@ -190,6 +184,10 @@ public class Registrar {
 
   private void setValidateMetadata(boolean validateMetadata) {
     this.validateMetadata = validateMetadata;
+  }
+
+  private void setDeviceList(List<String> deviceList) {
+    this.deviceList = deviceList;
   }
 
   private void setFeedTopic(String feedTopic) {
@@ -279,7 +277,7 @@ public class Registrar {
   }
 
   private void processDevices() {
-    processDevices(null);
+    processDevices(this.deviceList);
   }
 
   private void processDevices(List<String> devices) {

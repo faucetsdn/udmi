@@ -72,7 +72,8 @@ public class RegistrarTest {
     ArrayList<String> argList = new ArrayList<String>();
     argList.add("-s");
     argList.add(SITE_PATH);
-    registrar.executeWithRegistrar(registrar, argList);
+    Registrar.processArgs(argList, registrar);
+    registrar.execute();
     assertErrorSummaryValidateSuccess(registrar.getLastErrorSummary());
   }
 
@@ -83,7 +84,8 @@ public class RegistrarTest {
     argList.add("-t");
     argList.add("-s");
     argList.add(SITE_PATH);
-    registrar.executeWithRegistrar(registrar, argList);
+    Registrar.processArgs(argList, registrar);
+    registrar.execute();
     assertErrorSummaryValidateFailure(registrar.getLastErrorSummary());
   }
 
