@@ -26,11 +26,6 @@ jobs:
           bin/gencode check
           pubber/bin/build check
           validator/bin/build check
-      - name: extra
-        if: ${{ always() }}
-        run: |
-          sha256sum foo.py
-          diff gencode/python/udmi/schema/config_localnet.py foo.py
       - name: Schema conformance tests
         if: ${{ always() }}
         run: bin/test_schema -p
