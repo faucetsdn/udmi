@@ -114,11 +114,13 @@
   "scan_family": "iot",
   "version": 1,
   "timestamp": "2022-06-21T17:19:49.191183+00:00",
-  "hardware": {
-    "make": "JCI",
-    "model": "MS-VMA1615-0"
-  },
-  "ancillary": {
-    "objectName": "VAV-CO2"
+  "system": {
+    "hardware": {
+      "make": "JCI",
+      "model": "MS-VMA1615-0"
+    },
+    "ancillary": {
+      "objectName": "VAV-CO2"
+    }
   }
 }
