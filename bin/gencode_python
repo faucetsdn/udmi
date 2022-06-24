@@ -27,7 +27,6 @@ def get_title(contents, default=None):
     if default:
         return default;
     md5_hash = hashlib.md5(json.dumps(contents).encode()).hexdigest()[0:8]
-    print('TAPTAP', md5_hash, contents)
     return 'Object %s' % md5_hash.upper()
 
 def get_class_name(contents):
