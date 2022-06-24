@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.api.services.cloudiot.v1.model.Device;
@@ -29,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
@@ -49,10 +51,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 
+/**
+ * Validate devices' static metadata and register them in the cloud.
+ */
 public class Registrar {
 
   public static final String SCHEMA_BASE_PATH = "schema";
@@ -96,37 +100,23 @@ public class Registrar {
   private Duration idleLimit;
   private Set<String> cloudDevices;
   private Metadata siteMetadata;
+  private Map<String, Map<String, String>> lastErrorSummary;
+  private boolean validateMetadata = false;
+  private List<String> deviceList;
 
+  /**
+   * Main entry point for registrar.
+   *
+   * @param args Standard command line arguments
+   */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     Registrar registrar = new Registrar();
-    try {
-      boolean processAllDevices = processArgs(argList, registrar);
-
-      if (registrar.schemaBase == null) {
-        registrar.setToolRoot(null);
-      }
-
-      registrar.loadSiteMetadata();
-
-      if (processAllDevices) {
-        registrar.processDevices();
-      } else {
-        registrar.processDevices(argList);
-      }
-
-      registrar.writeErrors();
-      registrar.shutdown();
-    } catch (ExceptionMap em) {
-      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
-      throw new RuntimeException("mapped exceptions", em);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      throw new RuntimeException("main exception", ex);
-    }
+    processArgs(argList, registrar);
+    registrar.execute();
   }
 
-  private static boolean processArgs(List<String> argList, Registrar registrar) {
+  public static void processArgs(List<String> argList, Registrar registrar) {
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
@@ -148,17 +138,39 @@ public class Registrar {
         case "-l":
           registrar.setIdleLimit(argList.remove(0));
           break;
+        case "-t":
+          registrar.setValidateMetadata(true);
+          break;
         case "--":
-          return false;
+          break;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
           }
+          // Add the current non-option back into the list and use it as device names list.
           argList.add(0, option);
-          return false;
+          registrar.setDeviceList(argList);
+          return;
       }
     }
-    return true;
+  }
+
+  public void execute() {
+    try {
+      if (schemaBase == null) {
+        setToolRoot(null);
+      }
+      loadSiteMetadata();
+      processDevices();
+      writeErrors();
+      shutdown();
+    } catch (ExceptionMap em) {
+      ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
+      throw new RuntimeException("mapped exceptions", em);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      throw new RuntimeException("main exception", ex);
+    }
   }
 
   private void setIdleLimit(String option) {
@@ -170,6 +182,14 @@ public class Registrar {
     updateCloudIoT = update;
   }
 
+  private void setValidateMetadata(boolean validateMetadata) {
+    this.validateMetadata = validateMetadata;
+  }
+
+  private void setDeviceList(List<String> deviceList) {
+    this.deviceList = deviceList;
+  }
+
   private void setFeedTopic(String feedTopic) {
     System.err.println("Sending device feed to topic " + feedTopic);
     feedPusher = new PubSubPusher(projectId, feedTopic);
@@ -177,6 +197,10 @@ public class Registrar {
     if (!feedPusher.isEmpty()) {
       throw new RuntimeException("Feed is not empty, do you have enough pullers?");
     }
+  }
+
+  protected Map<String, Map<String, String>> getLastErrorSummary() {
+    return lastErrorSummary;
   }
 
   private void writeErrors() throws Exception {
@@ -216,9 +240,10 @@ public class Registrar {
     String version = Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
     errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, version));
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
+    lastErrorSummary = errorSummary;
   }
 
-  private void setSitePath(String sitePath) {
+  protected void setSitePath(String sitePath) {
     Preconditions.checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
     summaryFile = new File(siteDir, REGISTRATION_SUMMARY_JSON);
@@ -252,7 +277,7 @@ public class Registrar {
   }
 
   private void processDevices() {
-    processDevices(null);
+    processDevices(this.deviceList);
   }
 
   private void processDevices(List<String> devices) {
@@ -459,13 +484,15 @@ public class Registrar {
     sendUpdateMessage(localDevice, CONFIG_SUB_TYPE, subFolder, localDevice.deviceConfigObject());
   }
 
-  private void sendUpdateMessage(LocalDevice localDevice, String subType, SubFolder subfolder, Object target) {
+  private void sendUpdateMessage(LocalDevice localDevice, String subType, SubFolder subfolder,
+      Object target) {
     String fieldName = subfolder.toString().toLowerCase();
     try {
       Field declaredField = target.getClass().getDeclaredField(fieldName);
       sendSubMessage(localDevice, subType, subfolder, declaredField.get(target));
     } catch (Exception e) {
-      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName, target.getClass().getSimpleName()));
+      throw new RuntimeException(String.format("Getting field %s from target %s", fieldName,
+          target.getClass().getSimpleName()));
     }
   }
 
@@ -550,11 +577,16 @@ public class Registrar {
 
     Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
     Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
+    initializeSettings(localDevices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     return localDevices;
+  }
+
+  private void initializeSettings(Map<String, LocalDevice> localDevices) {
+    localDevices.values().forEach(LocalDevice::initializeSettings);
   }
 
   private void validateSamples(Map<String, LocalDevice> localDevices) {
@@ -624,7 +656,7 @@ public class Registrar {
             localDevices.computeIfAbsent(
                 deviceName,
                 keyName -> new LocalDevice(siteDir, devicesDir, deviceName, schemas, generation,
-                    siteMetadata));
+                    siteMetadata, validateMetadata));
         try {
           localDevice.loadCredentials();
         } catch (Exception e) {
@@ -645,7 +677,7 @@ public class Registrar {
     return localDevices;
   }
 
-  private void setProjectId(String projectId) {
+  protected void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
     }
@@ -653,7 +685,7 @@ public class Registrar {
     initializeCloudProject();
   }
 
-  private void setToolRoot(String toolRoot) {
+  protected void setToolRoot(String toolRoot) {
     schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
     File[] schemaFiles = schemaBase.listFiles(file -> file.getName().endsWith(SCHEMA_SUFFIX));
     for (File schemaFile : Objects.requireNonNull(schemaFiles)) {
@@ -691,6 +723,9 @@ public class Registrar {
 
     File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
     try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
+      // At this time, do not validate the Metadata schema because, by its nature of being
+      // a partial overlay on each device Metadata, this Metadata will likely be incomplete
+      // and fail validation.
       schemas.get(METADATA_JSON).validate(OBJECT_MAPPER.readTree(targetStream));
     } catch (FileNotFoundException e) {
       return;
@@ -704,6 +739,10 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
     }
+  }
+
+  protected Map<String, JsonSchema> getSchemas() {
+    return schemas;
   }
 
   class RelativeDownloader implements URIDownloader {

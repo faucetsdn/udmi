@@ -11,6 +11,8 @@ public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
   private static final String TARGET_FORMAT = "%d.%d.%d";
+  public static final String STATE_SCHEMA = "state";
+  public static final String METADATA_SCHEMA = "metadata";
   private final JsonNode message;
   private final String schemaName;
   private final int major;
@@ -68,8 +70,11 @@ public class MessageUpgrader {
 
   private void upgrade_1_3_14() {
     patch = 14;
-    if ("state".equals(schemaName)) {
+    if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_3_14_state();
+    }
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgrade_1_3_14_metadata();
     }
   }
 
@@ -79,6 +84,17 @@ public class MessageUpgrader {
       upgradeMakeModel(system);
       upgradeFirmware(system);
       upgradeStatuses(system);
+    }
+  }
+
+  private void upgrade_1_3_14_metadata() {
+    ObjectNode localnet = (ObjectNode) message.get("localnet");
+    if (localnet == null) {
+      return;
+    }
+    ObjectNode subsystem = (ObjectNode) localnet.remove("subsystem");
+    if (subsystem != null) {
+      localnet.set("families", subsystem);
     }
   }
 

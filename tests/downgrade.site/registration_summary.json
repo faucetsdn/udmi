@@ -1,0 +1,13 @@
+{
+  "Credential" : {
+    "DWN-1" : "While loading credentials for local device DWN-1",
+    "DWN-2" : "While loading credentials for local device DWN-2"
+  },
+  "Files" : {
+    "DWN-1" : "devices/DWN-1",
+    "DWN-2" : "devices/DWN-2"
+  },
+  "Version" : {
+    "main" : "1.3.13-87-g8566aca1"
+  }
+}
