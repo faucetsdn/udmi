@@ -45,7 +45,7 @@ def process_file(source):
         eprint('Processing file', source)
         with open(source) as fd:
             contents = json.load(fd)
-        contents[SOURCE_KEY] = source
+        contents[SOURCE_KEY] = os.path.relpath(source)
         generate_class(contents)
     except Exception:
         raise Exception('While processing file %s' % source)

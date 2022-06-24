@@ -1,7 +1,7 @@
 """Generated class for model_system.json"""
 
 
-class ObjectCC5CED9E:
+class Object11D8FD30:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class ObjectCC5CED9E:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectCC5CED9E()
+    result = Object11D8FD30()
     result.x = source.get('x')
     result.y = source.get('y')
     result.z = source.get('z')
@@ -25,7 +25,7 @@ class ObjectCC5CED9E:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectCC5CED9E.from_dict(source[key])
+      result[key] = Object11D8FD30.from_dict(source[key])
     return result
 
   @staticmethod
@@ -46,7 +46,7 @@ class ObjectCC5CED9E:
     return result
 
 
-class ObjectF3010191:
+class Object9CBC741A:
   """Generated schema class"""
 
   def __init__(self):
@@ -58,10 +58,10 @@ class ObjectF3010191:
   def from_dict(source):
     if not source:
       return None
-    result = Object1F7AA959()
+    result = Object327C415D()
     result.site = source.get('site')
     result.section = source.get('section')
-    result.position = ObjectCC5CED9E.from_dict(source.get('position'))
+    result.position = Object11D8FD30.from_dict(source.get('position'))
     return result
 
   @staticmethod
@@ -70,7 +70,7 @@ class ObjectF3010191:
       return None
     result = {}
     for key in source:
-      result[key] = Object1F7AA959.from_dict(source[key])
+      result[key] = Object327C415D.from_dict(source[key])
     return result
 
   @staticmethod
@@ -91,7 +91,7 @@ class ObjectF3010191:
     return result
 
 
-class Object40669492:
+class Object0EA01FC6:
   """Generated schema class"""
 
   def __init__(self):
@@ -103,7 +103,7 @@ class Object40669492:
   def from_dict(source):
     if not source:
       return None
-    result = Object40669492()
+    result = Object0EA01FC6()
     result.guid = source.get('guid')
     result.site = source.get('site')
     result.name = source.get('name')
@@ -115,7 +115,7 @@ class Object40669492:
       return None
     result = {}
     for key in source:
-      result[key] = Object40669492.from_dict(source[key])
+      result[key] = Object0EA01FC6.from_dict(source[key])
     return result
 
   @staticmethod
@@ -136,7 +136,7 @@ class Object40669492:
     return result
 
 
-class Object3ACE9067:
+class ObjectA51C8B52:
   """Generated schema class"""
 
   def __init__(self):
@@ -146,8 +146,8 @@ class Object3ACE9067:
   def from_dict(source):
     if not source:
       return None
-    result = Object6FD34535()
-    result.asset = Object40669492.from_dict(source.get('asset'))
+    result = Object8FD736D9()
+    result.asset = Object0EA01FC6.from_dict(source.get('asset'))
     return result
 
   @staticmethod
@@ -156,7 +156,7 @@ class Object3ACE9067:
       return None
     result = {}
     for key in source:
-      result[key] = Object6FD34535.from_dict(source[key])
+      result[key] = Object8FD736D9.from_dict(source[key])
     return result
 
   @staticmethod
@@ -173,7 +173,7 @@ class Object3ACE9067:
     return result
 
 
-class ObjectDEF80C95:
+class Object734A44BA:
   """Generated schema class"""
 
   def __init__(self):
@@ -183,7 +183,7 @@ class ObjectDEF80C95:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectDEF80C95()
+    result = Object734A44BA()
     result.suffix = source.get('suffix')
     return result
 
@@ -193,7 +193,7 @@ class ObjectDEF80C95:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectDEF80C95.from_dict(source[key])
+      result[key] = Object734A44BA.from_dict(source[key])
     return result
 
   @staticmethod
@@ -224,9 +224,9 @@ class SystemModel:
     if not source:
       return None
     result = SystemModel()
-    result.location = Object1F7AA959.from_dict(source.get('location'))
-    result.physical_tag = Object6FD34535.from_dict(source.get('physical_tag'))
-    result.aux = ObjectDEF80C95.from_dict(source.get('aux'))
+    result.location = Object327C415D.from_dict(source.get('location'))
+    result.physical_tag = Object8FD736D9.from_dict(source.get('physical_tag'))
+    result.aux = Object734A44BA.from_dict(source.get('aux'))
     result.min_loglevel = source.get('min_loglevel')
     return result
 
