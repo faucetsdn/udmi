@@ -23,6 +23,9 @@ jobs:
       - name: code checks
         if: ${{ always() }}
         run: |
+          echo TAPTAP
+          diff gencode/python/udmi/schema/config_localnet.py foo.py || true
+          echo TAPTAP
           bin/gencode check
           pubber/bin/build check
           validator/bin/build check
