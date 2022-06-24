@@ -24,6 +24,7 @@ jobs:
         if: ${{ always() }}
         run: |
           echo TAPTAP
+          sha256sum foo.py
           diff gencode/python/udmi/schema/config_localnet.py foo.py || true
           echo TAPTAP
           bin/gencode check
