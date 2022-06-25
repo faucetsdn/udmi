@@ -69,7 +69,7 @@ public class SystemState {
     @JsonPropertyDescription("The serial number of the physical device")
     public java.lang.String serial_no;
     /**
-     * Hardware
+     * SystemHardware
      * <p>
      * A collection of fields which describe the physical hardware of the device.
      * (Required)
@@ -77,7 +77,7 @@ public class SystemState {
      */
     @JsonProperty("hardware")
     @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
-    public Hardware hardware;
+    public SystemHardware hardware;
     /**
      * A collection of items which can be used to describe version of software running on a device
      * (Required)

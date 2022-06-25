@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Hardware
+ * SystemHardware
  * <p>
  * A collection of fields which describe the physical hardware of the device.
  * 
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "rev"
 })
 @Generated("jsonschema2pojo")
-public class Hardware {
+public class SystemHardware {
 
     /**
      * The manufacturer of the device
@@ -68,10 +68,10 @@ public class Hardware {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Hardware) == false) {
+        if ((other instanceof SystemHardware) == false) {
             return false;
         }
-        Hardware rhs = ((Hardware) other);
+        SystemHardware rhs = ((SystemHardware) other);
         return (((((this.model == rhs.model)||((this.model!= null)&&this.model.equals(rhs.model)))&&((this.rev == rhs.rev)||((this.rev!= null)&&this.rev.equals(rhs.rev))))&&((this.sku == rhs.sku)||((this.sku!= null)&&this.sku.equals(rhs.sku))))&&((this.make == rhs.make)||((this.make!= null)&&this.make.equals(rhs.make))));
     }
 
