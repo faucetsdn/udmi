@@ -38,11 +38,14 @@
       }
     }
   },
-  "hardware": {
-    "model": "MS-NAE5510-3",
-    "make": "JCI"
-  },
-  "ancillary": {
-    "rabbits": 283
+  "system": {
+    "serial_no": "983129832",
+    "hardware": {
+      "model": "MS-NAE5510-3",
+      "make": "JCI"
+    },
+    "ancillary": {
+      "rabbits": 283
+    }
   }
 }

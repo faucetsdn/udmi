@@ -1,6 +1,6 @@
 {
   "projectId": "daq-test-suite",
-  "deviceRegistryId": "test_registry",
+  "deviceRegistryId": "ZZ-TRI-FECTA",
   "deviceNumId": "921302198324",
   "deviceId": "FCU-2",
   "subFolder": "pointset",

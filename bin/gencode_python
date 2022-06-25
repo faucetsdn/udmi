@@ -45,7 +45,7 @@ def process_file(source):
         eprint('Processing file', source)
         with open(source) as fd:
             contents = json.load(fd)
-        contents[SOURCE_KEY] = source
+        contents[SOURCE_KEY] = os.path.relpath(source)
         generate_class(contents)
     except Exception:
         raise Exception('While processing file %s' % source)
@@ -227,6 +227,7 @@ def write_dep(writer, contents, depcontent):
         assert len(mapcontent) == 1, 'multiple patternProperties not supported'
         write_dep(writer, contents, list(mapcontent.values())[0])
     elif subclass:
+        subcontent[SOURCE_KEY] = contents[SOURCE_KEY]
         write_class(writer, subcontent)
 
 def write_definitions(writer, contents):
