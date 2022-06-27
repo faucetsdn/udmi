@@ -478,6 +478,8 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
+      // Some things can't be done from a on-message callback, so do them here instead.
+      maybeRedirectEndpoint();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
@@ -548,7 +550,6 @@ public class Pubber {
     }
 
     initializeMqtt();
-    startConnection(this.onDone);
   }
 
   private void disconnectMqtt() {
@@ -696,7 +697,6 @@ public class Pubber {
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
-      maybeRedirectEndpoint();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
@@ -706,12 +706,18 @@ public class Pubber {
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    if (redirectRegistry == null || redirectRegistry.equals(configuration.registryId)) {
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.registryId)
+        || configLatch.getCount() > 0) {
       return;
     }
-    disconnectMqtt();
-    configuration.registryId = redirectRegistry;
-    initializeMqtt();
+    try {
+      disconnectMqtt();
+      configuration.registryId = redirectRegistry;
+      initializeMqtt();
+      startConnection(onDone);
+    } catch (Exception e) {
+      throw new RuntimeException("While redirecting connection endpoint", e);
+    }
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
