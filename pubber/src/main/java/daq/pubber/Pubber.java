@@ -547,6 +547,17 @@ public class Pubber {
       throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
     }
 
+    initializeMqtt();
+    startConnection(this.onDone);
+  }
+
+  private void disconnectMqtt() {
+    Preconditions.checkState(mqttPublisher != null, "mqttPublisher not defined");
+    mqttPublisher.close();
+    mqttPublisher = null;
+  }
+
+  private void initializeMqtt() {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
       String keyDevice =
@@ -685,11 +696,22 @@ public class Pubber {
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
+      maybeRedirectEndpoint();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
     maybeRestartExecutor(actualInterval);
+  }
+
+  private void maybeRedirectEndpoint() {
+    String redirectRegistry = configuration.options.redirectRegistry;
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.registryId)) {
+      return;
+    }
+    disconnectMqtt();
+    configuration.registryId = redirectRegistry;
+    initializeMqtt();
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {

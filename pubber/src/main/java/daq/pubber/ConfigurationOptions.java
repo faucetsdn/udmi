@@ -13,6 +13,7 @@ public class ConfigurationOptions {
   public Boolean noHardware;
   public String extraPoint;
   public String extraField;
+  public String redirectRegistry;
 
   /**
    * Returns a string of enabled options and values.
