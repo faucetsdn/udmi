@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-if [ $# != 1 ]; then
-    echo Usage: $0 [project_id]
+if (( $# < 1 )); then
+    echo Usage: $0 PROJECT_ID [options]
     false
 fi
 
@@ -27,7 +27,7 @@ EOF
 PUBSUB_FUNCTIONS="udmi_target udmi_state udmi_config udmi_reflect"
 for func in $PUBSUB_FUNCTIONS; do
     echo Deploying pubsub-trigger function $func...
-    gcloud functions deploy $func --set-env-vars GCP_PROJECT=$PROJECT --trigger-topic=$func --runtime=$RUNTIME --project=$PROJECT --source=$SOURCE &
+    gcloud functions deploy $func --set-env-vars GCP_PROJECT=$PROJECT --trigger-topic=$func --runtime=$RUNTIME --project=$PROJECT --source=$SOURCE "$@" &
     sleep 10
 done
 
