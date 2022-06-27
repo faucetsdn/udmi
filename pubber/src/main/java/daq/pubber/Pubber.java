@@ -164,7 +164,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
-    configuration.projectId = projectId;
+    configuration.endpoint.projectId = projectId;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -342,8 +342,8 @@ public class Pubber {
   }
 
   private void processCloudConfig(CloudIotConfig cloudIotConfig) {
-    configuration.registryId = cloudIotConfig.registry_id;
-    configuration.cloudRegion = cloudIotConfig.cloud_region;
+    configuration.endpoint.registryId = cloudIotConfig.registry_id;
+    configuration.endpoint.cloudRegion = cloudIotConfig.cloud_region;
   }
 
   private void initializeDevice() {
@@ -706,13 +706,13 @@ public class Pubber {
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    if (redirectRegistry == null || redirectRegistry.equals(configuration.registryId)
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.endpoint.registryId)
         || configLatch.getCount() > 0) {
       return;
     }
     try {
       disconnectMqtt();
-      configuration.registryId = redirectRegistry;
+      configuration.endpoint.registryId = redirectRegistry;
       initializeMqtt();
       startConnection(onDone);
     } catch (Exception e) {
