@@ -3,8 +3,7 @@
   "blobset": {
     "phase": "prep",
     "blobs": [
-      {
-        "id": "hello_payload",
+      "hello_payload":
         "type": "base64",
         "content_type": "text/plain",
         "payload": "SEVMTE8="
