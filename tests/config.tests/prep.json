@@ -2,13 +2,13 @@
   "version": 1,
   "blobset": {
     "phase": "prep",
-    "blobs": [
-      "hello_payload":
+    "blobs": {
+      "hello_payload": {
         "type": "base64",
         "content_type": "text/plain",
         "payload": "SEVMTE8="
       }
-    ]
+    }
   },
   "timestamp": "2022-06-28T12:00:00.000Z"
 }
