@@ -1,10 +1,12 @@
 {
   "version": 1,
   "blobset": {
-    "phase": "apply",
+    "phase": "prep",
     "blobs": [
       {
-        "id": "hello_playload"
+        "id": "hello_payload",
+        "type": "base64",
+        "payload": "SEVMTE8="
       }
     ]
   },

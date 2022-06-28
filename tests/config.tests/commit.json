@@ -1,12 +1,12 @@
 {
   "version": 1,
   "blobset": {
-    "blobs": {
-      "codebase": {
-        "stage": "steady",
-        "target": "1623941564.8938339"
+    "phase": "commit",
+    "blobs": [
+      {
+        "id": "hello_playload"
       }
-    }
+    ]
   },
-  "timestamp": "2021-06-17T12:20:44.254Z"
+  "timestamp": "2022-06-28T12:00:00.000Z"
 }
