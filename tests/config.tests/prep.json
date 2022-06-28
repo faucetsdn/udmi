@@ -6,6 +6,7 @@
       {
         "id": "hello_payload",
         "type": "base64",
+        "content_type": "text/plain",
         "payload": "SEVMTE8="
       }
     ]
