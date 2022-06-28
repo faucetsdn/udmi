@@ -17,7 +17,7 @@ scopes of device data:
 
 The overall onboarding sequence involves multiple components that work together to provide the overall flow:
 * **Device**: The target thing that needs to be discovered, configured, and ultimately communications point data
-* **Node**: A 'discovery node' responsible for handling on-prem non-UDMI discovery communication with a device
+* **Spotter**: A on-prem node responsible for handling discovery scans of devices.
 * **Cloud**: The on-prem/in-cloud boundary. Things to the left are things in the building, to the right are in the cloud
 * **Agent**: Responsible for managing the overall _discovery_ process (how often, what color, etc...)
 * **Mapper**: Uses hueristics, ML, or a UI to convert discovery information into a concrete device/sink mapping
@@ -25,55 +25,55 @@ The overall onboarding sequence involves multiple components that work together 
 
 Notes & Caveats:
 1. Only "interesting" messages are shown in the diagram, there's other control flow things that go on (e.g.
-to configure when the discovery *Node* should activate) to complete the overall flow.
+to configure when the *Spotter* should activate) to complete the overall flow.
 2. This just shows one-of-many potential provisioning (handling keys) techniques. There's other paths
 that would be possible (including manually, which is the baseline default).
 3. This shows the flow for a direct-connect (no IoT Gateway) device. The overall flow for a proxied device
 (with IoT Gateway) would more or less be the same, just different details about exact communication mechanisms.
 
 ```
-+---------+               +-------+ +-------+               +-------+           +--------+          +-------+
-| Device  |               | Node  | | Cloud |               | Agent |           | Mapper |          | Sink  |
-+---------+               +-------+ +-------+               +-------+           +--------+          +-------+
-     |                        |         |                       |                    |                   |
-     | (Info)                 |         |                       |                    |                   |
-     |----------------------->|         |                       |                    |                   |
-     |                        |         |                       |                    |                   |
-     |                        | Discovery Event                 |                    |                   |
-     |                        |----------------------------------------------------->|                   |
-     |                        |         |                       |                    |                   |
-     |                        |         |                       |                    | Mapping Event     |
-     |                        |         |                       |                    |------------------>|
-     |                        |         |                       |                    |                   |
-     |                        |         |                       |      Mapping Event |                   |
-     |                        |         |                       |<-------------------|                   |
-     |                        |         |                       |                    |                   |
-     |                        |         |     (Cloud Provision) |                    |                   |
-     |                        |         |<----------------------|                    |                   |
-     |                        |         |                       |                    |                   |
-     |                        |         |     Discovery Command |                    |                   |
-     |                        |<--------------------------------|                    |                   |
-     |                        |         |                       |                    |                   |
-     |     (Device Provision) |         |                       |                    |                   |
-     |<-----------------------|         |                       |                    |                   |
-     |                        |         |                       |                    |                   |
-     |                        |         |                       |                    |   Pointset Config |
-     |<--------------------------------------------------------------------------------------------------|
-     |                        |         |                       |                    |                   |
-     | Pointset Event         |         |                       |                    |                   |
-     |-------------------------------------------------------------------------------------------------->|
-     |                        |         |                       |                    |                   |
++---------+               +---------+ +-------+               +-------+           +--------+          +-------+
+| Device  |               | Spotter | | Cloud |               | Agent |           | Mapper |          | Sink  |
++---------+               +---------+ +-------+               +-------+           +--------+          +-------+
+     |                        |           |                       |                    |                   |
+     | (Info)                 |           |                       |                    |                   |
+     |----------------------->|           |                       |                    |                   |
+     |                        |           |                       |                    |                   |
+     |                        | Discovery Event                   |                    |                   |
+     |                        |------------------------------------------------------->|                   |
+     |                        |           |                       |                    |                   |
+     |                        |           |                       |                    | Mapping Event     |
+     |                        |           |                       |                    |------------------>|
+     |                        |           |                       |                    |                   |
+     |                        |           |                       |      Mapping Event |                   |
+     |                        |           |                       |<-------------------|                   |
+     |                        |           |                       |                    |                   |
+     |                        |           |     (Cloud Provision) |                    |                   |
+     |                        |           |<----------------------|                    |                   |
+     |                        |           |                       |                    |                   |
+     |                        |           |     Discovery Command |                    |                   |
+     |                        |<----------------------------------|                    |                   |
+     |                        |           |                       |                    |                   |
+     |     (Device Provision) |           |                       |                    |                   |
+     |<-----------------------|           |                       |                    |                   |
+     |                        |           |                       |                    |                   |
+     |                        |           |                       |                    |   Pointset Config |
+     |<----------------------------------------------------------------------------------------------------|
+     |                        |           |                       |                    |                   |
+     | Pointset Event         |           |                       |                    |                   |
+     |---------------------------------------------------------------------------------------------------->|
+     |                        |           |                       |                    |                   |
 ```
 
 1. **(Info)** contains natively-encoded _Device_ information (format out of scope for UDMI)
   * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }, and public key `XYZZYZ`"
-2. **[Discovery Event](../../tests/event_discovery.tests/enumeration.json)** from _Node_ wraps up the device info into a UDMI-normalized format
+2. **[Discovery Event](../../tests/event_discovery.tests/enumeration.json)** from _Spotter_ wraps up the device info into a UDMI-normalized format
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
 3. **Mapping Event** from the _Mapper_ (recieved by both _Sink_ and _Agent_)
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 5. **(Cloud Provision)** from _Agent_ sets up the _Cloud_ layer using the IoT Core API.
   * "Device `AHU-183` exists and has public key `XYZZYZ`"
-4. **[Discovery Command](../../tests/command_discovery.tests/provision.json)** from the _Agent_ to the discovery _Node_ contains information necessary to provision the device
+4. **[Discovery Command](../../tests/command_discovery.tests/provision.json)** from the _Agent_ to the _Spotter_ contains information necessary to provision the device
   * "Device `78F936` should call itself `AHU-183` when connecting to the cloud"
 5. **(Device Provision)** uses some natively-encoded mechanism for setting up the device with relevant cloud info
   * "Device `78F936`, you are celled `AHU-183` when connecting to the cloud"
@@ -85,14 +85,14 @@ that would be possible (including manually, which is the baseline default).
 ## Source
 Created using https://textart.io/sequence#
 ```
-object Device Node Cloud Agent Mapper Sink
-Device->Node: (Info)
-Node->Mapper: Discovery Event
+object Device Spotter Cloud Agent Mapper Sink
+Device->Spotter: (Info)
+Spotter->Mapper: Discovery Event
 Mapper->Sink: Mapping Event
 Mapper->Agent: Mapping Event
 Agent->Cloud: (Cloud Provision)
-Agent->Node: Discovery Command
-Node->Device: (Device Provision)
+Agent->Spotter: Discovery Command
+Spotter->Device: (Device Provision)
 Sink->Device: Pointset Config
 Device->Sink: Pointset Event
 ```

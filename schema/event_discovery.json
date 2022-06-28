@@ -49,11 +49,22 @@
         }
       }
     },
-    "ancillary": {
-      "$ref": "file:ancillary_properties.json"
-    },
-    "hardware": {
-      "$ref": "file:state_system_hardware.json"
+    "system": {
+      "title": "System Discovery Event",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serial_no": {
+          "description": "The serial number of the physical device",
+          "type": "string"
+        },
+        "ancillary": {
+          "$ref": "file:ancillary_properties.json"
+        },
+        "hardware": {
+          "$ref": "file:state_system_hardware.json"
+        }
+      }
     }
   },
   "required": [

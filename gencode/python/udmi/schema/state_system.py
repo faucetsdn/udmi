@@ -1,5 +1,5 @@
 """Generated class for state_system.json"""
-from .state_system_hardware import Hardware
+from .state_system_hardware import SystemHardware
 from .common import Entry
 
 
@@ -27,7 +27,7 @@ class SystemState:
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
     result.serial_no = source.get('serial_no')
-    result.hardware = Hardware.from_dict(source.get('hardware'))
+    result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.params = source.get('params')
     result.status = Entry.from_dict(source.get('status'))

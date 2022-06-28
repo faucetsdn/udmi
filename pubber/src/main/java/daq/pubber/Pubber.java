@@ -53,7 +53,6 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
-import udmi.schema.Hardware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointEnumerationEvent;
@@ -64,6 +63,7 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemEvent;
+import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
 
 /**
@@ -349,7 +349,7 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
-    deviceState.system.hardware = new Hardware();
+    deviceState.system.hardware = new SystemHardware();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
@@ -360,9 +360,9 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId));
+        configuration.gatewayId, configuration.options));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
@@ -478,6 +478,8 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
+      // Some things can't be done from a on-message callback, so do them here instead.
+      maybeRedirectEndpoint();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
@@ -547,6 +549,16 @@ public class Pubber {
       throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
     }
 
+    initializeMqtt();
+  }
+
+  private void disconnectMqtt() {
+    Preconditions.checkState(mqttPublisher != null, "mqttPublisher not defined");
+    mqttPublisher.close();
+    mqttPublisher = null;
+  }
+
+  private void initializeMqtt() {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
       String keyDevice =
@@ -690,6 +702,22 @@ public class Pubber {
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
     maybeRestartExecutor(actualInterval);
+  }
+
+  private void maybeRedirectEndpoint() {
+    String redirectRegistry = configuration.options.redirectRegistry;
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.registryId)
+        || configLatch.getCount() > 0) {
+      return;
+    }
+    try {
+      disconnectMqtt();
+      configuration.registryId = redirectRegistry;
+      initializeMqtt();
+      startConnection(onDone);
+    } catch (Exception e) {
+      throw new RuntimeException("While redirecting connection endpoint", e);
+    }
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {

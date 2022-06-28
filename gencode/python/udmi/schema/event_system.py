@@ -1,7 +1,7 @@
 """Generated class for event_system.json"""
 
 
-class Object32FA76A9:
+class ObjectB317E398:
   """Generated schema class"""
 
   def __init__(self):
@@ -17,7 +17,7 @@ class Object32FA76A9:
   def from_dict(source):
     if not source:
       return None
-    result = Object32FA76A9()
+    result = ObjectB317E398()
     result.restart_count = source.get('restart_count')
     result.mem_total_mb = source.get('mem_total_mb')
     result.mem_free_mb = source.get('mem_free_mb')
@@ -33,7 +33,7 @@ class Object32FA76A9:
       return None
     result = {}
     for key in source:
-      result[key] = Object32FA76A9.from_dict(source[key])
+      result[key] = ObjectB317E398.from_dict(source[key])
     return result
 
   @staticmethod
@@ -79,7 +79,7 @@ class SystemEvent:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.logentries = Entry.array_from(source.get('logentries'))
-    result.metrics = Object32FA76A9.from_dict(source.get('metrics'))
+    result.metrics = ObjectB317E398.from_dict(source.get('metrics'))
     return result
 
   @staticmethod
