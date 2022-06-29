@@ -18,6 +18,13 @@
       "minimum": 0,
       "maximum": 86400,
       "default": 600
+    },
+    "mode": {
+      "description": "Target operating mode for the device. Defaults to 'active'.",
+      "enum": [
+        "active",
+        "restart"
+      ]
     }
   }
 }

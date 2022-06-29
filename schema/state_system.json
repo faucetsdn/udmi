@@ -25,6 +25,14 @@
       "comment": "Operational status of the device",
       "type": "boolean"
     },
+    "mode": {
+      "description": "Current operating mode for the device. Defaults to 'active'.",
+      "enum": [
+        "active",
+        "ready",
+        "restarting"
+      ]
+    },
     "serial_no": {
       "description": "The serial number of the physical device",
       "type": "string",
