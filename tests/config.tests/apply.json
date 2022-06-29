@@ -1,9 +1,10 @@
 {
   "version": 1,
   "blobset": {
-    "phase": "apply",
     "blobs": {
-        "hello_payload": {}
+      "hello_payload": {
+        "phase": "apply"
+      }
     }
   },
   "timestamp": "2022-06-28T12:00:00.000Z"

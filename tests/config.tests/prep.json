@@ -1,9 +1,9 @@
 {
   "version": 1,
   "blobset": {
-    "phase": "prep",
     "blobs": {
       "hello_payload": {
+        "phase": "prep",
         "type": "base64",
         "content_type": "text/plain",
         "payload": "SEVMTE8="
