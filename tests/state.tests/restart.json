@@ -11,13 +11,13 @@
     },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
-    "operational": true,
+    "operational": false,
     "mode": "restarting",
     "status": {
-      "message": "Tickity Boo",
+      "message": "System rebooting due to config trigger",
       "category": "device.state.com",
       "timestamp": "2018-08-26T21:39:30.364Z",
-      "level": 600
+      "level": 800
     }
   },
   "pointset": {

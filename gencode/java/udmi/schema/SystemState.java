@@ -2,12 +2,15 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -22,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "last_config",
     "operational",
+    "mode",
     "serial_no",
     "hardware",
     "software",
@@ -60,6 +64,13 @@ public class SystemState {
      */
     @JsonProperty("operational")
     public Boolean operational;
+    /**
+     * Current operating mode for the device. Defaults to 'active'.
+     * 
+     */
+    @JsonProperty("mode")
+    @JsonPropertyDescription("Current operating mode for the device. Defaults to 'active'.")
+    public SystemState.Mode mode;
     /**
      * The serial number of the physical device
      * (Required)
@@ -100,6 +111,7 @@ public class SystemState {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
         result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
@@ -121,7 +133,53 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+    }
+
+
+    /**
+     * Current operating mode for the device. Defaults to 'active'.
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum Mode {
+
+        ACTIVE("active"),
+        READY("ready"),
+        RESTARTING("restarting");
+        private final java.lang.String value;
+        private final static Map<java.lang.String, SystemState.Mode> CONSTANTS = new HashMap<java.lang.String, SystemState.Mode>();
+
+        static {
+            for (SystemState.Mode c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Mode(java.lang.String value) {
+            this.value = value;
+        }
+
+        @Override
+        public java.lang.String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public java.lang.String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static SystemState.Mode fromValue(java.lang.String value) {
+            SystemState.Mode constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }
