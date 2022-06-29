@@ -7,6 +7,11 @@
         "type": "base64",
         "content_type": "text/plain",
         "payload": "SEVMTE8="
+      },
+      "update_payload": {
+        "phase": "prep",
+        "type": "url",
+        "href": "http://manuf/path/file"
       }
     }
   },
