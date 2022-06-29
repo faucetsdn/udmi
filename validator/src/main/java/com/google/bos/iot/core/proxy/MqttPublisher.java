@@ -70,7 +70,6 @@ class MqttPublisher implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
-  private MqttConnectOptions mqttConnectOptions;
   private long mqttTokenSetTimeMs;
 
   MqttPublisher(String projectId, String cloudRegion, String registryId,
@@ -104,7 +103,7 @@ class MqttPublisher implements MessagePublisher {
       throw new RuntimeException("Error acquiring lock", e);
     }
     try {
-      if (!mqttClient.isConnected()) {
+      if (!isConnected()) {
         throw new RuntimeException("MQTT Client not connected");
       }
       maybeRefreshJwt();
@@ -123,6 +122,10 @@ class MqttPublisher implements MessagePublisher {
     } finally {
       connectWait.release();
     }
+  }
+
+  private synchronized boolean isConnected() {
+    return mqttClient.isConnected();
   }
 
   private synchronized void delayStateUpdate(String deviceId) {
@@ -144,7 +147,7 @@ class MqttPublisher implements MessagePublisher {
     lastStateTime.put(deviceId, now);
   }
 
-  private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
+  private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
     mqttClient.publish(mqttTopic, mqttMessage, MQTT_QOS, MQTT_SHOULD_RETAIN);
     publishCounter.incrementAndGet();
@@ -154,23 +157,25 @@ class MqttPublisher implements MessagePublisher {
     try {
       publisherExecutor.shutdownNow();
       publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS);
-      if (mqttClient.isConnected()) {
-        mqttClient.disconnect();
+      synchronized(this) {
+        if (isConnected()) {
+          mqttClient.disconnect();
+        }
+        mqttClient.close();
       }
-      mqttClient.close();
     } catch (Exception e) {
       LOG.error(deviceId + " while terminating client: " + e, e);
     }
   }
 
   @Override
-  public String getSubscriptionId() {
+  public synchronized String getSubscriptionId() {
     return mqttClient.getClientId();
   }
 
   @Override
   public boolean isActive() {
-    return mqttClient.isConnected();
+    return isConnected();
   }
 
   @Override
@@ -205,20 +210,9 @@ class MqttPublisher implements MessagePublisher {
 
   private void connectMqttClient(String deviceId) {
     try {
-      if (mqttClient.isConnected()) {
+      if (isConnected()) {
         return;
       }
-      mqttClient.setCallback(new MqttCallbackHandler());
-      mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
-      mqttClient.setManualAcks(false);
-
-      mqttConnectOptions = new MqttConnectOptions();
-      // Note that the the Google Cloud IoT only supports MQTT 3.1.1, and Paho requires that we
-      // explicitly set this. If you don't set MQTT version, the server will immediately close its
-      // connection to your device.
-      mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      mqttConnectOptions.setUserName(UNUSED_ACCOUNT_NAME);
-      mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       connectAndSetupMqtt();
       connectWait.release();
     } catch (Exception e) {
@@ -227,18 +221,25 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void connectAndSetupMqtt() throws Exception {
+  private synchronized void connectAndSetupMqtt() throws Exception {
     LOG.info(deviceId + " creating new jwt");
+    MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+    mqttConnectOptions.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
+    mqttConnectOptions.setUserName(UNUSED_ACCOUNT_NAME);
+    mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
     mqttConnectOptions.setPassword(createJwt());
     mqttTokenSetTimeMs = System.currentTimeMillis();
     LOG.info(deviceId + " connecting to mqtt server");
+    mqttClient.setCallback(new MqttCallbackHandler());
+    mqttClient.setTimeToWait(INITIALIZE_TIME_MS);
+    mqttClient.setManualAcks(false);
     mqttClient.connect(mqttConnectOptions);
     attachedClients.clear();
     attachedClients.add(deviceId);
     LOG.info(deviceId + " adding subscriptions");
-    subscribeToUpdates(deviceId);
-    subscribeToErrors(deviceId);
-    subscribeToCommands(deviceId);
+    subscribeToSafe(CONFIG_UPDATE_TOPIC_FMT, deviceId);
+    subscribeToSafe(ERROR_TOPIC_FMT, deviceId);
+    subscribeToSafe(COMMAND_TOPIC_FMT, deviceId);
     LOG.info(deviceId + " done with setup connection");
   }
 
@@ -247,13 +248,15 @@ class MqttPublisher implements MessagePublisher {
     long currentTimeMillis = System.currentTimeMillis();
     long remaining = refreshTime - currentTimeMillis;
     LOG.debug(deviceId + " remaining until refresh " + remaining);
-    if (remaining < 0 && mqttClient.isConnected()) {
+    if (remaining < 0 && isConnected()) {
       try {
         LOG.info(deviceId + " handling token refresh");
-        mqttClient.disconnect();
-        long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
-        LOG.info(deviceId + " disconnect took " + disconnectTime);
-        connectAndSetupMqtt();
+        synchronized (this) {
+          mqttClient.disconnect();
+          long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
+          LOG.info(deviceId + " disconnect took " + disconnectTime);
+          connectAndSetupMqtt();
+        }
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
       }
@@ -276,28 +279,10 @@ class MqttPublisher implements MessagePublisher {
     return String.format(MESSAGE_TOPIC_FORMAT, deviceId, topic);
   }
 
-  private void subscribeToUpdates(String deviceId) {
-    String updateTopic = String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId);
+  private void subscribeToSafe(String format, String deviceId) {
+    String updateTopic = String.format(format, deviceId);
     try {
       mqttClient.subscribe(updateTopic);
-    } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
-    }
-  }
-
-  private void subscribeToErrors(String deviceId) {
-    String updateTopic = String.format(ERROR_TOPIC_FMT, deviceId);
-    try {
-      mqttClient.subscribe(updateTopic);
-    } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
-    }
-  }
-
-  private void subscribeToCommands(String deviceId) {
-    String updateTopic = String.format(COMMAND_TOPIC_FMT, deviceId);
-    try {
-      mqttClient.subscribe(updateTopic, COMMANDS_QOS);
     } catch (MqttException e) {
       throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
     }
