@@ -12,6 +12,12 @@
         "phase": "prep",
         "type": "url",
         "href": "http://manuf/path/file.zip"
+      },
+      "endpoint_update": {
+        "phase": "prep",
+        "type": "base64",
+        "content_type": "application/json",
+        "payload": "e30="
       }
     }
   },
