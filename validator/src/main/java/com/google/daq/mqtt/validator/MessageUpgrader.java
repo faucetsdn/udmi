@@ -137,6 +137,7 @@ public class MessageUpgrader {
       }
       ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
       hardwareNode.put("model", makeModel.asText());
+      hardwareNode.put("make", "");
       system.set("hardware", hardwareNode);
     }
   }

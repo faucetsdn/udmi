@@ -25,5 +25,9 @@
         "type": "string",
         "examples": ["A", "B", "1"]
       }
-    }
+    },
+    "required": [
+      "make",
+      "model"
+    ]
   }
