@@ -4,20 +4,17 @@
     "blobs": {
       "fw_payload": {
         "phase": "prep",
-        "type": "base64",
         "content_type": "application/zip",
-        "payload": "UEsDBAoAAAAAAAZZ3VSU7ZiuBQAAAAUAAAAIABwAYm9vdC5pbWdVVAkAA9xqvGLcarxidXgLAAEEFjQAAARTXwEAYm9vdApQSwMECgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAHABmdy5pbWdVVAkAA95qvGLearxidXgLAAEEFjQAAARTXwEAZncKUEsBAh4DCgAAAAAABlndVJTtmK4FAAAABQAAAAgAGAAAAAAAAQAAAKSBAAAAAGJvb3QuaW1nVVQFAAPcarxidXgLAAEEFjQAAARTXwEAUEsBAh4DCgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAGAAAAAAAAQAAAKSBRwAAAGZ3LmltZ1VUBQAD3mq8YnV4CwABBBY0AAAEU18BAFBLBQYAAAAAAgACAJoAAACKAAAAAAA="
+        "base64": "UEsDBAoAAAAAAAZZ3VSU7ZiuBQAAAAUAAAAIABwAYm9vdC5pbWdVVAkAA9xqvGLcarxidXgLAAEEFjQAAARTXwEAYm9vdApQSwMECgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAHABmdy5pbWdVVAkAA95qvGLearxidXgLAAEEFjQAAARTXwEAZncKUEsBAh4DCgAAAAAABlndVJTtmK4FAAAABQAAAAgAGAAAAAAAAQAAAKSBAAAAAGJvb3QuaW1nVVQFAAPcarxidXgLAAEEFjQAAARTXwEAUEsBAh4DCgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAGAAAAAAAAQAAAKSBRwAAAGZ3LmltZ1VUBQAD3mq8YnV4CwABBBY0AAAEU18BAFBLBQYAAAAAAgACAJoAAACKAAAAAAA="
       },
       "update_payload": {
         "phase": "prep",
-        "type": "url",
-        "href": "http://manuf/path/file.zip"
+        "url": "http://manuf/path/file.zip"
       },
       "endpoint_update": {
         "phase": "prep",
-        "type": "base64",
         "content_type": "application/json",
-        "payload": "e30="
+        "base64": "e30="
       }
     }
   },
