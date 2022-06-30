@@ -26,6 +26,7 @@ public class SystemHardware {
 
     /**
      * The manufacturer of the device
+     * (Required)
      * 
      */
     @JsonProperty("make")
@@ -33,6 +34,7 @@ public class SystemHardware {
     public String make;
     /**
      * The model of the device
+     * (Required)
      * 
      */
     @JsonProperty("model")
