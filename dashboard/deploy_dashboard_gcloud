@@ -11,6 +11,30 @@ cd $ROOT/dashboard
 PROJECT=$1
 shift
 
+udmi_state=udmi_state
+udmi_reflect=udmi_reflect
+udmi_target=udmi_target
+udmi_config=udmi_config
+
+append_env_var () {
+   extra_args="$extra_args --set-env-vars $1=$2"
+} 
+
+while (( $# > 0 )) ; do
+    k=$(echo $1 | cut -d'=' -f1)
+    v=$(echo $1 | cut -d'=' -f2)
+
+  case $k in
+    --udmi_state) udmi_state=$v && append_env_var UDMI_STATE $v;;
+    --udmi_reflect) udmi_reflect=$v && append_env_var UDMI_REFLECT $v;;
+    --udmi_target) udmi_target=$v && append_env_var UDMI_TARGET $v;;
+    --udmi_config) udmi_config=$v && append_env_var UDMI_CONFIG $v;;
+    --reflect_registry) append_env_var REFLECT_REGISTRY $v;;
+    --service_account) extra_args="$extra_args --service_account=$v"
+  esac
+  shift
+done
+
 RUNTIME=nodejs12
 SOURCE=functions/
 
@@ -26,8 +50,16 @@ EOF
 
 PUBSUB_FUNCTIONS="udmi_target udmi_state udmi_config udmi_reflect"
 for func in $PUBSUB_FUNCTIONS; do
-    echo Deploying pubsub-trigger function $func...
-    gcloud functions deploy $func --set-env-vars GCP_PROJECT=$PROJECT --trigger-topic=$func --runtime=$RUNTIME --project=$PROJECT --source=$SOURCE "$@" &
+    echo Deploying pubsub-trigger function $func as ${!func}...
+
+    gcloud functions deploy ${!func} \
+      --set-env-vars GCP_PROJECT=$PROJECT \
+      --trigger-topic=${!func}  \
+      --runtime=$RUNTIME \
+      --project=$PROJECT \
+      --source=$SOURCE \
+      --entry-point=$func \
+      $extra_args &
     sleep 10
 done
 

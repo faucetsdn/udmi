@@ -10,10 +10,10 @@ if (!process.env.GCLOUD_PROJECT) {
   process.env.GCLOUD_PROJECT = PROJECT_ID;
 }
 
-const UDMI_TARGET = process.env.UDMI_TARGET || 'udmi_target'
-const UDMI_STATE = process.env.UDMI_STATE || 'udmi_state'
-const UDMI_REFLECT = process.env.UDMI_REFLECT || 'udmi_reflect'
-const UDMI_CONFIG = process.env.UDMI_CONFIG || 'udmi_config'
+const UDMI_TARGET = process.env.UDMI_TARGET || 'udmi_target';
+const UDMI_STATE = process.env.UDMI_STATE || 'udmi_state';
+const UDMI_REFLECT = process.env.UDMI_REFLECT || 'udmi_reflect';
+const UDMI_CONFIG = process.env.UDMI_CONFIG || 'udmi_config';
 const REFLECT_REGISTRY =  process.env.REFLECT_REGISTRY ||'UDMS-REFLECT';
 
 const version = require('./version');
