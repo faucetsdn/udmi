@@ -10,6 +10,12 @@ if (!process.env.GCLOUD_PROJECT) {
   process.env.GCLOUD_PROJECT = PROJECT_ID;
 }
 
+const UDMI_TARGET = process.env.UDMI_TARGET || 'udmi_target'
+const UDMI_STATE = process.env.UDMI_STATE || 'udmi_state'
+const UDMI_REFLECT = process.env.UDMI_REFLECT || 'udmi_reflect'
+const UDMI_CONFIG = process.env.UDMI_CONFIG || 'udmi_config'
+const REFLECT_REGISTRY =  process.env.REFLECT_REGISTRY ||'UDMS-REFLECT';
+
 const version = require('./version');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
@@ -17,7 +23,6 @@ const { PubSub } = require(`@google-cloud/pubsub`);
 const pubsub = new PubSub();
 const iot = require('@google-cloud/iot');
 
-const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const UDMI_VERSION = version.udmis;
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
@@ -117,7 +122,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr) {
     });
 }
 
-exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
+exports.udmi_target = functions.pubsub.topic(UDMI_TARGET).onPublish((event) => {
   const attributes = event.attributes;
   const subType = attributes.subType || EVENT_TYPE;
   const base64 = event.data;
@@ -158,7 +163,7 @@ function getRegistryRegions() {
   }).catch(console.error);
 }
 
-exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
+exports.udmi_reflect = functions.pubsub.topic(UDMI_REFLECT).onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
@@ -244,7 +249,7 @@ function udmi_query_states(attributes) {
   });
 }
 
-exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
+exports.udmi_state = functions.pubsub.topic(UDMI_STATE).onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
@@ -263,7 +268,7 @@ function process_state_update(attributes, msgObject) {
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
-  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
+  promises.push(publishPubsubMessage(UDMI_TARGET, attributes, msgObject));
 
   for (var block in msgObject) {
     let subMsg = msgObject[block];
@@ -271,7 +276,7 @@ function process_state_update(attributes, msgObject) {
       attributes.subFolder = block;
       subMsg.timestamp = msgObject.timestamp;
       subMsg.version = msgObject.version;
-      promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
+      promises.push(publishPubsubMessage(UDMI_TARGET, attributes, subMsg));
       const new_promises = recordMessage(attributes, subMsg);
       promises.push(...new_promises);
     }
@@ -280,7 +285,7 @@ function process_state_update(attributes, msgObject) {
   return Promise.all(promises);
 };
 
-exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
+exports.udmi_config = functions.pubsub.topic(UDMI_CONFIG).onPublish((event) => {
   const attributes = event.attributes;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
@@ -299,7 +304,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   attributes.subType = CONFIG_TYPE;
 
   const promises = recordMessage(attributes, msgObject);
-  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
+  promises.push(publishPubsubMessage(UDMI_TARGET, attributes, msgObject));
 
   if (useFirestore) {
     console.info('Deferring to firestore trigger for IoT Core modification.');
