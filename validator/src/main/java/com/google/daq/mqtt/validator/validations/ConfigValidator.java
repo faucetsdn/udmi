@@ -34,6 +34,11 @@ public class ConfigValidator extends SequenceValidator {
   }
 
   @Test
+  public void device_config_acked() {
+    untilTrue("config acked", () -> configAcked);
+  }
+
+  @Test
   public void broken_config() {
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);

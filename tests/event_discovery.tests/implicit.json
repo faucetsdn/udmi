@@ -32,7 +32,20 @@
     "sup_flow_actual_avo_1": {
       "units": "percent",
       "ref": "analog-value_29",
-      "description": "Basic value reading"
+      "description": "Basic value reading",
+      "ancillary": {
+        "monkeys": true
+      }
+    }
+  },
+  "system": {
+    "serial_no": "983129832",
+    "hardware": {
+      "model": "MS-NAE5510-3",
+      "make": "JCI"
+    },
+    "ancillary": {
+      "rabbits": 283
     }
   }
 }

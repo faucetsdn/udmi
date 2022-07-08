@@ -12,6 +12,7 @@ buildscript {
 
 plugins {
     id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.adarshr.test-logger' version '3.2.0'
     id 'java'
     id 'checkstyle'
 }
@@ -31,7 +32,7 @@ sourceSets {
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 47
+    maxWarnings = 50
 }
 checkstyleMain.source = 'src/main/java'
 

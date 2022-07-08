@@ -1,39 +1,6 @@
 """Generated class for event_discovery_point.json"""
 from .common import Entry
-
-
-class Object1D746D26:
-  """Generated schema class"""
-
-  def __init__(self):
-    pass
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object1D746D26()
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object1D746D26.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    return result
+from .ancillary_properties import AncillaryProperties
 
 
 class PointEnumerationEvent:
@@ -61,7 +28,7 @@ class PointEnumerationEvent:
     result.writable = source.get('writable')
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
-    result.ancillary = Object1D746D26.from_dict(source.get('ancillary'))
+    result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     return result
 
   @staticmethod

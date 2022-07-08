@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -52,7 +53,6 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
-import udmi.schema.Hardware;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointEnumerationEvent;
@@ -63,6 +63,7 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.SystemEvent;
+import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
 
 /**
@@ -146,6 +147,8 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+    } catch (UnrecognizedPropertyException e) {
+      throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
     } catch (Exception e) {
       throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
     }
@@ -298,6 +301,15 @@ public class Pubber {
 
     Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+
+    if (configuration.options.missingPoint != null) {
+      if (points.containsKey(configuration.options.missingPoint)) {
+        points.remove(configuration.options.missingPoint);
+      } else {
+        throw new RuntimeException("missingPoint not in pointset");
+      }
+    } 
+
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
@@ -346,7 +358,7 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
-    deviceState.system.hardware = new Hardware();
+    deviceState.system.hardware = new SystemHardware();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
@@ -357,10 +369,9 @@ public class Pubber {
       pullDeviceMessage();
     }
 
-    info(String.format("Starting pubber %s, serial %s, mac %s, extra %s, gateway %s",
+    info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.extraField,
-        configuration.gatewayId));
+        configuration.gatewayId, configuration.options));
 
     deviceState.system.operational = true;
     deviceState.system.serial_no = configuration.serialNo;
@@ -369,12 +380,21 @@ public class Pubber {
     deviceState.system.software = new HashMap<>();
     deviceState.system.software.put("firmware", "v1");
     deviceState.system.last_config = new Date(0);
-    devicePoints.extraField = configuration.extraField;
 
-    if (configuration.extraPoint != null && !configuration.extraPoint.isEmpty()) {
-      addPoint(makePoint(configuration.extraPoint,
+    // Pubber runtime options
+    if (configuration.options.extraField != null) {
+      devicePoints.extraField = configuration.options.extraField;
+    }
+
+    if (configuration.options.extraPoint != null) {
+      addPoint(makePoint(configuration.options.extraPoint,
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
+
+    if (configuration.options.noHardware != null && configuration.options.noHardware) {
+      deviceState.system.hardware = null;
+    }
+
     markStateDirty(0);
   }
 
