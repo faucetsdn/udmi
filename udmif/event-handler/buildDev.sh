@@ -1,4 +1,3 @@
-
 # clear all the old *.js artifacts
 rm -rf dist
 

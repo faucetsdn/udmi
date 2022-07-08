@@ -66,4 +66,4 @@ terraform apply
     terraform state rm google_project.udmi-project
     terraform state rm google_storage_bucket.tf-bucket
     ```
-- If you run into API enablement issues, you can retry the *plan* and *apply* terraform commands. If you still have issues, you can look at api.tf for a list of APIs that must be enabled and enabled them manually.
+- If you run into API enablement issues or other issues, you can retry the *plan* and *apply* terraform commands. If you still have issues, you can look at api.tf for a list of APIs that must be enabled and enable them manually.

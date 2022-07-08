@@ -1,7 +1,7 @@
-# Locally transpille the typescript code so terraform can deploy it properly.
-
+# set default environment variables pointing to a local mongodb instance
 export MONGO_PROTOCOL=mongodb
 export MONGO_HOST=localhost
 export MONGO_DATABASE=udmi 
 
-npm run watch
+# run the application while watching for file changes
+npm start

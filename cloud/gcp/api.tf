@@ -9,6 +9,8 @@ resource "google_project_service" "service" {
     "storage.googleapis.com",
     "sourcerepo.googleapis.com",
     "cloudiot.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "cloudbuild.googleapis.com",    
     "container.googleapis.com",
     "containerregistry.googleapis.com"
   ])

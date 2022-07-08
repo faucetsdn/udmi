@@ -22,7 +22,7 @@ dockerSecret:
 
 env:
   API_URI: /api
-  GOOGLE_CLIENT_ID: <<Injected via CI/CD variable>>
+  GOOGLE_CLIENT_ID: ProvideValue
 
 serviceAccount:
   # Specifies whether a service account should be created

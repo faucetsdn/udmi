@@ -29,6 +29,7 @@ __pycache__/
 
 .vscode
 
+#Terraform authentication and template files.
 cloud/gcp/terraform.tfvars
 cloud/gcp/udmi-sites.tf
 cloud/gcp/main.tf
