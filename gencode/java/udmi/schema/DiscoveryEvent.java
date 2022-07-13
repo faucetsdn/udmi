@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "generation",
     "status",
     "scan_family",
+    "scan_id",
     "families",
     "points",
     "system"
@@ -70,6 +71,13 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary scan discovery address family")
     public java.lang.String scan_family;
     /**
+     * The primary id of the device (for scan_family)
+     * 
+     */
+    @JsonProperty("scan_id")
+    @JsonPropertyDescription("The primary id of the device (for scan_family)")
+    public java.lang.String scan_id;
+    /**
      * Address family results for a scan. Not included for device enumeration messages.
      * 
      */
@@ -97,6 +105,7 @@ public class DiscoveryEvent {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.scan_id == null)? 0 :this.scan_id.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
@@ -115,7 +124,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return (((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_id == rhs.scan_id)||((this.scan_id!= null)&&this.scan_id.equals(rhs.scan_id))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
 }

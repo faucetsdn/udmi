@@ -11,6 +11,7 @@
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T21:37:12Z",
   "scan_family": "bacnet",
+  "scan_id": "92EA09",
   "families": {
     "iot": {
       "id": "AHU-1"
