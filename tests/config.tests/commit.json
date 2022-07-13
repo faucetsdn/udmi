@@ -2,10 +2,22 @@
   "version": 1,
   "blobset": {
     "blobs": {
-      "endpoint_update": {
-        "phase": "commit"
+      "arbitrary_manufacturer_id": {
+        "phase": "commit",
+        "content_type": "application/zip",
+        "base64": "UEsDBAoAAAAAAAZZ3VSU7ZiuBQAAAAUAAAAIABwAYm9vdC5pbWdVVAkAA9xqvGLcarxidXgLAAEEFjQAAARTXwEAYm9vdApQSwMECgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAHABmdy5pbWdVVAkAA95qvGLearxidXgLAAEEFjQAAARTXwEAZncKUEsBAh4DCgAAAAAABlndVJTtmK4FAAAABQAAAAgAGAAAAAAAAQAAAKSBAAAAAGJvb3QuaW1nVVQFAAPcarxidXgLAAEEFjQAAARTXwEAUEsBAh4DCgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAGAAAAAAAAQAAAKSBRwAAAGZ3LmltZ1VUBQAD3mq8YnV4CwABBBY0AAAEU18BAFBLBQYAAAAAAgACAJoAAACKAAAAAAA="
+      },
+      "_firmware_update": {
+        "phase": "commit",
+        "url": "https://manuf.com/path/file.zip",
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "_endpoint_redirect": {
+        "phase": "commit",
+        "content_type": "application/json",
+        "base64": "e30="
       }
     }
   },
-  "timestamp": "2022-06-28T12:00:00.000Z"
+  "timestamp": "2022-07-13T12:00:00.000Z"
 }
