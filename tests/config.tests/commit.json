@@ -10,7 +10,7 @@
       "_firmware_update": {
         "phase": "commit",
         "url": "https://manuf.com/path/file.zip",
-        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "_endpoint_redirect": {
         "phase": "commit",
