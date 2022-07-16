@@ -301,6 +301,15 @@ public class Pubber {
 
     Map<String, PointPointsetModel> points =
         metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+
+    if (configuration.options.missingPoint != null) {
+      if (points.containsKey(configuration.options.missingPoint)) {
+        points.remove(configuration.options.missingPoint);
+      } else {
+        throw new RuntimeException("missingPoint not in pointset");
+      }
+    } 
+
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
@@ -835,6 +844,7 @@ public class Pubber {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
+          discoveryEvent.scan_id = deviceId;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",

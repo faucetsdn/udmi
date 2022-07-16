@@ -12,5 +12,5 @@ public class CloudIotConfig {
   public String update_topic;
   public String alt_project;
   public String alt_registry;
-  public boolean block_unknown;
+  public boolean block_unknown = true;
 }

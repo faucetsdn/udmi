@@ -10,7 +10,13 @@
   "version": "1.3.14",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T21:37:12Z",
-  "scan_family": "iot",
+  "scan_family": "bacnet",
+  "scan_id": "872849",
+  "families": {
+    "bacnet": {
+      "id": "872849"
+    }
+  },
   "points": {
     "sup_flow_actual_avo_1": {
       "status": {
