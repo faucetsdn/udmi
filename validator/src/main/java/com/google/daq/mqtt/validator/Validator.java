@@ -286,6 +286,7 @@ public class Validator {
     outBaseDir.mkdirs();
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
+    writeDeviceMetadataReport();
 
     return (message, attributes) -> validateMessage(message, attributes);
   }
@@ -334,8 +335,8 @@ public class Validator {
   }
 
   private void periodicReport() {
-    System.err.println("Periodic report");
-    client.publish("hello" ,"world", "monkeys");
+    String registryId = cloudIotConfig.registry_id;
+    client.publish(registryId ,"world", "monkeys");
   }
 
   private void sendInitializationQuery() {
