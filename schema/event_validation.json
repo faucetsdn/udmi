@@ -1,0 +1,79 @@
+{
+  "title": "Validation Event",
+  "description": "[Validation result](../docs/specs/validation.md) with implicit enumeration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the discover telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "generation": {
+      "description": "The event's validation scan trigger's generation timestamp",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    },
+    "scan_family": {
+      "description": "The primary scan validation address family",
+      "type": "string"
+    },
+    "scan_id": {
+      "description": "The primary id of the device (for scan_family)",
+      "type": "string"
+    },
+    "families": {
+      "description": "Address family results for a scan. Not included for device enumeration messages.",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FamilyValidationEvent>",
+      "patternProperties": {
+        "^iot|bacnet|ipv4|ipv6|ethmac$": {
+          "$ref": "file:event_validation_family.json"
+        }
+      }
+    },
+    "points": {
+      "description": "Collection of data points available for this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$": {
+          "$ref": "file:event_validation_point.json#"
+        }
+      }
+    },
+    "system": {
+      "title": "System Validation Event",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serial_no": {
+          "description": "The serial number of the physical device",
+          "type": "string"
+        },
+        "ancillary": {
+          "$ref": "file:ancillary_properties.json"
+        },
+        "hardware": {
+          "$ref": "file:state_system_hardware.json"
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "generation"
+  ]
+}
