@@ -83,4 +83,5 @@ If the config passes these checks, then the device should
 1) perform the write
 2) set a timer to trigger at the given `set_value_expiry`, overwriting any existing timer. 
 
-When the timer expires, the device reverts to its operational state, and sends a state update to notify the cloud of the state change.
+When the timer expires, the device reverts to its base state (as if no set values have been indicated),
+and sends a state update to notify the cloud of the state change.
