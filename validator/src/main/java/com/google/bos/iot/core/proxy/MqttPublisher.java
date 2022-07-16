@@ -52,7 +52,7 @@ class MqttPublisher implements MessagePublisher {
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String ATTACH_MESSAGE_FORMAT = "/devices/%s/attach";
-  private static final int TOKEN_EXPIRATION_SEC = 60 * 60 * 1;
+  private static final int TOKEN_EXPIRATION_SEC = 60;
   private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -157,7 +157,7 @@ class MqttPublisher implements MessagePublisher {
     try {
       publisherExecutor.shutdownNow();
       publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS);
-      synchronized(this) {
+      synchronized (this) {
         if (isConnected()) {
           mqttClient.disconnect();
         }

@@ -49,6 +49,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope.SubFolder;
@@ -105,6 +109,7 @@ public class Validator {
       EVENT_POINTSET, PointsetEvent.class,
       STATE_POINTSET, PointsetState.class
   );
+  private static final long REPORT_INTERVAL_SEC = 15;
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -122,6 +127,7 @@ public class Validator {
   private String deviceId;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
+  private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create validator for the given project id.
@@ -306,19 +312,30 @@ public class Validator {
     System.err.println(
         "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
-    boolean initialized = false;
-    while (client.isActive()) {
-      try {
-        if (!initialized) {
-          initialized = true;
-          sendInitializationQuery();
+    ScheduledFuture<?> reportSender = executor.scheduleAtFixedRate(this::periodicReport,
+        REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
+    try {
+      boolean initialized = false;
+      while (client.isActive()) {
+        try {
+          if (!initialized) {
+            initialized = true;
+            sendInitializationQuery();
+          }
+          client.processMessage(validator);
+        } catch (Exception e) {
+          e.printStackTrace();
         }
-        client.processMessage(validator);
-      } catch (Exception e) {
-        e.printStackTrace();
       }
+    } finally {
+      System.err.println("Message loop complete");
+      reportSender.cancel(true);
     }
-    System.err.println("Message loop complete");
+  }
+
+  private void periodicReport() {
+    System.err.println("Periodic report");
+    client.publish("hello" ,"world", "monkeys");
   }
 
   private void sendInitializationQuery() {
