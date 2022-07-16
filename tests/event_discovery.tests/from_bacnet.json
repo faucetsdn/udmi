@@ -112,6 +112,7 @@
     }
   },
   "scan_family": "iot",
+  "scan_id": "5005",
   "version": 1,
   "timestamp": "2022-06-21T17:19:49.191183+00:00",
   "system": {
