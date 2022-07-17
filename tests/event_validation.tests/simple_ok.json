@@ -5,5 +5,10 @@
   "device_id": "AHU-2",
   "subtype": "event",
   "subfolder": "discovery",
-  "errors": null
+  "status": {
+    "message": "Tickity Boo",
+    "category": "device.state.com",
+    "timestamp": "2018-08-26T21:39:30.364Z",
+    "level": 600
+  }
 }

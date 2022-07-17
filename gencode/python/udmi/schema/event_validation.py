@@ -1,4 +1,6 @@
 """Generated class for event_validation.json"""
+from .common import Entry
+from .event_validation_device import DeviceValidationEvent
 
 
 class ValidationEvent:
@@ -12,6 +14,7 @@ class ValidationEvent:
     self.device_id = None
     self.subfolder = None
     self.subtype = None
+    self.status = None
     self.extra_devices = None
     self.devices = None
 
@@ -27,8 +30,9 @@ class ValidationEvent:
     result.device_id = source.get('device_id')
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
+    result.status = Entry.from_dict(source.get('status'))
     result.extra_devices = source.get('extra_devices')
-    result.devices = source.get('devices')
+    result.devices = DeviceValidationEvent.map_from(source.get('devices'))
     return result
 
   @staticmethod
@@ -63,8 +67,10 @@ class ValidationEvent:
       result['subfolder'] = self.subfolder # 5
     if self.subtype:
       result['subtype'] = self.subtype # 5
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     if self.extra_devices:
-      result['extra_devices'] = self.extra_devices # 5
+      result['extra_devices'] = self.extra_devices # 1
     if self.devices:
-      result['devices'] = self.devices # 5
+      result['devices'] = DeviceValidationEvent.expand_dict(self.devices) # 2
     return result

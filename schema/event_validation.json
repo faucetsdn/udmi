@@ -17,6 +17,7 @@
     },
     "last_updated": {
       "description": "Last time this validation report was updated",
+      "format": "date-time",
       "type": "string"
     },
     "site_id": {
@@ -35,9 +36,26 @@
       "description": "Subtype of the validated message",
       "type": "string"
     },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    },
     "extra_devices": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+      }
     },
     "devices": {
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, DeviceValidationEvent>",
+      "patternProperties": {
+        "^[A-Z]{2,6}-[0-9]{1,6}$": {
+          "$ref": "file:event_validation_device.json"
+        }
+      }
+
     }
   },
   "required": [
