@@ -6,7 +6,8 @@
   "extra_devices" : [ "FCK-4" ],
   "devices": {
     "AHU-1": {
-      "last_seen": "2022-07-16T18:27:19Z"
+      "last_seen": "2022-07-16T18:27:19Z",
+      "oldest_mark": "2022-07-16T18:27:19Z"
     }
   }
 }

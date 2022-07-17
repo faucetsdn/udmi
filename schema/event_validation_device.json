@@ -9,6 +9,11 @@
       "description": "Last time any message from this device was received",
       "format": "date-time",
       "type": "string"
+    },
+    "oldest_mark": {
+      "description": "Oldest recorded mark for this device",
+      "format": "date-time",
+      "type": "string"
     }
   }
 }

@@ -17,7 +17,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "last_seen"
+    "last_seen",
+    "oldest_mark"
 })
 @Generated("jsonschema2pojo")
 public class DeviceValidationEvent {
@@ -29,11 +30,19 @@ public class DeviceValidationEvent {
     @JsonProperty("last_seen")
     @JsonPropertyDescription("Last time any message from this device was received")
     public Date last_seen;
+    /**
+     * Oldest recorded mark for this device
+     * 
+     */
+    @JsonProperty("oldest_mark")
+    @JsonPropertyDescription("Oldest recorded mark for this device")
+    public Date oldest_mark;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.last_seen == null)? 0 :this.last_seen.hashCode()));
+        result = ((result* 31)+((this.oldest_mark == null)? 0 :this.oldest_mark.hashCode()));
         return result;
     }
 
@@ -46,7 +55,7 @@ public class DeviceValidationEvent {
             return false;
         }
         DeviceValidationEvent rhs = ((DeviceValidationEvent) other);
-        return ((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)));
+        return (((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)))&&((this.oldest_mark == rhs.oldest_mark)||((this.oldest_mark!= null)&&this.oldest_mark.equals(rhs.oldest_mark))));
     }
 
 }
