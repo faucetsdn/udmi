@@ -60,6 +60,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.ValidationEvent;
 
 /**
  * Core class for running site-level validations of data streams.
@@ -67,6 +68,7 @@ import udmi.schema.PointsetState;
 public class Validator {
 
   public static final String STATE_QUERY_TOPIC = "query/state";
+  public static final String VALIDATION_EVENT_TOPIC = "validation/event";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
@@ -110,6 +112,8 @@ public class Validator {
       STATE_POINTSET, PointsetState.class
   );
   private static final long REPORT_INTERVAL_SEC = 15;
+  private static final String VALIDATION_DEVICE = "_validator";
+  private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -124,10 +128,10 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
-  private String deviceId;
+  private String globalDeviceId;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
-  private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Create validator for the given project id.
@@ -300,7 +304,7 @@ public class Validator {
   }
 
   private void validateReflector(String instName) {
-    deviceId = NO_SITE.equals(instName) ? null : instName;
+    globalDeviceId = NO_SITE.equals(instName) ? null : instName;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -311,7 +315,7 @@ public class Validator {
       return;
     }
     System.err.println(
-        "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
+        "Entering message loop on " + client.getSubscriptionId() + " with device " + globalDeviceId);
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender = executor.scheduleAtFixedRate(this::periodicReport,
         REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
@@ -335,14 +339,22 @@ public class Validator {
   }
 
   private void periodicReport() {
-    String registryId = cloudIotConfig.registry_id;
-    client.publish(registryId ,"world", "monkeys");
+    try {
+      String registryId = cloudIotConfig.registry_id;
+      ValidationEvent validationEvent = new ValidationEvent();
+      System.err.println("Sending validation report for " + registryId);
+      client.publish(VALIDATION_DEVICE, VALIDATION_EVENT_TOPIC,
+          OBJECT_MAPPER.writeValueAsString(validationEvent));
+    } catch (Exception e) {
+      System.err.println("Exception handling periodic report");
+      e.printStackTrace();
+    }
   }
 
   private void sendInitializationQuery() {
-    if (deviceId != null) {
-      System.err.println("Sending initialization query messages for device " + deviceId);
-      client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    if (globalDeviceId != null) {
+      System.err.println("Sending initialization query messages for device " + globalDeviceId);
+      client.publish(globalDeviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
 
@@ -438,7 +450,6 @@ public class Validator {
         updated = true;
       }
 
-
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
@@ -503,6 +514,11 @@ public class Validator {
     String category = attributes.get("category");
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
+    String deviceId = attributes.get("deviceId");
+    if (deviceId != null && deviceId.startsWith(EXCLUDE_DEVICE_PREFIX)) {
+      return false;
+    }
+
     boolean interestingFolderType = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
