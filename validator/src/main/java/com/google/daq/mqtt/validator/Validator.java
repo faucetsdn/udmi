@@ -40,6 +40,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -126,7 +127,8 @@ public class Validator {
    *
    * @param argList Argument list
    */
-  public Validator(List<String> argList) {
+  public Validator(List<String> immutableList) {
+    List<String> argList = new ArrayList<>(immutableList);
     while (argList.size() > 0) {
       String option = removeNextArg(argList);
       try {
@@ -170,8 +172,7 @@ public class Validator {
    */
   public static void main(String[] args) {
     try {
-      List<String> arrayList = Arrays.stream(args).collect(Collectors.toList());
-      Validator validator = new Validator(arrayList);
+      Validator validator = new Validator(Arrays.asList(args));
       validator.messageLoop();
     } catch (ExceptionMap processingException) {
       System.exit(2);
