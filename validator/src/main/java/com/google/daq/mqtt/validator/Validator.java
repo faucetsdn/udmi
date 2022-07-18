@@ -127,7 +127,6 @@ public class Validator {
    * @param argList Argument list
    */
   public Validator(List<String> argList) {
-    setSchemaSpec("schema");
     while (argList.size() > 0) {
       String option = removeNextArg(argList);
       try {
@@ -137,6 +136,9 @@ public class Validator {
             break;
           case "-s":
             setSiteDir(removeNextArg(argList));
+            break;
+          case "-a":
+            setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
             initializeCloudIoT();
@@ -155,6 +157,9 @@ public class Validator {
       } catch (MissingFormatArgumentException e) {
         throw new RuntimeException("For command line option " + option, e);
       }
+    }
+    if (schemaMap == null) {
+      setSchemaSpec("schema");
     }
   }
 
@@ -312,7 +317,7 @@ public class Validator {
 
   private void messageLoop() {
     if (client == null) {
-      throw new RuntimeException("No message loop client defined");
+      return;
     }
     System.err.println(
         "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
