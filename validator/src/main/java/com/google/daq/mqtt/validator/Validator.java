@@ -118,7 +118,7 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
-  private String deviceId;
+  private List<String> deviceIds;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
 
@@ -127,8 +127,16 @@ public class Validator {
    *
    * @param argList Argument list
    */
-  public Validator(List<String> immutableList) {
-    List<String> argList = new ArrayList<>(immutableList);
+  public Validator(List<String> argList) {
+    List<String> listCopy = new ArrayList<>(argList);
+    parseArgs(listCopy);
+    if (schemaMap == null) {
+      setSchemaSpec("schema");
+    }
+    deviceIds = listCopy;
+  }
+
+  private void parseArgs(List<String> argList) {
     while (argList.size() > 0) {
       String option = removeNextArg(argList);
       try {
@@ -153,15 +161,15 @@ public class Validator {
           case "-r":
             validateReflector();
             break;
+          case "--":
+            // All remaining arguments remain in the return list.
+            return;
           default:
             throw new RuntimeException("Unknown cmdline option " + option);
         }
       } catch (MissingFormatArgumentException e) {
         throw new RuntimeException("For command line option " + option, e);
       }
-    }
-    if (schemaMap == null) {
-      setSchemaSpec("schema");
     }
   }
 
@@ -310,7 +318,6 @@ public class Validator {
   }
 
   private void validateReflector() {
-    deviceId = null;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -320,16 +327,11 @@ public class Validator {
     if (client == null) {
       return;
     }
-    System.err.println(
-        "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
+    sendInitializationQuery();
+    System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
-    boolean initialized = false;
     while (client.isActive()) {
       try {
-        if (!initialized) {
-          initialized = true;
-          sendInitializationQuery();
-        }
         client.processMessage(validator);
       } catch (Exception e) {
         e.printStackTrace();
@@ -339,7 +341,7 @@ public class Validator {
   }
 
   private void sendInitializationQuery() {
-    if (deviceId != null) {
+    for (String deviceId : deviceIds) {
       System.err.println("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
