@@ -40,11 +40,13 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingFormatArgumentException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
@@ -105,12 +107,12 @@ public class Validator {
       EVENT_POINTSET, PointsetEvent.class,
       STATE_POINTSET, PointsetState.class
   );
-  private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
   private final Set<String> ignoredRegistries = new HashSet();
+  private String projectId;
   private File outBaseDir;
   private File metadataReportFile;
   private DataSink dataSink;
@@ -124,45 +126,14 @@ public class Validator {
   private Map<String, JsonSchema> schemaMap;
 
   /**
-   * Create validator for the given project id.
-   *
-   * @param projectId Target cloud project id
-   */
-  public Validator(String projectId) {
-    this.projectId = projectId;
-  }
-
-  /**
    * Let's go.
    *
    * @param args Arguments for program execution
    */
   public static void main(String[] args) {
-    if (args.length != 5) {
-      throw new IllegalArgumentException("Args: [project] [schema] [target] [instance] [site]");
-    }
     try {
-      Validator validator = new Validator(args[0]);
-      validator.setSchemaSpec(args[1]);
-      String targetSpec = args[2];
-      String instName = args[3];
-      String siteDir = args[4];
-      validator.setSiteDir(siteDir);
-      switch (targetSpec) {
-        case PUBSUB_MARKER:
-          validator.initializeCloudIoT();
-          validator.initializeFirestoreDataSink();
-          validator.validatePubSub(instName);
-          break;
-        case FILES_MARKER:
-          validator.validateFilesOutput(instName);
-          break;
-        case REFLECT_MARKER:
-          validator.validateReflector(instName);
-          break;
-        default:
-          throw new RuntimeException("Unknown target spec " + targetSpec);
-      }
+      List<String> arrayList = Arrays.stream(args).collect(Collectors.toList());
+      Validator validator = new Validator(arrayList);
       validator.messageLoop();
     } catch (ExceptionMap processingException) {
       System.exit(2);
@@ -172,6 +143,50 @@ public class Validator {
       System.exit(-1);
     }
     System.exit(0);
+  }
+
+  /**
+   * Create validator with the given args.
+   *
+   * @param argList Argument list
+   */
+  public Validator(List<String> argList) {
+    setSchemaSpec("schema");
+    while (argList.size() > 0) {
+      String option = removeNextArg(argList);
+      try {
+        switch (option) {
+          case "-p":
+            projectId = removeNextArg(argList);
+            break;
+          case "-s":
+            setSiteDir(removeNextArg(argList));
+            break;
+          case "-t":
+            initializeCloudIoT();
+            initializeFirestoreDataSink();
+            validatePubSub(removeNextArg(argList));
+            break;
+          case "-f":
+            validateFilesOutput(removeNextArg(argList));
+            break;
+          case "-r":
+            validateReflector();
+            break;
+          default:
+            throw new RuntimeException("Unknown cmdline option " + option);
+        }
+      } catch (MissingFormatArgumentException e) {
+        throw new RuntimeException("For command line option " + option, e);
+      }
+    }
+  }
+
+  private String removeNextArg(List<String> argList) {
+    if (argList.isEmpty()) {
+      throw new MissingFormatArgumentException("Missing argument");
+    }
+    return argList.remove(0);
   }
 
   /**
@@ -292,8 +307,8 @@ public class Validator {
     }
   }
 
-  private void validateReflector(String instName) {
-    deviceId = NO_SITE.equals(instName) ? null : instName;
+  private void validateReflector() {
+    deviceId = null;
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
@@ -301,7 +316,7 @@ public class Validator {
 
   private void messageLoop() {
     if (client == null) {
-      return;
+      throw new RuntimeException("No message loop client defined");
     }
     System.err.println(
         "Entering message loop on " + client.getSubscriptionId() + " with device " + deviceId);
