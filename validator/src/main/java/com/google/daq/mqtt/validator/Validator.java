@@ -40,7 +40,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -78,9 +77,6 @@ public class Validator {
   private static final String JSON_SUFFIX = ".json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
-  private static final String PUBSUB_MARKER = "pubsub";
-  private static final String FILES_MARKER = "files";
-  private static final String REFLECT_MARKER = "reflect";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
@@ -126,26 +122,6 @@ public class Validator {
   private Map<String, JsonSchema> schemaMap;
 
   /**
-   * Let's go.
-   *
-   * @param args Arguments for program execution
-   */
-  public static void main(String[] args) {
-    try {
-      List<String> arrayList = Arrays.stream(args).collect(Collectors.toList());
-      Validator validator = new Validator(arrayList);
-      validator.messageLoop();
-    } catch (ExceptionMap processingException) {
-      System.exit(2);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.flush();
-      System.exit(-1);
-    }
-    System.exit(0);
-  }
-
-  /**
    * Create validator with the given args.
    *
    * @param argList Argument list
@@ -180,6 +156,26 @@ public class Validator {
         throw new RuntimeException("For command line option " + option, e);
       }
     }
+  }
+
+  /**
+   * Let's go.
+   *
+   * @param args Arguments for program execution
+   */
+  public static void main(String[] args) {
+    try {
+      List<String> arrayList = Arrays.stream(args).collect(Collectors.toList());
+      Validator validator = new Validator(arrayList);
+      validator.messageLoop();
+    } catch (ExceptionMap processingException) {
+      System.exit(2);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.flush();
+      System.exit(-1);
+    }
+    System.exit(0);
   }
 
   private String removeNextArg(List<String> argList) {
@@ -434,7 +430,6 @@ public class Validator {
         reportingDevice.addError(e);
         updated = true;
       }
-
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
