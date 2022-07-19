@@ -29,7 +29,6 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.PubSubDataSink;
 import com.google.daq.mqtt.util.ValidationException;
-import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -172,21 +171,24 @@ public class Validator {
             break;
           case "-a":
             setSchemaSpec(removeNextArg(argList));
-            schemaDefined = trueOrThrow(schemaDefined);
+            schemaDefined = true;
             break;
           case "-t":
             initializeCloudIoT();
             initializeFirestoreDataSink();
             validatePubSub(removeNextArg(argList));
-            srcDefined = trueOrThrow(srcDefined);
+            srcDefined = true;
             break;
           case "-f":
             validateFilesOutput(removeNextArg(argList));
-            srcDefined = trueOrThrow(srcDefined);
+            srcDefined = true;
             break;
           case "-r":
             validateMessageTrace(removeNextArg(argList));
-            srcDefined = trueOrThrow(srcDefined);
+            srcDefined = true;
+            break;
+          case "-n":
+            srcDefined = true;
             break;
           case "-w":
             setWriteDir(removeNextArg(argList));
@@ -208,13 +210,6 @@ public class Validator {
     if (!srcDefined) {
       validateReflector();
     }
-  }
-
-  private boolean trueOrThrow(boolean wasTrue) {
-    if (wasTrue) {
-      throw new IllegalArgumentException("Option already defined");
-    }
-    return true;
   }
 
   MessageReadingClient getMessageReadingClient() {
