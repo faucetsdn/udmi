@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "timestamp": "2022-07-13T12:00:10.000Z",
+  "system": {},
+  "blobset": {
+    "blobs": {
+      "arbitrary_manufacturer_id": {
+        "status": {
+          "message": "Received arbitrary_manufacturer_id",
+          "category": "blobset.blobs.receive",
+          "timestamp": "2022-07-13T12:00:08.000Z",
+          "level": 100 
+        }
+      },
+      "_firmware_update": {
+        "status": {
+          "message": "Received firmware update",
+          "category": "blobset.blobs.receive",
+          "timestamp": "2022-07-13T12:00:08.000Z",
+          "level": 100 
+        }
+      },
+      "_endpoint_redirect": {
+        "status": {
+          "message": "Receivedi endpoint redirect",
+          "category": "blobset.blobs.receive",
+          "timestamp": "2022-07-13T12:00:08.000Z",
+          "level": 100 
+        }
+      }
+    }
+  }
+}
