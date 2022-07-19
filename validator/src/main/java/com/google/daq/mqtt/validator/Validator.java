@@ -29,6 +29,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.PubSubDataSink;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -216,6 +217,10 @@ public class Validator {
     return true;
   }
 
+  MessageReadingClient getMessageReadingClient() {
+    return (MessageReadingClient) client;
+  }
+
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
   }
@@ -359,7 +364,7 @@ public class Validator {
     client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
   }
 
-  private void messageLoop() {
+  void messageLoop() {
     if (client == null) {
       return;
     }

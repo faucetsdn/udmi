@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.MessagePublisher;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +22,6 @@ import java.util.stream.Collectors;
 public class MessageReadingClient implements MessagePublisher {
 
   private static final String PLAYBACK_PROJECT_ID = "playback-project";
-  private final File messageDir;
-
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(Feature.ALLOW_COMMENTS)
@@ -30,18 +29,18 @@ public class MessageReadingClient implements MessagePublisher {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
-
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
+  private final File messageDir;
   private final String deviceNumId = String.format("0000%d", hashCode());
   private final String registryId;
+  int messageCount;
 
   boolean isActive = true;
   Map<String, List<String>> deviceMessageLists = new HashMap<>();
   Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
   Map<String, String> deviceNextTimestamp = new HashMap<>();
-
-  // Create a process-unique ID.
+  private List<OutputBundle> outputMessages = new ArrayList<>();
 
   public MessageReadingClient(String registryId, String dirStr) {
     this.registryId = registryId;
@@ -101,8 +100,24 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void publish(String deviceId, String topic, String data) {
-    // NOOP since trace playback is static.
+    try {
+      OutputBundle outputBundle = new OutputBundle();
+      outputBundle.deviceId = deviceId;
+      outputBundle.topic = topic;
+      outputBundle.message = OBJECT_MAPPER.readValue(data, TreeMap.class);
+      outputMessages.add(outputBundle);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message data", e);
+    }
+  }
+
+  static class OutputBundle {
+
+    public String deviceId;
+    public String topic;
+    public TreeMap<String, Object> message;
   }
 
   @Override
@@ -127,6 +142,7 @@ public class MessageReadingClient implements MessagePublisher {
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
     String timestamp = deviceNextTimestamp.remove(deviceId);
     System.out.printf("Replay %s for %s%n", timestamp, deviceId);
+    messageCount++;
     validator.accept(message, attributes);
     prepNextMessage(deviceId);
     if (deviceMessages.isEmpty()) {
