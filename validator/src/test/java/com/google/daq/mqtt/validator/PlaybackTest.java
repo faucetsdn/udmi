@@ -6,6 +6,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Test;
 
+/**
+ * Tests based on validation of message trace playback.
+ */
 public class PlaybackTest {
 
   private static final String SCHEMA_SPEC = "../schema";
@@ -15,7 +18,7 @@ public class PlaybackTest {
 
   @Test
   public void traceCount() {
-   MessageReadingClient client = validateTrace("simple");
+    MessageReadingClient client = validateTrace("simple");
     assertEquals("trace message count", 7, client.messageCount);
   }
 
@@ -26,8 +29,8 @@ public class PlaybackTest {
         "-a", SCHEMA_SPEC,
         "-s", SITE_DIR,
         "-r", tracePath);
-     Validator validator = new Validator(testArgs);
-     validator.messageLoop();
-     return validator.getMessageReadingClient();
+    Validator validator = new Validator(testArgs);
+    validator.messageLoop();
+    return validator.getMessageReadingClient();
   }
 }
