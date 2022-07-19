@@ -17,7 +17,7 @@ public class PlaybackTest {
   private static final String TRACE_BASE = "../validator/traces/";
 
   @Test
-  public void traceCount() {
+  public void simpleTraceCount() {
     MessageReadingClient client = validateTrace("simple");
     assertEquals("trace message count", 7, client.messageCount);
   }

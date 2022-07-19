@@ -115,12 +115,12 @@ public class Validator {
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String VALIDATION_DEVICE = "_validator";
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
-  private final String projectId;
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
   private final Set<String> ignoredRegistries = new HashSet();
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private String projectId;
   private File outBaseDir;
   private File metadataReportFile;
