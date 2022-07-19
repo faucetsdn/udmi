@@ -542,6 +542,9 @@ public class Validator {
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
+    if (writeDir == null) {
+      return;
+    }
     String deviceId = attributes.get("deviceId");
     String type = attributes.get("subType");
     String folder = attributes.get("subFolder");
@@ -553,6 +556,8 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
+      String timestamp = (String) message.get("timestamp");
+      System.out.printf("Capture %s for %s%n", timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing message file " + messageFile.getAbsolutePath());

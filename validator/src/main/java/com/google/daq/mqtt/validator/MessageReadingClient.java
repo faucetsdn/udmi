@@ -126,6 +126,7 @@ public class MessageReadingClient implements MessagePublisher {
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
     String timestamp = deviceNextTimestamp.remove(deviceId);
+    System.out.printf("Replay %s for %s%n", timestamp, deviceId);
     validator.accept(message, attributes);
     prepNextMessage(deviceId);
     if (deviceMessages.isEmpty()) {
@@ -138,7 +139,7 @@ public class MessageReadingClient implements MessagePublisher {
     String nextTimestamp = deviceNextTimestamp.get(nextDevice);
     for (String deviceId : deviceNextTimestamp.keySet()) {
       String deviceTimestamp = deviceNextTimestamp.get(deviceId);
-      if (deviceId.compareTo(nextTimestamp) < 0) {
+      if (deviceTimestamp.compareTo(nextTimestamp) < 0) {
         nextDevice = deviceId;
         nextTimestamp = deviceTimestamp;
       }
