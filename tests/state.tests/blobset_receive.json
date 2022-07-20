@@ -7,7 +7,11 @@
       "model": "Bird Trap"
     },
     "software": {
+<<<<<<< HEAD
       "firmware": "1.1"
+=======
+      "firmware": "1.0"
+>>>>>>> parent of d36c1ab3 (Delete blobset_receive.json)
     },
     "serial_no": "000000",
     "last_config": "2022-07-11T00:00:10.000Z",
