@@ -134,7 +134,7 @@ public class Validator {
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File writeDir;
-  private boolean reportEveryMessage;
+  private boolean reportAfterEveryMessage;
 
   /**
    * Let's go.
@@ -228,7 +228,7 @@ public class Validator {
 
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
-    reportEveryMessage = true;
+    reportAfterEveryMessage = true;
   }
 
   private String removeNextArg(List<String> argList) {
@@ -379,7 +379,7 @@ public class Validator {
     System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportEveryMessage ? null : executor.scheduleAtFixedRate(this::sendValidatonReport,
+        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::sendValidatonReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
@@ -417,13 +417,6 @@ public class Validator {
     }
   }
 
-  private Set<String> convertIgnoreSet(String ignoreSpec) {
-    if (ignoreSpec == null) {
-      return ImmutableSet.of();
-    }
-    return Arrays.stream(ignoreSpec.split(",")).collect(Collectors.toSet());
-  }
-
   protected void validateMessage(MessageBundle bundle) {
     validateMessage(bundle.message, bundle.attributes);
   }
@@ -431,8 +424,26 @@ public class Validator {
   private void validateMessage(
       Map<String, Object> message,
       Map<String, String> attributes) {
-    if (validateUpdate(schemaMap, message, attributes)) {
+
+    String deviceId = attributes.get("deviceId");
+    if (expectedDevices.containsKey(deviceId)) {
+      processedDevices.add(deviceId);
+    }
+
+    if (!shouldConsiderMessage(attributes)) {
+      return;
+    }
+
+    if (writeDir != null) {
+      writeMessageCapture(message, attributes);
+    }
+
+    if (validateUpdate(message, attributes)) {
       writeDeviceMetadataReport();
+    }
+
+    if (reportAfterEveryMessage) {
+      sendValidatonReport();
     }
   }
 
@@ -451,31 +462,13 @@ public class Validator {
   }
 
   private boolean validateUpdate(
-      Map<String, JsonSchema> schemaMap,
       Map<String, Object> message,
       Map<String, String> attributes) {
 
-    if (!shouldConsiderMessage(attributes)) {
-      return false;
-    }
-
     String deviceId = attributes.get("deviceId");
+    final ReportingDevice reportingDevice = getReportingDevice(deviceId);
     try {
-      if (writeDir != null) {
-        writeMessageCapture(message, attributes);
-      }
-
-      if (expectedDevices.containsKey(deviceId)) {
-        processedDevices.add(deviceId);
-      }
-
-      if (reportEveryMessage) {
-        sendValidatonReport();
-      }
-
       String schemaName = messageSchema(attributes);
-      final ReportingDevice reportingDevice = getReportingDevice(deviceId);
-      boolean updated = false;
       if (!reportingDevice.markMessageType(schemaName)) {
         return false;
       }
@@ -494,6 +487,7 @@ public class Validator {
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
       PrintStream errorOut = new PrintStream(errorStream);
+      boolean updated = false;
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
@@ -562,7 +556,7 @@ public class Validator {
 
       return updated;
     } catch (Exception e) {
-      getReportingDevice(deviceId).addError(e);
+      reportingDevice.addError(e);
       return true;
     }
   }
