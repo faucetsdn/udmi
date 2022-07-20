@@ -36,7 +36,11 @@ rm -rf $sitepath/out/
 echo Executing validator $schema $target...
 
 if [[ $target == reflect ]]; then
-    srcargs="-r"
+    if [[ $subscription == -- ]]; then
+        srcargs=""
+    else
+        srcargs="-- $subscription"
+    fi
 elif [[ $target == pubsub ]]; then
     srcargs="-t $subscription"
 else

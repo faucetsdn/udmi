@@ -48,6 +48,7 @@ public class ValidatorTest {
   private static final String DEVICE_NUM_ID = "97216312321";
   private static final String REGISTRY_ID = "ZZ-TRI-FECTA";
   private static final List<String> testArgs = ImmutableList.of(
+      "-n",
       "-p", PROJECT_ID,
       "-a", SCHEMA_SPEC,
       "-s", SITE_DIR);
