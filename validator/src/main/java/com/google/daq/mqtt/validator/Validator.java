@@ -15,7 +15,6 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotCoreClient;
 import com.google.bos.iot.core.proxy.MessagePublisher;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -456,22 +455,7 @@ public class Validator {
       Map<String, Object> message,
       Map<String, String> attributes) {
 
-    String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
-    if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
-      if (ignoredRegistries.add(registryId)) {
-        System.err.println("Ignoring data for not-configured registry " + registryId);
-      }
-      return false;
-    }
-
-    if (!shouldValidateMessage(attributes)) {
-      return false;
-    }
-
-    String deviceId = attributes.get("deviceId");
-    Preconditions.checkNotNull(deviceId, "Missing deviceId in message");
-
-    if (!deviceIds.isEmpty() && !deviceIds.contains(deviceId)) {
+    if (!shouldConsiderMessage(attributes)) {
       return false;
     }
 
@@ -480,12 +464,13 @@ public class Validator {
         writeMessageCapture(message, attributes);
       }
 
-      if (reportEveryMessage) {
-        sendValidatonReport();
-      }
-
+      String deviceId = attributes.get("deviceId");
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
+      }
+
+      if (reportEveryMessage) {
+        sendValidatonReport();
       }
 
       String schemaName = messageSchema(attributes);
@@ -602,19 +587,32 @@ public class Validator {
     }
   }
 
-  private boolean shouldValidateMessage(Map<String, String> attributes) {
+  private boolean shouldConsiderMessage(Map<String, String> attributes) {
+    String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
     String category = attributes.get("category");
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
     String deviceId = attributes.get("deviceId");
+
+    if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
+      if (ignoredRegistries.add(registryId)) {
+        System.err.println("Ignoring data for not-configured registry " + registryId);
+      }
+      return false;
+    }
+
     if (deviceId != null && deviceId.startsWith(EXCLUDE_DEVICE_PREFIX)) {
       return false;
     }
 
-    boolean interestingFolderType = subType == null
+    if (!deviceIds.isEmpty() && !deviceIds.contains(deviceId)) {
+      return false;
+    }
+
+    boolean isInteresting = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
-    return !CONFIG_CATEGORY.equals(category) && interestingFolderType;
+    return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
   private File prepareDeviceOutDir(
