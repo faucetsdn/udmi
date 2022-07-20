@@ -121,6 +121,7 @@ public class Validator {
   private final Set<String> base64Devices = new TreeSet<>();
   private final Set<String> ignoredRegistries = new HashSet();
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+  private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private String projectId;
   private File outBaseDir;
   private File metadataReportFile;
@@ -130,11 +131,22 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
-  private List<String> deviceIds;
+  private final List<String> deviceIds;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File writeDir;
-  private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
+  private boolean reportEveryMessage;
+
+  /**
+   * Create validator with the given args.
+   *
+   * @param argList Argument list
+   */
+  public Validator(List<String> argList) {
+    List<String> listCopy = new ArrayList<>(argList);
+    parseArgs(listCopy);
+    deviceIds = listCopy;
+  }
 
   /**
    * Let's go.
@@ -153,17 +165,6 @@ public class Validator {
       System.exit(-1);
     }
     System.exit(0);
-  }
-
-  /**
-   * Create validator with the given args.
-   *
-   * @param argList Argument list
-   */
-  public Validator(List<String> argList) {
-    List<String> listCopy = new ArrayList<>(argList);
-    parseArgs(listCopy);
-    deviceIds = listCopy;
   }
 
   private void parseArgs(List<String> argList) {
@@ -228,6 +229,7 @@ public class Validator {
 
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
+    reportEveryMessage = true;
   }
 
   private String removeNextArg(List<String> argList) {
@@ -377,16 +379,12 @@ public class Validator {
     sendInitializationQuery();
     System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
-    ScheduledFuture<?> reportSender = executor.scheduleAtFixedRate(this::periodicReport,
-        REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
+    ScheduledFuture<?> reportSender =
+        reportEveryMessage ? null : executor.scheduleAtFixedRate(this::sendValidatonReport,
+            REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
-      boolean initialized = false;
       while (client.isActive()) {
         try {
-          if (!initialized) {
-            initialized = true;
-            sendInitializationQuery();
-          }
           client.processMessage(validator);
         } catch (Exception e) {
           e.printStackTrace();
@@ -394,11 +392,13 @@ public class Validator {
       }
     } finally {
       System.err.println("Message loop complete");
-      reportSender.cancel(true);
+      if (reportSender != null) {
+        reportSender.cancel(true);
+      }
     }
   }
 
-  private void periodicReport() {
+  private void sendValidatonReport() {
     try {
       String registryId = cloudIotConfig.registry_id;
       ValidationEvent validationEvent = new ValidationEvent();
@@ -476,7 +476,13 @@ public class Validator {
     }
 
     try {
-      writeMessageCapture(message, attributes);
+      if (writeDir != null) {
+        writeMessageCapture(message, attributes);
+      }
+
+      if (reportEveryMessage) {
+        sendValidatonReport();
+      }
 
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
@@ -577,9 +583,6 @@ public class Validator {
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
-    if (writeDir == null) {
-      return;
-    }
     String deviceId = attributes.get("deviceId");
     String type = attributes.get("subType");
     String folder = attributes.get("subFolder");

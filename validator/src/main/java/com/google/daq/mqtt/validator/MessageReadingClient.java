@@ -113,6 +113,10 @@ public class MessageReadingClient implements MessagePublisher {
     }
   }
 
+  List<OutputBundle> getOutputMessages() {
+    return outputMessages;
+  }
+
   static class OutputBundle {
 
     public String deviceId;
