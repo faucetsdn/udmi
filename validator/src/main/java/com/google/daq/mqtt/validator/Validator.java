@@ -137,17 +137,6 @@ public class Validator {
   private boolean reportEveryMessage;
 
   /**
-   * Create validator with the given args.
-   *
-   * @param argList Argument list
-   */
-  public Validator(List<String> argList) {
-    List<String> listCopy = new ArrayList<>(argList);
-    parseArgs(listCopy);
-    deviceIds = listCopy;
-  }
-
-  /**
    * Let's go.
    *
    * @param args Arguments for program execution
@@ -164,6 +153,17 @@ public class Validator {
       System.exit(-1);
     }
     System.exit(0);
+  }
+
+  /**
+   * Create validator with the given args.
+   *
+   * @param argList Argument list
+   */
+  public Validator(List<String> argList) {
+    List<String> listCopy = new ArrayList<>(argList);
+    parseArgs(listCopy);
+    deviceIds = listCopy;
   }
 
   private void parseArgs(List<String> argList) {
@@ -459,12 +459,12 @@ public class Validator {
       return false;
     }
 
+    String deviceId = attributes.get("deviceId");
     try {
       if (writeDir != null) {
         writeMessageCapture(message, attributes);
       }
 
-      String deviceId = attributes.get("deviceId");
       if (expectedDevices.containsKey(deviceId)) {
         processedDevices.add(deviceId);
       }
