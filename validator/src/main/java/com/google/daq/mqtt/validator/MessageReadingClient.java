@@ -43,7 +43,7 @@ public class MessageReadingClient implements MessagePublisher {
   Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
   Map<String, String> deviceNextTimestamp = new HashMap<>();
-  private List<OutputBundle> outputMessages = new ArrayList<>();
+  private final List<OutputBundle> outputMessages = new ArrayList<>();
 
   /**
    * Create a new client.
@@ -126,13 +126,6 @@ public class MessageReadingClient implements MessagePublisher {
     return outputMessages;
   }
 
-  static class OutputBundle {
-
-    public String deviceId;
-    public String topic;
-    public TreeMap<String, Object> message;
-  }
-
   @Override
   public void close() {
     isActive = false;
@@ -174,5 +167,12 @@ public class MessageReadingClient implements MessagePublisher {
       }
     }
     return nextDevice;
+  }
+
+  static class OutputBundle {
+
+    public String deviceId;
+    public String topic;
+    public TreeMap<String, Object> message;
   }
 }
