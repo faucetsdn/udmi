@@ -25,6 +25,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.DataSink;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.PubSubDataSink;
 import com.google.daq.mqtt.util.ValidationException;
@@ -63,7 +64,6 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
-import udmi.schema.ValidationEvent;
 
 /**
  * Core class for running site-level validations of data streams.
@@ -71,7 +71,6 @@ import udmi.schema.ValidationEvent;
 public class Validator {
 
   public static final String STATE_QUERY_TOPIC = "query/state";
-  public static final String VALIDATION_EVENT_TOPIC = "validation/event";
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   private static final ObjectMapper OBJECT_MAPPER =
@@ -93,7 +92,6 @@ public class Validator {
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
-  private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
@@ -112,7 +110,6 @@ public class Validator {
       STATE_POINTSET, PointsetState.class
   );
   private static final long REPORT_INTERVAL_SEC = 15;
-  private static final String VALIDATION_DEVICE = "_validator";
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -121,10 +118,10 @@ public class Validator {
   private final Set<String> ignoredRegistries = new HashSet();
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
+  private final List<DataSink> dataSinks = new ArrayList<>();
   private String projectId;
   private File outBaseDir;
   private File metadataReportFile;
-  private DataSink dataSink;
   private File schemaRoot;
   private String schemaSpec;
   private CloudIotConfig cloudIotConfig;
@@ -259,9 +256,7 @@ public class Validator {
 
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
-    metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
-    System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
-    metadataReportFile.delete();
+    dataSinks.add(new FileDataSink(outBaseDir));
   }
 
   private void setWriteDir(String writeDirArg) {
@@ -351,8 +346,7 @@ public class Validator {
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
     outBaseDir.mkdirs();
     System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
-    System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
-    writeDeviceMetadataReport();
+    processValidationReport();
 
     return (message, attributes) -> validateMessage(message, attributes);
   }
@@ -361,7 +355,7 @@ public class Validator {
     String registryId = cloudIotConfig.registry_id;
     client = new PubSubClient(projectId, registryId, instName);
     if (cloudIotManager.getUpdateTopic() != null) {
-      dataSink = new PubSubDataSink(projectId, cloudIotManager.getUpdateTopic());
+      dataSinks.add(new PubSubDataSink(projectId, registryId, cloudIotManager.getUpdateTopic()));
     }
   }
 
@@ -379,7 +373,7 @@ public class Validator {
     System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::sendValidatonReport,
+        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
@@ -394,19 +388,6 @@ public class Validator {
       if (reportSender != null) {
         reportSender.cancel(true);
       }
-    }
-  }
-
-  private void sendValidatonReport() {
-    try {
-      String registryId = cloudIotConfig.registry_id;
-      ValidationEvent validationEvent = new ValidationEvent();
-      System.err.println("Sending validation report for " + registryId);
-      client.publish(VALIDATION_DEVICE, VALIDATION_EVENT_TOPIC,
-          OBJECT_MAPPER.writeValueAsString(validationEvent));
-    } catch (Exception e) {
-      System.err.println("Exception handling periodic report");
-      e.printStackTrace();
     }
   }
 
@@ -438,13 +419,11 @@ public class Validator {
       writeMessageCapture(message, attributes);
     }
 
-    if (validateUpdate(message, attributes)) {
-      writeDeviceMetadataReport();
+    ReportingDevice reportingDevice = validateUpdate(message, attributes);
+    if (reportingDevice != null) {
+      dataSinks.forEach(sink -> sink.validationResult(attributes, message, reportingDevice));
     }
-
-    if (reportAfterEveryMessage) {
-      sendValidatonReport();
-    }
+    processValidationReport();
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -461,7 +440,7 @@ public class Validator {
     }
   }
 
-  private boolean validateUpdate(
+  private ReportingDevice validateUpdate(
       Map<String, Object> message,
       Map<String, String> attributes) {
 
@@ -470,7 +449,7 @@ public class Validator {
     try {
       String schemaName = messageSchema(attributes);
       if (!reportingDevice.markMessageType(schemaName)) {
-        return false;
+        return null;
       }
 
       System.err.printf(
@@ -487,7 +466,6 @@ public class Validator {
       errorFile.delete();
       ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
       PrintStream errorOut = new PrintStream(errorStream);
-      boolean updated = false;
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
@@ -498,27 +476,21 @@ public class Validator {
         System.err.println(e.getMessage());
         errorOut.println(e.getMessage());
         reportingDevice.addError(e);
-        updated = true;
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e.getMessage());
-        processViolation(message, attributes, deviceId, ENVELOPE_SCHEMA_ID, errorOut, e);
         reportingDevice.addError(e);
-        updated = true;
       }
 
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);
-          sendValidationResult(deviceId, schemaName, attributes, message, null);
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
-          processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
-          updated = true;
         }
       }
 
@@ -527,19 +499,16 @@ public class Validator {
       } else if (expectedDevices.containsKey(deviceId)) {
         try {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
-            updated |= !reportingDevice.hasBeenValidated();
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
             reportingDevice.validateMessage(messageObject);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          processViolation(message, attributes, deviceId, schemaName, errorOut, e);
           reportingDevice.addError(e);
-          updated = true;
         }
-      } else if (extraDevices.add(deviceId)) {
-        updated = true;
+      } else {
+        extraDevices.add(deviceId);
       }
 
       errorOut.flush();
@@ -553,12 +522,10 @@ public class Validator {
       if (!reportingDevice.hasError()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
-
-      return updated;
     } catch (Exception e) {
       reportingDevice.addError(e);
-      return true;
     }
+    return reportingDevice;
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
@@ -668,53 +635,30 @@ public class Validator {
     }
   }
 
-  private void writeDeviceMetadataReport() {
-    try {
-      MetadataReport metadataReport = new MetadataReport();
-      metadataReport.updated = new Date();
-      metadataReport.missingDevices = new TreeSet<>();
-      metadataReport.extraDevices = extraDevices;
-      metadataReport.pointsetDevices = new TreeSet<>();
-      metadataReport.base64Devices = base64Devices;
-      metadataReport.expectedDevices = expectedDevices.keySet();
-      metadataReport.errorDevices = new TreeMap<>();
-      for (ReportingDevice deviceInfo : expectedDevices.values()) {
-        String deviceId = deviceInfo.getDeviceId();
-        if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
-          metadataReport.errorDevices.put(deviceId, deviceInfo.getMetadataDiff());
-        } else if (deviceInfo.hasBeenValidated()) {
-          metadataReport.pointsetDevices.add(deviceId);
-        } else {
-          metadataReport.missingDevices.add(deviceId);
-        }
+  private void processValidationReport() {
+    MetadataReport metadataReport = new MetadataReport();
+    metadataReport.updated = new Date();
+    metadataReport.missingDevices = new TreeSet<>();
+    metadataReport.extraDevices = extraDevices;
+    metadataReport.pointsetDevices = new TreeSet<>();
+    metadataReport.base64Devices = base64Devices;
+    metadataReport.expectedDevices = expectedDevices.keySet();
+    metadataReport.errorDevices = new TreeMap<>();
+    for (ReportingDevice deviceInfo : expectedDevices.values()) {
+      String deviceId = deviceInfo.getDeviceId();
+      if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
+        metadataReport.errorDevices.put(deviceId, deviceInfo.getMetadataDiff());
+      } else if (deviceInfo.hasBeenValidated()) {
+        metadataReport.pointsetDevices.add(deviceId);
+      } else {
+        metadataReport.missingDevices.add(deviceId);
       }
-      OBJECT_MAPPER.writeValue(metadataReportFile, metadataReport);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While generating metadata report file " + metadataReportFile.getAbsolutePath(), e);
     }
+
+    dataSinks.forEach(sink -> sink.validationReport(metadataReport));
   }
 
-  private void processViolation(
-      Map<String, Object> message,
-      Map<String, String> attributes,
-      String deviceId,
-      String schemaId,
-      PrintStream errorOut,
-      Exception e) {
-    ErrorTree errorTree = ExceptionMap.format(e, ERROR_FORMAT_INDENT);
-    sendValidationResult(deviceId, schemaId, attributes, message, errorTree);
-    errorTree.write(errorOut);
-  }
-
-  private void sendValidationResult(String deviceId, String schemaId,
-      Map<String, String> attributes, Map<String, Object> message, ErrorTree errorTree) {
-    if (dataSink != null) {
-      dataSink.validationResult(deviceId, schemaId, attributes, message, errorTree);
-    }
-  }
-
-  private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
+ private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
     List<File> schemaFiles = makeFileList(null, schemaSpec);
     if (schemaFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero schemas");
