@@ -5,16 +5,22 @@ class BlobBlobsetConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.stage = None
-    self.target = None
+    self.phase = None
+    self.content_type = None
+    self.base64 = None
+    self.url = None
+    self.sha256 = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = BlobBlobsetConfig()
-    result.stage = source.get('stage')
-    result.target = source.get('target')
+    result.phase = source.get('phase')
+    result.content_type = source.get('content_type')
+    result.base64 = source.get('base64')
+    result.url = source.get('url')
+    result.sha256 = source.get('sha256')
     return result
 
   @staticmethod
@@ -35,8 +41,14 @@ class BlobBlobsetConfig:
 
   def to_dict(self):
     result = {}
-    if self.stage:
-      result['stage'] = self.stage # 5
-    if self.target:
-      result['target'] = self.target # 5
+    if self.phase:
+      result['phase'] = self.phase # 5
+    if self.content_type:
+      result['content_type'] = self.content_type # 5
+    if self.base64:
+      result['base64'] = self.base64 # 5
+    if self.url:
+      result['url'] = self.url # 5
+    if self.sha256:
+      result['sha256'] = self.sha256 # 5
     return result

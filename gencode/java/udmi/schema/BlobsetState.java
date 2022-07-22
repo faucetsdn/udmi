@@ -16,14 +16,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "state_etag",
     "blobs"
 })
 @Generated("jsonschema2pojo")
 public class BlobsetState {
 
-    @JsonProperty("state_etag")
-    public java.lang.String state_etag;
     /**
      * 
      * (Required)
@@ -36,7 +33,6 @@ public class BlobsetState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.blobs == null)? 0 :this.blobs.hashCode()));
-        result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
         return result;
     }
 
@@ -49,7 +45,7 @@ public class BlobsetState {
             return false;
         }
         BlobsetState rhs = ((BlobsetState) other);
-        return (((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))));
+        return ((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs)));
     }
 
 }
