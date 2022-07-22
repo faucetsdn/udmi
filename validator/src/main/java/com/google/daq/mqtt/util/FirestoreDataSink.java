@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Class managing a firestore link for validation results.
  */
-public class FirestoreDataSink implements DataSink {
+public class FirestoreDataSink {
 
   private static final String
       VIEW_URL_FORMAT = "https://console.cloud.google.com/firestore/data/registries/?project=%s";
@@ -52,7 +52,6 @@ public class FirestoreDataSink implements DataSink {
     }
   }
 
-  @Override
   public void validationResult(Map<String, String> attributes,
       Object message, ReportingDevice reportingDevice) {
     if (oldError.get() != null) {
@@ -82,11 +81,6 @@ public class FirestoreDataSink implements DataSink {
     } catch (Exception e) {
       throw new RuntimeException("While writing result for " + deviceId, e);
     }
-  }
-
-  @Override
-  public void validationReport(MetadataReport metadataReport) {
-
   }
 
   public String getViewUrl() {

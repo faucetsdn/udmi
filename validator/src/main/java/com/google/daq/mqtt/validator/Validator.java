@@ -22,12 +22,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.daq.mqtt.util.DataSink;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
-import com.google.daq.mqtt.util.PubSubDataSink;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -59,11 +57,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import udmi.schema.AuditEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.Target;
+import udmi.schema.ValidationEvent;
 
 /**
  * Core class for running site-level validations of data streams.
@@ -111,6 +112,10 @@ public class Validator {
   );
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
+  private static final String VALIDATION_DEVICE = "_validator";
+  private static final String VALIDATION_EVENT_TOPIC = "validation/event";
+  private static final String SUB_FOLDER_ATTRIBUTE_KEY = "subFolder";
+  private static final String SUB_TYPE_ATTRIBUTE_KEY = "subType";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -118,7 +123,7 @@ public class Validator {
   private final Set<String> ignoredRegistries = new HashSet();
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
-  private final List<DataSink> dataSinks = new ArrayList<>();
+  private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final List<String> deviceIds;
   private String projectId;
   private File outBaseDir;
@@ -130,7 +135,7 @@ public class Validator {
   private String siteDir;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
-  private File writeDir;
+  private File traceDir;
   private boolean reportAfterEveryMessage;
 
   /**
@@ -182,7 +187,6 @@ public class Validator {
             break;
           case "-t":
             initializeCloudIoT();
-            initializeFirestoreDataSink();
             validatePubSub(removeNextArg(argList));
             srcDefined = true;
             break;
@@ -198,7 +202,7 @@ public class Validator {
             srcDefined = true;
             break;
           case "-w":
-            setWriteDir(removeNextArg(argList));
+            setMessageTraceDir(removeNextArg(argList));
             break;
           case "--":
             // All remaining arguments remain in the return list.
@@ -225,6 +229,7 @@ public class Validator {
 
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
+    dataSinks.add(client);
     reportAfterEveryMessage = true;
   }
 
@@ -259,12 +264,12 @@ public class Validator {
     dataSinks.add(new FileDataSink(outBaseDir));
   }
 
-  private void setWriteDir(String writeDirArg) {
-    writeDir = new File(writeDirArg);
-    if (writeDir.exists()) {
-      throw new RuntimeException("Write directory already exists " + writeDir.getAbsolutePath());
+  private void setMessageTraceDir(String writeDirArg) {
+    traceDir = new File(writeDirArg);
+    if (traceDir.exists()) {
+      throw new RuntimeException("Trace directory already exists " + traceDir.getAbsolutePath());
     }
-    writeDir.mkdirs();
+    traceDir.mkdirs();
   }
 
   private void initializeExpectedDevices(String siteDir) {
@@ -301,12 +306,6 @@ public class Validator {
     } catch (Exception e) {
       throw new RuntimeException("While initializing cloud IoT for project " + projectId, e);
     }
-  }
-
-  private void initializeFirestoreDataSink() {
-    // TODO: Make this configurable somehow.
-    //    dataSink = new FirestoreDataSink(projectId);
-    //    System.err.println("Results will be uploaded to " + dataSink.getViewUrl());
   }
 
   /**
@@ -352,11 +351,17 @@ public class Validator {
   }
 
   private void validatePubSub(String instName) {
-    String registryId = cloudIotConfig.registry_id;
+    String registryId = getRegistryId();
     client = new PubSubClient(projectId, registryId, instName);
     if (cloudIotManager.getUpdateTopic() != null) {
-      dataSinks.add(new PubSubDataSink(projectId, registryId, cloudIotManager.getUpdateTopic()));
+      // TODO: Figure out if the sink topic can/should be the same as the instName topic.
+      dataSinks.add(client);
     }
+  }
+
+  private String getRegistryId() {
+    String registryId = cloudIotConfig.registry_id;
+    return registryId;
   }
 
   private void validateReflector() {
@@ -415,13 +420,13 @@ public class Validator {
       return;
     }
 
-    if (writeDir != null) {
+    if (traceDir != null) {
       writeMessageCapture(message, attributes);
     }
 
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      dataSinks.forEach(sink -> sink.validationResult(attributes, message, reportingDevice));
+      sendValidationResult(attributes, message, reportingDevice);
     }
     processValidationReport();
   }
@@ -528,6 +533,48 @@ public class Validator {
     return reportingDevice;
   }
 
+
+  private void sendValidationResult(Map<String, String> origAttributes, Object message,
+      ReportingDevice reportingDevice) {
+    try {
+      Map<String, String> attributes = new HashMap<>(origAttributes);
+      final String subFolder = attributes.get(SUB_FOLDER_ATTRIBUTE_KEY);
+      final String rawSubType = attributes.get(SUB_TYPE_ATTRIBUTE_KEY);
+      final String subType = rawSubType == null ? SubType.EVENT.toString() : rawSubType;
+
+      AuditEvent auditEvent = new AuditEvent();
+      auditEvent.version = ConfigUtil.UDMI_VERSION;
+      auditEvent.timestamp = new Date();
+      auditEvent.target = new Target();
+      auditEvent.target.subFolder = subFolder;
+      auditEvent.target.subType = subType;
+      attributes.put("subType", SubType.EVENT.value());
+      String messageString = OBJECT_MAPPER.writeValueAsString(auditEvent);
+      dataSinks.forEach(sink -> sink.validationResult(attributes, message, reportingDevice));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing validation message");
+    }
+  }
+
+  private void sendValidationReport(MetadataReport metadataReport) {
+    try {
+      ValidationEvent validationEvent = new ValidationEvent();
+      String registryId = getRegistryId();
+      System.err.println("Sending validation report for " + registryId);
+      String subFolder = String.format("events/%s/%s", VALIDATION_DEVICE, VALIDATION_EVENT_TOPIC);
+      Map<String, String> attributes = Map.of(
+          "deviceId", VALIDATION_DEVICE,
+          "projectId", projectId,
+          "subFolder", subFolder,
+          "deviceId", registryId // intentional b/c of udmi_reflect function
+      );
+      dataSinks.forEach(sink -> sink.validationReport(metadataReport));
+    } catch (Exception e) {
+      System.err.println("Exception handling periodic report");
+      e.printStackTrace();
+    }
+  }
+
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
     String type = attributes.get("subType");
@@ -536,7 +583,7 @@ public class Validator {
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
     String filename = String.format("%03d_%s_%s.json", index, type, folder);
-    File deviceDir = new File(writeDir, deviceId);
+    File deviceDir = new File(traceDir, deviceId);
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
@@ -655,7 +702,7 @@ public class Validator {
       }
     }
 
-    dataSinks.forEach(sink -> sink.validationReport(metadataReport));
+    sendValidationReport(metadataReport);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {

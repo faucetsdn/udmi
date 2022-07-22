@@ -5,12 +5,11 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.daq.mqtt.validator.ReportingDevice;
+import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.MetadataReport;
 import java.io.File;
-import java.util.Map;
 
-public class FileDataSink implements DataSink {
+public class FileDataSink implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
@@ -27,12 +26,6 @@ public class FileDataSink implements DataSink {
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
     System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
     metadataReportFile.delete();
-  }
-
-  @Override
-  public void validationResult(Map<String, String> attributes, Object message,
-      ReportingDevice reportingDevice) {
-
   }
 
   @Override
