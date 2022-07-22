@@ -19,6 +19,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Client to read messages from a directory of captured messages.
+ */
 public class MessageReadingClient implements MessagePublisher {
 
   private static final String PLAYBACK_PROJECT_ID = "playback-project";
@@ -42,6 +45,12 @@ public class MessageReadingClient implements MessagePublisher {
   Map<String, String> deviceNextTimestamp = new HashMap<>();
   private List<OutputBundle> outputMessages = new ArrayList<>();
 
+  /**
+   * Create a new client.
+   *
+   * @param registryId registry to use for attribute creation
+   * @param dirStr     directory containing message trace
+   */
   public MessageReadingClient(String registryId, String dirStr) {
     this.registryId = registryId;
     messageDir = new File(dirStr);

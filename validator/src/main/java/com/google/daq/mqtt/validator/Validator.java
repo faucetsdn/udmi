@@ -119,6 +119,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<DataSink> dataSinks = new ArrayList<>();
+  private final List<String> deviceIds;
   private String projectId;
   private File outBaseDir;
   private File metadataReportFile;
@@ -127,11 +128,21 @@ public class Validator {
   private CloudIotConfig cloudIotConfig;
   private CloudIotManager cloudIotManager;
   private String siteDir;
-  private final List<String> deviceIds;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File writeDir;
   private boolean reportAfterEveryMessage;
+
+  /**
+   * Create validator with the given args.
+   *
+   * @param argList Argument list
+   */
+  public Validator(List<String> argList) {
+    List<String> listCopy = new ArrayList<>(argList);
+    parseArgs(listCopy);
+    deviceIds = listCopy;
+  }
 
   /**
    * Let's go.
@@ -150,17 +161,6 @@ public class Validator {
       System.exit(-1);
     }
     System.exit(0);
-  }
-
-  /**
-   * Create validator with the given args.
-   *
-   * @param argList Argument list
-   */
-  public Validator(List<String> argList) {
-    List<String> listCopy = new ArrayList<>(argList);
-    parseArgs(listCopy);
-    deviceIds = listCopy;
   }
 
   private void parseArgs(List<String> argList) {
@@ -550,10 +550,6 @@ public class Validator {
 
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
-    String category = attributes.get("category");
-    String subType = attributes.get("subType");
-    String subFolder = attributes.get("subFolder");
-    String deviceId = attributes.get("deviceId");
 
     if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
       if (ignoredRegistries.add(registryId)) {
@@ -562,6 +558,7 @@ public class Validator {
       return false;
     }
 
+    String deviceId = attributes.get("deviceId");
     if (deviceId != null && deviceId.startsWith(EXCLUDE_DEVICE_PREFIX)) {
       return false;
     }
@@ -570,6 +567,9 @@ public class Validator {
       return false;
     }
 
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    String category = attributes.get("category");
     boolean isInteresting = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
@@ -658,7 +658,7 @@ public class Validator {
     dataSinks.forEach(sink -> sink.validationReport(metadataReport));
   }
 
- private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
+  private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
     List<File> schemaFiles = makeFileList(null, schemaSpec);
     if (schemaFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero schemas");
