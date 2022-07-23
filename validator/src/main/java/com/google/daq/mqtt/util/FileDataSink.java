@@ -6,8 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.MessagePublisher;
-import com.google.daq.mqtt.validator.Validator.MetadataReport;
 import java.io.File;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class FileDataSink implements MessagePublisher {
 
@@ -28,13 +29,28 @@ public class FileDataSink implements MessagePublisher {
     metadataReportFile.delete();
   }
 
+
   @Override
-  public void validationReport(MetadataReport metadataReport) {
-    try {
-      OBJECT_MAPPER.writeValue(metadataReportFile, metadataReport);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While generating metadata report file " + metadataReportFile.getAbsolutePath(), e);
-    }
+  public void publish(String deviceId, String topic, String data) {
+    // TODO: This should go somewhere!
+  }
+
+  @Override
+  public void close() {
+  }
+
+  @Override
+  public String getSubscriptionId() {
+    return metadataReportFile.getAbsolutePath();
+  }
+
+  @Override
+  public boolean isActive() {
+    return true;
+  }
+
+  @Override
+  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+    throw new RuntimeException("Not implemented for file data sink");
   }
 }

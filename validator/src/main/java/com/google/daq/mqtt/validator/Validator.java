@@ -111,7 +111,7 @@ public class Validator {
   );
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
-  private static final String VALIDATION_DEVICE = "_validator";
+  private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String SUB_FOLDER_ATTRIBUTE_KEY = "subFolder";
   private static final String SUB_TYPE_ATTRIBUTE_KEY = "subType";
@@ -126,7 +126,6 @@ public class Validator {
   private final List<String> deviceIds;
   private String projectId;
   private File outBaseDir;
-  private File metadataReportFile;
   private File schemaRoot;
   private String schemaSpec;
   private CloudIotConfig cloudIotConfig;
@@ -342,10 +341,7 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    outBaseDir.mkdirs();
-    System.err.println("Results may be in such directories as " + outBaseDir.getAbsolutePath());
     processValidationReport();
-
     return (message, attributes) -> validateMessage(message, attributes);
   }
 
@@ -536,28 +532,11 @@ public class Validator {
   private void sendValidationResult(Map<String, String> origAttributes, Object message,
       ReportingDevice reportingDevice) {
     try {
-      Map<String, String> attributes = new HashMap<>(origAttributes);
-      final String subFolder = attributes.get(SUB_FOLDER_ATTRIBUTE_KEY);
-      final String rawSubType = attributes.get(SUB_TYPE_ATTRIBUTE_KEY);
-      final String subType = rawSubType == null ? SubType.EVENT.toString() : rawSubType;
-
       ValidationEvent validationEvent = makeValidationEvent();
-      sendValidationEvent(validationEvent);
+      sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result");
     }
-  }
-
-  private void sendValidationEvent(ValidationEvent validationEvent) throws JsonProcessingException {
-    String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
-    dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
-  }
-
-  private ValidationEvent makeValidationEvent() {
-    ValidationEvent validationEvent = new ValidationEvent();
-    validationEvent.version = ConfigUtil.UDMI_VERSION;
-    validationEvent.timestamp = new Date();
-    return validationEvent;
   }
 
   private void sendValidationReport(MetadataReport metadataReport) {
@@ -565,17 +544,22 @@ public class Validator {
       ValidationEvent validationEvent = makeValidationEvent();
       String registryId = getRegistryId();
       System.err.println("Sending validation report for " + registryId);
-      String subFolder = String.format("events/%s/%s", VALIDATION_DEVICE, VALIDATION_EVENT_TOPIC);
-      Map<String, String> attributes = Map.of(
-          "deviceId", VALIDATION_DEVICE,
-          "projectId", projectId,
-          "subFolder", subFolder,
-          "deviceId", registryId // intentional b/c of udmi_reflect function
-      );
-      sendValidationEvent(validationEvent);
+      sendValidationEvent(VALIDATION_REPORT_DEVICE, validationEvent);
     } catch (Exception e) {
-      throw new RuntimeException("While sending validation report");
+      throw new RuntimeException("While sending validation report", e);
     }
+  }
+
+  private void sendValidationEvent(String deviceId, ValidationEvent validationEvent) throws JsonProcessingException {
+    String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
+    dataSinks.forEach(sink -> sink.publish(deviceId, VALIDATION_EVENT_TOPIC, messageString));
+  }
+
+  private ValidationEvent makeValidationEvent() {
+    ValidationEvent validationEvent = new ValidationEvent();
+    validationEvent.version = ConfigUtil.UDMI_VERSION;
+    validationEvent.timestamp = new Date();
+    return validationEvent;
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
