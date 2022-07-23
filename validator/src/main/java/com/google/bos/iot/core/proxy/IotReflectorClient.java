@@ -18,7 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 
-public class IotCoreClient implements MessagePublisher {
+public class IotReflectorClient implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -38,7 +38,7 @@ public class IotCoreClient implements MessagePublisher {
   private final String projectId;
   private boolean active;
 
-  public IotCoreClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
+  public IotReflectorClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
     final byte[] keyBytes;
     try {
       keyBytes = getFileBytes(keyFile);

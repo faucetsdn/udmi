@@ -14,7 +14,7 @@ import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.bos.iot.core.proxy.IotCoreClient;
+import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -366,7 +366,7 @@ public class Validator {
   private void validateReflector() {
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotCoreClient(projectId, cloudIotConfig, keyFile);
+    client = new IotReflectorClient(projectId, cloudIotConfig, keyFile);
   }
 
   void messageLoop() {
