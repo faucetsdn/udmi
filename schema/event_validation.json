@@ -39,11 +39,47 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "extra_devices": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
+    "summary": {
+      "title": "Validation Summary",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "extra_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pointset_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "base64_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "error_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "devices": {

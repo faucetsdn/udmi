@@ -42,6 +42,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +66,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationSummary;
 
 /**
  * Core class for running site-level validations of data streams.
@@ -114,8 +116,6 @@ public class Validator {
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
-  private static final String SUB_FOLDER_ATTRIBUTE_KEY = "subFolder";
-  private static final String SUB_TYPE_ATTRIBUTE_KEY = "subType";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -342,7 +342,7 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    processValidationReport();
+    processValidationSummary();
     return (message, attributes) -> validateMessage(message, attributes);
   }
 
@@ -374,7 +374,7 @@ public class Validator {
     System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationReport,
+        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationSummary,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
@@ -424,7 +424,7 @@ public class Validator {
     if (reportingDevice != null) {
       sendValidationResult(attributes, message, reportingDevice);
     }
-    processValidationReport();
+    processValidationSummary();
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -540,7 +540,7 @@ public class Validator {
     }
   }
 
-  private void sendValidationReport(MetadataReport metadataReport) {
+  private void sendValidationSummary(ValidationSummary report) {
     try {
       ValidationEvent validationEvent = makeValidationEvent();
       String registryId = getRegistryId();
@@ -674,28 +674,30 @@ public class Validator {
     }
   }
 
-  private void processValidationReport() {
-    MetadataReport metadataReport = new MetadataReport();
-    metadataReport.timestamp = new Date();
-    metadataReport.version = UDMI_VERSION;
-    metadataReport.missingDevices = new TreeSet<>();
-    metadataReport.extra_devices = extraDevices;
-    metadataReport.pointsetDevices = new TreeSet<>();
-    metadataReport.base64Devices = base64Devices;
-    metadataReport.expectedDevices = expectedDevices.keySet();
-    metadataReport.errorDevices = new TreeMap<>();
+  private void processValidationSummary() {
+    ValidationSummary summary = new ValidationSummary();
+
+    summary.missing_devices = new ArrayList<>();
+    summary.pointset_devices = new ArrayList<>();
+    summary.error_devices = new ArrayList<>();
     for (ReportingDevice deviceInfo : expectedDevices.values()) {
       String deviceId = deviceInfo.getDeviceId();
       if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
-        metadataReport.errorDevices.put(deviceId, deviceInfo.getMetadataDiff());
+        summary.error_devices.add(deviceId);
       } else if (deviceInfo.hasBeenValidated()) {
-        metadataReport.pointsetDevices.add(deviceId);
+        summary.pointset_devices.add(deviceId);
       } else {
-        metadataReport.missingDevices.add(deviceId);
+        summary.missing_devices.add(deviceId);
       }
     }
+    summary.missing_devices.sort(Comparator.naturalOrder());
+    summary.pointset_devices.sort(Comparator.naturalOrder());
+    summary.expected_devices.sort(Comparator.naturalOrder());
 
-    sendValidationReport(metadataReport);
+    summary.extra_devices = new ArrayList<>(extraDevices);
+    summary.base64_devices = new ArrayList<>(base64Devices);
+    summary.expected_devices = new ArrayList<>(expectedDevices.keySet());
+    sendValidationSummary(summary);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
@@ -843,21 +845,6 @@ public class Validator {
 
   private File getFullPath(String prefix, File targetFile) {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
-  }
-
-  /**
-   * Report for results from processing the metadata.
-   */
-  public static class MetadataReport {
-
-    public Date timestamp;
-    public String version;
-    public Set<String> expectedDevices;
-    public Set<String> missingDevices;
-    public Set<String> extra_devices;
-    public Set<String> pointsetDevices;
-    public Set<String> base64Devices;
-    public Map<String, ReportingDevice.MetadataDiff> errorDevices;
   }
 
   static class MessageBundle {

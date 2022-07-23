@@ -7,7 +7,6 @@ import com.google.cloud.firestore.FirestoreOptions;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.validator.ReportingDevice;
-import com.google.daq.mqtt.validator.Validator.MetadataReport;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;

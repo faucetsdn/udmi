@@ -1,5 +1,62 @@
 """Generated class for event_validation.json"""
 from .common import Entry
+
+
+class ValidationSummary:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.extra_devices = None
+    self.missing_devices = None
+    self.pointset_devices = None
+    self.base64_devices = None
+    self.error_devices = None
+    self.expected_devices = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ValidationSummary()
+    result.extra_devices = source.get('extra_devices')
+    result.missing_devices = source.get('missing_devices')
+    result.pointset_devices = source.get('pointset_devices')
+    result.base64_devices = source.get('base64_devices')
+    result.error_devices = source.get('error_devices')
+    result.expected_devices = source.get('expected_devices')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ValidationSummary.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.extra_devices:
+      result['extra_devices'] = self.extra_devices # 1
+    if self.missing_devices:
+      result['missing_devices'] = self.missing_devices # 1
+    if self.pointset_devices:
+      result['pointset_devices'] = self.pointset_devices # 1
+    if self.base64_devices:
+      result['base64_devices'] = self.base64_devices # 1
+    if self.error_devices:
+      result['error_devices'] = self.error_devices # 1
+    if self.expected_devices:
+      result['expected_devices'] = self.expected_devices # 1
+    return result
 from .event_validation_device import DeviceValidationEvent
 
 
@@ -15,7 +72,7 @@ class ValidationEvent:
     self.subfolder = None
     self.subtype = None
     self.status = None
-    self.extra_devices = None
+    self.summary = None
     self.devices = None
 
   @staticmethod
@@ -31,7 +88,7 @@ class ValidationEvent:
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
     result.status = Entry.from_dict(source.get('status'))
-    result.extra_devices = source.get('extra_devices')
+    result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
     return result
 
@@ -69,8 +126,8 @@ class ValidationEvent:
       result['subtype'] = self.subtype # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.extra_devices:
-      result['extra_devices'] = self.extra_devices # 1
+    if self.summary:
+      result['summary'] = self.summary.to_dict() # 4
     if self.devices:
       result['devices'] = DeviceValidationEvent.expand_dict(self.devices) # 2
     return result

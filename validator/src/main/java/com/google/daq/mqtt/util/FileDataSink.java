@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.MessagePublisher;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -26,7 +25,7 @@ public class FileDataSink implements MessagePublisher {
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
-  private final File metadataReportFile;
+  private final File reportFile;
   private final String validationSrc;
   private final File outBaseDir;
 
@@ -39,10 +38,9 @@ public class FileDataSink implements MessagePublisher {
   public FileDataSink(File outBaseDir, String validationSrc) {
     this.validationSrc = validationSrc;
     this.outBaseDir = outBaseDir;
-    metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
-    System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
-    System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
-    metadataReportFile.delete();
+    reportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
+    System.err.println("Generating report file in " + reportFile.getAbsolutePath());
+    reportFile.delete();
   }
 
   @Override
@@ -56,7 +54,7 @@ public class FileDataSink implements MessagePublisher {
   }
 
   private File getOutputFile(String deviceId, String topic) {
-    return deviceId.equals(validationSrc) ? metadataReportFile : getDeviceFile(deviceId, topic);
+    return deviceId.equals(validationSrc) ? reportFile : getDeviceFile(deviceId, topic);
   }
 
   private File getDeviceFile(String deviceId, String topic) {
@@ -72,7 +70,7 @@ public class FileDataSink implements MessagePublisher {
 
   @Override
   public String getSubscriptionId() {
-    return metadataReportFile.getAbsolutePath();
+    return reportFile.getAbsolutePath();
   }
 
   @Override

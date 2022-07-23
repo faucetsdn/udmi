@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.daq.mqtt.validator.Validator.MetadataReport;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,6 +21,7 @@ import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.ValidationEvent;
 
 /**
  * Unit test suite for the validator.
@@ -59,16 +59,16 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     bundle.message.remove("system");
     validator.validateMessage(bundle);
-    MetadataReport report = getMetadataReport();
-    assertEquals("One error device", 1, report.errorDevices.size());
+    ValidationEvent summary = getValidationReport();
+    assertEquals("One error device", 1, summary.devices.size());
   }
 
   @Test
   public void emptyPointsetEvent() {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
-    MetadataReport report = getMetadataReport();
-    assertEquals("One error device", 1, report.errorDevices.size());
+    ValidationEvent summary = getValidationReport();
+    assertEquals("One error device", 1, summary.devices.size());
   }
 
   @Test
@@ -76,8 +76,8 @@ public class ValidatorTest {
     PointsetEvent messageObject = basePointsetEvent();
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
-    MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 0, report.errorDevices.size());
+    ValidationEvent report = getValidationReport();
+    assertEquals("No error devices", 0, report.devices.size());
   }
 
   @Test
@@ -86,9 +86,9 @@ public class ValidatorTest {
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
     validator.validateMessage(bundle);
-    MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 1, report.errorDevices.size());
-    Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
+    ValidationEvent report = getValidationReport();
+    assertEquals("No error devices", 1, report.devices.size());
+    Set<String> missingPoints = report.devices.get("AHU-1").missing_ports;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
@@ -99,9 +99,9 @@ public class ValidatorTest {
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle("state", "pointset", messageObject);
     validator.validateMessage(bundle);
-    MetadataReport report = getMetadataReport();
-    assertEquals("No error devices", 1, report.errorDevices.size());
-    Set<String> missingPoints = report.errorDevices.get("AHU-1").missingPoints;
+    ValidationEvent report = getValidationReport();
+    assertEquals("No error devices", 1, report.devices.size());
+    Set<String> missingPoints = report.devices.get("AHU-1").missingPoints;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
@@ -154,9 +154,9 @@ public class ValidatorTest {
     return bundle;
   }
 
-  private MetadataReport getMetadataReport() {
+  private ValidationEvent getValidationReport() {
     try {
-      return OBJECT_MAPPER.readValue(REPORT_FILE, MetadataReport.class);
+      return OBJECT_MAPPER.readValue(REPORT_FILE, ValidationEvent.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);
     }
