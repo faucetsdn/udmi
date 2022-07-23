@@ -39,7 +39,7 @@ public class PlaybackTest {
     List<OutputBundle> outputMessages = client.getOutputMessages();
     ValidationEvent finalReport = asValidationEvent(
         outputMessages.get(outputMessages.size() - 1).message);
-    assertEquals("extra devices", 0, finalReport.extra_devices.size());
+    assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
   }
 
   private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {
