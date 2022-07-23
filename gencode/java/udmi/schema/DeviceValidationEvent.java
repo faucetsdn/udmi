@@ -1,7 +1,9 @@
 
 package udmi.schema;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,7 +20,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "last_seen",
-    "oldest_mark"
+    "oldest_mark",
+    "missing_points"
 })
 @Generated("jsonschema2pojo")
 public class DeviceValidationEvent {
@@ -37,12 +40,15 @@ public class DeviceValidationEvent {
     @JsonProperty("oldest_mark")
     @JsonPropertyDescription("Oldest recorded mark for this device")
     public Date oldest_mark;
+    @JsonProperty("missing_points")
+    public List<String> missing_points = new ArrayList<String>();
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.last_seen == null)? 0 :this.last_seen.hashCode()));
         result = ((result* 31)+((this.oldest_mark == null)? 0 :this.oldest_mark.hashCode()));
+        result = ((result* 31)+((this.missing_points == null)? 0 :this.missing_points.hashCode()));
         return result;
     }
 
@@ -55,7 +61,7 @@ public class DeviceValidationEvent {
             return false;
         }
         DeviceValidationEvent rhs = ((DeviceValidationEvent) other);
-        return (((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)))&&((this.oldest_mark == rhs.oldest_mark)||((this.oldest_mark!= null)&&this.oldest_mark.equals(rhs.oldest_mark))));
+        return ((((this.last_seen == rhs.last_seen)||((this.last_seen!= null)&&this.last_seen.equals(rhs.last_seen)))&&((this.oldest_mark == rhs.oldest_mark)||((this.oldest_mark!= null)&&this.oldest_mark.equals(rhs.oldest_mark))))&&((this.missing_points == rhs.missing_points)||((this.missing_points!= null)&&this.missing_points.equals(rhs.missing_points))));
     }
 
 }

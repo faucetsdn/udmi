@@ -7,6 +7,7 @@ class DeviceValidationEvent:
   def __init__(self):
     self.last_seen = None
     self.oldest_mark = None
+    self.missing_points = None
 
   @staticmethod
   def from_dict(source):
@@ -15,6 +16,7 @@ class DeviceValidationEvent:
     result = DeviceValidationEvent()
     result.last_seen = source.get('last_seen')
     result.oldest_mark = source.get('oldest_mark')
+    result.missing_points = source.get('missing_points')
     return result
 
   @staticmethod
@@ -39,4 +41,6 @@ class DeviceValidationEvent:
       result['last_seen'] = self.last_seen # 5
     if self.oldest_mark:
       result['oldest_mark'] = self.oldest_mark # 5
+    if self.missing_points:
+      result['missing_points'] = self.missing_points # 1
     return result
