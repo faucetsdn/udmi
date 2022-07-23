@@ -1,8 +1,9 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -259,7 +260,7 @@ public class Validator {
 
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
-    dataSinks.add(new FileDataSink(outBaseDir));
+    dataSinks.add(new FileDataSink(outBaseDir, VALIDATION_REPORT_DEVICE));
   }
 
   private void setMessageTraceDir(String writeDirArg) {
@@ -535,7 +536,7 @@ public class Validator {
       ValidationEvent validationEvent = makeValidationEvent();
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
-      throw new RuntimeException("While sending validation result");
+      throw new RuntimeException("While sending validation result", e);
     }
   }
 
@@ -561,7 +562,7 @@ public class Validator {
 
   private ValidationEvent makeValidationEvent() {
     ValidationEvent validationEvent = new ValidationEvent();
-    validationEvent.version = ConfigUtil.UDMI_VERSION;
+    validationEvent.version = UDMI_VERSION;
     validationEvent.timestamp = new Date();
     return validationEvent;
   }
@@ -675,9 +676,10 @@ public class Validator {
 
   private void processValidationReport() {
     MetadataReport metadataReport = new MetadataReport();
-    metadataReport.updated = new Date();
+    metadataReport.timestamp = new Date();
+    metadataReport.version = UDMI_VERSION;
     metadataReport.missingDevices = new TreeSet<>();
-    metadataReport.extraDevices = extraDevices;
+    metadataReport.extra_devices = extraDevices;
     metadataReport.pointsetDevices = new TreeSet<>();
     metadataReport.base64Devices = base64Devices;
     metadataReport.expectedDevices = expectedDevices.keySet();
@@ -848,10 +850,11 @@ public class Validator {
    */
   public static class MetadataReport {
 
-    public Date updated;
+    public Date timestamp;
+    public String version;
     public Set<String> expectedDevices;
     public Set<String> missingDevices;
-    public Set<String> extraDevices;
+    public Set<String> extra_devices;
     public Set<String> pointsetDevices;
     public Set<String> base64Devices;
     public Map<String, ReportingDevice.MetadataDiff> errorDevices;

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.bos.iot.core.proxy.MessagePublisher;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -24,23 +27,43 @@ public class FileDataSink implements MessagePublisher {
           .setSerializationInclusion(Include.NON_NULL);
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private final File metadataReportFile;
+  private final String validationSrc;
+  private final File outBaseDir;
 
   /**
    * New instance.
    *
    * @param outBaseDir directory root for output files
+   * @param validationSrc
    */
-  public FileDataSink(File outBaseDir) {
+  public FileDataSink(File outBaseDir, String validationSrc) {
+    this.validationSrc = validationSrc;
+    this.outBaseDir = outBaseDir;
     metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());
     System.err.println("Writing validation report to " + metadataReportFile.getAbsolutePath());
     metadataReportFile.delete();
   }
 
-
   @Override
   public void publish(String deviceId, String topic, String data) {
-    // TODO: This should go somewhere!
+    File outFile = getOutputFile(deviceId, topic);
+    try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile))) {
+      out.println(data);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing output file " + outFile.getAbsolutePath(), e);
+    }
+  }
+
+  private File getOutputFile(String deviceId, String topic) {
+    return deviceId.equals(validationSrc) ? metadataReportFile : getDeviceFile(deviceId, topic);
+  }
+
+  private File getDeviceFile(String deviceId, String topic) {
+    File deviceDir = new File(outBaseDir, String.format("devices/%s", deviceId));
+    deviceDir.mkdirs();
+    String[] parts = topic.split("/");
+    return new File(deviceDir, String.format("%s_%s.json", parts[1], parts[0]));
   }
 
   @Override
