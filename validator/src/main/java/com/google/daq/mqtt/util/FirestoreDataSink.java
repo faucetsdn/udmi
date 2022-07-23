@@ -52,7 +52,7 @@ public class FirestoreDataSink {
     }
   }
 
-  public void validationResult(Map<String, String> attributes,
+  private void validationResult(Map<String, String> attributes,
       Object message, ReportingDevice reportingDevice) {
     if (oldError.get() != null) {
       throw oldError.getAndSet(null);

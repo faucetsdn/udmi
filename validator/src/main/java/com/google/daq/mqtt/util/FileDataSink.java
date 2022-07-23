@@ -10,6 +10,9 @@ import java.io.File;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+/**
+ * Create a data sink that writes to local files.
+ */
 public class FileDataSink implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER =
@@ -22,6 +25,11 @@ public class FileDataSink implements MessagePublisher {
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private final File metadataReportFile;
 
+  /**
+   * New instance.
+   *
+   * @param outBaseDir directory root for output files
+   */
   public FileDataSink(File outBaseDir) {
     metadataReportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
     System.err.println("Generating report file in " + metadataReportFile.getAbsolutePath());

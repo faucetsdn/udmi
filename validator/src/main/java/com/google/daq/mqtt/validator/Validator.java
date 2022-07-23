@@ -550,9 +550,13 @@ public class Validator {
     }
   }
 
-  private void sendValidationEvent(String deviceId, ValidationEvent validationEvent) throws JsonProcessingException {
-    String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
-    dataSinks.forEach(sink -> sink.publish(deviceId, VALIDATION_EVENT_TOPIC, messageString));
+  private void sendValidationEvent(String deviceId, ValidationEvent validationEvent) {
+    try {
+      String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
+      dataSinks.forEach(sink -> sink.publish(deviceId, VALIDATION_EVENT_TOPIC, messageString));
+    } catch (Exception e) {
+      throw new RuntimeException("While sending validation event for " + deviceId, e);
+    }
   }
 
   private ValidationEvent makeValidationEvent() {
