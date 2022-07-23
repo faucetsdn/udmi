@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,13 +58,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import udmi.schema.AuditEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
-import udmi.schema.Target;
 import udmi.schema.ValidationEvent;
 
 /**
@@ -542,23 +541,28 @@ public class Validator {
       final String rawSubType = attributes.get(SUB_TYPE_ATTRIBUTE_KEY);
       final String subType = rawSubType == null ? SubType.EVENT.toString() : rawSubType;
 
-      AuditEvent auditEvent = new AuditEvent();
-      auditEvent.version = ConfigUtil.UDMI_VERSION;
-      auditEvent.timestamp = new Date();
-      auditEvent.target = new Target();
-      auditEvent.target.subFolder = subFolder;
-      auditEvent.target.subType = subType;
-      attributes.put("subType", SubType.EVENT.value());
-      String messageString = OBJECT_MAPPER.writeValueAsString(auditEvent);
-      dataSinks.forEach(sink -> sink.validationResult(attributes, message, reportingDevice));
+      ValidationEvent validationEvent = makeValidationEvent();
+      sendValidationEvent(validationEvent);
     } catch (Exception e) {
-      throw new RuntimeException("While publishing validation message");
+      throw new RuntimeException("While sending validation result");
     }
+  }
+
+  private void sendValidationEvent(ValidationEvent validationEvent) throws JsonProcessingException {
+    String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
+    dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
+  }
+
+  private ValidationEvent makeValidationEvent() {
+    ValidationEvent validationEvent = new ValidationEvent();
+    validationEvent.version = ConfigUtil.UDMI_VERSION;
+    validationEvent.timestamp = new Date();
+    return validationEvent;
   }
 
   private void sendValidationReport(MetadataReport metadataReport) {
     try {
-      ValidationEvent validationEvent = new ValidationEvent();
+      ValidationEvent validationEvent = makeValidationEvent();
       String registryId = getRegistryId();
       System.err.println("Sending validation report for " + registryId);
       String subFolder = String.format("events/%s/%s", VALIDATION_DEVICE, VALIDATION_EVENT_TOPIC);
@@ -568,10 +572,9 @@ public class Validator {
           "subFolder", subFolder,
           "deviceId", registryId // intentional b/c of udmi_reflect function
       );
-      dataSinks.forEach(sink -> sink.validationReport(metadataReport));
+      sendValidationEvent(validationEvent);
     } catch (Exception e) {
-      System.err.println("Exception handling periodic report");
-      e.printStackTrace();
+      throw new RuntimeException("While sending validation report");
     }
   }
 
