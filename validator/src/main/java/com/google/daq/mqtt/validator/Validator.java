@@ -60,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
@@ -342,7 +343,7 @@ public class Validator {
   }
 
   private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    processValidationSummary();
+    processValidationReport();
     return (message, attributes) -> validateMessage(message, attributes);
   }
 
@@ -374,7 +375,7 @@ public class Validator {
     System.err.println("Entering message loop on " + client.getSubscriptionId());
     BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationSummary,
+        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
@@ -424,7 +425,7 @@ public class Validator {
     if (reportingDevice != null) {
       sendValidationResult(attributes, message, reportingDevice);
     }
-    processValidationSummary();
+    processValidationReport();
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -540,12 +541,9 @@ public class Validator {
     }
   }
 
-  private void sendValidationSummary(ValidationSummary report) {
+  private void sendValidationReport(ValidationEvent report) {
     try {
-      ValidationEvent validationEvent = makeValidationEvent();
-      String registryId = getRegistryId();
-      System.err.println("Sending validation report for " + registryId);
-      sendValidationEvent(VALIDATION_REPORT_DEVICE, validationEvent);
+      sendValidationEvent(VALIDATION_REPORT_DEVICE, report);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation report", e);
     }
@@ -674,8 +672,9 @@ public class Validator {
     }
   }
 
-  private void processValidationSummary() {
+  private void processValidationReport() {
     ValidationSummary summary = new ValidationSummary();
+    Map<String, DeviceValidationEvent> devices = new TreeMap<>();
 
     summary.missing_devices = new ArrayList<>();
     summary.pointset_devices = new ArrayList<>();
@@ -684,6 +683,11 @@ public class Validator {
       String deviceId = deviceInfo.getDeviceId();
       if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
         summary.error_devices.add(deviceId);
+        DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
+            key -> new DeviceValidationEvent());
+        deviceValidationEvent.status = deviceInfo.getErrorStatus();
+        deviceValidationEvent.missing_points = arrayIfNotEmpty(
+            deviceInfo.getMetadataDiff().missingPoints);
       } else if (deviceInfo.hasBeenValidated()) {
         summary.pointset_devices.add(deviceId);
       } else {
@@ -697,7 +701,18 @@ public class Validator {
     summary.extra_devices = new ArrayList<>(extraDevices);
     summary.base64_devices = new ArrayList<>(base64Devices);
     summary.expected_devices = new ArrayList<>(expectedDevices.keySet());
-    sendValidationSummary(summary);
+
+    ValidationEvent report = new ValidationEvent();
+    report.summary = summary;
+    report.devices = devices;
+    sendValidationReport(report);
+  }
+
+  private <T> ArrayList<T> arrayIfNotEmpty(Set<T> items) {
+    if (items == null || items.isEmpty()) {
+      return null;
+    }
+    return new ArrayList<>(items);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {

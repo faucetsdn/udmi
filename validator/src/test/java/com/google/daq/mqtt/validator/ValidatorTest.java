@@ -59,16 +59,18 @@ public class ValidatorTest {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     bundle.message.remove("system");
     validator.validateMessage(bundle);
-    ValidationEvent summary = getValidationReport();
-    assertEquals("One error device", 1, summary.devices.size());
+    ValidationEvent report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    assertEquals("One error device", 1, report.devices.size());
   }
 
   @Test
   public void emptyPointsetEvent() {
     MessageBundle bundle = getMessageBundle("event", "pointset", new PointsetEvent());
     validator.validateMessage(bundle);
-    ValidationEvent summary = getValidationReport();
-    assertEquals("One error device", 1, summary.devices.size());
+    ValidationEvent report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    assertEquals("One error device", 1, report.devices.size());
   }
 
   @Test

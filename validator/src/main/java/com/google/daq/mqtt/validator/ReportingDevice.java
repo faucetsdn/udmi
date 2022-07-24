@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import udmi.schema.Entry;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
@@ -184,6 +185,15 @@ public class ReportingDevice {
    */
   public boolean markMessageType(String subFolder) {
     return validatedTypes.add(subFolder);
+  }
+
+  /**
+   * Create a status entry for this device.
+   *
+   * @return status entry
+   */
+  public Entry getErrorStatus() {
+    return new Entry();
   }
 
   /**
