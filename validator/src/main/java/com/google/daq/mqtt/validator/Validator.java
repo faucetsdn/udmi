@@ -409,7 +409,7 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    if (expectedDevices.containsKey(deviceId)) {
+    if (deviceId != null && expectedDevices.containsKey(deviceId)) {
       processedDevices.add(deviceId);
     }
 
