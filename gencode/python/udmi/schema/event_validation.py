@@ -6,24 +6,20 @@ class ValidationSummary:
   """Generated schema class"""
 
   def __init__(self):
+    self.correct_devices = None
     self.extra_devices = None
     self.missing_devices = None
-    self.pointset_devices = None
-    self.base64_devices = None
     self.error_devices = None
-    self.expected_devices = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = ValidationSummary()
+    result.correct_devices = source.get('correct_devices')
     result.extra_devices = source.get('extra_devices')
     result.missing_devices = source.get('missing_devices')
-    result.pointset_devices = source.get('pointset_devices')
-    result.base64_devices = source.get('base64_devices')
     result.error_devices = source.get('error_devices')
-    result.expected_devices = source.get('expected_devices')
     return result
 
   @staticmethod
@@ -44,18 +40,14 @@ class ValidationSummary:
 
   def to_dict(self):
     result = {}
+    if self.correct_devices:
+      result['correct_devices'] = self.correct_devices # 1
     if self.extra_devices:
       result['extra_devices'] = self.extra_devices # 1
     if self.missing_devices:
       result['missing_devices'] = self.missing_devices # 1
-    if self.pointset_devices:
-      result['pointset_devices'] = self.pointset_devices # 1
-    if self.base64_devices:
-      result['base64_devices'] = self.base64_devices # 1
     if self.error_devices:
       result['error_devices'] = self.error_devices # 1
-    if self.expected_devices:
-      result['expected_devices'] = self.expected_devices # 1
     return result
 from .event_validation_device import DeviceValidationEvent
 
@@ -67,8 +59,6 @@ class ValidationEvent:
     self.timestamp = None
     self.version = None
     self.last_updated = None
-    self.site_id = None
-    self.device_id = None
     self.subfolder = None
     self.subtype = None
     self.status = None
@@ -83,8 +73,6 @@ class ValidationEvent:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_updated = source.get('last_updated')
-    result.site_id = source.get('site_id')
-    result.device_id = source.get('device_id')
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
     result.status = Entry.from_dict(source.get('status'))
@@ -116,10 +104,6 @@ class ValidationEvent:
       result['version'] = self.version # 5
     if self.last_updated:
       result['last_updated'] = self.last_updated # 5
-    if self.site_id:
-      result['site_id'] = self.site_id # 5
-    if self.device_id:
-      result['device_id'] = self.device_id # 5
     if self.subfolder:
       result['subfolder'] = self.subfolder # 5
     if self.subtype:

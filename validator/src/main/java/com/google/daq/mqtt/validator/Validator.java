@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -42,7 +43,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -674,11 +674,13 @@ public class Validator {
 
   private void processValidationReport() {
     ValidationSummary summary = new ValidationSummary();
-    Map<String, DeviceValidationEvent> devices = new TreeMap<>();
+    summary.extra_devices = new ArrayList<>(extraDevices);
 
     summary.missing_devices = new ArrayList<>();
-    summary.pointset_devices = new ArrayList<>();
+    summary.correct_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
+
+    Map<String, DeviceValidationEvent> devices = new TreeMap<>();
     for (ReportingDevice deviceInfo : expectedDevices.values()) {
       String deviceId = deviceInfo.getDeviceId();
       if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
@@ -689,18 +691,16 @@ public class Validator {
         deviceValidationEvent.missing_points = arrayIfNotEmpty(
             deviceInfo.getMetadataDiff().missingPoints);
       } else if (deviceInfo.hasBeenValidated()) {
-        summary.pointset_devices.add(deviceId);
+        summary.correct_devices.add(deviceId);
       } else {
         summary.missing_devices.add(deviceId);
       }
     }
-    summary.missing_devices.sort(Comparator.naturalOrder());
-    summary.pointset_devices.sort(Comparator.naturalOrder());
-    summary.expected_devices.sort(Comparator.naturalOrder());
 
-    summary.extra_devices = new ArrayList<>(extraDevices);
-    summary.base64_devices = new ArrayList<>(base64Devices);
-    summary.expected_devices = new ArrayList<>(expectedDevices.keySet());
+    int reportedSize = summary.correct_devices.size() + summary.error_devices.size()
+        + summary.missing_devices.size();
+    assertEquals("all devices accounted for", expectedDevices.size(), reportedSize);
+
 
     ValidationEvent report = new ValidationEvent();
     report.summary = summary;

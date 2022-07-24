@@ -20,14 +20,6 @@
       "format": "date-time",
       "type": "string"
     },
-    "site_id": {
-      "description": "Site id being validated",
-      "type": "string"
-    },
-    "device_id": {
-      "description": "Device id that has been validated",
-      "type": "string"
-    },
     "subfolder": {
       "description": "Subfolder of the validated message",
       "type": "string"
@@ -44,6 +36,12 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "correct_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "extra_devices": {
           "type": "array",
           "items": {
@@ -56,25 +54,7 @@
             "type": "string"
           }
         },
-        "pointset_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "base64_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "error_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "expected_devices": {
           "type": "array",
           "items": {
             "type": "string"
