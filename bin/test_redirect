@@ -1,0 +1,43 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 PROJECT_ID
+    false
+fi
+
+project_id=$1
+shift
+
+if [[ -n `which rot13` ]]; then
+   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
+   echo 'Using target project (rot13):' $(echo $project_id | rot13)
+else
+   echo 'Using target project:' $project_id
+fi
+
+site_path=sites/udmi_site_model
+device_id=AHU-1
+
+serial_no=sequencer-$RANDOM
+echo Using pubber with serial $serial_no
+
+PUBBER_OUT=pubber.out
+
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+if [[ -n $pids ]]; then
+    echo Killing pubber pids $pids
+    kill $pids
+fi
+
+pubber/bin/build
+
+echo Writing pubber output to $PUBBER_OUT
+echo bin/pubber $site_path $project_id $device_id $serial_no
+
+result=0
+timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT 2>&1 || result=$?
+
+echo Pubber exit code $result

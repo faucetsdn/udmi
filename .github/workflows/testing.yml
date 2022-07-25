@@ -48,9 +48,11 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: pubber redirect
+      - name: pubber run
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         run: |
-          timeout 5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing | tee pubber.out
+          bin/test_redirect $GCP_TARGET_PROJECT
       - name: pubber checks
         run: |
           # Simple checks that a redirect happened and failed
