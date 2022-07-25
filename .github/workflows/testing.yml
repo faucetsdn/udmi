@@ -59,7 +59,7 @@ jobs:
           fgrep registries/ZZ-TRI-FECTA/devices/AHU-1 pubber.out
           fgrep 'system.config.parse success' pubber.out
           fgrep registries/missing/devices/AHU-1 pubber.out
-          fgrep Not authorized to connect
+          fgrep 'Not authorized to connect' pubber.out
     
   udmi:
     name: Sequence tests
