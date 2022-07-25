@@ -54,12 +54,17 @@ jobs:
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
       - name: pubber checks
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           # Simple checks that a redirect happened and failed
           fgrep registries/ZZ-TRI-FECTA/devices/AHU-1 pubber.out
           fgrep 'system.config.parse success' pubber.out
           fgrep registries/missing/devices/AHU-1 pubber.out
           fgrep 'Not authorized to connect' pubber.out
+      - name: pubber logs
+        if: ${{ always() }}
+        run: |
+          cat pubber.out || true
     
   udmi:
     name: Sequence tests
