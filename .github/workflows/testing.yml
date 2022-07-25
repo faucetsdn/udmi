@@ -50,7 +50,7 @@ jobs:
           bin/clone_model
       - name: pubber redirect
         run: |
-          timeout5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing
+          timeout 5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing || true
       - name: pubber logs
         if: ${{ always() }}
         run: |
