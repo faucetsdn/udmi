@@ -1,6 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
-if [ $# != 5 ]; then
+if [ $# < 5 ]; then
     echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
     false
 fi
@@ -36,8 +36,9 @@ rm -rf $sitepath/out/
 echo Executing validator $schema $target...
 
 if [[ $target == reflect ]]; then
-    if [[ $subscription == -- ]]; then
-        srcargs=""
+    if [[ $subscription != -- ]]; then
+        echo Unsupported subsription $subscription with reflect
+        false
     else
         srcargs="-- $subscription"
     fi

@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -394,8 +395,10 @@ public class Validator {
   }
 
   private void sendInitializationQuery() {
+    if (!deviceIds.isEmpty()) {
+      System.err.println("Sending initialization query messages for device " + deviceIds);
+    }
     for (String deviceId : deviceIds) {
-      System.err.println("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
@@ -681,9 +684,13 @@ public class Validator {
     summary.error_devices = new ArrayList<>();
 
     Map<String, DeviceValidationEvent> devices = new TreeMap<>();
-    for (ReportingDevice deviceInfo : expectedDevices.values()) {
-      String deviceId = deviceInfo.getDeviceId();
-      if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
+    Collection<String> summarizeDevices =
+        deviceIds.isEmpty() ? expectedDevices.keySet() : deviceIds;
+    for (String deviceId : summarizeDevices) {
+      ReportingDevice deviceInfo = expectedDevices.get(deviceId);
+      if (deviceInfo == null) {
+        summary.missing_devices.add(deviceId);
+      } else if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());
@@ -696,11 +703,6 @@ public class Validator {
         summary.missing_devices.add(deviceId);
       }
     }
-
-    int reportedSize = summary.correct_devices.size() + summary.error_devices.size()
-        + summary.missing_devices.size();
-    assertEquals("all devices accounted for", expectedDevices.size(), reportedSize);
-
 
     ValidationEvent report = new ValidationEvent();
     report.summary = summary;
