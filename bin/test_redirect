@@ -32,8 +32,6 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
-pubber/bin/build
-
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
 

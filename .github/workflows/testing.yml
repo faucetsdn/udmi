@@ -54,6 +54,8 @@ jobs:
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
       - name: pubber checks
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           # Simple checks that a redirect happened and failed
