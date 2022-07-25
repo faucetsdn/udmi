@@ -35,6 +35,27 @@ jobs:
           bin/test_registrar
           bin/test_sites
 
+  redirect:
+    name: Endpoint Redirection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: pubber redirect
+        timeout5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing
+      - name: pubber logs
+        if: ${{ always() }}
+        run: |
+          cat pubber.out || true
+          more out/*.json
+    
   udmi:
     name: Sequence tests
     runs-on: ubuntu-latest
