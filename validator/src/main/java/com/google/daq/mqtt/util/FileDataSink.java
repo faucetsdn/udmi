@@ -32,8 +32,8 @@ public class FileDataSink implements MessagePublisher {
   /**
    * New instance.
    *
-   * @param outBaseDir directory root for output files
-   * @param validationSrc
+   * @param outBaseDir    directory root for output files
+   * @param validationSrc source of validation messages
    */
   public FileDataSink(File outBaseDir, String validationSrc) {
     this.validationSrc = validationSrc;
