@@ -19,7 +19,7 @@ else
 fi
 
 site_path=sites/udmi_site_model
-device_id=AHU-1
+device_id=AHU-22
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
