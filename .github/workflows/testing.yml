@@ -50,12 +50,14 @@ jobs:
           bin/clone_model
       - name: pubber redirect
         run: |
-          timeout 5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing || true
-      - name: pubber logs
-        if: ${{ always() }}
+          timeout 5m bin/pubber sites/udmi_site_model bos-peringknife-dev AHU-1 38172 redirectRegistry=missing | tee pubber.out
+      - name: pubber checks
         run: |
-          cat pubber.out || true
-          more out/*.json
+          # Simple checks that a redirect happened and failed
+          fgrep registries/ZZ-TRI-FECTA/devices/AHU-1 pubber.out
+          fgrep 'system.config.parse success' pubber.out
+          fgrep registries/missing/devices/AHU-1 pubber.out
+          fgrep Not authorized to connect
     
   udmi:
     name: Sequence tests
