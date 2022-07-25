@@ -7,11 +7,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.daq.mqtt.validator.Validator.MetadataReport;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -45,12 +47,12 @@ public class ValidatorTest {
   private static final File REPORT_FILE = new File(SITE_DIR + "/out/validation_report.json");
   private static final String DEVICE_NUM_ID = "97216312321";
   private static final String REGISTRY_ID = "ZZ-TRI-FECTA";
-  private final Validator validator = new Validator(PROJECT_ID);
-
-  {
-    validator.setSchemaSpec(SCHEMA_SPEC);
-    validator.setSiteDir(SITE_DIR);
-  }
+  private static final List<String> testArgs = ImmutableList.of(
+      "-n",
+      "-p", PROJECT_ID,
+      "-a", SCHEMA_SPEC,
+      "-s", SITE_DIR);
+  private final Validator validator = new Validator(testArgs);
 
   @Test
   public void emptySystemBlock() {

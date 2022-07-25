@@ -22,7 +22,7 @@
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "operational": {
-      "comment": "Operational status of the device",
+      "description": "Operational status of the device.",
       "type": "boolean"
     },
     "serial_no": {

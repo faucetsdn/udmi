@@ -289,7 +289,10 @@ public class MqttPublisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), QOS_AT_LEAST_ONCE);
+    boolean noConfigAck = (configuration.options.noConfigAck != null 
+        && configuration.options.noConfigAck);
+    int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), configQos);
     subscribeTopic(client, String.format(ERRORS_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
     info("Updates subscribed");
   }
