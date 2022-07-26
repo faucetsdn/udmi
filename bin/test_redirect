@@ -19,13 +19,14 @@ else
 fi
 
 site_path=sites/udmi_site_model
-device_id=AHU-22
+device_id=AHU-22 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
 
+# Ideally use lock files, not grep-and-kill...
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
