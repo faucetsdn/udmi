@@ -35,6 +35,40 @@ jobs:
           bin/test_registrar
           bin/test_sites
 
+  redirect:
+    name: Endpoint Redirection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: pubber run
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        run: |
+          bin/test_redirect $GCP_TARGET_PROJECT
+      - name: pubber checks
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        run: |
+          # Simple checks that a redirect happened and failed
+          set +x
+          fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out
+          fgrep 'system.config.parse success' pubber.out
+          fgrep registries/missing/devices/GAT-123 pubber.out
+          fgrep 'Not authorized to connect' pubber.out
+      - name: pubber logs
+        if: ${{ always() }}
+        run: |
+          cat pubber.out || true
+    
   udmi:
     name: Sequence tests
     runs-on: ubuntu-latest
