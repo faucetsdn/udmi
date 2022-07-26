@@ -2,6 +2,9 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Entry;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetModel;
@@ -193,7 +197,30 @@ public class ReportingDevice {
    * @return status entry
    */
   public Entry getErrorStatus() {
-    return new Entry();
+    if (errors.isEmpty()) {
+      return null;
+    }
+    Entry entry = new Entry();
+    entry.level = Level.ERROR.value();
+    if (errors.size() > 1) {
+      entry.category = "validation.error.multiple";
+      entry.message = "Multiple validation errors";
+      entry.detail = Joiner.on("\n").join(metadataDiff.errors);
+    } else {
+      Exception exception = errors.get(0);
+      entry.category = "validation.error.simple";
+      entry.message = exception.getMessage();
+      entry.detail = stackTraceString(exception);
+    }
+    return entry;
+  }
+
+  private String stackTraceString(Exception e) {
+    OutputStream outputStream = new ByteArrayOutputStream();
+    try (PrintStream ps = new PrintStream(outputStream)) {
+      e.printStackTrace(ps);
+    }
+    return outputStream.toString();
   }
 
   /**

@@ -16,6 +16,9 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.ValidationEvent;
 
+/**
+ * Base class for validator tests.
+ */
 public class TestBase {
 
   static final String FILTER_ALARM_PRESSURE_STATUS = "filter_alarm_pressure_status";
