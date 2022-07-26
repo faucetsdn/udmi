@@ -92,7 +92,7 @@ public class MqttPublisher {
 
   MqttPublisher(Configuration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    this.registryId = configuration.registryId;
+    this.registryId = configuration.endpoint.registryId;
     this.onError = onError;
     validateCloudIotOptions();
   }
@@ -157,10 +157,10 @@ public class MqttPublisher {
 
   private void validateCloudIotOptions() {
     try {
-      checkNotNull(configuration.bridgeHostname, "bridgeHostname");
-      checkNotNull(configuration.bridgePort, "bridgePort");
-      checkNotNull(configuration.projectId, "projectId");
-      checkNotNull(configuration.cloudRegion, "cloudRegion");
+      checkNotNull(configuration.endpoint.bridgeHostname, "bridgeHostname");
+      checkNotNull(configuration.endpoint.bridgePort, "bridgePort");
+      checkNotNull(configuration.endpoint.projectId, "projectId");
+      checkNotNull(configuration.endpoint.cloudRegion, "cloudRegion");
       checkNotNull(configuration.keyBytes, "keyBytes");
       checkNotNull(configuration.algorithm, "algorithm");
     } catch (Exception e) {
@@ -237,7 +237,8 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    return createJwt(configuration.projectId, configuration.keyBytes, configuration.algorithm)
+    return createJwt(configuration.endpoint.projectId, configuration.keyBytes,
+        configuration.algorithm)
         .toCharArray();
   }
 
@@ -271,14 +272,16 @@ public class MqttPublisher {
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    return String.format(ID_FORMAT, configuration.projectId, configuration.cloudRegion,
+    return String.format(ID_FORMAT, configuration.endpoint.projectId,
+        configuration.endpoint.cloudRegion,
         registryId, deviceId);
   }
 
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    return String.format(BROKER_URL_FORMAT, configuration.bridgeHostname, configuration.bridgePort);
+    return String.format(BROKER_URL_FORMAT, configuration.endpoint.bridgeHostname,
+        configuration.endpoint.bridgePort);
   }
 
   private String getMessageTopic(String deviceId, String topic) {
@@ -286,7 +289,10 @@ public class MqttPublisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), QOS_AT_LEAST_ONCE);
+    boolean noConfigAck = (configuration.options.noConfigAck != null 
+        && configuration.options.noConfigAck);
+    int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), configQos);
     subscribeTopic(client, String.format(ERRORS_TOPIC_FMT, deviceId), QOS_AT_MOST_ONCE);
     info("Updates subscribed");
   }

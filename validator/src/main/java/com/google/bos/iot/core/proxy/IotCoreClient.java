@@ -39,22 +39,30 @@ public class IotCoreClient implements MessagePublisher {
   private boolean active;
 
   public IotCoreClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
+    final byte[] keyBytes;
     try {
-      byte[] keyBytes = getFileBytes(keyFile);
-      siteName = iotConfig.registry_id;
-      this.projectId = projectId;
-      String cloudRegion =
-          iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
-      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
-          siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
-      subscriptionId =
-          String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT,
-              iotConfig.registry_id);
-      active = true;
+      keyBytes = getFileBytes(keyFile);
     } catch (Exception e) {
       throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
           e);
     }
+
+    siteName = iotConfig.registry_id;
+    this.projectId = projectId;
+    String cloudRegion =
+        iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
+    subscriptionId =
+        String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT,
+            iotConfig.registry_id);
+
+    try {
+      mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
+          siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+    } catch (Exception e) {
+      throw new RuntimeException("While connecting subscription " + subscriptionId, e);
+    }
+
+    active = true;
   }
 
   private void messageHandler(String topic, String payload) {

@@ -58,11 +58,12 @@ public class SystemState {
     @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)")
     public Date last_config;
     /**
-     * 
+     * Operational status of the device.
      * (Required)
      * 
      */
     @JsonProperty("operational")
+    @JsonPropertyDescription("Operational status of the device.")
     public Boolean operational;
     /**
      * Current operating mode for the device. Defaults to 'active'.
