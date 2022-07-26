@@ -76,7 +76,6 @@
   },
   "required": [
     "timestamp",
-    "version",
-    "site_id"
+    "version"
   ]
 }
