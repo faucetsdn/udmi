@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.net.URI;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,7 +32,7 @@ public class BlobBlobsetConfig {
     @JsonProperty("base64")
     public String base64;
     @JsonProperty("url")
-    public String url;
+    public URI url;
     @JsonProperty("sha256")
     public String sha256;
 
