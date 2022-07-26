@@ -28,10 +28,16 @@ The following parameters are currently supported from the CLI:
 * `extraPoint=<name>` - adds an extra point with the given name to the device
   which does not exist in device's metadata with a random value (will trigger
   validation additional point error)
+* `missingPoint=<name>` - removes the point with the given name (if exists) from
+  the device's active pointset at initialization  (will trigger validation
+  missing point)
 * `extraField=<name>` - adds an extra schema invalidating field to pointset events
   (will trigger validation schema error)
-* `no_hardware` - omits the `system.hardware` field from state messages (will
+* `noHardware` - omits the `system.hardware` field from state messages (will
   trigger validation error, missing required field)
+* `noConfigAck` - subscribes to the `config` topic with a QoS of 0, therefore
+  will not send PUBACK's for config messages
+
 
 More advanced options can be set by by calling pubber directly with the path a
 configuration file: `pubber/bin/run path/to/config.json`
