@@ -1,0 +1,10 @@
+{
+  "logentries" : [ {
+    "message" : "2022-07-19T05:04:36Z sending test message #70",
+    "category" : "pubber",
+    "timestamp" : "2022-07-19T05:04:36Z",
+    "level" : 200
+  } ],
+  "timestamp" : "2022-07-19T05:04:36Z",
+  "version" : "1.3.14"
+}
