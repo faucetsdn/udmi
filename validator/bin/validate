@@ -1,7 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 if [ $# < 5 ]; then
-    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
+    echo Usage: $0 project schema target subscription sitepath [devices...]
     false
 fi
 
@@ -11,6 +11,7 @@ target=$3
 subscription=$4
 sitepath=$(realpath $5)
 shift 5
+devices="$*"
 
 ROOT=$(dirname $0)/../..
 cd $ROOT
@@ -40,7 +41,7 @@ if [[ $target == reflect ]]; then
         echo Unsupported subsription $subscription with reflect
         false
     else
-        srcargs="-- $subscription"
+        srcargs="-- $devices"
     fi
 elif [[ $target == pubsub ]]; then
     srcargs="-t $subscription"
