@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-if [ $# < 5 ]; then
+if [[ $# < 5 ]]; then
     echo Usage: $0 project schema target subscription sitepath [devices...]
     false
 fi
@@ -40,7 +40,7 @@ if [[ $target == reflect ]]; then
     if [[ $subscription != -- ]]; then
         echo Unsupported subsription $subscription with reflect
         false
-    else
+    elif [[ -n $devices ]]; then
         srcargs="-- $devices"
     fi
 elif [[ $target == pubsub ]]; then
