@@ -6,6 +6,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.validator.ReportingDevice;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Class managing a firestore link for validation results.
  */
-public class FirestoreDataSink implements DataSink {
+public class FirestoreDataSink {
 
   private static final String
       VIEW_URL_FORMAT = "https://console.cloud.google.com/firestore/data/registries/?project=%s";
@@ -50,18 +51,21 @@ public class FirestoreDataSink implements DataSink {
     }
   }
 
-  @Override
-  public void validationResult(String deviceId, String schemaId, Map<String, String> attributes,
-      Object message, ErrorTree errorTree) {
+  private void validationResult(Map<String, String> attributes,
+      Object message, ReportingDevice reportingDevice) {
     if (oldError.get() != null) {
       throw oldError.getAndSet(null);
     }
 
+    String registryId = attributes.get("deviceRegistryId");
+    String deviceId = attributes.get("deviceId");
+    String subType = attributes.get("subType");
+    String subFolder = attributes.get("subFolder");
+    String schemaId = String.format("%s_%s", subType, subFolder);
+    Preconditions.checkNotNull(deviceId, "deviceId attribute not defined");
+    Preconditions.checkNotNull(schemaId, "schemaId not properly defined");
+    Preconditions.checkNotNull(registryId, "deviceRegistryId attribute not defined");
     try {
-      String registryId = attributes.get("deviceRegistryId");
-      Preconditions.checkNotNull(deviceId, "deviceId attribute not defined");
-      Preconditions.checkNotNull(schemaId, "schemaId not properly defined");
-      Preconditions.checkNotNull(registryId, "deviceRegistryId attribute not defined");
       String instantNow = dateTimeFormatter.format(Instant.now());
       DocumentReference registryDoc = db.collection("registries").document(registryId);
       registryDoc.update("validated", instantNow);
@@ -69,7 +73,6 @@ public class FirestoreDataSink implements DataSink {
       deviceDoc.update("validated", instantNow);
       PojoBundle dataBundle = new PojoBundle();
       dataBundle.validated = instantNow;
-      dataBundle.errorTree = errorTree;
       dataBundle.attributes = attributes;
       dataBundle.message = message;
       DocumentReference resultDoc = deviceDoc.collection("validations").document(schemaId);
