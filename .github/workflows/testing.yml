@@ -100,9 +100,12 @@ jobs:
           bin/test_validator $GCP_TARGET_PROJECT
           more /tmp/validator.out
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
-      - name: device output logs
+      - name: output logs
         if: ${{ always() }}
-        run: more `find udmi_site_model/out/devices/ -type f`
+        run: |
+          cd sites/udmi_site_model/out
+          echo Output from `pwd`
+          more `find out -type f`
       - name: pubber logs
         if: ${{ always() }}
         run: |
