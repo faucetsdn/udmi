@@ -1,0 +1,10 @@
+{
+  "deviceNumId" : "123456789101112",
+  "subFolder" : "update",
+  "wasBase64" : "false",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "subType" : "state",
+  "category" : "commands",
+  "deviceId" : "AHU-1",
+  "projectId" : "bos-peringknife-dev"
+}
