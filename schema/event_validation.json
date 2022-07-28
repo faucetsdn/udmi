@@ -31,6 +31,13 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
+    "errors": {
+      "description": "Errors encountered while validating a device",
+      "type": "array",
+      "items": {
+        "$ref": "file:common.json#/definitions/entry"
+      }
+    },
     "summary": {
       "title": "Validation Summary",
       "type": "object",

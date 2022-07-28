@@ -524,7 +524,7 @@ public class Validator {
         }
       }
 
-      if (!reportingDevice.hasError()) {
+      if (!reportingDevice.hasErrors()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
@@ -538,6 +538,8 @@ public class Validator {
       ReportingDevice reportingDevice) {
     try {
       ValidationEvent validationEvent = makeValidationEvent();
+      validationEvent.status = reportingDevice.getErrorStatus();
+      validationEvent.errors = reportingDevice.getErrors();
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
@@ -690,7 +692,7 @@ public class Validator {
       ReportingDevice deviceInfo = expectedDevices.get(deviceId);
       if (deviceInfo == null) {
         summary.missing_devices.add(deviceId);
-      } else if (deviceInfo.hasMetadataDiff() || deviceInfo.hasError()) {
+      } else if (deviceInfo.hasMetadataDiff() || deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());

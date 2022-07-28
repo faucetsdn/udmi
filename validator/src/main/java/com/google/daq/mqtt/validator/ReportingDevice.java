@@ -72,7 +72,7 @@ public class ReportingDevice {
    *
    * @return {@code true} if this device has errors
    */
-  public boolean hasError() {
+  public boolean hasErrors() {
     return metadataDiff.errors != null && !metadataDiff.errors.isEmpty();
   }
 
@@ -178,7 +178,15 @@ public class ReportingDevice {
     if (metadataDiff.errors == null) {
       metadataDiff.errors = new ArrayList<>();
     }
-    metadataDiff.errors.add(error.toString());
+    metadataDiff.errors.add(makeEntry(error));
+  }
+
+  private Entry makeEntry(Exception error) {
+    Entry entry = new Entry();
+    entry.message = error.getMessage();
+    entry.category = "device.validation.error";
+    entry.level = Level.ERROR.value();
+    return entry;
   }
 
   /**
@@ -223,12 +231,16 @@ public class ReportingDevice {
     return outputStream.toString();
   }
 
+  public List<Entry> getErrors() {
+    return metadataDiff.errors == null ? null : metadataDiff.errors;
+  }
+
   /**
    * Encapsulation of metadata differences.
    */
   public static class MetadataDiff {
 
-    public List<String> errors;
+    public List<Entry> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;
   }
