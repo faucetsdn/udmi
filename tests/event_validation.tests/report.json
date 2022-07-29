@@ -11,7 +11,6 @@
   "devices": {
     "AHU-1": {
       "last_seen": "2022-07-16T18:27:19Z",
-      "missing_points" : [ "filter_differential_pressure_setpoint" ],
       "oldest_mark": "2022-07-16T18:27:19Z",
       "status": {
         "message": "Tickity Boo",

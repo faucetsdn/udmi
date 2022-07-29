@@ -105,7 +105,9 @@ jobs:
           more /tmp/validator.out
           diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
       - name: output logs
-        if: ${{ always() }}
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           cd sites/udmi_site_model/out
           echo Output from `pwd`
