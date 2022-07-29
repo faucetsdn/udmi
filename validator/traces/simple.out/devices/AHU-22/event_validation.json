@@ -1,29 +1,4 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.3.14",
-  "status" : {
-    "message" : "Multiple validation errors",
-    "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
-    "category" : "validation.error.multiple",
-    "level" : 500
-  },
-  "errors" : [ {
-    "category" : "device.validation.error",
-    "level" : 500
-  }, {
-    "category" : "device.validation.error",
-    "level" : 500
-  }, {
-    "category" : "device.validation.error",
-    "level" : 500
-  }, {
-    "category" : "device.validation.error",
-    "level" : 500
-  }, {
-    "category" : "device.validation.error",
-    "level" : 500
-  }, {
-    "category" : "device.validation.error",
-    "level" : 500
-  } ]
+  "version" : "1.3.14"
 }

@@ -18,6 +18,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MessagePublisher;
+import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -147,6 +148,13 @@ public class Validator {
   public Validator(List<String> argList) {
     List<String> listCopy = new ArrayList<>(argList);
     parseArgs(listCopy);
+
+    if (schemaMap == null) {
+      setSchemaSpec("schema");
+    }
+    if (client == null) {
+      validateReflector();
+    }
     deviceIds = listCopy;
   }
 
@@ -170,8 +178,6 @@ public class Validator {
   }
 
   private void parseArgs(List<String> argList) {
-    boolean srcDefined = false;
-    boolean schemaDefined = false;
     while (argList.size() > 0) {
       String option = removeNextArg(argList);
       try {
@@ -184,23 +190,19 @@ public class Validator {
             break;
           case "-a":
             setSchemaSpec(removeNextArg(argList));
-            schemaDefined = true;
             break;
           case "-t":
             initializeCloudIoT();
             validatePubSub(removeNextArg(argList));
-            srcDefined = true;
             break;
           case "-f":
             validateFilesOutput(removeNextArg(argList));
-            srcDefined = true;
             break;
           case "-r":
             validateMessageTrace(removeNextArg(argList));
-            srcDefined = true;
             break;
           case "-n":
-            srcDefined = true;
+            client = new NullPublisher();
             break;
           case "-w":
             setMessageTraceDir(removeNextArg(argList));
@@ -214,13 +216,6 @@ public class Validator {
       } catch (MissingFormatArgumentException e) {
         throw new RuntimeException("For command line option " + option, e);
       }
-    }
-
-    if (!schemaDefined) {
-      setSchemaSpec("schema");
-    }
-    if (!srcDefined) {
-      validateReflector();
     }
   }
 
@@ -486,7 +481,7 @@ public class Validator {
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
-        System.err.println("Error validating attributes: " + e.getMessage());
+        System.err.println("Error validating attributes: " + e);
         reportingDevice.addError(e);
       }
 
@@ -760,6 +755,7 @@ public class Validator {
       String prefix = parts.length == 1 ? null : parts[0];
       String file = parts[parts.length - 1];
       validateFiles(schemaSpec, prefix, file);
+      client = new NullPublisher();
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException, ERROR_FORMAT_INDENT);
       errorTree.write(System.err);

@@ -1,27 +1,20 @@
 {
   "errors" : [ ],
   "summary" : {
-    "correct_devices" : [ ],
+    "correct_devices" : [ "AHU-22" ],
     "extra_devices" : [ ],
     "missing_devices" : [ "GAT-123", "SNS-4" ],
-    "error_devices" : [ "AHU-1", "AHU-22" ]
+    "error_devices" : [ "AHU-1" ]
   },
   "devices" : {
     "AHU-1" : {
       "status" : {
-        "message" : "Multiple validation errors",
-        "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
-        "category" : "validation.error.multiple",
+        "message" : "Metadata validation failed: Missing points: filter_differential_pressure_setpoint",
+        "detail" : "java.lang.RuntimeException: Metadata validation failed: Missing points: filter_differential_pressure_setpoint\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:140)\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:120)\n\tat com.google.daq.mqtt.validator.Validator.validateUpdate(Validator.java:504)\n\tat com.google.daq.mqtt.validator.Validator.validateMessage(Validator.java:422)\n\tat com.google.daq.mqtt.validator.Validator.lambda$messageValidator$0(Validator.java:343)\n\tat com.google.daq.mqtt.validator.MessageReadingClient.processMessage(MessageReadingClient.java:152)\n\tat com.google.daq.mqtt.validator.Validator.messageLoop(Validator.java:379)\n\tat com.google.daq.mqtt.validator.Validator.main(Validator.java:169)\n",
+        "category" : "validation.error.simple",
         "level" : 500
-      }
-    },
-    "AHU-22" : {
-      "status" : {
-        "message" : "Multiple validation errors",
-        "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
-        "category" : "validation.error.multiple",
-        "level" : 500
-      }
+      },
+      "missing_points" : [ "filter_differential_pressure_setpoint" ]
     }
   }
 }

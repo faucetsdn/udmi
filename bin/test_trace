@@ -13,7 +13,7 @@ site_model=sites/udmi_site_model
 site_out=$site_model/out
 
 rm -rf $site_out
-validator/bin/validate none schema trace $trace_name $site_model
+validator/bin/validate -- schema trace $trace_name $site_model
 
 echo
 echo Comparing output with trace capture $trace_out
