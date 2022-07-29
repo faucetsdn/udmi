@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
-import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -538,11 +537,10 @@ public class Validator {
       validationEvent.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
       validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
-      validationEvent.points = new PointsSummary();
-      validationEvent.points.missing = arrayIfNotEmpty(
-          reportingDevice.getMetadataDiff().missingPoints);
-      validationEvent.points.extra = arrayIfNotEmpty(
-          reportingDevice.getMetadataDiff().extraPoints);
+      PointsSummary pointsSummary = new PointsSummary();
+      pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
+      pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
+      validationEvent.points = pointsSummary;
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
