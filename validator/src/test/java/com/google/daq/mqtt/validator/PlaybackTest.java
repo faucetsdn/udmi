@@ -33,8 +33,8 @@ public class PlaybackTest extends TestBase {
     assertEquals("device summaries", 2, finalReport.devices.size());
     ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
     assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT,
-        deviceReport.points.missing.get(0));
-    assertEquals("extra points", 0, deviceReport.points.extra.size());
+        deviceReport.pointset.missing.get(0));
+    assertEquals("extra points", 0, deviceReport.pointset.extra.size());
     assertEquals("device status", (Integer) Level.ERROR.value(), deviceReport.status.level);
   }
 
