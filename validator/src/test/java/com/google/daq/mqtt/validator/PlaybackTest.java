@@ -21,7 +21,36 @@ public class PlaybackTest extends TestBase {
   @Test
   public void simpleTraceReport() {
     MessageReadingClient client = validateTrace("simple");
-    assertEquals("trace message count", 7, client.messageCount);
+    assertEquals("trace message count", 8, client.messageCount);
+    List<OutputBundle> outputMessages = client.getOutputMessages();
+    ValidationEvent finalReport = asValidationEvent(
+        outputMessages.get(outputMessages.size() - 1).message);
+    assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
+    assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
+    assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
+    assertEquals("error devices", 2, finalReport.summary.error_devices.size());
+
+    assertEquals("device summaries", 2, finalReport.devices.size());
+    ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
+    assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT,
+        deviceReport.missing_points.get(0));
+    assertEquals("device status", (Integer) Level.ERROR.value(), deviceReport.status.level);
+  }
+
+  private ValidationEvent forDevice(List<OutputBundle> outputMessages, String deviceId) {
+    for (OutputBundle bundle : outputMessages) {
+      if (bundle.deviceId.equals(deviceId)) {
+        return asValidationEvent(bundle.message);
+      }
+    }
+    throw new RuntimeException("Event match for device not found " + deviceId);
+  }
+
+  @Test
+  public void deviceArgs() {
+    MessageReadingClient client = validateTrace("simple",
+        List.of("--", "AHU-22", "SNS-4", "XXX", "YYY"));
+    assertEquals("trace message count", 8, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     ValidationEvent finalReport = asValidationEvent(
         outputMessages.get(outputMessages.size() - 1).message);
@@ -29,27 +58,7 @@ public class PlaybackTest extends TestBase {
     assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
     assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
     assertEquals("error devices", 1, finalReport.summary.error_devices.size());
-
     assertEquals("device summaries", 1, finalReport.devices.size());
-    DeviceValidationEvent deviceSummary = finalReport.devices.get("AHU-1");
-    assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT,
-        finalReport.missing_points.get(0));
-    assertEquals("device status", (Integer) Level.ERROR.value(), deviceSummary.status.level);
-  }
-
-  @Test
-  public void deviceArgs() {
-    MessageReadingClient client = validateTrace("simple",
-        List.of("--", "AHU-22", "SNS-4", "XXX", "YYY"));
-    assertEquals("trace message count", 7, client.messageCount);
-    List<OutputBundle> outputMessages = client.getOutputMessages();
-    ValidationEvent finalReport = asValidationEvent(
-        outputMessages.get(outputMessages.size() - 1).message);
-    assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
-    assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-    assertEquals("missing devices", 3, finalReport.summary.missing_devices.size());
-    assertEquals("error devices", 0, finalReport.summary.error_devices.size());
-    assertEquals("device summaries", 0, finalReport.devices.size());
   }
 
   private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {
