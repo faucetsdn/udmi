@@ -1,20 +1,27 @@
 {
   "errors" : [ ],
   "summary" : {
-    "correct_devices" : [ "AHU-22" ],
+    "correct_devices" : [ ],
     "extra_devices" : [ ],
     "missing_devices" : [ "GAT-123", "SNS-4" ],
-    "error_devices" : [ "AHU-1" ]
+    "error_devices" : [ "AHU-1", "AHU-22" ]
   },
   "devices" : {
     "AHU-1" : {
       "status" : {
-        "message" : "Metadata validation failed: Missing points: filter_differential_pressure_setpoint",
-        "detail" : "java.lang.RuntimeException: Metadata validation failed: Missing points: filter_differential_pressure_setpoint\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:140)\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:120)\n\tat com.google.daq.mqtt.validator.Validator.validateUpdate(Validator.java:509)\n\tat com.google.daq.mqtt.validator.Validator.validateMessage(Validator.java:427)\n\tat com.google.daq.mqtt.validator.Validator.lambda$messageValidator$0(Validator.java:348)\n\tat com.google.daq.mqtt.validator.MessageReadingClient.processMessage(MessageReadingClient.java:152)\n\tat com.google.daq.mqtt.validator.Validator.messageLoop(Validator.java:384)\n\tat com.google.daq.mqtt.validator.Validator.main(Validator.java:161)\n",
-        "category" : "validation.error.simple",
+        "message" : "Multiple validation errors",
+        "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
+        "category" : "validation.error.multiple",
         "level" : 500
-      },
-      "missing_points" : [ "filter_differential_pressure_setpoint" ]
+      }
+    },
+    "AHU-22" : {
+      "status" : {
+        "message" : "Multiple validation errors",
+        "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
+        "category" : "validation.error.multiple",
+        "level" : 500
+      }
     }
   }
 }

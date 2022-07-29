@@ -28,11 +28,11 @@ jobs:
           validator/bin/build check
       - name: Schema conformance tests
         if: ${{ always() }}
-        run: bin/test_schema -p
-      - name: validator trace
         run: |
-          rm -rf sites/udmi_site_model/out
-          validator/bin/validate none schema trace simple sites/udmi_site_model
+          bin/test_schema -p
+      - name: simple trace test
+        run: |
+          bin/test_trace simple
       - name: Registrar tests
         if: ${{ always() }}
         run: |

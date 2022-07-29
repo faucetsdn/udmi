@@ -1,14 +1,28 @@
 {
-  "timestamp" : "2022-07-28T19:47:25Z",
+  "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.3.14",
   "status" : {
-    "message" : "Metadata validation failed: Missing points: filter_differential_pressure_setpoint",
-    "detail" : "java.lang.RuntimeException: Metadata validation failed: Missing points: filter_differential_pressure_setpoint\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:140)\n\tat com.google.daq.mqtt.validator.ReportingDevice.validateMessage(ReportingDevice.java:120)\n\tat com.google.daq.mqtt.validator.Validator.validateUpdate(Validator.java:509)\n\tat com.google.daq.mqtt.validator.Validator.validateMessage(Validator.java:427)\n\tat com.google.daq.mqtt.validator.Validator.lambda$messageValidator$0(Validator.java:348)\n\tat com.google.daq.mqtt.validator.MessageReadingClient.processMessage(MessageReadingClient.java:152)\n\tat com.google.daq.mqtt.validator.Validator.messageLoop(Validator.java:384)\n\tat com.google.daq.mqtt.validator.Validator.main(Validator.java:161)\n",
-    "category" : "validation.error.simple",
+    "message" : "Multiple validation errors",
+    "detail" : "udmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56\nudmi.schema.Entry@f3cb0b56",
+    "category" : "validation.error.multiple",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Metadata validation failed: Missing points: filter_differential_pressure_setpoint",
+    "category" : "device.validation.error",
+    "level" : 500
+  }, {
+    "category" : "device.validation.error",
+    "level" : 500
+  }, {
+    "category" : "device.validation.error",
+    "level" : 500
+  }, {
+    "category" : "device.validation.error",
+    "level" : 500
+  }, {
+    "category" : "device.validation.error",
+    "level" : 500
+  }, {
     "category" : "device.validation.error",
     "level" : 500
   } ]
