@@ -5,6 +5,9 @@
     },
     "triangulating_axis" : {
       "present_value" : 11
+    },
+    "rocket_count": {
+      "present_value" : "yes"
     }
   },
   "timestamp" : "2022-07-19T05:04:26Z",

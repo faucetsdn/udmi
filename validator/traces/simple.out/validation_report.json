@@ -4,10 +4,10 @@
   "missing_points" : [ ],
   "errors" : [ ],
   "summary" : {
-    "correct_devices" : [ "SNS-4" ],
+    "correct_devices" : [ ],
     "extra_devices" : [ ],
     "missing_devices" : [ "GAT-123" ],
-    "error_devices" : [ "AHU-1", "AHU-22" ]
+    "error_devices" : [ "AHU-1", "AHU-22", "SNS-4" ]
   },
   "devices" : {
     "AHU-1" : {
@@ -22,6 +22,13 @@
         "message" : "Multiple validation errors",
         "detail" : "While converting to json node: 2 schema violations found; Unrecognized field \"yesvalue\" (class udmi.schema.PointsetEvent), not marked as ignorable (4 known properties: \"version\", \"points\", \"timestamp\", \"partial_update\"])\n at [Source: UNKNOWN; line: -1, column: -1] (through reference chain: udmi.schema.PointsetEvent[\"yesvalue\"])",
         "category" : "validation.error.multiple"
+      }
+    },
+    "SNS-4" : {
+      "status" : {
+        "message" : "Metadata validation failed: Extra points: rocket_count",
+        "category" : "validation.error.simple",
+        "level" : 500
       }
     }
   }

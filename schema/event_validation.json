@@ -31,8 +31,9 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "points": {
-      "title": "Points Summary",
+    "pointset": {
+      "title": "Pointset Summary",
+      "description": "Errors specific to pointset handling",
       "type": "object",
       "additionalProperties":  false,
       "properties": {
@@ -53,7 +54,7 @@
       }
     },
     "errors": {
-      "description": "Errors encountered while validating a device",
+      "description": "List of errors encountered while validating a device",
       "type": "array",
       "items": {
         "$ref": "file:common.json#/definitions/entry"

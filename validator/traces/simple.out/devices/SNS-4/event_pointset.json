@@ -5,6 +5,9 @@
     },
     "triangulating_axis" : {
       "present_value" : 11
+    },
+    "rocket_count" : {
+      "present_value" : "yes"
     }
   },
   "timestamp" : "1999-10-20T01:02:03Z",

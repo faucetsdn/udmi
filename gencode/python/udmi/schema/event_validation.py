@@ -2,7 +2,7 @@
 from .common import Entry
 
 
-class PointsSummary:
+class PointsetSummary:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class PointsSummary:
   def from_dict(source):
     if not source:
       return None
-    result = PointsSummary()
+    result = PointsetSummary()
     result.missing = source.get('missing')
     result.extra = source.get('extra')
     return result
@@ -24,7 +24,7 @@ class PointsSummary:
       return None
     result = {}
     for key in source:
-      result[key] = PointsSummary.from_dict(source[key])
+      result[key] = PointsetSummary.from_dict(source[key])
     return result
 
   @staticmethod
@@ -103,7 +103,7 @@ class ValidationEvent:
     self.subfolder = None
     self.subtype = None
     self.status = None
-    self.points = None
+    self.pointset = None
     self.errors = None
     self.summary = None
     self.devices = None
@@ -119,7 +119,7 @@ class ValidationEvent:
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
     result.status = Entry.from_dict(source.get('status'))
-    result.points = PointsSummary.from_dict(source.get('points'))
+    result.pointset = PointsetSummary.from_dict(source.get('pointset'))
     result.errors = Entry.array_from(source.get('errors'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
@@ -155,8 +155,8 @@ class ValidationEvent:
       result['subtype'] = self.subtype # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.points:
-      result['points'] = self.points.to_dict() # 4
+    if self.pointset:
+      result['pointset'] = self.pointset.to_dict() # 4
     if self.errors:
       result['errors'] = self.errors.to_dict() # 3
     if self.summary:

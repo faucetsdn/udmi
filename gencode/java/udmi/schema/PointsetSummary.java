@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Points Summary
+ * Pointset Summary
  * <p>
- * 
+ * Errors specific to pointset handling
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "extra"
 })
 @Generated("jsonschema2pojo")
-public class PointsSummary {
+public class PointsetSummary {
 
     /**
      * Missing points discovered while validating a device
@@ -52,10 +52,10 @@ public class PointsSummary {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PointsSummary) == false) {
+        if ((other instanceof PointsetSummary) == false) {
             return false;
         }
-        PointsSummary rhs = ((PointsSummary) other);
+        PointsetSummary rhs = ((PointsetSummary) other);
         return (((this.missing == rhs.missing)||((this.missing!= null)&&this.missing.equals(rhs.missing)))&&((this.extra == rhs.extra)||((this.extra!= null)&&this.extra.equals(rhs.extra))));
     }
 

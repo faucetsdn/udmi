@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "subfolder",
     "subtype",
     "status",
-    "points",
+    "pointset",
     "errors",
     "summary",
     "devices"
@@ -80,19 +80,20 @@ public class ValidationEvent {
     @JsonProperty("status")
     public Entry status;
     /**
-     * Points Summary
+     * Pointset Summary
      * <p>
-     * 
+     * Errors specific to pointset handling
      * 
      */
-    @JsonProperty("points")
-    public PointsSummary points;
+    @JsonProperty("pointset")
+    @JsonPropertyDescription("Errors specific to pointset handling")
+    public PointsetSummary pointset;
     /**
-     * Errors encountered while validating a device
+     * List of errors encountered while validating a device
      * 
      */
     @JsonProperty("errors")
-    @JsonPropertyDescription("Errors encountered while validating a device")
+    @JsonPropertyDescription("List of errors encountered while validating a device")
     public List<Entry> errors = new ArrayList<Entry>();
     /**
      * Validation Summary
@@ -113,11 +114,11 @@ public class ValidationEvent {
         result = ((result* 31)+((this.subtype == null)? 0 :this.subtype.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         result = ((result* 31)+((this.subfolder == null)? 0 :this.subfolder.hashCode()));
+        result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.errors == null)? 0 :this.errors.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
-        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
 
@@ -130,7 +131,7 @@ public class ValidationEvent {
             return false;
         }
         ValidationEvent rhs = ((ValidationEvent) other);
-        return (((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.subtype == rhs.subtype)||((this.subtype!= null)&&this.subtype.equals(rhs.subtype))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.subfolder == rhs.subfolder)||((this.subfolder!= null)&&this.subfolder.equals(rhs.subfolder))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.errors == rhs.errors)||((this.errors!= null)&&this.errors.equals(rhs.errors))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
+        return (((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.subtype == rhs.subtype)||((this.subtype!= null)&&this.subtype.equals(rhs.subtype))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.subfolder == rhs.subfolder)||((this.subfolder!= null)&&this.subfolder.equals(rhs.subfolder))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.errors == rhs.errors)||((this.errors!= null)&&this.errors.equals(rhs.errors))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }
