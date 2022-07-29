@@ -3,7 +3,7 @@
   "version" : "1.3.14",
   "status" : {
     "message" : "Metadata validation failed: Missing points: filter_differential_pressure_setpoint",
-    "detail" : "java.lang.RuntimeException: Metadata validation failed: Missing points: filter_differential_pressure_setpoint\n",
+    "detail" : "java.lang.RuntimeException: Metadata validation failed: Missing points: filter_differential_pressure_setpoint\n\tredacted\n\tredacted\n\tredacted\n\tredacted\n\tredacted\n\tredacted\n\tredacted\n\tredacted\n",
     "category" : "validation.error.simple",
     "level" : 500
   },
