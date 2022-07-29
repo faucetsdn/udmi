@@ -26,4 +26,4 @@ done
 
 diff -r $trace_out $site_out
 
-echo Diff complete, no changes found.
+echo Diff complete, no deviation found.
