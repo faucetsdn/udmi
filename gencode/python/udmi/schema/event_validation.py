@@ -62,6 +62,7 @@ class ValidationEvent:
     self.subfolder = None
     self.subtype = None
     self.status = None
+    self.missing_points = None
     self.errors = None
     self.summary = None
     self.devices = None
@@ -77,6 +78,7 @@ class ValidationEvent:
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
     result.status = Entry.from_dict(source.get('status'))
+    result.missing_points = source.get('missing_points')
     result.errors = Entry.array_from(source.get('errors'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
@@ -112,6 +114,8 @@ class ValidationEvent:
       result['subtype'] = self.subtype # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
+    if self.missing_points:
+      result['missing_points'] = self.missing_points # 1
     if self.errors:
       result['errors'] = self.errors.to_dict() # 3
     if self.summary:

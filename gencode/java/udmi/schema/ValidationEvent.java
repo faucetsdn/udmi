@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "subfolder",
     "subtype",
     "status",
+    "missing_points",
     "errors",
     "summary",
     "devices"
@@ -79,6 +80,13 @@ public class ValidationEvent {
     @JsonProperty("status")
     public Entry status;
     /**
+     * Missing points discovered while validating a device
+     * 
+     */
+    @JsonProperty("missing_points")
+    @JsonPropertyDescription("Missing points discovered while validating a device")
+    public List<java.lang.String> missing_points = new ArrayList<java.lang.String>();
+    /**
      * Errors encountered while validating a device
      * 
      */
@@ -105,6 +113,7 @@ public class ValidationEvent {
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         result = ((result* 31)+((this.subfolder == null)? 0 :this.subfolder.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.missing_points == null)? 0 :this.missing_points.hashCode()));
         result = ((result* 31)+((this.errors == null)? 0 :this.errors.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
@@ -120,7 +129,7 @@ public class ValidationEvent {
             return false;
         }
         ValidationEvent rhs = ((ValidationEvent) other);
-        return ((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.subtype == rhs.subtype)||((this.subtype!= null)&&this.subtype.equals(rhs.subtype))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.subfolder == rhs.subfolder)||((this.subfolder!= null)&&this.subfolder.equals(rhs.subfolder))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.errors == rhs.errors)||((this.errors!= null)&&this.errors.equals(rhs.errors))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.subtype == rhs.subtype)||((this.subtype!= null)&&this.subtype.equals(rhs.subtype))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.subfolder == rhs.subfolder)||((this.subfolder!= null)&&this.subfolder.equals(rhs.subfolder))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.missing_points == rhs.missing_points)||((this.missing_points!= null)&&this.missing_points.equals(rhs.missing_points))))&&((this.errors == rhs.errors)||((this.errors!= null)&&this.errors.equals(rhs.errors))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

@@ -63,6 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.DeviceValidationEvent;
+import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
@@ -534,7 +535,10 @@ public class Validator {
     try {
       ValidationEvent validationEvent = makeValidationEvent();
       validationEvent.status = reportingDevice.getErrorStatus();
-      validationEvent.errors = reportingDevice.getErrors();
+      List<Entry> errors = reportingDevice.getErrors();
+      validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
+      validationEvent.missing_points = arrayIfNotEmpty(
+          reportingDevice.getMetadataDiff().missingPoints);
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
@@ -692,8 +696,6 @@ public class Validator {
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());
         deviceValidationEvent.status = deviceInfo.getErrorStatus();
-        deviceValidationEvent.missing_points = arrayIfNotEmpty(
-            deviceInfo.getMetadataDiff().missingPoints);
       } else if (deviceInfo.hasBeenValidated()) {
         summary.correct_devices.add(deviceId);
       } else {
@@ -701,7 +703,7 @@ public class Validator {
       }
     }
 
-    ValidationEvent report = new ValidationEvent();
+    ValidationEvent report = makeValidationEvent();
     report.summary = summary;
     report.devices = devices;
     sendValidationReport(report);

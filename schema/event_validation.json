@@ -31,6 +31,13 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
+    "missing_points": {
+      "description": "Missing points discovered while validating a device",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "errors": {
       "description": "Errors encountered while validating a device",
       "type": "array",

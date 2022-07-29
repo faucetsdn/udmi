@@ -2,15 +2,13 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -183,8 +181,10 @@ public class ReportingDevice {
 
   private Entry makeEntry(Exception error) {
     Entry entry = new Entry();
-    entry.message = error.getMessage();
-    entry.category = "device.validation.error";
+    entry.message = getExceptionMessage(error);
+    String detail = getExceptionCauses(error);
+    entry.detail = entry.message.equals(detail) ? null : detail;
+    entry.category = "validation.error.simple";
     entry.level = Level.ERROR.value();
     return entry;
   }
@@ -208,27 +208,35 @@ public class ReportingDevice {
     if (errors.isEmpty()) {
       return null;
     }
+    return errors.size() == 1 ? makeEntry(errors.get(0)) : makeCompoundEntry(errors);
+  }
+
+  private Entry makeCompoundEntry(List<Exception> erx) {
     Entry entry = new Entry();
-    entry.level = Level.ERROR.value();
-    if (errors.size() > 1) {
-      entry.category = "validation.error.multiple";
-      entry.message = "Multiple validation errors";
-      entry.detail = Joiner.on("\n").join(metadataDiff.errors);
-    } else {
-      Exception exception = errors.get(0);
-      entry.category = "validation.error.simple";
-      entry.message = exception.getMessage();
-      entry.detail = stackTraceString(exception);
-    }
+    entry.category = "validation.error.multiple";
+    entry.message = "Multiple validation errors";
+    entry.detail = Joiner.on("; ")
+        .join(erx.stream().map(this::getExceptionMessage).collect(Collectors.toList()));
     return entry;
   }
 
-  private String stackTraceString(Exception e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
+  private String getExceptionCauses(Throwable exception) {
+    List<String> messages = new ArrayList<>();
+    String previousMessage = null;
+    while (exception != null) {
+      String newMessage = getExceptionMessage(exception);
+      if (previousMessage == null || !previousMessage.endsWith(newMessage)) {
+        messages.add(newMessage);
+        previousMessage = newMessage;
+      }
+      exception = exception.getCause();
     }
-    return outputStream.toString();
+    return Joiner.on("; ").join(messages);
+  }
+
+  private String getExceptionMessage(Throwable exception) {
+    String message = exception.getMessage();
+    return message != null ? message : exception.toString();
   }
 
   public List<Entry> getErrors() {

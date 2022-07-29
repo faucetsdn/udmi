@@ -58,7 +58,7 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationEvent report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    List<String> missingPoints = report.devices.get("AHU-1").missing_points;
+    List<String> missingPoints = report.missing_points;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
@@ -71,7 +71,7 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationEvent report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    List<String> missingPoints = report.devices.get("AHU-1").missing_points;
+    List<String> missingPoints = report.missing_points;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
