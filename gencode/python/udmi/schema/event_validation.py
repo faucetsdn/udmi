@@ -2,6 +2,47 @@
 from .common import Entry
 
 
+class PointsSummary:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.missing = None
+    self.extra = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = PointsSummary()
+    result.missing = source.get('missing')
+    result.extra = source.get('extra')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = PointsSummary.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.missing:
+      result['missing'] = self.missing # 1
+    if self.extra:
+      result['extra'] = self.extra # 1
+    return result
+
+
 class ValidationSummary:
   """Generated schema class"""
 
@@ -62,7 +103,7 @@ class ValidationEvent:
     self.subfolder = None
     self.subtype = None
     self.status = None
-    self.missing_points = None
+    self.points = None
     self.errors = None
     self.summary = None
     self.devices = None
@@ -78,7 +119,7 @@ class ValidationEvent:
     result.subfolder = source.get('subfolder')
     result.subtype = source.get('subtype')
     result.status = Entry.from_dict(source.get('status'))
-    result.missing_points = source.get('missing_points')
+    result.points = PointsSummary.from_dict(source.get('points'))
     result.errors = Entry.array_from(source.get('errors'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
@@ -114,8 +155,8 @@ class ValidationEvent:
       result['subtype'] = self.subtype # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.missing_points:
-      result['missing_points'] = self.missing_points # 1
+    if self.points:
+      result['points'] = self.points.to_dict() # 4
     if self.errors:
       result['errors'] = self.errors.to_dict() # 3
     if self.summary:

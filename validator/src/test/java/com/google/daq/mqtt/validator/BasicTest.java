@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.util.List;
+import udmi.schema.PointPointsetEvent;
+import udmi.schema.PointsSummary;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.ValidationEvent;
@@ -20,6 +22,7 @@ public class BasicTest extends TestBase {
       "-p", PROJECT_ID,
       "-a", SCHEMA_SPEC,
       "-s", SITE_DIR);
+  private static final String FLUX_READING = "FLUX_READING";
   private final Validator validator = new Validator(TEST_ARGS);
 
   @org.junit.Test
@@ -58,9 +61,24 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationEvent report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    List<String> missingPoints = getValidationResult(DEVICE_ID).missing_points;
-    assertEquals("Missing one point", 1, missingPoints.size());
-    assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
+    PointsSummary points = getValidationResult(DEVICE_ID).points;
+    assertEquals("Missing one point", 1, points.missing.size());
+    assertTrue("Missing correct point", points.missing.contains(FILTER_ALARM_PRESSURE_STATUS));
+    assertEquals("No extra points", 0, points.extra.size());
+  }
+
+  @org.junit.Test
+  public void additionalPointsetEvent() {
+    PointsetEvent messageObject = basePointsetEvent();
+    messageObject.points.put(FLUX_READING, new PointPointsetEvent());
+    MessageBundle bundle = getMessageBundle("event", "pointset", messageObject);
+    validator.validateMessage(bundle);
+    ValidationEvent report = getValidationReport();
+    assertEquals("No error devices", 1, report.devices.size());
+    PointsSummary points = getValidationResult(DEVICE_ID).points;
+    assertEquals("No missing points", 0, points.missing.size());
+    assertEquals("One extra point", 1, points.extra.size());
+    assertTrue("Missing correct point", points.extra.contains(FLUX_READING));
   }
 
   @org.junit.Test
@@ -71,7 +89,7 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationEvent report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    List<String> missingPoints = getValidationResult(DEVICE_ID).missing_points;
+    List<String> missingPoints = getValidationResult(DEVICE_ID).points.missing;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }

@@ -67,6 +67,7 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
+import udmi.schema.PointsSummary;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.ValidationEvent;
@@ -537,8 +538,11 @@ public class Validator {
       validationEvent.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
       validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
-      validationEvent.missing_points = arrayIfNotEmpty(
+      validationEvent.points = new PointsSummary();
+      validationEvent.points.missing = arrayIfNotEmpty(
           reportingDevice.getMetadataDiff().missingPoints);
+      validationEvent.points.extra = arrayIfNotEmpty(
+          reportingDevice.getMetadataDiff().extraPoints);
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);

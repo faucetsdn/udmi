@@ -31,11 +31,25 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "missing_points": {
-      "description": "Missing points discovered while validating a device",
-      "type": "array",
-      "items": {
-        "type": "string"
+    "points": {
+      "title": "Points Summary",
+      "type": "object",
+      "additionalProperties":  false,
+      "properties": {
+        "missing": {
+          "description": "Missing points discovered while validating a device",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extra": {
+          "description": "Extra points discovered while validating a device",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "errors": {
