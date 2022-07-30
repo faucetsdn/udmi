@@ -258,7 +258,7 @@ public class Validator {
 
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
-    dataSinks.add(new FileDataSink(outBaseDir, VALIDATION_REPORT_DEVICE));
+    dataSinks.add(new FileDataSink(outBaseDir));
   }
 
   private void setMessageTraceDir(String writeDirArg) {
@@ -534,6 +534,8 @@ public class Validator {
       ReportingDevice reportingDevice) {
     try {
       ValidationEvent validationEvent = makeValidationEvent();
+      validationEvent.sub_folder = origAttributes.get("subFolder");
+      validationEvent.sub_type = origAttributes.get("subType");
       validationEvent.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
       validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;

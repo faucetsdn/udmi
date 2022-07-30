@@ -20,11 +20,11 @@
       "format": "date-time",
       "type": "string"
     },
-    "subfolder": {
+    "sub_folder": {
       "description": "Subfolder of the validated message",
       "type": "string"
     },
-    "subtype": {
+    "sub_type": {
       "description": "Subtype of the validated message",
       "type": "string"
     },

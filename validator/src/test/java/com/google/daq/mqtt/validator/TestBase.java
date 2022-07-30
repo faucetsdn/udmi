@@ -98,10 +98,10 @@ public class TestBase {
     }
   }
 
-  protected ValidationEvent getValidationResult(String deviceId) {
+  protected ValidationEvent getValidationResult(String deviceId, String subType, String subFolder) {
     try {
       File resultFile = new File(REPORT_BASE,
-          String.format("devices/%s/event_validation.json", deviceId));
+          String.format("devices/%s/%s_%s.out", deviceId, subType, subFolder));
       return OBJECT_MAPPER.readValue(resultFile, ValidationEvent.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);

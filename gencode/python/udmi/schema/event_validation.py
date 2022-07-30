@@ -100,8 +100,8 @@ class ValidationEvent:
     self.timestamp = None
     self.version = None
     self.last_updated = None
-    self.subfolder = None
-    self.subtype = None
+    self.sub_folder = None
+    self.sub_type = None
     self.status = None
     self.pointset = None
     self.errors = None
@@ -116,8 +116,8 @@ class ValidationEvent:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_updated = source.get('last_updated')
-    result.subfolder = source.get('subfolder')
-    result.subtype = source.get('subtype')
+    result.sub_folder = source.get('sub_folder')
+    result.sub_type = source.get('sub_type')
     result.status = Entry.from_dict(source.get('status'))
     result.pointset = PointsetSummary.from_dict(source.get('pointset'))
     result.errors = Entry.array_from(source.get('errors'))
@@ -149,10 +149,10 @@ class ValidationEvent:
       result['version'] = self.version # 5
     if self.last_updated:
       result['last_updated'] = self.last_updated # 5
-    if self.subfolder:
-      result['subfolder'] = self.subfolder # 5
-    if self.subtype:
-      result['subtype'] = self.subtype # 5
+    if self.sub_folder:
+      result['sub_folder'] = self.sub_folder # 5
+    if self.sub_type:
+      result['sub_type'] = self.sub_type # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
     if self.pointset:
