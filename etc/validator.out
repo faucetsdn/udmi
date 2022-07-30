@@ -1,0 +1,12 @@
+{
+  "timestamp" : "2022-07-30T17:53:08Z",
+  "version" : "1.3.14",
+  "sub_folder" : "pointset",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "While converting to json node: 1 schema violations found",
+    "category" : "validation.error.simple",
+    "level" : 500
+  },
+  "pointset" : { }
+}

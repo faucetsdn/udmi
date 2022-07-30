@@ -41,8 +41,9 @@ echo Started validator pid $vpid
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
-echo bin/pubber $site_path $project_id $device_id $serial_no
-bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
+echo $cmd
+$cmd > $PUBBER_OUT 2>&1 &
 
 WAITING=10
 for i in `seq 1 $WAITING`; do
@@ -67,5 +68,10 @@ echo Killing pids $vpid $pids
 kill $vpid $pids
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
+if [[ -z $outfiles ]]; then
+    echo No .out files found in $site_path/out/devices
+    false
+fi
+
 echo Found .out files $outfiles, copying to /tmp/validator.out
-more $outfiles > /tmp/validator.out || true
+more $outfiles > /tmp/validator.out
