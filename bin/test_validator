@@ -73,7 +73,9 @@ if [[ -z $outfiles ]]; then
     false
 fi
 
-echo Found .out files $outfiles, copying to /tmp/validator.out
-more $outfiles | sed -E > /tmp/validator.out \
+echo Found out files $outfiles, copying to /tmp/validator.out
+
+# Include /dev/null so that more has >1 to chomp on and outputs headers.
+more /dev/null $outfiles | sed -E > /tmp/validator.out \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \
