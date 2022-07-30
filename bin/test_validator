@@ -74,4 +74,6 @@ if [[ -z $outfiles ]]; then
 fi
 
 echo Found .out files $outfiles, copying to /tmp/validator.out
-more $outfiles > /tmp/validator.out
+more $outfiles | sed -E > /tmp/validator.out \
+        -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
+        -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \
