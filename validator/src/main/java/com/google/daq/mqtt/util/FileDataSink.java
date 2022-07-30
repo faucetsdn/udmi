@@ -34,7 +34,7 @@ public class FileDataSink implements MessagePublisher {
   /**
    * New instance.
    *
-   * @param outBaseDir    directory root for output files
+   * @param outBaseDir directory root for output files
    */
   public FileDataSink(File outBaseDir) {
     this.outBaseDir = outBaseDir;
@@ -47,6 +47,9 @@ public class FileDataSink implements MessagePublisher {
   public void publish(String deviceId, String topic, String data) {
     File outFile =
         isValidation(topic) ? getValidationFile(deviceId, data) : getOutputFile(deviceId, topic);
+    if (outFile == null) {
+      return;
+    }
     try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile))) {
       out.println(data);
     } catch (Exception e) {
@@ -80,7 +83,9 @@ public class FileDataSink implements MessagePublisher {
       String subFolder = (String) message.get("sub_folder");
       String subType = (String) message.get("sub_type");
       boolean isReport = subFolder == null && subType == null;
-      return isReport ? reportFile : getOutputFile(deviceId, subType, subFolder, VALIDATION_SUFFIX);
+      boolean isEmpty = !isReport && !message.containsKey("status");
+      return isReport ? reportFile
+          : isEmpty ? null : getOutputFile(deviceId, subType, subFolder, VALIDATION_SUFFIX);
     } catch (Exception e) {
       throw new RuntimeException("While processing validation message " + deviceId, e);
     }

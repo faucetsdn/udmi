@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -85,6 +86,7 @@ public class Validator {
           .enable(Feature.ALLOW_COMMENTS)
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   private static final String ERROR_FORMAT_INDENT = "  ";
@@ -94,7 +96,6 @@ public class Validator {
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
-  private static final String ERROR_FILE_FORMAT = "%s.out";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String METADATA_JSON = "metadata.json";
@@ -120,6 +121,7 @@ public class Validator {
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
+  private static final String POINTSET_SUBFOLDER = "pointset";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -447,6 +449,7 @@ public class Validator {
 
     String deviceId = attributes.get("deviceId");
     final ReportingDevice reportingDevice = getReportingDevice(deviceId);
+    reportingDevice.clearErrors();
     try {
       String schemaName = messageSchema(attributes);
       if (!reportingDevice.markMessageType(schemaName)) {
@@ -463,10 +466,7 @@ public class Validator {
 
       sanitizeMessage(schemaName, message);
       upgradeMessage(schemaName, message);
-      File errorFile = prepareDeviceOutDir(message, attributes, deviceId, schemaName);
-      errorFile.delete();
-      ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-      PrintStream errorOut = new PrintStream(errorStream);
+      prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
@@ -475,7 +475,6 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
-        errorOut.println(e.getMessage());
         reportingDevice.addError(e);
       }
 
@@ -512,14 +511,6 @@ public class Validator {
         extraDevices.add(deviceId);
       }
 
-      errorOut.flush();
-      if (errorStream.size() > 0) {
-        System.err.println("Writing errors to " + errorFile.getAbsolutePath());
-        try (OutputStream output = new FileOutputStream(errorFile)) {
-          output.write(errorStream.toByteArray());
-        }
-      }
-
       if (!reportingDevice.hasErrors()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
@@ -529,20 +520,22 @@ public class Validator {
     return reportingDevice;
   }
 
-
   private void sendValidationResult(Map<String, String> origAttributes, Object message,
       ReportingDevice reportingDevice) {
     try {
       ValidationEvent validationEvent = makeValidationEvent();
-      validationEvent.sub_folder = origAttributes.get("subFolder");
+      String subFolder = origAttributes.get("subFolder");
+      validationEvent.sub_folder = subFolder;
       validationEvent.sub_type = origAttributes.get("subType");
       validationEvent.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
       validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
-      PointsetSummary pointsSummary = new PointsetSummary();
-      pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
-      pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
-      validationEvent.pointset = pointsSummary;
+      if (POINTSET_SUBFOLDER.equals(subFolder)) {
+        PointsetSummary pointsSummary = new PointsetSummary();
+        pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
+        pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
+        validationEvent.pointset = pointsSummary;
+      }
       sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
@@ -621,7 +614,7 @@ public class Validator {
     return !CONFIG_CATEGORY.equals(category) && isInteresting;
   }
 
-  private File prepareDeviceOutDir(
+  private void prepareDeviceOutDir(
       Map<String, Object> message,
       Map<String, String> attributes,
       String deviceId,
@@ -635,16 +628,6 @@ public class Validator {
 
     File attributesFile = new File(deviceDir, String.format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
-
-    File errorFile = prepareErrorFile(schemaName, deviceDir);
-
-    return errorFile;
-  }
-
-  private File prepareErrorFile(String schemaName, File deviceDir) {
-    File errorFile = new File(deviceDir, String.format(ERROR_FILE_FORMAT, schemaName));
-    errorFile.delete();
-    return errorFile;
   }
 
   private File makeDeviceDir(String deviceId) {
@@ -695,7 +678,7 @@ public class Validator {
       ReportingDevice deviceInfo = expectedDevices.get(deviceId);
       if (deviceInfo == null) {
         summary.missing_devices.add(deviceId);
-      } else if (deviceInfo.hasMetadataDiff() || deviceInfo.hasErrors()) {
+      } else if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());

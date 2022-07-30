@@ -25,12 +25,12 @@ public class PlaybackTest extends TestBase {
     List<OutputBundle> outputMessages = client.getOutputMessages();
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
     ValidationEvent finalReport = asValidationEvent(lastBundle.message);
-    assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
+    assertEquals("correct devices", 2, finalReport.summary.correct_devices.size());
     assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
     assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
-    assertEquals("error devices", 2, finalReport.summary.error_devices.size());
+    assertEquals("error devices", 1, finalReport.summary.error_devices.size());
 
-    assertEquals("device summaries", 2, finalReport.devices.size());
+    assertEquals("device summaries", 1, finalReport.devices.size());
     ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
     String missingPointName = deviceReport.pointset.missing.get(0);
     assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, missingPointName);
@@ -63,8 +63,8 @@ public class PlaybackTest extends TestBase {
 
   private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {
     try {
-      return OBJECT_MAPPER.readValue(OBJECT_MAPPER.writeValueAsString(message),
-          ValidationEvent.class);
+      String stringValue = OBJECT_MAPPER.writeValueAsString(message);
+      return OBJECT_MAPPER.readValue(stringValue, ValidationEvent.class);
     } catch (Exception e) {
       throw new RuntimeException("While converting message", e);
     }

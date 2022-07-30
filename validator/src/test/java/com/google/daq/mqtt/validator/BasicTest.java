@@ -17,9 +17,9 @@ import udmi.schema.ValidationEvent;
  */
 public class BasicTest extends TestBase {
 
-  public static final String EVENT_SUBTYPE = "event";
-  public static final String STATE_SUBTYPE = "state";
-  public static final String POINTSET_SUBFOLDER = "pointset";
+  private static final String EVENT_SUBTYPE = "event";
+  private static final String STATE_SUBTYPE = "state";
+  private static final String POINTSET_SUBFOLDER = "pointset";
   private static final List<String> TEST_ARGS = ImmutableList.of(
       "-n",
       "-p", PROJECT_ID,
@@ -63,7 +63,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationEvent report = getValidationReport();
-    assertEquals("No error devices", 1, report.devices.size());
+    assertEquals("One error devices", 1, report.devices.size());
     ValidationEvent result = getValidationResult(DEVICE_ID, EVENT_SUBTYPE, POINTSET_SUBFOLDER);
     PointsetSummary pointset = result.pointset;
     assertEquals("Missing one point", 1, pointset.missing.size());

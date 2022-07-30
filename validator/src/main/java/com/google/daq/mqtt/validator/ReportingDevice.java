@@ -244,6 +244,16 @@ public class ReportingDevice {
   }
 
   /**
+   * Clear all errors for this device.
+   */
+  public void clearErrors() {
+    errors.clear();
+    if (metadataDiff.errors != null) {
+      metadataDiff.errors.clear();
+    }
+  }
+
+  /**
    * Encapsulation of metadata differences.
    */
   public static class MetadataDiff {
