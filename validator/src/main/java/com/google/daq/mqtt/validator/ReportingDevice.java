@@ -179,6 +179,12 @@ public class ReportingDevice {
     metadataDiff.errors.add(makeEntry(error));
   }
 
+  /**
+   * Make a status Entry corresponding to a single exception.
+   *
+   * @param error exception to summarize
+   * @return Entry summarizing the exception
+   */
   private Entry makeEntry(Exception error) {
     Entry entry = new Entry();
     entry.message = getExceptionMessage(error);
@@ -211,15 +217,30 @@ public class ReportingDevice {
     return errors.size() == 1 ? makeEntry(errors.get(0)) : makeCompoundEntry(errors);
   }
 
-  private Entry makeCompoundEntry(List<Exception> erx) {
+  /**
+   * Make a single status Entry that comprises multiple exceptions. This is intended to be a summary
+   * note only, indicating that additional detail for all the exceptions should be sought
+   * elsewhere.
+   *
+   * @param exceptions list of exceptions to summarize
+   * @return summarized entry covering all the inputs
+   */
+  private Entry makeCompoundEntry(List<Exception> exceptions) {
     Entry entry = new Entry();
     entry.category = "validation.error.multiple";
     entry.message = "Multiple validation errors";
     entry.detail = Joiner.on("; ")
-        .join(erx.stream().map(this::getExceptionMessage).collect(Collectors.toList()));
+        .join(exceptions.stream().map(this::getExceptionMessage).collect(Collectors.toList()));
     return entry;
   }
 
+  /**
+   * Get a string representing all the causes for a given exception. This is meant to be a summary
+   * of what went wrong, but will lose some information along the way.
+   *
+   * @param exception exception to summarize
+   * @return string summary of all the causes
+   */
   private String getExceptionCauses(Throwable exception) {
     List<String> messages = new ArrayList<>();
     String previousMessage = null;
