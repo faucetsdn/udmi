@@ -2,15 +2,13 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -72,7 +70,7 @@ public class ReportingDevice {
    *
    * @return {@code true} if this device has errors
    */
-  public boolean hasError() {
+  public boolean hasErrors() {
     return metadataDiff.errors != null && !metadataDiff.errors.isEmpty();
   }
 
@@ -178,7 +176,23 @@ public class ReportingDevice {
     if (metadataDiff.errors == null) {
       metadataDiff.errors = new ArrayList<>();
     }
-    metadataDiff.errors.add(error.toString());
+    metadataDiff.errors.add(makeEntry(error));
+  }
+
+  /**
+   * Make a status Entry corresponding to a single exception.
+   *
+   * @param error exception to summarize
+   * @return Entry summarizing the exception
+   */
+  private Entry makeEntry(Exception error) {
+    Entry entry = new Entry();
+    entry.message = getExceptionMessage(error);
+    String detail = getExceptionCauses(error);
+    entry.detail = entry.message.equals(detail) ? null : detail;
+    entry.category = "validation.error.simple";
+    entry.level = Level.ERROR.value();
+    return entry;
   }
 
   /**
@@ -200,27 +214,64 @@ public class ReportingDevice {
     if (errors.isEmpty()) {
       return null;
     }
+    return errors.size() == 1 ? makeEntry(errors.get(0)) : makeCompoundEntry(errors);
+  }
+
+  /**
+   * Make a single status Entry that comprises multiple exceptions. This is intended to be a summary
+   * note only, indicating that additional detail for all the exceptions should be sought
+   * elsewhere.
+   *
+   * @param exceptions list of exceptions to summarize
+   * @return summarized entry covering all the inputs
+   */
+  private Entry makeCompoundEntry(List<Exception> exceptions) {
     Entry entry = new Entry();
-    entry.level = Level.ERROR.value();
-    if (errors.size() > 1) {
-      entry.category = "validation.error.multiple";
-      entry.message = "Multiple validation errors";
-      entry.detail = Joiner.on("\n").join(metadataDiff.errors);
-    } else {
-      Exception exception = errors.get(0);
-      entry.category = "validation.error.simple";
-      entry.message = exception.getMessage();
-      entry.detail = stackTraceString(exception);
-    }
+    entry.category = "validation.error.multiple";
+    entry.message = "Multiple validation errors";
+    entry.detail = Joiner.on("; ")
+        .join(exceptions.stream().map(this::getExceptionMessage).collect(Collectors.toList()));
     return entry;
   }
 
-  private String stackTraceString(Exception e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
+  /**
+   * Get a string representing all the causes for a given exception. This is meant to be a summary
+   * of what went wrong, but will lose some information along the way.
+   *
+   * @param exception exception to summarize
+   * @return string summary of all the causes
+   */
+  private String getExceptionCauses(Throwable exception) {
+    List<String> messages = new ArrayList<>();
+    String previousMessage = null;
+    while (exception != null) {
+      String newMessage = getExceptionMessage(exception);
+      if (previousMessage == null || !previousMessage.endsWith(newMessage)) {
+        messages.add(newMessage);
+        previousMessage = newMessage;
+      }
+      exception = exception.getCause();
     }
-    return outputStream.toString();
+    return Joiner.on("; ").join(messages);
+  }
+
+  private String getExceptionMessage(Throwable exception) {
+    String message = exception.getMessage();
+    return message != null ? message : exception.toString();
+  }
+
+  public List<Entry> getErrors() {
+    return metadataDiff.errors == null ? null : metadataDiff.errors;
+  }
+
+  /**
+   * Clear all errors for this device.
+   */
+  public void clearErrors() {
+    errors.clear();
+    if (metadataDiff.errors != null) {
+      metadataDiff.errors.clear();
+    }
   }
 
   /**
@@ -228,7 +279,7 @@ public class ReportingDevice {
    */
   public static class MetadataDiff {
 
-    public List<String> errors;
+    public List<Entry> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;
   }
