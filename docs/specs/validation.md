@@ -11,15 +11,14 @@ seen, or never seen, etc...). This capability is an extension of the basic
 
 ## Message Types
 
-All validation messages are defined by the [validation event](../../schema/event_validation.json)
+The validation agent runs autonomously, consumes messages, and injects _result_ or _report_ messages as needed.
+All validation messages are defined by the
+[validation event schema](../../schema/event_validation.json)([_🧬View_](../../gencode/docs/event_validation.html)).
+
 schema, and are instantiated in two flavors:
 
 * _result_: Validation results for an individual device [example](../../tests/event_validation.tests/simple_ok.json).
 * _report_: Validation report for an entire site [example](../../tests/event_validation.tests/report.json).
-
-## System Flow
-
-The validation agent runs autonomously, consumes messages, and injects _result_ or _report_ messages as needed.
 
 ## Message Channel
 
@@ -48,11 +47,10 @@ Sending validation updates to projects/bos-udmi-dev/topics/udmi_reflect
 ## Verifying Output
 
 If everything worked as intended, there should be periodic validation events that show up on the `udmi_target`
-topic. 
+topic.
 
-```
-attribute.subFolder = 'validation'
-attribute.subType = 'event'
-attribute.deviceId = '__validator' _or device ID of device being validated_
-```
-
+<pre>
+  attribute.subFolder = 'validation'
+  attribute.subType = 'event'
+  attribute.deviceId = '_validator' or <i>deviceId of validated device</i>
+<pre>
