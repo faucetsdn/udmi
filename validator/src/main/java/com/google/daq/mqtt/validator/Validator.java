@@ -348,9 +348,9 @@ public class Validator {
 
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
-    client = new PubSubClient(projectId, registryId, instName);
-    if (cloudIotManager.getUpdateTopic() != null) {
-      // TODO: Figure out if the sink topic can/should be the same as the instName topic.
+    String updateTopic = cloudIotManager.getUpdateTopic();
+    client = new PubSubClient(projectId, registryId, instName, updateTopic);
+    if (updateTopic != null) {
       dataSinks.add(client);
     }
   }
