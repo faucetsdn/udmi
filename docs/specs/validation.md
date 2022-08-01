@@ -53,4 +53,4 @@ topic.
   attribute.subFolder = 'validation'
   attribute.subType = 'event'
   attribute.deviceId = '_validator' or <i>deviceId of validated device</i>
-<pre>
+</pre>
