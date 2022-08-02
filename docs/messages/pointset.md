@@ -12,7 +12,7 @@ data ontology for the device (stipulated and verified outside of UDMI, e.g. [Dig
 
 Pointset is represented in four locations
 - [Metadata](#metadata)
-- [Telemetry](#telemetry)
+- [Event](#event)
 - [State](#state)
 - [Config](#config)
 
@@ -32,13 +32,13 @@ The general structure of a `pointset` block exists inside of a complete metadata
     * _{`point_name`}_: Point name.
       * `units`: Expected units designation for this point.
 
-## Telemetry
+## Event
 
 - **Schema Definition:** [event_pointset.json](../../schema/event_pointset.json)
  ([_🧬View_](../../gencode/docs/event_pointset.html#points))
 - [Working `event_pointset` Example](../../tests/event_pointset.tests/example.json)
 
-A basic `pointset` telemetry message contains
+A basic `pointset` event message contains
 the point data sent from a device. The message contains just the top-level `points` designator,
 while the `pointset` typing is applied as part of the [message envelope](envelope.md).
 
@@ -47,8 +47,8 @@ while the `pointset` typing is applied as part of the [message envelope](envelop
     * `present_value`: The specific point data reading.
 * `partial_update`: Optional indicator if this is an incremental update (not all points included).
 
-Telemetry update messages should be sent "as needed" or according to specific requirements as
-stipulated in the `config` block. The basic `pointset` telemetry message for a device should
+Event telemetry messages should be sent "as needed" or according to specific requirements as
+stipulated in the `config` block. The basic `pointset` event message for a device should
 contain the values for all representative points from that device, as determined by the associated
 `config` block. If no points are specified in the `config` block, the device programming determines
 the representative points.
@@ -98,13 +98,13 @@ block with the following structure:e
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
       * (`set_value`): Optional setting to control the specified device point. See [writeback documentation](../specs/sequences/writeback.md).
-      * (`cov_threshold`): Optional threshold for triggering a COV telemetry update.
+      * (`cov_threshold`): Optional threshold for triggering a COV event update.
 
 The points defined in the `config.pointset.points` dictionary is the authoritative source
-indicating the representative points for the device (in both `telemetry` and `state` messages). If
+indicating the representative points for the device (in both `event` and `state` messages). If
 the device has additional points that are _not_ stipulated in the config they should be silently
 dropped. If the device does not know about a stipulated point then it should report it as a
-point with an _error_ level `status` entry in its `state` message, and exclude it from the telemetry message.
+point with an _error_ level `status` entry in its `state` message, and exclude it from the event message.
 If a `config` block is not present, or does not contain a `pointset.points` object,
 then the device should determine on its own which points to report.
 
