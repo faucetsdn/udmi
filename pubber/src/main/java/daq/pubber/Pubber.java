@@ -756,7 +756,7 @@ public class Pubber {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.points = enumeratePoints(configuration.deviceId);
+    discoveryEvent.uniqs = enumeratePoints(configuration.deviceId);
     publishDeviceMessage(discoveryEvent);
   }
 
@@ -878,7 +878,7 @@ public class Pubber {
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).id = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
-            discoveryEvent.points = enumeratePoints(deviceId);
+            discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
           sentEvents.incrementAndGet();
