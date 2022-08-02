@@ -6,8 +6,6 @@ class BlobBlobsetState:
   """Generated schema class"""
 
   def __init__(self):
-    self.stage = None
-    self.result = None
     self.status = None
 
   @staticmethod
@@ -15,8 +13,6 @@ class BlobBlobsetState:
     if not source:
       return None
     result = BlobBlobsetState()
-    result.stage = source.get('stage')
-    result.result = source.get('result')
     result.status = Entry.from_dict(source.get('status'))
     return result
 
@@ -38,10 +34,6 @@ class BlobBlobsetState:
 
   def to_dict(self):
     result = {}
-    if self.stage:
-      result['stage'] = self.stage # 5
-    if self.result:
-      result['result'] = self.result # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
     return result

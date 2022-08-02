@@ -56,11 +56,12 @@ public class PubSubClient implements MessagePublisher {
   /**
    * Create a new PubSub client.
    *
-   * @param projectId  target project id
-   * @param registryId target registry id
-   * @param name       target subscription name
+   * @param projectId   target project id
+   * @param registryId  target registry id
+   * @param name        target subscription name
+   * @param updateTopic output PubSub topic for updates (else null)
    */
-  public PubSubClient(String projectId, String registryId, String name) {
+  public PubSubClient(String projectId, String registryId, String name, String updateTopic) {
     try {
       this.projectId = projectId;
       this.registryId = registryId;
@@ -70,8 +71,13 @@ public class PubSubClient implements MessagePublisher {
       subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
       subscriber.startAsync().awaitRunning();
 
-      ProjectTopicName topicName = ProjectTopicName.of(projectId, UDMI_REFLECT);
-      publisher = Publisher.newBuilder(topicName).build();
+      if (updateTopic != null) {
+        ProjectTopicName topicName = ProjectTopicName.of(projectId, updateTopic);
+        System.err.println("Sending validation updates to " + topicName);
+        publisher = Publisher.newBuilder(topicName).build();
+      } else {
+        publisher = null;
+      }
 
       active.set(true);
     } catch (Exception e) {

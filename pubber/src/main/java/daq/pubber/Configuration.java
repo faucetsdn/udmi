@@ -5,11 +5,7 @@ package daq.pubber;
  * General bucket of pubber configuration information.
  */
 public class Configuration {
-  public String bridgeHostname = "mqtt.googleapis.com";
-  public String bridgePort = "443";
-  public String projectId;
-  public String cloudRegion;
-  public String registryId;
+  public EndpointConfiguration endpoint = new EndpointConfiguration();
   public String gatewayId;
   public String deviceId;
   public String sitePath;

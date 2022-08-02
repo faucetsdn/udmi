@@ -43,9 +43,11 @@ else
     
     cat <<EOF > /tmp/pubber_config.json
 {
-    "projectId": "$project_id",
+    "endpoint": {
+      "projectId": "$project_id",
+      "cloudRegion": "$cloud_region"
+    },
     "sitePath": "$site_path",
-    "cloudRegion": "$cloud_region",
     "deviceId": "$device_id",
     "serialNo": "$serial_no",
     "options": $options_json
