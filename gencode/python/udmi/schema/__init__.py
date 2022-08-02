@@ -13,7 +13,6 @@ from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .envelope import Envelope
 from .event import Event
-from .event_audit import AuditEvent
 from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
@@ -21,6 +20,8 @@ from .event_mapping import DiscoveryEvent
 from .event_pointset import PointsetEvent
 from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent
+from .event_validation import ValidationEvent
+from .event_validation_device import DeviceValidationEvent
 from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel

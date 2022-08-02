@@ -15,6 +15,7 @@ public class ConfigurationOptions {
   public String extraPoint;
   public String missingPoint;
   public String extraField;
+  public String redirectRegistry;
 
   /**
    * Returns a string of enabled options and values.
