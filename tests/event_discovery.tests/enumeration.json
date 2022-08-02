@@ -15,7 +15,8 @@
       "description": "Basic value reading"
     },
     // Multi-state enumerated value
-    "zone_mode_msv_1": {
+    "978A87C5": {
+      "name": "zone_mode_msv_1",
       "possible_values": [ "Deadband Mode", "Heating Mode", "Cooling Mode" ],
       "type": "multistate"  // enumerated values defining the multistate
     },

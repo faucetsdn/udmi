@@ -48,7 +48,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
       "patternProperties": {
-        "^[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$": {
+        "^[-_.:/a-zA-Z0-9]+$": {
           "$ref": "file:event_discovery_point.json#"
         }
       }
