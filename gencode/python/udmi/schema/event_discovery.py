@@ -62,7 +62,7 @@ class DiscoveryEvent:
     self.scan_family = None
     self.scan_id = None
     self.families = None
-    self.points = None
+    self.uniqs = None
     self.system = None
 
   @staticmethod
@@ -77,7 +77,7 @@ class DiscoveryEvent:
     result.scan_family = source.get('scan_family')
     result.scan_id = source.get('scan_id')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
-    result.points = PointEnumerationEvent.map_from(source.get('points'))
+    result.uniqs = PointEnumerationEvent.map_from(source.get('uniqs'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
     return result
 
@@ -113,8 +113,8 @@ class DiscoveryEvent:
       result['scan_id'] = self.scan_id # 5
     if self.families:
       result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
-    if self.points:
-      result['points'] = PointEnumerationEvent.expand_dict(self.points) # 2
+    if self.uniqs:
+      result['uniqs'] = PointEnumerationEvent.expand_dict(self.uniqs) # 2
     if self.system:
       result['system'] = self.system.to_dict() # 4
     return result
