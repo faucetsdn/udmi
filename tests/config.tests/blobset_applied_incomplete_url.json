@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "blobset": {
+    "blobs": {
+      "_firmware_update": {
+        "phase": "applied",
+        "url": "https://manuf.com/path/file.zip"
+      }
+    }
+  },
+  "timestamp": "2022-07-13T12:00:00.000Z"
+}

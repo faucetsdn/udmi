@@ -4,11 +4,27 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "stage": {
+    "phase": {
       "type": "string"
     },
-    "target": {
+    "content_type": {
       "type": "string"
+    },
+    "base64": {
+      "type": "string",
+      "pattern": "^[0-9A-Za-z=+/]{4,}$"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
-  }
+  },
+  "oneOf": [
+    { "required": ["content_type", "base64"] },
+    { "required": ["url", "sha256"] }
+  ]
 }

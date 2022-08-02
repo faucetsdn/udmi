@@ -164,7 +164,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
-    configuration.projectId = projectId;
+    configuration.endpoint.projectId = projectId;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -351,8 +351,8 @@ public class Pubber {
   }
 
   private void processCloudConfig(CloudIotConfig cloudIotConfig) {
-    configuration.registryId = cloudIotConfig.registry_id;
-    configuration.cloudRegion = cloudIotConfig.cloud_region;
+    configuration.endpoint.registryId = cloudIotConfig.registry_id;
+    configuration.endpoint.cloudRegion = cloudIotConfig.cloud_region;
   }
 
   private void initializeDevice() {
@@ -487,6 +487,8 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
+      // Some things can't be done from a on-message callback, so do them here instead.
+      maybeRedirectEndpoint();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
@@ -556,6 +558,16 @@ public class Pubber {
       throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
     }
 
+    initializeMqtt();
+  }
+
+  private void disconnectMqtt() {
+    Preconditions.checkState(mqttPublisher != null, "mqttPublisher not defined");
+    mqttPublisher.close();
+    mqttPublisher = null;
+  }
+
+  private void initializeMqtt() {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (configuration.sitePath != null && configuration.keyFile != null) {
       String keyDevice =
@@ -699,6 +711,22 @@ public class Pubber {
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
     maybeRestartExecutor(actualInterval);
+  }
+
+  private void maybeRedirectEndpoint() {
+    String redirectRegistry = configuration.options.redirectRegistry;
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.endpoint.registryId)
+        || configLatch.getCount() > 0) {
+      return;
+    }
+    try {
+      disconnectMqtt();
+      configuration.endpoint.registryId = redirectRegistry;
+      initializeMqtt();
+      startConnection(onDone);
+    } catch (Exception e) {
+      throw new RuntimeException("While redirecting connection endpoint", e);
+    }
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
