@@ -51,11 +51,11 @@ public class PointsetConfig {
     @JsonPropertyDescription("The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public java.lang.String state_etag;
     /**
-     * An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. [Writeback documentation](../docs/specs/sequences/writeback.md)
+     * An expiry for the the device to revert to baseline (no set value). [Writeback documentation](../docs/specs/sequences/writeback.md)
      * 
      */
     @JsonProperty("set_value_expiry")
-    @JsonPropertyDescription("An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. [Writeback documentation](../docs/specs/sequences/writeback.md)")
+    @JsonPropertyDescription("An expiry for the the device to revert to baseline (no set value). [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public Date set_value_expiry;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.

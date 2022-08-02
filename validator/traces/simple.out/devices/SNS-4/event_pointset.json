@@ -1,0 +1,15 @@
+{
+  "points" : {
+    "split_threshold" : {
+      "present_value" : true
+    },
+    "triangulating_axis" : {
+      "present_value" : 11
+    },
+    "rocket_count" : {
+      "present_value" : "yes"
+    }
+  },
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.3.14"
+}

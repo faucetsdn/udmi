@@ -21,7 +21,7 @@
       "maxLength": 32
     },
     "set_value_expiry": {
-      "description": "An expiry for the the device reverts to its operational state, and sends a state update to notify the cloud of the state change. [Writeback documentation](../docs/specs/sequences/writeback.md)",
+      "description": "An expiry for the the device to revert to baseline (no set value). [Writeback documentation](../docs/specs/sequences/writeback.md)",
       "type": "string",
       "format": "date-time"
     },

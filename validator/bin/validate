@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-if [ $# != 5 ]; then
-    echo Usage: $0 [project] [schema] [target] [subscription] [sitepath]
+if [[ $# < 5 ]]; then
+    echo Usage: $0 project schema target subscription sitepath [devices...]
     false
 fi
 
@@ -11,9 +11,15 @@ target=$3
 subscription=$4
 sitepath=$(realpath $5)
 shift 5
+devices="$*"
 
 ROOT=$(dirname $0)/../..
 cd $ROOT
+
+if [[ "$schema" != schema ]]; then
+    echo Currently only default schema supported.
+    false
+fi
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
@@ -30,10 +36,27 @@ rm -rf $sitepath/out/
 
 echo Executing validator $schema $target...
 
-echo java -jar $jarfile $project $schema $target $subscription $sitepath
+if [[ $target == reflect ]]; then
+    if [[ $subscription != -- ]]; then
+        echo Unsupported subsription $subscription with reflect
+        false
+    elif [[ -n $devices ]]; then
+        srcargs="-- $devices"
+    fi
+elif [[ $target == pubsub ]]; then
+    srcargs="-t $subscription"
+elif [[ $target == trace ]]; then
+    srcargs="-r validator/traces/$subscription -- $devices"
+else
+    echo Unsupported target $target
+    false
+fi
+
+args="-p $project -s $sitepath $srcargs"
+echo java -jar $jarfile $args
 
 error=0
-java -jar $jarfile $project $schema $target $subscription $sitepath || error=$?
+java -jar $jarfile $args || error=$?
 
 echo Validation complete, exit $error
 exit $error

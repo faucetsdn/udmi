@@ -1,0 +1,22 @@
+{
+  "title": "Device Validation Event",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Validation summary information for an individual device.",
+  "properties": {
+    "last_seen": {
+      "description": "Last time any message from this device was received",
+      "format": "date-time",
+      "type": "string"
+    },
+    "oldest_mark": {
+      "description": "Oldest recorded mark for this device",
+      "format": "date-time",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    }
+  }
+}

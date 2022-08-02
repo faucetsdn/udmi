@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.bos.iot.core.proxy.IotCoreClient;
+import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
@@ -90,7 +90,7 @@ public abstract class SequenceValidator {
   private static final int logLevel;
   private static final File deviceOutputDir;
   private static final File resultSummary;
-  private static final IotCoreClient client;
+  private static final IotReflectorClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
 
@@ -149,7 +149,7 @@ public abstract class SequenceValidator {
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = new IotCoreClient(projectId, cloudIotConfig, key_file);
+    client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
     setReflectorState();
   }
 
