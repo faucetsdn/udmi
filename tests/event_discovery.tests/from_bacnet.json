@@ -1,6 +1,6 @@
 {
   "generation": "2022-06-21T17:19:49.191023+00:00",
-  "points": {
+  "uniqs": {
     "org_building_5005_analogInput_1094": {
       "ref": "org/building/5005/analogInput/1094",
       "units": "inchesOfWater",
