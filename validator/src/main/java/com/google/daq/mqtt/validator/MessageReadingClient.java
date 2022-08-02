@@ -19,6 +19,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Client to read messages from a directory of captured messages.
+ */
 public class MessageReadingClient implements MessagePublisher {
 
   private static final String PLAYBACK_PROJECT_ID = "playback-project";
@@ -31,7 +34,6 @@ public class MessageReadingClient implements MessagePublisher {
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
   private final File messageDir;
-  private final String deviceNumId = String.format("0000%d", hashCode());
   private final String registryId;
   int messageCount;
 
@@ -40,8 +42,14 @@ public class MessageReadingClient implements MessagePublisher {
   Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
   Map<String, String> deviceNextTimestamp = new HashMap<>();
-  private List<OutputBundle> outputMessages = new ArrayList<>();
+  private final List<OutputBundle> outputMessages = new ArrayList<>();
 
+  /**
+   * Create a new client.
+   *
+   * @param registryId registry to use for attribute creation
+   * @param dirStr     directory containing message trace
+   */
   public MessageReadingClient(String registryId, String dirStr) {
     this.registryId = registryId;
     messageDir = new File(dirStr);
@@ -82,7 +90,7 @@ public class MessageReadingClient implements MessagePublisher {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("deviceId", deviceId);
-      attributes.put("deviceNumId", deviceNumId);
+      attributes.put("deviceNumId", getNumId(deviceId));
       attributes.put("projectId", PLAYBACK_PROJECT_ID);
       attributes.put("deviceRegistryId", registryId);
 
@@ -99,6 +107,10 @@ public class MessageReadingClient implements MessagePublisher {
     }
   }
 
+  private String getNumId(String deviceId) {
+    return String.format("%014d", deviceId.hashCode());
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public void publish(String deviceId, String topic, String data) {
@@ -113,11 +125,8 @@ public class MessageReadingClient implements MessagePublisher {
     }
   }
 
-  static class OutputBundle {
-
-    public String deviceId;
-    public String topic;
-    public TreeMap<String, Object> message;
+  List<OutputBundle> getOutputMessages() {
+    return outputMessages;
   }
 
   @Override
@@ -161,5 +170,12 @@ public class MessageReadingClient implements MessagePublisher {
       }
     }
     return nextDevice;
+  }
+
+  static class OutputBundle {
+
+    public String deviceId;
+    public String topic;
+    public TreeMap<String, Object> message;
   }
 }

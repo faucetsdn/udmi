@@ -184,7 +184,8 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     if (attributes.subFolder == QUERY_FOLDER) {
       return udmi_query_event(attributes, msgObject);
     }
-    target = 'udmi_' + attributes.subType;
+    const targetFunction = attributes.subType == 'event' ? 'target' : attributes.subType;
+    target = 'udmi_' + targetFunction;
     return publishPubsubMessage(target, attributes, msgObject);
   });
 });

@@ -1,0 +1,14 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.3.14",
+  "sub_folder" : "pointset",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Metadata validation failed: Extra points: rocket_count",
+    "category" : "validation.error.simple",
+    "level" : 500
+  },
+  "pointset" : {
+    "extra" : [ "rocket_count" ]
+  }
+}

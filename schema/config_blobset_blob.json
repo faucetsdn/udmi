@@ -11,13 +11,20 @@
       "type": "string"
     },
     "base64": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9A-Za-z=+/]{4,}$"
     },
     "url": {
-      "type": "string"
+      "type": "string",
+      "format": "uri"
     },
     "sha256": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
-  }
+  },
+  "oneOf": [
+    { "required": ["content_type", "base64"] },
+    { "required": ["url", "sha256"] }
+  ]
 }
