@@ -21,6 +21,10 @@ fi
 site_path=sites/udmi_site_model
 device_id=AHU-22 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 
+site_config=$site_path/cloud_iot_config.json
+cloud_region=$(jq -r .cloud_region $site_config)
+registry_id=$(jq -r .registry_id $site_config)
+
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
@@ -32,6 +36,16 @@ if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
     kill $pids
 fi
+
+device_config=/tmp/${device_id}_config.json
+cp sites/udmi_site_model/devices/${device_id}/out/generated_config.json $device_config
+now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
+echo Setting config timestamp $now_date
+jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
+
+echo Resetting device $device_id config...
+gcloud iot devices configs update --config-file=$device_config \
+       --device=$device_id --region=$cloud_region --registry=$registry_id --project=$project_id
 
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
