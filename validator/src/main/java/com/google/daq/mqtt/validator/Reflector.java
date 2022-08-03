@@ -33,7 +33,6 @@ public class Reflector {
   }
 
   private void reflect() {
-    client.publish();
   }
 
   private void initialize() {
