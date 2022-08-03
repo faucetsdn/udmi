@@ -126,7 +126,6 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
-  private final AtomicInteger logMessageCount = new AtomicInteger(0);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
@@ -308,7 +307,7 @@ public class Pubber {
       } else {
         throw new RuntimeException("missingPoint not in pointset");
       }
-    } 
+    }
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
@@ -756,13 +755,17 @@ public class Pubber {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.points = enumeratePoints(configuration.deviceId);
+    discoveryEvent.uniqs = enumeratePoints(configuration.deviceId);
     publishDeviceMessage(discoveryEvent);
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
     return allMetadata.get(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(Map.Entry::getKey, this::getPointEnumerationEvent));
+        Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
+  }
+
+  private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
+    return String.format("%08x", entry.getKey().hashCode());
   }
 
   private PointEnumerationEvent getPointEnumerationEvent(
@@ -772,6 +775,7 @@ public class Pubber {
     pointEnumerationEvent.writable = model.writable;
     pointEnumerationEvent.units = model.units;
     pointEnumerationEvent.ref = model.ref;
+    pointEnumerationEvent.name = entry.getKey();
     return pointEnumerationEvent;
   }
 
@@ -878,7 +882,7 @@ public class Pubber {
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).id = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
-            discoveryEvent.points = enumeratePoints(deviceId);
+            discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
           sentEvents.incrementAndGet();
