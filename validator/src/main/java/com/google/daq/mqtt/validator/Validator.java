@@ -1,13 +1,13 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
-import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.Common.JSON_SUFFIX;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.OBJECT_MAPPER;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_ATTRIBUTE;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;

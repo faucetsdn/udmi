@@ -8,12 +8,14 @@ import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.daq.mqtt.util.FileDataSink;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * General utility for working with UDMI Reflector messages.
+ */
 public class Reflector {
 
   private String projectId;
@@ -22,10 +24,20 @@ public class Reflector {
   private File baseDir;
   private IotReflectorClient client;
 
+  /**
+   * Create an instance of the Reflector class.
+   *
+   * @param argsList command-line arguments
+   */
   public Reflector(List<String> argsList) {
     parseArgs(argsList);
   }
 
+  /**
+   * Let's go.
+   *
+   * @param args command-line arguments
+   */
   public static void main(String[] args) {
     Reflector reflector = new Reflector(Arrays.asList(args));
     reflector.initialize();
@@ -53,6 +65,8 @@ public class Reflector {
           case "-s":
             setSiteDir(removeNextArg(listCopy));
             break;
+          default:
+            throw new IllegalArgumentException("Unknown command line option " + option);
         }
       } catch (Exception e) {
         throw new RuntimeException("While processing option " + option, e);

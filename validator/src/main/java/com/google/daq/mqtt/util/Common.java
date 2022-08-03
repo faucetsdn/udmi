@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
 
+/**
+ * Collection of common constants and minor utilities.
+ */
 public abstract class Common {
 
   public static final String STATE_QUERY_TOPIC = "query/state";
@@ -25,6 +28,12 @@ public abstract class Common {
   public static final String JSON_SUFFIX = ".json";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
 
+  /**
+   * Remove the next item from the list in an exception-safe way.
+   *
+   * @param argList list of arguments
+   * @return removed argument
+   */
   public static String removeNextArg(List<String> argList) {
     if (argList.isEmpty()) {
       throw new MissingFormatArgumentException("Missing argument");
