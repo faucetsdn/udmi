@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidatorConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -454,7 +455,7 @@ public abstract class SequenceValidator {
   }
 
   protected void queryState() {
-    client.publish(deviceId, Validator.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    client.publish(deviceId, Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   /**
