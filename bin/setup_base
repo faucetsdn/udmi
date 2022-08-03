@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt-get install -y hxtools
+sudo apt-get install -y hxtools moreutils
 
 python3 -m venv venv
 
