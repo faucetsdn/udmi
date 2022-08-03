@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -73,6 +74,8 @@ public class Pubber {
 
   public static final int SCAN_DURATION_SEC = 10;
   public static final String DISCOVERY_ID = "RANDOM_ID";
+  public static final String IOT_ENDPOINT_BLOB_NAME = "_iot_config";
+  public static final String BLOB_COMMIT_PHASE = "commit";
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -136,6 +139,8 @@ public class Pubber {
   private Consumer<String> onDone;
   private boolean publishingLog;
   private Map<String, Metadata> allMetadata;
+  private String appliedEndpoint;
+  private EndpointConfiguration extractedEndpoint;
 
   /**
    * Start an instance from a configuration file.
@@ -486,7 +491,7 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
-      // Some things can't be done from a on-message callback, so do them here instead.
+      // Some things can't be done from an on-message callback, so do them here instead.
       maybeRedirectEndpoint();
     } catch (Exception e) {
       error("Fatal error during execution", e);
@@ -576,6 +581,7 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
+    appliedEndpoint = toJson(configuration.endpoint);
     mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -587,6 +593,14 @@ public class Pubber {
         this::configHandler, Config.class);
   }
 
+  private String toJson(Object configuration) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(configuration);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting object to string", e);
+    }
+  }
+
   private void ensureKeyBytes() {
     if (configuration.keyBytes != null) {
       return;
@@ -594,6 +608,7 @@ public class Pubber {
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
     info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
+    configuration.keyFile = null;
   }
 
   private String getDeviceKeyPrefix() {
@@ -705,6 +720,7 @@ public class Pubber {
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
+      extractedEndpoint = extractEndpointBlobConfig();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
@@ -712,19 +728,52 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
+  private EndpointConfiguration extractEndpointBlobConfig() {
+    try {
+      String iot_config = extractConfigBlob(IOT_ENDPOINT_BLOB_NAME);
+      if (iot_config == null) {
+        return null;
+      }
+      return OBJECT_MAPPER.readValue(iot_config, EndpointConfiguration.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting endpoint blob config", e);
+    }
+  }
+
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    if (redirectRegistry == null || redirectRegistry.equals(configuration.endpoint.registryId)
-        || configLatch.getCount() > 0) {
+    if (extractedEndpoint != null && !toJson(extractedEndpoint).equals(appliedEndpoint)) {
+      info("New config blob endpoint detected");
+      configuration.endpoint = extractedEndpoint;
+    } else if (redirectRegistry != null && configLatch.getCount() <= 0 &&
+        !redirectRegistry.equals(configuration.endpoint.registryId)) {
+      info("Mismatched redirectRegistry detected");
+      configuration.endpoint.registryId = redirectRegistry;
+    } else {
       return;
     }
     try {
       disconnectMqtt();
-      configuration.endpoint.registryId = redirectRegistry;
       initializeMqtt();
       startConnection(onDone);
     } catch (Exception e) {
       throw new RuntimeException("While redirecting connection endpoint", e);
+    }
+  }
+
+  private String extractConfigBlob(String blobName) {
+    try {
+      if (deviceConfig == null || deviceConfig.blobset == null || deviceConfig.blobset.blobs == null) {
+        return null;
+      }
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
+      if (blobBlobsetConfig != null && BLOB_COMMIT_PHASE.equals(blobBlobsetConfig.phase)
+          && blobBlobsetConfig.base64 != null) {
+        return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
+      }
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting config blob " + blobName, e);
     }
   }
 
