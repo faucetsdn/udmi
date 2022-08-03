@@ -730,11 +730,11 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iot_config = extractConfigBlob(IOT_ENDPOINT_BLOB_NAME);
-      if (iot_config == null) {
+      String iotConfig = extractConfigBlob(IOT_ENDPOINT_BLOB_NAME);
+      if (iotConfig == null) {
         return null;
       }
-      return OBJECT_MAPPER.readValue(iot_config, EndpointConfiguration.class);
+      return OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
@@ -745,8 +745,8 @@ public class Pubber {
     if (extractedEndpoint != null && !toJson(extractedEndpoint).equals(appliedEndpoint)) {
       info("New config blob endpoint detected");
       configuration.endpoint = extractedEndpoint;
-    } else if (redirectRegistry != null && configLatch.getCount() <= 0 &&
-        !redirectRegistry.equals(configuration.endpoint.registryId)) {
+    } else if (redirectRegistry != null && configLatch.getCount() <= 0
+        && !redirectRegistry.equals(configuration.endpoint.registryId)) {
       info("Mismatched redirectRegistry detected");
       configuration.endpoint.registryId = redirectRegistry;
     } else {
@@ -763,7 +763,8 @@ public class Pubber {
 
   private String extractConfigBlob(String blobName) {
     try {
-      if (deviceConfig == null || deviceConfig.blobset == null || deviceConfig.blobset.blobs == null) {
+      if (deviceConfig == null || deviceConfig.blobset == null
+          || deviceConfig.blobset.blobs == null) {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
