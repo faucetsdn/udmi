@@ -9,6 +9,7 @@ import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,11 +19,13 @@ import java.util.List;
  */
 public class Reflector {
 
+  private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;
   private CloudIotConfig cloudIotConfig;
   private File baseDir;
   private IotReflectorClient client;
+  private String deviceId;
 
   /**
    * Create an instance of the Reflector class.
@@ -30,7 +33,7 @@ public class Reflector {
    * @param argsList command-line arguments
    */
   public Reflector(List<String> argsList) {
-    parseArgs(argsList);
+    reflectCommands = parseArgs(argsList);
   }
 
   /**
@@ -45,6 +48,33 @@ public class Reflector {
   }
 
   private void reflect() {
+    System.err.printf("Reflecting %d directives...%n", reflectCommands.size());
+    while (!reflectCommands.isEmpty()) {
+      reflect(reflectCommands.remove(0));
+    }
+  }
+
+  private void reflect(String directive) {
+    System.err.printf("Reflecting %s%n", directive);
+    String[] parts = directive.split(":", 2);
+    if (parts.length != 2) {
+      throw new RuntimeException("Expected topic:file format reflect directive " + directive);
+    }
+    File file = new File(parts[1]);
+    reflect(parts[0], file);
+  }
+
+  private void reflect(String topic, File dataFile) {
+    try (FileInputStream fis = new FileInputStream(dataFile)) {
+      String data = new String(fis.readAllBytes());
+      reflect(topic, data);
+    } catch (Exception e) {
+      throw new RuntimeException("While processing input file " + dataFile.getAbsolutePath());
+    }
+  }
+
+  private void reflect(String topic, String data) {
+    client.publish(deviceId, topic, data);
   }
 
   private void initialize() {
@@ -65,14 +95,16 @@ public class Reflector {
           case "-s":
             setSiteDir(removeNextArg(listCopy));
             break;
+          case "-d":
+            deviceId = removeNextArg(listCopy);
           default:
-            throw new IllegalArgumentException("Unknown command line option " + option);
+            return listCopy; // default case is the remaining list of reflection directives
         }
       } catch (Exception e) {
         throw new RuntimeException("While processing option " + option, e);
       }
     }
-    return listCopy;
+    throw new IllegalArgumentException("No reflect directives specified!");
   }
 
   /**

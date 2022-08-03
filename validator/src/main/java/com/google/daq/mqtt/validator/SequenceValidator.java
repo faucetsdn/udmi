@@ -149,6 +149,7 @@ public abstract class SequenceValidator {
     resultSummary.delete();
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
+    System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
     client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
     setReflectorState();
