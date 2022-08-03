@@ -15,5 +15,20 @@ export const resolvers = {
     points: (_, { deviceId }, { dataSources: { deviceDS } }) => {
       return deviceDS.getPoints(deviceId);
     },
+    deviceNames: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getDeviceNames(searchOptions);
+    },
+    deviceMakes: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getDeviceMakes(searchOptions);
+    },
+    deviceModels: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getDeviceModels(searchOptions);
+    },
+    sites: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getSites(searchOptions);
+    },
+    sections: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getSections(searchOptions);
+    },
   },
 };

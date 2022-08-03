@@ -24,7 +24,7 @@ describe('DeviceService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should return the device', (done) => {
+  it('should return the device', () => {
     const mockDeviceResponse: DeviceQueryResponse = {
       device: {
         id: '123',
@@ -44,7 +44,6 @@ describe('DeviceService', () => {
     // Make some assertion about the result for once it's fulfilled.
     service.getDevice('123').subscribe(({ data }) => {
       expect(data).toEqual(mockDeviceResponse);
-      done();
     });
 
     // The following `expectOne()` will match the operation's document.

@@ -1,5 +1,3 @@
-const { v4: uuid } = require('uuid');
-
 const deviceTemplates = [
     { make: 'Cisco', models: ['Mediator'], name: 'cis', firmwareVersion: ['v1.2'] },
     { make: 'BitBox USA', models: ['BitBox'], name: 'bb-usa', firmwareVersion: ['v2.3'] },
@@ -31,12 +29,12 @@ const pointStates = ['Applied', 'Updating', 'Overriden', 'Invalid', 'Failure'];
 
 
 let n = 1;
-while (n <= 10000) {
+while (n <= 500) {
     const deviceTemplate = getRandom(deviceTemplates);
     const deviceModel = getRandom(deviceTemplate.models);
     const deviceSite = getRandom(sites);
 
-    const id = uuid();
+    const id = n;
     const name = `${deviceTemplate.name}-${n}`;
     const make = `${deviceTemplate.make}`;
     const model = deviceModel;

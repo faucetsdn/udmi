@@ -1,35 +1,42 @@
 # UDMI Event Handler
 
-The project uses Google Cloud Functions Infrastructure to allow faster iteration of a GCP Node Cloud function.
+This project is a GCP Cloud function written in Typescript that uses Google Cloud Functions Infrastructure to allow faster development.
 
+## MongoDB
 ---
 
-## Setup the Poject
+In order to properly run the cloud function, it requires MongoDB to be up and running.  Following the instruction linked below.
 
-1.  Run the build script
+[Installing MongoDB](https://www.mongodb.com/docs/manual/administration/install-community/)
 
-```
-npm install
-```  
+You will need to configure the connection parameters in your runDev.sh file if they are different from a standard install.
 
+## Build and Run
 ---
 
-## Run the Simple Cloud Function Server
+### Install dependencies and transpile code into JS.
 
-1.  Run the project, which will bind to port 8080;
+Installs all the npm dependencies and transpiles code into JS
 
 ```
-npm run watch
+./buildDev.sh
 ```
 
----
+### Run the Simple Cloud Function Server
+
+Run the project, which will bind to port 8080;
+
+```
+./runDev.sh
+```
 
 ## Submit a Pub Sub style Event
+---
 
-1. Send an event to the local server using curl
+Send an event to the local server using curl.  Example events can be found in the sample_messages folder.
 
 ```
-curl -d "@devicePointSetStatesEvent.json" \
+curl -d "@sample.json" \
   -X POST \
   -H "Ce-Type: true" \
   -H "Ce-Specversion: true" \
@@ -39,14 +46,26 @@ curl -d "@devicePointSetStatesEvent.json" \
   http://localhost:8080
 ```
 
+## Unit Tests
 ---
 
-## Deploying to GCP
+To run the unit tests once, issue the following command:
 
-TBD
+```
+npm run test
+```
 
----
+or to run the tests automatically with every code change, issue the following command:
 
+```
+npm run testInteractive
+```
 ## Notes
--- Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs)
--- The data inside the json is expected to be base64 encoded
+---
+
+* Basic Instructions taken from [GCP Cloud Platform (Node)](https://github.com/GoogleCloudPlatform/functions-framework-nodejs) \
+* The data inside the json is expected to be base64 encoded, to decode it (on macos) copy the base64 string and execute the following command in your terminal:
+
+   ```
+   pbpaste | base64 --decode && echo -e
+   ```
