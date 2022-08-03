@@ -45,6 +45,16 @@ public class Reflector {
     Reflector reflector = new Reflector(Arrays.asList(args));
     reflector.initialize();
     reflector.reflect();
+    reflector.shutdown();
+  }
+
+  private void shutdown() {
+    try {
+      Thread.sleep(5000);
+    } catch (Exception e) {
+      throw new RuntimeException("While sleeping", e);
+    }
+    client.close();
   }
 
   private void reflect() {
@@ -52,6 +62,7 @@ public class Reflector {
     while (!reflectCommands.isEmpty()) {
       reflect(reflectCommands.remove(0));
     }
+    System.err.println("Done with all reflective directives!");
   }
 
   private void reflect(String directive) {
@@ -69,7 +80,7 @@ public class Reflector {
       String data = new String(fis.readAllBytes());
       reflect(topic, data);
     } catch (Exception e) {
-      throw new RuntimeException("While processing input file " + dataFile.getAbsolutePath());
+      throw new RuntimeException("While processing input file " + dataFile.getAbsolutePath(), e);
     }
   }
 
@@ -97,7 +108,9 @@ public class Reflector {
             break;
           case "-d":
             deviceId = removeNextArg(listCopy);
+            break;
           default:
+            listCopy.add(option);
             return listCopy; // default case is the remaining list of reflection directives
         }
       } catch (Exception e) {
