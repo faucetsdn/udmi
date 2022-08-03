@@ -43,10 +43,10 @@
     <orderEntry type="library" name="Gradle: io.moquette:moquette-broker:0.15" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:metrics-librato:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:librato-java:2.1.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.6.3" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.12.5" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.12.5" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.12.5" level="project" />
+    <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.6.4" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.13.3" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.13.3" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.13.3" level="project" />
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.10.10" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.30" level="project" />
