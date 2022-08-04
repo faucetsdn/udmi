@@ -1,7 +1,7 @@
 package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Blob.COMMIT_PHASE;
+import static udmi.schema.Blob.FINAL_PHASE;
 import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -768,7 +768,7 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && COMMIT_PHASE.equals(blobBlobsetConfig.phase)
+      if (blobBlobsetConfig != null && FINAL_PHASE.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
       }
