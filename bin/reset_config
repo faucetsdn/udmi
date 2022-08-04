@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(realpath $(dirname $0)/..)
 
@@ -12,6 +12,8 @@ project_id=$2
 device_id=$3
 shift 3
 cd ${ROOT}
+
+pwd
 
 device_config=/tmp/${device_id}_config.json
 cp ${site_dir}/devices/${device_id}/out/generated_config.json ${device_config}
