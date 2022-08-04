@@ -35,6 +35,8 @@ fi
 
 bin/reset_config $site_path $project_id $device_id
 
+echo bin/pubber $site_path $project_id $device_id $serial_no
+
 echo Writing pubber output to $PUBBER_OUT.1
 result=0
 timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || result=$?

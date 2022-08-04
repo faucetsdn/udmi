@@ -3,7 +3,7 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(dirname $0)/..
+ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
 if [[ $# != 1 ]]; then
@@ -67,7 +67,7 @@ sleep 30
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 echo Killing pids $vpid $pids
-kill $vpid $pids
+kill $vpid $pids || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then

@@ -1,10 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(realpath $(dirname $0)/..)
 
-if [[ $# != 3 && $# != 4 ]]; then
-    echo Usage: $0 site_dir project_id device_id [config_filename]
-    echo "  config_filename defaults to generated_config.json"
+if [[ $# != 3 ]]; then
+    echo Usage: $0 site_dir project_id device_id
     false
 fi
 
@@ -12,20 +11,16 @@ site_dir=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
+cd ${ROOT}
 
-filename=generated_config.json
-if [[ -n $1 ]]; then
-    filename=$1
-    shift
-fi
-
-cd $ROOT
+pwd
 
 device_config=/tmp/${device_id}_config.json
-cp $site_dir/devices/${device_id}/out/$filename $device_config
-now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
-echo Setting config timestamp $now_date
-jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
+cp ${site_dir}/devices/${device_id}/out/generated_config.json ${device_config}
+now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
+echo Setting config timestamp ${now_date}
+sponge < /dev/null || echo sponge command not found, might need workaround for osx or other
+jq .timestamp=\"${now_date}\" < ${device_config} | sponge ${device_config}
 
-echo Resetting device $device_id config...
-validator/bin/reflector $site_dir $project_id $device_id update/config:$device_config
+echo Resetting device ${device_id} config...
+validator/bin/reflector ${site_dir} ${project_id} ${device_id} update/config:${device_config}
