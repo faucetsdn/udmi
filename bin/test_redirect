@@ -45,5 +45,5 @@ bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
 sleep 20
-bin/reset_config $site_path $project_id $device_id redirect_config.json
+bin/reset_config $site_path $project_id $device_id #redirect_config.json
 sleep 20
