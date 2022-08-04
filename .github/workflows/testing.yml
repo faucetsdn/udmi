@@ -65,10 +65,15 @@ jobs:
         run: |
           # Simple checks that a redirect happened and failed
           set +x
-          fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out
-          fgrep 'system.config.parse success' pubber.out
-          fgrep registries/missing/devices/GAT-123 pubber.out
-          fgrep 'Not authorized to connect' pubber.out
+          fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out.1
+          fgrep 'system.config.parse success' pubber.out.1
+          fgrep registries/missing/devices/GAT-123 pubber.out.1
+          fgrep 'Not authorized to connect' pubber.out.1
+          # Now check the redirect-by-config setup
+          fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out.2
+          fgrep 'system.config.parse success' pubber.out.2
+          fgrep registries/reconfigure/devices/GAT-123 pubber.out.2
+          fgrep 'Not authorized to connect' pubber.out.2
       - name: pubber logs
         if: ${{ always() }}
         run: |

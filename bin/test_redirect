@@ -21,10 +21,6 @@ fi
 site_path=sites/udmi_site_model
 device_id=AHU-22 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 
-site_config=$site_path/cloud_iot_config.json
-cloud_region=$(jq -r .cloud_region $site_config)
-registry_id=$(jq -r .registry_id $site_config)
-
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
@@ -39,10 +35,15 @@ fi
 
 bin/reset_config $site_path $project_id $device_id
 
-echo Writing pubber output to $PUBBER_OUT
-echo bin/pubber $site_path $project_id $device_id $serial_no
-
+echo Writing pubber output to $PUBBER_OUT.1
 result=0
-timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT 2>&1 || result=$?
-
+timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || result=$?
 echo Pubber exit code $result
+
+echo Writing pubber output to $PUBBER_OUT.2
+bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
+
+# Wait for initial connection, then reset config to redirect
+sleep 20
+bin/reset_config $site_path $project_id $device_id redirect_config.json
+sleep 20
