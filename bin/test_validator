@@ -1,9 +1,9 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(dirname $0)/..
+ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
 if [[ $# != 1 ]]; then
