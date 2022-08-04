@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
@@ -22,6 +22,9 @@ fi
 
 echo Building validator...
 $ROOT_DIR/validator/bin/build > /dev/null
+
+echo Files built
+(cd $ROOT_DIR; find validator/build -type f) || true
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
