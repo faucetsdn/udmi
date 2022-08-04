@@ -1,15 +1,16 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
+import static com.google.daq.mqtt.util.Common.JSON_SUFFIX;
+import static com.google.daq.mqtt.util.Common.NO_SITE;
+import static com.google.daq.mqtt.util.Common.OBJECT_MAPPER;
+import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
+import static com.google.daq.mqtt.util.Common.TIMESTAMP_ATTRIBUTE;
+import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
@@ -31,7 +32,6 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,7 +39,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -78,19 +77,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final String STATE_QUERY_TOPIC = "query/state";
-  public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
-  public static final String NO_SITE = "--";
-  private static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper()
-          .enable(Feature.ALLOW_COMMENTS)
-          .enable(SerializationFeature.INDENT_OUTPUT)
-          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-          .setDateFormat(new ISO8601DateFormat())
-          .setSerializationInclusion(Include.NON_NULL);
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final String JSON_SUFFIX = ".json";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -104,7 +91,6 @@ public class Validator {
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String STATE_POINTSET = "state_pointset";
-  private static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
@@ -181,7 +167,7 @@ public class Validator {
   }
 
   private void parseArgs(List<String> argList) {
-    while (argList.size() > 0) {
+    while (!argList.isEmpty()) {
       String option = removeNextArg(argList);
       try {
         switch (option) {
@@ -230,13 +216,6 @@ public class Validator {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
     dataSinks.add(client);
     reportAfterEveryMessage = true;
-  }
-
-  private String removeNextArg(List<String> argList) {
-    if (argList.isEmpty()) {
-      throw new MissingFormatArgumentException("Missing argument");
-    }
-    return argList.remove(0);
   }
 
   /**
