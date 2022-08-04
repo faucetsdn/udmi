@@ -33,12 +33,12 @@ rm -rf $site_path/out/devices
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
+bin/reset_config $site_path $project_id $device_id
+
 bin/validator $site_path $project_id &
 vpid=$!
 sleep 10
 echo Started validator pid $vpid
-
-bin/reset_config $site_path $project_id $device_id
 
 pubber/bin/build
 

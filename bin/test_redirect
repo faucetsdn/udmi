@@ -24,6 +24,10 @@ device_id=AHU-22 # Static device for testing. Needs to be different than other t
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
+site_config=$site_path/cloud_iot_config.json
+cloud_region=$(jq -r .cloud_region $site_config)
+registry_id=$(jq -r .registry_id $site_config)
+
 PUBBER_OUT=pubber.out
 
 # Ideally use lock files, not grep-and-kill...
@@ -39,7 +43,7 @@ echo bin/pubber $site_path $project_id $device_id $serial_no
 
 echo Writing pubber output to $PUBBER_OUT.1
 result=0
-timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || result=$?
+#timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || result=$?
 echo Pubber exit code $result
 
 echo Writing pubber output to $PUBBER_OUT.2
@@ -47,5 +51,30 @@ bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
 sleep 20
-bin/reset_config $site_path $project_id $device_id #redirect_config.json
+
+cat <<EOF > endpoint.json
+{
+  "projectId": "$project_id",
+  "registryId": "$registry_id",
+  "cloudRegion": "$cloud_region"
+}
+EOF
+
+base64=$(base64 endpoint.json)
+
+cat <<EOF > endpoint.json
+{
+  "blobs": {
+    "_iot_config": {
+      "phase": "final",
+      "base64": "$base64"
+    }
+  }
+}
+EOF
+
+out_base=$site_path/devices/$device_id/out
+jq -s '.[0] * .[1]' $out_base/generated_config.json endpoint.json > $out_base/redirect_config.json
+
+bin/reset_config $site_path $project_id $device_id redirect_config.json
 sleep 20
