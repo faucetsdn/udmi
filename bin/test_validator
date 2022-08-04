@@ -38,6 +38,8 @@ vpid=$!
 sleep 10
 echo Started validator pid $vpid
 
+bin/reset_config $site_path $project_id $device_id
+
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
