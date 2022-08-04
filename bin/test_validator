@@ -20,11 +20,14 @@ serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
+VALIDATOR_OUT=validator.out
+WAITING=10
 
+vids=`ps ax | fgrep validator | fgrep java | awk '{print $1}'`
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n $pids ]]; then
-    echo Killing pubber pids $pids
-    kill $pids
+if [[ -n "$pids$vids" ]]; then
+    echo Killing pids $pids $vids
+    kill $pids $vids
 fi
 
 rm -rf $site_path/out/devices
@@ -33,21 +36,32 @@ rm -rf $site_path/out/devices
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
+pubber/bin/build
+
 bin/reset_config $site_path $project_id $device_id
 
-bin/validator $site_path $project_id &
-vpid=$!
-sleep 10
-echo Started validator pid $vpid
+echo Starting validator, output in $VALIDATOR_OUT
+bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
+for i in `seq 1 $WAITING`; do
+    if fgrep "Entering message loop" $VALIDATOR_OUT; then
+        break
+    fi
+    echo Waiting for validator startup $((WAITING - i))...
+    sleep 2
+done
 
-pubber/bin/build
+if [[ $i -eq $WAITING ]]; then
+    echo validator startup failed:
+    cat $VALIDATOR_OUT
+    false
+fi
+echo Started validator pid $vpid
 
 echo Writing pubber output to $PUBBER_OUT
 cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
 echo $cmd
 $cmd > $PUBBER_OUT 2>&1 &
 
-WAITING=10
 for i in `seq 1 $WAITING`; do
     if fgrep "Connection complete" $PUBBER_OUT; then
         break
@@ -63,11 +77,14 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Waiting for system to run for a bit...
-sleep 30
+timeout 60s tail -f $VALIDATOR_OUT || true
 
+vids=`ps ax | fgrep validator | fgrep java | awk '{print $1}'`
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-echo Killing pids $vpid $pids
-kill $vpid $pids
+if [[ -n "$pids$vids" ]]; then
+    echo Killing pids $pids $vids
+    kill $pids $vids
+fi
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
