@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ROOT=$(realpath $(dirname $0)/../..)
 
@@ -17,8 +17,6 @@ cd $ROOT
 pwd
 
 validator/bin/build
-
-find validator/build -type f || true
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.validator.Reflector
