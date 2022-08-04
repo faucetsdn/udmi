@@ -37,14 +37,7 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
-device_config=/tmp/${device_id}_config.json
-cp sites/udmi_site_model/devices/${device_id}/out/generated_config.json $device_config
-now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
-echo Setting config timestamp $now_date
-jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
-
-echo Resetting device $device_id config...
-validator/bin/reflector $site_path $project_id $device_id update/config:$device_config
+bin/reset_config $site_path $project_id $device_id
 
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no

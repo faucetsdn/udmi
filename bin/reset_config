@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+
+if [[ $# != 3 ]]; then
+    echo Usage: $0 site_dir project_id device_id
+    false
+fi
+
+site_dir=$(realpath $1)
+project_id=$2
+device_id=$3
+shift 3
+cd $ROOT
+
+device_config=/tmp/${device_id}_config.json
+cp $site_dir/devices/${device_id}/out/generated_config.json $device_config
+now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
+echo Setting config timestamp $now_date
+jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
+
+echo Resetting device $device_id config...
+validator/bin/reflector $site_dir $project_id $device_id update/config:$device_config
