@@ -1,6 +1,8 @@
 package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.Blob.COMMIT_PHASE;
+import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,8 +76,6 @@ public class Pubber {
 
   public static final int SCAN_DURATION_SEC = 10;
   public static final String DISCOVERY_ID = "RANDOM_ID";
-  public static final String IOT_ENDPOINT_BLOB_NAME = "_iot_config";
-  public static final String BLOB_COMMIT_PHASE = "commit";
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -730,7 +730,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(IOT_ENDPOINT_BLOB_NAME);
+      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
       if (iotConfig == null) {
         return null;
       }
@@ -768,7 +768,7 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && BLOB_COMMIT_PHASE.equals(blobBlobsetConfig.phase)
+      if (blobBlobsetConfig != null && COMMIT_PHASE.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
       }
