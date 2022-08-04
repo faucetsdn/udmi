@@ -31,8 +31,8 @@ echo Generating code in $OUTDIR
 $JARBIN $JOPTS --source . --target $OUTDIR
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
-echo Copying Level.java
-cp -n $ROOT_DIR/etc/Level.java $OUTDIR/udmi/schema/Level.java
+echo Copying shared constants $ROOT_DIR/etc/*.java
+cp -n $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
 
 echo Cleaning up __ classes...
 find $OUTDIR -name \*__\*.java | xargs rm
