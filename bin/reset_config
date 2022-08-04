@@ -15,7 +15,7 @@ cd $ROOT
 
 device_config=/tmp/${device_id}_config.json
 cp $site_dir/devices/${device_id}/out/generated_config.json $device_config
-now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
+now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting config timestamp $now_date
 jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
 
