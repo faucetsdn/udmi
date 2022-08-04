@@ -21,11 +21,8 @@ echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n $pids ]]; then
-    echo Killing pubber pids $pids
-    kill $pids
-fi
+echo Killing running pubber instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 rm -rf $site_path/out/devices
 
@@ -65,9 +62,8 @@ fi
 echo Waiting for system to run for a bit...
 sleep 30
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-echo Killing pids $vpid $pids
-kill $vpid $pids
+echo Killing running pubber instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then

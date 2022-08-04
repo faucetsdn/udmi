@@ -30,12 +30,8 @@ registry_id=$(jq -r .registry_id $site_config)
 
 PUBBER_OUT=pubber.out
 
-# Ideally use lock files, not grep-and-kill...
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n $pids ]]; then
-    echo Killing pubber pids $pids
-    kill $pids
-fi
+echo Killing running pubber instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 bin/reset_config $site_path $project_id $device_id
 
@@ -43,8 +39,7 @@ echo bin/pubber $site_path $project_id $device_id $serial_no
 
 echo Writing pubber output to $PUBBER_OUT.1
 result=0
-timeout 5m bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || result=$?
-echo Pubber exit code $result
+timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1
 
 echo Writing pubber output to $PUBBER_OUT.2
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
@@ -81,3 +76,7 @@ bin/reset_config $site_path $project_id $device_id redirect_config.json
 
 # Let pubber react to the new configuration
 sleep 20
+
+# Ideally use lock files, not grep-and-kill...
+echo Killing running pubber instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
