@@ -37,7 +37,7 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
-bin/reset_config $site_path $project_id $device_id
+#bin/reset_config $site_path $project_id $device_id
 
 echo bin/pubber $site_path $project_id $device_id $serial_no
 
@@ -47,10 +47,10 @@ result=0
 echo Pubber exit code $result
 
 echo Writing pubber output to $PUBBER_OUT.2
-bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
+#bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
-sleep 20
+#sleep 20
 
 cat <<EOF > endpoint.json
 {
@@ -60,9 +60,9 @@ cat <<EOF > endpoint.json
 }
 EOF
 
-base64=$(base64 endpoint.json)
+base64=$(base64 -w 0 endpoint.json)
 
-cat <<EOF > endpoint.json
+cat <<EOF > blobs.json
 {
   "blobs": {
     "_iot_config": {
@@ -74,7 +74,8 @@ cat <<EOF > endpoint.json
 EOF
 
 out_base=$site_path/devices/$device_id/out
-jq -s '.[0] * .[1]' $out_base/generated_config.json endpoint.json > $out_base/redirect_config.json
+jq -s '.[0] * .[1]' $out_base/generated_config.json blobs.json > $out_base/redirect_config.json
 
+echo bin/reset_config $site_path $project_id $device_id redirect_config.json
 bin/reset_config $site_path $project_id $device_id redirect_config.json
-sleep 20
+#sleep 20
