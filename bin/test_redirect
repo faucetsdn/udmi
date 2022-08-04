@@ -43,9 +43,8 @@ now_date=$(date -Ins -u | sed -E 's/.{6}\+.*/Z/' | tr , .)
 echo Setting config timestamp $now_date
 jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
 
-#echo Resetting device $device_id config...
-#gcloud iot devices configs update --config-file=$device_config \
-#       --device=$device_id --region=$cloud_region --registry=$registry_id --project=$project_id
+echo Resetting device $device_id config...
+validator/bin/reflector $site_path $project_id $device_id update/config:$device_config
 
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
