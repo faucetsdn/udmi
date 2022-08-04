@@ -14,7 +14,7 @@ cd $ROOT
 echo Building validataor in $PWD
 
 rm -rf build
-./gradlew --info shadow $check
+./gradlew shadow $check
 
 ls -l build/libs/validator-1.0-SNAPSHOT-all.jar
 

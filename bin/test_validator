@@ -67,7 +67,7 @@ sleep 30
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 echo Killing pids $vpid $pids
-kill $vpid $pids || true
+kill $vpid $pids
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
