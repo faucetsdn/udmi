@@ -17,6 +17,7 @@ device_config=/tmp/${device_id}_config.json
 cp $site_dir/devices/${device_id}/out/generated_config.json $device_config
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting config timestamp $now_date
+sponge < /dev/null || echo sponge command not found, might need workaround for osx or other
 jq .timestamp=\"$now_date\" < $device_config | sponge $device_config
 
 echo Resetting device $device_id config...
