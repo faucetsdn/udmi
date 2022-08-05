@@ -1,0 +1,30 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+
+if [[ $# != 3 && $# != 4 ]]; then
+    echo Usage: $0 site_dir project_id device_id [config_file]
+    false
+fi
+
+site_dir=$(realpath $1)
+project_id=$2
+device_id=$3
+shift 3
+
+config_file=generated_config.json
+if [[ -n $1 ]]; then
+    config_file=$1
+    shift
+fi
+
+cd ${ROOT}
+
+dst_config=/tmp/${device_id}_config.json
+src_config=${site_dir}/devices/${device_id}/out/$config_file
+now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
+echo Setting config timestamp ${now_date}
+jq .timestamp=\"${now_date}\" < ${src_config} > ${dst_config}
+
+echo Resetting device ${device_id} config...
+validator/bin/reflector ${site_dir} ${project_id} ${device_id} update/config:${dst_config}

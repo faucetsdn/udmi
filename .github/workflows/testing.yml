@@ -52,32 +52,44 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: pubber run
+      - name: pubber runs
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
-      - name: pubber checks
+      - name: pubber cmd checks
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          # Simple checks that a redirect happened and failed
-          set +x
-          fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out
-          fgrep 'system.config.parse success' pubber.out
-          fgrep registries/missing/devices/GAT-123 pubber.out
-          fgrep 'Not authorized to connect' pubber.out
-      - name: pubber logs
-        if: ${{ always() }}
+          echo ::::::: pubber.out.1
+          cat pubber.out.1
+          echo :::::::
+          echo Simple checks that a redirect happened and failed
+          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.1
+          fgrep 'system.config.parse success' pubber.out.1
+          fgrep registries/missing/devices pubber.out.1
+          fgrep 'Not authorized to connect' pubber.out.1
+      - name: pubber config checks
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          cat pubber.out || true
+          echo ::::::: pubber.out.2
+          cat pubber.out.2
+          echo :::::::
+          echo Check the redirect-by-config setup
+          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.2
+          fgrep 'system.config.parse success' pubber.out.2
+          fgrep registries/reconfigure/devices pubber.out.2
+          fgrep 'Not authorized to connect' pubber.out.2
     
   udmi:
     name: Sequence tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
