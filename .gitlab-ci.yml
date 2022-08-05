@@ -1,0 +1,38 @@
+api:
+  stage: build
+  variables:
+    WORKING_DIR: udmif/api 
+  trigger:
+    include: udmif/api/build.yml
+  rules:
+    - changes:
+      - "udmif/api/**/*"
+
+web:
+  stage: build
+  variables:
+    WORKING_DIR: udmif/web
+  trigger:
+    include: udmif/web/build.yml
+  rules:
+    - changes:
+      - "udmif/web/**/*"
+
+event-handler:
+  stage: build
+  variables:
+    WORKING_DIR: udmif/event-handler
+  trigger:
+    include: udmif/event-handler/build.yml
+  rules:
+    - changes:
+      - "udmif/event-handler/**/*"
+
+gcp:
+  stage: build
+  trigger:
+    include: cloud/gcp/build.yml
+  rules:
+    - changes:
+      - "cloud/gcp/**/*"
+    

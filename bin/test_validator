@@ -20,15 +20,20 @@ serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
+VALIDATOR_OUT=validator.out
+WAITING=10
 
-echo Killing running pubber instances...
+echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
 rm -rf $site_path/out/devices
 
 # Prepare auth key used by reflector
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
+
+pubber/bin/build
 
 bin/reset_config $site_path $project_id $device_id
 
@@ -37,14 +42,28 @@ vpid=$!
 sleep 10
 echo Started validator pid $vpid
 
-pubber/bin/build
+echo Starting validator, output in $VALIDATOR_OUT
+bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
+for i in `seq 1 $WAITING`; do
+    if fgrep "Entering message loop" $VALIDATOR_OUT; then
+        break
+    fi
+    echo Waiting for validator startup $((WAITING - i))...
+    sleep 2
+done
+
+if [[ $i -eq $WAITING ]]; then
+    echo validator startup failed:
+    cat $VALIDATOR_OUT
+    false
+fi
+echo Started validator pid $vpid
 
 echo Writing pubber output to $PUBBER_OUT
 cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
 echo $cmd
 $cmd > $PUBBER_OUT 2>&1 &
 
-WAITING=10
 for i in `seq 1 $WAITING`; do
     if fgrep "Connection complete" $PUBBER_OUT; then
         break
@@ -60,10 +79,11 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Waiting for system to run for a bit...
-sleep 30
+timeout 60s tail -f $VALIDATOR_OUT || true
 
-echo Killing running pubber instances...
+echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then

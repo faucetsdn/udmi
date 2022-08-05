@@ -35,6 +35,7 @@ ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 bin/reset_config $site_path $project_id $device_id
 
+echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
 
 echo Writing pubber output to $PUBBER_OUT.1

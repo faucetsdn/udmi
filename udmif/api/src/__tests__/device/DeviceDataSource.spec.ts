@@ -57,3 +57,63 @@ describe('DeviceDataSource.getPoints()', () => {
     expect(points).toEqual([]);
   });
 });
+
+describe('DeviceDataSource.getDeviceNames()', () => {
+  test('returns device names', async () => {
+    const deviceNames: string[] = await deviceDS.getDeviceNames();
+    expect(deviceNames.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('returns [] if there are no matches', async () => {
+    const deviceNames: string[] = await deviceDS.getDeviceNames({ search: 'lkjd' });
+    expect(deviceNames).toEqual([]);
+  });
+});
+
+describe('DeviceDataSource.getDeviceMakes()', () => {
+  test('returns device makes', async () => {
+    const deviceMakes: string[] = await deviceDS.getDeviceMakes();
+    expect(deviceMakes.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('returns [] if there are no matches', async () => {
+    const deviceMakes: string[] = await deviceDS.getDeviceMakes({ search: 'lkjd' });
+    expect(deviceMakes).toEqual([]);
+  });
+});
+
+describe('DeviceDataSource.getDeviceModels()', () => {
+  test('returns device models', async () => {
+    const deviceModels: string[] = await deviceDS.getDeviceModels();
+    expect(deviceModels.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('returns [] if there are no matches', async () => {
+    const deviceModels: string[] = await deviceDS.getDeviceModels({ search: 'lkjd' });
+    expect(deviceModels).toEqual([]);
+  });
+});
+
+describe('DeviceDataSource.getSites()', () => {
+  test('returns sites', async () => {
+    const sites: string[] = await deviceDS.getSites();
+    expect(sites.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('returns [] if there are no matches', async () => {
+    const sites: string[] = await deviceDS.getSites({ search: 'lkjd' });
+    expect(sites).toEqual([]);
+  });
+});
+
+describe('DeviceDataSource.getSections()', () => {
+  test('returns sections', async () => {
+    const sections: string[] = await deviceDS.getSections();
+    expect(sections.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('returns [] if there are no matches', async () => {
+    const sections: string[] = await deviceDS.getSections({ search: 'lkjd' });
+    expect(sections).toEqual([]);
+  });
+});
