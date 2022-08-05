@@ -14,8 +14,6 @@ device_id=$3
 shift 3
 cd $ROOT
 
-pwd
-
 validator/bin/build
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar

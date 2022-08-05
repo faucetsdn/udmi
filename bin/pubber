@@ -19,7 +19,7 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
 fi
 
 echo Building pubber...
-$ROOT_DIR/pubber/bin/build > /dev/null
+$ROOT_DIR/pubber/bin/build
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
