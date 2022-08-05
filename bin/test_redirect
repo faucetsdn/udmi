@@ -19,7 +19,7 @@ else
 fi
 
 site_path=sites/udmi_site_model
-device_id=AHU-22 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -47,7 +47,7 @@ sleep 20
 cat <<EOF > endpoint.json
 {
   "projectId": "$project_id",
-  "registryId": "$registry_id",
+  "registryId": "redirect",
   "cloudRegion": "$cloud_region"
 }
 EOF
@@ -70,7 +70,7 @@ out_base=$site_path/devices/$device_id/out
 jq -s '.[0] * .[1]' $out_base/generated_config.json blobs.json > $out_base/redirect_config.json
 
 echo New redirection config:
-cat $out_base/redirect_config.json
+cat /tmp/${device_id}_config.json
 
 echo bin/reset_config $site_path $project_id $device_id redirect_config.json
 bin/reset_config $site_path $project_id $device_id redirect_config.json
