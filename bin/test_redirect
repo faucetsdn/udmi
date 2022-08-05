@@ -36,7 +36,7 @@ ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 bin/reset_config $site_path $project_id $device_id
 
 echo Running pubber with redirectRegistry on timeout
-timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
+#timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
 echo Running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
@@ -66,12 +66,16 @@ cat <<EOF > blobs.json
 EOF
 
 out_base=$site_path/devices/$device_id/out
+# Merge JSON files together into new redirect config
 jq -s '.[0] * .[1]' $out_base/generated_config.json blobs.json > $out_base/redirect_config.json
+
+echo New redirection config:
+cat $out_base/redirect_config.json
 
 echo bin/reset_config $site_path $project_id $device_id redirect_config.json
 bin/reset_config $site_path $project_id $device_id redirect_config.json
 
-# Let pubber react to the new configuration
+echo Let pubber react to the new configuration...
 sleep 20
 
 # Ideally use lock files, not grep-and-kill...
