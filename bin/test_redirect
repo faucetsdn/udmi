@@ -56,10 +56,12 @@ base64=$(base64 -w 0 endpoint.json)
 
 cat <<EOF > blobs.json
 {
-  "blobs": {
-    "_iot_config": {
-      "phase": "final",
-      "base64": "$base64"
+  "blobset": {
+    "blobs": {
+      "_iot_config": {
+        "phase": "final",
+        "base64": "$base64"
+      }
     }
   }
 }
