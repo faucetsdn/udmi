@@ -15,3 +15,5 @@ export function isSystem(message): boolean {
 export function isSubFolder(message, folderName: string): boolean {
   return message.attributes.subFolder === folderName;
 }
+
+

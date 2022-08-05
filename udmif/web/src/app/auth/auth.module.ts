@@ -26,4 +26,4 @@ export function SocialAuthFactory(env: EnvService): SocialAuthServiceConfig {
     },
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -23,6 +23,7 @@ describe('DeviceDaoFactory.getDeviceDAO()', () => {
 });
 
 describe('DeviceDaoFactory.getUri()', () => {
+
   // take a backup of the environment prior to running the tests
   const ENV_BACKUP = { ...process.env };
 
