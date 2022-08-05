@@ -58,28 +58,32 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
-      - name: pubber checks
+      - name: pubber cmd checks
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
+          echo ::::::: pubber.out.1
+          cat pubber.out.1
+          echo :::::::
           echo Simple checks that a redirect happened and failed
           fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out.1
           fgrep 'system.config.parse success' pubber.out.1
           fgrep registries/missing/devices/GAT-123 pubber.out.1
           fgrep 'Not authorized to connect' pubber.out.1
+      - name: pubber config checks
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        run: |
+          echo ::::::: pubber.out.2
+          cat pubber.out.2
+          echo :::::::
           echo Check the redirect-by-config setup
           fgrep registries/ZZ-TRI-FECTA/devices/GAT-123 pubber.out.2
           fgrep 'system.config.parse success' pubber.out.2
           fgrep registries/reconfigure/devices/GAT-123 pubber.out.2
           fgrep 'Not authorized to connect' pubber.out.2
-      - name: pubber logs
-        if: ${{ always() }}
-        run: |
-          echo ::::::: pubber.out.1
-          cat pubber.out.1 || true
-          echo ::::::: pubber.out.2
-          cat pubber.out.2 || true
     
   udmi:
     name: Sequence tests
