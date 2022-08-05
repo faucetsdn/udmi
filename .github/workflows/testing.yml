@@ -64,26 +64,26 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           echo ::::::: pubber.out.1
-          cat pubber.out.1
+          cat out/pubber.out.1
           echo :::::::
           echo Simple checks that a redirect happened and failed
-          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.1
-          fgrep 'system.config.parse success' pubber.out.1
-          fgrep registries/missing/devices pubber.out.1
-          fgrep 'Not authorized to connect' pubber.out.1
+          fgrep registries/ZZ-TRI-FECTA/devices out/pubber.out.1
+          fgrep 'system.config.parse success' out/pubber.out.1
+          fgrep registries/missing/devices out/pubber.out.1
+          fgrep 'Not authorized to connect' out/pubber.out.1
       - name: pubber config checks
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          echo ::::::: pubber.out.2
-          cat pubber.out.2
+          echo ::::::: out/pubber.out.2
+          cat out/pubber.out.2
           echo :::::::
           echo Check the redirect-by-config setup
-          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.2
-          fgrep 'system.config.parse success' pubber.out.2
-          fgrep registries/reconfigure/devices pubber.out.2
-          fgrep 'Not authorized to connect' pubber.out.2
+          fgrep registries/ZZ-TRI-FECTA/devices out/pubber.out.2
+          fgrep 'system.config.parse success' out/pubber.out.2
+          fgrep registries/reconfigure/devices out/pubber.out.2
+          fgrep 'Not authorized to connect' out/pubber.out.2
     
   udmi:
     name: Sequence tests
@@ -127,5 +127,5 @@ jobs:
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          cat pubber.out || true
+          cat out/pubber.out || true
           more out/*.json

@@ -20,6 +20,7 @@ fi
 
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+mkdir -p out
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -28,7 +29,7 @@ site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
-PUBBER_OUT=pubber.out
+PUBBER_OUT=out/pubber.out
 
 echo Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
@@ -44,7 +45,7 @@ bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 # Wait for initial connection, then reset config to redirect
 sleep 20
 
-cat <<EOF > endpoint.json
+cat <<EOF > out/endpoint.json
 {
   "projectId": "$project_id",
   "registryId": "reconfigure",
@@ -52,9 +53,9 @@ cat <<EOF > endpoint.json
 }
 EOF
 
-base64=$(base64 -w 0 endpoint.json)
+base64=$(base64 -w 0 out/endpoint.json)
 
-cat <<EOF > blobs.json
+cat <<EOF > out/blobs.json
 {
   "blobset": {
     "blobs": {
@@ -69,7 +70,7 @@ EOF
 
 out_base=$site_path/devices/$device_id/out
 # Merge JSON files together into new redirect config
-jq -s '.[0] * .[1]' $out_base/generated_config.json blobs.json > $out_base/redirect_config.json
+jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $out_base/redirect_config.json
 
 echo New redirection config:
 cat /tmp/${device_id}_config.json

@@ -15,12 +15,13 @@ shift
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
+mkdir -p out
 
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=pubber.out
-VALIDATOR_OUT=validator.out
+PUBBER_OUT=out/pubber.out
+VALIDATOR_OUT=out/validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
