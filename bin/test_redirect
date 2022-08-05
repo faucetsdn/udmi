@@ -29,7 +29,7 @@ site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
-PUBBER_OUT=out/pubber.out
+PUBBER_OUT=pubber.out
 
 echo Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true

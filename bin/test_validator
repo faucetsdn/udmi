@@ -20,8 +20,8 @@ mkdir -p out
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=out/pubber.out
-VALIDATOR_OUT=out/validator.out
+PUBBER_OUT=pubber.out
+VALIDATOR_OUT=validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
