@@ -24,6 +24,7 @@ describe('DeviceTypeUtils.isSystemState', () => {
     const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: MODEL }, data: {} };
     expect(isSystem(inputMessage)).toEqual(true);
   });
+
 });
 
 describe('DeviceDocumentFactory.isPointset...', () => {
@@ -47,3 +48,4 @@ describe('DeviceDocumentFactory.isPointset...', () => {
     expect(isPointset(inputMessage)).toEqual(true);
   });
 });
+

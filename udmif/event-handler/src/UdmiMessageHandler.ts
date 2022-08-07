@@ -5,7 +5,7 @@ import { UdmiMessage } from './UdmiMessage';
 import { DeviceKey } from './DeviceKey';
 
 export default class UdmiMessageHandler {
-  constructor(private deviceDao: DeviceDao) {}
+  constructor(private deviceDao: DeviceDao) { }
 
   async handleUdmiEvent(udmiMessage: UdmiMessage) {
     try {
