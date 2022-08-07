@@ -2,8 +2,8 @@
 
 ROOT=$(realpath $(dirname $0)/..)
 
-if [[ $# != 3 ]]; then
-    echo Usage: $0 site_dir project_id device_id
+if [[ $# != 3 && $# != 4 ]]; then
+    echo Usage: $0 site_dir project_id device_id [config_file]
     false
 fi
 
@@ -11,16 +11,20 @@ site_dir=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
+
+config_file=generated_config.json
+if [[ -n $1 ]]; then
+    config_file=$1
+    shift
+fi
+
 cd ${ROOT}
 
-pwd
-
-device_config=/tmp/${device_id}_config.json
-cp ${site_dir}/devices/${device_id}/out/generated_config.json ${device_config}
+dst_config=/tmp/${device_id}_config.json
+src_config=${site_dir}/devices/${device_id}/out/$config_file
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting config timestamp ${now_date}
-sponge < /dev/null || echo sponge command not found, might need workaround for osx or other
-jq .timestamp=\"${now_date}\" < ${device_config} | sponge ${device_config}
+jq .timestamp=\"${now_date}\" < ${src_config} > ${dst_config}
 
 echo Resetting device ${device_id} config...
-validator/bin/reflector ${site_dir} ${project_id} ${device_id} update/config:${device_config}
+validator/bin/reflector ${site_dir} ${project_id} ${device_id} update/config:${dst_config}
