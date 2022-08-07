@@ -65,6 +65,7 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
+import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
@@ -119,9 +120,8 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final long VERY_LONG_TIME_SEC = 1234567890;
-  private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
   private static final Date DEVICE_START_TIME = new Date();
+  private static final int RESTART_EXIT_CODE = -5;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -141,6 +141,7 @@ public class Pubber {
   private Map<String, Metadata> allMetadata;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
+  private boolean wasActiveMode;
 
   /**
    * Start an instance from a configuration file.
@@ -491,12 +492,29 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
-      // Some things can't be done from an on-message callback, so do them here instead.
-      maybeRedirectEndpoint();
+      deferredConfigActions();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
     }
+  }
+
+  private void deferredConfigActions() {
+    maybeRedirectEndpoint();
+    maybeRestartSystem();
+  }
+
+  private void maybeRestartSystem() {
+    if (wasActiveMode && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
+      restartSystem();
+    }
+    wasActiveMode = SystemMode.ACTIVE.equals(deviceConfig.system.mode);
+  }
+
+  private void restartSystem() {
+    System.err.println("Restarting system with extreme prejudice.");
+    System.err.flush();
+    System.exit(RESTART_EXIT_CODE);
   }
 
   private void flushDirtyState() {
