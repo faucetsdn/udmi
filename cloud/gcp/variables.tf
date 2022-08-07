@@ -45,136 +45,131 @@ variable "log_level" {
 
 ## GKE variables ##
 variable "gke_num_nodes" {
-    type = number
-    default = 1
-    description = "number of gke nodes"
+  type        = number
+  default     = 1
+  description = "number of gke nodes"
 }
 variable "gke_node_locations" {
-  type = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "The list of zones in which the cluster's nodes are located"
 }
 
 variable "gke_initial_node_count" {
-  type = number
-  default = 0
+  type        = number
+  default     = 1
   description = "The number of nodes to create in this cluster's default node pool"
 }
 
 variable "gke_cluster_name" {
-  type = string
-  default = "udmi"
-  description = "gke cluster name"
+  type        = string
+  default     = "udmi"
+  description = "Cluster name"
 }
 
 variable "gke_node_pool_name" {
-  type = string
-  default = "udmi-pool"
+  type        = string
+  default     = "udmi-pool"
   description = "The name of the node pool"
 }
 variable "gke_cluster_location" {
-  type = string
-  default = "us-central1-f"
+  type        = string
+  default     = "us-central1-f"
   description = "The location (region or zone) of the cluster"
 }
 variable "gke_machine_type" {
-  type = string
-  default = "e2-standard-2"
+  type        = string
+  default     = "e2-standard-2"
   description = "The name of a Google Compute Engine machine type"
 }
 #cloud DNS variables
 variable "dns_name" {
-  type = string
+  type        = string
   description = "The DNS name of the udmi managed zone"
 }
 #ssl variable
 variable "ssl_domains" {
-  type = list(string)
+  type        = list(string)
   description = "Domains for which a managed SSL certificate will be valid"
 }
 ##vpc variables##
 variable "gcp_vpc_name" {
-    type = string
-    default = "udmi"
-    description = "Name of the VPC will be created"
+  type        = string
+  default     = "udmi"
+  description = "Name of the VPC that will be created when create_vpc=true"
 }
 variable "ip_cidr_range" {
-  type = string
-  default = "10.10.0.0/24"
-  description = "The range of internal addresses that are owned by this subnetwork"
+  type        = string
+  default     = "10.10.0.0/24"
+  description = "CIDR range of the VPC when creating a new one"
 }
 variable "create_vpc" {
-  type = bool
-  default = false
-  description = "we can use default vpc or new vpc"
+  type        = bool
+  default     = false
+  description = "Indicates if we use the default vpc or create a new one."
 }
 
-## function variables 
-variable "eventHandler_functions" {
-  type = map(object({
-    name                  = string 
-    runtime               = string
-    available_memory_mb   = number
-    entry_point           = string 
-    project               = string
-    region                = string
-    storage_class         = string
-    location              = string
-    environment_variables = map(string)
-  }))
-  description = "eventHandler function values"
-}
 ## Mongodb variables
 variable "public_key" {
-  type  = string
+  type        = string
   description = "This is the public key of udmi MongoDB Atlas API key pair."
 }
 variable "private_key" {
-  type  = string
+  type        = string
   description = "This is the private key of udmi MongoDB Atlas key pair."
 }
-variable "project_name" {
-  type = string
-  description = "The name of the project udmi wants to create"
-}
 variable "atlas_org_id" {
-  type = string
+  type        = string
   description = "The ID of the organization udmi want to create the project within."
 }
+variable "project_name" {
+  type        = string
+  default     = "udmi"
+  description = "The name of the project udmi wants to create"
+}
 variable "cluster_name" {
-  type = string 
+  type        = string
+  default     = "udmi"
   description = "Name of the cluster as it appears in Atlas. Once the cluster is created, its name cannot be changed."
 }
 variable "mongodb_version" {
-  type = string 
+  type        = string
+  default     = "5.0"
   description = "Version of the cluster to deploy."
 }
 variable "cluster_region" {
-  type = string 
+  type        = string
+  default     = "CENTRAL_US"
   description = "Physical location of your MongoDB cluster."
 }
 variable "provider_name" {
-  type = string 
+  type        = string
+  default     = "GCP"
   description = "Cloud service provider on which the servers are provisioned."
 }
 variable "disk_size_gb" {
-  type = string 
-  description = "mongodb space were we are using for udmi project"
+  type        = string
+  default     = "20"
+  description = "Maximum disk size for the mongo instance"
 }
 variable "instance_size_name" {
-  type = string 
-  description = "mongodb space name were we are using for udmi project"
-}
-variable "auto_scaling_max_instance_size" {
-  type = string 
-  description = "auto scalling max instance size when it require"
+  type        = string
+  default     = "M10"
+  description = "mongodb instance name"
 }
 variable "auto_scaling_min_instance_size" {
-  type = string 
-  description = "auto scalling min instance size when it require"
+  type        = string
+  default     = "M10"
+  description = "auto scalling min instance size when scaling down"
+}
+variable "auto_scaling_max_instance_size" {
+  type        = string
+  default     = "M20"
+  description = "auto scalling max instance size when scaling up"
 }
 variable "db_username" {
   type        = string
+  default     = "udmi"
   description = "Username for authenticating to MongoDB."
 }
 variable "db_password" {
@@ -183,12 +178,11 @@ variable "db_password" {
 }
 variable "database_name" {
   type        = string
+  default     = "udmi"
   description = "Database on which the user has the specified role."
 }
 variable "db_role" {
-  type = string 
-  description = "Name of the role to grant."
+  type        = string
+  default     = "readWrite"
+  description = "Name of the role to grant to the database user."
 }
-
-
-

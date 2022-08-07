@@ -1,3 +1,6 @@
+#See the variable.tf file for a list of all the variables that can be configured and their default values.
+#Variables can be overriden here as needed when a default is provided. They must be defined here when no default is provided.
+
 # GCP Settings
 gcp_project_id   = "@GCP_PROJECT_ID@"
 gcp_project_name   = "@GCP_PROJECT_NAME@"
@@ -13,3 +16,15 @@ gcp_access_group = "group:@GCP_PROJECT_GROUP@"
 
 # Log level
 log_level = "DEBUG"
+
+#cloud DNS variables and ssl domains for UDMIF. Use a domain you own.
+dns_name        = "udmi.mydomain.com."
+ssl_domains = ["web.udmi.mydomain.com", "api.udmi.mydomain.com"]
+
+#GKE an other related variables
+
+#MongoDB Atlas
+atlas_org_id    = "YourAtlasOrgId"
+public_key      = "YourAtlasPublicKey"
+private_key     = "YourAtlasPrivateKey@"
+db_password     = "YourUdmiDbpassword"

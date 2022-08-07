@@ -187,3 +187,48 @@ describe('MongoDeviceDAO.getPoints', () => {
     expect(points).toEqual(device.points);
   });
 });
+
+describe('MongoDeviceDAO.getDeviceNames', () => {
+  test('unique device names are returned', async () => {
+    const retrievedDeviceNames: string[] = await mongoDeviceDAO.getDeviceNames({ limit: 10 });
+
+    expect(retrievedDeviceNames).toBeDistinct();
+    expect(retrievedDeviceNames.length).toBeWithinRange(0, 10);
+  });
+});
+
+describe('MongoDeviceDAO.getDeviceMakes', () => {
+  test('unique device makes are returned', async () => {
+    const retrievedDeviceMakes: string[] = await mongoDeviceDAO.getDeviceMakes({ limit: 10 });
+
+    expect(retrievedDeviceMakes).toBeDistinct();
+    expect(retrievedDeviceMakes.length).toBeWithinRange(0, 10);
+  });
+});
+
+describe('MongoDeviceDAO.getDeviceModels', () => {
+  test('unique device models are returned', async () => {
+    const retrievedDeviceModels: string[] = await mongoDeviceDAO.getDeviceModels({ limit: 10 });
+
+    expect(retrievedDeviceModels).toBeDistinct();
+    expect(retrievedDeviceModels.length).toBeWithinRange(0, 10);
+  });
+});
+
+describe('MongoDeviceDAO.getSites', () => {
+  test('unique sites are returned', async () => {
+    const retrievedSites: string[] = await mongoDeviceDAO.getSites({ limit: 10 });
+
+    expect(retrievedSites).toBeDistinct();
+    expect(retrievedSites.length).toBeWithinRange(0, 10);
+  });
+});
+
+describe('MongoDeviceDAO.getSections', () => {
+  test('unique sections are returned', async () => {
+    const retrievedSections: string[] = await mongoDeviceDAO.getSections({ limit: 10 });
+
+    expect(retrievedSections).toBeDistinct();
+    expect(retrievedSections.length).toBeWithinRange(0, 10);
+  });
+});

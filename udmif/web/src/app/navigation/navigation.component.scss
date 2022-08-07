@@ -1,11 +1,22 @@
+@use '../../styles/variables' as *;
+
 .mat-toolbar.mat-primary {
   position: sticky;
   top: 0;
   z-index: 1;
 
-  .mat-button-base {
-    margin-left: 8px;
+  nav {
+    padding-left: $gutter-width;
+    height: 100%;
+  }
+
+  a,
+  button {
     min-width: unset;
+    border-radius: 0;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -24,5 +35,5 @@
 }
 
 .active {
-  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0px -4px $accent;
 }

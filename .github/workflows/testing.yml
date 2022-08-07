@@ -78,6 +78,7 @@ jobs:
     name: Sequence tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1

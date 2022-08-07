@@ -12,6 +12,7 @@ import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
 import java.io.ByteArrayOutputStream;
@@ -148,6 +149,7 @@ public abstract class SequenceValidator {
     resultSummary.delete();
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
+    System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
     client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
     setReflectorState();
@@ -454,7 +456,7 @@ public abstract class SequenceValidator {
   }
 
   protected void queryState() {
-    client.publish(deviceId, Validator.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    client.publish(deviceId, Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   /**
