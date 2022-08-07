@@ -2,10 +2,14 @@
 package udmi.schema;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -26,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class BlobBlobsetConfig {
 
     @JsonProperty("phase")
-    public String phase;
+    public BlobBlobsetConfig.Phase phase;
     @JsonProperty("content_type")
     public String content_type;
     @JsonProperty("base64")
@@ -57,6 +61,45 @@ public class BlobBlobsetConfig {
         }
         BlobBlobsetConfig rhs = ((BlobBlobsetConfig) other);
         return ((((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.base64 == rhs.base64)||((this.base64 != null)&&this.base64 .equals(rhs.base64))))&&((this.content_type == rhs.content_type)||((this.content_type!= null)&&this.content_type.equals(rhs.content_type))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
+    }
+
+    @Generated("jsonschema2pojo")
+    public enum Phase {
+
+        FINAL("final");
+        private final String value;
+        private final static Map<String, BlobBlobsetConfig.Phase> CONSTANTS = new HashMap<String, BlobBlobsetConfig.Phase>();
+
+        static {
+            for (BlobBlobsetConfig.Phase c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Phase(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static BlobBlobsetConfig.Phase fromValue(String value) {
+            BlobBlobsetConfig.Phase constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

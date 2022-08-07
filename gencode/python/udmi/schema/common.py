@@ -58,6 +58,7 @@ class Common:
   """Generated schema class"""
 
 
+  SystemMode = SystemMode
   Entry = Entry
 
   def __init__(self):

@@ -20,11 +20,7 @@
       "default": 600
     },
     "mode": {
-      "description": "Target operating mode for the device. Defaults to 'active'.",
-      "enum": [
-        "active",
-        "restart"
-      ]
+      "$ref": "file:common.json#/definitions/mode"
     }
   }
 }

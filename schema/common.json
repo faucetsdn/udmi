@@ -2,6 +2,15 @@
   "title": "Common",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "mode": {
+      "title": "System Mode",
+      "description": "Operating mode for the device. Defaults is 'active'.",
+      "enum": [
+        "initial",
+        "active",
+        "restart"
+      ]
+    },
     "entry": {
       "title": "Entry",
       "type": "object",

@@ -42,12 +42,14 @@ public class SystemConfig {
     @JsonPropertyDescription("The rate at which the system should send system event metric updates. 0 indicates no updates.")
     public Integer metrics_rate_sec = 600;
     /**
-     * Target operating mode for the device. Defaults to 'active'.
+     * System Mode
+     * <p>
+     * Operating mode for the device. Defaults is 'active'.
      * 
      */
     @JsonProperty("mode")
-    @JsonPropertyDescription("Target operating mode for the device. Defaults to 'active'.")
-    public SystemConfig.Mode mode;
+    @JsonPropertyDescription("Operating mode for the device. Defaults is 'active'.")
+    public SystemConfig.SystemMode mode;
 
     @Override
     public int hashCode() {
@@ -72,24 +74,27 @@ public class SystemConfig {
 
 
     /**
-     * Target operating mode for the device. Defaults to 'active'.
+     * System Mode
+     * <p>
+     * Operating mode for the device. Defaults is 'active'.
      * 
      */
     @Generated("jsonschema2pojo")
-    public enum Mode {
+    public enum SystemMode {
 
+        INITIAL("initial"),
         ACTIVE("active"),
         RESTART("restart");
         private final String value;
-        private final static Map<String, SystemConfig.Mode> CONSTANTS = new HashMap<String, SystemConfig.Mode>();
+        private final static Map<String, SystemConfig.SystemMode> CONSTANTS = new HashMap<String, SystemConfig.SystemMode>();
 
         static {
-            for (SystemConfig.Mode c: values()) {
+            for (SystemConfig.SystemMode c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
 
-        Mode(String value) {
+        SystemMode(String value) {
             this.value = value;
         }
 
@@ -104,8 +109,8 @@ public class SystemConfig {
         }
 
         @JsonCreator
-        public static SystemConfig.Mode fromValue(String value) {
-            SystemConfig.Mode constant = CONSTANTS.get(value);
+        public static SystemConfig.SystemMode fromValue(String value) {
+            SystemConfig.SystemMode constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

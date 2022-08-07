@@ -26,12 +26,7 @@
       "type": "boolean"
     },
     "mode": {
-      "description": "Current operating mode for the device. Defaults to 'active'.",
-      "enum": [
-        "active",
-        "ready",
-        "restarting"
-      ]
+      "$ref": "file:common.json#/definitions/mode"
     },
     "serial_no": {
       "description": "The serial number of the physical device",
