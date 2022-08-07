@@ -6,10 +6,19 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavigationModule } from './navigation/navigation.module';
 import { GraphQLModule } from './graphql/graphql.module';
 import { AuthModule } from './auth/auth.module';
+import { EnvModule } from './env/env.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, BrowserAnimationsModule, NavigationModule, GraphQLModule, AuthModule],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    NavigationModule,
+    GraphQLModule,
+    AuthModule,
+    EnvModule,
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

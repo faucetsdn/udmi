@@ -6,15 +6,17 @@ import { of } from 'rxjs';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
-import { DevicesQueryResponse, SortOptions } from './devices';
+import { DevicesQueryResponse, DevicesQueryVariables, SortOptions } from './devices';
 import { SearchFilterItem } from '../search-filter/search-filter';
 import { Device } from '../device/device';
 import { ApolloQueryResult } from '@apollo/client/core';
+import { QueryRef } from 'apollo-angular';
 
 describe('DevicesComponent', () => {
   let component: DevicesComponent;
   let fixture: ComponentFixture<DevicesComponent>;
   let mockDevicesService: jasmine.SpyObj<DevicesService>;
+  let refetch: jasmine.Spy;
   let devices: Device[] = [
     {
       id: 'device-id-123',
@@ -24,9 +26,12 @@ describe('DevicesComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockDevicesService = jasmine.createSpyObj(DevicesService, ['getDevices', 'fetchMore']);
-    mockDevicesService.getDevices.and.returnValue(
-      of(<ApolloQueryResult<DevicesQueryResponse>>{
+    refetch = jasmine.createSpy().and.resolveTo(<ApolloQueryResult<DevicesQueryResponse>>{
+      data: {},
+    });
+    mockDevicesService = jasmine.createSpyObj(DevicesService, ['getDevices']);
+    mockDevicesService.getDevices.and.returnValue(<QueryRef<DevicesQueryResponse, DevicesQueryVariables>>(<unknown>{
+      valueChanges: of(<ApolloQueryResult<DevicesQueryResponse>>{
         data: {
           devices: {
             devices,
@@ -34,9 +39,9 @@ describe('DevicesComponent', () => {
             totalFilteredCount: 1,
           },
         },
-        loading: false,
-      })
-    );
+      }),
+      refetch,
+    }));
 
     await TestBed.configureTestingModule({
       imports: [DevicesModule, BrowserAnimationsModule],
@@ -59,7 +64,6 @@ describe('DevicesComponent', () => {
     expect(component.devices).toEqual(devices);
     expect(component.totalCount).toEqual(1);
     expect(component.totalFilteredCount).toEqual(1);
-    expect(component.loading).toBeFalse();
   });
 
   it('should change pages', () => {
@@ -73,7 +77,14 @@ describe('DevicesComponent', () => {
 
     expect(component.pageSize).toEqual(11);
     expect(component.currentPage).toEqual(2);
-    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(22, 11, undefined, undefined);
+    expect(refetch).toHaveBeenCalledWith({
+      searchOptions: {
+        offset: 22,
+        batchSize: 11,
+        sortOptions: undefined,
+        filter: undefined,
+      },
+    });
   });
 
   it('should sort', () => {
@@ -90,7 +101,14 @@ describe('DevicesComponent', () => {
     };
 
     expect(component.sortOptions).toEqual(sortOptions);
-    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(0, 10, sortOptions, undefined);
+    expect(refetch).toHaveBeenCalledWith({
+      searchOptions: {
+        offset: 0,
+        batchSize: 10,
+        sortOptions,
+        filter: undefined,
+      },
+    });
   });
 
   it('should filter', () => {
@@ -107,6 +125,13 @@ describe('DevicesComponent', () => {
     const filter: string = JSON.stringify(filters);
 
     expect(component.filter).toEqual(filter);
-    expect(mockDevicesService.fetchMore).toHaveBeenCalledWith(0, 10, undefined, filter);
+    expect(refetch).toHaveBeenCalledWith({
+      searchOptions: {
+        offset: 0,
+        batchSize: 10,
+        sortOptions: undefined,
+        filter,
+      },
+    });
   });
 });
