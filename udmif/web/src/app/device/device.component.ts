@@ -20,7 +20,7 @@ export class DeviceComponent implements OnInit {
     'lastPayload',
     'tags',
   ];
-  device: Device = null;
+  device?: Device;
   loading: boolean = true;
 
   constructor(private route: ActivatedRoute, private deviceService: DeviceService) {}

@@ -35,6 +35,6 @@ resource "mongodbatlas_database_user" "user" {
 
   roles {
     role_name     = var.db_role
-    database_name = var.database_name 
+    database_name = var.database_name
   }
 }

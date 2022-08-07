@@ -33,6 +33,8 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
+bin/reset_config $site_path $project_id $device_id
+
 echo Writing pubber output to $PUBBER_OUT
 echo bin/pubber $site_path $project_id $device_id $serial_no
 

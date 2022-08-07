@@ -1,15 +1,9 @@
 .table-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
-  .mat-paginator {
-    display: inline-block;
-    background: transparent;
-  }
-
-  .mat-paginator-container {
-    padding-right: 0;
+  .grow {
+    flex: 1;
   }
 }
 

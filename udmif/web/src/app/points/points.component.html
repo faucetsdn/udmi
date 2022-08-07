@@ -1,4 +1,4 @@
-<p class="mat-small">{{ points.length }} Points</p>
+<p>{{ points.length }} Points</p>
 <mat-table [dataSource]="dataSource" matSort aria-label="List of points">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
     <mat-header-cell *matHeaderCellDef mat-sort-header>{{ columnName | capitalize }}</mat-header-cell>

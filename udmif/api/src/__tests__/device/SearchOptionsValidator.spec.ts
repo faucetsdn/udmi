@@ -1,5 +1,19 @@
-import { SearchOptions } from '../../device/model';
-import { validate } from '../../device/SearchOptionsValidator';
+import {
+  DeviceMakesSearchOptions,
+  DeviceModelsSearchOptions,
+  DeviceNamesSearchOptions,
+  SearchOptions,
+  SectionsSearchOptions,
+  SitesSearchOptions,
+} from '../../device/model';
+import {
+  validate,
+  validateDeviceMakesSearchOptions,
+  validateDeviceModelsSearchOptions,
+  validateDeviceNamesSearchOptions,
+  validateSectionsSearchOptions,
+  validateSitesSearchOptions,
+} from '../../device/SearchOptionsValidator';
 
 describe('SearchOptionsValidator.validate', () => {
   test('defaults offset if not provided', () => {
@@ -7,6 +21,7 @@ describe('SearchOptionsValidator.validate', () => {
   });
 
   test.each([
+    [0, 0],
     [999, 999],
     [1000, 1000],
     [1001, 1000],
@@ -16,5 +31,80 @@ describe('SearchOptionsValidator.validate', () => {
     const expectedSearchOption: SearchOptions = { batchSize: expected, offset: 0 };
 
     expect(validate(searchOptions)).toEqual(expectedSearchOption);
+  });
+});
+
+describe('SearchOptionsValidator.validateDeviceNamesSearchOptions', () => {
+  test.each([
+    [0, 0],
+    [null, 10],
+    [undefined, 10],
+  ])('limit defaults to 10 when not supplied', async (limit, expected) => {
+    const searchOptions: DeviceNamesSearchOptions = { limit };
+    expect(validateDeviceNamesSearchOptions(searchOptions).limit).toEqual(expected);
+  });
+
+  test('limit still defaults to 10 when no searchOptions are supplied', () => {
+    expect(validateDeviceNamesSearchOptions().limit).toEqual(10);
+  });
+});
+
+describe('SearchOptionsValidator.validateDeviceMakesSearchOptions', () => {
+  test.each([
+    [0, 0],
+    [null, 10],
+    [undefined, 10],
+  ])('limit defaults to 10 when not supplied', async (limit, expected) => {
+    const searchOptions: DeviceMakesSearchOptions = { limit };
+    expect(validateDeviceMakesSearchOptions(searchOptions).limit).toEqual(expected);
+  });
+
+  test('limit still defaults to 10 when no searchOptions are supplied', () => {
+    expect(validateDeviceMakesSearchOptions().limit).toEqual(10);
+  });
+});
+
+describe('SearchOptionsValidator.validateDeviceModelsSearchOptions', () => {
+  test.each([
+    [0, 0],
+    [null, 10],
+    [undefined, 10],
+  ])('limit defaults to 10 when not supplied', async (limit, expected) => {
+    const searchOptions: DeviceModelsSearchOptions = { limit };
+    expect(validateDeviceModelsSearchOptions(searchOptions).limit).toEqual(expected);
+  });
+
+  test('limit still defaults to 10 when no searchOptions are supplied', () => {
+    expect(validateDeviceModelsSearchOptions().limit).toEqual(10);
+  });
+});
+
+describe('SearchOptionsValidator.validateSitesSearchOptions', () => {
+  test.each([
+    [0, 0],
+    [null, 10],
+    [undefined, 10],
+  ])('limit defaults to 10 when not supplied', async (limit, expected) => {
+    const searchOptions: SitesSearchOptions = { limit };
+    expect(validateSitesSearchOptions(searchOptions).limit).toEqual(expected);
+  });
+
+  test('limit still defaults to 10 when no searchOptions are supplied', () => {
+    expect(validateSitesSearchOptions().limit).toEqual(10);
+  });
+});
+
+describe('SearchOptionsValidator.validateSectionsSearchOptions', () => {
+  test.each([
+    [0, 0],
+    [null, 10],
+    [undefined, 10],
+  ])('limit defaults to 10 when not supplied', async (limit, expected) => {
+    const searchOptions: SectionsSearchOptions = { limit };
+    expect(validateSectionsSearchOptions(searchOptions).limit).toEqual(expected);
+  });
+
+  test('limit still defaults to 10 when no searchOptions are supplied', () => {
+    expect(validateSectionsSearchOptions().limit).toEqual(10);
   });
 });
