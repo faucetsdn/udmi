@@ -11,9 +11,8 @@ while [[ $result -eq 192 ]]; do
 
     PUB_PID=$!
 
-    echo $PUB_PID > $ROOT_DIR/.pubber.pid
-
     result=0
+    echo Waiting for pubber pid $PUB_PID to complete...
     wait $PUB_PID || result=$?
 done
 
