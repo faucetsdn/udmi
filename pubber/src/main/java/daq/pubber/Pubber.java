@@ -121,7 +121,7 @@ public class Pubber {
       "superimposition_reading", makePointPointsetModel(false)
   );
   private static final Date DEVICE_START_TIME = new Date();
-  private static final int RESTART_EXIT_CODE = -5;
+  private static final int RESTART_EXIT_CODE = 5;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -141,7 +141,6 @@ public class Pubber {
   private Map<String, Metadata> allMetadata;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
-  private boolean wasActiveMode;
 
   /**
    * Start an instance from a configuration file.
@@ -379,6 +378,7 @@ public class Pubber {
         configuration.gatewayId, configuration.options));
 
     deviceState.system.operational = true;
+    deviceState.system.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -505,13 +505,18 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    if (wasActiveMode && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
+    if (SystemMode.ACTIVE.equals(deviceState.system.mode) &&
+        SystemMode.RESTART.equals(deviceConfig.system.mode)) {
       restartSystem();
     }
-    wasActiveMode = SystemMode.ACTIVE.equals(deviceConfig.system.mode);
+    if (SystemMode.ACTIVE.equals(deviceConfig.system.mode)) {
+      deviceState.system.mode = SystemMode.ACTIVE;
+    }
   }
 
   private void restartSystem() {
+    deviceState.system.mode = SystemMode.RESTART;
+    publishStateMessage();
     System.err.println("Restarting system with extreme prejudice.");
     System.err.flush();
     System.exit(RESTART_EXIT_CODE);
@@ -1175,7 +1180,6 @@ public class Pubber {
       publishingLog = true;
       pubberLogMessage(message, level, timestamp);
     } catch (Exception e) {
-      mqttPublisher = null;
       localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
     } finally {
       publishingLog = false;
