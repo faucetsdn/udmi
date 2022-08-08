@@ -2,10 +2,19 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/../..)
 
-java -Dorg.slf4j.simpleLogger.showThreadName=false \
-     -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
-     $@ &
+result=192  # Exit code used to indicate intentional system restart.
 
-echo $! > $ROOT_DIR/.pubber.pid
+while [[ $result -eq 192 ]]; do
+    java -Dorg.slf4j.simpleLogger.showThreadName=false \
+         -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
+         $@ &
 
-wait
+    PUB_PID=$!
+
+    result=0
+    echo Waiting for pubber pid $PUB_PID to complete...
+    wait $PUB_PID || result=$?
+done
+
+echo Done with pubber run, exit code $result
+exit $result
