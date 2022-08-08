@@ -121,7 +121,7 @@ public class Pubber {
       "superimposition_reading", makePointPointsetModel(false)
   );
   private static final Date DEVICE_START_TIME = new Date();
-  private static final int RESTART_EXIT_CODE = 5;
+  private static final int RESTART_EXIT_CODE = 192;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);

@@ -2,9 +2,9 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/../..)
 
-result=5  # Exit code used to indicate intentional system restart
+result=192  # Exit code used to indicate intentional system restart.
 
-while [[ $result == 5 ]]; do
+while [[ $result -eq 192 ]]; do
     java -Dorg.slf4j.simpleLogger.showThreadName=false \
          -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
          $@ &
