@@ -7,6 +7,7 @@ class SystemConfig:
   def __init__(self):
     self.min_loglevel = None
     self.metrics_rate_sec = None
+    self.mode = None
 
   @staticmethod
   def from_dict(source):
@@ -15,6 +16,7 @@ class SystemConfig:
     result = SystemConfig()
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
+    result.mode = source.get('mode')
     return result
 
   @staticmethod
@@ -39,4 +41,6 @@ class SystemConfig:
       result['min_loglevel'] = self.min_loglevel # 5
     if self.metrics_rate_sec:
       result['metrics_rate_sec'] = self.metrics_rate_sec # 5
+    if self.mode:
+      result['mode'] = self.mode # 5
     return result

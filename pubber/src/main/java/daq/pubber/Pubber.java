@@ -1,8 +1,6 @@
 package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +44,8 @@ import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.Phase;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -65,6 +65,7 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
+import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
@@ -119,9 +120,8 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final long VERY_LONG_TIME_SEC = 1234567890;
-  private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
   private static final Date DEVICE_START_TIME = new Date();
+  private static final int RESTART_EXIT_CODE = 192;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final Configuration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -378,6 +378,7 @@ public class Pubber {
         configuration.gatewayId, configuration.options));
 
     deviceState.system.operational = true;
+    deviceState.system.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -405,7 +406,11 @@ public class Pubber {
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
-      executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      try {
+        executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      } catch (Exception e) {
+        System.err.println("Rejecting state publish after " + delayMs + " " + e);
+      }
     }
   }
 
@@ -491,12 +496,37 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
-      // Some things can't be done from an on-message callback, so do them here instead.
-      maybeRedirectEndpoint();
+      deferredConfigActions();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
     }
+  }
+
+  private void deferredConfigActions() {
+    maybeRedirectEndpoint();
+    maybeRestartSystem();
+  }
+
+  private void maybeRestartSystem() {
+    if (deviceConfig.system == null) {
+      return;
+    }
+    if (SystemMode.ACTIVE.equals(deviceState.system.mode)
+        && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
+      restartSystem();
+    }
+    if (SystemMode.ACTIVE.equals(deviceConfig.system.mode)) {
+      deviceState.system.mode = SystemMode.ACTIVE;
+    }
+  }
+
+  private void restartSystem() {
+    deviceState.system.mode = SystemMode.RESTART;
+    publishStateMessage();
+    System.err.println("Restarting system with extreme prejudice.");
+    System.err.flush();
+    System.exit(RESTART_EXIT_CODE);
   }
 
   private void flushDirtyState() {
@@ -730,7 +760,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
+      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_CONFIG.value());
       if (iotConfig == null) {
         return null;
       }
@@ -768,7 +798,7 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && FINAL_PHASE.equals(blobBlobsetConfig.phase)
+      if (blobBlobsetConfig != null && Phase.FINAL.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
       }
@@ -1157,7 +1187,6 @@ public class Pubber {
       publishingLog = true;
       pubberLogMessage(message, level, timestamp);
     } catch (Exception e) {
-      mqttPublisher = null;
       localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
     } finally {
       publishingLog = false;

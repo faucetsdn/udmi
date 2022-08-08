@@ -1,0 +1,20 @@
+{
+  "version": "1.3.14",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 400,
+    "mode": "restart"
+  },
+  "pointset": {
+    "sample_limit_sec": 2,
+    "sample_rate_sec": 500,
+    "points": {
+      "return_air_temperature_sensor": {
+      },
+      "nexus_sensor": {
+        "ref": "ziuewwedf"
+      }
+    }
+  }
+}
