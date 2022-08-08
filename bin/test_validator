@@ -3,7 +3,7 @@
 # Force consistent sort order
 export LC_ALL=C
 
-ROOT_DIR=$(realpath $(dirname $0)/..)
+ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
 if [[ $# != 1 ]]; then
@@ -15,18 +15,17 @@ shift
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
-mkdir -p out
 
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
 PUBBER_OUT=pubber.out
-VALIDATOR_OUT=validator.out
-WAITING=10
 
-echo Killing running pubber/validator instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
-ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+if [[ -n $pids ]]; then
+    echo Killing pubber pids $pids
+    kill $pids
+fi
 
 rm -rf $site_path/out/devices
 
@@ -34,37 +33,18 @@ rm -rf $site_path/out/devices
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
-pubber/bin/build
-
-bin/reset_config $site_path $project_id $device_id
-
 bin/validator $site_path $project_id &
 vpid=$!
 sleep 10
 echo Started validator pid $vpid
 
-echo Starting validator, output in $VALIDATOR_OUT
-bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
-for i in `seq 1 $WAITING`; do
-    if fgrep "Entering message loop" $VALIDATOR_OUT; then
-        break
-    fi
-    echo Waiting for validator startup $((WAITING - i))...
-    sleep 2
-done
-
-if [[ $i -eq $WAITING ]]; then
-    echo validator startup failed:
-    cat $VALIDATOR_OUT
-    false
-fi
-echo Started validator pid $vpid
+pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
-cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
-echo $cmd
-$cmd > $PUBBER_OUT 2>&1 &
+echo bin/pubber $site_path $project_id $device_id $serial_no
+bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
 
+WAITING=10
 for i in `seq 1 $WAITING`; do
     if fgrep "Connection complete" $PUBBER_OUT; then
         break
@@ -80,21 +60,12 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Waiting for system to run for a bit...
-timeout 60s tail -f $VALIDATOR_OUT || true
+sleep 30
 
-echo Killing running pubber/validator instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
-ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
+echo Killing pids $vpid $pids
+kill $vpid $pids
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
-if [[ -z $outfiles ]]; then
-    echo No .out files found in $site_path/out/devices
-    false
-fi
-
-echo Found out files $outfiles, copying to /tmp/validator.out
-
-# Include /dev/null so that more has >1 to chomp on and outputs headers.
-more /dev/null $outfiles | sed -E > /tmp/validator.out \
-        -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
-        -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \
+echo Found .out files $outfiles, copying to /tmp/validator.out
+more $outfiles > /tmp/validator.out || true

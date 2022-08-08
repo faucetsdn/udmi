@@ -21,19 +21,8 @@ dockerSecret:
   accessToken: ""
 
 env:
-  #IDP Authentication information. 
-  AUTH_CLIENT_ID: ProvideValue
-  CLIENT_IDS: ProvideValue
-  
-  #MongoDB connection information. Required when DATASOURCE is set to MONGO.
-  MONGO_PROTOCOL: ProvideValue
-  MONGO_USER: ProvideValue
-  MONGO_PWD: ProvideValue
-  MONGO_HOST: ProvideValue
-  MONGO_DATABASE: ProvideValue
-
-  #Source of data for the API. Can either be STATIC for demo, in memory data or MONGO for real data. If MONGO, all MONGO_ env variables must be provided.
-  DATASOURCE: STATIC
+  AUTH_CLIENT_ID: <<Injected via CI/CD variable>>
+  CLIENT_IDS: <<Injected via CI/CD variable>>
 
 serviceAccount:
   # Specifies whether a service account should be created

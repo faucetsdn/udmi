@@ -19,13 +19,13 @@ export function loadConfig(): Configuration {
     nodeEnv: process.env.NODE_ENV,
     datasource: process.env.DATASOURCE || 'STATIC',
     projectId: process.env.PROJECT_ID,
-    logLevel: process.env.LOG_LEVEL ?? 'info',
+    logLevel: process.env.LOG_LEVEL,
     mongoProtocol: process.env.MONGO_PROTOCOL,
-    mongoUsername: process.env.MONGO_USER,
-    mongoPassword: process.env.MONGO_PWD,
+    mongoUsername: process.env.MONGO_USERNAME,
+    mongoPassword: process.env.MONGO_PASSWORD,
     mongoHost: process.env.MONGO_HOST,
     mongoDatabase: process.env.MONGO_DATABASE,
-    authClientId: process.env.AUTH_CLIENT_ID ?? '',
-    clientIds: process.env.CLIENT_IDS?.split(',') ?? [],
+    authClientId: process.env.AUTH_CLIENT_ID,
+    clientIds: process.env.CLIENT_IDS.split(','),
   };
 }

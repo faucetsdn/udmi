@@ -4,6 +4,7 @@
   "description": "API for the Universal Device Management Dashboard",
   "author": "Buildings IOT",
   "main": "dist/app.js",
+  "license": "UNLICENSED",
   "dependencies": {
     "apollo-datasource-graphql": "^1.3.2",
     "apollo-server": "^3.6.2",
@@ -29,11 +30,11 @@
     "typescript": "^4.5.5"
   },
   "scripts": {
-    "start": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:6329  src/app.ts",
-    "test": "NODE_ENV=test jest --runInBand --silent",
+    "dev": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:6329  src/app.ts",
+    "start": "ts-node src/app.ts",
+    "test": "NODE_ENV=test jest --runInBand",
     "testInteractive": "NODE_ENV=test jest --runInBand --watchAll",
-    "postinstall": "cd ../.. && husky install udmif/api/.husky",
-    "production": "NODE_ENV=production node -r ts-node/register src/app.ts"
+    "postinstall": "cd ../.. && husky install udmif/api/.husky"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"

@@ -327,35 +327,28 @@ function parse_old_config(oldConfig, resetConfig) {
 
 async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
-  var newConfig;
 
-  if (subFolder == 'update') {
-    console.log('Config replace version', version, startTime);
-    newConfig = subContents;
-  } else {
-    const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
-    newConfig = parse_old_config(oldConfig, resetConfig);
-    if (newConfig === null) {
-      return;
-    }
-
-    newConfig.version = UDMI_VERSION;
-    newConfig.timestamp = currentTimestamp();
-
-    console.log('Config modify version', subFolder, version, startTime);
-    if (subContents) {
-      delete subContents.version;
-      delete subContents.timestamp;
-      newConfig[subFolder] = subContents;
-    } else {
-      if (!newConfig[subFolder]) {
-        console.log('Config target already null', subFolder, version, startTime);
-        return;
-      }
-      delete newConfig[subFolder];
-    }
+  const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
+  const newConfig = parse_old_config(oldConfig, resetConfig);
+  if (newConfig === null) {
+    return;
   }
 
+  newConfig.version = UDMI_VERSION;
+  newConfig.timestamp = currentTimestamp();
+
+  console.log('Config modify version', subFolder, version, startTime);
+  if (subContents) {
+    delete subContents.version;
+    delete subContents.timestamp;
+    newConfig[subFolder] = subContents;
+  } else {
+    if (!newConfig[subFolder]) {
+      console.log('Config target already null', subFolder, version, startTime);
+      return;
+    }
+    delete newConfig[subFolder];
+  }
   const attributes = {
     projectId: PROJECT_ID,
     cloudRegion: registry_regions[registryId],

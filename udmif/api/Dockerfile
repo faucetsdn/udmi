@@ -14,4 +14,4 @@ RUN npm install
 
 EXPOSE $PORT
 
-CMD ["npm", "run", "production"]
+CMD ["npm", "start"]

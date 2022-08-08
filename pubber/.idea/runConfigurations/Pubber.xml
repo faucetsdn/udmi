@@ -1,8 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Pubber" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="ALTERNATIVE_JRE_PATH" value="/usr/lib/jvm/java-1.11.0-openjdk-amd64" />
     <option name="MAIN_CLASS_NAME" value="daq.pubber.Pubber" />
     <module name="pubber" />
-    <option name="PROGRAM_PARAMETERS" value="bos-peringknife-dev sites/udmi_site_model AHU-1 54335" />
+    <option name="PROGRAM_PARAMETERS" value="bos-johnrandolph-dev $PROJECT_DIR$/../../udmi_site_model ZZ-PER-FECTA 54335" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>

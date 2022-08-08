@@ -1,67 +1,42 @@
-import { Component, ElementRef, HostBinding, Injector, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { startCase, findIndex, some } from 'lodash-es';
-import { iif, Observable, of } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { startCase, findIndex } from 'lodash-es';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { DevicesService } from '../devices/devices.service';
-
-const services: any = {
-  DevicesService,
-};
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange'],
+  inputs: ['data', 'handleFilterChange'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
-  serviceName!: string;
-  fields!: Record<string, string>;
-  limit: number = 5;
+  data: Record<string, string[]> = {};
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
   itemCtrl = new FormControl();
-  filteredItems: Observable<ChipItem[]>; // the autocomplete list of options, filtered based on users input
-  items: ChipItem[] = []; // list of chips
-  allItems: ChipItem[] = []; // list of options, options will switch based on filterIndex
-  filterIndex: number = 0; // position in the current chip we are building
-  fieldItems: ChipItem[] = []; // hardcoded fields we can filter on, set by the input 'fields'
+  filteredItems: Observable<ChipItem[]>;
+  items: ChipItem[] = [];
+  allItems: ChipItem[] = [];
+  filterIndex: number = 0;
+  placeholder: string = 'Select field...';
+  fieldItems: ChipItem[] = [];
 
   @ViewChild('itemInput') itemInput!: ElementRef<HTMLInputElement>;
-  @ViewChild(MatAutocompleteTrigger) triggerAutocompleteInput!: MatAutocompleteTrigger;
-  @HostBinding('className') componentClass: string;
 
-  constructor(private injector: Injector) {
-    this.componentClass = 'app-search-filter';
+  constructor() {
     this.filteredItems = this.itemCtrl.valueChanges.pipe(
-      startWith(''),
-      switchMap((term) =>
-        iif(
-          () => this.filterEntry.operator === '=' && !some(this.allItems, (item: ChipItem) => term === item.value), // avoid calling the backend again with the populated search term when the value is selected
-          // Auto-complete on suggested values when we've chosen the equals operator on a field.
-          <Observable<ChipItem[]>>this.injector
-            .get<any>(services[this.serviceName])
-            [this.fields[this.filterEntry.field]]?.(term, this.limit)
-            .pipe(
-              map(({ values }) => {
-                this.allItems = values.map((value: string): ChipItem => ({ label: value, value }));
-                return this.allItems;
-              })
-            ),
-          // Else auto-complete on the field names or equals(=)/contains(~).
-          of(term ? this._filter(term) : this.allItems)
-        )
-      )
+      startWith(null),
+      map((item: string | null) => (item ? this._filter(item) : this.allItems.slice()))
     );
   }
 
   ngOnInit(): void {
-    this.allItems = Object.keys(this.fields).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
+    this.allItems = Object.keys(this.data).map((chipValue) => ({ label: startCase(chipValue), value: chipValue }));
     this.fieldItems = this.allItems;
   }
 
@@ -86,47 +61,21 @@ export class SearchFilterComponent implements OnInit {
 
     this.items.splice(index, 1); // remove the chip
 
-    // Check if we're deleting an exisitng chip,
-    // or one we are halfway done building.
+    // Check if we're deleting an exisitng filter, or one we are halfway done building.
     if (index === this.filters.length) {
-      // We're deleting a partially built chip.
-      this.allItems = this.fieldItems;
+      // We're deleting a half built filter.
+      this.allItems = this.fieldItems; // select field
+      this.placeholder = 'Select field...';
       this.filterIndex = 0;
-      this.filterEntry = {};
-      this._resetInput();
-      this._closePanel();
+      this.filterEntry = {}; // clear the chip cache
     } else {
-      // We're deleting a fully built chip.
+      // We're deleting a built filter.
       this.filters.splice(index, 1); // remove the filter
       this.handleFilterChange(this.filters);
-
-      if (this.filterIndex) {
-        // Keep the panel open when we're still building a chip
-        // but deleting one next to it.
-        this._closePanel();
-        this._openPanel();
-      } else if (this.itemInput.nativeElement.value !== '') {
-        // We've typed something before deleting chip next to this one,
-        // so reopen the panel in the right position.
-        this._closePanel();
-        this._openPanel();
-      } else {
-        // We've typed nothing, so don't keep the panel open.
-        this._closePanel();
-      }
     }
-  }
 
-  clear(): void {
-    this.items = [];
-    this.filters = [];
-    this.allItems = this.fieldItems;
-    this.filterIndex = 0;
-    this.filterEntry = {}; // clear the chip cache
-
-    this._resetInput();
-    this._closePanel();
-    this.handleFilterChange(this.filters);
+    // Show the auto-complete options panel.
+    this._focusItemInput();
   }
 
   selected(event: MatAutocompleteSelectedEvent): void {
@@ -137,50 +86,51 @@ export class SearchFilterComponent implements OnInit {
     this.filterIndex++;
 
     switch (this.filterIndex) {
+      case 0:
+        this.allItems = this.fieldItems; // select field
+        this.placeholder = 'Select field...';
+        break;
       case 1:
         this.allItems = [
           { label: '(=) Equals', value: '=' },
           { label: '(~) Contains', value: '~' },
         ]; // select operator
+        this.placeholder = 'Select operator...';
         this.filterEntry.field = chipValue; // store the field
-        this._resetInput();
-        this._openPanel();
         break;
       case 2:
-        this.allItems = []; // can clear the items, the api will handle filtering user input above in observable
+        this.allItems =
+          chipValue === '~'
+            ? []
+            : this.data[this.items[this.items.length - 2].value].map((cv) => ({ label: cv, value: cv })); // select the fields options when operator is not contains (~)
+        this.placeholder = 'Select value...';
         this.filterEntry.operator = chipValue; // store the operator
         this._combineLastTwoChips();
-        this._resetInput();
-        this._openPanel();
         break;
       default:
         this.allItems = this.fieldItems; // reset
+        this.placeholder = 'Select field...';
         this.filterIndex = 0; // reset
         this.filterEntry.value = chipValue; // store the value
         this.filters.push(this.filterEntry);
         this.filterEntry = {}; // clear the chip cache
         this._combineLastTwoChips();
-        this._resetInput();
-        this._closePanel();
         this.handleFilterChange(this.filters);
         break;
     }
+
+    // Show the auto-complete options panel.
+    this._focusItemInput();
   }
 
-  private _resetInput(): void {
+  private _focusItemInput(): void {
+    // Clear the input.
     this.itemInput.nativeElement.value = '';
-    this.itemCtrl.setValue('');
-  }
+    this.itemCtrl.setValue(null);
 
-  private _openPanel(): void {
     setTimeout(() => {
-      this.triggerAutocompleteInput.openPanel();
-    });
-  }
-
-  private _closePanel(): void {
-    setTimeout(() => {
-      this.triggerAutocompleteInput.closePanel();
+      this.itemInput.nativeElement.blur();
+      this.itemInput.nativeElement.focus();
     });
   }
 

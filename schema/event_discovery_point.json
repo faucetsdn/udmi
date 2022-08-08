@@ -5,10 +5,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "name": {
-      "description": "Friendly name for the point, if known",
-      "type": "string"
-    },
     "possible_values": {
       "description": "List of possible enumerated values for the point",
       "type": "array",

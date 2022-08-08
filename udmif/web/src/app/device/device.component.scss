@@ -1,11 +1,10 @@
-@use '../../styles/variables' as *;
+@import '../../styles/variables';
 
 .summary {
   margin-top: $gutter-width;
   margin-bottom: $gutter-width;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  column-gap: $spacing * 2;
 }
 
 .active {

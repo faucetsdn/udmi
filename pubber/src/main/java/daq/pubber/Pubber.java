@@ -1,8 +1,6 @@
 package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +43,6 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -129,6 +126,7 @@ public class Pubber {
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
+  private final AtomicInteger logMessageCount = new AtomicInteger(0);
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
@@ -139,8 +137,6 @@ public class Pubber {
   private Consumer<String> onDone;
   private boolean publishingLog;
   private Map<String, Metadata> allMetadata;
-  private String appliedEndpoint;
-  private EndpointConfiguration extractedEndpoint;
 
   /**
    * Start an instance from a configuration file.
@@ -312,7 +308,7 @@ public class Pubber {
       } else {
         throw new RuntimeException("missingPoint not in pointset");
       }
-    }
+    } 
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
@@ -491,7 +487,7 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
-      // Some things can't be done from an on-message callback, so do them here instead.
+      // Some things can't be done from a on-message callback, so do them here instead.
       maybeRedirectEndpoint();
     } catch (Exception e) {
       error("Fatal error during execution", e);
@@ -581,7 +577,6 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    appliedEndpoint = toJson(configuration.endpoint);
     mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -593,14 +588,6 @@ public class Pubber {
         this::configHandler, Config.class);
   }
 
-  private String toJson(Object configuration) {
-    try {
-      return OBJECT_MAPPER.writeValueAsString(configuration);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting object to string", e);
-    }
-  }
-
   private void ensureKeyBytes() {
     if (configuration.keyBytes != null) {
       return;
@@ -608,7 +595,6 @@ public class Pubber {
     Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
     info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
-    configuration.keyFile = null;
   }
 
   private String getDeviceKeyPrefix() {
@@ -720,7 +706,6 @@ public class Pubber {
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
-      extractedEndpoint = extractEndpointBlobConfig();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
@@ -728,53 +713,19 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
-  private EndpointConfiguration extractEndpointBlobConfig() {
-    try {
-      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
-      if (iotConfig == null) {
-        return null;
-      }
-      return OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While extracting endpoint blob config", e);
-    }
-  }
-
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    if (extractedEndpoint != null && !toJson(extractedEndpoint).equals(appliedEndpoint)) {
-      info("New config blob endpoint detected");
-      configuration.endpoint = extractedEndpoint;
-    } else if (redirectRegistry != null && configLatch.getCount() <= 0
-        && !redirectRegistry.equals(configuration.endpoint.registryId)) {
-      info("Mismatched redirectRegistry detected");
-      configuration.endpoint.registryId = redirectRegistry;
-    } else {
+    if (redirectRegistry == null || redirectRegistry.equals(configuration.endpoint.registryId)
+        || configLatch.getCount() > 0) {
       return;
     }
     try {
       disconnectMqtt();
+      configuration.endpoint.registryId = redirectRegistry;
       initializeMqtt();
       startConnection(onDone);
     } catch (Exception e) {
       throw new RuntimeException("While redirecting connection endpoint", e);
-    }
-  }
-
-  private String extractConfigBlob(String blobName) {
-    try {
-      if (deviceConfig == null || deviceConfig.blobset == null
-          || deviceConfig.blobset.blobs == null) {
-        return null;
-      }
-      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && FINAL_PHASE.equals(blobBlobsetConfig.phase)
-          && blobBlobsetConfig.base64 != null) {
-        return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
-      }
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException("While extracting config blob " + blobName, e);
     }
   }
 
@@ -805,17 +756,13 @@ public class Pubber {
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.uniqs = enumeratePoints(configuration.deviceId);
+    discoveryEvent.points = enumeratePoints(configuration.deviceId);
     publishDeviceMessage(discoveryEvent);
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
     return allMetadata.get(deviceId).pointset.points.entrySet().stream().collect(
-        Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
-  }
-
-  private String getPointUniqKey(Map.Entry<String, PointPointsetModel> entry) {
-    return String.format("%08x", entry.getKey().hashCode());
+        Collectors.toMap(Map.Entry::getKey, this::getPointEnumerationEvent));
   }
 
   private PointEnumerationEvent getPointEnumerationEvent(
@@ -825,7 +772,6 @@ public class Pubber {
     pointEnumerationEvent.writable = model.writable;
     pointEnumerationEvent.units = model.units;
     pointEnumerationEvent.ref = model.ref;
-    pointEnumerationEvent.name = entry.getKey();
     return pointEnumerationEvent;
   }
 
@@ -932,7 +878,7 @@ public class Pubber {
           discoveryEvent.families.computeIfAbsent("iot",
               key -> new FamilyDiscoveryEvent()).id = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
-            discoveryEvent.uniqs = enumeratePoints(deviceId);
+            discoveryEvent.points = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
           sentEvents.incrementAndGet();

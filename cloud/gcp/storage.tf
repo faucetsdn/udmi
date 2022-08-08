@@ -8,7 +8,7 @@ resource "google_storage_bucket" "tf-bucket" {
     enabled = true
   }
   lifecycle {
-    # Stop any terraform plan which would destroy this bucket.
+    # Stop any terraform plan which would destroy this GCP project.
     prevent_destroy = true
   }
 }

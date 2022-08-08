@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -x
 
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
@@ -31,8 +32,6 @@ if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
     kill $pids
 fi
-
-bin/reset_config $site_path $project_id $device_id
 
 pubber/bin/build
 

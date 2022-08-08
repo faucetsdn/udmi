@@ -2,21 +2,23 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ApolloModule, APOLLO_OPTIONS } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
-import { InMemoryCache, ApolloClientOptions, ApolloLink, Observable } from '@apollo/client/core';
+import { InMemoryCache, ApolloClientOptions, ApolloLink } from '@apollo/client/core';
 import { setContext } from '@apollo/client/link/context';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { firstValueFrom, map, take } from 'rxjs';
-import { EnvService } from '../env/env.service';
-import { onError } from '@apollo/client/link/error';
-import { AuthService } from '../auth/auth.service';
 
-export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthService): ApolloClientOptions<any> {
-  const authLink = setContext(async (operation, context) => {
+const uri = '/api';
+export function createApollo(httpLink: HttpLink, authService: SocialAuthService): ApolloClientOptions<any> {
+  const auth = setContext(async (operation, context) => {
     const idToken = await firstValueFrom(
-      auth.authState.pipe(
+      authService.authState.pipe(
         map((authState) => authState?.idToken),
         take(1)
       )
     );
+
+    // If refreshToken needs to be used see:
+    // https://apollo-angular.com/docs/recipes/authentication/#waiting-for-a-refreshed-token
 
     if (!idToken) {
       return {};
@@ -29,31 +31,8 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
     }
   });
 
-  const errorLink = onError(({ forward, graphQLErrors, networkError, operation }) => {
-    if (networkError) {
-      if (JSON.stringify(networkError).includes('UNAUTHENTICATED')) {
-        // Try refreshing the token.
-        return promiseToApolloObservable(auth.refreshToken()).flatMap(() => forward(operation));
-      }
-    }
-  });
-
-  const promiseToApolloObservable = (promise: Promise<any>) =>
-    new Observable((subscriber: any) => {
-      promise.then(
-        (value) => {
-          if (subscriber.closed) {
-            return;
-          }
-          subscriber.next(value);
-          subscriber.complete();
-        },
-        (err) => subscriber.error(err)
-      );
-    });
-
   return {
-    link: ApolloLink.from([errorLink, authLink, httpLink.create({ uri: env.apiUri })]),
+    link: ApolloLink.from([auth, httpLink.create({ uri })]),
     cache: new InMemoryCache(),
   };
 }
@@ -63,9 +42,9 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
   providers: [
     {
       provide: APOLLO_OPTIONS,
-      useFactory: ApolloFactory,
-      deps: [HttpLink, EnvService, AuthService],
+      useFactory: createApollo,
+      deps: [HttpLink, SocialAuthService],
     },
   ],
 })
-export class GraphQLModule { }
+export class GraphQLModule {}

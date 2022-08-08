@@ -6,11 +6,13 @@ export interface PointModel {
   state: string;
 }
 
-export type Point = Partial<PointModel>;
+export type Point = Partial<PointModel> | null;
 
-export type PointsQueryResponse = {
-  points?: Point[];
+export type PointsResponse = {
+  points: Point[] | null;
 };
+
+export type PointsQueryResponse = PointsResponse;
 
 export type PointsQueryVariables = {
   deviceId: string;

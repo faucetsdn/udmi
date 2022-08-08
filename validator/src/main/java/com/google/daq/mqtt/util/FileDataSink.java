@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
 /**
@@ -18,8 +17,6 @@ import java.util.function.BiConsumer;
  */
 public class FileDataSink implements MessagePublisher {
 
-  public static final String VALIDATION_SUFFIX = "out";
-  public static final String JSON_SUFFIX = "json";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(Feature.ALLOW_COMMENTS)
@@ -29,14 +26,17 @@ public class FileDataSink implements MessagePublisher {
           .setSerializationInclusion(Include.NON_NULL);
   private static final String REPORT_JSON_FILENAME = "validation_report.json";
   private final File reportFile;
+  private final String validationSrc;
   private final File outBaseDir;
 
   /**
    * New instance.
    *
-   * @param outBaseDir directory root for output files
+   * @param outBaseDir    directory root for output files
+   * @param validationSrc source of validation messages
    */
-  public FileDataSink(File outBaseDir) {
+  public FileDataSink(File outBaseDir, String validationSrc) {
+    this.validationSrc = validationSrc;
     this.outBaseDir = outBaseDir;
     reportFile = new File(outBaseDir, REPORT_JSON_FILENAME);
     System.err.println("Generating report file in " + reportFile.getAbsolutePath());
@@ -45,11 +45,7 @@ public class FileDataSink implements MessagePublisher {
 
   @Override
   public void publish(String deviceId, String topic, String data) {
-    File outFile =
-        isValidation(topic) ? getValidationFile(deviceId, data) : getOutputFile(deviceId, topic);
-    if (outFile == null) {
-      return;
-    }
+    File outFile = getOutputFile(deviceId, topic);
     try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile))) {
       out.println(data);
     } catch (Exception e) {
@@ -57,38 +53,15 @@ public class FileDataSink implements MessagePublisher {
     }
   }
 
-  private boolean isValidation(String topic) {
-    return topic.equals("validation/event");
-  }
-
   private File getOutputFile(String deviceId, String topic) {
-    String[] parts = topic.split("/");
-    return getOutputFile(deviceId, parts[1], parts[0], JSON_SUFFIX);
+    return deviceId.equals(validationSrc) ? reportFile : getDeviceFile(deviceId, topic);
   }
 
-  private File getOutputFile(String deviceId, String subType, String subFolder, String suffix) {
-    File deviceDir = getDeviceDir(deviceId);
+  private File getDeviceFile(String deviceId, String topic) {
+    File deviceDir = new File(outBaseDir, String.format("devices/%s", deviceId));
     deviceDir.mkdirs();
-    return new File(deviceDir, String.format("%s_%s.%s", subType, subFolder, suffix));
-  }
-
-  private File getDeviceDir(String deviceId) {
-    return new File(outBaseDir, String.format("devices/%s", deviceId));
-  }
-
-  @SuppressWarnings("unchecked")
-  private File getValidationFile(String deviceId, String data) {
-    try {
-      Map<String, Object> message = OBJECT_MAPPER.readValue(data, TreeMap.class);
-      String subFolder = (String) message.get("sub_folder");
-      String subType = (String) message.get("sub_type");
-      boolean isReport = subFolder == null && subType == null;
-      boolean isEmpty = !isReport && !message.containsKey("status");
-      return isReport ? reportFile
-          : isEmpty ? null : getOutputFile(deviceId, subType, subFolder, VALIDATION_SUFFIX);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing validation message " + deviceId, e);
-    }
+    String[] parts = topic.split("/");
+    return new File(deviceDir, String.format("%s_%s.json", parts[1], parts[0]));
   }
 
   @Override

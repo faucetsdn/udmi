@@ -59,7 +59,7 @@ public class IotReflectorClient implements MessagePublisher {
       mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
           siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
     } catch (Exception e) {
-      throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
+      throw new RuntimeException("While connecting subscription " + subscriptionId, e);
     }
 
     active = true;

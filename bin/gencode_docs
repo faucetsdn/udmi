@@ -86,7 +86,7 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
-schemas="state event_system event_pointset event_discovery event_validation config metadata envelope"
+schemas="state event_system event_pointset event_discovery config metadata envelope"
 
 for schema in $schemas; do
     echo == Processing $schema.json

@@ -22,6 +22,15 @@ public class ConfigValidator extends SequenceValidator {
   public static final String SYSTEM_CONFIG_APPLY = "system.config.apply";
 
   @Test
+  public void blob_configs() {
+    info("blob_configs");
+    untilTrue("last_config not null", () -> deviceState.system.last_config != null);
+    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("state no status", () -> deviceState.system.status == null);
+    assertTrue(true);
+  }
+
+  @Test
   public void system_last_update() {
     deviceConfig.system.min_loglevel = 400;
     untilTrue("state last_config match", () -> {

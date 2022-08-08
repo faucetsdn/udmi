@@ -1,22 +1,14 @@
-resource "google_project_service" "service" {
-  for_each = toset([
-    "cloudresourcemanager.googleapis.com",
-    "serviceusage.googleapis.com",
-    "compute.googleapis.com",
-    "pubsub.googleapis.com",
-    "dns.googleapis.com",
-    "iam.googleapis.com",
-    "storage.googleapis.com",
-    "sourcerepo.googleapis.com",
-    "cloudiot.googleapis.com",
-    "cloudfunctions.googleapis.com",
-    "cloudbuild.googleapis.com",    
-    "container.googleapis.com",
-    "containerregistry.googleapis.com"
-  ])
+resource "google_project_service" "site_iam" {
+  project = var.gcp_project_id
+  service = "iam.googleapis.com"
+}
 
-  service = each.key
+resource "google_project_service" "site_storage" {
+  project = var.gcp_project_id
+  service = "storage.googleapis.com"
+}
 
-  project            = var.gcp_project_id
-  disable_on_destroy = false
+resource "google_project_service" "site_sourcerepo" {
+  project = var.gcp_project_id
+  service = "sourcerepo.googleapis.com"
 }

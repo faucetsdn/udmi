@@ -4,7 +4,6 @@ include:
     file: terraform/base.yml
 
 stages:
-  - test
   - init
   - validate
   - build

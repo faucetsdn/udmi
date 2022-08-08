@@ -1,18 +1,7 @@
 import { randomInt } from 'crypto';
 import { v4 as uuid } from 'uuid';
 import { fromString } from '../../FilterParser';
-import {
-  Device,
-  DeviceMakesSearchOptions,
-  DeviceModelsSearchOptions,
-  DeviceNamesSearchOptions,
-  Filter,
-  Point,
-  SearchOptions,
-  SectionsSearchOptions,
-  SitesSearchOptions,
-  SORT_DIRECTION,
-} from '../../model';
+import { Device, Filter, Point, SearchOptions, SORT_DIRECTION } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { filterDevices } from './StaticDeviceFilter';
 
@@ -50,14 +39,13 @@ export class StaticDeviceDAO implements DeviceDAO {
   }
 
   public async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
-
     let filteredDevices = this.devices;
     if (searchOptions.filter) {
       const filters: Filter[] = fromString(searchOptions.filter);
       filteredDevices = filterDevices(filters, filteredDevices);
     }
 
-    return filteredDevices.length;
+    return filterDevices.length;
   }
 
   public async getDevice(id: string): Promise<Device | null> {
@@ -81,26 +69,6 @@ export class StaticDeviceDAO implements DeviceDAO {
     }
 
     return filteredDevices.slice(searchOptions.offset, searchOptions.offset + searchOptions.batchSize);
-  }
-
-  public async getDeviceNames(searchOptions: DeviceNamesSearchOptions): Promise<string[]> {
-    return this.getDistinct('name', searchOptions.search, searchOptions.limit);
-  }
-
-  public async getDeviceMakes(searchOptions: DeviceMakesSearchOptions): Promise<string[]> {
-    return this.getDistinct('make', searchOptions.search, searchOptions.limit);
-  }
-
-  public async getDeviceModels(searchOptions: DeviceModelsSearchOptions): Promise<string[]> {
-    return this.getDistinct('model', searchOptions.search, searchOptions.limit);
-  }
-
-  public async getSites(searchOptions: SitesSearchOptions): Promise<string[]> {
-    return this.getDistinct('site', searchOptions.search, searchOptions.limit);
-  }
-
-  public async getSections(searchOptions: SectionsSearchOptions): Promise<string[]> {
-    return this.getDistinct('section', searchOptions.search, searchOptions.limit);
   }
 
   // this allows us to sort the static data
@@ -154,7 +122,7 @@ export class StaticDeviceDAO implements DeviceDAO {
         section,
         lastPayload,
         operational,
-        firmware,
+        firmware: firmware,
         serialNumber,
         points,
         tags: [],
@@ -167,15 +135,5 @@ export class StaticDeviceDAO implements DeviceDAO {
 
   private getRandom(array: any[]): any {
     return array[Math.floor(Math.random() * array.length)];
-  }
-
-  private getDistinct(field: string, search?: string, limit?: number): string[] {
-    const results = [...new Set(this.devices.map((item) => item[field]))];
-
-    if (search) {
-      return results.filter((item) => item.toLowerCase().includes(search.toLowerCase())).slice(0, limit);
-    } else {
-      return results.slice(0, limit);
-    }
   }
 }

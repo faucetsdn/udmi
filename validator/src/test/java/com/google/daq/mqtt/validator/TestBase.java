@@ -39,8 +39,7 @@ public class TestBase {
   static final String REGISTRY_ID = "ZZ-TRI-FECTA";
   static final String SCHEMA_SPEC = "../schema";
   static final String SITE_DIR = "../sites/udmi_site_model";
-  private static final File REPORT_BASE = new File(SITE_DIR, "/out");
-  private static final File REPORT_FILE = new File(REPORT_BASE, "validation_report.json");
+  static final File REPORT_FILE = new File(SITE_DIR + "/out/validation_report.json");
 
   protected PointsetEvent basePointsetEvent() {
     PointsetEvent pointsetEvent = new PointsetEvent();
@@ -93,16 +92,6 @@ public class TestBase {
   protected ValidationEvent getValidationReport() {
     try {
       return OBJECT_MAPPER.readValue(REPORT_FILE, ValidationEvent.class);
-    } catch (Exception e) {
-      throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);
-    }
-  }
-
-  protected ValidationEvent getValidationResult(String deviceId, String subType, String subFolder) {
-    try {
-      File resultFile = new File(REPORT_BASE,
-          String.format("devices/%s/%s_%s.out", deviceId, subType, subFolder));
-      return OBJECT_MAPPER.readValue(resultFile, ValidationEvent.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);
     }

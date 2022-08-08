@@ -1,9 +1,8 @@
 {
   "generation": "2022-06-21T17:19:49.191023+00:00",
-  "uniqs": {
-    "5005/1094": {
+  "points": {
+    "org_building_5005_analogInput_1094": {
       "ref": "org/building/5005/analogInput/1094",
-      "name": "discharge_air_velocity_pressure",
       "units": "inchesOfWater",
       "description": "Discharge Air Velocity Pressure",
       "ancillary": {

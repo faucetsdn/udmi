@@ -1,10 +1,6 @@
+<app-search-filter [data]="searchFilterOptions" [handleFilterChange]="filterData"></app-search-filter>
 <div class="table-controls">
-  <app-search-filter
-    serviceName="DevicesService"
-    [fields]="searchFields"
-    [limit]="15"
-    [handleFilterChange]="filterData"
-  ></app-search-filter>
+  <span class="mat-small">{{ totalCount }} Devices</span>
   <mat-paginator
     [length]="totalFilteredCount"
     [pageSize]="pageSize"
@@ -17,13 +13,10 @@
 </div>
 <mat-table [dataSource]="devices" matSort (matSortChange)="sortData($event)" aria-label="List of devices">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
-    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ columnName | capitalize }}</mat-header-cell>
-    <div *ngIf="columnName === 'lastPayload'; else elseBlock">
-      <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
-    </div>
-    <ng-template #elseBlock
-      ><mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell></ng-template
-    >
+    <mat-header-cell *matHeaderCellDef mat-sort-header="{{ columnName }}">{{
+      columnName | capitalize
+    }}</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>

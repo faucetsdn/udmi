@@ -17,6 +17,12 @@
     },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
+    },
+    "missing_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

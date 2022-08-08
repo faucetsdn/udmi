@@ -12,7 +12,6 @@ check_links.out
 dashboard/functions/node_modules/
 dashboard/public/deploy_version.js
 firebase-debug.log
-credentials.json
 /out/
 /validator/build/
 /validator/out/
@@ -30,7 +29,6 @@ __pycache__/
 
 .vscode
 
-#Terraform authentication and template files.
 cloud/gcp/terraform.tfvars
 cloud/gcp/udmi-sites.tf
 cloud/gcp/main.tf

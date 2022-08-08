@@ -8,7 +8,10 @@ import org.slf4j.LoggerFactory;
 public class NullPublisher implements MessagePublisher {
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
 
-  public NullPublisher() {
+  final String deviceId;
+
+  public NullPublisher(String deviceId) {
+    this.deviceId = deviceId;
   }
 
   @Override

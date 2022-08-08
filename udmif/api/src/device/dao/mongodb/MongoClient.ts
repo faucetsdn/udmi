@@ -8,7 +8,7 @@ export async function getMongoDb(systemConfiguration: Configuration): Promise<Db
 
   try {
     const client: MongoClient = await MongoClient.connect(uri, getClientOptions());
-    logger.info(`Connected to mongo host ${host}.`);
+    logger.debug(`Connected to mongo host ${host}.`);
     return client.db(systemConfiguration.mongoDatabase);
   } catch (e) {
     logger.error(`Error connecting to mongo host ${host} - ${e}`);
@@ -23,7 +23,7 @@ function getUri(systemConfiguration: Configuration): string {
   const host = systemConfiguration.mongoHost;
   const protocol = systemConfiguration.mongoProtocol;
 
-  logger.info(`Attempting to connect to mongo as user: ${userName}`);
+  logger.debug(`Attempting to connect to mongo as user: '${userName}'`);
 
   // set up the uri
   const credentials = userName ? `${userName}:${password}@` : '';

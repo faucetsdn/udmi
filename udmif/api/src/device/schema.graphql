@@ -9,41 +9,6 @@ input SearchOptions {
   filter: String
 }
 
-input DeviceNamesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input DeviceMakesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input DeviceModelsSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SitesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SectionsSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
 input SortOptions {
   # the direction the data should be sorted
   direction: SORT_DIRECTION
@@ -66,6 +31,7 @@ type DevicesResponse {
   # the total number of devices after the filter in the search options has been applied
   totalFilteredCount: Int!
 }
+
 
 type Point{
   # the ID of the point
@@ -114,14 +80,4 @@ type Query {
   device( id: ID! ): Device
   # Get points by a Device ID
   points( deviceId: ID!) : [Point!]!
-  # Get a list of device names
-  deviceNames(searchOptions: DeviceNamesSearchOptions) : [String!]!
-  # Get a list of device makes
-  deviceMakes(searchOptions: DeviceMakesSearchOptions) : [String!]!
-  # Get a list of device models
-  deviceModels(searchOptions: DeviceModelsSearchOptions) : [String!]!
-  # Get a list of sites
-  sites(searchOptions: SitesSearchOptions) : [String!]!
-  # Get a list of sections
-  sections(searchOptions: SectionsSearchOptions) : [String!]!
 }

@@ -67,36 +67,6 @@ const QUERY_POINTS = gql`
   }
 `;
 
-const QUERY_DEVICE_NAMES = gql`
-  query {
-    deviceNames
-  }
-`;
-
-const QUERY_DEVICE_MAKES = gql`
-  query {
-    deviceMakes
-  }
-`;
-
-const QUERY_DEVICE_MODELS = gql`
-  query {
-    deviceModels
-  }
-`;
-
-const QUERY_SITES = gql`
-  query {
-    sites
-  }
-`;
-
-const QUERY_SECTIONS = gql`
-  query {
-    sections
-  }
-`;
-
 beforeAll(async () => {
   const dataSources = () => {
     return {
@@ -123,26 +93,6 @@ describe('Devices', () => {
   });
   test('points', async () => {
     const result = await runQuery(QUERY_POINTS, {});
-    expect(result).toMatchSnapshot();
-  });
-  test('getDeviceNames', async () => {
-    const result = await runQuery(QUERY_DEVICE_NAMES);
-    expect(result).toMatchSnapshot();
-  });
-  test('getDeviceMakes', async () => {
-    const result = await runQuery(QUERY_DEVICE_MAKES);
-    expect(result).toMatchSnapshot();
-  });
-  test('getDeviceModels', async () => {
-    const result = await runQuery(QUERY_DEVICE_MODELS);
-    expect(result).toMatchSnapshot();
-  });
-  test('getSites', async () => {
-    const result = await runQuery(QUERY_SITES);
-    expect(result).toMatchSnapshot();
-  });
-  test('getSections', async () => {
-    const result = await runQuery(QUERY_SECTIONS);
     expect(result).toMatchSnapshot();
   });
 });

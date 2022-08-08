@@ -54,7 +54,7 @@ public class DiscoveryValidator extends SequenceValidator {
     DiscoveryEvent discoveryEvent = events.get(0);
     info("Received discovery generation " + getTimestamp(discoveryEvent.generation));
     assertEquals("matching event generation", startTime, discoveryEvent.generation);
-    int discoveredPoints = discoveryEvent.uniqs == null ? 0 : discoveryEvent.uniqs.size();
+    int discoveredPoints = discoveryEvent.points == null ? 0 : discoveryEvent.points.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
         discoveredPoints);
   }
@@ -91,8 +91,8 @@ public class DiscoveryValidator extends SequenceValidator {
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
-    Predicate<DiscoveryEvent> hasPoints = event -> event.uniqs != null
-        && !event.uniqs.isEmpty();
+    Predicate<DiscoveryEvent> hasPoints = event -> event.points != null
+        && !event.points.isEmpty();
     if (shouldEnumerate) {
       assertTrue("with enumeration", receivedEvents.stream().allMatch(hasPoints));
     } else {

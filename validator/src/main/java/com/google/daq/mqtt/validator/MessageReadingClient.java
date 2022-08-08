@@ -34,6 +34,7 @@ public class MessageReadingClient implements MessagePublisher {
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
   private final File messageDir;
+  private final String deviceNumId = String.format("0000%d", hashCode());
   private final String registryId;
   int messageCount;
 
@@ -90,7 +91,7 @@ public class MessageReadingClient implements MessagePublisher {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("deviceId", deviceId);
-      attributes.put("deviceNumId", getNumId(deviceId));
+      attributes.put("deviceNumId", deviceNumId);
       attributes.put("projectId", PLAYBACK_PROJECT_ID);
       attributes.put("deviceRegistryId", registryId);
 
@@ -105,10 +106,6 @@ public class MessageReadingClient implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException("While creating attributes for " + deviceId + " " + msgName, e);
     }
-  }
-
-  private String getNumId(String deviceId) {
-    return String.format("%014d", deviceId.hashCode());
   }
 
   @Override

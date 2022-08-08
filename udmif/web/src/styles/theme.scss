@@ -1,9 +1,9 @@
 @use '@angular/material' as mat;
-@use 'variables' as *;
+@import 'variables';
 
 @include mat.core();
 
-$_my-theme: mat.define-light-theme(
+$my-theme: mat.define-light-theme(
   (
     color: (
       primary: $primary-palette,
@@ -12,4 +12,4 @@ $_my-theme: mat.define-light-theme(
   )
 );
 
-@include mat.all-component-themes($_my-theme);
+@include mat.all-component-themes($my-theme);

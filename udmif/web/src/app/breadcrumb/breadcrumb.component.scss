@@ -1,14 +1,14 @@
-@use '../../styles/variables' as *;
+@import '../../styles/variables';
 
 .breadcrumbs {
   display: flex;
   align-items: center;
 
   a {
-    color: $primary;
+    color: $accent;
   }
 
   .mat-icon {
-    color: $icon-default;
+    color: $text-secondary;
   }
 }

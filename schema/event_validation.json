@@ -20,45 +20,16 @@
       "format": "date-time",
       "type": "string"
     },
-    "sub_folder": {
+    "subfolder": {
       "description": "Subfolder of the validated message",
       "type": "string"
     },
-    "sub_type": {
+    "subtype": {
       "description": "Subtype of the validated message",
       "type": "string"
     },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
-    },
-    "pointset": {
-      "title": "Pointset Summary",
-      "description": "Errors specific to pointset handling",
-      "type": "object",
-      "additionalProperties":  false,
-      "properties": {
-        "missing": {
-          "description": "Missing points discovered while validating a device",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extra": {
-          "description": "Extra points discovered while validating a device",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "errors": {
-      "description": "List of errors encountered while validating a device",
-      "type": "array",
-      "items": {
-        "$ref": "file:common.json#/definitions/entry"
-      }
     },
     "summary": {
       "title": "Validation Summary",
