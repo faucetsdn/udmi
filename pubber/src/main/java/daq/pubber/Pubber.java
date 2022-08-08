@@ -505,6 +505,9 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
+    if (deviceConfig.system == null) {
+      return;
+    }
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
         && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
       restartSystem();
