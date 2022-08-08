@@ -18,7 +18,7 @@ import { getAggregate } from './MongoAggregateBuilder';
 
 // this class exists to return sorted, and filtered data from MongoDB
 export class MongoDeviceDAO implements DeviceDAO {
-  constructor(private db: Db) {}
+  constructor(private db: Db) { }
 
   async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
     return this.db

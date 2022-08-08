@@ -1,6 +1,12 @@
 import { createDeviceDocument } from '../DeviceDocumentFactory';
 import { DeviceDocument } from '../DeviceDocument';
-import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../DocumentTypeUtil';
+import {
+  CONFIG,
+  MODEL,
+  POINTSET_SUB_FOLDER,
+  STATE,
+  SYSTEM_SUB_FOLDER,
+} from '../DocumentTypeUtil';
 import { UdmiMessage } from '../UdmiMessage';
 import { Point } from '../Point';
 
@@ -10,6 +16,7 @@ const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceNumId: id, subFolder: SY
 const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceNumId: id, subFolder: POINTSET_SUB_FOLDER };
 
 describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
+
   const points: Point[] = [];
   const tags: string[] = [];
 
@@ -77,9 +84,10 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
 
   beforeEach(() => {
     existingPoints = [];
-  });
+  })
 
   test('creates a device document with pointset', () => {
+
     // arrange
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
@@ -106,6 +114,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
   });
 
   test('creates a device document with pointset model', () => {
+
     const inputMessage: UdmiMessage = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: MODEL },
       data: {
@@ -187,8 +196,11 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
   });
 
   test('merges a device document with pointset', () => {
+
     // existing point has units and a value
-    existingPoints.push({ name: faps, id: faps, value: '70', units: 'Bars', meta: { code: faps, units: 'Bars' } });
+    existingPoints.push(
+      { name: faps, id: faps, value: '70', units: 'Bars', meta: { code: faps, units: 'Bars' } }
+    )
 
     // arrange
     const inputMessage: UdmiMessage = {
@@ -214,4 +226,6 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
+
 });
+

@@ -10,12 +10,12 @@ export interface DeviceDao {
 }
 
 export class DefaultDeviceDao implements DeviceDao {
-  constructor(private collection: Collection<DeviceDocument>) {}
+  constructor(private collection: Collection<DeviceDocument>) { }
 
   /**
    * Updates a device document if it is found using the device key, else it will insert a new device document
    * @param {DeviceKey} deviceKey
-   * @param {DeviceDocument} deviceDocument
+   * @param {DeviceDocument} deviceDocument 
    */
   async upsert(deviceKey: DeviceKey, deviceDocument: DeviceDocument): Promise<void> {
     // we're using upsert which will allow document updates if it already exists and a document cretion if it does not

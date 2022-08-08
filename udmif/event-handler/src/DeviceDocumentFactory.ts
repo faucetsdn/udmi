@@ -1,11 +1,16 @@
 import { DeviceDocumentBuilder, DeviceDocument } from './DeviceDocument';
-import { isPointset, isSystem } from './DocumentTypeUtil';
+import {
+  isPointset,
+  isSystem,
+} from './DocumentTypeUtil';
 import { UdmiMessage } from './UdmiMessage';
 import { PointBuilder, Point } from './Point';
 
 export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): DeviceDocument {
   const builder: DeviceDocumentBuilder = new DeviceDocumentBuilder();
-  builder.id(udmiMessage.attributes.deviceNumId).name(udmiMessage.attributes.deviceId);
+  builder
+    .id(udmiMessage.attributes.deviceNumId)
+    .name(udmiMessage.attributes.deviceId);
 
   if (isSystem(udmiMessage)) {
     return buildDeviceDocumentFromSystem(udmiMessage, builder);
@@ -14,7 +19,10 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
   }
 }
 
-function buildDeviceDocumentFromSystem(udmiMessage: UdmiMessage, builder: DeviceDocumentBuilder): DeviceDocument {
+function buildDeviceDocumentFromSystem(
+  udmiMessage: UdmiMessage,
+  builder: DeviceDocumentBuilder
+): DeviceDocument {
   return builder
     .lastPayload(udmiMessage.data.timestamp)
     .operational(udmiMessage.data.operational)
@@ -35,7 +43,7 @@ function buildDeviceDocumentFromPointset(
   const points: Point[] = [];
 
   for (var pointCode in udmiMessage.data.points) {
-    const existingPoint = existingPoints.find((point) => point.name === pointCode);
+    const existingPoint = existingPoints.find(point => point.name === pointCode);
     const point: Point = buildPoint(udmiMessage, existingPoint, pointCode);
     points.push(point);
   }
@@ -44,6 +52,7 @@ function buildDeviceDocumentFromPointset(
 }
 
 function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
+
   const pointValue = udmiMessage.data.points[pointCode];
 
   // we get the value from either the message or the existing point
@@ -61,3 +70,4 @@ function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: s
     .metaCode(pointCode)
     .build();
 }
+

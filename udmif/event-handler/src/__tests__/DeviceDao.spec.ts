@@ -23,7 +23,7 @@ afterAll(async () => {
 beforeEach(async () => {
   // clean the collection before each test
   await deviceCollection.deleteMany({});
-});
+})
 
 describe('DeviceDao.upsert', () => {
   test('upsert calls the updateOne method on the provided collection', () => {
@@ -44,6 +44,7 @@ describe('DeviceDao.upsert', () => {
 });
 
 describe('DeviceDao.get', () => {
+
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(deviceCollection, 'findOne');

@@ -68,4 +68,4 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
     },
   ],
 })
-export class GraphQLModule {}
+export class GraphQLModule { }

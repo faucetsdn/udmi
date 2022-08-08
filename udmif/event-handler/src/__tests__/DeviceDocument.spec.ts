@@ -60,7 +60,7 @@ describe('DeviceDocument.DeviceDocumentBuilder', () => {
       site,
       serialNumber,
       points,
-      tags,
+      tags
     });
   });
 });
