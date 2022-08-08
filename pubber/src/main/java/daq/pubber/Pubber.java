@@ -1,8 +1,6 @@
 package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +44,8 @@ import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.Phase;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -406,7 +406,11 @@ public class Pubber {
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
-      executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      try {
+        executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      } catch (Exception e) {
+        System.err.println("Rejecting state publish after " + delayMs + " " + e);
+      }
     }
   }
 
@@ -756,7 +760,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
+      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_CONFIG.value());
       if (iotConfig == null) {
         return null;
       }
@@ -794,7 +798,7 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && FINAL_PHASE.equals(blobBlobsetConfig.phase)
+      if (blobBlobsetConfig != null && Phase.FINAL.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
       }

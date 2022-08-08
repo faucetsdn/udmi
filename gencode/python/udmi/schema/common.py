@@ -59,6 +59,7 @@ class Common:
 
 
   SystemMode = SystemMode
+  SystemBlobsets = SystemBlobsets
   Entry = Entry
 
   def __init__(self):

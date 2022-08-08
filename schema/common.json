@@ -11,6 +11,13 @@
         "restart"
       ]
     },
+    "blobsets": {
+      "title": "System Blobsets",
+      "description": "Predefined system blobsets",
+      "enum": [
+        "_iot_config"
+      ]
+    },
     "entry": {
       "title": "Entry",
       "type": "object",
