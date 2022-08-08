@@ -6,6 +6,7 @@ class BlobsetConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.blobsets = None
     self.blobs = None
 
   @staticmethod
@@ -13,6 +14,7 @@ class BlobsetConfig:
     if not source:
       return None
     result = BlobsetConfig()
+    result.blobsets = source.get('blobsets')
     result.blobs = BlobBlobsetConfig.map_from(source.get('blobs'))
     return result
 
@@ -34,6 +36,8 @@ class BlobsetConfig:
 
   def to_dict(self):
     result = {}
+    if self.blobsets:
+      result['blobsets'] = self.blobsets # 5
     if self.blobs:
       result['blobs'] = BlobBlobsetConfig.expand_dict(self.blobs) # 2
     return result
