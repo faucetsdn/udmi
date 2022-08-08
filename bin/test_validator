@@ -15,6 +15,7 @@ shift
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
+mkdir -p out
 
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
@@ -23,12 +24,9 @@ PUBBER_OUT=pubber.out
 VALIDATOR_OUT=validator.out
 WAITING=10
 
-vids=`ps ax | fgrep validator | fgrep java | awk '{print $1}'`
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n "$pids$vids" ]]; then
-    echo Killing pids $pids $vids
-    kill $pids $vids
-fi
+echo Killing running pubber/validator instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
 rm -rf $site_path/out/devices
 
@@ -39,6 +37,11 @@ cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.p
 pubber/bin/build
 
 bin/reset_config $site_path $project_id $device_id
+
+bin/validator $site_path $project_id &
+vpid=$!
+sleep 10
+echo Started validator pid $vpid
 
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
@@ -79,12 +82,9 @@ fi
 echo Waiting for system to run for a bit...
 timeout 60s tail -f $VALIDATOR_OUT || true
 
-vids=`ps ax | fgrep validator | fgrep java | awk '{print $1}'`
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
-if [[ -n "$pids$vids" ]]; then
-    echo Killing pids $pids $vids
-    kill $pids $vids
-fi
+echo Killing running pubber/validator instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
