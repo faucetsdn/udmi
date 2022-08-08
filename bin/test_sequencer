@@ -32,6 +32,8 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
+bin/reset_config $site_path $project_id $device_id
+
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
