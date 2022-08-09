@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "extraPoint",
     "missingPoint",
     "extraField",
-    "redirectRegustry"
+    "redirectRegistry"
 })
 @Generated("jsonschema2pojo")
 public class PubberOptions {
@@ -35,13 +35,13 @@ public class PubberOptions {
     public String missingPoint;
     @JsonProperty("extraField")
     public String extraField;
-    @JsonProperty("redirectRegustry")
-    public String redirectRegustry;
+    @JsonProperty("redirectRegistry")
+    public String redirectRegistry;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.redirectRegustry == null)? 0 :this.redirectRegustry.hashCode()));
+        result = ((result* 31)+((this.redirectRegistry == null)? 0 :this.redirectRegistry.hashCode()));
         result = ((result* 31)+((this.noHardware == null)? 0 :this.noHardware.hashCode()));
         result = ((result* 31)+((this.extraField == null)? 0 :this.extraField.hashCode()));
         result = ((result* 31)+((this.missingPoint == null)? 0 :this.missingPoint.hashCode()));
@@ -59,7 +59,7 @@ public class PubberOptions {
             return false;
         }
         PubberOptions rhs = ((PubberOptions) other);
-        return (((((((this.redirectRegustry == rhs.redirectRegustry)||((this.redirectRegustry!= null)&&this.redirectRegustry.equals(rhs.redirectRegustry)))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))));
+        return (((((((this.redirectRegistry == rhs.redirectRegistry)||((this.redirectRegistry!= null)&&this.redirectRegistry.equals(rhs.redirectRegistry)))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))));
     }
 
 }
