@@ -1,0 +1,70 @@
+"""Generated class for pubber_configuration.json"""
+
+
+class PubberConfiguration:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.endpoint = None
+    self.options = None
+    self.gatewayId = None
+    self.sitePath = None
+    self.keyFile = None
+    self.algorithm = None
+    self.serialNo = None
+    self.macAddr = None
+    self.keyBytes = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = PubberConfiguration()
+    result.endpoint = source.get('endpoint')
+    result.options = source.get('options')
+    result.gatewayId = source.get('gatewayId')
+    result.sitePath = source.get('sitePath')
+    result.keyFile = source.get('keyFile')
+    result.algorithm = source.get('algorithm')
+    result.serialNo = source.get('serialNo')
+    result.macAddr = source.get('macAddr')
+    result.keyBytes = source.get('keyBytes')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = PubberConfiguration.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.endpoint:
+      result['endpoint'] = self.endpoint # 5
+    if self.options:
+      result['options'] = self.options # 5
+    if self.gatewayId:
+      result['gatewayId'] = self.gatewayId # 5
+    if self.sitePath:
+      result['sitePath'] = self.sitePath # 5
+    if self.keyFile:
+      result['keyFile'] = self.keyFile # 5
+    if self.algorithm:
+      result['algorithm'] = self.algorithm # 5
+    if self.serialNo:
+      result['serialNo'] = self.serialNo # 5
+    if self.macAddr:
+      result['macAddr'] = self.macAddr # 5
+    if self.keyBytes:
+      result['keyBytes'] = self.keyBytes # 5
+    return result

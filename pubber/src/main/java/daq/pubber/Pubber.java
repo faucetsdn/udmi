@@ -65,6 +65,7 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.PubberConfiguration;
 import udmi.schema.State;
 import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
@@ -122,7 +123,7 @@ public class Pubber {
   private static final Date DEVICE_START_TIME = new Date();
   private static final int RESTART_EXIT_CODE = 192;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final Configuration configuration;
+  private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final State deviceState = new State();
@@ -150,7 +151,7 @@ public class Pubber {
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+      configuration = OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class);
       projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
@@ -169,7 +170,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     this.projectId = projectId;
-    configuration = new Configuration();
+    configuration = new PubberConfiguration();
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {

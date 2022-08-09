@@ -40,6 +40,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.KeyBytes;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -80,7 +82,7 @@ public class MqttPublisher {
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
 
-  private final Configuration configuration;
+  private final PubberConfiguration configuration;
   private final String registryId;
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
@@ -90,7 +92,7 @@ public class MqttPublisher {
   private final Consumer<Exception> onError;
   private CountDownLatch gatewayLatch;
 
-  MqttPublisher(Configuration configuration, Consumer<Exception> onError) {
+  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
     this.registryId = configuration.endpoint.registryId;
     this.onError = onError;
@@ -221,7 +223,8 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
+      KeyBytes keyBytes = configuration.keyBytes;
+      info("Password hash " + Hashing.sha256().hashBytes(keyBytes).toString());
       options.setPassword(createJwt());
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 

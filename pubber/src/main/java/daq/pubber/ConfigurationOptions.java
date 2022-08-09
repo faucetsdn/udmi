@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Pubber configuration options which change default behavior.
  */
-public class ConfigurationOptions {
+public abstract class ConfigurationOptions {
   public Boolean noHardware;
   public Boolean noConfigAck;
   public String extraPoint;
