@@ -40,7 +40,6 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.schema.KeyBytes;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -223,7 +222,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      KeyBytes keyBytes = configuration.keyBytes;
+      byte[] keyBytes = (byte[]) configuration.keyBytes;
       info("Password hash " + Hashing.sha256().hashBytes(keyBytes).toString());
       options.setPassword(createJwt());
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
@@ -240,7 +239,7 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    return createJwt(configuration.endpoint.projectId, configuration.keyBytes,
+    return createJwt(configuration.endpoint.projectId, (byte[]) configuration.keyBytes,
         configuration.algorithm)
         .toCharArray();
   }

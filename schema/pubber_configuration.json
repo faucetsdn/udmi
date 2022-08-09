@@ -30,6 +30,7 @@
       "type": "string"
     },
     "keyBytes": {
+      "description": "Should be type byte[], but that can't be represented in json schema"
     }
   }
 }
