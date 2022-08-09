@@ -11,6 +11,7 @@ from .config_localnet import LocalnetConfig
 from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
+from .endpoint_configuration import EndpointConfiguration
 from .envelope import Envelope
 from .event import Event
 from .event_discovery import DiscoveryEvent
@@ -22,6 +23,7 @@ from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent
 from .event_validation import ValidationEvent
 from .event_validation_device import DeviceValidationEvent
+from .iot_config import IoTConfig
 from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
