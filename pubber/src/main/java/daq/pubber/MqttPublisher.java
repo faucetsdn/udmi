@@ -222,8 +222,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      byte[] keyBytes = (byte[]) configuration.keyBytes;
-      info("Password hash " + Hashing.sha256().hashBytes(keyBytes).toString());
+      info("Password hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
       options.setPassword(createJwt());
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
@@ -291,7 +290,7 @@ public class MqttPublisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    boolean noConfigAck = (configuration.options.noConfigAck != null 
+    boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
     subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), configQos);
