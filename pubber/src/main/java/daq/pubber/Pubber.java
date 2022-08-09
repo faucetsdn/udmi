@@ -67,6 +67,7 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.PubberOptions;
 import udmi.schema.State;
 import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
@@ -152,7 +153,8 @@ public class Pubber {
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class);
+      configuration = sanitizeConfiguration(
+          OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
       projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
@@ -171,7 +173,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     this.projectId = projectId;
-    configuration = new PubberConfiguration();
+    configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -261,6 +263,13 @@ public class Pubber {
       LOG.error("Exception starting instance " + serialNo, e);
       startFeedListener(projectId, siteName, feedName, serialNo);
     }
+  }
+
+  private static PubberConfiguration sanitizeConfiguration(PubberConfiguration configuration) {
+    if (configuration.options == null) {
+      configuration.options = new PubberOptions();
+    }
+    return configuration;
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
