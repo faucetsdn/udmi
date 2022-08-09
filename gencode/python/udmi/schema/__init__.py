@@ -1,4 +1,5 @@
 from .ancillary_properties import AncillaryProperties
+from .cloud_iot_config import CloudIotConfig
 from .command_discovery import DiscoveryCommand
 from .common import Common
 from .config import Config
@@ -23,7 +24,6 @@ from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent
 from .event_validation import ValidationEvent
 from .event_validation_device import DeviceValidationEvent
-from .iot_config import IoTConfig
 from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
