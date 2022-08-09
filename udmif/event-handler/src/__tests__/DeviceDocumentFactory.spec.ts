@@ -6,7 +6,7 @@ import {
   POINTSET_SUB_FOLDER,
   STATE,
   SYSTEM_SUB_FOLDER,
-} from '../DocumentTypeUtil';
+} from '../MessageUtils';
 import { UdmiMessage } from '../UdmiMessage';
 import { Point } from '../Point';
 

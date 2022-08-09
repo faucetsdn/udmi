@@ -1,8 +1,8 @@
 import { DeviceDocumentBuilder, DeviceDocument } from './DeviceDocument';
 import {
-  isPointset,
-  isSystem,
-} from './DocumentTypeUtil';
+  isPointsetSubType,
+  isSystemSubType,
+} from './MessageUtils';
 import { UdmiMessage } from './UdmiMessage';
 import { PointBuilder, Point } from './Point';
 
@@ -12,9 +12,9 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
     .id(udmiMessage.attributes.deviceNumId)
     .name(udmiMessage.attributes.deviceId);
 
-  if (isSystem(udmiMessage)) {
+  if (isSystemSubType(udmiMessage)) {
     return buildDeviceDocumentFromSystem(udmiMessage, builder);
-  } else if (isPointset(udmiMessage)) {
+  } else if (isPointsetSubType(udmiMessage)) {
     return buildDeviceDocumentFromPointset(udmiMessage, existingPoints, builder);
   }
 }
