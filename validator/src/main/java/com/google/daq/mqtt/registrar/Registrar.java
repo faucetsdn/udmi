@@ -23,6 +23,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -86,7 +87,7 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
-  private File siteDir;
+  private SiteModel siteModel;
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
