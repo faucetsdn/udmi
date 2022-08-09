@@ -128,6 +128,7 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
+  private final String projectId;
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -149,6 +150,7 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+      projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
     } catch (Exception e) {
@@ -165,8 +167,8 @@ public class Pubber {
    * @param serialNo  Serial number of the device
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
+    this.projectId = projectId;
     configuration = new Configuration();
-    configuration.projectId = projectId;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -293,7 +295,7 @@ public class Pubber {
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
-      siteModel.initialize(configuration.projectId);
+      siteModel.initialize(projectId);
       configuration.endpoint = siteModel.getEndpointConfig();
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
