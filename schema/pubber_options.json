@@ -18,7 +18,7 @@
     "extraField": {
       "type": "string"
     },
-    "redurectRegustry": {
+    "redirectRegustry": {
       "type": "string"
     }
   }

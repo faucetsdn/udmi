@@ -10,7 +10,7 @@ class PubberOptions:
     self.extraPoint = None
     self.missingPoint = None
     self.extraField = None
-    self.redurectRegustry = None
+    self.redirectRegustry = None
 
   @staticmethod
   def from_dict(source):
@@ -22,7 +22,7 @@ class PubberOptions:
     result.extraPoint = source.get('extraPoint')
     result.missingPoint = source.get('missingPoint')
     result.extraField = source.get('extraField')
-    result.redurectRegustry = source.get('redurectRegustry')
+    result.redirectRegustry = source.get('redirectRegustry')
     return result
 
   @staticmethod
@@ -53,6 +53,6 @@ class PubberOptions:
       result['missingPoint'] = self.missingPoint # 5
     if self.extraField:
       result['extraField'] = self.extraField # 5
-    if self.redurectRegustry:
-      result['redurectRegustry'] = self.redurectRegustry # 5
+    if self.redirectRegustry:
+      result['redirectRegustry'] = self.redirectRegustry # 5
     return result
