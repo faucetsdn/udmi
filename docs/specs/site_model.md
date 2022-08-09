@@ -27,7 +27,7 @@ The primary use of the site_model will be through the [registrar](../tools/regis
 
 ## `cloud_iot_config.json`
 
-[cloud_iot_config.json](schema) and [example](hdoo)
+[cloud_iot_config.json](../schema/cloud_iot_config.json) and [example](../tests/cloud_iot_config.tests/cloud_iot_config.json).
 
 ## `devices/`
 
