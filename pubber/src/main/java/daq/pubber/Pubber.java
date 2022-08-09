@@ -307,7 +307,7 @@ public class Pubber {
 
     info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId, GeneralUtils.optionsString(configuration.options));
+        configuration.gatewayId, GeneralUtils.optionsString(configuration.options)));
 
     deviceState.system.operational = true;
     deviceState.system.mode = SystemMode.INITIAL;
