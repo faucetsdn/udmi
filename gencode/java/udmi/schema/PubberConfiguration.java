@@ -53,12 +53,7 @@ public class PubberConfiguration {
     public String serialNo;
     @JsonProperty("macAddr")
     public String macAddr;
-    /**
-     * Should be type byte[], but that can't be represented in json schema
-     * 
-     */
     @JsonProperty("keyBytes")
-    @JsonPropertyDescription("Should be type byte[], but that can't be represented in json schema")
     public Object keyBytes;
     /**
      * Pubber Options
