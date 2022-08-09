@@ -61,6 +61,30 @@
         "timestamp",
         "level"
       ]
+    },
+    "endpoint": {
+      "title": "Endpoint Configuration",
+      "description": "Parameters to define an MQTT endpoint",
+      "additionalProperties": true,
+      "properties": {
+        "bridgeHostname": {
+          "type": "string",
+          "default": "mqtt.googleapis.com"
+        },
+        "bridgePort": {
+          "type": "string",
+          "default": "443"
+        },
+        "cloudRegion": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "registryId": {
+          "type": "string"
+        }
+      }
     }
   }
 }

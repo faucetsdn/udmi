@@ -1,0 +1,39 @@
+{
+  "title": "Pubber Configuration",
+  "description": "Parameters to define a pubber runtime instance",
+  "additionalProperties": true,
+  "properties": {
+    "endpoint": {
+      "$ref": "file:common.json#/definitions/endpoint"
+    },
+    "deviceId": {
+      "type": "string"
+    },
+    "gatewayId": {
+      "type": "string"
+    },
+    "sitePath": {
+      "type": "string"
+    },
+    "keyFile": {
+      "type": "string",
+      "default": "local/rsa_private.pkcs8"
+    },
+    "algorithm": {
+      "type": "string",
+      "default": "RS256"
+    },
+    "serialNo": {
+      "type": "string"
+    },
+    "macAddr": {
+      "type": "string"
+    },
+    "keyBytes": {
+      "description": "Should be type byte[], but that can't be represented in json schema"
+    },
+    "options": {
+      "$ref": "file:pubber_options.json"
+    }
+  }
+}
