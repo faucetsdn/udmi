@@ -1,6 +1,8 @@
 package daq.pubber;
 
 
+import com.google.udmi.util.EndpointConfiguration;
+
 /**
  * General bucket of pubber configuration information.
  */
