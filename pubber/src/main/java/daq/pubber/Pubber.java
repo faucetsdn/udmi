@@ -11,10 +11,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
-import com.google.daq.mqtt.util.CloudIotConfig;
+import com.google.udmi.util.EndpointConfiguration;
+import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
-import daq.pubber.SwarmMessage.Attributes;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,6 +51,8 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
@@ -93,10 +94,8 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
-  private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
@@ -130,6 +129,7 @@ public class Pubber {
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
+  private final String projectId;
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -138,9 +138,9 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
-  private Map<String, Metadata> allMetadata;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
+  private SiteModel siteModel;
 
   /**
    * Start an instance from a configuration file.
@@ -151,6 +151,7 @@ public class Pubber {
     File configFile = new File(configPath);
     try {
       configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+      projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
     } catch (Exception e) {
@@ -167,8 +168,8 @@ public class Pubber {
    * @param serialNo  Serial number of the device
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
+    this.projectId = projectId;
     configuration = new Configuration();
-    configuration.endpoint.projectId = projectId;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -260,63 +261,6 @@ public class Pubber {
     }
   }
 
-  private Set<String> getAllDevices() {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(configuration.sitePath), "devices");
-    File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
-    return Arrays.stream(files).map(File::getName).collect(Collectors.toSet());
-  }
-
-  private void loadDeviceMetadata() {
-    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
-    allMetadata = getAllDevices().stream()
-        .collect(toMap(deviceId -> deviceId, deviceId -> getDeviceMetadata(deviceId)));
-    processDeviceMetadata(allMetadata.get(configuration.deviceId));
-  }
-
-  private Metadata getDeviceMetadata(String deviceId) {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(configuration.sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
-    File deviceMetadataFile = new File(deviceDir, "metadata.json");
-    try {
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
-    }
-  }
-
-  private void processDeviceMetadata(Metadata metadata) {
-    if (metadata.cloud != null) {
-      configuration.algorithm = metadata.cloud.auth_type.value();
-      info("Configuring with key type " + configuration.algorithm);
-    }
-
-    if (metadata.gateway != null) {
-      configuration.gatewayId = metadata.gateway.gateway_id;
-      if (configuration.gatewayId != null) {
-        Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
-        if (authType != null) {
-          configuration.algorithm = authType.value();
-        }
-      }
-    }
-
-    Map<String, PointPointsetModel> points =
-        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
-
-    if (configuration.options.missingPoint != null) {
-      if (points.containsKey(configuration.options.missingPoint)) {
-        points.remove(configuration.options.missingPoint);
-      } else {
-        throw new RuntimeException("missingPoint not in pointset");
-      }
-    }
-
-    points.forEach((name, point) -> addPoint(makePoint(name, point)));
-  }
-
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
@@ -343,22 +287,6 @@ public class Pubber {
     throw new RuntimeException("Unknown value type " + baselineValue.getClass());
   }
 
-  private void loadCloudConfig() {
-    Preconditions.checkState(configuration.sitePath != null,
-        "sitePath not defined in configuration");
-    File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
-    try {
-      processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
-    } catch (Exception e) {
-      throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
-    }
-  }
-
-  private void processCloudConfig(CloudIotConfig cloudIotConfig) {
-    configuration.endpoint.registryId = cloudIotConfig.registry_id;
-    configuration.endpoint.cloudRegion = cloudIotConfig.cloud_region;
-  }
-
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
@@ -367,8 +295,10 @@ public class Pubber {
     devicePoints.points = new HashMap<>();
 
     if (configuration.sitePath != null) {
-      loadCloudConfig();
-      loadDeviceMetadata();
+      siteModel = new SiteModel(configuration.sitePath);
+      siteModel.initialize(projectId);
+      configuration.endpoint = siteModel.getEndpointConfig();
+      processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
@@ -418,10 +348,10 @@ public class Pubber {
     while (true) {
       try {
         info("Waiting for swarm configuration");
-        SwarmMessage.Attributes attributes = new Attributes();
+        Envelope attributes = new Envelope();
         Bundle pull = pubSubClient.pull();
-        attributes.subFolder = pull.attributes.get("subFolder");
-        if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
+        attributes.subFolder = SubFolder.valueOf(pull.attributes.get("subFolder"));
+        if (!SubFolder.SWARM.equals(attributes.subFolder)) {
           error("Ignoring message with subFolder " + attributes.subFolder);
           continue;
         }
@@ -446,21 +376,43 @@ public class Pubber {
     }
   }
 
-  private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
+  private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
         .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
-    processCloudConfig(makeCloudIotConfig(attributes));
-    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
+    configuration.endpoint = SiteModel.makeEndpointConfig(attributes);
+    processDeviceMetadata(
+        Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
-  private CloudIotConfig makeCloudIotConfig(Attributes attributes) {
-    CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
-        "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
-        "deviceRegistryLocation");
-    return cloudIotConfig;
+  private void processDeviceMetadata(Metadata metadata) {
+    if (metadata.cloud != null) {
+      configuration.algorithm = metadata.cloud.auth_type.value();
+      info("Configuring with key type " + configuration.algorithm);
+    }
+
+    if (metadata.gateway != null) {
+      configuration.gatewayId = metadata.gateway.gateway_id;
+      if (configuration.gatewayId != null) {
+        Auth_type authType = siteModel.getAuthType(configuration.gatewayId);
+        if (authType != null) {
+          configuration.algorithm = authType.value();
+        }
+      }
+    }
+
+    Map<String, PointPointsetModel> points =
+        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+
+    if (configuration.options.missingPoint != null) {
+      if (points.containsKey(configuration.options.missingPoint)) {
+        points.remove(configuration.options.missingPoint);
+      } else {
+        throw new RuntimeException("missingPoint not in pointset");
+      }
+    }
+
+    points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -603,11 +555,8 @@ public class Pubber {
 
   private void initializeMqtt() {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
-    if (configuration.sitePath != null && configuration.keyFile != null) {
-      String keyDevice =
-          configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
-      configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
-          keyDevice, getDeviceKeyPrefix());
+    if (siteModel != null && configuration.keyFile != null) {
+      configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
@@ -639,10 +588,6 @@ public class Pubber {
     info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
     configuration.keyFile = null;
-  }
-
-  private String getDeviceKeyPrefix() {
-    return configuration.algorithm.startsWith("RS") ? "rsa" : "ec";
   }
 
   private void connect() {
@@ -840,7 +785,7 @@ public class Pubber {
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
-    return allMetadata.get(deviceId).pointset.points.entrySet().stream().collect(
+    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
         Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
   }
 
@@ -950,7 +895,7 @@ public class Pubber {
     if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
-      allMetadata.forEach((deviceId, targetMetadata) -> {
+      siteModel.forEachDevice((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
