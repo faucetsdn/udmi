@@ -383,8 +383,7 @@ public class Pubber {
         Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
-
-  public void processDeviceMetadata(Metadata metadata) {
+  private void processDeviceMetadata(Metadata metadata) {
     if (metadata.cloud != null) {
       configuration.algorithm = metadata.cloud.auth_type.value();
       info("Configuring with key type " + configuration.algorithm);
