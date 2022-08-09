@@ -17,14 +17,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "endpoint",
-    "options",
+    "deviceId",
     "gatewayId",
     "sitePath",
     "keyFile",
     "algorithm",
     "serialNo",
     "macAddr",
-    "keyBytes"
+    "keyBytes",
+    "options"
 })
 @Generated("jsonschema2pojo")
 public class PubberConfiguration {
@@ -38,15 +39,8 @@ public class PubberConfiguration {
     @JsonProperty("endpoint")
     @JsonPropertyDescription("Parameters to define an MQTT endpoint")
     public EndpointConfiguration endpoint;
-    /**
-     * Pubber Options
-     * <p>
-     * Pubber runtime options
-     * 
-     */
-    @JsonProperty("options")
-    @JsonPropertyDescription("Pubber runtime options")
-    public PubberOptions options;
+    @JsonProperty("deviceId")
+    public String deviceId;
     @JsonProperty("gatewayId")
     public String gatewayId;
     @JsonProperty("sitePath")
@@ -66,6 +60,15 @@ public class PubberConfiguration {
     @JsonProperty("keyBytes")
     @JsonPropertyDescription("Should be type byte[], but that can't be represented in json schema")
     public Object keyBytes;
+    /**
+     * Pubber Options
+     * <p>
+     * Pubber runtime options
+     * 
+     */
+    @JsonProperty("options")
+    @JsonPropertyDescription("Pubber runtime options")
+    public PubberOptions options;
 
     @Override
     public int hashCode() {
@@ -75,6 +78,7 @@ public class PubberConfiguration {
         result = ((result* 31)+((this.keyBytes == null)? 0 :this.keyBytes.hashCode()));
         result = ((result* 31)+((this.keyFile == null)? 0 :this.keyFile.hashCode()));
         result = ((result* 31)+((this.options == null)? 0 :this.options.hashCode()));
+        result = ((result* 31)+((this.deviceId == null)? 0 :this.deviceId.hashCode()));
         result = ((result* 31)+((this.gatewayId == null)? 0 :this.gatewayId.hashCode()));
         result = ((result* 31)+((this.algorithm == null)? 0 :this.algorithm.hashCode()));
         result = ((result* 31)+((this.serialNo == null)? 0 :this.serialNo.hashCode()));
@@ -91,7 +95,7 @@ public class PubberConfiguration {
             return false;
         }
         PubberConfiguration rhs = ((PubberConfiguration) other);
-        return ((((((((((this.sitePath == rhs.sitePath)||((this.sitePath!= null)&&this.sitePath.equals(rhs.sitePath)))&&((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint))))&&((this.keyBytes == rhs.keyBytes)||((this.keyBytes!= null)&&this.keyBytes.equals(rhs.keyBytes))))&&((this.keyFile == rhs.keyFile)||((this.keyFile!= null)&&this.keyFile.equals(rhs.keyFile))))&&((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))))&&((this.algorithm == rhs.algorithm)||((this.algorithm!= null)&&this.algorithm.equals(rhs.algorithm))))&&((this.serialNo == rhs.serialNo)||((this.serialNo!= null)&&this.serialNo.equals(rhs.serialNo))))&&((this.macAddr == rhs.macAddr)||((this.macAddr!= null)&&this.macAddr.equals(rhs.macAddr))));
+        return (((((((((((this.sitePath == rhs.sitePath)||((this.sitePath!= null)&&this.sitePath.equals(rhs.sitePath)))&&((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint))))&&((this.keyBytes == rhs.keyBytes)||((this.keyBytes!= null)&&this.keyBytes.equals(rhs.keyBytes))))&&((this.keyFile == rhs.keyFile)||((this.keyFile!= null)&&this.keyFile.equals(rhs.keyFile))))&&((this.options == rhs.options)||((this.options!= null)&&this.options.equals(rhs.options))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))))&&((this.algorithm == rhs.algorithm)||((this.algorithm!= null)&&this.algorithm.equals(rhs.algorithm))))&&((this.serialNo == rhs.serialNo)||((this.serialNo!= null)&&this.serialNo.equals(rhs.serialNo))))&&((this.macAddr == rhs.macAddr)||((this.macAddr!= null)&&this.macAddr.equals(rhs.macAddr))));
     }
 
 }

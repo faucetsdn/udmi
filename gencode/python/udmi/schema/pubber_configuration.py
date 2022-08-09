@@ -6,7 +6,7 @@ class PubberConfiguration:
 
   def __init__(self):
     self.endpoint = None
-    self.options = None
+    self.deviceId = None
     self.gatewayId = None
     self.sitePath = None
     self.keyFile = None
@@ -14,6 +14,7 @@ class PubberConfiguration:
     self.serialNo = None
     self.macAddr = None
     self.keyBytes = None
+    self.options = None
 
   @staticmethod
   def from_dict(source):
@@ -21,7 +22,7 @@ class PubberConfiguration:
       return None
     result = PubberConfiguration()
     result.endpoint = source.get('endpoint')
-    result.options = source.get('options')
+    result.deviceId = source.get('deviceId')
     result.gatewayId = source.get('gatewayId')
     result.sitePath = source.get('sitePath')
     result.keyFile = source.get('keyFile')
@@ -29,6 +30,7 @@ class PubberConfiguration:
     result.serialNo = source.get('serialNo')
     result.macAddr = source.get('macAddr')
     result.keyBytes = source.get('keyBytes')
+    result.options = source.get('options')
     return result
 
   @staticmethod
@@ -51,8 +53,8 @@ class PubberConfiguration:
     result = {}
     if self.endpoint:
       result['endpoint'] = self.endpoint # 5
-    if self.options:
-      result['options'] = self.options # 5
+    if self.deviceId:
+      result['deviceId'] = self.deviceId # 5
     if self.gatewayId:
       result['gatewayId'] = self.gatewayId # 5
     if self.sitePath:
@@ -67,4 +69,6 @@ class PubberConfiguration:
       result['macAddr'] = self.macAddr # 5
     if self.keyBytes:
       result['keyBytes'] = self.keyBytes # 5
+    if self.options:
+      result['options'] = self.options # 5
     return result

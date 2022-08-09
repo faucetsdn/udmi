@@ -6,8 +6,8 @@
     "endpoint": {
       "$ref": "file:common.json#/definitions/endpoint"
     },
-    "options": {
-      "$ref": "file:pubber_options.json"
+    "deviceId": {
+      "type": "string"
     },
     "gatewayId": {
       "type": "string"
@@ -31,6 +31,9 @@
     },
     "keyBytes": {
       "description": "Should be type byte[], but that can't be represented in json schema"
+    },
+    "options": {
+      "$ref": "file:pubber_options.json"
     }
   }
 }
