@@ -25,6 +25,7 @@ sourceSets {
     main {
         java {
             srcDirs '../gencode/java'
+            srcDirs '../common/src/main/java'
         }
     }
 }

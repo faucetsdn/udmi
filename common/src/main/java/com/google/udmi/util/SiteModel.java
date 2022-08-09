@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static java.util.stream.Collectors.toMap;
 
