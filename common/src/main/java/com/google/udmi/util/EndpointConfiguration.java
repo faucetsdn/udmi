@@ -1,4 +1,4 @@
-package daq.pubber;
+package com.google.udmi.util;
 
 /**
  * Configuration for the connection endpoint.

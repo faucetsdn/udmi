@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
-import daq.pubber.EndpointConfiguration;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
