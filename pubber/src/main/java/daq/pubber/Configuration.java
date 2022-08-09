@@ -6,6 +6,7 @@ package daq.pubber;
  */
 public class Configuration {
   public EndpointConfiguration endpoint = new EndpointConfiguration();
+  public String projectId;
   public String gatewayId;
   public String deviceId;
   public String sitePath;

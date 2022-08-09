@@ -11,11 +11,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
-import com.google.udmi.util.CloudIotConfig;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
-import daq.pubber.SwarmMessage.Attributes;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
@@ -52,6 +50,8 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
@@ -95,7 +95,6 @@ public class Pubber {
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String OUT_DIR = "out";
   private static final String PUBSUB_SITE = "PubSub";
-  private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
@@ -167,7 +166,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     configuration = new Configuration();
-    configuration.endpoint.projectId = projectId;
+    configuration.projectId = projectId;
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -294,7 +293,8 @@ public class Pubber {
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
-      siteModel.initialize();
+      siteModel.initialize(configuration.projectId);
+      configuration.endpoint = siteModel.getEndpointConfig();
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
@@ -345,10 +345,10 @@ public class Pubber {
     while (true) {
       try {
         info("Waiting for swarm configuration");
-        SwarmMessage.Attributes attributes = new Attributes();
+        Envelope attributes = new Envelope();
         Bundle pull = pubSubClient.pull();
-        attributes.subFolder = pull.attributes.get("subFolder");
-        if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
+        attributes.subFolder = SubFolder.valueOf(pull.attributes.get("subFolder"));
+        if (!SubFolder.SWARM.equals(attributes.subFolder)) {
           error("Ignoring message with subFolder " + attributes.subFolder);
           continue;
         }
@@ -373,12 +373,11 @@ public class Pubber {
     }
   }
 
-  private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
+  private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
         .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
-    CloudIotConfig cloudIotConfig = makeCloudIotConfig(attributes);
-    configuration.endpoint = SiteModel.extractEndpointConfig(cloudIotConfig);
+    configuration.endpoint = SiteModel.makeEndpointConfig(attributes);
     processDeviceMetadata(
         Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
@@ -411,15 +410,6 @@ public class Pubber {
     }
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
-  }
-
-  private CloudIotConfig makeCloudIotConfig(Attributes attributes) {
-    CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
-        "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
-        "deviceRegistryLocation");
-    return cloudIotConfig;
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {

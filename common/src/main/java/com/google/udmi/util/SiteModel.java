@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel.Auth_type;
+import udmi.schema.Envelope;
 import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 
@@ -39,6 +40,20 @@ public class SiteModel {
     endpoint.registryId = cloudIotConfig.registry_id;
     endpoint.cloudRegion = cloudIotConfig.cloud_region;
     return endpoint;
+  }
+
+  private static CloudIotConfig makeCloudIotConfig(Envelope attributes) {
+    CloudIotConfig cloudIotConfig = new CloudIotConfig();
+    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+        "deviceRegistryId");
+    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+        "deviceRegistryLocation");
+    return cloudIotConfig;
+  }
+
+  public static EndpointConfiguration makeEndpointConfig(Envelope attributes) {
+    CloudIotConfig cloudIotConfig = makeCloudIotConfig(attributes);
+    return extractEndpointConfig(cloudIotConfig);
   }
 
   private Set<String> getAllDevices() {
@@ -73,20 +88,25 @@ public class SiteModel {
     allMetadata.forEach(consumer);
   }
 
-  private void loadEndpointConfig() {
+  private void loadEndpointConfig(String projectId) {
     Preconditions.checkState(sitePath != null,
         "sitePath not defined in configuration");
     File cloudConfig = new File(new File(sitePath), "cloud_iot_config.json");
     try {
       endpointConfig = extractEndpointConfig(
           OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
+      endpointConfig.projectId = projectId;
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
   }
 
-  public void initialize() {
-    loadEndpointConfig();
+  public EndpointConfiguration getEndpointConfig() {
+    return endpointConfig;
+  }
+
+  public void initialize(String projectId) {
+    loadEndpointConfig(projectId);
     loadAllDeviceMetadata();
   }
 
