@@ -32,3 +32,8 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _overridden_: (**WARNING**) The reported value has been overridden locally
     * _failure_: (**ERROR**) The system failed to read/write the point
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
+* _discovery_: Handling on-prem discovery flow
+  * _device_: Conditions specific to device scanning
+    * _failure_: (**ERROR**) Failure to discover/scan an entire device
+  * _point_: Conditions specific to point enumeration
+    * _failure_: (**ERROR**) Failure to discover/enumerate a particular point

@@ -16,6 +16,8 @@
     { "pattern": "^pointset\\.point\\.updating$" },
     { "pattern": "^pointset\\.point\\.overridden$" },
     { "pattern": "^pointset\\.point\\.failure$" },
-    { "pattern": "^pointset\\.point\\.invalid$" }
+    { "pattern": "^pointset\\.point\\.invalid$" },
+    { "pattern": "^discovery\\.device\\.failure$" },
+    { "pattern": "^discovery\\.point\\.failure$" }
     ]
 }
