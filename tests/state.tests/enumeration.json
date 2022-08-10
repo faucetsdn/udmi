@@ -19,13 +19,7 @@
   },
   "discovery": {
     "enumeration": {
-      "generation": "2018-08-26T21:37:12Z",
-      "status": {
-        "message": "Comms channel seems a bit unstable",
-        "category": "discovery.bacnet.timeout",
-        "timestamp": "2018-08-26T21:39:28.364Z",
-        "level": 400
-      }
+      "generation": "2018-08-26T21:37:12Z"
     }
   }
 }

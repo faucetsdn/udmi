@@ -38,7 +38,7 @@
         "value_state": "invalid",
         "status": {
           "message": "Point scale_sensor is not writeable",
-          "category": "pointset.points.invalid",
+          "category": "pointset.point.invalid",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 600
         }
