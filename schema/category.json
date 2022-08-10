@@ -1,10 +1,5 @@
 {
-  "description": "A device-specific representation of the category an entry pertains to",
-  "type": "string",
-  "examples": ["pointset.points.config"],
   "oneOf": [
-    { "pattern": "^system\\.config\\.receive$" },
-    { "pattern": "^system\\.config\\.parse" },
-    { "pattern": "^system\\.config\\.apply" }
-  ]
+    @@ gencode stuff goes here
+    ]
 }

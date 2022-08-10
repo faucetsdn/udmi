@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import hashlib
+import json
+import os
+import shutil
+import sys
+
+doc_in = os.path.join('docs/specs/categories.md')
+schema_in = os.path.join('etc/category.json')
+schema_out = os.path.join('schema/category.json')
+java_in = os.path.join('etc/Category.java')
+java_out = os.path.join('gencode/java/udmi/schema/Category.java')
+
+lines=[]
+
+with open(doc_in) as doc:
+    lines = doc.readlines();
+
+with open(schema_in) as inp:
+    with open(schema_out, 'w') as out:
+        while line := inp.readline():
+            out.write(line)
+        

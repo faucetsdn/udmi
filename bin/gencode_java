@@ -9,6 +9,8 @@ cd $ROOT_DIR
 rm -rf gencode/java codegen/java
 mkdir -p codegen gencode
 
+bin/gencode_categories
+
 OUTDIR=$ROOT_DIR/gencode/java
 cd codegen
 GENDIR=$PWD

@@ -1,16 +1,34 @@
-package udmi.schema;
+[**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Categories](#)
 
-import static udmi.schema.Level.DEBUG;
-import static udmi.schema.Level.NOTICE;
+# Entry Error Categories
 
-// This class is manually curated, auto-generated, and then copied into the gencode directory.
-// Look for the proper source and don't be fooled! Ultimately sourced from docs/specs/categories.md
-public class Category {
+Categories are assembled in a hierarical fashion to represent the intended level
+of detail (more specific is better). E.g. a complete system config parsing message
+would be categorized as `system.config.parse`, while a system config entry of
+unspecified category would be just `system.config`. Some categories come with
+implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy below.
 
-  public static final String SYSTEM_CONFIG_RECEIVE ="system.config.receive";
-  public static final Level SYSTEM_CONFIG_RECEIVE_LEVEL = DEBUG;
-  public static final String SYSTEM_CONFIG_PARSE ="system.config.parse";
-  public static final Level SYSTEM_CONFIG_PARSE_LEVEL = DEBUG;
-  public static final String SYSTEM_CONFIG_APPLY ="system.config.apply";
-  public static final Level SYSTEM_CONFIG_APPLY_LEVEL = NOTICE;
-}
+* _system_: Basic system operation
+  * _base_: Baseline system operational messages
+    * _start_ (**NOTICE**): System is in the process of (re)starting and essentially offline
+    * _shutdown_ (**NOTICE**): System is shutting down
+    * _ready_: (**NOTICE**): System is fully ready for operation
+    * _comms_: Baseline message handling
+  * _config_: Configuration message handling
+    * _receive_: (**DEBUG**) Receiving a config message
+    * _parse_: (**DEBUG**) Parsing a received message
+    * _apply_: (**NOTICE**) Application of a parsed config message
+  * _network_: Network (IP) message handling
+    * _connect_: (**NOTICE**) Connected to the network
+    * _disconnect_: (**NOTICE**) Disconnected from a network
+  * _auth_: Authentication to local application (e.g. web server, SSH)
+    * _login_: (**NOTICE**) Successful login. The entry message should include the username and application
+    * _logout_: (**NOTICE**) Successful logout 
+    * _fail_: (**WARNING**) Failed authentication attempt. The entry message should include the application
+* _pointset_: Handling managing data point conditions
+  * _point_: Conditions relating to a specific point, the entry `message` field should
+  start with "Point _pointname_" followed by descriptive information.
+    * _applied_ (**INFO**): The `set_value` for a point has been implied
+    * _updating_ (**NOTICE**): The point is in the process of updating
+    * _overridden_ (**WARNING**): The reported value has been overridden locally
+    * _invalid_ (**ERROR**): A `config` parameter for the point is invalid in some way
