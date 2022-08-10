@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
-import com.google.udmi.util.EndpointConfiguration;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -50,6 +50,7 @@ import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -65,6 +66,8 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.PubberConfiguration;
+import udmi.schema.PubberOptions;
 import udmi.schema.State;
 import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
@@ -122,7 +125,7 @@ public class Pubber {
   private static final Date DEVICE_START_TIME = new Date();
   private static final int RESTART_EXIT_CODE = 192;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final Configuration configuration;
+  private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final State deviceState = new State();
@@ -150,7 +153,8 @@ public class Pubber {
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+      configuration = sanitizeConfiguration(
+          OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
       projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
@@ -169,7 +173,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     this.projectId = projectId;
-    configuration = new Configuration();
+    configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -261,6 +265,13 @@ public class Pubber {
     }
   }
 
+  private static PubberConfiguration sanitizeConfiguration(PubberConfiguration configuration) {
+    if (configuration.options == null) {
+      configuration.options = new PubberOptions();
+    }
+    return configuration;
+  }
+
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
@@ -305,7 +316,7 @@ public class Pubber {
 
     info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId, configuration.options));
+        configuration.gatewayId, GeneralUtils.optionsString(configuration.options)));
 
     deviceState.system.operational = true;
     deviceState.system.mode = SystemMode.INITIAL;

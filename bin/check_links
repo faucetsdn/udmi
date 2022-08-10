@@ -80,7 +80,7 @@ def check_links(file_path):
                 resolved_path = os.path.realpath(os.path.join(dir_name, link_path))
 
                 if not os.path.exists(resolved_path):
-                    failing_links.append((file_path, 'link', link))
+                    failing_links.append((file_path, 'link', resolved_path))
             else:
                 # Rewrite hosted links (e.g. github pages) to local by subtracting the web host
                 rewritten_link = blank_regex_substitutions(link, HOSTED_GITHUB, HOSTED_GITHUB_PAGES)
