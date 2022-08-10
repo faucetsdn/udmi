@@ -2,13 +2,15 @@
 
 import hashlib
 import json
+import re
 import os
 import shutil
 import sys
 
 GENCODE_MARKER = '@@ '
 CATEGORY_MARKER = '* '
-CATEGORY_REGEX = '* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
+CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
+JSON_FORMAT = '%s    { "pattern": "^%s$" }'
 
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
@@ -16,12 +18,37 @@ schema_out = os.path.join('schema/category.json')
 java_in = os.path.join('etc/Category.java')
 java_out = os.path.join('gencode/java/udmi/schema/Category.java')
 
+
+def calculate_index_level(line):
+    if not line.strip().startswith(CATEGORY_MARKER):
+        return -1
+    return line.find(CATEGORY_MARKER)//2
+
 def read_categories():
     categories = []
+    prefix = []
+    previous = -1
+    group = None
     with open(doc_in) as doc:
         while line := doc.readline():
-            if line.strip().startswith(CATEGORY_MARKER):
-                categories += line
+            level = calculate_index_level(line)
+            match = re.match(CATEGORY_REGEX, line)
+            if level < 0 or not match:
+                continue
+            if level < previous:
+                for _ in range(level, previous):
+                    prefix.pop(len(prefix) - 1)
+            elif level > previous:
+                if group:
+                    prefix.append(group)
+            previous = level
+            group = match.group(1)
+            category = '.'.join(prefix + [group])
+            level = match.group(3)
+            description = match.group(4)
+            if level:
+                entry = (category, level, description)
+                categories.append(entry)
     return categories
 
 def write_schema_out(categories):
@@ -34,8 +61,13 @@ def write_schema_out(categories):
                     out.write(line)
 
 def write_schema_categories(out, categories):
+    first = True
     for category in categories:
-        out.write(category)
+        prefix = '' if first else ',\n'
+        target = category[0].replace('.', '\\\\.')
+        out.write(JSON_FORMAT % (prefix, target))
+        first = False
+    out.write('\n')
     
 categories = read_categories()
 write_schema_out(categories)

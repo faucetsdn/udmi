@@ -1,7 +1,7 @@
 """Generated class for category.json"""
 
 
-class ObjectD83FA82F:
+class Object9194F77A:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class ObjectD83FA82F:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectD83FA82F()
+    result = Object9194F77A()
     return result
 
   @staticmethod
@@ -20,7 +20,7 @@ class ObjectD83FA82F:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectD83FA82F.from_dict(source[key])
+      result[key] = Object9194F77A.from_dict(source[key])
     return result
 
   @staticmethod

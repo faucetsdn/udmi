@@ -1,9 +1,6 @@
 from .ancillary_properties import AncillaryProperties
-<<<<<<< HEAD
-from .category import ObjectD83FA82F
-=======
+from .category import Object9194F77A
 from .cloud_iot_config import CloudIotConfig
->>>>>>> master
 from .command_discovery import DiscoveryCommand
 from .common import Common
 from .config import Config
