@@ -3,6 +3,7 @@
   "oneOf": [
     { "pattern": "^system\\.base\\.start$" },
     { "pattern": "^system\\.base\\.shutdown$" },
+    { "pattern": "^system\\.base\\.ready$" },
     { "pattern": "^system\\.config\\.receive$" },
     { "pattern": "^system\\.config\\.parse$" },
     { "pattern": "^system\\.config\\.apply$" },
@@ -10,6 +11,11 @@
     { "pattern": "^system\\.network\\.disconnect$" },
     { "pattern": "^system\\.auth\\.login$" },
     { "pattern": "^system\\.auth\\.logout$" },
-    { "pattern": "^system\\.auth\\.fail$" }
+    { "pattern": "^system\\.auth\\.fail$" },
+    { "pattern": "^pointset\\.point\\.applied$" },
+    { "pattern": "^pointset\\.point\\.updating$" },
+    { "pattern": "^pointset\\.point\\.overridden$" },
+    { "pattern": "^pointset\\.point\\.failure$" },
+    { "pattern": "^pointset\\.point\\.invalid$" }
     ]
 }

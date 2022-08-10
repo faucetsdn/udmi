@@ -18,7 +18,7 @@ schema_out = os.path.join('schema/category.json')
 java_in = os.path.join('etc/Category.java')
 java_out = os.path.join('gencode/java/udmi/schema/Category.java')
 
-def calculate_index_level(line):
+def calculate_index_indent(line):
     if not line.strip().startswith(CATEGORY_MARKER):
         return -1
     return line.find(CATEGORY_MARKER)//2
@@ -30,17 +30,17 @@ def read_categories():
     group = None
     with open(doc_in) as doc:
         while line := doc.readline():
-            level = calculate_index_level(line)
+            indent = calculate_index_indent(line)
             match = re.match(CATEGORY_REGEX, line)
-            if level < 0 or not match:
+            if indent < 0 or not match:
                 continue
-            if level < previous:
-                for _ in range(level, previous):
-                    prefix.pop(len(prefix) - 1)
-            elif level > previous:
+            if indent < previous:
+                for _ in range(indent, previous):
+                    rem = prefix.pop(len(prefix) - 1)
+            elif indent > previous:
                 if group:
                     prefix.append(group)
-            previous = level
+            previous = indent
             group = match.group(1)
             category = '.'.join(prefix + [group])
             level = match.group(3)
