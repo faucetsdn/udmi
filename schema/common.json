@@ -33,10 +33,7 @@
           "type": "string"
         },
         "category": {
-          "description": "A device-specific representation of the category an entry pertains to",
-          "type": "string",
-          "pattern": "^[a-z][._a-zA-Z]*[a-zA-Z]$",
-          "examples": ["pointset.points.config"]
+          "$ref": "file:category.json"
         },
         "timestamp": {
           "description": "Timestamp the condition was triggered, or most recently updated",

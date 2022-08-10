@@ -1,0 +1,10 @@
+{
+  "description": "A device-specific representation of the category an entry pertains to",
+  "type": "string",
+  "examples": ["pointset.points.config"],
+  "oneOf": [
+    {
+      "exact": "system.config.receive"
+    }
+  ]
+}
