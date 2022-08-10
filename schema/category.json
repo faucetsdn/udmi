@@ -18,6 +18,9 @@
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
     { "pattern": "^discovery\\.device\\.failure$" },
-    { "pattern": "^discovery\\.point\\.failure$" }
+    { "pattern": "^discovery\\.point\\.failure$" },
+    { "pattern": "^blobset\\.blob\\.received$" },
+    { "pattern": "^blobset\\.blob\\.fetched$" },
+    { "pattern": "^blobset\\.blob\\.applied$" }
     ]
 }

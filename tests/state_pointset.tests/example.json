@@ -16,7 +16,7 @@
       "value_state": "failure",
       "status": {
         "message": "Failure to confirm point",
-        "category": "pointset.points.failure",
+        "category": "pointset.point.failure",
         "timestamp": "2018-08-26T21:39:28.364Z",
         "level": 600
       }
