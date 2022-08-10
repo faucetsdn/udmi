@@ -10,14 +10,13 @@ import sys
 GENCODE_MARKER = '@@ '
 CATEGORY_MARKER = '* '
 CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
-JSON_FORMAT = '%s    { "pattern": "^%s$" }'
+JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
 
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
 schema_out = os.path.join('schema/category.json')
 java_in = os.path.join('etc/Category.java')
 java_out = os.path.join('gencode/java/udmi/schema/Category.java')
-
 
 def calculate_index_level(line):
     if not line.strip().startswith(CATEGORY_MARKER):
@@ -56,17 +55,17 @@ def write_schema_out(categories):
         with open(schema_out, 'w') as out:
             while line := inp.readline():
                 if line.strip().startswith(GENCODE_MARKER):
-                    write_schema_categories(out, categories)
+                    indent = line[0:line.find(GENCODE_MARKER)]
+                    write_schema_categories(out, indent, categories)
                 else:
                     out.write(line)
 
-def write_schema_categories(out, categories):
-    first = True
+def write_schema_categories(out, indent, categories):
+    prefix = ''
     for category in categories:
-        prefix = '' if first else ',\n'
         target = category[0].replace('.', '\\\\.')
-        out.write(JSON_FORMAT % (prefix, target))
-        first = False
+        out.write(JSON_FORMAT % (prefix, indent, target))
+        prefix = ',\n'
     out.write('\n')
     
 categories = read_categories()

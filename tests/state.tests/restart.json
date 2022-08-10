@@ -15,7 +15,7 @@
     "mode": "restart",
     "status": {
       "message": "System rebooting due to config trigger",
-      "category": "device.state.com",
+      "category": "system.config.apply",
       "timestamp": "2018-08-26T21:39:30.364Z",
       "level": 800
     }

@@ -21,7 +21,7 @@
       "space_temperature_sensor": {
         "status": {
           "message": "Present value out of limits",
-          "category": "com.acme.device.regulator",
+          "category": "system.config.apply",
           "timestamp": "2019-01-17T11:39:28.364Z",
           "level": 400
         }
@@ -30,7 +30,7 @@
         "value_state": "overridden",
         "status": {
           "message": "Value overridden by set_value",
-          "category": "com.acme.device.monitor",
+          "category": "system.config.apply",
           "timestamp": "2019-01-17T10:59:11.364Z",
           "level": 300
         }
@@ -39,7 +39,7 @@
         "value_state": "overridden",
         "status": {
           "message": "Value overridden by set_value",
-          "category": "com.acme.device.manager",
+          "category": "system.config.apply",
           "timestamp": "2019-01-17T13:14:55.364Z",
           "level": 300
         }
