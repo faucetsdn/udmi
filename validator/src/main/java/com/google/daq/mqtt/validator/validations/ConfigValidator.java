@@ -4,6 +4,12 @@ import static com.google.daq.mqtt.validator.CleanDateFormat.cleanDate;
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
+import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
+import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
+import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
+import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
+import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
 import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
@@ -16,10 +22,6 @@ import udmi.schema.Level;
  * Validate basic device configuration handling operation, not specific to any device function.
  */
 public class ConfigValidator extends SequenceValidator {
-
-  public static final String SYSTEM_CONFIG_RECEIVE = "system.config.receive";
-  public static final String SYSTEM_CONFIG_PARSE = "system.config.parse";
-  public static final String SYSTEM_CONFIG_APPLY = "system.config.apply";
 
   @Test
   public void system_last_update() {
@@ -49,7 +51,7 @@ public class ConfigValidator extends SequenceValidator {
     );
     extraField = "break_json";
     updateConfig();
-    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     AtomicReference<Date> stableConfig = new AtomicReference<>(null);
     untilTrue("state has status", () -> {
       boolean hasStatus = deviceState.system.status != null;
@@ -70,17 +72,17 @@ public class ConfigValidator extends SequenceValidator {
         dateEquals(matchedConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
-    hasNotLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
+    hasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     resetConfig();
     extraField = null;
-    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("state no status", () -> deviceState.system.status == null);
     untilTrue("last_config updated",
         () -> !dateEquals(matchedConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operational);
-    hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
-    hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
   @Test
@@ -92,23 +94,23 @@ public class ConfigValidator extends SequenceValidator {
     final Date prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
     updateConfig();
-    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("state no status", () -> deviceState.system.status == null);
-    hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
-    hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
     extraField = null;
     updateConfig();
-    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated again",
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("state no status", () -> deviceState.system.status == null);
-    hasLogged(SYSTEM_CONFIG_PARSE, Level.INFO);
-    hasLogged(SYSTEM_CONFIG_APPLY, Level.INFO);
+    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
 
