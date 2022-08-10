@@ -380,7 +380,7 @@ public class MqttPublisher {
   private void checkAuthentication(String deviceId) {
     String authId = isProxyDevice(deviceId) ? configuration.gatewayId : deviceId;
     Instant reauthTime = reauthTimes.get(authId);
-    if (reauthTime != null && Instant.now().isBefore(reauthTime)) {
+    if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
       return;
     }
     warn("Authentication retry time reached for " + authId);
