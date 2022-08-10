@@ -21,6 +21,7 @@ cd $ROOT_DIR
 
 OUTPUT_DIR=$ROOT_DIR/gencode/docs
 TMP_DIR=$ROOT_DIR/tmp/schema
+rm -rf $OUTPUT_DIR $TMP_DIR
 
 schema_files=`ls schema/*.json`
 
@@ -71,7 +72,6 @@ if [ -d venv ]; then
     source venv/bin/activate
 fi
 
-rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
