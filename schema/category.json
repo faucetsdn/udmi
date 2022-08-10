@@ -17,9 +17,9 @@
     { "pattern": "^pointset\\.point\\.overridden$" },
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
-    { "pattern": "^discovery\\.family\\.failure$" },
-    { "pattern": "^discovery\\.device\\.failure$" },
-    { "pattern": "^discovery\\.point\\.failure$" },
+    { "pattern": "^discovery\\.family\\.scan$" },
+    { "pattern": "^discovery\\.device\\.enumerate$" },
+    { "pattern": "^discovery\\.point\\.describe$" },
     { "pattern": "^blobset\\.blob\\.received$" },
     { "pattern": "^blobset\\.blob\\.fetched$" },
     { "pattern": "^blobset\\.blob\\.applied$" }
