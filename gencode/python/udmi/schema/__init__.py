@@ -1,5 +1,5 @@
 from .ancillary_properties import AncillaryProperties
-from .category import Object9194F77A
+from .category import ObjectBC07E246
 from .cloud_iot_config import CloudIotConfig
 from .command_discovery import DiscoveryCommand
 from .common import Common

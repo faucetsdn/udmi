@@ -73,6 +73,7 @@ def write_schema_categories(out, indent, categories):
     out.write('\n')
     
 def write_java_out(categories):
+    os.makedirs(os.path.dirname(java_out), exist_ok=True)
     with open(java_in) as inp:
         with open(java_out, 'w') as out:
             while line := inp.readline():
