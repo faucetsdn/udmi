@@ -13,8 +13,8 @@ CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
 
 JAVA_DESCRIPTION = "\n%s// %s\n"
-JAVA_TARGET = '%s%s = "%s";\n'
-JAVA_LEVEL = '%s%s_LEVEL = %s;\n'
+JAVA_TARGET = '%spublic static final String %s = "%s";\n'
+JAVA_LEVEL = '%spublic static final Level %s_LEVEL = %s;\n'
 
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
