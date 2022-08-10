@@ -6,19 +6,36 @@ import os
 import shutil
 import sys
 
+GENCODE_MARKER = '@@ '
+CATEGORY_MARKER = '* '
+CATEGORY_REGEX = '* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
+
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
 schema_out = os.path.join('schema/category.json')
 java_in = os.path.join('etc/Category.java')
 java_out = os.path.join('gencode/java/udmi/schema/Category.java')
 
-lines=[]
+def read_categories():
+    categories = []
+    with open(doc_in) as doc:
+        while line := doc.readline():
+            if line.strip().startswith(CATEGORY_MARKER):
+                categories += line
+    return categories
 
-with open(doc_in) as doc:
-    lines = doc.readlines();
+def write_schema_out(categories):
+    with open(schema_in) as inp:
+        with open(schema_out, 'w') as out:
+            while line := inp.readline():
+                if line.strip().startswith(GENCODE_MARKER):
+                    write_schema_categories(out, categories)
+                else:
+                    out.write(line)
 
-with open(schema_in) as inp:
-    with open(schema_out, 'w') as out:
-        while line := inp.readline():
-            out.write(line)
-        
+def write_schema_categories(out, categories):
+    for category in categories:
+        out.write(category)
+    
+categories = read_categories()
+write_schema_out(categories)

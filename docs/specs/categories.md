@@ -10,8 +10,8 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
 
 * _system_: Basic system operation
   * _base_: Baseline system operational messages
-    * _start_ (**NOTICE**): System is in the process of (re)starting and essentially offline
-    * _shutdown_ (**NOTICE**): System is shutting down
+    * _start_: (**NOTICE**) System is in the process of (re)starting and essentially offline
+    * _shutdown_: (**NOTICE**) System is shutting down
     * _ready_: (**NOTICE**): System is fully ready for operation
     * _comms_: Baseline message handling
   * _config_: Configuration message handling
