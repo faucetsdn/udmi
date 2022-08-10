@@ -12,6 +12,10 @@ CATEGORY_MARKER = '* '
 CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
 
+JAVA_DESCRIPTION = "\n%s// %s\n"
+JAVA_TARGET = '%s%s = "%s";\n'
+JAVA_LEVEL = '%s%s_LEVEL = %s;\n'
+
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
 schema_out = os.path.join('schema/category.json')
@@ -68,5 +72,26 @@ def write_schema_categories(out, indent, categories):
         prefix = ',\n'
     out.write('\n')
     
+def write_java_out(categories):
+    with open(java_in) as inp:
+        with open(java_out, 'w') as out:
+            while line := inp.readline():
+                if line.strip().startswith(GENCODE_MARKER):
+                    indent = line[0:line.find(GENCODE_MARKER)]
+                    write_java_categories(out, indent, categories)
+                else:
+                    out.write(line)
+
+def write_java_categories(out, indent, categories):
+    for category in categories:
+        target = category[0]
+        level = category[1]
+        desc = category[2]
+        const = target.replace('.', '_').upper()
+        out.write(JAVA_DESCRIPTION % (indent, desc))
+        out.write(JAVA_TARGET % (indent, const, target))
+        out.write(JAVA_LEVEL % (indent, const, level))
+    
 categories = read_categories()
 write_schema_out(categories)
+write_java_out(categories)
