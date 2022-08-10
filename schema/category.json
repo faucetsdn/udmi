@@ -3,8 +3,8 @@
   "type": "string",
   "examples": ["pointset.points.config"],
   "oneOf": [
-    {
-      "exact": "system.config.receive"
-    }
+    { "pattern": "^system\\.config\\.receive$" },
+    { "pattern": "^system\\.config\\.parse" },
+    { "pattern": "^system\\.config\\.apply" }
   ]
 }

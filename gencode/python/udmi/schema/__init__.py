@@ -1,5 +1,5 @@
 from .ancillary_properties import AncillaryProperties
-from .category import Object287A131B
+from .category import ObjectD83FA82F
 from .command_discovery import DiscoveryCommand
 from .common import Common
 from .config import Config
