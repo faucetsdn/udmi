@@ -54,8 +54,9 @@ public class ConfigValidator extends SequenceValidator {
     updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     AtomicReference<Date> stableConfig = new AtomicReference<>(null);
-    untilTrue("state has status", () -> {
-      boolean hasStatus = deviceState.system.status != null;
+    untilTrue("state has error status", () -> {
+      boolean hasStatus = deviceState.system.status != null
+          && deviceState.system.status.level >= Level.ERROR.value();
       if (!hasStatus) {
         stableConfig.set(deviceState.system.last_config);
       }

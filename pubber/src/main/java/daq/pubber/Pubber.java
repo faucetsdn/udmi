@@ -636,24 +636,21 @@ public class Pubber {
       error("Error receiving message " + type, cause);
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
-    final Entry report;
-    if (cause == null) {
-      report = entryFromException(category, null);
-    } else {
-      report = entryFromException(category, cause);
-    }
-    if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
-      deviceState.system.status = null;
-    } else {
-      deviceState.system.status = report;
-    }
+    Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
+    // TODO: Replace this with a heap so only the highest-priority status is reported.
+    deviceState.system.status = shouldLogLevel(report.level) ? report : null;
     publishStateMessage();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
+  }
+
+  private boolean shouldLogLevel(int level) {
+    Integer min_loglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
+    return level >= (min_loglevel == null ? Level.INFO.value() : min_loglevel);
   }
 
   private Entry entryFromException(String category, Throwable e) {
@@ -1069,9 +1066,11 @@ public class Pubber {
   }
 
   private void publishLogMessage(Entry report) {
-    SystemEvent systemEvent = new SystemEvent();
-    systemEvent.logentries.add(report);
-    publishDeviceMessage(systemEvent);
+    if (shouldLogLevel(report.level)) {
+      SystemEvent systemEvent = new SystemEvent();
+      systemEvent.logentries.add(report);
+      publishDeviceMessage(systemEvent);
+    }
   }
 
   private void publishStateMessage() {
