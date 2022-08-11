@@ -12,6 +12,7 @@ class SystemState:
     self.last_config = None
     self.operational = None
     self.mode = None
+    self.last_start = None
     self.serial_no = None
     self.hardware = None
     self.software = None
@@ -28,6 +29,7 @@ class SystemState:
     result.last_config = source.get('last_config')
     result.operational = source.get('operational')
     result.mode = source.get('mode')
+    result.last_start = source.get('last_start')
     result.serial_no = source.get('serial_no')
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
@@ -63,6 +65,8 @@ class SystemState:
       result['operational'] = self.operational # 5
     if self.mode:
       result['mode'] = self.mode # 5
+    if self.last_start:
+      result['last_start'] = self.last_start # 5
     if self.serial_no:
       result['serial_no'] = self.serial_no # 5
     if self.hardware:

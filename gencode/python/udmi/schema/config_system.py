@@ -8,6 +8,7 @@ class SystemConfig:
     self.min_loglevel = None
     self.metrics_rate_sec = None
     self.mode = None
+    self.latest_start = None
 
   @staticmethod
   def from_dict(source):
@@ -17,6 +18,7 @@ class SystemConfig:
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
     result.mode = source.get('mode')
+    result.latest_start = source.get('latest_start')
     return result
 
   @staticmethod
@@ -43,4 +45,6 @@ class SystemConfig:
       result['metrics_rate_sec'] = self.metrics_rate_sec # 5
     if self.mode:
       result['mode'] = self.mode # 5
+    if self.latest_start:
+      result['latest_start'] = self.latest_start # 5
     return result

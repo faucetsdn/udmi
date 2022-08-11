@@ -1151,7 +1151,7 @@ public class Pubber {
 
   private void localLog(Entry entry) {
     String message = entry.category + " " + entry.message;
-    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
+s    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
   }
 
   private void localLog(String message, Level level, String timestamp) {
