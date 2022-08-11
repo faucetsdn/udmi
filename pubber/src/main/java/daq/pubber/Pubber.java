@@ -1164,7 +1164,7 @@ public class Pubber {
   }
 
   private String getTestingTag() {
-    return deviceConfig.testing == null ? ""
+    return deviceConfig.testing == null || deviceConfig.testing.sequence_name == null ? ""
         : String.format(" (%s)", deviceConfig.testing.sequence_name);
   }
 
