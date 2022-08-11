@@ -1165,7 +1165,7 @@ public class Pubber {
 
   private String getTestingTag() {
     return deviceConfig.testing == null ? ""
-        : String.format(" (%s)", deviceConfig.testing.sequence_name;
+        : String.format(" (%s)", deviceConfig.testing.sequence_name);
   }
 
   private void localLog(String message, Level level, String timestamp) {
