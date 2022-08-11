@@ -19,6 +19,9 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "testing": {
+      "$ref": "file:config_testing.json#"
+    },
     "system": {
       "$ref": "file:config_system.json#"
     },

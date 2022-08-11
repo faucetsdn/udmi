@@ -45,13 +45,12 @@ public class ConfigValidator extends SequenceValidator {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
-    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("no interesting status", this::noInterestingStatus);
     clearLogs();
     untilTrue("previous config/state synced",
         () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)
     );
     extraField = "break_json";
-    updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     AtomicReference<Date> stableConfig = new AtomicReference<>(null);
     untilTrue("state has error status", () -> {
@@ -75,10 +74,9 @@ public class ConfigValidator extends SequenceValidator {
     assertTrue("system operational", deviceState.system.operational);
     hasLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     hasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    resetConfig();
-    extraField = null;
+    resetConfig(); // clears extra_field
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("no interesting status", this::noInterestingStatus);
     untilTrue("last_config updated",
         () -> !dateEquals(matchedConfig, deviceState.system.last_config)
     );
@@ -87,31 +85,34 @@ public class ConfigValidator extends SequenceValidator {
     hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
+  private boolean noInterestingStatus() {
+    return deviceState.system.status == null ||
+        deviceState.system.status.level < Level.WARNING.value();
+  }
+
   @Test
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("no interesting status", this::noInterestingStatus);
     clearLogs();
     final Date prevConfig = deviceState.system.last_config;
     extraField = "Flabberguilstadt";
-    updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("no interesting status", this::noInterestingStatus);
     hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
     extraField = null;
-    updateConfig();
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated again",
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilTrue("state no status", () -> deviceState.system.status == null);
+    untilTrue("no interesting status", this::noInterestingStatus);
     hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }

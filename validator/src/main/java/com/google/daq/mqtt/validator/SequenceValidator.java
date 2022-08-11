@@ -55,6 +55,7 @@ import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
+import udmi.schema.TestingConfig;
 
 /**
  * Validate a device using a sequence of message exchanges.
@@ -177,6 +178,9 @@ public abstract class SequenceValidator {
     protected void starting(Description description) {
       try {
         testName = description.getMethodName();
+        if (deviceConfig != null) {
+          deviceConfig.testing.sqeuence_name = testName;
+        }
         File testsOutputDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testsOutputDir);
         testsOutputDir.mkdirs();
@@ -191,6 +195,9 @@ public abstract class SequenceValidator {
       assert testName.equals(description.getMethodName());
       notice("ending test " + testName);
       testName = null;
+      if (deviceConfig != null) {
+        deviceConfig.testing = null;
+      }
     }
 
     @Override
@@ -281,14 +288,20 @@ public abstract class SequenceValidator {
     return getTimestamp(CleanDateFormat.cleanDate());
   }
 
+  private void resetDeviceConfig() {
+    deviceConfig = readGeneratedConfig();
+    deviceConfig.system = Optional.ofNullable(deviceConfig.system).orElse(new SystemConfig());
+    deviceConfig.system.min_loglevel = 400;
+    deviceConfig.testing = new TestingConfig();
+    deviceConfig.testing.sqeuence_name = testName;
+  }
+
   private Config readGeneratedConfig() {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
       debug("Reading generated config file " + deviceConfigFile.getPath());
       Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
-      Config config = Optional.ofNullable(generatedConfig).orElse(new Config());
-      config.system = Optional.ofNullable(config.system).orElse(new SystemConfig());
-      return config;
+      return Optional.ofNullable(generatedConfig).orElse(new Config());
     } catch (Exception e) {
       throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
     }
@@ -309,9 +322,6 @@ public abstract class SequenceValidator {
 
     resetConfig();
 
-    deviceConfig = readGeneratedConfig();
-    deviceConfig.system.min_loglevel = 400;
-
     clearLogs();
     queryState();
 
@@ -321,13 +331,13 @@ public abstract class SequenceValidator {
   }
 
   protected void resetConfig() {
-    deviceConfig = new Config();
-    deviceConfig.system = new SystemConfig();
     sentConfig.clear();
+    resetDeviceConfig();
     extraField = "reset_config";
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
+    updateConfig();
   }
 
   private Date syncConfig() {
@@ -468,10 +478,7 @@ public abstract class SequenceValidator {
     if (debugLogLevel()) {
       warning("Not resetting config to enable post-execution debugging");
     } else {
-      // Restore the config to a canonical state.
       resetConfig();
-      deviceConfig = readGeneratedConfig();
-      updateConfig();
     }
     deviceConfig = null;
     deviceState = null;
@@ -479,6 +486,7 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
+    updateConfig(SubFolder.TESTING, deviceConfig.testing);
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);

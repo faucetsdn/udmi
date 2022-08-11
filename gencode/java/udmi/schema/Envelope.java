@@ -100,6 +100,7 @@ public class Envelope {
 
         UPDATE("update"),
         AUDIT("audit"),
+        TESTING("testing"),
         DISCOVERY("discovery"),
         SYSTEM("system"),
         GATEWAY("gateway"),
