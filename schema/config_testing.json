@@ -5,7 +5,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "sqeuence_name": {
+    "sequence_name": {
       "description": "The sequence name currently being tested (for debug logging)",
       "type": "string"
     }

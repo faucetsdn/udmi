@@ -5,14 +5,14 @@ class TestingConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.sqeuence_name = None
+    self.sequence_name = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = TestingConfig()
-    result.sqeuence_name = source.get('sqeuence_name')
+    result.sequence_name = source.get('sequence_name')
     return result
 
   @staticmethod
@@ -33,6 +33,6 @@ class TestingConfig:
 
   def to_dict(self):
     result = {}
-    if self.sqeuence_name:
-      result['sqeuence_name'] = self.sqeuence_name # 5
+    if self.sequence_name:
+      result['sequence_name'] = self.sequence_name # 5
     return result

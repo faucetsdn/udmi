@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "sqeuence_name"
+    "sequence_name"
 })
 @Generated("jsonschema2pojo")
 public class TestingConfig {
@@ -25,14 +25,14 @@ public class TestingConfig {
      * The sequence name currently being tested (for debug logging)
      * 
      */
-    @JsonProperty("sqeuence_name")
+    @JsonProperty("sequence_name")
     @JsonPropertyDescription("The sequence name currently being tested (for debug logging)")
-    public String sqeuence_name;
+    public String sequence_name;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.sqeuence_name == null)? 0 :this.sqeuence_name.hashCode()));
+        result = ((result* 31)+((this.sequence_name == null)? 0 :this.sequence_name.hashCode()));
         return result;
     }
 
@@ -45,7 +45,7 @@ public class TestingConfig {
             return false;
         }
         TestingConfig rhs = ((TestingConfig) other);
-        return ((this.sqeuence_name == rhs.sqeuence_name)||((this.sqeuence_name!= null)&&this.sqeuence_name.equals(rhs.sqeuence_name)));
+        return ((this.sequence_name == rhs.sequence_name)||((this.sequence_name!= null)&&this.sequence_name.equals(rhs.sequence_name)));
     }
 
 }

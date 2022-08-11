@@ -179,7 +179,7 @@ public abstract class SequenceValidator {
       try {
         testName = description.getMethodName();
         if (deviceConfig != null) {
-          deviceConfig.testing.sqeuence_name = testName;
+          deviceConfig.testing.sequence_name = testName;
         }
         File testsOutputDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testsOutputDir);
@@ -293,7 +293,7 @@ public abstract class SequenceValidator {
     deviceConfig.system = Optional.ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = 400;
     deviceConfig.testing = new TestingConfig();
-    deviceConfig.testing.sqeuence_name = testName;
+    deviceConfig.testing.sequence_name = testName;
   }
 
   private Config readGeneratedConfig() {
