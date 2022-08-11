@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.Phase;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -110,13 +112,14 @@ public class Pubber {
       DiscoveryEvent.class, "events/discovery"
   );
   private static final int MESSAGE_REPORT_INTERVAL = 10;
-  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
-      Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
-      Level.DEBUG, LOG::info,
-      Level.INFO, LOG::info,
-      Level.WARNING, LOG::warn,
-      Level.ERROR, LOG::error
-  );
+  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.<Level, Consumer<String>>builder()
+      .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
+      .put(Level.DEBUG, LOG::info)
+      .put(Level.INFO, LOG::info)
+      .put(Level.NOTICE, LOG::info)
+      .put(Level.WARNING, LOG::warn)
+      .put(Level.ERROR, LOG::error)
+      .build();
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -660,7 +663,8 @@ public class Pubber {
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
-    entry.level = success ? Level.INFO.value() : Level.ERROR.value();
+    Level successLevel = Category.LEVEL.computeIfAbsent(category, key -> Level.INFO);
+    entry.level = (success ? successLevel : Level.ERROR).value();
     return entry;
   }
 
@@ -680,7 +684,7 @@ public class Pubber {
   private void configHandler(Config config) {
     try {
       info("Config handler");
-      File configOut = new File(OUT_DIR, "config.json");
+      File configOut = new File(OUT_DIR, traceTimestamp() + "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
         debug("New config:\n" + OBJECT_MAPPER.writeValueAsString(config));
@@ -1109,13 +1113,17 @@ public class Pubber {
     augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
-    String fileName = topic.replace("/", "_") + ".json";
-    File stateOut = new File(OUT_DIR, fileName);
+    String fileName = traceTimestamp() + topic.replace("/", "_") + ".json";
+    File messageOut = new File(OUT_DIR, fileName);
     try {
-      OBJECT_MAPPER.writeValue(stateOut, message);
+      OBJECT_MAPPER.writeValue(messageOut, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+      throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private String traceTimestamp() {
+    return TRUE.equals(configuration.options.messageTrace) ? (getTimestamp() + "_") : "";
   }
 
   private void augmentDeviceMessage(Object message) {

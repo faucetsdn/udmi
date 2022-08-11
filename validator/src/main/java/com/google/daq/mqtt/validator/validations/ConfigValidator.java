@@ -25,7 +25,7 @@ public class ConfigValidator extends SequenceValidator {
 
   @Test
   public void system_last_update() {
-    deviceConfig.system.min_loglevel = 400;
+    deviceConfig.system.min_loglevel = Level.WARNING.value();
     untilTrue("state last_config match", () -> {
       Date expectedConfig = deviceConfig.timestamp;
       Date lastConfig = deviceState.system.last_config;
@@ -42,6 +42,7 @@ public class ConfigValidator extends SequenceValidator {
 
   @Test
   public void broken_config() {
+    deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("state no status", () -> deviceState.system.status == null);
@@ -87,6 +88,7 @@ public class ConfigValidator extends SequenceValidator {
 
   @Test
   public void extra_config() {
+    deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operational);
     untilTrue("state no status", () -> deviceState.system.status == null);

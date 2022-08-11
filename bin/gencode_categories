@@ -15,6 +15,7 @@ JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
 JAVA_DESCRIPTION = "\n%s// %s\n"
 JAVA_TARGET = '%spublic static final String %s = "%s";\n'
 JAVA_LEVEL = '%spublic static final Level %s_LEVEL = %s;\n'
+JAVA_MAP_ADD = '%sstatic { LEVEL.put(%s, %s); }\n'
 
 doc_in = os.path.join('docs/specs/categories.md')
 schema_in = os.path.join('etc/category.json')
@@ -71,7 +72,7 @@ def write_schema_categories(out, indent, categories):
         out.write(JSON_FORMAT % (prefix, indent, target))
         prefix = ',\n'
     out.write('\n')
-    
+
 def write_java_out(categories):
     os.makedirs(os.path.dirname(java_out), exist_ok=True)
     with open(java_in) as inp:
@@ -92,7 +93,9 @@ def write_java_categories(out, indent, categories):
         out.write(JAVA_DESCRIPTION % (indent, desc))
         out.write(JAVA_TARGET % (indent, const, target))
         out.write(JAVA_LEVEL % (indent, const, level))
-    
+        out.write(JAVA_MAP_ADD % (indent, const, level))
+
+
 categories = read_categories()
 write_schema_out(categories)
 write_java_out(categories)

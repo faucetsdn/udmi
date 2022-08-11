@@ -9,6 +9,9 @@
     "noConfigAck": {
       "type": "boolean"
     },
+    "messageTrace": {
+      "type": "boolean"
+    },
     "extraPoint": {
       "type": "string"
     },
