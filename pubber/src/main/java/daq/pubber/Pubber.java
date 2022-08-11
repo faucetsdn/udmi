@@ -112,7 +112,8 @@ public class Pubber {
       DiscoveryEvent.class, "events/discovery"
   );
   private static final int MESSAGE_REPORT_INTERVAL = 10;
-  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.<Level, Consumer<String>>builder()
+  private static final Map<Level, Consumer<String>> LOG_MAP =
+      ImmutableMap.<Level, Consumer<String>>builder()
       .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
       .put(Level.DEBUG, LOG::info)
       .put(Level.INFO, LOG::info)
