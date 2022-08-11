@@ -1158,14 +1158,14 @@ public class Pubber {
     }
   }
 
-  private void localLog(Entry entry) {
-    String message = String.format("Entry %s %s%s", entry.category, entry.message, getTestingTag());
-    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
-  }
-
   private String getTestingTag() {
     return deviceConfig.testing == null || deviceConfig.testing.sequence_name == null ? ""
         : String.format(" (%s)", deviceConfig.testing.sequence_name);
+  }
+
+  private void localLog(Entry entry) {
+    String message = String.format("Entry %s %s%s", entry.category, entry.message, getTestingTag());
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
   }
 
   private void localLog(String message, Level level, String timestamp) {
