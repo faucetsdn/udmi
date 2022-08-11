@@ -1,15 +1,15 @@
-import { UdmiMessage } from '../UdmiMessage';
+import { UdmiMessage } from '../model/UdmiMessage';
 import UdmiMessageHandler from '../UdmiMessageHandler';
 import { EVENT, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER, VALIDATION_SUB_FOLDER } from '../MessageUtils';
 
-const deviceId: string = 'AHU-1';
-const deviceNumId: string = '2625324262579600';
+const AHU_ID: string = 'AHU-1';
+const AHU_NUM_ID: string = '2625324262579600';
 
 describe('UdmiMessageHandler', () => {
   const event: UdmiMessage = createMessage(
     {
-      deviceId,
-      deviceNumId,
+      deviceId: AHU_ID,
+      deviceNumId: AHU_NUM_ID,
       subFolder: SYSTEM_SUB_FOLDER,
       subType: MODEL,
     },
@@ -24,12 +24,12 @@ describe('UdmiMessageHandler', () => {
   let udmiMessageHandler: UdmiMessageHandler;
   const upsertMock = jest.fn();
   const getMock = jest.fn();
+  const createMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    udmiMessageHandler = new UdmiMessageHandler({ upsert: upsertMock, get: getMock });
+    udmiMessageHandler = new UdmiMessageHandler({ upsert: upsertMock, get: getMock }, { createDeviceDocument: createMock });
   });
-
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
     await udmiMessageHandler.handleUdmiEvent(event);
@@ -38,26 +38,12 @@ describe('UdmiMessageHandler', () => {
     expect(upsertMock).toHaveBeenCalled();
   });
 
-  test('Exception is logged', async () => {
-    // arrange
-    jest.spyOn(global.console, 'error');
-    upsertMock.mockImplementation(() => {
-      throw Error('some error');
-    });
-
-    // act
-    await udmiMessageHandler.handleUdmiEvent(event);
-
-    // assert
-    expect(console.error).toHaveBeenCalled();
-  });
-
   test('Unhandled Message Types are logged', async () => {
 
     const message: UdmiMessage = createMessage(
       {
-        deviceId,
-        deviceNumId,
+        deviceId: AHU_ID,
+        deviceNumId: AHU_NUM_ID,
         subFolder: 'random',
         subType: MODEL,
       },
@@ -71,48 +57,62 @@ describe('UdmiMessageHandler', () => {
     await udmiMessageHandler.handleUdmiEvent(message);
 
     // assert
-    expect(console.warn).toHaveBeenCalledWith('Could not handle the following message: ' + JSON.stringify(message));
+    expect(console.warn).toHaveBeenCalledWith('Skipping UDMI message: ' + JSON.stringify(message));
   });
 
   test.each([
-    [null, deviceNumId],
-    [deviceId, null]
+    [null, AHU_NUM_ID],
   ])('throws an exception if a mandatory field (deviceId, deviceNumId) is are (%p, %p)', async (deviceId: string, deviceNumId: string) => {
 
     // arrange
     jest.spyOn(global.console, 'error');
 
-    // act
-    await udmiMessageHandler.handleUdmiEvent(createMessage({
+    const message = createMessage({
       deviceId, deviceNumId, subFolder: SYSTEM_SUB_FOLDER, subType: MODEL,
-    }));
-
-    // assert
-    expect(console.error).toHaveBeenCalledWith('An unexpected error occurred: ', new Error('An invalid device name or id was submitted'));
+    });
+    // act and assert
+    expect(udmiMessageHandler.handleUdmiEvent(message)).rejects.toThrow('An invalid device id was submitted');
   });
 
   test.each([
-    [SYSTEM_SUB_FOLDER, STATE, true],
-    [SYSTEM_SUB_FOLDER, EVENT, false],
-    [POINTSET_SUB_FOLDER, STATE, true],
-    [POINTSET_SUB_FOLDER, EVENT, false],
-    [VALIDATION_SUB_FOLDER, EVENT, false],
-    [VALIDATION_SUB_FOLDER, STATE, false],
-    ['random', STATE, false]
-  ])('Message with subFolder: %p and type: %p can be handled', async (subFolder: string, subType: string, result: boolean) => {
-    const message = createMessageFromTypes(subFolder, subType);
+    [AHU_ID, null]
+  ])('throws an exception if a mandatory field (deviceId, deviceNumId) is are (%p, %p)', async (deviceId: string, deviceNumId: string) => {
+
+    // arrange
+    jest.spyOn(global.console, 'error');
+
+    const message = createMessage({
+      deviceId, deviceNumId, subFolder: SYSTEM_SUB_FOLDER, subType: MODEL,
+    });
+    // act and assert
+    expect(udmiMessageHandler.handleUdmiEvent(message)).rejects.toThrow('An invalid device num id was submitted');
+  });
+
+  test.each([
+    [SYSTEM_SUB_FOLDER, STATE, AHU_ID, true],
+    [SYSTEM_SUB_FOLDER, EVENT, AHU_ID, false],
+    [POINTSET_SUB_FOLDER, STATE, AHU_ID, true],
+    [POINTSET_SUB_FOLDER, EVENT, AHU_ID, false],
+    [VALIDATION_SUB_FOLDER, EVENT, AHU_ID, true],
+    [VALIDATION_SUB_FOLDER, EVENT, '_validator', false],
+    [VALIDATION_SUB_FOLDER, STATE, AHU_ID, false],
+    ['random', STATE, AHU_ID, false]
+  ])('Message with subFolder: %p and type: %p can be handled', async (subFolder: string, subType: string, deviceId: string, result: boolean) => {
+    const message = createMessageFromTypes(subFolder, subType, deviceId);
+    console.log(message);
     await udmiMessageHandler.handleUdmiEvent(message);
     if (result) {
       expect(getMock).toHaveBeenCalled();
+      expect(createMock).toHaveBeenCalled();
       expect(upsertMock).toHaveBeenCalled();
     }
   })
 });
 
-function createMessageFromTypes(subFolder: string, subType: string): UdmiMessage {
+function createMessageFromTypes(subFolder: string, subType: string, deviceId: string = 'AHU-1'): UdmiMessage {
   const defaultAttributes = {
     deviceId,
-    deviceNumId,
+    deviceNumId: AHU_NUM_ID,
     subFolder,
     subType
   };

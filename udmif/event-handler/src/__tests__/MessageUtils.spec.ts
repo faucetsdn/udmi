@@ -10,7 +10,7 @@ import {
   isPointsetSubType,
   isValidationSubType,
 } from '../MessageUtils';
-import { UdmiMessage } from '../UdmiMessage';
+import { UdmiMessage } from '../model/UdmiMessage';
 
 
 describe('DeviceTypeUtils.Ssystem', () => {

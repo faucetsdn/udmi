@@ -1,0 +1,13 @@
+{
+    "attributes": {
+        "cloudRegion": "us-central1",
+        "deviceId": "_validator",
+        "deviceRegistryId": "ZZ-TRI-FECTA",
+        "projectId": "labs-333619",
+        "subFolder": "validation",
+        "subType": "event"
+    },
+    "data": "eyJ0aW1lc3RhbXAiOiIyMDIyLTA4LTAzVDE3OjI4OjUwWiIsInZlcnNpb24iOiIxLjMuMTQiLCJlcnJvcnMiOltdLCJzdW1tYXJ5Ijp7ImNvcnJlY3RfZGV2aWNlcyI6WyJBSFUtMSJdLCJleHRyYV9kZXZpY2VzIjpbXSwibWlzc2luZ19kZXZpY2VzIjpbIkFIVS0yMiIsIkdBVC0xMjMiLCJTTlMtNCJdLCJlcnJvcl9kZXZpY2VzIjpbXX0sImRldmljZXMiOnt9fQo=",
+    "messageId": "5260630364563760",
+    "publishTime": "2022-08-03T17:29:00.822Z"
+}

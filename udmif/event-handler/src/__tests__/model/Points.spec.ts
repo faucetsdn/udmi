@@ -1,4 +1,4 @@
-import { PointBuilder } from '../Point';
+import { PointBuilder } from '../../model/Point';
 
 const id: string = 'some-id';
 const name: string = 'some-name';

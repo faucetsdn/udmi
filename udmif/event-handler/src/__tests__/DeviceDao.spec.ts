@@ -1,10 +1,10 @@
 import { DefaultDeviceDao, DeviceDao } from '../DeviceDao';
 import { Collection, MongoClient, Db } from 'mongodb';
-import { DeviceKey } from '../DeviceKey';
-import { DeviceDocument } from '../DeviceDocument';
+import { DeviceKey } from '../model/DeviceKey';
+import { Device } from '../model/Device';
 
 // mongo collection
-let deviceCollection: Collection<DeviceDocument>;
+let deviceCollection: Collection<Device>;
 let connection: MongoClient;
 let db: Db;
 
@@ -31,7 +31,7 @@ describe('DeviceDao.upsert', () => {
     const name: string = 'name';
     const id: string = 'id';
     const deviceKey: DeviceKey = { name, id };
-    const deviceDocument: DeviceDocument = { name, id };
+    const deviceDocument: Device = { name, id };
     const deviceDao: DeviceDao = new DefaultDeviceDao(deviceCollection);
     const updateOneSpy = jest.spyOn(deviceCollection, 'updateOne').mockImplementation(jest.fn());
 
@@ -54,11 +54,11 @@ describe('DeviceDao.get', () => {
     const deviceKey: DeviceKey = { name, id };
     const deviceDao: DeviceDao = new DefaultDeviceDao(deviceCollection);
 
-    const insertedDeviceDocument: DeviceDocument = { name, id, points: [], serialNumber: 'randomSerialId' };
+    const insertedDeviceDocument: Device = { name, id, points: [], serialNumber: 'randomSerialId' };
     deviceCollection.insertOne(insertedDeviceDocument);
 
     // act
-    const retrievedDeviceDocument: DeviceDocument = await deviceDao.get(deviceKey);
+    const retrievedDeviceDocument: Device = await deviceDao.get(deviceKey);
 
     // assert
     expect(retrievedDeviceDocument).toEqual(insertedDeviceDocument);

@@ -17,8 +17,8 @@ beforeEach(() => {
 });
 
 describe('DeviceDaoFactory.getDeviceDAO()', () => {
-  test('returns a DeviceDao object', async () => {
-    await expect(getDeviceDAO()).toBeTruthy();
+  test('returns a DeviceDao object', () => {
+    expect(getDeviceDAO()).toBeTruthy();
   });
 });
 
@@ -31,19 +31,19 @@ describe('DeviceDaoFactory.getUri()', () => {
     process.env = { ...ENV_BACKUP }; // Restore old environment
   });
 
-  test('returns a uri with a host', async () => {
+  test('returns a uri with a host', () => {
     process.env.MONGO_HOST = 'host:8001';
-    await expect(getUri()).toEqual('undefined://host:8001');
+    expect(getUri()).toEqual('undefined://host:8001');
   });
-  test('returns a uri with a protocol', async () => {
+  test('returns a uri with a protocol', () => {
     process.env.MONGO_PROTOCOL = 'mongodb';
-    await expect(getUri()).toEqual('mongodb://undefined');
+    expect(getUri()).toEqual('mongodb://undefined');
   });
-  test('returns a uri with a user and password', async () => {
+  test('returns a uri with a user and password', () => {
     process.env.MONGO_PROTOCOL = 'mongodb';
     process.env.MONGO_HOST = 'host:8001';
     process.env.MONGO_USER = 'user';
     process.env.MONGO_PWD = 'pwd';
-    await expect(getUri()).toEqual('mongodb://user:pwd@host:8001');
+    expect(getUri()).toEqual('mongodb://user:pwd@host:8001');
   });
 });

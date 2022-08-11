@@ -1,3 +1,15 @@
+export interface Error {
+  message: string;
+  category: string,
+  level: number,
+}
+
+export interface Status {
+  message: string,
+  detail: string,
+  category: string
+}
+
 export interface UdmiMessage {
   attributes: {
     deviceId: string;
@@ -8,6 +20,7 @@ export interface UdmiMessage {
     projectId?: string;
   };
   data: {
+    // system
     hardware?: {
       make: string;
       model: string;
@@ -33,6 +46,13 @@ export interface UdmiMessage {
     operational?: string;
     serial_no?: string;
     timestamp?: string;
+    // pointset
     points?: any;
+    // validation
+    version?: string;
+    sub_folder?: string;
+    sub_type?: string;
+    status?: Status,
+    errors?: Error[];
   };
 }

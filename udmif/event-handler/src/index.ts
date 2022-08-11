@@ -1,7 +1,9 @@
 import type { EventFunction } from '@google-cloud/functions-framework/build/src/functions';
 import { getDeviceDAO } from './DeviceDaoFactory';
 import UdmiMessageHandler from './UdmiMessageHandler';
-import { UdmiMessage } from './UdmiMessage';
+import { UdmiMessage } from './model/UdmiMessage';
+import { DeviceDocumentFactory } from './DeviceDocumentFactory';
+import { InvalidMessageError } from './InvalidMessageError';
 
 let messageHandler: UdmiMessageHandler;
 
@@ -11,19 +13,22 @@ let messageHandler: UdmiMessageHandler;
  * @param {!Object} event Event payload.
  * @param {!Object} context Metadata for the event.
  */
-export const handleUdmiEvent: EventFunction = async (event: any, context: any) => {
+export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
     if (!messageHandler) {
       console.log('Creating Message Handler');
-      messageHandler = new UdmiMessageHandler(await getDeviceDAO());
+      messageHandler = new UdmiMessageHandler(await getDeviceDAO(), new DeviceDocumentFactory());
     }
     const udmiMessage: UdmiMessage = decodeEventData(event);
-    console.log('Received the following udmi message: ' + JSON.stringify(udmiMessage));
     await messageHandler.handleUdmiEvent(udmiMessage);
   } catch (e) {
-    console.error('An unexpected error occurred: ', e);
+    if (e instanceof InvalidMessageError) {
+      console.error(e.message);
+    } else {
+      console.error('An unexpected error occurred: ', e);
+    }
   }
-};
+}
 
 /**
  * Decode the event data by replacing the base64 encoded data with a decoded version of the data

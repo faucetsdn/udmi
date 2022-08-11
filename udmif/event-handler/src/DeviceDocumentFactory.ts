@@ -1,13 +1,21 @@
-import { DeviceDocumentBuilder, DeviceDocument } from './DeviceDocument';
+import { DeviceBuilder, Device } from './model/Device';
 import {
   isPointsetSubType,
   isSystemSubType,
+  isValidationSubType,
 } from './MessageUtils';
-import { UdmiMessage } from './UdmiMessage';
-import { PointBuilder, Point } from './Point';
+import { UdmiMessage } from './model/UdmiMessage';
+import { PointBuilder, Point } from './model/Point';
+import { Validation, ValidationBuilder } from './model/Validation';
 
-export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): DeviceDocument {
-  const builder: DeviceDocumentBuilder = new DeviceDocumentBuilder();
+export class DeviceDocumentFactory {
+  public createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
+    return createDeviceDocument(udmiMessage, existingPoints);
+  }
+}
+
+export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
+  const builder: DeviceBuilder = new DeviceBuilder();
   builder
     .id(udmiMessage.attributes.deviceNumId)
     .name(udmiMessage.attributes.deviceId);
@@ -16,13 +24,19 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
     return buildDeviceDocumentFromSystem(udmiMessage, builder);
   } else if (isPointsetSubType(udmiMessage)) {
     return buildDeviceDocumentFromPointset(udmiMessage, existingPoints, builder);
+  } else if (isValidationSubType(udmiMessage)) {
+    return buildDeviceDocumentFromValidation(udmiMessage, builder);
   }
 }
 
+/**
+ * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
+ */
 function buildDeviceDocumentFromSystem(
   udmiMessage: UdmiMessage,
-  builder: DeviceDocumentBuilder
-): DeviceDocument {
+  builder: DeviceBuilder
+): Device {
+
   return builder
     .lastPayload(udmiMessage.data.timestamp)
     .operational(udmiMessage.data.operational)
@@ -35,15 +49,38 @@ function buildDeviceDocumentFromSystem(
     .build();
 }
 
+/**
+ * https://faucetsdn.github.io/udmi/gencode/docs/event_validation.html  describes the incoming schema for an event validation message
+ */
+function buildDeviceDocumentFromValidation(
+  udmiMessage: UdmiMessage,
+  builder: DeviceBuilder
+): Device {
+
+  const validation: Validation = new ValidationBuilder()
+    .timestamp(udmiMessage.data.timestamp)
+    .category(udmiMessage.data.status.category)
+    .message(udmiMessage.data.status.message)
+    .detail(udmiMessage.data.status.detail)
+    .errors(udmiMessage.data.errors)
+    .build();
+
+  return builder.validation(validation)
+    .build();
+}
+
+/**
+ * https://faucetsdn.github.io/udmi/gencode/docs/event_pointset.html describes the incoming schema for an event pointset message
+ */
 function buildDeviceDocumentFromPointset(
   udmiMessage: UdmiMessage,
   existingPoints: Point[],
-  deviceBuilder: DeviceDocumentBuilder
-): DeviceDocument {
+  deviceBuilder: DeviceBuilder
+): Device {
   const points: Point[] = [];
 
-  for (var pointCode in udmiMessage.data.points) {
-    const existingPoint = existingPoints.find(point => point.name === pointCode);
+  for (let pointCode in udmiMessage.data.points) {
+    const existingPoint = existingPoints.find(candidatePoint => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiMessage, existingPoint, pointCode);
     points.push(point);
   }

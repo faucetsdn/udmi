@@ -1,3 +1,5 @@
+import { InvalidMessageError } from "../InvalidMessageError";
+
 /**
  * Sample point.
  * {
@@ -42,7 +44,7 @@ export class PointBuilder {
     return this;
   }
 
-  /* TODO: confirm this is mandatory, we may have to use the code in the pointset message with no translation */
+  /* we are using the code in the pointset message with no translation as the name*/
   name(name: string): PointBuilder {
     if (name) {
       this._document.name = name;
@@ -97,10 +99,10 @@ export class PointBuilder {
 
   build(): Point {
     if (this._document.id === '') {
-      throw new Error('Point id can not be empty');
+      throw new InvalidMessageError('Point id can not be empty');
     }
     if (this._document.name === '') {
-      throw new Error('Point name can not be empty');
+      throw new InvalidMessageError('Point name can not be empty');
     }
     return this._document;
   }

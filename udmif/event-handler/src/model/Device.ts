@@ -1,4 +1,6 @@
 import { Point } from './Point';
+import { Validation } from './Validation';
+import { InvalidMessageError } from "../InvalidMessageError";
 
 /**
  * Sample Device Document
@@ -14,10 +16,11 @@ import { Point } from './Point';
     "serialNumber": "PI1H230ZQX",
     "firmware": "v3.4",
     "tags": string[],
-    "points": Point[]
+    "points": Point[],
+    "validation": Validation,
    }
  */
-export interface DeviceDocument {
+export interface Device {
   id: string;
   name: string;
   make?: string;
@@ -30,10 +33,11 @@ export interface DeviceDocument {
   firmware?: string;
   tags?: string[];
   points?: Point[];
+  validation?: Validation;
 }
 
-export class DeviceDocumentBuilder {
-  private readonly _document: DeviceDocument;
+export class DeviceBuilder {
+  private readonly _document: Device;
 
   constructor() {
     this._document = {
@@ -43,89 +47,96 @@ export class DeviceDocumentBuilder {
     };
   }
 
-  id(id: string): DeviceDocumentBuilder {
+  id(id: string): DeviceBuilder {
     if (id) {
       this._document.id = id;
     }
     return this;
   }
 
-  name(name: string): DeviceDocumentBuilder {
+  name(name: string): DeviceBuilder {
     if (name) {
       this._document.name = name;
     }
     return this;
   }
 
-  operational(operational: string): DeviceDocumentBuilder {
+  operational(operational: string): DeviceBuilder {
     if (operational) {
       this._document.operational = operational;
     }
     return this;
   }
 
-  serialNumber(serialNo: string): DeviceDocumentBuilder {
+  serialNumber(serialNo: string): DeviceBuilder {
     if (serialNo) {
       this._document.serialNumber = serialNo;
     }
     return this;
   }
 
-  make(make: string): DeviceDocumentBuilder {
+  make(make: string): DeviceBuilder {
     if (make) {
       this._document.make = make;
     }
     return this;
   }
 
-  model(model: string): DeviceDocumentBuilder {
+  model(model: string): DeviceBuilder {
     if (model) {
       this._document.model = model;
     }
     return this;
   }
 
-  firmware(firmware: string): DeviceDocumentBuilder {
+  firmware(firmware: string): DeviceBuilder {
     if (firmware) {
       this._document.firmware = firmware;
     }
     return this;
   }
 
-  lastPayload(timestamp: string): DeviceDocumentBuilder {
+  lastPayload(timestamp: string): DeviceBuilder {
     if (timestamp) {
       this._document.lastPayload = timestamp;
     }
     return this;
   }
 
-  section(section: string): DeviceDocumentBuilder {
+  section(section: string): DeviceBuilder {
     if (section) {
       this._document.section = section;
     }
     return this;
   }
 
-  site(site: string): DeviceDocumentBuilder {
+  site(site: string): DeviceBuilder {
     if (site) {
       this._document.site = site;
     }
     return this;
   }
 
-  points(points: Point[]): DeviceDocumentBuilder {
+  points(points: Point[]): DeviceBuilder {
     if (points) {
       this._document.points = points;
     }
     return this;
   }
 
-  build(): DeviceDocument {
+  validation(validation: Validation): DeviceBuilder {
+    if (validation) {
+      this._document.validation = validation;
+    }
+    return this;
+  }
+
+  build(): Device {
     if (this._document.id === '') {
-      throw new Error('Point id can not be empty');
+      throw new InvalidMessageError('Point id can not be empty');
     }
     if (this._document.name === '') {
-      throw new Error('Point name can not be empty');
+      throw new InvalidMessageError('Point name can not be empty');
     }
     return this._document;
   }
