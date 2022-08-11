@@ -23,11 +23,6 @@ schema_out = os.path.join('schema/category.json')
 java_in = os.path.join('etc/Category.java')
 java_out = os.path.join('gencode/java/udmi/schema/Category.java')
 
-def calculate_index_indent(line):
-    if not line.strip().startswith(CATEGORY_MARKER):
-        return -1
-    return line.find(CATEGORY_MARKER)//2
-
 def read_categories():
     categories = []
     prefix = []
@@ -35,7 +30,7 @@ def read_categories():
     group = None
     with open(doc_in) as doc:
         while line := doc.readline():
-            indent = calculate_index_indent(line)
+            indent = line.find(CATEGORY_MARKER)//2
             match = re.match(CATEGORY_REGEX, line)
             if indent < 0 or not match:
                 continue
@@ -59,9 +54,9 @@ def write_schema_out(categories):
     with open(schema_in) as inp:
         with open(schema_out, 'w') as out:
             while line := inp.readline():
-                if line.strip().startswith(GENCODE_MARKER):
-                    indent = line[0:line.find(GENCODE_MARKER)]
-                    write_schema_categories(out, indent, categories)
+                index = line.find(GENCODE_MARKER)
+                if index > 0:
+                    write_schema_categories(out, line[0:index], categories)
                 else:
                     out.write(line)
 
