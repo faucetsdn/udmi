@@ -114,13 +114,13 @@ public class Pubber {
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
-      .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
-      .put(Level.DEBUG, LOG::info)
-      .put(Level.INFO, LOG::info)
-      .put(Level.NOTICE, LOG::info)
-      .put(Level.WARNING, LOG::warn)
-      .put(Level.ERROR, LOG::error)
-      .build();
+          .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
+          .put(Level.DEBUG, LOG::info)
+          .put(Level.INFO, LOG::info)
+          .put(Level.NOTICE, LOG::info)
+          .put(Level.WARNING, LOG::warn)
+          .put(Level.ERROR, LOG::error)
+          .build();
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -1076,7 +1076,7 @@ public class Pubber {
   private void publishStateMessage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      warn(String.format("defer state update %d", delay));
+      warn(String.format("State defer %dms", delay));
       markStateDirty(delay);
       return;
     }
@@ -1084,7 +1084,8 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
+      debug(String.format("State update:%s\n%s", getTestingTag(),
+          OBJECT_MAPPER.writeValueAsString(deviceState)));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1158,8 +1159,13 @@ public class Pubber {
   }
 
   private void localLog(Entry entry) {
-    String message = entry.category + " " + entry.message;
+    String message = String.format("Entry %s %s%s", entry.category, entry.message, getTestingTag());
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
+  }
+
+  private String getTestingTag() {
+    return deviceConfig.testing == null ? ""
+        : String.format(" (%s)", deviceConfig.testing.sequence_name;
   }
 
   private void localLog(String message, Level level, String timestamp) {
