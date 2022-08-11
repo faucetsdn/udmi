@@ -55,7 +55,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $site_path $project_id $device_id $serial_no
+bin/sequencer -v $site_path $project_id $device_id $serial_no
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
 
