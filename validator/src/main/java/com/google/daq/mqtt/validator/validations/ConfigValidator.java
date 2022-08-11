@@ -86,8 +86,8 @@ public class ConfigValidator extends SequenceValidator {
   }
 
   private boolean noInterestingStatus() {
-    return deviceState.system.status == null ||
-        deviceState.system.status.level < Level.WARNING.value();
+    return deviceState.system.status == null
+        || deviceState.system.status.level < Level.WARNING.value();
   }
 
   @Test
