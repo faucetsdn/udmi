@@ -685,7 +685,8 @@ public class Pubber {
       File configOut = new File(OUT_DIR, traceTimestamp() + "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
-        debug("New config:\n" + OBJECT_MAPPER.writeValueAsString(config));
+        debug(String.format("Config update%s:\n%s", getTestingTag(config),
+            OBJECT_MAPPER.writeValueAsString(config)));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -1084,7 +1085,7 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug(String.format("State update:%s\n%s", getTestingTag(),
+      debug(String.format("State update%s:\n%s", getTestingTag(deviceConfig),
           OBJECT_MAPPER.writeValueAsString(deviceState)));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
@@ -1158,13 +1159,14 @@ public class Pubber {
     }
   }
 
-  private String getTestingTag() {
-    return deviceConfig.testing == null || deviceConfig.testing.sequence_name == null ? ""
-        : String.format(" (%s)", deviceConfig.testing.sequence_name);
+  private String getTestingTag(Config config) {
+    return config.testing == null || config.testing.sequence_name == null ? ""
+        : String.format(" (%s)", config.testing.sequence_name);
   }
 
   private void localLog(Entry entry) {
-    String message = String.format("Entry %s %s%s", entry.category, entry.message, getTestingTag());
+    String message = String.format("Entry %s %s%s", entry.category, entry.message,
+        getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
   }
 
