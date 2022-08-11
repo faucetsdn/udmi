@@ -649,8 +649,8 @@ public class Pubber {
   }
 
   private boolean shouldLogLevel(int level) {
-    Integer min_loglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
-    return level >= (min_loglevel == null ? Level.INFO.value() : min_loglevel);
+    Integer minLoglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
+    return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
   }
 
   private Entry entryFromException(String category, Throwable e) {
