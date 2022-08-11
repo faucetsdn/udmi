@@ -128,4 +128,4 @@ jobs:
         if: ${{ always() }}
         run: |
           cat pubber.out || true
-          more out/*.json
+          more pubber/out/*.json

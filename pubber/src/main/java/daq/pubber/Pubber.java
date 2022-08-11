@@ -99,7 +99,7 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String OUT_DIR = "out";
+  private static final String OUT_DIR = "pubber/out";
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
@@ -148,6 +148,7 @@ public class Pubber {
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
+  private PrintStream logPrintWriter;
 
   /**
    * Start an instance from a configuration file.
@@ -555,8 +556,11 @@ public class Pubber {
     File outDir = new File(OUT_DIR);
     try {
       outDir.mkdir();
+      File logOut = new File(OUT_DIR, traceTimestamp() + "pubber.log");
+      logPrintWriter = new PrintStream(logOut);
+      logPrintWriter.println("Pubber log started at " + getTimestamp());
     } catch (Exception e) {
-      throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
+      throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
     }
 
     initializeMqtt();
@@ -1173,6 +1177,14 @@ public class Pubber {
   private void localLog(String message, Level level, String timestamp) {
     String logMessage = String.format("%s %s", timestamp, message);
     LOG_MAP.get(level).accept(logMessage);
+    try {
+      if (logPrintWriter != null) {
+        logPrintWriter.println(logMessage);
+        logPrintWriter.flush();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While writing log output file", e);
+    }
   }
 
   private void trace(String message) {
