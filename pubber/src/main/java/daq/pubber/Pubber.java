@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.Blob.FINAL_PHASE;
+import static udmi.schema.Blob.FIRMWARE_UPDATE_BLOB;
 import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -46,6 +47,8 @@ import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobsetState;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -716,16 +719,65 @@ public class Pubber {
     if (config != null) {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
+      info(String.format("Config == %s", config.toString()));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
       extractedEndpoint = extractEndpointBlobConfig();
+      BlobBlobsetConfig firmwareUpdateConfig = extractFirmwareUpdateBlobConfig();
+      if (firmwareUpdateConfig!=null) {
+        performFirmwareUpdate(firmwareUpdateConfig);
+      }
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
     maybeRestartExecutor(actualInterval);
+  }
+
+  private void performFirmwareUpdate(BlobBlobsetConfig firmwareUpdateConfig) {
+    if ((firmwareUpdateConfig.url != null) && (!firmwareUpdateConfig.sha256.isEmpty())) {
+      BlobBlobsetState state = new BlobBlobsetState();
+      state.status = new Entry();
+      state.status.message = "Received firmware update";
+      state.status.category = "blobset.blob.receive";
+      state.status.level = 100;
+      deviceState.blobset = new BlobsetState();
+      deviceState.blobset.blobs = new HashMap<String, BlobBlobsetState>();
+      deviceState.blobset.blobs.put(FIRMWARE_UPDATE_BLOB, state);
+      publishStateMessage();
+    } else if (!firmwareUpdateConfig.base64.isEmpty() && !firmwareUpdateConfig.content_type.isEmpty()) {
+      BlobBlobsetState state = new BlobBlobsetState();
+      state.status = new Entry();
+      state.status.message = "Received firmware update";
+      state.status.category = "blobset.blob.receive";
+      state.status.level = 100;
+      deviceState.blobset.blobs = new HashMap<String, BlobBlobsetState>();
+      deviceState.blobset.blobs.put(FIRMWARE_UPDATE_BLOB, state);
+      publishStateMessage();
+    }
+  }
+
+  private BlobBlobsetConfig extractFirmwareUpdateBlobConfig() {
+    try {
+      BlobBlobsetConfig config = extractConfigBlobFull(FIRMWARE_UPDATE_BLOB);
+
+      if (config == null) {
+        return null;
+      }
+
+      if ((config.url == null) || (config.sha256.isEmpty())) {
+        throw new RuntimeException("While extracting firmware update blob config: Missing url or sha256");
+      }
+
+      info(getTimestamp() + " doing firmware update of " + config.url.toString() + " sha256 " + config.sha256);
+
+      return config;
+
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting firmware update blob config");
+    }
   }
 
   private EndpointConfiguration extractEndpointBlobConfig() {
@@ -761,13 +813,21 @@ public class Pubber {
     }
   }
 
-  private String extractConfigBlob(String blobName) {
-    try {
+  private BlobBlobsetConfig extractConfigBlobFull(String blobName) {
+      try {
       if (deviceConfig == null || deviceConfig.blobset == null
           || deviceConfig.blobset.blobs == null) {
         return null;
       }
-      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
+      return deviceConfig.blobset.blobs.get(blobName);
+    } catch (Exception e) {
+      throw new RuntimeException("While extracting config blob " + blobName, e);
+    }
+  }
+
+  private String extractConfigBlob(String blobName) {
+    try {
+      BlobBlobsetConfig blobBlobsetConfig = extractConfigBlobFull(blobName);
       if (blobBlobsetConfig != null && FINAL_PHASE.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
