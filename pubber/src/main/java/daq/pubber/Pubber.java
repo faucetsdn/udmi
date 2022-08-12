@@ -689,8 +689,8 @@ public class Pubber {
       File configOut = new File(OUT_DIR, traceTimestamp() + "config.json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
-        debug(String.format("Config update%s:\n%s", getTestingTag(config),
-            OBJECT_MAPPER.writeValueAsString(config)));
+        debug(String.format("Config update%s", getTestingTag(config)),
+            OBJECT_MAPPER.writeValueAsString(config));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -1061,12 +1061,14 @@ public class Pubber {
     publishDeviceMessage(devicePoints);
   }
 
-  private void pubberLogMessage(String logMessage, Level level, String timestamp) {
+  private void pubberLogMessage(String logMessage, Level level, String timestamp,
+      String detail) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
+    logEntry.detail = detail;
     publishLogMessage(logEntry);
   }
 
@@ -1089,8 +1091,8 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug(String.format("State update%s:\n%s", getTestingTag(deviceConfig),
-          OBJECT_MAPPER.writeValueAsString(deviceState)));
+      debug(String.format("State update%s", getTestingTag(deviceConfig)),
+          OBJECT_MAPPER.writeValueAsString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1146,8 +1148,12 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
+    cloudLog(message, level, null);
+  }
+
+  private void cloudLog(String message, Level level, String detail) {
     String timestamp = getTimestamp();
-    localLog(message, level, timestamp);
+    localLog(message, level, timestamp, detail);
 
     if (publishingLog || mqttPublisher == null) {
       return;
@@ -1155,9 +1161,9 @@ public class Pubber {
 
     try {
       publishingLog = true;
-      pubberLogMessage(message, level, timestamp);
+      pubberLogMessage(message, level, timestamp, detail);
     } catch (Exception e) {
-      localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
+      localLog("Error publishing log message: " + e, Level.ERROR, timestamp, null);
     } finally {
       publishingLog = false;
     }
@@ -1171,11 +1177,12 @@ public class Pubber {
   private void localLog(Entry entry) {
     String message = String.format("Entry %s %s %s%s", Level.fromValue(entry.level).name(),
         entry.category, entry.message, getTestingTag(deviceConfig));
-    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
   }
 
-  private void localLog(String message, Level level, String timestamp) {
-    String logMessage = String.format("%s %s", timestamp, message);
+  private void localLog(String message, Level level, String timestamp, String detail) {
+    String detailPostfix = detail == null ? "" : ":\n" + detail;
+    String logMessage = String.format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
     try {
       if (logPrintWriter != null) {
@@ -1191,8 +1198,8 @@ public class Pubber {
     cloudLog(message, Level.TRACE);
   }
 
-  private void debug(String message) {
-    cloudLog(message, Level.DEBUG);
+  private void debug(String message, String detail) {
+    cloudLog(message, Level.DEBUG, detail);
   }
 
   private void info(String message) {
