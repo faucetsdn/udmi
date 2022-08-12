@@ -40,11 +40,11 @@ export default class UdmiMessageHandler {
       throw new InvalidMessageError('An invalid device id was submitted');
     }
 
-    if (!message.attributes.deviceNumId) {
-      throw new InvalidMessageError('An invalid device num id was submitted');
+    if (!message.attributes.deviceRegistryId) {
+      throw new InvalidMessageError('An invalid site was submitted');
     }
 
-    return { name: message.attributes.deviceId, id: message.attributes.deviceNumId };
+    return { name: message.attributes.deviceId, site: message.attributes.deviceRegistryId };
   }
 
   private messageCanBeHandled(message: UdmiMessage): boolean {

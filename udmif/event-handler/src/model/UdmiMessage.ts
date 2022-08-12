@@ -1,22 +1,22 @@
 export interface Error {
   message: string;
-  category: string,
-  level: number,
+  category: string;
+  level: number;
 }
 
 export interface Status {
-  message: string,
-  detail: string,
-  category: string
+  message: string;
+  detail: string;
+  category: string;
 }
 
 export interface UdmiMessage {
   attributes: {
     deviceId: string;
-    deviceNumId: string;
+    deviceRegistryId: string;
+    deviceNumId?: string;
     subFolder?: string;
     subType?: string;
-    deviceRegistryId?: string;
     projectId?: string;
   };
   data: {
@@ -52,7 +52,7 @@ export interface UdmiMessage {
     version?: string;
     sub_folder?: string;
     sub_type?: string;
-    status?: Status,
+    status?: Status;
     errors?: Error[];
   };
 }

@@ -1,9 +1,5 @@
 import { DeviceBuilder, Device } from './model/Device';
-import {
-  isPointsetSubType,
-  isSystemSubType,
-  isValidationSubType,
-} from './MessageUtils';
+import { isPointsetSubType, isSystemSubType, isValidationSubType } from './MessageUtils';
 import { UdmiMessage } from './model/UdmiMessage';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from './model/Validation';
@@ -16,9 +12,7 @@ export class DeviceDocumentFactory {
 
 export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
   const builder: DeviceBuilder = new DeviceBuilder();
-  builder
-    .id(udmiMessage.attributes.deviceNumId)
-    .name(udmiMessage.attributes.deviceId);
+  builder.site(udmiMessage.attributes.deviceRegistryId).name(udmiMessage.attributes.deviceId);
 
   if (isSystemSubType(udmiMessage)) {
     return buildDeviceDocumentFromSystem(udmiMessage, builder);
@@ -32,11 +26,7 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
  */
-function buildDeviceDocumentFromSystem(
-  udmiMessage: UdmiMessage,
-  builder: DeviceBuilder
-): Device {
-
+function buildDeviceDocumentFromSystem(udmiMessage: UdmiMessage, builder: DeviceBuilder): Device {
   return builder
     .lastPayload(udmiMessage.data.timestamp)
     .operational(udmiMessage.data.operational)
@@ -45,18 +35,14 @@ function buildDeviceDocumentFromSystem(
     .model(udmiMessage.data.hardware?.model)
     .firmware(udmiMessage.data.software?.firmware)
     .section(udmiMessage.data.location?.section)
-    .site(udmiMessage.data.location?.site)
+    .id(udmiMessage.attributes.deviceNumId)
     .build();
 }
 
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_validation.html  describes the incoming schema for an event validation message
  */
-function buildDeviceDocumentFromValidation(
-  udmiMessage: UdmiMessage,
-  builder: DeviceBuilder
-): Device {
-
+function buildDeviceDocumentFromValidation(udmiMessage: UdmiMessage, builder: DeviceBuilder): Device {
   const validation: Validation = new ValidationBuilder()
     .timestamp(udmiMessage.data.timestamp)
     .category(udmiMessage.data.status.category)
@@ -65,8 +51,7 @@ function buildDeviceDocumentFromValidation(
     .errors(udmiMessage.data.errors)
     .build();
 
-  return builder.validation(validation)
-    .build();
+  return builder.validation(validation).build();
 }
 
 /**
@@ -80,7 +65,7 @@ function buildDeviceDocumentFromPointset(
   const points: Point[] = [];
 
   for (let pointCode in udmiMessage.data.points) {
-    const existingPoint = existingPoints.find(candidatePoint => candidatePoint.name === pointCode);
+    const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiMessage, existingPoint, pointCode);
     points.push(point);
   }
@@ -89,7 +74,6 @@ function buildDeviceDocumentFromPointset(
 }
 
 function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
-
   const pointValue = udmiMessage.data.points[pointCode];
 
   // we get the value from either the message or the existing point
@@ -107,4 +91,3 @@ function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: s
     .metaCode(pointCode)
     .build();
 }
-

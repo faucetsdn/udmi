@@ -1,6 +1,6 @@
 import { Point } from './Point';
 import { Validation } from './Validation';
-import { InvalidMessageError } from "../InvalidMessageError";
+import { InvalidMessageError } from '../InvalidMessageError';
 
 /**
  * Sample Device Document
@@ -21,11 +21,11 @@ import { InvalidMessageError } from "../InvalidMessageError";
    }
  */
 export interface Device {
-  id: string;
   name: string;
+  site: string;
+  id?: string;
   make?: string;
   model?: string;
-  site?: string;
   section?: string;
   lastPayload?: string;
   operational?: string;
@@ -41,8 +41,8 @@ export class DeviceBuilder {
 
   constructor() {
     this._document = {
-      id: '',
       name: '',
+      site: '',
       tags: [],
     };
   }
@@ -132,11 +132,11 @@ export class DeviceBuilder {
   }
 
   build(): Device {
-    if (this._document.id === '') {
-      throw new InvalidMessageError('Point id can not be empty');
+    if (this._document.site === '') {
+      throw new InvalidMessageError('Device site can not be empty');
     }
     if (this._document.name === '') {
-      throw new InvalidMessageError('Point name can not be empty');
+      throw new InvalidMessageError('Device name can not be empty');
     }
     return this._document;
   }

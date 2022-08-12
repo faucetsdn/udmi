@@ -15,21 +15,22 @@ const serialNumber: string = 'serialNumber';
 const points: Point[] = [];
 const tags: string[] = [];
 const validation: Validation = {
-  category: "category-x",
-  message: "Multiple validation errors",
-  timestamp: "2022-08-03T17:28:49Z",
-  detail: "While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found",
+  category: 'category-x',
+  message: 'Multiple validation errors',
+  timestamp: '2022-08-03T17:28:49Z',
+  detail:
+    'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
   errors: [
     {
-      message: "While converting to json node: 2 schema violations found",
+      message: 'While converting to json node: 2 schema violations found',
       level: 500,
-      category: "category-x"
+      category: 'category-x',
     },
     {
-      message: "While converting to json node: 1 schema violations found",
+      message: 'While converting to json node: 1 schema violations found',
       level: 500,
-      category: "category-x"
-    }
+      category: 'category-x',
+    },
   ],
 };
 
@@ -39,21 +40,24 @@ describe('Device.DeviceBuilder', () => {
     builder = new DeviceBuilder();
   });
 
-  test('throws exception when id is not specified', () => {
+  test('throws exception when site is not specified', () => {
     expect(() => {
       builder.build();
-    }).toThrow('Point id can not be empty');
+    }).toThrow('Device site can not be empty');
   });
+
   test('throws exception when name is not specified', () => {
-    builder.id(id);
+    builder.site(site);
     expect(() => {
       builder.build();
-    }).toThrow('Point name can not be empty');
+    }).toThrow('Device name can not be empty');
   });
+
   test('Builder creates Device Document with id and name', () => {
-    builder.id(id).name(name);
-    expect(builder.build()).toEqual({ id, name, tags });
+    builder.site(site).name(name);
+    expect(builder.build()).toEqual({ site, name, tags });
   });
+
   test('Builder allows optional attributes', () => {
     builder
       .id(id)
@@ -81,7 +85,7 @@ describe('Device.DeviceBuilder', () => {
       serialNumber,
       points,
       validation,
-      tags
+      tags,
     });
   });
 });

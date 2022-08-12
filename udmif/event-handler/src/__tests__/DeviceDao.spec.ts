@@ -23,15 +23,15 @@ afterAll(async () => {
 beforeEach(async () => {
   // clean the collection before each test
   await deviceCollection.deleteMany({});
-})
+});
 
 describe('DeviceDao.upsert', () => {
   test('upsert calls the updateOne method on the provided collection', () => {
     // arrange
     const name: string = 'name';
-    const id: string = 'id';
-    const deviceKey: DeviceKey = { name, id };
-    const deviceDocument: Device = { name, id };
+    const site: string = 'site-1';
+    const deviceKey: DeviceKey = { name, site };
+    const deviceDocument: Device = { name, site };
     const deviceDao: DeviceDao = new DefaultDeviceDao(deviceCollection);
     const updateOneSpy = jest.spyOn(deviceCollection, 'updateOne').mockImplementation(jest.fn());
 
@@ -44,17 +44,16 @@ describe('DeviceDao.upsert', () => {
 });
 
 describe('DeviceDao.get', () => {
-
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(deviceCollection, 'findOne');
 
     const name: string = 'name';
-    const id: string = 'id';
-    const deviceKey: DeviceKey = { name, id };
+    const site: string = 'id';
+    const deviceKey: DeviceKey = { name, site };
     const deviceDao: DeviceDao = new DefaultDeviceDao(deviceCollection);
 
-    const insertedDeviceDocument: Device = { name, id, points: [], serialNumber: 'randomSerialId' };
+    const insertedDeviceDocument: Device = { name, site, points: [], serialNumber: 'randomSerialId' };
     deviceCollection.insertOne(insertedDeviceDocument);
 
     // act

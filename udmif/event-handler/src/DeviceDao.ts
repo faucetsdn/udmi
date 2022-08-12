@@ -5,17 +5,17 @@ import { DeviceKey } from './model/DeviceKey';
 const options = { upsert: true };
 
 export interface DeviceDao {
-  upsert(filterQuery: any, updateQuery: any);
-  get(filterQuery: any);
+  upsert(filterQuery: any, updateQuery: any): Promise<void>;
+  get(filterQuery: any): Promise<Device>;
 }
 
 export class DefaultDeviceDao implements DeviceDao {
-  constructor(private collection: Collection<Device>) { }
+  constructor(private collection: Collection<Device>) {}
 
   /**
    * Updates a device document if it is found using the device key, else it will insert a new device document
    * @param {DeviceKey} deviceKey
-   * @param {Device} deviceDocument 
+   * @param {Device} deviceDocument
    */
   async upsert(deviceKey: DeviceKey, deviceDocument: Device): Promise<void> {
     // we're using upsert which will allow document updates if it already exists and a document cretion if it does not
