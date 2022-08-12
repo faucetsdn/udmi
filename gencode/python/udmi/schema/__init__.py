@@ -13,7 +13,7 @@ from .config_localnet import LocalnetConfig
 from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
-from .config_testing import TestingConfig
+from .config_system_testing import TestingSystemConfig
 from .envelope import Envelope
 from .event import Event
 from .event_discovery import DiscoveryEvent

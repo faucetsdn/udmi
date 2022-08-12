@@ -1,7 +1,7 @@
-"""Generated class for config_testing.json"""
+"""Generated class for config_system_testing.json"""
 
 
-class TestingConfig:
+class TestingSystemConfig:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class TestingConfig:
   def from_dict(source):
     if not source:
       return None
-    result = TestingConfig()
+    result = TestingSystemConfig()
     result.sequence_name = source.get('sequence_name')
     return result
 
@@ -21,7 +21,7 @@ class TestingConfig:
       return None
     result = {}
     for key in source:
-      result[key] = TestingConfig.from_dict(source[key])
+      result[key] = TestingSystemConfig.from_dict(source[key])
     return result
 
   @staticmethod

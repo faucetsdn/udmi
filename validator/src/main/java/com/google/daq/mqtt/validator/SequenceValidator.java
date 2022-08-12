@@ -55,7 +55,7 @@ import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.TestingConfig;
+import udmi.schema.TestingSystemConfig;
 
 /**
  * Validate a device using a sequence of message exchanges.
@@ -178,7 +178,7 @@ public abstract class SequenceValidator {
       try {
         testName = description.getMethodName();
         if (deviceConfig != null) {
-          deviceConfig.testing.sequence_name = testName;
+          deviceConfig.system.testing.sequence_name = testName;
         }
         File testsOutputDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testsOutputDir);
@@ -195,7 +195,7 @@ public abstract class SequenceValidator {
       notice("ending test " + testName);
       testName = null;
       if (deviceConfig != null) {
-        deviceConfig.testing = null;
+        deviceConfig.system.testing = null;
       }
     }
 
@@ -291,8 +291,8 @@ public abstract class SequenceValidator {
     deviceConfig = readGeneratedConfig();
     deviceConfig.system = Optional.ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = 400;
-    deviceConfig.testing = new TestingConfig();
-    deviceConfig.testing.sequence_name = testName;
+    deviceConfig.system.testing = new TestingSystemConfig();
+    deviceConfig.system.testing.sequence_name = testName;
   }
 
   private Config readGeneratedConfig() {
@@ -332,12 +332,12 @@ public abstract class SequenceValidator {
   protected void resetConfig() {
     resetDeviceConfig();
     extraField = "reset_config";
-    deviceConfig.testing.sequence_name = extraField;
+    deviceConfig.system.testing.sequence_name = extraField;
     sentConfig.clear();
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
-    deviceConfig.testing.sequence_name = testName;
+    deviceConfig.system.testing.sequence_name = testName;
     updateConfig();
   }
 
@@ -507,7 +507,6 @@ public abstract class SequenceValidator {
   }
 
   protected void updateConfig() {
-    updateConfig(SubFolder.TESTING, deviceConfig.testing);
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);

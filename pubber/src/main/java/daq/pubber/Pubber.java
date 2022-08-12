@@ -1170,8 +1170,9 @@ public class Pubber {
   }
 
   private String getTestingTag(Config config) {
-    return config.testing == null || config.testing.sequence_name == null ? ""
-        : String.format(" (%s)", config.testing.sequence_name);
+    return config.system == null || config.system.testing == null
+        || config.system.testing.sequence_name == null ? ""
+        : String.format(" (%s)", config.system.testing.sequence_name);
   }
 
   private void localLog(Entry entry) {

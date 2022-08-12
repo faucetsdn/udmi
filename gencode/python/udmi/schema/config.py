@@ -1,5 +1,4 @@
 """Generated class for config.json"""
-from .config_testing import TestingConfig
 from .config_system import SystemConfig
 from .config_gateway import GatewayConfig
 from .config_discovery import DiscoveryConfig
@@ -14,7 +13,6 @@ class Config:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.testing = None
     self.system = None
     self.gateway = None
     self.discovery = None
@@ -29,7 +27,6 @@ class Config:
     result = Config()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.testing = TestingConfig.from_dict(source.get('testing'))
     result.system = SystemConfig.from_dict(source.get('system'))
     result.gateway = GatewayConfig.from_dict(source.get('gateway'))
     result.discovery = DiscoveryConfig.from_dict(source.get('discovery'))
@@ -60,8 +57,6 @@ class Config:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.testing:
-      result['testing'] = self.testing.to_dict() # 4
     if self.system:
       result['system'] = self.system.to_dict() # 4
     if self.gateway:

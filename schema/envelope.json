@@ -27,7 +27,6 @@
       "enum": [
         "update",
         "audit",
-        "testing",
         "discovery",
         "system",
         "gateway",

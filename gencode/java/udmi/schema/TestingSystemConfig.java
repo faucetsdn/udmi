@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Testing Config
+ * Testing System Config
  * <p>
  * Configuration parameters for device-under-test
  * 
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "sequence_name"
 })
 @Generated("jsonschema2pojo")
-public class TestingConfig {
+public class TestingSystemConfig {
 
     /**
      * The sequence name currently being tested (for debug logging)
@@ -41,10 +41,10 @@ public class TestingConfig {
         if (other == this) {
             return true;
         }
-        if ((other instanceof TestingConfig) == false) {
+        if ((other instanceof TestingSystemConfig) == false) {
             return false;
         }
-        TestingConfig rhs = ((TestingConfig) other);
+        TestingSystemConfig rhs = ((TestingSystemConfig) other);
         return ((this.sequence_name == rhs.sequence_name)||((this.sequence_name!= null)&&this.sequence_name.equals(rhs.sequence_name)));
     }
 
