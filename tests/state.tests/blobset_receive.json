@@ -31,9 +31,9 @@
           "level": 100 
         }
       },
-      "_endpoint_redirect": {
+      "_iot_endpoint_config": {
         "status": {
-          "message": "Received endpoint redirect",
+          "message": "Received endpoint config",
           "category": "blobset.blob.receive",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
