@@ -55,7 +55,7 @@ def write_schema_out(categories):
         with open(schema_out, 'w') as out:
             while line := inp.readline():
                 index = line.find(GENCODE_MARKER)
-                if index > 0:
+                if index >= 0:
                     write_schema_categories(out, line[0:index], categories)
                 else:
                     out.write(line)
@@ -73,8 +73,9 @@ def write_java_out(categories):
     with open(java_in) as inp:
         with open(java_out, 'w') as out:
             while line := inp.readline():
-                if line.strip().startswith(GENCODE_MARKER):
-                    indent = line[0:line.find(GENCODE_MARKER)]
+                index = line.find(GENCODE_MARKER)
+                if index >= 0:
+                    indent = line[0:index]
                     write_java_categories(out, indent, categories)
                 else:
                     out.write(line)
