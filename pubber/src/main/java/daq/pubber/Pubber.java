@@ -2,7 +2,7 @@ package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.IOT_CONFIG_BLOB;
+import static udmi.schema.Blob.IOT_ENDPOINT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -730,7 +730,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
+      String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG_BLOB);
       if (iotConfig == null) {
         return null;
       }
