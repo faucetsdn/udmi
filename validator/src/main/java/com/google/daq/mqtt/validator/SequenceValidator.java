@@ -73,6 +73,7 @@ public abstract class SequenceValidator {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int UDMI_TEST_TIMEOUT_SEC = 60;
+  public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
   protected static final Metadata deviceMetadata;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
@@ -95,7 +96,6 @@ public abstract class SequenceValidator {
   private static final IotReflectorClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
   private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
-
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -626,9 +626,20 @@ public abstract class SequenceValidator {
       return evaluator.get();
     } catch (Exception e) {
       debug("Suppressing exception: " + e);
-      trace(stackTraceString(e));
+      trace("Suppressed from line " + getTraceString(e));
       return null;
     }
+  }
+
+  private String getTraceString(Exception e) {
+    String[] lines = stackTraceString(e).split("\n");
+    for (String line : lines) {
+      if (line.contains(PACKAGE_MATCH_SNIPPET)) {
+        return line;
+      }
+    }
+    throw new RuntimeException(
+        "No matching stack trace line found with " + PACKAGE_MATCH_SNIPPET, e);
   }
 
   private String stackTraceString(Exception e) {
