@@ -70,6 +70,7 @@ public abstract class SequenceValidator {
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
+  public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int UDMI_TEST_TIMEOUT_SEC = 60;
   protected static final Metadata deviceMetadata;
@@ -87,7 +88,6 @@ public abstract class SequenceValidator {
   private static final String projectId;
   private static final String deviceId;
   private static final String siteModel;
-  private static final String registryId;
   private static final String serialNo;
   private static final int logLevel;
   private static final File deviceOutputDir;
@@ -136,7 +136,6 @@ public abstract class SequenceValidator {
     final CloudIotConfig cloudIotConfig;
     try {
       cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
-      registryId = checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
@@ -411,13 +410,32 @@ public abstract class SequenceValidator {
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
       if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
-        String postfix = message == null ? ": (null)" : ":\n" + OBJECT_MAPPER.writeValueAsString(message);
+        String postfix =
+            message == null ? ": (null)" : ":\n" + OBJECT_MAPPER.writeValueAsString(message);
         trace("received " + messageBase + postfix);
+      } else if (messageBase.startsWith(SYSTEM_EVENT_MESSAGE_BASE)) {
+        logSystemEvent(messageBase, message);
       } else {
         debug("received " + messageBase);
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void logSystemEvent(String messageBase, Map<String, Object> message) {
+    try {
+      SystemEvent event = OBJECT_MAPPER.convertValue(message, SystemEvent.class);
+      if (event.logentries == null || event.logentries.isEmpty()) {
+        debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
+      } else {
+        for (Entry logEntry : event.logentries) {
+          debug(String.format("received %s %s %s: %s", messageBase,
+              Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message));
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While logging system event", e);
     }
   }
 
