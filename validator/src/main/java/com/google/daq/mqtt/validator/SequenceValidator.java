@@ -411,7 +411,8 @@ public abstract class SequenceValidator {
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
       if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
-        trace("received " + messageBase + ":\n" + OBJECT_MAPPER.writeValueAsString(message));
+        String postfix = message == null ? ": (null)" : ":\n" + OBJECT_MAPPER.writeValueAsString(message);
+        trace("received " + messageBase + postfix);
       } else {
         debug("received " + messageBase);
       }
