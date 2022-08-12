@@ -288,7 +288,11 @@ public abstract class SequenceValidator {
   }
 
   private void resetDeviceConfig() {
-    deviceConfig = readGeneratedConfig();
+    resetDeviceConfig(false);
+  }
+
+  private void resetDeviceConfig(boolean clean) {
+    deviceConfig = clean ? new Config() : readGeneratedConfig();
     deviceConfig.system = Optional.ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = 400;
     deviceConfig.system.testing = new TestingSystemConfig();
@@ -331,13 +335,12 @@ public abstract class SequenceValidator {
 
   protected void resetConfig() {
     debug("Starting reset config flow");
-    resetDeviceConfig();
+    resetDeviceConfig(true);
     extraField = "reset_config";
     deviceConfig.system.testing.sequence_name = extraField;
     sentConfig.clear();
     untilTrue("device config reset", this::configUpdateComplete);
-    extraField = null;
-    deviceConfig.system.testing.sequence_name = testName;
+    resetDeviceConfig();
     updateConfig();
     debug("Done with reset config flow");
   }
