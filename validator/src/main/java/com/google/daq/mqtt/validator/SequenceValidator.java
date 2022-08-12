@@ -330,12 +330,14 @@ public abstract class SequenceValidator {
   }
 
   protected void resetConfig() {
-    sentConfig.clear();
     resetDeviceConfig();
     extraField = "reset_config";
+    deviceConfig.testing.sequence_name = extraField;
+    sentConfig.clear();
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
+    deviceConfig.testing.sequence_name = testName;
     updateConfig();
   }
 
