@@ -425,7 +425,7 @@ public abstract class SequenceValidator {
 
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
-      SystemEvent event = OBJECT_MAPPER.convertValue(message, SystemEvent.class);
+      SystemEvent event = convertTo(SystemEvent.class, message);
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
@@ -756,6 +756,10 @@ public abstract class SequenceValidator {
   private synchronized void handleReflectorMessage(String subFolderRaw,
       Map<String, Object> message) {
     try {
+      if (message.containsKey("exception")) {
+        debug("Ignoring reflector exception:\n" + OBJECT_MAPPER.writeValueAsString(message));
+        return;
+      }
       Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       if (converted instanceof Config) {
@@ -763,7 +767,7 @@ public abstract class SequenceValidator {
         if ("reset_config".equals(extraField)) {
           debug("Update with config reset");
         } else if ("break_json".equals(extraField)) {
-          notice("Ignoring broken json");
+          error("Shouldn't be seeing this!");
           return;
         }
         Config config = (Config) converted;
