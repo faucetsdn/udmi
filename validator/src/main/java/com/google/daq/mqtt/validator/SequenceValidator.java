@@ -330,15 +330,16 @@ public abstract class SequenceValidator {
   }
 
   protected void resetConfig() {
+    debug("Starting reset config flow");
     resetDeviceConfig();
     extraField = "reset_config";
     deviceConfig.system.testing.sequence_name = extraField;
     sentConfig.clear();
-    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     untilTrue("device config reset", this::configUpdateComplete);
     extraField = null;
     deviceConfig.system.testing.sequence_name = testName;
     updateConfig();
+    debug("Done with reset config flow");
   }
 
   private Date syncConfig() {
@@ -686,9 +687,9 @@ public abstract class SequenceValidator {
   }
 
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
-    updateConfig();
     waitingCondition = "waiting for " + description;
     info("start " + waitingCondition);
+    updateConfig();
     while (evaluator.get()) {
       receiveMessage();
     }
