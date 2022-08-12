@@ -8,6 +8,7 @@ class Envelope:
     self.deviceId = None
     self.deviceNumId = None
     self.deviceRegistryId = None
+    self.deviceRegistryLocation = None
     self.projectId = None
     self.subFolder = None
     self.subType = None
@@ -20,6 +21,7 @@ class Envelope:
     result.deviceId = source.get('deviceId')
     result.deviceNumId = source.get('deviceNumId')
     result.deviceRegistryId = source.get('deviceRegistryId')
+    result.deviceRegistryLocation = source.get('deviceRegistryLocation')
     result.projectId = source.get('projectId')
     result.subFolder = source.get('subFolder')
     result.subType = source.get('subType')
@@ -49,6 +51,8 @@ class Envelope:
       result['deviceNumId'] = self.deviceNumId # 5
     if self.deviceRegistryId:
       result['deviceRegistryId'] = self.deviceRegistryId # 5
+    if self.deviceRegistryLocation:
+      result['deviceRegistryLocation'] = self.deviceRegistryLocation # 5
     if self.projectId:
       result['projectId'] = self.projectId # 5
     if self.subFolder:

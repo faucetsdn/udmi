@@ -25,6 +25,9 @@
       "description": "Operational status of the device.",
       "type": "boolean"
     },
+    "mode": {
+      "$ref": "file:common.json#/definitions/mode"
+    },
     "serial_no": {
       "description": "The serial number of the physical device",
       "type": "string",

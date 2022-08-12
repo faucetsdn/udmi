@@ -5,7 +5,9 @@
   "additionalProperties": false,
   "properties": {
     "phase": {
-      "type": "string"
+      "enum": [
+        "final"
+      ]
     },
     "content_type": {
       "type": "string"

@@ -2,6 +2,22 @@
   "title": "Common",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "mode": {
+      "title": "System Mode",
+      "description": "Operating mode for the device. Defaults is 'active'.",
+      "enum": [
+        "initial",
+        "active",
+        "restart"
+      ]
+    },
+    "blobsets": {
+      "title": "System Blobsets",
+      "description": "Predefined system blobsets",
+      "enum": [
+        "_iot_config"
+      ]
+    },
     "entry": {
       "title": "Entry",
       "type": "object",
@@ -45,6 +61,30 @@
         "timestamp",
         "level"
       ]
+    },
+    "endpoint": {
+      "title": "Endpoint Configuration",
+      "description": "Parameters to define an MQTT endpoint",
+      "additionalProperties": true,
+      "properties": {
+        "bridgeHostname": {
+          "type": "string",
+          "default": "mqtt.googleapis.com"
+        },
+        "bridgePort": {
+          "type": "string",
+          "default": "443"
+        },
+        "cloudRegion": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "registryId": {
+          "type": "string"
+        }
+      }
     }
   }
 }
