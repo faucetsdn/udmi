@@ -1134,7 +1134,8 @@ public class Pubber {
   }
 
   private String traceTimestamp(String messageBase) {
-    int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger()).incrementAndGet();
+    int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
+        .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
     return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
