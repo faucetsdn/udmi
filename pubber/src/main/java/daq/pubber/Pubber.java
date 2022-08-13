@@ -41,6 +41,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
@@ -128,6 +129,7 @@ public class Pubber {
   );
   private static final Date DEVICE_START_TIME = new Date();
   private static final int RESTART_EXIT_CODE = 192;
+  private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -556,7 +558,7 @@ public class Pubber {
     File outDir = new File(OUT_DIR);
     try {
       outDir.mkdir();
-      File logOut = new File(OUT_DIR, traceTimestamp() + "pubber.log");
+      File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
       logPrintWriter = new PrintStream(logOut);
       logPrintWriter.println("Pubber log started at " + getTimestamp());
     } catch (Exception e) {
@@ -686,7 +688,7 @@ public class Pubber {
   private void configHandler(Config config) {
     try {
       info("Config handler");
-      File configOut = new File(OUT_DIR, traceTimestamp() + "config.json");
+      File configOut = new File(OUT_DIR, traceTimestamp("config") + ".json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
         debug(String.format("Config update%s", getTestingTag(config)),
@@ -1121,7 +1123,8 @@ public class Pubber {
     augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
-    String fileName = traceTimestamp() + topic.replace("/", "_") + ".json";
+    String messageBase = topic.replace("/", "_");
+    String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(OUT_DIR, fileName);
     try {
       OBJECT_MAPPER.writeValue(messageOut, message);
@@ -1130,8 +1133,10 @@ public class Pubber {
     }
   }
 
-  private String traceTimestamp() {
-    return TRUE.equals(configuration.options.messageTrace) ? (getTimestamp() + "_") : "";
+  private String traceTimestamp(String messageBase) {
+    int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger()).incrementAndGet();
+    String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
+    return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private void augmentDeviceMessage(Object message) {

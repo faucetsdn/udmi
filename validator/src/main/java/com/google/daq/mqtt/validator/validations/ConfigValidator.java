@@ -24,7 +24,6 @@ public class ConfigValidator extends SequenceValidator {
 
   @Test
   public void system_last_update() {
-    deviceConfig.system.min_loglevel = Level.WARNING.value();
     untilTrue("state last_config match", () -> {
       Date expectedConfig = deviceConfig.timestamp;
       Date lastConfig = deviceState.system.last_config;
@@ -34,12 +33,21 @@ public class ConfigValidator extends SequenceValidator {
     });
   }
 
+  @Test void system_min_loglevel() {
+    clearLogs()
+    Integer savedLevel = deviceConfig.system.min_loglevel;
+    deviceConfig.system.min_loglevel = Level.WARNING.value();
+    hasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    deviceConfig.system.min_loglevel = savedLevel;
+    hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+  }
+
   @Test
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
-  @Test(timeout = LONG_TIMEOUT_MS)
+  @Test
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilFalse("no interesting status", this::hasInterestingStatus);

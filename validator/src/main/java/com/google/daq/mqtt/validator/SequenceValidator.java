@@ -74,7 +74,6 @@ public abstract class SequenceValidator {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 60 * 1000;
-  public static final long LONG_TIMEOUT_MS = NORM_TIMEOUT_MS + 2;
   public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
   protected static final Metadata deviceMetadata;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -302,7 +301,7 @@ public abstract class SequenceValidator {
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     deviceConfig.system = Optional.ofNullable(deviceConfig.system).orElse(new SystemConfig());
-    deviceConfig.system.min_loglevel = 400;
+    deviceConfig.system.min_loglevel = Level.INFO.value();
     deviceConfig.system.testing = new TestingSystemConfig();
     deviceConfig.system.testing.sequence_name = testName;
   }
@@ -385,8 +384,8 @@ public abstract class SequenceValidator {
     }
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
     String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
+    String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
     }
