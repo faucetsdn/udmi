@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -107,6 +108,7 @@ public abstract class SequenceValidator {
   );
   private static final String UDMI_VERSION = Objects.requireNonNullElse(
       System.getenv("UDMI_VERSION"), "unknown");
+  private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static Date stateTimestamp;
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -778,6 +780,8 @@ public abstract class SequenceValidator {
       }
       Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
+      int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
+          .incrementAndGet();
       if (converted instanceof Config) {
         String extraField = getExtraField(message);
         if ("reset_config".equals(extraField)) {
@@ -790,10 +794,12 @@ public abstract class SequenceValidator {
         deviceConfig.timestamp = config.timestamp;
         deviceConfig.version = config.version;
         info("Updated config with timestamp " + getTimestamp(config.timestamp));
-        debug("Updated config:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        debug(String.format("Updated config #%03d:\n%s", updateCount,
+            OBJECT_MAPPER.writeValueAsString(converted)));
         recordDeviceConfig();
       } else if (converted instanceof AugmentedState) {
-        debug("Updated state:\n" + OBJECT_MAPPER.writeValueAsString(converted));
+        debug(String.format("Updated state #%03d:\n%s", updateCount,
+            OBJECT_MAPPER.writeValueAsString(converted)));
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
