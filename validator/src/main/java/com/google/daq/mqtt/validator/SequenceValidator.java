@@ -628,6 +628,11 @@ public abstract class SequenceValidator {
     return value != null && value;
   }
 
+  protected boolean catchToTrue(Supplier<Boolean> evaluator) {
+    Boolean value = catchToNull(evaluator);
+    return value == null || value;
+  }
+
   protected <T> T catchToNull(Supplier<T> evaluator) {
     try {
       return evaluator.get();
@@ -704,6 +709,10 @@ public abstract class SequenceValidator {
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
     untilLoop(() -> !catchToFalse(evaluator), description);
+  }
+
+  protected void untilFalse(String description, Supplier<Boolean> evaluator) {
+    untilLoop(() -> catchToTrue(evaluator), description);
   }
 
   protected void untilUntrue(String description, Supplier<Boolean> evaluator) {
