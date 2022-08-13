@@ -109,6 +109,7 @@ public abstract class SequenceValidator {
   private static final String UDMI_VERSION = Objects.requireNonNullElse(
       System.getenv("UDMI_VERSION"), "unknown");
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
+  private static final long LOG_CLEAR_TIME_MS = 1000;
   private static Date stateTimestamp;
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -663,6 +664,8 @@ public abstract class SequenceValidator {
   }
 
   protected List<Map<String, Object>> clearLogs() {
+    long waitStart = System.currentTimeMillis();
+    untilTrue("logs to clear", () -> System.currentTimeMillis() > waitStart + LOG_CLEAR_TIME_MS);
     lastLog = null;
     debug("logs cleared");
     return receivedEvents.remove(SubFolder.SYSTEM);
@@ -864,7 +867,7 @@ public abstract class SequenceValidator {
     }
   }
 
-  private synchronized boolean configUpdateComplete() {
+  protected synchronized boolean configUpdateComplete() {
     return deviceConfig.equals(receivedUpdates.get("config"));
   }
 

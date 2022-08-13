@@ -43,16 +43,14 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilTrue("system operational", () -> deviceState.system.operational);
-    untilTrue("last_config not null", () -> deviceState.system.last_config != null);
+    untilTrue("clean config/state synced", this::configUpdateComplete);
     untilFalse("no interesting status", this::hasInterestingStatus);
-    clearLogs();
-    untilTrue("previous config/state synced",
-        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config)
-    );
     Date stableConfig = deviceConfig.timestamp;
+    info("initial stable_config " + getTimestamp(stableConfig));
+    info("initial last_config " + getTimestamp(deviceState.system.last_config));
     assertTrue("initial stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
+    clearLogs();
     extraField = "break_json";
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("has interesting status", this::hasInterestingStatus);
@@ -61,8 +59,8 @@ public class ConfigValidator extends SequenceValidator {
     info("Error detail: " + stateStatus.detail);
     assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-    info("stable_config " + getTimestamp(stableConfig));
-    info("last_config " + getTimestamp(deviceState.system.last_config));
+    info("following stable_config " + getTimestamp(stableConfig));
+    info("following last_config " + getTimestamp(deviceState.system.last_config));
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operational);
