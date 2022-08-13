@@ -338,15 +338,16 @@ public abstract class SequenceValidator {
   }
 
   protected void resetConfig() {
-    debug("Starting reset config flow");
+    debug("Starting reset_config");
     resetDeviceConfig(true);
     extraField = "reset_config";
     deviceConfig.system.testing.sequence_name = extraField;
     sentConfig.clear();
     untilTrue("device config reset", this::configUpdateComplete);
+    extraField = null;
     resetDeviceConfig();
     updateConfig();
-    debug("Done with reset config flow");
+    debug("Done with reset_config");
   }
 
   private Date syncConfig() {

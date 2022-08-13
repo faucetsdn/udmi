@@ -43,8 +43,8 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilTrue("clean config/state synced", this::configUpdateComplete);
     untilFalse("no interesting status", this::hasInterestingStatus);
+    untilTrue("clean config/state synced", this::configUpdateComplete);
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
