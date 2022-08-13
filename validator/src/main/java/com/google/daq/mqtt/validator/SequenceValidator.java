@@ -110,6 +110,7 @@ public abstract class SequenceValidator {
       System.getenv("UDMI_VERSION"), "unknown");
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final long LOG_CLEAR_TIME_MS = 1000;
+  private static final String LOCAL_PREFIX = "local_";
   private static Date stateTimestamp;
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -414,18 +415,18 @@ public abstract class SequenceValidator {
 
     String testOutDirName = TESTS_OUT_DIR + "/" + checkNotNull(testName);
     File testOutDir = new File(deviceOutputDir, testOutDirName);
-
+    String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "setting " : "received ";
     File messageFile = new File(testOutDir, messageBase + ".json");
     try {
       OBJECT_MAPPER.writeValue(messageFile, message);
       if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
         String postfix =
             message == null ? ": (null)" : ":\n" + OBJECT_MAPPER.writeValueAsString(message);
-        trace("received " + messageBase + postfix);
+        trace(prefix + messageBase + postfix);
       } else if (messageBase.startsWith(SYSTEM_EVENT_MESSAGE_BASE)) {
         logSystemEvent(messageBase, message);
       } else {
-        debug("received " + messageBase);
+        debug(prefix + messageBase);
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
@@ -434,12 +435,13 @@ public abstract class SequenceValidator {
 
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
+      String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "setting " : "received ";
       SystemEvent event = convertTo(SystemEvent.class, message);
       if (event.logentries == null || event.logentries.isEmpty()) {
-        debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
+        debug(prefix + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
         for (Entry logEntry : event.logentries) {
-          debug(String.format("received %s %s %s: %s", messageBase,
+          debug(String.format("%s%s %s %s: %s", prefix, messageBase,
               Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message));
         }
       }
@@ -530,7 +532,7 @@ public abstract class SequenceValidator {
       if (updated) {
         final Object augmentedData = augmentData(data);
         sentConfig.put(subBlock, messageData);
-        recordRawMessage(augmentedData, "local_" + subBlock.value());
+        recordRawMessage(augmentedData, LOCAL_PREFIX + subBlock.value());
         String augmentedMessage = OBJECT_MAPPER.writeValueAsString(augmentedData);
         debug(String.format("update %s_%s", "config", subBlock));
         String topic = subBlock + "/config";
@@ -566,7 +568,7 @@ public abstract class SequenceValidator {
       String messageData = OBJECT_MAPPER.writeValueAsString(deviceConfig);
       boolean updated = !messageData.equals(sentDeviceConfig);
       if (updated) {
-        recordRawMessage(deviceConfig, "local_config");
+        recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
         sentDeviceConfig = messageData;
       }
       return updated;
