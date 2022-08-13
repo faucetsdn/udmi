@@ -176,6 +176,7 @@ public abstract class SequenceValidator {
   private String waitingCondition;
   private boolean enforceSerial;
   private String testName;
+  private long testStartTimeMs;
   @Rule
   public TestWatcher testWatcher = new TestWatcher() {
     @Override
@@ -189,6 +190,7 @@ public abstract class SequenceValidator {
         FileUtils.deleteDirectory(testsOutputDir);
         testsOutputDir.mkdirs();
         notice("starting test " + testName);
+        testStartTimeMs = System.currentTimeMillis();
       } catch (Exception e) {
         throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
       }
@@ -197,7 +199,8 @@ public abstract class SequenceValidator {
     @Override
     protected void finished(Description description) {
       assert testName.equals(description.getMethodName());
-      notice("ending test " + testName);
+      long stopTimeMs = System.currentTimeMillis();
+      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
