@@ -73,7 +73,8 @@ public abstract class SequenceValidator {
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
-  public static final int UDMI_TEST_TIMEOUT_SEC = 60;
+  public static final int NORM_TIMEOUT_MS = 60 * 1000;
+  public static final long LONG_TIMEOUT_MS = NORM_TIMEOUT_MS + 2;
   public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
   protected static final Metadata deviceMetadata;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -164,7 +165,7 @@ public abstract class SequenceValidator {
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   @Rule
-  public Timeout globalTimeout = new Timeout(UDMI_TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
+  public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
@@ -442,8 +443,9 @@ public abstract class SequenceValidator {
         debug(prefix + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
         for (Entry logEntry : event.logentries) {
-          debug(String.format("%s%s %s %s: %s", prefix, messageBase,
-              Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message));
+          debug(String.format("%s%s %s %s %s: %s", prefix, messageBase,
+              Level.fromValue(logEntry.level).name(), logEntry.category,
+              getTimestamp(logEntry.timestamp), logEntry.message));
         }
       }
     } catch (Exception e) {
@@ -827,9 +829,14 @@ public abstract class SequenceValidator {
     }
   }
 
+  /**
+   * Check/remember the configAcked field of a state update. This field is only populated by the
+   * supporting cloud functions in response to an explicit state query, and checks that the device
+   * has acked (in an MQTT sense) a previously sent config.
+   *
+   * @param converted received message to pull the ack from
+   */
   private void updateConfigAcked(AugmentedState converted) {
-    // The configAcked field is only defined if this state update comes from an
-    // explicit query, otherwise it'll be null (which means 'unknown').
     if (converted.configAcked != null) {
       configAcked = "true".equals(converted.configAcked);
     }

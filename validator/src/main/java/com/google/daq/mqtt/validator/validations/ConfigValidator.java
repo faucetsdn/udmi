@@ -13,7 +13,6 @@ import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
 import com.google.daq.mqtt.validator.SequenceValidator;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -40,12 +39,13 @@ public class ConfigValidator extends SequenceValidator {
     untilTrue("config acked", () -> configAcked);
   }
 
-  @Test
+  @Test(timeout = LONG_TIMEOUT_MS)
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilFalse("no interesting status", this::hasInterestingStatus);
     untilTrue("clean config/state synced", this::configUpdateComplete);
     Date stableConfig = deviceConfig.timestamp;
+    untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial stable_config " + getTimestamp(stableConfig));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     assertTrue("initial stable_config matches last_config",
