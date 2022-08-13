@@ -33,7 +33,8 @@ public class ConfigValidator extends SequenceValidator {
     });
   }
 
-  @Test void system_min_loglevel() {
+  @Test
+  public void system_min_loglevel() {
     clearLogs();
     Integer savedLevel = deviceConfig.system.min_loglevel;
     deviceConfig.system.min_loglevel = Level.WARNING.value();
