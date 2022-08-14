@@ -56,14 +56,18 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 bin/sequencer -vv $site_path $project_id $device_id $serial_no
+echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
+echo Copied output to /tmp/sequencer.out for later examination.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
     kill $pids
 else
-    echo No pubber pids found, likely due to premature termination.
+    echo No pubber pids found, likely due to premature termination: failing test run.
     false
 fi
+
+echo Done with base test_sequencer run.
