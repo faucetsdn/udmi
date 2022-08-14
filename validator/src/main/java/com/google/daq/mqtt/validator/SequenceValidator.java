@@ -703,6 +703,7 @@ public abstract class SequenceValidator {
   }
 
   protected void hasNotLogged(String category, Level level) {
+    updateConfig();
     warning("WARNING HASNOTLOGGED IS NOT COMPLETE");
   }
 
