@@ -50,7 +50,7 @@ public class DiscoveryValidator extends SequenceValidator {
     );
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
     List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
-    assertEquals("one event received", 1, events.size());
+    assertTrue("a few events received", events.size() >= 1 && events.size() <= 2);
     DiscoveryEvent discoveryEvent = events.get(0);
     info("Received discovery generation " + getTimestamp(discoveryEvent.generation));
     assertEquals("matching event generation", startTime, discoveryEvent.generation);

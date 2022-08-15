@@ -229,7 +229,7 @@ public class ProxyTarget {
   }
 
   private void messageHandler(String topic, String message) {
-    info("Received message for " + topic);
+    info("Received on " + topic);
     if (topic.endsWith(CONFIG_TOPIC)) {
       try {
         String deviceId = topic

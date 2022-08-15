@@ -1,0 +1,29 @@
+{
+  "title": "Pubber Options",
+  "description": "Pubber runtime options",
+  "additionalProperties": true,
+  "properties": {
+    "noHardware": {
+      "type": "boolean"
+    },
+    "noConfigAck": {
+      "type": "boolean"
+    },
+    "messageTrace": {
+      "type": "boolean"
+    },
+    "extraPoint": {
+      "type": "string"
+    },
+    "missingPoint": {
+      "type": "string"
+    },
+    "extraField": {
+      "type": "string"
+    },
+    "redirectRegistry": {
+      "type": "string"
+    }
+  }
+}
+

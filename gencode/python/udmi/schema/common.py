@@ -58,7 +58,10 @@ class Common:
   """Generated schema class"""
 
 
+  SystemMode = SystemMode
+  SystemBlobsets = SystemBlobsets
   Entry = Entry
+  EndpointConfiguration = EndpointConfiguration
 
   def __init__(self):
     pass

@@ -3,7 +3,7 @@
   "blobset": {
     "blobs": {
       "_firmware_update": {
-        "phase": "applied",
+        "phase": "final",
         "url": "https://manuf.com/path/file.zip"
       }
     }

@@ -17,6 +17,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -40,6 +41,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.PubberConfiguration;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -71,6 +73,8 @@ public class MqttPublisher {
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
   private static final long CONFIG_WAIT_TIME_MS = 10000;
+  private static final String EVENT_MARK_PREFIX = "events/";
+  private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -80,7 +84,7 @@ public class MqttPublisher {
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
 
-  private final Configuration configuration;
+  private final PubberConfiguration configuration;
   private final String registryId;
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
@@ -90,7 +94,7 @@ public class MqttPublisher {
   private final Consumer<Exception> onError;
   private CountDownLatch gatewayLatch;
 
-  MqttPublisher(Configuration configuration, Consumer<Exception> onError) {
+  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
     this.registryId = configuration.endpoint.registryId;
     this.onError = onError;
@@ -103,7 +107,22 @@ public class MqttPublisher {
       throw new RuntimeException("Publisher shutdown.");
     }
     debug("Publishing in background " + topic);
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, data, callback));
+    Object marked = topic.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topic, data) : data;
+    publisherExecutor.submit(() -> publishCore(deviceId, topic, marked, callback));
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object decorateMessage(String topic, Object data) {
+    try {
+      Map<String, Object> mapped = OBJECT_MAPPER.convertValue(data, Map.class);
+      String timestamp = (String) mapped.get("timestamp");
+      int serialNo = EVENT_SERIAL
+          .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
+      mapped.put("timestamp", timestamp.replace("Z", String.format(".%03dZ", serialNo % 1000)));
+      return mapped;
+    } catch (Exception e) {
+      throw new RuntimeException("While decorating message", e);
+    }
   }
 
   private void publishCore(String deviceId, String topic, Object data,
@@ -221,7 +240,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      info("Password hash " + Hashing.sha256().hashBytes(configuration.keyBytes).toString());
+      info("Password hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
       options.setPassword(createJwt());
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
@@ -237,7 +256,7 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    return createJwt(configuration.endpoint.projectId, configuration.keyBytes,
+    return createJwt(configuration.endpoint.projectId, (byte[]) configuration.keyBytes,
         configuration.algorithm)
         .toCharArray();
   }
@@ -289,7 +308,7 @@ public class MqttPublisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    boolean noConfigAck = (configuration.options.noConfigAck != null 
+    boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
     subscribeTopic(client, String.format(CONFIG_UPDATE_TOPIC_FMT, deviceId), configQos);
@@ -378,7 +397,7 @@ public class MqttPublisher {
   private void checkAuthentication(String deviceId) {
     String authId = isProxyDevice(deviceId) ? configuration.gatewayId : deviceId;
     Instant reauthTime = reauthTimes.get(authId);
-    if (reauthTime != null && Instant.now().isBefore(reauthTime)) {
+    if (reauthTime == null || (reauthTime != null && Instant.now().isBefore(reauthTime))) {
       return;
     }
     warn("Authentication retry time reached for " + authId);

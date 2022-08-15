@@ -5,6 +5,7 @@ RESULT pass periodic_scan Sequence complete
 RESULT pass self_enumeration Sequence complete
 RESULT pass single_scan Sequence complete
 RESULT pass system_last_update Sequence complete
+RESULT pass system_min_loglevel Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
