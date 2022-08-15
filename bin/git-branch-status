@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# Shows relationship between branch and upstream.
+#
+# Configure with parent branch for local tracking, e.g.:
+#   git config branch.$branch.parent master
+#
+# Configure with description about what branch is for, e.g.:
+#   git config branch.$branch.description "Dependence changes"
+#
+
+git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
+while read local remote
+do
+    if [ -n "$remote" ]; then
+	git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || continue
+	LEFT_AHEAD=$(grep -c '^<' /tmp/git_upstream_status_delta)
+	RIGHT_AHEAD=$(grep -c '^>' /tmp/git_upstream_status_delta)
+	if [ "$LEFT_AHEAD" != 0 -a "$RIGHT_AHEAD" != 0 ]; then
+	    OFFSET="disjoint $LEFT_AHEAD/$RIGHT_AHEAD"
+	elif [ "$LEFT_AHEAD" != 0 ]; then
+	    OFFSET="ahead $LEFT_AHEAD"
+	elif [ "$RIGHT_AHEAD" != 0 ]; then
+	    OFFSET="behind $RIGHT_AHEAD"
+	else
+	    OFFSET="insync"
+	fi
+    else
+	OFFSET="local"
+    fi
+
+    parent=$(git config branch.$local.parent)
+    if [[ -z $parent && $local != master ]]; then
+        parent=master
+    fi
+    
+    if [ -n "$parent" ]; then
+        LEFT_PARENT=$(git rev-list --left-only --count $local...$parent)
+        RIGHT_PARENT=$(git rev-list --right-only --count $local...$parent)
+	if [ "$LEFT_PARENT" != 0 -a "$RIGHT_PARENT" != 0 ]; then
+	    POFF="; disjoint $parent $LEFT_PARENT/$RIGHT_PARENT"
+	elif [ "$LEFT_PARENT" != 0 ]; then
+	    POFF="; ahead $parent $LEFT_PARENT"
+	elif [ "$RIGHT_PARENT" != 0 ]; then
+	    POFF="; behind $parent $RIGHT_PARENT"
+	else
+	    POFF="; insync $parent"
+	fi
+    else
+        POFF=
+    fi
+    
+    description=$(git config branch.$local.description)
+    if [[ -z $description && $local != master ]]; then
+        description="git config branch.$local.description XXX"
+    fi
+    
+    printf "%-15s%-30s%s\n" $local "$OFFSET$POFF" "$description"
+done

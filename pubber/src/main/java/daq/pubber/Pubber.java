@@ -725,7 +725,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_CONFIG.value());
+      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
       if (iotConfig == null) {
         return null;
       }
