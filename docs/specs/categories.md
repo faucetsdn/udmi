@@ -10,9 +10,9 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
 
 * _system_: Basic system operation
   * _base_: Baseline system operational messages
-    * _start_ (**NOTICE**): System is in the process of (re)starting and essentially offline
-    * _shutdown_ (**NOTICE**): System is shutting down
-    * _ready_: (**NOTICE**): System is fully ready for operation
+    * _start_: (**NOTICE**) System is in the process of (re)starting and essentially offline
+    * _shutdown_: (**NOTICE**) System is shutting down
+    * _ready_: (**NOTICE**) System is fully ready for operation
     * _comms_: Baseline message handling
   * _config_: Configuration message handling
     * _receive_: (**DEBUG**) Receiving a config message
@@ -26,9 +26,21 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _logout_: (**NOTICE**) Successful logout 
     * _fail_: (**WARNING**) Failed authentication attempt. The entry message should include the application
 * _pointset_: Handling managing data point conditions
-  * _point_: Conditions relating to a specific point, the entry `message` field should
-  start with "Point _pointname_" followed by descriptive information.
-    * _applied_ (**INFO**): The `set_value` for a point has been implied
-    * _updating_ (**NOTICE**): The point is in the process of updating
-    * _overridden_ (**WARNING**): The reported value has been overridden locally
-    * _invalid_ (**ERROR**): A `config` parameter for the point is invalid in some way
+  * _point_: Conditions relating to a specific point, the entry `message` should start with "Point _pointname_"
+    * _applied_: (**INFO**) The `set_value` for a point has been applied
+    * _updating_: (**NOTICE**) The point is in the process of updating
+    * _overridden_: (**WARNING**) The reported value has been overridden locally
+    * _failure_: (**ERROR**) The system failed to read/write the point
+    * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
+* _discovery_: Handling on-prem discovery flow
+  * _family_: Conditions specific to an entire address family (e.g. bacnet)
+    * _scan_: (**INFO**) Relating to scanning a particular address family
+  * _device_: Conditions specific to device scanning
+    * _enumerate_: (**INFO**) Handling point enumeration for a given device
+  * _point_: Conditions specific to point enumeration
+    * _describe_: (**INFO**) Relating to describing a particular point
+* _blobset_: Handling update of device data blobs
+  * _blob_: Conditions specific to an individual blob
+    * _received_: (**DEBUG**) Request for an update has been received
+    * _fetched_: (**DEBUG**) Update blob has been successfully fetched
+    * _applied_: (**NOTICE**) Update has been successfully applied

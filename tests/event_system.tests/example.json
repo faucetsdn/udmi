@@ -6,14 +6,14 @@
       "message": "things are happening",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "com.testCategory",
+      "category": "system.config.receive",
       "level": 600
     },
     {
       "message": "something else happened",
       "timestamp": "2018-08-26T21:39:39.364Z",
       "detail": "someplace, sometime",
-      "category": "com.testCategory",
+      "category": "system.config.apply",
       "level": 700
     }
   ]

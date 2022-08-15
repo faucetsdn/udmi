@@ -17,6 +17,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -41,7 +42,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.PubberOptions;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -73,6 +73,8 @@ public class MqttPublisher {
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
   private static final long CONFIG_WAIT_TIME_MS = 10000;
+  private static final String EVENT_MARK_PREFIX = "events/";
+  private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -105,7 +107,22 @@ public class MqttPublisher {
       throw new RuntimeException("Publisher shutdown.");
     }
     debug("Publishing in background " + topic);
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, data, callback));
+    Object marked = topic.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topic, data) : data;
+    publisherExecutor.submit(() -> publishCore(deviceId, topic, marked, callback));
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object decorateMessage(String topic, Object data) {
+    try {
+      Map<String, Object> mapped = OBJECT_MAPPER.convertValue(data, Map.class);
+      String timestamp = (String) mapped.get("timestamp");
+      int serialNo = EVENT_SERIAL
+          .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
+      mapped.put("timestamp", timestamp.replace("Z", String.format(".%03dZ", serialNo % 1000)));
+      return mapped;
+    } catch (Exception e) {
+      throw new RuntimeException("While decorating message", e);
+    }
   }
 
   private void publishCore(String deviceId, String topic, Object data,

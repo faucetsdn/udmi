@@ -1,4 +1,5 @@
 """Generated class for config_system.json"""
+from .config_system_testing import TestingSystemConfig
 
 
 class SystemConfig:
@@ -8,6 +9,7 @@ class SystemConfig:
     self.min_loglevel = None
     self.metrics_rate_sec = None
     self.mode = None
+    self.testing = None
 
   @staticmethod
   def from_dict(source):
@@ -17,6 +19,7 @@ class SystemConfig:
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
     result.mode = source.get('mode')
+    result.testing = TestingSystemConfig.from_dict(source.get('testing'))
     return result
 
   @staticmethod
@@ -43,4 +46,6 @@ class SystemConfig:
       result['metrics_rate_sec'] = self.metrics_rate_sec # 5
     if self.mode:
       result['mode'] = self.mode # 5
+    if self.testing:
+      result['testing'] = self.testing.to_dict() # 4
     return result

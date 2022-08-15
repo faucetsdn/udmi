@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import shutil
 import sys
 
 FILE_PREFIX="file:"
@@ -261,6 +262,7 @@ def generate_class(contents):
         write_class(writer, contents)
 
 def generate_module(in_files):
+    shutil.rmtree(out_dir)
     os.makedirs(out_dir, exist_ok=True)
     full_path = os.path.join(out_dir, '__init__.py')
     with open(full_path, 'w') as fd:

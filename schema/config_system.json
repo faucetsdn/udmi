@@ -21,6 +21,9 @@
     },
     "mode": {
       "$ref": "file:common.json#/definitions/mode"
+    },
+    "testing": {
+      "$ref": "file:config_system_testing.json#"
     }
   }
 }
