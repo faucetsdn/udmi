@@ -26,21 +26,16 @@ public class ConfigValidator extends SequenceValidator {
   public static final String SYSTEM_CONFIG_APPLY = "system.config.apply";
 
   @Test
-  public void blob_config_firmware_update_test() {
-    info("jrand1");
+  public void blobset_config_iot_endpoint_config() {
     BlobBlobsetConfig cfg = new BlobBlobsetConfig();
     cfg.phase = "final";
-    cfg.url = URI.create("http://localhost/firmware");
-    cfg.sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    cfg.base64 = "e30=";
+    cfg.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
-    deviceConfig.blobset.blobs.put("_firmware_update", cfg);
-    info("jrand1a");
+    deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
     updateConfig();
-    info("jrand1 after updateConfig()");
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-    info("jrand1 after hasLogged");
-    info("jrand2");
   }
 
   @Test
