@@ -24,7 +24,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "min_loglevel",
     "metrics_rate_sec",
     "mode",
-    "latest_start"
+    "latest_start",
+    "testing"
 })
 @Generated("jsonschema2pojo")
 public class SystemConfig {
@@ -59,6 +60,15 @@ public class SystemConfig {
     @JsonProperty("latest_start")
     @JsonPropertyDescription("Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.")
     public Date latest_start;
+    /**
+     * Testing System Config
+     * <p>
+     * Configuration parameters for device-under-test
+     * 
+     */
+    @JsonProperty("testing")
+    @JsonPropertyDescription("Configuration parameters for device-under-test")
+    public TestingSystemConfig testing;
 
     @Override
     public int hashCode() {
@@ -67,6 +77,7 @@ public class SystemConfig {
         result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
         result = ((result* 31)+((this.latest_start == null)? 0 :this.latest_start.hashCode()));
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
+        result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
         return result;
     }
 
@@ -79,7 +90,7 @@ public class SystemConfig {
             return false;
         }
         SystemConfig rhs = ((SystemConfig) other);
-        return (((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode))))&&((this.latest_start == rhs.latest_start)||((this.latest_start!= null)&&this.latest_start.equals(rhs.latest_start))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))));
+        return ((((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode))))&&((this.latest_start == rhs.latest_start)||((this.latest_start!= null)&&this.latest_start.equals(rhs.latest_start))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
     }
 
 

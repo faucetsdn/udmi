@@ -26,6 +26,9 @@
       "description": "Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.",
       "type": "string",
       "format": "date-time"
+    },
+    "testing": {
+      "$ref": "file:config_system_testing.json#"
     }
   }
 }

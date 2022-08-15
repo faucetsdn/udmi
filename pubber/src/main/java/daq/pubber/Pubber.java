@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -40,11 +41,13 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.Phase;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -97,7 +100,7 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String OUT_DIR = "out";
+  private static final String OUT_DIR = "pubber/out";
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
@@ -110,13 +113,15 @@ public class Pubber {
       DiscoveryEvent.class, "events/discovery"
   );
   private static final int MESSAGE_REPORT_INTERVAL = 10;
-  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
-      Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
-      Level.DEBUG, LOG::info,
-      Level.INFO, LOG::info,
-      Level.WARNING, LOG::warn,
-      Level.ERROR, LOG::error
-  );
+  private static final Map<Level, Consumer<String>> LOG_MAP =
+      ImmutableMap.<Level, Consumer<String>>builder()
+          .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
+          .put(Level.DEBUG, LOG::info)
+          .put(Level.INFO, LOG::info)
+          .put(Level.NOTICE, LOG::info)
+          .put(Level.WARNING, LOG::warn)
+          .put(Level.ERROR, LOG::error)
+          .build();
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -124,6 +129,7 @@ public class Pubber {
   );
   private static final Date DEVICE_START_TIME = new Date();
   private static final int RESTART_EXIT_CODE = 192;
+  private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -144,6 +150,7 @@ public class Pubber {
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
+  private PrintStream logPrintWriter;
 
   /**
    * Start an instance from a configuration file.
@@ -551,8 +558,11 @@ public class Pubber {
     File outDir = new File(OUT_DIR);
     try {
       outDir.mkdir();
+      File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
+      logPrintWriter = new PrintStream(logOut);
+      logPrintWriter.println("Pubber log started at " + getTimestamp());
     } catch (Exception e) {
-      throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
+      throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
     }
 
     initializeMqtt();
@@ -632,24 +642,21 @@ public class Pubber {
       error("Error receiving message " + type, cause);
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
-    final Entry report;
-    if (cause == null) {
-      report = entryFromException(category, null);
-    } else {
-      report = entryFromException(category, cause);
-    }
-    if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
-      deviceState.system.status = null;
-    } else {
-      deviceState.system.status = report;
-    }
+    Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
+    // TODO: Replace this with a heap so only the highest-priority status is reported.
+    deviceState.system.status = shouldLogLevel(report.level) ? report : null;
     publishStateMessage();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
+  }
+
+  private boolean shouldLogLevel(int level) {
+    Integer minLoglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
+    return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
   }
 
   private Entry entryFromException(String category, Throwable e) {
@@ -660,7 +667,8 @@ public class Pubber {
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
-    entry.level = success ? Level.INFO.value() : Level.ERROR.value();
+    Level successLevel = Category.LEVEL.computeIfAbsent(category, key -> Level.INFO);
+    entry.level = (success ? successLevel : Level.ERROR).value();
     return entry;
   }
 
@@ -680,10 +688,11 @@ public class Pubber {
   private void configHandler(Config config) {
     try {
       info("Config handler");
-      File configOut = new File(OUT_DIR, "config.json");
+      File configOut = new File(OUT_DIR, traceTimestamp("config") + ".json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
-        debug("New config:\n" + OBJECT_MAPPER.writeValueAsString(config));
+        debug(String.format("Config update%s", getTestingTag(config)),
+            OBJECT_MAPPER.writeValueAsString(config));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -873,6 +882,7 @@ public class Pubber {
 
   private long scheduleFuture(Date futureTime, Runnable futureTask) {
     long delay = futureTime.getTime() - new Date().getTime();
+    debug(String.format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
   }
@@ -1054,25 +1064,29 @@ public class Pubber {
     publishDeviceMessage(devicePoints);
   }
 
-  private void pubberLogMessage(String logMessage, Level level, String timestamp) {
+  private void pubberLogMessage(String logMessage, Level level, String timestamp,
+      String detail) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
+    logEntry.detail = detail;
     publishLogMessage(logEntry);
   }
 
   private void publishLogMessage(Entry report) {
-    SystemEvent systemEvent = new SystemEvent();
-    systemEvent.logentries.add(report);
-    publishDeviceMessage(systemEvent);
+    if (shouldLogLevel(report.level)) {
+      SystemEvent systemEvent = new SystemEvent();
+      systemEvent.logentries.add(report);
+      publishDeviceMessage(systemEvent);
+    }
   }
 
   private void publishStateMessage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      warn(String.format("defer state update %d", delay));
+      warn(String.format("State defer %dms", delay));
       markStateDirty(delay);
       return;
     }
@@ -1080,7 +1094,8 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
+      debug(String.format("State update%s", getTestingTag(deviceConfig)),
+          OBJECT_MAPPER.writeValueAsString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1109,13 +1124,21 @@ public class Pubber {
     augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
-    String fileName = topic.replace("/", "_") + ".json";
-    File stateOut = new File(OUT_DIR, fileName);
+    String messageBase = topic.replace("/", "_");
+    String fileName = traceTimestamp(messageBase) + ".json";
+    File messageOut = new File(OUT_DIR, fileName);
     try {
-      OBJECT_MAPPER.writeValue(stateOut, message);
+      OBJECT_MAPPER.writeValue(messageOut, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+      throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private String traceTimestamp(String messageBase) {
+    int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
+        .incrementAndGet();
+    String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
+    return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private void augmentDeviceMessage(Object message) {
@@ -1132,8 +1155,12 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
+    cloudLog(message, level, null);
+  }
+
+  private void cloudLog(String message, Level level, String detail) {
     String timestamp = getTimestamp();
-    localLog(message, level, timestamp);
+    localLog(message, level, timestamp, detail);
 
     if (publishingLog || mqttPublisher == null) {
       return;
@@ -1141,22 +1168,38 @@ public class Pubber {
 
     try {
       publishingLog = true;
-      pubberLogMessage(message, level, timestamp);
+      pubberLogMessage(message, level, timestamp, detail);
     } catch (Exception e) {
-      localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
+      localLog("Error publishing log message: " + e, Level.ERROR, timestamp, null);
     } finally {
       publishingLog = false;
     }
   }
 
-  private void localLog(Entry entry) {
-    String message = entry.category + " " + entry.message;
-s    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
+  private String getTestingTag(Config config) {
+    return config.system == null || config.system.testing == null
+        || config.system.testing.sequence_name == null ? ""
+        : String.format(" (%s)", config.system.testing.sequence_name);
   }
 
-  private void localLog(String message, Level level, String timestamp) {
-    String logMessage = String.format("%s %s", timestamp, message);
+  private void localLog(Entry entry) {
+    String message = String.format("Entry %s %s %s %s%s", Level.fromValue(entry.level).name(),
+        entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
+  }
+
+  private void localLog(String message, Level level, String timestamp, String detail) {
+    String detailPostfix = detail == null ? "" : ":\n" + detail;
+    String logMessage = String.format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
+    try {
+      if (logPrintWriter != null) {
+        logPrintWriter.println(logMessage);
+        logPrintWriter.flush();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While writing log output file", e);
+    }
   }
 
   private void trace(String message) {
@@ -1165,6 +1208,10 @@ s    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp)
 
   private void debug(String message) {
     cloudLog(message, Level.DEBUG);
+  }
+
+  private void debug(String message, String detail) {
+    cloudLog(message, Level.DEBUG, detail);
   }
 
   private void info(String message) {

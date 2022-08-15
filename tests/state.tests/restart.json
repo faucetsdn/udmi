@@ -15,7 +15,7 @@
     "mode": "restart",
     "status": {
       "message": "System rebooting due to config trigger",
-      "category": "device.state.com",
+      "category": "system.config.apply",
       "timestamp": "2018-08-26T21:39:30.364Z",
       "level": 800
     }
@@ -23,7 +23,7 @@
   "pointset": {
     "status": {  // Status scoped to overall pointset operation
       "message": "Invalid sample time",
-      "category": "pointset.config",
+      "category": "pointset.point.invalid",
       "timestamp": "2018-08-26T21:39:28.364Z",
       "level": 800
     },
@@ -31,7 +31,7 @@
       "return_air_temperature_sensor": {
         "status": {  // Status scoped to a specific point in a pointset
           "message": "Point return_air_temperature_sensor unable to read value",
-          "category": "pointset.points.telemetry",
+          "category": "pointset.point.failure",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 800
         }

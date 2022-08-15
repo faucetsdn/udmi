@@ -25,6 +25,9 @@ an optional device serial number:
 ~/udmi/bin/sequence ${GCP_PROJECT_NAME} ${TARGET_DEVICE} ${SERIAL_NUMBER}
 ```
 
+It's a good idea to make sure everything is setup properly by initially running the sequences
+against the [pubber reference](pubber.md). Specifically note the _troubleshooting_ section.
+
 ## Troubleshooting
 
 To increase the logging verbosity add a `-v` at the beginning of the command options, or add
@@ -35,6 +38,21 @@ specified tests:
 
 ```
 username@hostname:~/udmi$ bin/sequencer -vv udmi_site_model bos-udmi-proto AHU-1 broken_config
+```
+
+The sequence test that's being tested will be included along with many log messages, e.g.:
+```
+$ fgrep broken_config -r sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/ | head
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/config_system_2022-08-12T20:33:57.073Z.json:    "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/local_system_2022-08-12T20:34:10Z.json:    "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/config_update_2022-08-12T20:34:12.419Z.json:      "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/local_config_2022-08-12T20:33:57Z.json:      "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/local_system_2022-08-12T20:33:52Z.json:    "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/config_system_2022-08-12T20:33:55.191Z.json:    "sequence_name" : "broken_config"
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/system.log:2022-08-12T20:33:54Z DEBUG pubber State update (broken_config)
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/system.log:2022-08-12T20:33:56Z DEBUG pubber State update (broken_config)
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/system.log:2022-08-12T20:33:59Z DEBUG pubber State update (broken_config)
+sites/udmi_site_model/out/devices/AHU-1/tests/broken_config/config_system_2022-08-12T20:34:12.396Z.json:    "sequence_name" : "broken_config"
 ```
 
 ## Example Output
