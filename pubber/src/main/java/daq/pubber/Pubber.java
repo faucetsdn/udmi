@@ -882,6 +882,7 @@ public class Pubber {
 
   private long scheduleFuture(Date futureTime, Runnable futureTask) {
     long delay = futureTime.getTime() - new Date().getTime();
+    debug(String.format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
   }
