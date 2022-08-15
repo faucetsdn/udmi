@@ -34,7 +34,7 @@
       "_iot_endpoint_config": {
         "status": {
           "message": "Received endpoint config",
-          "category": "blobset.blob.receive",
+          "category": "blobset.blob.received",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
