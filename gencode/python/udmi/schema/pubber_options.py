@@ -7,6 +7,7 @@ class PubberOptions:
   def __init__(self):
     self.noHardware = None
     self.noConfigAck = None
+    self.messageTrace = None
     self.extraPoint = None
     self.missingPoint = None
     self.extraField = None
@@ -19,6 +20,7 @@ class PubberOptions:
     result = PubberOptions()
     result.noHardware = source.get('noHardware')
     result.noConfigAck = source.get('noConfigAck')
+    result.messageTrace = source.get('messageTrace')
     result.extraPoint = source.get('extraPoint')
     result.missingPoint = source.get('missingPoint')
     result.extraField = source.get('extraField')
@@ -47,6 +49,8 @@ class PubberOptions:
       result['noHardware'] = self.noHardware # 5
     if self.noConfigAck:
       result['noConfigAck'] = self.noConfigAck # 5
+    if self.messageTrace:
+      result['messageTrace'] = self.messageTrace # 5
     if self.extraPoint:
       result['extraPoint'] = self.extraPoint # 5
     if self.missingPoint:

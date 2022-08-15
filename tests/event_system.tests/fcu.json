@@ -5,14 +5,14 @@
     {
       "message": "System Booted",
       "timestamp": "2018-08-26T20:39:19.364Z",
-      "category": "com.acme.system",
+      "category": "system.config.apply",
       "level": 300
     },
     {
       "message": "Device communication failed",
       "detail": "Connection attempt to device 3564 failed",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "com.acme.comms",
+      "category": "system.config.apply",
       "level": 700
     }
   ]

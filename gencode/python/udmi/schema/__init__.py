@@ -1,4 +1,5 @@
 from .ancillary_properties import AncillaryProperties
+from .category import ObjectBC07E246
 from .cloud_iot_config import CloudIotConfig
 from .command_discovery import DiscoveryCommand
 from .common import Common
@@ -12,6 +13,7 @@ from .config_localnet import LocalnetConfig
 from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
+from .config_system_testing import TestingSystemConfig
 from .envelope import Envelope
 from .event import Event
 from .event_discovery import DiscoveryEvent
