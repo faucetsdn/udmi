@@ -15,7 +15,7 @@
       "title": "System Blobsets",
       "description": "Predefined system blobsets",
       "enum": [
-        "_iot_config"
+        "_iot_endpoint_config"
       ]
     },
     "entry": {
