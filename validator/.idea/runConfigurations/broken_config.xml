@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="BaselineValidator.broken_config" type="JUnit" factoryName="JUnit">
+  <configuration default="false" name="broken_config" type="JUnit" factoryName="JUnit">
     <module name="validator" />
     <extension name="coverage">
       <pattern>
@@ -13,7 +13,7 @@
     <option name="TEST_OBJECT" value="method" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <envs>
-      <env name="VALIDATOR_CONFIG" value="udmi_site_model/validator/validator.json" />
+      <env name="VALIDATOR_CONFIG" value="/tmp/validator_config.json" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />

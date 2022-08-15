@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "min_loglevel",
     "metrics_rate_sec",
-    "mode"
+    "mode",
+    "testing"
 })
 @Generated("jsonschema2pojo")
 public class SystemConfig {
@@ -50,6 +51,15 @@ public class SystemConfig {
     @JsonProperty("mode")
     @JsonPropertyDescription("Operating mode for the device. Defaults is 'active'.")
     public SystemConfig.SystemMode mode;
+    /**
+     * Testing System Config
+     * <p>
+     * Configuration parameters for device-under-test
+     * 
+     */
+    @JsonProperty("testing")
+    @JsonPropertyDescription("Configuration parameters for device-under-test")
+    public TestingSystemConfig testing;
 
     @Override
     public int hashCode() {
@@ -57,6 +67,7 @@ public class SystemConfig {
         result = ((result* 31)+((this.metrics_rate_sec == null)? 0 :this.metrics_rate_sec.hashCode()));
         result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
+        result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
         return result;
     }
 
@@ -69,7 +80,7 @@ public class SystemConfig {
             return false;
         }
         SystemConfig rhs = ((SystemConfig) other);
-        return ((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))));
+        return (((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
     }
 
 

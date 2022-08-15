@@ -23,8 +23,8 @@
     }
   },
   "status": {
-    "message": "Could not find all points",
-    "category": "discovery.enumeration.incomplete",
+    "message": "Could not find all device points",
+    "category": "discovery.device.enumerate",
     "timestamp": "2018-08-26T21:39:28.364Z",
     "level": 600
   }
