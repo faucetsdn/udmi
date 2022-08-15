@@ -1206,6 +1206,10 @@ public class Pubber {
     cloudLog(message, Level.TRACE);
   }
 
+  private void debug(String message) {
+    cloudLog(message, Level.DEBUG);
+  }
+
   private void debug(String message, String detail) {
     cloudLog(message, Level.DEBUG, detail);
   }
