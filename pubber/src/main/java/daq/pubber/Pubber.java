@@ -2,7 +2,6 @@ package daq.pubber;
 
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.FIRMWARE_UPDATE_BLOB;
 import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -47,8 +46,6 @@ import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
-import udmi.schema.BlobBlobsetState;
-import udmi.schema.BlobsetState;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
@@ -725,10 +722,12 @@ public class Pubber {
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
       extractedEndpoint = extractEndpointBlobConfig();
+      /*
       BlobBlobsetConfig firmwareUpdateConfig = extractFirmwareUpdateBlobConfig();
       if (firmwareUpdateConfig!=null) {
         performFirmwareUpdate(firmwareUpdateConfig);
       }
+      */
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
@@ -736,6 +735,7 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
+  /*
   private void performFirmwareUpdate(BlobBlobsetConfig firmwareUpdateConfig) {
     if ((firmwareUpdateConfig.url != null) && (!firmwareUpdateConfig.sha256.isEmpty())) {
       BlobBlobsetState state = new BlobBlobsetState();
@@ -779,6 +779,7 @@ public class Pubber {
       throw new RuntimeException("While extracting firmware update blob config");
     }
   }
+  */
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
