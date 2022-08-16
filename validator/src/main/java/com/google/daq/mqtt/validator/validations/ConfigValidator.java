@@ -31,7 +31,7 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void blobset_config_iot_endpoint_config() {
     BlobBlobsetConfig cfg = new BlobBlobsetConfig();
-    cfg.phase = Phase.valueOf("final");
+    cfg.phase = Phase.FINAL;
     cfg.base64 = "e30=";
     cfg.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
