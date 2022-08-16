@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.Phase;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -30,7 +31,7 @@ public class ConfigValidator extends SequenceValidator {
   @Test
   public void blobset_config_iot_endpoint_config() {
     BlobBlobsetConfig cfg = new BlobBlobsetConfig();
-    cfg.phase = "final";
+    cfg.phase = Phase.valueOf("final");
     cfg.base64 = "e30=";
     cfg.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
