@@ -23,19 +23,17 @@ import udmi.schema.Level;
 public class ConfigValidator extends SequenceValidator {
 
   @Test
-￼ public void blobset_config_iot_endpoint_config() {
-￼   BlobBlobsetConfig cfg = new BlobBlobsetConfig();
-￼   cfg.phase = Phase.FINAL;
-￼   cfg.base64 = "e30=";
-￼   cfg.content_type = "application/json";
-￼   deviceConfig.blobset = new BlobsetConfig();
-￼   deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
-￼   deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
-￼   updateConfig();
-￼   info("jrand1 before");
-￼   hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
-￼   info("jrand1 after");
-￼ }
+  public void blobset_config_iot_endpoint_config() {
+    BlobBlobsetConfig cfg = new BlobBlobsetConfig();
+    cfg.phase = Phase.FINAL;
+    cfg.base64 = "e30=";
+    cfg.content_type = "application/json";
+    deviceConfig.blobset = new BlobsetConfig();
+    deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
+    deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
+    updateConfig();
+    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+  }
 
   @Test
   public void system_last_update() {
