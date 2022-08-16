@@ -38,7 +38,9 @@ public class ConfigValidator extends SequenceValidator {
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
     deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
     updateConfig();
+    info("jrand1 before");
     hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    info("jrand1 after");
   }
 
   @Test
