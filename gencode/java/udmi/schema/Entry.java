@@ -42,13 +42,12 @@ public class Entry {
     @JsonPropertyDescription("An optional extensive entry which can include more detail, e.g. a complete program stack-trace")
     public String detail;
     /**
-     * A device-specific representation of the category an entry pertains to
+     * Auto-generated category mappings from bin/gencode_categories.
      * (Required)
      * 
      */
     @JsonProperty("category")
-    @JsonPropertyDescription("A device-specific representation of the category an entry pertains to")
-    public String category;
+    public Object category;
     /**
      * Timestamp the condition was triggered, or most recently updated
      * (Required)

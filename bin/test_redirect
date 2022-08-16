@@ -59,7 +59,7 @@ cat <<EOF > out/blobs.json
 {
   "blobset": {
     "blobs": {
-      "_iot_config": {
+      "_iot_endpoint_config": {
         "phase": "final",
         "base64": "$base64"
       }

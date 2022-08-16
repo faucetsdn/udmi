@@ -4,6 +4,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "blobsets": {
+      "description": "Placeholder to create generated code enum",
+      "$ref": "file:common.json#/definitions/blobsets"
+    },
     "blobs": {
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, BlobBlobsetConfig>",

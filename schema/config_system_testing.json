@@ -1,0 +1,13 @@
+{
+  "title": "Testing System Config",
+  "description": "Configuration parameters for device-under-test",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "sequence_name": {
+      "description": "The sequence name currently being tested (for debug logging)",
+      "type": "string"
+    }
+  }
+}

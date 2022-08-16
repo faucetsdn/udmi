@@ -18,6 +18,12 @@
       "minimum": 0,
       "maximum": 86400,
       "default": 600
+    },
+    "mode": {
+      "$ref": "file:common.json#/definitions/mode"
+    },
+    "testing": {
+      "$ref": "file:config_system_testing.json#"
     }
   }
 }

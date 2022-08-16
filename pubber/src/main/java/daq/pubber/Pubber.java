@@ -1,8 +1,7 @@
 package daq.pubber;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.Blob.FINAL_PHASE;
-import static udmi.schema.Blob.IOT_CONFIG_BLOB;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +12,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
-import com.google.daq.mqtt.util.CloudIotConfig;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
-import daq.pubber.SwarmMessage.Attributes;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
@@ -26,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,15 +41,22 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.Phase;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
@@ -64,7 +69,10 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
+import udmi.schema.PubberConfiguration;
+import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
@@ -92,10 +100,8 @@ public class Pubber {
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int CONFIG_WAIT_TIME_MS = 10000;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
-  private static final String OUT_DIR = "out";
+  private static final String OUT_DIR = "pubber/out";
   private static final String PUBSUB_SITE = "PubSub";
-  private static final String SWARM_SUBFOLDER = "swarm";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
@@ -107,29 +113,32 @@ public class Pubber {
       DiscoveryEvent.class, "events/discovery"
   );
   private static final int MESSAGE_REPORT_INTERVAL = 10;
-  private static final Map<Level, Consumer<String>> LOG_MAP = ImmutableMap.of(
-      Level.TRACE, LOG::info,  // TODO: Make debug/trace programmatically visible.
-      Level.DEBUG, LOG::info,
-      Level.INFO, LOG::info,
-      Level.WARNING, LOG::warn,
-      Level.ERROR, LOG::error
-  );
+  private static final Map<Level, Consumer<String>> LOG_MAP =
+      ImmutableMap.<Level, Consumer<String>>builder()
+          .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
+          .put(Level.DEBUG, LOG::info)
+          .put(Level.INFO, LOG::info)
+          .put(Level.NOTICE, LOG::info)
+          .put(Level.WARNING, LOG::warn)
+          .put(Level.ERROR, LOG::error)
+          .build();
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final long VERY_LONG_TIME_SEC = 1234567890;
-  private static final Date NEVER_FUTURE = Date.from(Instant.now().plusSeconds(VERY_LONG_TIME_SEC));
   private static final Date DEVICE_START_TIME = new Date();
+  private static final int RESTART_EXIT_CODE = 192;
+  private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final Configuration configuration;
+  private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
+  private final String projectId;
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -138,9 +147,10 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Consumer<String> onDone;
   private boolean publishingLog;
-  private Map<String, Metadata> allMetadata;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
+  private SiteModel siteModel;
+  private PrintStream logPrintWriter;
 
   /**
    * Start an instance from a configuration file.
@@ -150,7 +160,9 @@ public class Pubber {
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = OBJECT_MAPPER.readValue(configFile, Configuration.class);
+      configuration = sanitizeConfiguration(
+          OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
+      projectId = configuration.endpoint.projectId;
     } catch (UnrecognizedPropertyException e) {
       throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
     } catch (Exception e) {
@@ -167,8 +179,8 @@ public class Pubber {
    * @param serialNo  Serial number of the device
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
-    configuration = new Configuration();
-    configuration.endpoint.projectId = projectId;
+    this.projectId = projectId;
+    configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
@@ -260,61 +272,11 @@ public class Pubber {
     }
   }
 
-  private Set<String> getAllDevices() {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(configuration.sitePath), "devices");
-    File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
-    return Arrays.stream(files).map(File::getName).collect(Collectors.toSet());
-  }
-
-  private void loadDeviceMetadata() {
-    Preconditions.checkState(configuration.deviceId != null, "deviceId not defined");
-    allMetadata = getAllDevices().stream()
-        .collect(toMap(deviceId -> deviceId, deviceId -> getDeviceMetadata(deviceId)));
-    processDeviceMetadata(allMetadata.get(configuration.deviceId));
-  }
-
-  private Metadata getDeviceMetadata(String deviceId) {
-    Preconditions.checkState(configuration.sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(configuration.sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
-    File deviceMetadataFile = new File(deviceDir, "metadata.json");
-    try {
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+  private static PubberConfiguration sanitizeConfiguration(PubberConfiguration configuration) {
+    if (configuration.options == null) {
+      configuration.options = new PubberOptions();
     }
-  }
-
-  private void processDeviceMetadata(Metadata metadata) {
-    if (metadata.cloud != null) {
-      configuration.algorithm = metadata.cloud.auth_type.value();
-      info("Configuring with key type " + configuration.algorithm);
-    }
-
-    if (metadata.gateway != null) {
-      configuration.gatewayId = metadata.gateway.gateway_id;
-      if (configuration.gatewayId != null) {
-        Auth_type authType = allMetadata.get(configuration.gatewayId).cloud.auth_type;
-        if (authType != null) {
-          configuration.algorithm = authType.value();
-        }
-      }
-    }
-
-    Map<String, PointPointsetModel> points =
-        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
-
-    if (configuration.options.missingPoint != null) {
-      if (points.containsKey(configuration.options.missingPoint)) {
-        points.remove(configuration.options.missingPoint);
-      } else {
-        throw new RuntimeException("missingPoint not in pointset");
-      }
-    }
-
-    points.forEach((name, point) -> addPoint(makePoint(name, point)));
+    return configuration;
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -343,22 +305,6 @@ public class Pubber {
     throw new RuntimeException("Unknown value type " + baselineValue.getClass());
   }
 
-  private void loadCloudConfig() {
-    Preconditions.checkState(configuration.sitePath != null,
-        "sitePath not defined in configuration");
-    File cloudConfig = new File(new File(configuration.sitePath), "cloud_iot_config.json");
-    try {
-      processCloudConfig(OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
-    } catch (Exception e) {
-      throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
-    }
-  }
-
-  private void processCloudConfig(CloudIotConfig cloudIotConfig) {
-    configuration.endpoint.registryId = cloudIotConfig.registry_id;
-    configuration.endpoint.cloudRegion = cloudIotConfig.cloud_region;
-  }
-
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.pointset = new PointsetState();
@@ -367,17 +313,20 @@ public class Pubber {
     devicePoints.points = new HashMap<>();
 
     if (configuration.sitePath != null) {
-      loadCloudConfig();
-      loadDeviceMetadata();
+      siteModel = new SiteModel(configuration.sitePath);
+      siteModel.initialize(projectId);
+      configuration.endpoint = siteModel.getEndpointConfig();
+      processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
     }
 
     info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId, configuration.options));
+        configuration.gatewayId, GeneralUtils.optionsString(configuration.options)));
 
     deviceState.system.operational = true;
+    deviceState.system.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -405,7 +354,11 @@ public class Pubber {
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
-      executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      try {
+        executor.schedule(this::flushDirtyState, delayMs, TimeUnit.MILLISECONDS);
+      } catch (Exception e) {
+        System.err.println("Rejecting state publish after " + delayMs + " " + e);
+      }
     }
   }
 
@@ -413,10 +366,10 @@ public class Pubber {
     while (true) {
       try {
         info("Waiting for swarm configuration");
-        SwarmMessage.Attributes attributes = new Attributes();
+        Envelope attributes = new Envelope();
         Bundle pull = pubSubClient.pull();
-        attributes.subFolder = pull.attributes.get("subFolder");
-        if (!SWARM_SUBFOLDER.equals(attributes.subFolder)) {
+        attributes.subFolder = SubFolder.valueOf(pull.attributes.get("subFolder"));
+        if (!SubFolder.SWARM.equals(attributes.subFolder)) {
           error("Ignoring message with subFolder " + attributes.subFolder);
           continue;
         }
@@ -441,21 +394,43 @@ public class Pubber {
     }
   }
 
-  private void processSwarmConfig(SwarmMessage swarm, SwarmMessage.Attributes attributes) {
+  private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
     configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
         .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
-    processCloudConfig(makeCloudIotConfig(attributes));
-    processDeviceMetadata(Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
+    configuration.endpoint = SiteModel.makeEndpointConfig(attributes);
+    processDeviceMetadata(
+        Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
-  private CloudIotConfig makeCloudIotConfig(Attributes attributes) {
-    CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
-        "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
-        "deviceRegistryLocation");
-    return cloudIotConfig;
+  private void processDeviceMetadata(Metadata metadata) {
+    if (metadata.cloud != null) {
+      configuration.algorithm = metadata.cloud.auth_type.value();
+      info("Configuring with key type " + configuration.algorithm);
+    }
+
+    if (metadata.gateway != null) {
+      configuration.gatewayId = metadata.gateway.gateway_id;
+      if (configuration.gatewayId != null) {
+        Auth_type authType = siteModel.getAuthType(configuration.gatewayId);
+        if (authType != null) {
+          configuration.algorithm = authType.value();
+        }
+      }
+    }
+
+    Map<String, PointPointsetModel> points =
+        metadata.pointset == null ? DEFAULT_POINTS : metadata.pointset.points;
+
+    if (configuration.options.missingPoint != null) {
+      if (points.containsKey(configuration.options.missingPoint)) {
+        points.remove(configuration.options.missingPoint);
+      } else {
+        throw new RuntimeException("missingPoint not in pointset");
+      }
+    }
+
+    points.forEach((name, point) -> addPoint(makePoint(name, point)));
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
@@ -491,12 +466,37 @@ public class Pubber {
       updatePoints();
       sendDeviceMessage();
       flushDirtyState();
-      // Some things can't be done from an on-message callback, so do them here instead.
-      maybeRedirectEndpoint();
+      deferredConfigActions();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
     }
+  }
+
+  private void deferredConfigActions() {
+    maybeRedirectEndpoint();
+    maybeRestartSystem();
+  }
+
+  private void maybeRestartSystem() {
+    if (deviceConfig.system == null) {
+      return;
+    }
+    if (SystemMode.ACTIVE.equals(deviceState.system.mode)
+        && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
+      restartSystem();
+    }
+    if (SystemMode.ACTIVE.equals(deviceConfig.system.mode)) {
+      deviceState.system.mode = SystemMode.ACTIVE;
+    }
+  }
+
+  private void restartSystem() {
+    deviceState.system.mode = SystemMode.RESTART;
+    publishStateMessage();
+    System.err.println("Restarting system with extreme prejudice.");
+    System.err.flush();
+    System.exit(RESTART_EXIT_CODE);
   }
 
   private void flushDirtyState() {
@@ -558,8 +558,11 @@ public class Pubber {
     File outDir = new File(OUT_DIR);
     try {
       outDir.mkdir();
+      File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
+      logPrintWriter = new PrintStream(logOut);
+      logPrintWriter.println("Pubber log started at " + getTimestamp());
     } catch (Exception e) {
-      throw new RuntimeException("While creating out dir " + outDir.getPath(), e);
+      throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
     }
 
     initializeMqtt();
@@ -573,11 +576,8 @@ public class Pubber {
 
   private void initializeMqtt() {
     Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
-    if (configuration.sitePath != null && configuration.keyFile != null) {
-      String keyDevice =
-          configuration.gatewayId != null ? configuration.gatewayId : configuration.deviceId;
-      configuration.keyFile = String.format(KEY_SITE_PATH_FORMAT, configuration.sitePath,
-          keyDevice, getDeviceKeyPrefix());
+    if (siteModel != null && configuration.keyFile != null) {
+      configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
@@ -611,10 +611,6 @@ public class Pubber {
     configuration.keyFile = null;
   }
 
-  private String getDeviceKeyPrefix() {
-    return configuration.algorithm.startsWith("RS") ? "rsa" : "ec";
-  }
-
   private void connect() {
     try {
       mqttPublisher.connect(configuration.deviceId);
@@ -646,24 +642,21 @@ public class Pubber {
       error("Error receiving message " + type, cause);
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
-    final Entry report;
-    if (cause == null) {
-      report = entryFromException(category, null);
-    } else {
-      report = entryFromException(category, cause);
-    }
-    if (Level.DEBUG.value() == report.level || Level.INFO.value() == report.level) {
-      deviceState.system.status = null;
-    } else {
-      deviceState.system.status = report;
-    }
+    Entry report = entryFromException(category, cause);
     localLog(report);
     publishLogMessage(report);
+    // TODO: Replace this with a heap so only the highest-priority status is reported.
+    deviceState.system.status = shouldLogLevel(report.level) ? report : null;
     publishStateMessage();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
+  }
+
+  private boolean shouldLogLevel(int level) {
+    Integer minLoglevel = deviceConfig.system == null ? null : deviceConfig.system.min_loglevel;
+    return level >= (minLoglevel == null ? Level.INFO.value() : minLoglevel);
   }
 
   private Entry entryFromException(String category, Throwable e) {
@@ -674,7 +667,8 @@ public class Pubber {
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
-    entry.level = success ? Level.INFO.value() : Level.ERROR.value();
+    Level successLevel = Category.LEVEL.computeIfAbsent(category, key -> Level.INFO);
+    entry.level = (success ? successLevel : Level.ERROR).value();
     return entry;
   }
 
@@ -694,10 +688,11 @@ public class Pubber {
   private void configHandler(Config config) {
     try {
       info("Config handler");
-      File configOut = new File(OUT_DIR, "config.json");
+      File configOut = new File(OUT_DIR, traceTimestamp("config") + ".json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
-        debug("New config:\n" + OBJECT_MAPPER.writeValueAsString(config));
+        debug(String.format("Config update%s", getTestingTag(config)),
+            OBJECT_MAPPER.writeValueAsString(config));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -783,7 +778,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(IOT_CONFIG_BLOB);
+      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
       if (iotConfig == null) {
         return null;
       }
@@ -871,7 +866,7 @@ public class Pubber {
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
-    return allMetadata.get(deviceId).pointset.points.entrySet().stream().collect(
+    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream().collect(
         Collectors.toMap(this::getPointUniqKey, this::getPointEnumerationEvent));
   }
 
@@ -948,6 +943,7 @@ public class Pubber {
 
   private long scheduleFuture(Date futureTime, Runnable futureTask) {
     long delay = futureTime.getTime() - new Date().getTime();
+    debug(String.format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
   }
@@ -981,7 +977,7 @@ public class Pubber {
     if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
-      allMetadata.forEach((deviceId, targetMetadata) -> {
+      siteModel.forEachDevice((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
@@ -1129,25 +1125,29 @@ public class Pubber {
     publishDeviceMessage(devicePoints);
   }
 
-  private void pubberLogMessage(String logMessage, Level level, String timestamp) {
+  private void pubberLogMessage(String logMessage, Level level, String timestamp,
+      String detail) {
     Entry logEntry = new Entry();
     logEntry.category = "pubber";
     logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
+    logEntry.detail = detail;
     publishLogMessage(logEntry);
   }
 
   private void publishLogMessage(Entry report) {
-    SystemEvent systemEvent = new SystemEvent();
-    systemEvent.logentries.add(report);
-    publishDeviceMessage(systemEvent);
+    if (shouldLogLevel(report.level)) {
+      SystemEvent systemEvent = new SystemEvent();
+      systemEvent.logentries.add(report);
+      publishDeviceMessage(systemEvent);
+    }
   }
 
   private void publishStateMessage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      warn(String.format("defer state update %d", delay));
+      warn(String.format("State defer %dms", delay));
       markStateDirty(delay);
       return;
     }
@@ -1155,7 +1155,8 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug("State update:\n" + OBJECT_MAPPER.writeValueAsString(deviceState));
+      debug(String.format("State update%s", getTestingTag(deviceConfig)),
+          OBJECT_MAPPER.writeValueAsString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1184,13 +1185,21 @@ public class Pubber {
     augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
-    String fileName = topic.replace("/", "_") + ".json";
-    File stateOut = new File(OUT_DIR, fileName);
+    String messageBase = topic.replace("/", "_");
+    String fileName = traceTimestamp(messageBase) + ".json";
+    File messageOut = new File(OUT_DIR, fileName);
     try {
-      OBJECT_MAPPER.writeValue(stateOut, message);
+      OBJECT_MAPPER.writeValue(messageOut, message);
     } catch (Exception e) {
-      throw new RuntimeException("While writing " + stateOut.getAbsolutePath(), e);
+      throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private String traceTimestamp(String messageBase) {
+    int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
+        .incrementAndGet();
+    String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
+    return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
   private void augmentDeviceMessage(Object message) {
@@ -1207,8 +1216,12 @@ public class Pubber {
   }
 
   private void cloudLog(String message, Level level) {
+    cloudLog(message, level, null);
+  }
+
+  private void cloudLog(String message, Level level, String detail) {
     String timestamp = getTimestamp();
-    localLog(message, level, timestamp);
+    localLog(message, level, timestamp, detail);
 
     if (publishingLog || mqttPublisher == null) {
       return;
@@ -1216,23 +1229,38 @@ public class Pubber {
 
     try {
       publishingLog = true;
-      pubberLogMessage(message, level, timestamp);
+      pubberLogMessage(message, level, timestamp, detail);
     } catch (Exception e) {
-      mqttPublisher = null;
-      localLog("Error publishing log message: " + e, Level.ERROR, timestamp);
+      localLog("Error publishing log message: " + e, Level.ERROR, timestamp, null);
     } finally {
       publishingLog = false;
     }
   }
 
-  private void localLog(Entry entry) {
-    String message = entry.category + " " + entry.message;
-    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp));
+  private String getTestingTag(Config config) {
+    return config.system == null || config.system.testing == null
+        || config.system.testing.sequence_name == null ? ""
+        : String.format(" (%s)", config.system.testing.sequence_name);
   }
 
-  private void localLog(String message, Level level, String timestamp) {
-    String logMessage = String.format("%s %s", timestamp, message);
+  private void localLog(Entry entry) {
+    String message = String.format("Entry %s %s %s %s%s", Level.fromValue(entry.level).name(),
+        entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
+    localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
+  }
+
+  private void localLog(String message, Level level, String timestamp, String detail) {
+    String detailPostfix = detail == null ? "" : ":\n" + detail;
+    String logMessage = String.format("%s %s%s", timestamp, message, detailPostfix);
     LOG_MAP.get(level).accept(logMessage);
+    try {
+      if (logPrintWriter != null) {
+        logPrintWriter.println(logMessage);
+        logPrintWriter.flush();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While writing log output file", e);
+    }
   }
 
   private void trace(String message) {
@@ -1241,6 +1269,10 @@ public class Pubber {
 
   private void debug(String message) {
     cloudLog(message, Level.DEBUG);
+  }
+
+  private void debug(String message, String detail) {
+    cloudLog(message, Level.DEBUG, detail);
   }
 
   private void info(String message) {

@@ -18,7 +18,7 @@
       "arbitrary_manufacturer_id": {
         "status": {
           "message": "Received arbitrary_manufacturer_id",
-          "category": "blobset.blob.receive",
+          "category": "blobset.blob.received",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
@@ -26,15 +26,15 @@
       "_firmware_update": {
         "status": {
           "message": "Received firmware update",
-          "category": "blobset.blob.receive",
+          "category": "blobset.blob.received",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
       },
-      "_endpoint_redirect": {
+      "_iot_endpoint_config": {
         "status": {
-          "message": "Received endpoint redirect",
-          "category": "blobset.blob.receive",
+          "message": "Received endpoint config",
+          "category": "blobset.blob.received",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }

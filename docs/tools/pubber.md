@@ -22,22 +22,24 @@ Pubber is run from the CLI within the UDMI directory.
 * `SERIAL_NO` - serial number to use (can be any alphanumeric string)
 * `[options]` - optional configuration parameters which change pubber behavior
 
+Output will be collected in `pubber/out/`, including a complete log and message traces.
+
 ### Options
 
 The following parameters are currently supported from the CLI:
-* `extraPoint=<name>` - adds an extra point with the given name to the device
+* `extraPoint=<name>`: Adds an extra point with the given name to the device
   which does not exist in device's metadata with a random value (will trigger
   validation additional point error)
-* `missingPoint=<name>` - removes the point with the given name (if exists) from
+* `missingPoint=<name>`: Removes the point with the given name (if exists) from
   the device's active pointset at initialization  (will trigger validation
   missing point)
-* `extraField=<name>` - adds an extra schema invalidating field to pointset events
+* `extraField=<name>`: Adds an extra schema invalidating field to pointset events
   (will trigger validation schema error)
-* `noHardware` - omits the `system.hardware` field from state messages (will
+* `noHardware`: Omits the `system.hardware` field from state messages (will
   trigger validation error, missing required field)
-* `noConfigAck` - subscribes to the `config` topic with a QoS of 0, therefore
+* `noConfigAck`: Subscribes to the `config` topic with a QoS of 0, therefore
   will not send PUBACK's for config messages
-
+* `messageTrace`: More verbose output of captured messages (to `pubber/out/`)
 
 More advanced options can be set by by calling pubber directly with the path a
 configuration file: `pubber/bin/run path/to/config.json`
@@ -153,3 +155,21 @@ specific setup. The relevant bits of configuration are the information in the <c
 file (see above), and the generated public key (also see above).
 
 Alternatively, you can use the [registrar tool](registrar.md) to automate device registration.
+
+## Troubleshooting
+
+When using the `messageTrace` option to pubber and running the sequence tester it will include the sequence
+test in the logs, e.g.:
+```
+$ fgrep broken_config -r pubber/out/ | head
+pubber/out/2022-08-12T20:34:11Z_config.json:      "sequence_name" : "broken_config"
+pubber/out/2022-08-12T20:33:56Z_events_system.json:    "message" : "State update (broken_config)",
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:51Z Config update (broken_config):
+pubber/out/2022-08-12T20:33:20Z_pubber.log:      "sequence_name" : "broken_config"
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:51Z Entry NOTICE system.config.apply success (broken_config)
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:52Z State update (broken_config):
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:54Z Entry DEBUG system.config.receive success (broken_config)
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:54Z Entry DEBUG system.config.parse success (broken_config)
+pubber/out/2022-08-12T20:33:20Z_pubber.log:2022-08-12T20:33:54Z Config update (broken_config):
+pubber/out/2022-08-12T20:33:20Z_pubber.log:      "sequence_name" : "broken_config"
+```
