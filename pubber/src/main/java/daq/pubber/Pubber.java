@@ -41,7 +41,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
@@ -72,6 +71,7 @@ import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.SystemConfig;
 import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
@@ -128,7 +128,8 @@ public class Pubber {
       "superimposition_reading", makePointPointsetModel(false)
   );
   private static final Date DEVICE_START_TIME = new Date();
-  private static final int RESTART_EXIT_CODE = 192;
+  private static final int RESTART_EXIT_CODE = 192; // After exit, wrapper script should restart.
+  private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
   private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -307,8 +308,9 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.pointset = new PointsetState();
     deviceState.system.hardware = new SystemHardware();
+    deviceState.system.last_start = DEVICE_START_TIME;
+    deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
@@ -386,7 +388,7 @@ public class Pubber {
     }
   }
 
-  private void safeSleep(int duration) {
+  private void safeSleep(long duration) {
     try {
       Thread.sleep(duration);
     } catch (InterruptedException e) {
@@ -479,29 +481,33 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    if (deviceConfig.system == null) {
+    SystemConfig systemConfig = deviceConfig.system;
+    if (systemConfig == null) {
       return;
     }
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
-        && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
-      restartSystem();
+        && SystemMode.RESTART.equals(systemConfig.mode)) {
+      restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(deviceConfig.system.mode)) {
+    if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
       deviceState.system.mode = SystemMode.ACTIVE;
+    }
+    if (systemConfig.latest_start != null && DEVICE_START_TIME.before(systemConfig.latest_start)) {
+      restartSystem(false);
     }
   }
 
-  private void restartSystem() {
-    deviceState.system.mode = SystemMode.RESTART;
-    publishStateMessage();
-    System.err.println("Restarting system with extreme prejudice.");
+  private void restartSystem(boolean restart) {
+    deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+    publishStateMessage(true);
+    System.err.println("Restarting system with extreme prejudice, restart " + restart);
     System.err.flush();
-    System.exit(RESTART_EXIT_CODE);
+    System.exit(restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE);
   }
 
   private void flushDirtyState() {
     if (stateDirty.get()) {
-      publishStateMessage();
+      publishStateMessage(false);
     }
   }
 
@@ -647,7 +653,7 @@ public class Pubber {
     publishLogMessage(report);
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishStateMessage();
+    publishStateMessage(false);
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
@@ -703,7 +709,7 @@ public class Pubber {
       publisherConfigLog("apply", e);
       trace(stackTraceString(e));
     }
-    publishStateMessage();
+    publishStateMessage(false);
   }
 
   private void processConfigUpdate(Config config) {
@@ -906,7 +912,7 @@ public class Pubber {
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.active = true;
-    publishStateMessage();
+    publishStateMessage(false);
     Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
     scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
   }
@@ -972,7 +978,7 @@ public class Pubber {
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
-          publishStateMessage();
+          publishStateMessage(false);
         }
       }
     } catch (Exception e) {
@@ -1083,12 +1089,15 @@ public class Pubber {
     }
   }
 
-  private void publishStateMessage() {
+  private void publishStateMessage(boolean synchronous) {
+    CountDownLatch latch = new CountDownLatch(1);
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-    if (delay > 0) {
+    if (delay > 0 && !synchronous) {
       warn(String.format("State defer %dms", delay));
       markStateDirty(delay);
       return;
+    } else if (delay > 0) {
+      safeSleep(delay);
     }
     deviceState.timestamp = new Date();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
@@ -1104,7 +1113,18 @@ public class Pubber {
     lastStateTimeMs = System.currentTimeMillis() + STATE_THROTTLE_MS;
     publishDeviceMessage(deviceState, () -> {
       lastStateTimeMs = System.currentTimeMillis();
+      latch.countDown();
     });
+    if (synchronous) {
+      try {
+        info("Waiting for synchronous state send...");
+        if (!latch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS)) {
+          error("Timeout waiting for synchronous state send");
+        }
+      } catch (Exception e) {
+        error("Exception while waiting for synchronous state send", e);
+      }
+    }
   }
 
   private void publishDeviceMessage(Object message) {

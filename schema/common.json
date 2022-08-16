@@ -4,11 +4,12 @@
   "definitions": {
     "mode": {
       "title": "System Mode",
-      "description": "Operating mode for the device. Defaults is 'active'.",
+      "description": "Operating mode for the device. Default is 'active'.",
       "enum": [
         "initial",
         "active",
-        "restart"
+        "restart",
+        "shutdown"
       ]
     },
     "blobsets": {

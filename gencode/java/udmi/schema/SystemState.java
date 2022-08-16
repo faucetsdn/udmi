@@ -66,11 +66,11 @@ public class SystemState {
     /**
      * System Mode
      * <p>
-     * Operating mode for the device. Defaults is 'active'.
+     * Operating mode for the device. Default is 'active'.
      * 
      */
     @JsonProperty("mode")
-    @JsonPropertyDescription("Operating mode for the device. Defaults is 'active'.")
+    @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
     public udmi.schema.SystemConfig.SystemMode mode;
     /**
      * Last time the system started up.

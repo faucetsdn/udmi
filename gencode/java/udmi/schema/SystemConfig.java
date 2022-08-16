@@ -47,11 +47,11 @@ public class SystemConfig {
     /**
      * System Mode
      * <p>
-     * Operating mode for the device. Defaults is 'active'.
+     * Operating mode for the device. Default is 'active'.
      * 
      */
     @JsonProperty("mode")
-    @JsonPropertyDescription("Operating mode for the device. Defaults is 'active'.")
+    @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
     public SystemConfig.SystemMode mode;
     /**
      * Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.
@@ -97,7 +97,7 @@ public class SystemConfig {
     /**
      * System Mode
      * <p>
-     * Operating mode for the device. Defaults is 'active'.
+     * Operating mode for the device. Default is 'active'.
      * 
      */
     @Generated("jsonschema2pojo")
@@ -105,7 +105,8 @@ public class SystemConfig {
 
         INITIAL("initial"),
         ACTIVE("active"),
-        RESTART("restart");
+        RESTART("restart"),
+        SHUTDOWN("shutdown");
         private final String value;
         private final static Map<String, SystemConfig.SystemMode> CONSTANTS = new HashMap<String, SystemConfig.SystemMode>();
 
