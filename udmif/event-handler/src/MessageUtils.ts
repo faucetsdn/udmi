@@ -7,15 +7,27 @@ export const CONFIG = 'config';
 export const EVENT = 'event';
 
 export function isPointsetSubType(message): boolean {
-  return isSubFolder(message, POINTSET_SUB_FOLDER) && (!message.attributes.subType || isSubType(message, MODEL) || isSubType(message, STATE) || isSubType(message, CONFIG));
+  return (
+    isSubFolder(message, POINTSET_SUB_FOLDER) &&
+    (!message.attributes.subType ||
+      isSubType(message, MODEL) ||
+      isSubType(message, STATE) ||
+      isSubType(message, CONFIG))
+  );
 }
 
 export function isSystemSubType(message): boolean {
-  return isSubFolder(message, SYSTEM_SUB_FOLDER) && (!message.attributes.subType || isSubType(message, MODEL) || isSubType(message, STATE) || isSubType(message, CONFIG));
+  return (
+    isSubFolder(message, SYSTEM_SUB_FOLDER) &&
+    (!message.attributes.subType ||
+      isSubType(message, MODEL) ||
+      isSubType(message, STATE) ||
+      isSubType(message, CONFIG))
+  );
 }
 
 export function isValidationSubType(message): boolean {
-  return isSubFolder(message, VALIDATION_SUB_FOLDER) && isSubType(message, EVENT);
+  return isSubFolder(message, VALIDATION_SUB_FOLDER);
 }
 
 export function isSubFolder(message, folderName: string): boolean {
@@ -25,4 +37,3 @@ export function isSubFolder(message, folderName: string): boolean {
 export function isSubType(message, typeName: string): boolean {
   return message.attributes.subType === typeName;
 }
-

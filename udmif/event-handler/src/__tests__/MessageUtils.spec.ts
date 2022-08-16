@@ -12,7 +12,7 @@ import {
 } from '../MessageUtils';
 import { UdmiMessage } from '../model/UdmiMessage';
 
-describe('DeviceTypeUtils.Ssystem', () => {
+describe('MessageUtils.System', () => {
   const systemSubFolder = SYSTEM_SUB_FOLDER;
 
   test.each([
@@ -27,7 +27,7 @@ describe('DeviceTypeUtils.Ssystem', () => {
   });
 });
 
-describe('DeviceDocumentFactory.PointSet', () => {
+describe('MessageUtils.PointSet', () => {
   const pointSubFolder = POINTSET_SUB_FOLDER;
 
   test.each([
@@ -42,14 +42,14 @@ describe('DeviceDocumentFactory.PointSet', () => {
   });
 });
 
-describe('DeviceTypeUtils.Validation', () => {
+describe('MessageUtils.Validation', () => {
   const validationSubFolder = VALIDATION_SUB_FOLDER;
 
   test.each([
-    [validationSubFolder, null, false],
-    [validationSubFolder, STATE, false],
-    [validationSubFolder, MODEL, false],
-    [validationSubFolder, CONFIG, false],
+    [validationSubFolder, null, true],
+    [validationSubFolder, STATE, true],
+    [validationSubFolder, MODEL, true],
+    [validationSubFolder, CONFIG, true],
     [validationSubFolder, EVENT, true],
   ])('is a pointset sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
     const inputMessage: UdmiMessage = createMessage(subFolder, subType);

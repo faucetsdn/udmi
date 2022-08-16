@@ -1,4 +1,4 @@
-import { createDeviceDocument } from '../DeviceDocumentFactory';
+import { createDeviceDocument, DeviceDocumentFactory } from '../DeviceDocumentFactory';
 import { Device } from '../model/Device';
 import {
   CONFIG,
@@ -17,6 +17,16 @@ const name: string = 'name';
 const site: string = 'site-1';
 const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: SYSTEM_SUB_FOLDER };
 const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: POINTSET_SUB_FOLDER };
+
+describe('DeviceDocumentFactory.constructor', () => {
+  const tags: string[] = [];
+
+  test('creates a default device document', () => {
+    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
+    const expectedDeviceDocument: Device = { name, site, tags };
+    expect(new DeviceDocumentFactory().createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+  });
+});
 
 describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
   const tags: string[] = [];
@@ -229,10 +239,12 @@ describe('DeviceDocumentFactory.createDeviceDocument.validation', () => {
       timestamp: '2022-08-03T17:28:49Z',
       version: '1.3.14',
       status: {
+        timestamp: '2022-08-03T17:28:49Z',
         message: 'Multiple validation errors',
         detail:
           'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
         category: 'category-x',
+        level: 600,
       },
       errors: [
         {
@@ -251,9 +263,18 @@ describe('DeviceDocumentFactory.createDeviceDocument.validation', () => {
 
   test('a device document with the validation is populated', () => {
     const expectedValidations: Validation = {
-      category: 'category-x',
-      message: 'Multiple validation errors',
       timestamp: '2022-08-03T17:28:49Z',
+      version: '1.3.14',
+      category: 'category-x',
+      status: {
+        timestamp: '2022-08-03T17:28:49Z',
+        message: 'Multiple validation errors',
+        detail:
+          'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
+        category: 'category-x',
+        level: 600,
+      },
+      message: 'Multiple validation errors',
       detail:
         'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
       errors: [

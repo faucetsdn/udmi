@@ -15,9 +15,10 @@ const serialNumber: string = 'serialNumber';
 const points: Point[] = [];
 const tags: string[] = [];
 const validation: Validation = {
+  timestamp: '2022-08-03T17:28:49Z',
+  version: '',
   category: 'category-x',
   message: 'Multiple validation errors',
-  timestamp: '2022-08-03T17:28:49Z',
   detail:
     'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
   errors: [

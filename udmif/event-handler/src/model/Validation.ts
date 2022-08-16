@@ -1,5 +1,5 @@
-import { Error } from "./UdmiMessage";
-import { InvalidMessageError } from "../InvalidMessageError";
+import { Error, Status } from './UdmiMessage';
+import { InvalidMessageError } from '../InvalidMessageError';
 
 /**
  * Sample incoming validation.
@@ -20,69 +20,87 @@ import { InvalidMessageError } from "../InvalidMessageError";
     },
  */
 export interface Validation {
-    category: string;
-    message: string;
-    timestamp: string;
-    detail?: string;
-    errors?: Error[];
+  timestamp: string;
+  version: string;
+  category?: string;
+  message?: string;
+  detail?: string;
+  errors?: Error[];
+  status?: Status;
 }
 
 export class ValidationBuilder {
-    private readonly _document: Validation;
+  private _timestamp: string = null;
+  private _version: string = null;
+  private _category: string = null;
+  private _message: string = null;
+  private _detail: string = null;
+  private _errors: Error[] = null;
+  private _status: Status = null;
 
-    constructor() {
-        this._document = {
-            category: '',
-            message: '',
-            timestamp: '',
-            detail: '',
-            errors: [],
-        };
+  timestamp(timestamp: string): ValidationBuilder {
+    if (!timestamp) {
+      throw new InvalidMessageError('Validation timestamp can not be empty');
     }
+    this._timestamp = timestamp;
+    return this;
+  }
 
-    category(category: string): ValidationBuilder {
-        if (!category) {
-            throw new InvalidMessageError('Validation category can not be empty');
-        }
-
-        this._document.category = category;
-        return this;
+  version(version: string): ValidationBuilder {
+    if (!version) {
+      throw new InvalidMessageError('Validation version can not be empty');
     }
+    this._version = version;
+    return this;
+  }
 
-    message(message: string): ValidationBuilder {
-        if (!message) {
-            throw new InvalidMessageError('Validation message can not be empty');
-        }
-
-        this._document.message = message;
-        return this;
+  category(category: string): ValidationBuilder {
+    if (category) {
+      this._category = category;
     }
+    return this;
+  }
 
-    timestamp(timestamp: string): ValidationBuilder {
-        if (!timestamp) {
-            throw new InvalidMessageError('Validation timestamp can not be empty');
-        }
-        this._document.timestamp = timestamp;
-        return this;
+  message(message: string): ValidationBuilder {
+    if (message) {
+      this._message = message;
     }
+    return this;
+  }
 
-    errors(errors: Error[]): ValidationBuilder {
-        if (!errors) {
-            throw new InvalidMessageError('Validation errors can not be empty');
-        }
-
-        this._document.errors = errors;
-        return this;
+  errors(errors: Error[]): ValidationBuilder {
+    if (errors) {
+      this._errors = errors;
     }
+    return this;
+  }
 
-    detail(detail: string): ValidationBuilder {
-        if (detail) {
-            this._document.detail = detail;
-        }
-        return this;
+  status(status: Status): ValidationBuilder {
+    if (status) {
+      this._status = status;
     }
+    return this;
+  }
 
-    build(): Validation {
-        return this._document;
+  detail(detail: string): ValidationBuilder {
+    if (detail) {
+      this._detail = detail;
     }
+    return this;
+  }
+
+  build(): Validation {
+    this.timestamp(this._timestamp);
+    this.version(this._version);
+
+    return {
+      timestamp: this._timestamp,
+      version: this._version,
+      category: this._category,
+      status: this._status,
+      detail: this._detail,
+      message: this._message,
+      errors: this._errors,
+    };
+  }
 }

@@ -118,6 +118,25 @@ describe('UdmiMessageHandler', () => {
       }
     }
   );
+
+  test('Points are empty array if none found', async () => {
+    const message = createMessageFromTypes(POINTSET_SUB_FOLDER, STATE, AHU_ID);
+    console.log(message);
+    getMock.mockResolvedValue(null);
+    await udmiMessageHandler.handleUdmiEvent(message);
+    expect(getMock).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalledWith(message, []);
+    expect(upsertMock).toHaveBeenCalled();
+  });
+  test('Points are array if array found', async () => {
+    const message = createMessageFromTypes(POINTSET_SUB_FOLDER, STATE, AHU_ID);
+    console.log(message);
+    getMock.mockResolvedValue([]);
+    await udmiMessageHandler.handleUdmiEvent(message);
+    expect(getMock).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalledWith(message, []);
+    expect(upsertMock).toHaveBeenCalled();
+  });
 });
 
 function createMessageFromTypes(subFolder: string, subType: string, deviceId: string = 'AHU-1'): UdmiMessage {

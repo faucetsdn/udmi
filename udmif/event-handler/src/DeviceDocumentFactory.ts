@@ -1,6 +1,6 @@
 import { DeviceBuilder, Device } from './model/Device';
 import { isPointsetSubType, isSystemSubType, isValidationSubType } from './MessageUtils';
-import { UdmiMessage } from './model/UdmiMessage';
+import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from './model/UdmiMessage';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from './model/Validation';
 
@@ -26,7 +26,7 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
  */
-function buildDeviceDocumentFromSystem(udmiMessage: UdmiMessage, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromSystem(udmiMessage: SystemMessage, builder: DeviceBuilder): Device {
   return builder
     .lastPayload(udmiMessage.data.timestamp)
     .operational(udmiMessage.data.operational)
@@ -42,9 +42,11 @@ function buildDeviceDocumentFromSystem(udmiMessage: UdmiMessage, builder: Device
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_validation.html  describes the incoming schema for an event validation message
  */
-function buildDeviceDocumentFromValidation(udmiMessage: UdmiMessage, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromValidation(udmiMessage: ValidationMessage, builder: DeviceBuilder): Device {
   const validation: Validation = new ValidationBuilder()
     .timestamp(udmiMessage.data.timestamp)
+    .version(udmiMessage.data.version)
+    .status(udmiMessage.data.status)
     .category(udmiMessage.data.status.category)
     .message(udmiMessage.data.status.message)
     .detail(udmiMessage.data.status.detail)
@@ -58,7 +60,7 @@ function buildDeviceDocumentFromValidation(udmiMessage: UdmiMessage, builder: De
  * https://faucetsdn.github.io/udmi/gencode/docs/event_pointset.html describes the incoming schema for an event pointset message
  */
 function buildDeviceDocumentFromPointset(
-  udmiMessage: UdmiMessage,
+  udmiMessage: PointsetMessage,
   existingPoints: Point[],
   deviceBuilder: DeviceBuilder
 ): Device {
