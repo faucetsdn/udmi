@@ -15,34 +15,26 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "bridgeHostname",
-    "bridgePort",
-    "cloudRegion",
-    "projectId",
-    "registryId"
+    "hostname",
+    "port",
+    "client_id"
 })
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
 
-    @JsonProperty("bridgeHostname")
-    public String bridgeHostname = "mqtt.googleapis.com";
-    @JsonProperty("bridgePort")
-    public String bridgePort = "443";
-    @JsonProperty("cloudRegion")
-    public String cloudRegion;
-    @JsonProperty("projectId")
-    public String projectId;
-    @JsonProperty("registryId")
-    public String registryId;
+    @JsonProperty("hostname")
+    public String hostname;
+    @JsonProperty("port")
+    public String port = "8883";
+    @JsonProperty("client_id")
+    public String client_id;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.registryId == null)? 0 :this.registryId.hashCode()));
-        result = ((result* 31)+((this.bridgePort == null)? 0 :this.bridgePort.hashCode()));
-        result = ((result* 31)+((this.projectId == null)? 0 :this.projectId.hashCode()));
-        result = ((result* 31)+((this.bridgeHostname == null)? 0 :this.bridgeHostname.hashCode()));
-        result = ((result* 31)+((this.cloudRegion == null)? 0 :this.cloudRegion.hashCode()));
+        result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
+        result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
+        result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         return result;
     }
 
@@ -55,7 +47,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return ((((((this.registryId == rhs.registryId)||((this.registryId!= null)&&this.registryId.equals(rhs.registryId)))&&((this.bridgePort == rhs.bridgePort)||((this.bridgePort!= null)&&this.bridgePort.equals(rhs.bridgePort))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.bridgeHostname == rhs.bridgeHostname)||((this.bridgeHostname!= null)&&this.bridgeHostname.equals(rhs.bridgeHostname))))&&((this.cloudRegion == rhs.cloudRegion)||((this.cloudRegion!= null)&&this.cloudRegion.equals(rhs.cloudRegion))));
+        return ((((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname)))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
     }
 
 }

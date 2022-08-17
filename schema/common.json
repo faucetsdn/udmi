@@ -64,21 +64,14 @@
       "description": "Parameters to define an MQTT endpoint",
       "additionalProperties": true,
       "properties": {
-        "bridgeHostname": {
-          "type": "string",
-          "default": "mqtt.googleapis.com"
-        },
-        "bridgePort": {
-          "type": "string",
-          "default": "443"
-        },
-        "cloudRegion": {
+        "hostname": {
           "type": "string"
         },
-        "projectId": {
-          "type": "string"
+        "port": {
+          "type": "string",
+          "default": "8883"
         },
-        "registryId": {
+        "client_id": {
           "type": "string"
         }
       }

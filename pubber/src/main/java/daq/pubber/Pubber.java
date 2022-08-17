@@ -1,12 +1,12 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +41,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
@@ -139,6 +138,7 @@ public class Pubber {
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final String projectId;
+  private final String deviceId;
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -162,10 +162,12 @@ public class Pubber {
     try {
       configuration = sanitizeConfiguration(
           OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
-      projectId = configuration.endpoint.projectId;
-    } catch (UnrecognizedPropertyException e) {
-      throw new RuntimeException("Invalid arguments or options: " + e.getMessage());
+      Map<String, String> clientIdMap = MqttPublisher.parseClientId(
+          configuration.endpoint.client_id);
+      projectId = clientIdMap.get("projectId");
+      deviceId = clientIdMap.get("deviceId");
     } catch (Exception e) {
+      executor.shutdown();
       throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
     }
   }
@@ -180,6 +182,7 @@ public class Pubber {
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     this.projectId = projectId;
+    this.deviceId = deviceId;
     configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
@@ -314,7 +317,7 @@ public class Pubber {
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
-      siteModel.initialize(projectId);
+      siteModel.initialize(projectId, deviceId);
       configuration.endpoint = siteModel.getEndpointConfig();
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
@@ -395,12 +398,12 @@ public class Pubber {
   }
 
   private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
-    configuration.deviceId = Preconditions.checkNotNull(attributes.deviceId, "deviceId");
+    configuration.deviceId = checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
-        .decode(Preconditions.checkNotNull(swarm.key_base64, "key_base64"));
+        .decode(checkNotNull(swarm.key_base64, "key_base64"));
     configuration.endpoint = SiteModel.makeEndpointConfig(attributes);
     processDeviceMetadata(
-        Preconditions.checkNotNull(swarm.device_metadata, "device_metadata"));
+        checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
   private void processDeviceMetadata(Metadata metadata) {
@@ -553,19 +556,24 @@ public class Pubber {
   }
 
   private void initialize() {
-    initializeDevice();
-
-    File outDir = new File(OUT_DIR);
     try {
-      outDir.mkdir();
-      File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
-      logPrintWriter = new PrintStream(logOut);
-      logPrintWriter.println("Pubber log started at " + getTimestamp());
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
-    }
+      initializeDevice();
 
-    initializeMqtt();
+      File outDir = new File(OUT_DIR);
+      try {
+        outDir.mkdir();
+        File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
+        logPrintWriter = new PrintStream(logOut);
+        logPrintWriter.println("Pubber log started at " + getTimestamp());
+      } catch (Exception e) {
+        throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
+      }
+
+      initializeMqtt();
+    } catch (Exception e) {
+      executor.shutdown();
+      throw new RuntimeException("While initializing main pubber class", e);
+    }
   }
 
   private void disconnectMqtt() {
@@ -575,7 +583,7 @@ public class Pubber {
   }
 
   private void initializeMqtt() {
-    Preconditions.checkNotNull(configuration.deviceId, "configuration deviceId not defined");
+    checkNotNull(configuration.deviceId, "configuration deviceId not defined");
     if (siteModel != null && configuration.keyFile != null) {
       configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
@@ -605,7 +613,7 @@ public class Pubber {
     if (configuration.keyBytes != null) {
       return;
     }
-    Preconditions.checkNotNull(configuration.keyFile, "configuration keyFile not defined");
+    checkNotNull(configuration.keyFile, "configuration keyFile not defined");
     info("Loading device key bytes from " + configuration.keyFile);
     configuration.keyBytes = getFileBytes(configuration.keyFile);
     configuration.keyFile = null;
@@ -737,15 +745,18 @@ public class Pubber {
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
+    String currentId = configuration.endpoint.client_id;
+    String redirectId = getClientId(redirectRegistry);
+
     if (extractedEndpoint != null && !toJson(extractedEndpoint).equals(appliedEndpoint)) {
       info("New config blob endpoint detected");
       configuration.endpoint = extractedEndpoint;
-    } else if (redirectRegistry != null && configLatch.getCount() <= 0
-        && !redirectRegistry.equals(configuration.endpoint.registryId)) {
-      info("Mismatched redirectRegistry detected");
-      configuration.endpoint.registryId = redirectRegistry;
+    } else if (redirectRegistry != null && configLatch.getCount() <= 0 && !redirectId.equals(
+        currentId)) {
+      info("Mismatched redirectRegistry detected, redirecting to " + redirectRegistry);
+      configuration.endpoint.client_id = redirectId;
     } else {
-      return;
+      return; // No need to redirect anything!
     }
     try {
       disconnectMqtt();
@@ -754,6 +765,12 @@ public class Pubber {
     } catch (Exception e) {
       throw new RuntimeException("While redirecting connection endpoint", e);
     }
+  }
+
+  private String getClientId(String forRegistry) {
+    String cloudRegion = MqttPublisher.parseClientId(configuration.endpoint.client_id)
+        .get("cloudRegion");
+    return MqttPublisher.getClientId(projectId, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {

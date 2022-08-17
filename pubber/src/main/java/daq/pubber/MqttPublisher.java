@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -29,6 +30,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -48,25 +51,23 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttPublisher {
 
+  private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean SHOULD_RETAIN = false;
-
   private static final String CONFIG_UPDATE_TOPIC_FMT = "/devices/%s/config";
   private static final String ERRORS_TOPIC_FMT = "/devices/%s/errors";
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
-
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
   private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
-  private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
+  private static final Pattern ID_PATTERN = Pattern.compile(
+      "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
@@ -86,6 +87,8 @@ public class MqttPublisher {
 
   private final PubberConfiguration configuration;
   private final String registryId;
+  private final String projectId;
+  private final String cloudRegion;
 
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
@@ -96,9 +99,34 @@ public class MqttPublisher {
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    this.registryId = configuration.endpoint.registryId;
+    Map<String, String> clientIdParts = parseClientId(configuration.endpoint.client_id);
+    this.projectId = clientIdParts.get("projectId");
+    this.cloudRegion = clientIdParts.get("cloudRegion");
+    this.registryId = clientIdParts.get("registryId");
     this.onError = onError;
     validateCloudIotOptions();
+  }
+
+  public static Map<String, String> parseClientId(String client_id) {
+    if (client_id == null) {
+      throw new IllegalArgumentException("client_id not specified");
+    }
+    Matcher matcher = ID_PATTERN.matcher(client_id);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException(
+          String.format("client_id %s does not match pattern %s", client_id, ID_PATTERN.pattern()));
+    }
+    return ImmutableMap.of(
+        "projectId", matcher.group(1),
+        "cloudRegion", matcher.group(2),
+        "registryId", matcher.group(3),
+        "deviceId", matcher.group(4)
+    );
+  }
+
+  public static String getClientId(String projectId, String cloudRegion, String registryId,
+      String deviceId) {
+    return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
   }
 
   void publish(String deviceId, String topic, Object data, Runnable callback) {
@@ -176,10 +204,9 @@ public class MqttPublisher {
 
   private void validateCloudIotOptions() {
     try {
-      checkNotNull(configuration.endpoint.bridgeHostname, "bridgeHostname");
-      checkNotNull(configuration.endpoint.bridgePort, "bridgePort");
-      checkNotNull(configuration.endpoint.projectId, "projectId");
-      checkNotNull(configuration.endpoint.cloudRegion, "cloudRegion");
+      checkNotNull(configuration.endpoint.hostname, "endpoint hostname");
+      checkNotNull(configuration.endpoint.port, "endpoint port");
+      checkNotNull(configuration.endpoint.client_id, "endpoint client_id");
       checkNotNull(configuration.keyBytes, "keyBytes");
       checkNotNull(configuration.algorithm, "algorithm");
     } catch (Exception e) {
@@ -210,7 +237,6 @@ public class MqttPublisher {
 
   private MqttClient newMqttClient(String deviceId) {
     try {
-      Preconditions.checkNotNull(registryId, "registryId is null");
       Preconditions.checkNotNull(deviceId, "deviceId is null");
       String clientId = getClientId(deviceId);
       info("Creating new mqtt client for " + clientId);
@@ -256,9 +282,8 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    return createJwt(configuration.endpoint.projectId, (byte[]) configuration.keyBytes,
-        configuration.algorithm)
-        .toCharArray();
+    return createJwt(projectId, (byte[]) configuration.keyBytes,
+        configuration.algorithm).toCharArray();
   }
 
   /**
@@ -291,16 +316,17 @@ public class MqttPublisher {
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    return String.format(ID_FORMAT, configuration.endpoint.projectId,
-        configuration.endpoint.cloudRegion,
-        registryId, deviceId);
+    if (configuration.endpoint.client_id != null) {
+      return configuration.endpoint.client_id;
+    }
+    return getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    return String.format(BROKER_URL_FORMAT, configuration.endpoint.bridgeHostname,
-        configuration.endpoint.bridgePort);
+    return String.format(BROKER_URL_FORMAT, configuration.endpoint.hostname,
+        configuration.endpoint.port);
   }
 
   private String getMessageTopic(String deviceId, String topic) {

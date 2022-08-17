@@ -42,13 +42,14 @@ else
     done
     options_json="{${options_json%,}}" 
 
+    registry_id=`jq -r .registry_id $site_path/cloud_iot_config.json`
     cloud_region=`jq -r .cloud_region $site_path/cloud_iot_config.json`
     
     cat <<EOF > /tmp/pubber_config.json
 {
     "endpoint": {
-      "projectId": "$project_id",
-      "cloudRegion": "$cloud_region"
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
+      "hostname": "mqtt.googleapis.com"
     },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
