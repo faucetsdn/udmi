@@ -7,7 +7,8 @@ import {
   ValidatedDeviceNamesSearchOptions,
   ValidatedDeviceMakesSearchOptions,
   ValidatedDeviceModelsSearchOptions,
-  ValidatedSitesSearchOptions,
+  ValidatedSiteNamesSearchOptions,
+  Site,
 } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
 import { Db, Filter } from 'mongodb';
@@ -15,10 +16,11 @@ import { fromString } from '../../../device/FilterParser';
 import { getFilter } from './MongoFilterBuilder';
 import { getSort } from './MongoSortBuilder';
 import { getAggregate } from './MongoAggregateBuilder';
+import { v4 as uuid } from 'uuid';
 
 // this class exists to return sorted, and filtered data from MongoDB
 export class MongoDeviceDAO implements DeviceDAO {
-  constructor(private db: Db) { }
+  constructor(private db: Db) {}
 
   async getDevices(searchOptions: SearchOptions): Promise<Device[]> {
     return this.db
@@ -59,12 +61,30 @@ export class MongoDeviceDAO implements DeviceDAO {
     return this.getDistinct('model', searchOptions);
   }
 
-  async getSites(searchOptions: ValidatedSitesSearchOptions): Promise<string[]> {
+  async getSiteNames(searchOptions: ValidatedSiteNamesSearchOptions): Promise<string[]> {
     return this.getDistinct('site', searchOptions);
   }
 
   async getSections(searchOptions: ValidatedSectionsSearchOptions): Promise<string[]> {
     return this.getDistinct('section', searchOptions);
+  }
+
+  async getFilteredSiteCount(searchOptions: SearchOptions): Promise<number> {
+    //TODO::
+    return this.getSiteCount();
+  }
+
+  async getSiteCount(): Promise<number> {
+    //TODO::
+    return (await this.db.collection<Device>('device').distinct('site')).length;
+  }
+
+  async getSites(searchOptions: SearchOptions): Promise<Site[]> {
+    //TODO::
+    return (await this.db.collection<Device>('device').distinct('site')).map((site) => ({
+      id: uuid(),
+      name: site,
+    }));
   }
 
   private getFilter(searchOptions: SearchOptions): Filter<Device> {

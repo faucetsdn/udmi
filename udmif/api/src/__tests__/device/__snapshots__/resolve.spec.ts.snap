@@ -518,7 +518,7 @@ Object {
 }
 `;
 
-exports[`Devices getSites 1`] = `
+exports[`Devices getSiteNames 1`] = `
 Object {
   "data": Object {
     "sites": Array [

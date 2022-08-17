@@ -4,7 +4,7 @@ import {
   DeviceNamesSearchOptions,
   SearchOptions,
   SectionsSearchOptions,
-  SitesSearchOptions,
+  SiteNamesSearchOptions,
 } from '../../device/model';
 import {
   validate,
@@ -12,7 +12,7 @@ import {
   validateDeviceModelsSearchOptions,
   validateDeviceNamesSearchOptions,
   validateSectionsSearchOptions,
-  validateSitesSearchOptions,
+  validateSiteNamesSearchOptions,
 } from '../../device/SearchOptionsValidator';
 
 describe('SearchOptionsValidator.validate', () => {
@@ -79,18 +79,18 @@ describe('SearchOptionsValidator.validateDeviceModelsSearchOptions', () => {
   });
 });
 
-describe('SearchOptionsValidator.validateSitesSearchOptions', () => {
+describe('SearchOptionsValidator.validateSiteNamesSearchOptions', () => {
   test.each([
     [0, 0],
     [null, 10],
     [undefined, 10],
   ])('limit defaults to 10 when not supplied', async (limit, expected) => {
-    const searchOptions: SitesSearchOptions = { limit };
-    expect(validateSitesSearchOptions(searchOptions).limit).toEqual(expected);
+    const searchOptions: SiteNamesSearchOptions = { limit };
+    expect(validateSiteNamesSearchOptions(searchOptions).limit).toEqual(expected);
   });
 
   test('limit still defaults to 10 when no searchOptions are supplied', () => {
-    expect(validateSitesSearchOptions().limit).toEqual(10);
+    expect(validateSiteNamesSearchOptions().limit).toEqual(10);
   });
 });
 

@@ -42,7 +42,7 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
       .sort();
   }
 
-  async getSites(): Promise<string[]> {
+  async getSiteNames(): Promise<string[]> {
     return createDevices(10)
       .map((d) => d.site)
       .sort();

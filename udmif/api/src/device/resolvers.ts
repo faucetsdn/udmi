@@ -24,11 +24,14 @@ export const resolvers = {
     deviceModels: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
       return deviceDS.getDeviceModels(searchOptions);
     },
-    sites: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
-      return deviceDS.getSites(searchOptions);
+    siteNames: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getSiteNames(searchOptions);
     },
     sections: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
       return deviceDS.getSections(searchOptions);
+    },
+    sites: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
+      return deviceDS.getSites(searchOptions);
     },
   },
 };

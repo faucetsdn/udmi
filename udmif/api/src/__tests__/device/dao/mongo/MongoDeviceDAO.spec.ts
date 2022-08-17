@@ -215,9 +215,9 @@ describe('MongoDeviceDAO.getDeviceModels', () => {
   });
 });
 
-describe('MongoDeviceDAO.getSites', () => {
+describe('MongoDeviceDAO.getSiteNames', () => {
   test('unique sites are returned', async () => {
-    const retrievedSites: string[] = await mongoDeviceDAO.getSites({ limit: 10 });
+    const retrievedSites: string[] = await mongoDeviceDAO.getSiteNames({ limit: 10 });
 
     expect(retrievedSites).toBeDistinct();
     expect(retrievedSites.length).toBeWithinRange(0, 10);

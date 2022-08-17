@@ -137,7 +137,7 @@ describe('Devices', () => {
     const result = await runQuery(QUERY_DEVICE_MODELS);
     expect(result).toMatchSnapshot();
   });
-  test('getSites', async () => {
+  test('getSiteNames', async () => {
     const result = await runQuery(QUERY_SITES);
     expect(result).toMatchSnapshot();
   });

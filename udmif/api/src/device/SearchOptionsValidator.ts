@@ -6,13 +6,13 @@ import {
   DeviceNamesSearchOptions,
   SearchOptions,
   SectionsSearchOptions,
-  SitesSearchOptions,
+  SiteNamesSearchOptions,
   ValidatedCommonSearchOptions,
   ValidatedDeviceMakesSearchOptions,
   ValidatedDeviceModelsSearchOptions,
   ValidatedDeviceNamesSearchOptions,
   ValidatedSectionsSearchOptions,
-  ValidatedSitesSearchOptions,
+  ValidatedSiteNamesSearchOptions,
 } from './model';
 
 export function validate(searchOptions: SearchOptions): SearchOptions {
@@ -57,7 +57,9 @@ export function validateDeviceModelsSearchOptions(
   };
 }
 
-export function validateSitesSearchOptions(searchOptions?: SitesSearchOptions): ValidatedSitesSearchOptions {
+export function validateSiteNamesSearchOptions(
+  searchOptions?: SiteNamesSearchOptions
+): ValidatedSiteNamesSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };

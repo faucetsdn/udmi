@@ -8,12 +8,14 @@ import {
   Point,
   SearchOptions,
   SectionsSearchOptions,
-  SitesSearchOptions,
+  Site,
+  SitesResponse,
+  SiteNamesSearchOptions,
   ValidatedDeviceMakesSearchOptions,
   ValidatedDeviceModelsSearchOptions,
   ValidatedDeviceNamesSearchOptions,
   ValidatedSectionsSearchOptions,
-  ValidatedSitesSearchOptions,
+  ValidatedSiteNamesSearchOptions,
 } from './model';
 import { DeviceDAO } from './dao/DeviceDAO';
 import {
@@ -22,7 +24,7 @@ import {
   validateDeviceModelsSearchOptions,
   validateDeviceNamesSearchOptions,
   validateSectionsSearchOptions,
-  validateSitesSearchOptions,
+  validateSiteNamesSearchOptions,
 } from './SearchOptionsValidator';
 
 export class DeviceDataSource extends GraphQLDataSource {
@@ -67,13 +69,23 @@ export class DeviceDataSource extends GraphQLDataSource {
     return this.deviceDAO.getDeviceModels(validatedSearchOptions);
   }
 
-  async getSites(searchOptions?: SitesSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedSitesSearchOptions = validateSitesSearchOptions(searchOptions);
-    return this.deviceDAO.getSites(validatedSearchOptions);
+  async getSiteNames(searchOptions?: SiteNamesSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedSiteNamesSearchOptions = validateSiteNamesSearchOptions(searchOptions);
+    return this.deviceDAO.getSiteNames(validatedSearchOptions);
   }
 
   async getSections(searchOptions?: SectionsSearchOptions): Promise<string[]> {
     const validatedSearchOptions: ValidatedSectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
     return this.deviceDAO.getSections(validatedSearchOptions);
+  }
+
+  async getSites(searchOptions: SearchOptions): Promise<SitesResponse> {
+    const validatedSearchOptions: SearchOptions = validate(searchOptions);
+
+    const sites: Site[] = await this.deviceDAO.getSites(validatedSearchOptions);
+    const totalCount = await this.deviceDAO.getSiteCount();
+    const totalFilteredCount: number = await this.deviceDAO.getFilteredSiteCount(validatedSearchOptions);
+
+    return { sites, totalCount, totalFilteredCount };
   }
 }

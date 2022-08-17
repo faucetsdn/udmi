@@ -10,7 +10,8 @@ import {
   Point,
   SearchOptions,
   SectionsSearchOptions,
-  SitesSearchOptions,
+  Site,
+  SiteNamesSearchOptions,
   SORT_DIRECTION,
 } from '../../model';
 import { DeviceDAO } from '../DeviceDAO';
@@ -50,7 +51,6 @@ export class StaticDeviceDAO implements DeviceDAO {
   }
 
   public async getFilteredDeviceCount(searchOptions: SearchOptions): Promise<number> {
-
     let filteredDevices = this.devices;
     if (searchOptions.filter) {
       const filters: Filter[] = fromString(searchOptions.filter);
@@ -95,12 +95,30 @@ export class StaticDeviceDAO implements DeviceDAO {
     return this.getDistinct('model', searchOptions.search, searchOptions.limit);
   }
 
-  public async getSites(searchOptions: SitesSearchOptions): Promise<string[]> {
+  public async getSiteNames(searchOptions: SiteNamesSearchOptions): Promise<string[]> {
     return this.getDistinct('site', searchOptions.search, searchOptions.limit);
   }
 
   public async getSections(searchOptions: SectionsSearchOptions): Promise<string[]> {
     return this.getDistinct('section', searchOptions.search, searchOptions.limit);
+  }
+
+  public async getFilteredSiteCount(searchOptions: SearchOptions): Promise<number> {
+    //TODO::
+    return this.getSiteCount();
+  }
+
+  public async getSiteCount(): Promise<number> {
+    //TODO::
+    return this.getDistinct('site').length;
+  }
+
+  public async getSites(searchOptions: SearchOptions): Promise<Site[]> {
+    //TODO::
+    return this.getDistinct('site').map((site) => ({
+      id: uuid(),
+      name: site,
+    }));
   }
 
   // this allows us to sort the static data

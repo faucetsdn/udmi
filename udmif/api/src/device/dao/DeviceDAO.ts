@@ -2,11 +2,12 @@ import {
   Device,
   Point,
   SearchOptions,
+  Site,
   ValidatedDeviceMakesSearchOptions,
   ValidatedDeviceModelsSearchOptions,
   ValidatedDeviceNamesSearchOptions,
   ValidatedSectionsSearchOptions,
-  ValidatedSitesSearchOptions,
+  ValidatedSiteNamesSearchOptions,
 } from '../model';
 
 export interface DeviceDAO {
@@ -18,6 +19,9 @@ export interface DeviceDAO {
   getDeviceNames(searchOptions: ValidatedDeviceNamesSearchOptions): Promise<string[]>;
   getDeviceMakes(searchOptions: ValidatedDeviceMakesSearchOptions): Promise<string[]>;
   getDeviceModels(searchOptions: ValidatedDeviceModelsSearchOptions): Promise<string[]>;
-  getSites(searchOptions: ValidatedSitesSearchOptions): Promise<string[]>;
+  getSiteNames(searchOptions: ValidatedSiteNamesSearchOptions): Promise<string[]>;
   getSections(searchOptions: ValidatedSectionsSearchOptions): Promise<string[]>;
+  getSiteCount(): Promise<number>;
+  getFilteredSiteCount(searchOptions: SearchOptions): Promise<number>;
+  getSites(searchOptions: SearchOptions): Promise<Site[]>;
 }

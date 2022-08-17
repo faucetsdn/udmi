@@ -94,14 +94,14 @@ describe('DeviceDataSource.getDeviceModels()', () => {
   });
 });
 
-describe('DeviceDataSource.getSites()', () => {
+describe('DeviceDataSource.getSiteNames()', () => {
   test('returns sites', async () => {
-    const sites: string[] = await deviceDS.getSites();
+    const sites: string[] = await deviceDS.getSiteNames();
     expect(sites.length).toBeGreaterThanOrEqual(1);
   });
 
   test('returns [] if there are no matches', async () => {
-    const sites: string[] = await deviceDS.getSites({ search: 'lkjd' });
+    const sites: string[] = await deviceDS.getSiteNames({ search: 'lkjd' });
     expect(sites).toEqual([]);
   });
 });
