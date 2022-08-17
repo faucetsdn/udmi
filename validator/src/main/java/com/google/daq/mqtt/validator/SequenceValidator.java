@@ -709,13 +709,17 @@ public abstract class SequenceValidator {
 
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
     waitingCondition = "waiting for " + description;
-    info("start " + waitingCondition);
+    info(String.format("start %s after %s since test start", waitingCondition, timeSinceStart()));
     updateConfig();
     while (evaluator.get()) {
       receiveMessage();
     }
-    info("finished " + waitingCondition);
+    info(String.format("finished %s after %s since test start", waitingCondition, timeSinceStart()));
     waitingCondition = "nothing";
+  }
+
+  private String timeSinceStart() {
+    return (testStartTimeMs - System.currentTimeMillis())/60 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
