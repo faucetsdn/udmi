@@ -714,12 +714,13 @@ public abstract class SequenceValidator {
     while (evaluator.get()) {
       receiveMessage();
     }
-    info(String.format("finished %s after %s since test start", waitingCondition, timeSinceStart()));
+    info(
+        String.format("finished %s after %s since test start", waitingCondition, timeSinceStart()));
     waitingCondition = "nothing";
   }
 
   private String timeSinceStart() {
-    return (testStartTimeMs - System.currentTimeMillis())/60 + "s";
+    return (testStartTimeMs - System.currentTimeMillis()) / 60 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
