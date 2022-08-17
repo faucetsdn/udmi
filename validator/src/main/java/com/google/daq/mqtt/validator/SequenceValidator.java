@@ -73,7 +73,7 @@ public abstract class SequenceValidator {
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
-  public static final int NORM_TIMEOUT_MS = 60 * 1000;
+  public static final int NORM_TIMEOUT_MS = 120 * 1000;
   public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
   protected static final Metadata deviceMetadata;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
