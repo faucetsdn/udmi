@@ -41,8 +41,8 @@ export const GET_DEVICE_MODELS = gql`
 `;
 
 export const GET_DEVICE_SITES = gql`
-  query GetDeviceSites($searchOptions: SitesSearchOptions) {
-    sites(searchOptions: $searchOptions)
+  query GetDeviceSites($searchOptions: SiteNamesSearchOptions) {
+    siteNames(searchOptions: $searchOptions)
   }
 `;
 
