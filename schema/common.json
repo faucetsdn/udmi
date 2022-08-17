@@ -58,23 +58,6 @@
         "timestamp",
         "level"
       ]
-    },
-    "endpoint": {
-      "title": "Endpoint Configuration",
-      "description": "Parameters to define an MQTT endpoint",
-      "additionalProperties": true,
-      "properties": {
-        "hostname": {
-          "type": "string"
-        },
-        "port": {
-          "type": "string",
-          "default": "8883"
-        },
-        "client_id": {
-          "type": "string"
-        }
-      }
     }
   }
 }

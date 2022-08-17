@@ -22,10 +22,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("hostname")
     public String hostname;
     @JsonProperty("port")
     public String port = "8883";
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("client_id")
     public String client_id;
 
