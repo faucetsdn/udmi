@@ -492,7 +492,7 @@ public class Pubber {
     if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
       deviceState.system.mode = SystemMode.ACTIVE;
     }
-    if (systemConfig.latest_start != null && DEVICE_START_TIME.before(systemConfig.latest_start)) {
+    if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
       restartSystem(false);
     }
   }
