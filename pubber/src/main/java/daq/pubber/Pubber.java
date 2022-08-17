@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
@@ -83,7 +84,6 @@ import udmi.schema.SystemState;
 public class Pubber {
 
   public static final int SCAN_DURATION_SEC = 10;
-  public static final String DISCOVERY_ID = "RANDOM_ID";
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -91,9 +91,6 @@ public class Pubber {
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-  private static final String POINTSET_TOPIC = "events/pointset";
-  private static final String SYSTEM_TOPIC = "events/system";
-  private static final String STATE_TOPIC = "state";
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
   private static final int MIN_REPORT_MS = 200;
@@ -127,10 +124,12 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final Date DEVICE_START_TIME = new Date();
+  private static final Date DEVICE_START_TIME = getRoundedStartTime();
   private static final int RESTART_EXIT_CODE = 192; // After exit, wrapper script should restart.
   private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
   private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
+  private static final AtomicInteger retriesRemaining = new AtomicInteger(1000);
+  private static final long RESTART_DELAY_MS = 1000;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -146,13 +145,12 @@ public class Pubber {
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
-  private Consumer<String> onDone;
+  private Function<String, Boolean> connectionDone;
   private boolean publishingLog;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
-
   /**
    * Start an instance from a configuration file.
    *
@@ -189,6 +187,12 @@ public class Pubber {
     } else {
       configuration.sitePath = sitePath;
     }
+  }
+
+  private static Date getRoundedStartTime() {
+    long timestamp = new Date().getTime();
+    // Remove ms so that rounded conversions preserve equality.
+    return new Date(timestamp - (timestamp % 1000));
   }
 
   private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
@@ -234,8 +238,10 @@ public class Pubber {
     }
     pubber.initialize();
     pubber.startConnection(deviceId -> {
-      LOG.info("Connection closed/finished " + deviceId);
-      pubber.terminate();
+      int retries = retriesRemaining.decrementAndGet();
+      LOG.info(String.format("Connection closed/finished for %s, %d retries remaining", deviceId,
+          retries));
+      return retries > 0 && pubber.considerRestart();
     });
   }
 
@@ -266,6 +272,7 @@ public class Pubber {
         pubber.terminate();
         LOG.error("Connection terminated, restarting listener");
         startFeedListener(projectId, siteName, feedName, serialNo);
+        return false;
       });
     } catch (Exception e) {
       LOG.error("Exception starting instance " + serialNo, e);
@@ -278,6 +285,17 @@ public class Pubber {
       configuration.options = new PubberOptions();
     }
     return configuration;
+  }
+
+  private boolean considerRestart() {
+    if (deviceConfig.system != null && (deviceConfig.system.last_start == null
+        || !deviceConfig.system.last_start.equals(DEVICE_START_TIME))) {
+      terminate();
+      return false;
+    }
+    safeSleep(RESTART_DELAY_MS); // Prevent thrashing of reconnects.
+    startConnection(connectionDone);
+    return true;
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -493,6 +511,8 @@ public class Pubber {
       deviceState.system.mode = SystemMode.ACTIVE;
     }
     if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
+      System.err.printf("Device start time %s before last config start %s, terminating.",
+          isoConvert(DEVICE_START_TIME), isoConvert(systemConfig.last_start));
       restartSystem(false);
     }
   }
@@ -500,7 +520,7 @@ public class Pubber {
   private void restartSystem(boolean restart) {
     deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
     publishStateMessage(true);
-    System.err.println("Restarting system with extreme prejudice, restart " + restart);
+    System.err.println("Stopping system with extreme prejudice, restart " + restart);
     System.err.flush();
     System.exit(restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE);
   }
@@ -539,13 +559,21 @@ public class Pubber {
     }
   }
 
-  private void startConnection(Consumer<String> onDone) throws InterruptedException {
-    this.onDone = onDone;
-    connect();
-    boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-    info("synchronized start config result " + result);
-    if (!result && mqttPublisher != null) {
-      mqttPublisher.close();
+  private void startConnection(Function<String, Boolean> connectionDone) {
+    try {
+      this.connectionDone = connectionDone;
+      connect();
+      boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
+      info("synchronized start config result " + result);
+      if (!result && mqttPublisher != null) {
+        mqttPublisher.close();
+        throw new RuntimeException("Failed mqtt connect");
+      }
+    } catch (Exception e) {
+      error("while waiting for connection start", e);
+      while (connectionDone.apply(configuration.deviceId)) {
+        warn("Retrying initial connection...");
+      }
     }
   }
 
@@ -635,8 +663,10 @@ public class Pubber {
       publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
-      if (onDone != null) {
-        onDone.accept(configuration.deviceId);
+      if (connectionDone != null) {
+        while (connectionDone.apply(configuration.deviceId)) {
+          warn("Retrying reconnect handler...");
+        }
       }
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
@@ -756,7 +786,7 @@ public class Pubber {
     try {
       disconnectMqtt();
       initializeMqtt();
-      startConnection(onDone);
+      startConnection(connectionDone);
     } catch (Exception e) {
       throw new RuntimeException("While redirecting connection endpoint", e);
     }
