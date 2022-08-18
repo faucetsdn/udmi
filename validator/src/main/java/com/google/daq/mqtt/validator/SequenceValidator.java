@@ -73,7 +73,7 @@ public abstract class SequenceValidator {
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
-  public static final int NORM_TIMEOUT_MS = 60 * 1000;
+  public static final int NORM_TIMEOUT_MS = 120 * 1000;
   public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
   protected static final Metadata deviceMetadata;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -709,13 +709,17 @@ public abstract class SequenceValidator {
 
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
     waitingCondition = "waiting for " + description;
-    info("start " + waitingCondition);
+    info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
     updateConfig();
     while (evaluator.get()) {
       receiveMessage();
     }
-    info("finished " + waitingCondition);
+    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
     waitingCondition = "nothing";
+  }
+
+  private String timeSinceStart() {
+    return (System.currentTimeMillis() - testStartTimeMs) / 1000 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
