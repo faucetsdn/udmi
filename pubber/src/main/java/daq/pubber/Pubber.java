@@ -45,7 +45,7 @@ import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
-import udmi.schema.BlobBlobsetConfig.Phase;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
@@ -779,7 +779,7 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && Phase.FINAL.equals(blobBlobsetConfig.phase)
+      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)
           && blobBlobsetConfig.base64 != null) {
         return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
       }

@@ -11,6 +11,14 @@
         "restart"
       ]
     },
+    "phase": {
+      "title": "BlobPhase",
+      "description": "Phase for the management of a configuration blob.",
+      "enum": [
+        "updating",
+        "final"
+      ]
+    },
     "blobsets": {
       "title": "System Blobsets",
       "description": "Predefined system blobsets",

@@ -59,6 +59,7 @@ class Common:
 
 
   SystemMode = SystemMode
+  BlobPhase = BlobPhase
   SystemBlobsets = SystemBlobsets
   Entry = Entry
 
