@@ -720,7 +720,7 @@ public abstract class SequenceValidator {
   }
 
   private String timeSinceStart() {
-    return (testStartTimeMs - System.currentTimeMillis()) / 60 + "s";
+    return (System.currentTimeMillis() - testStartTimeMs) / 1000 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
