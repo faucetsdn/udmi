@@ -1,8 +1,8 @@
 import { DeviceBuilder, Device } from './model/Device';
-import { isPointsetSubType, isSystemSubType, isValidationSubType } from './MessageUtils';
-import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from './model/UdmiMessage';
+import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../MessageUtils';
+import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from '../model/UdmiMessage';
 import { PointBuilder, Point } from './model/Point';
-import { Validation, ValidationBuilder } from './model/Validation';
+import { Validation, ValidationBuilder } from '../model/Validation';
 
 export class DeviceDocumentFactory {
   public createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
@@ -75,7 +75,7 @@ function buildDeviceDocumentFromPointset(
   return deviceBuilder.points(points).build();
 }
 
-function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
+export function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
   const pointValue = udmiMessage.data.points[pointCode];
 
   // we get the value from either the message or the existing point

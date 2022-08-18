@@ -1,5 +1,5 @@
-import { createDeviceDocument, DeviceDocumentFactory } from '../DeviceDocumentFactory';
-import { Device } from '../model/Device';
+import { createDeviceDocument, DeviceDocumentFactory } from '../../device/DeviceDocumentFactory';
+import { Device } from '../../device/model/Device';
 import {
   CONFIG,
   EVENT,
@@ -8,10 +8,10 @@ import {
   STATE,
   SYSTEM_SUB_FOLDER,
   VALIDATION_SUB_FOLDER,
-} from '../MessageUtils';
-import { UdmiMessage } from '../model/UdmiMessage';
-import { Point } from '../model/Point';
-import { Validation } from '../model/Validation';
+} from '../../MessageUtils';
+import { UdmiMessage } from '../../model/UdmiMessage';
+import { Point } from '../../device/model/Point';
+import { Validation } from '../../model/Validation';
 
 const name: string = 'name';
 const site: string = 'site-1';

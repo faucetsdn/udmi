@@ -1,6 +1,11 @@
 import { Point } from './Point';
-import { Validation } from './Validation';
-import { InvalidMessageError } from '../InvalidMessageError';
+import { Validation } from '../../model/Validation';
+import { InvalidMessageError } from '../../InvalidMessageError';
+
+export interface DeviceKey {
+  name: string;
+  site: string;
+}
 
 /**
  * Sample Device Document

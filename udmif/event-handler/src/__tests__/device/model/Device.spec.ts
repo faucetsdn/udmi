@@ -1,6 +1,6 @@
-import { Point } from '../../model/Point';
-import { DeviceBuilder } from '../../model/Device';
-import { Validation } from '../../model/Validation';
+import { Point } from '../../../device/model/Point';
+import { DeviceBuilder } from '../../../device/model/Device';
+import { Validation } from '../../../model/Validation';
 
 const id: string = 'some-id';
 const name: string = 'some-name';

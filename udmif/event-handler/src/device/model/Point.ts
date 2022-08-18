@@ -1,4 +1,4 @@
-import { InvalidMessageError } from "../InvalidMessageError";
+import { InvalidMessageError } from '../../InvalidMessageError';
 
 /**
  * Sample point.

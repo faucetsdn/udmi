@@ -1,5 +1,5 @@
 import { handleUdmiEvent } from '../index';
-import * as factory from '../DeviceDaoFactory';
+import * as dao from '../dao/DAO';
 import UdmiMessageHandler from '../UdmiMessageHandler';
 
 jest.mock('../UdmiMessageHandler');
@@ -28,7 +28,8 @@ describe('index.constructor', () => {
     jest.clearAllMocks();
 
     // arrange
-    jest.spyOn(factory, 'getDeviceDAO').mockImplementation(jest.fn());
+    jest.spyOn(dao, 'getDeviceDAO').mockImplementation(jest.fn());
+    jest.spyOn(dao, 'getSiteDAO').mockImplementation(jest.fn());
     jest.spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent').mockImplementation(handleUdmiEventMock);
   });
 

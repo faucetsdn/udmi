@@ -32,6 +32,7 @@
     "build": "tsc -p ."
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
+    "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write",
+    "sample_messages/**/*.json": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   }
 }

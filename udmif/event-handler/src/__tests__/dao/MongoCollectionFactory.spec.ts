@@ -1,4 +1,4 @@
-import { getDeviceDAO, getUri } from '../DeviceDaoFactory';
+import { getUri } from '../../dao/MongoCollectionProvider';
 import { MongoClient } from 'mongodb';
 
 const mockClient = jest.fn().mockImplementation(() => {
@@ -16,14 +16,7 @@ beforeEach(() => {
   MongoClient.connect = mockClient;
 });
 
-describe('DeviceDaoFactory.getDeviceDAO()', () => {
-  test('returns a DeviceDao object', () => {
-    expect(getDeviceDAO()).toBeTruthy();
-  });
-});
-
-describe('DeviceDaoFactory.getUri()', () => {
-
+describe('MongoCollectionFactory.getUri()', () => {
   // take a backup of the environment prior to running the tests
   const ENV_BACKUP = { ...process.env };
 

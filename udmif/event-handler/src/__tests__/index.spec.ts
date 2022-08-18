@@ -1,5 +1,5 @@
 import { handleUdmiEvent } from '../index';
-import * as factory from '../DeviceDaoFactory';
+import * as DAO from '../dao/DAO';
 import UdmiMessageHandler from '../UdmiMessageHandler';
 
 jest.mock('../UdmiMessageHandler');
@@ -19,7 +19,8 @@ const event = {
 };
 
 describe('index', () => {
-  let factorySpy;
+  let deviceFactorySpy;
+  let siteFactorySpy;
   let handleUdmiEventSpy;
   const mockHandleEvent = jest.fn();
 
@@ -27,7 +28,8 @@ describe('index', () => {
     jest.clearAllMocks();
 
     // arrange
-    factorySpy = jest.spyOn(factory, 'getDeviceDAO').mockImplementation(jest.fn());
+    deviceFactorySpy = jest.spyOn(DAO, 'getDeviceDAO').mockImplementation(jest.fn());
+    siteFactorySpy = jest.spyOn(DAO, 'getSiteDAO').mockImplementation(jest.fn());
     handleUdmiEventSpy = jest
       .spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent')
       .mockImplementation(mockHandleEvent);
@@ -38,8 +40,9 @@ describe('index', () => {
     await handleUdmiEvent(event, {});
 
     // assert
-    expect(factorySpy).toHaveBeenCalled();
     expect(handleUdmiEventSpy).toHaveBeenCalled();
+    expect(deviceFactorySpy).toHaveBeenCalled();
+    expect(siteFactorySpy).toHaveBeenCalled();
   });
 
   test('Exception is logged', async () => {
