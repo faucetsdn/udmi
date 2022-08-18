@@ -99,34 +99,56 @@ public class MqttPublisher {
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    Map<String, String> clientIdParts = parseClientId(configuration.endpoint.client_id);
-    this.projectId = clientIdParts.get("projectId");
-    this.cloudRegion = clientIdParts.get("cloudRegion");
-    this.registryId = clientIdParts.get("registryId");
+    ClientInfo clientIdParts = parseClientId(configuration.endpoint.client_id);
+    this.projectId = clientIdParts.projectId;
+    this.cloudRegion = clientIdParts.cloudRegion;
+    this.registryId = clientIdParts.registryId;
     this.onError = onError;
     validateCloudIotOptions();
   }
 
-  public static Map<String, String> parseClientId(String client_id) {
-    if (client_id == null) {
+  static class ClientInfo {
+    String projectId;
+    String cloudRegion;
+    String registryId;
+    String deviceId;
+  }
+
+  /**
+   * Parse a GCP clientId string into component parts including project, etc...
+   *
+   * @param clientId client id to parse
+   * @return bucket of parameters
+   */
+  public static ClientInfo parseClientId(String clientId) {
+    if (clientId == null) {
       throw new IllegalArgumentException("client_id not specified");
     }
-    Matcher matcher = ID_PATTERN.matcher(client_id);
+    Matcher matcher = ID_PATTERN.matcher(clientId);
     if (!matcher.matches()) {
       throw new IllegalArgumentException(
-          String.format("client_id %s does not match pattern %s", client_id, ID_PATTERN.pattern()));
+          String.format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
     }
-    return ImmutableMap.of(
-        "projectId", matcher.group(1),
-        "cloudRegion", matcher.group(2),
-        "registryId", matcher.group(3),
-        "deviceId", matcher.group(4)
-    );
+    ClientInfo clientInfo = new ClientInfo();
+    clientInfo.projectId = matcher.group(1);
+    clientInfo.cloudRegion = matcher.group(2);
+    clientInfo.registryId = matcher.group(3);
+    clientInfo.deviceId = matcher.group(4);
+    return clientInfo;
   }
 
   public static String getClientId(String projectId, String cloudRegion, String registryId,
       String deviceId) {
     return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
+  }
+
+  private String getClientId(String deviceId) {
+    // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
+    // Google Cloud IoT, it must be in the format below.
+    if (configuration.endpoint.client_id != null) {
+      return configuration.endpoint.client_id;
+    }
+    return getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
   void publish(String deviceId, String topic, Object data, Runnable callback) {
@@ -311,15 +333,6 @@ public class MqttPublisher {
       throw new IllegalArgumentException(
           "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
     }
-  }
-
-  private String getClientId(String deviceId) {
-    // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
-    // Google Cloud IoT, it must be in the format below.
-    if (configuration.endpoint.client_id != null) {
-      return configuration.endpoint.client_id;
-    }
-    return getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
   private String getBrokerUrl() {

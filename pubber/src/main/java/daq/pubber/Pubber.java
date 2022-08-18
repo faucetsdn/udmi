@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
+import daq.pubber.MqttPublisher.ClientInfo;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -162,10 +163,9 @@ public class Pubber {
     try {
       configuration = sanitizeConfiguration(
           OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
-      Map<String, String> clientIdMap = MqttPublisher.parseClientId(
-          configuration.endpoint.client_id);
-      projectId = clientIdMap.get("projectId");
-      deviceId = clientIdMap.get("deviceId");
+      ClientInfo clientInfo = MqttPublisher.parseClientId(configuration.endpoint.client_id);
+      projectId = clientInfo.projectId;
+      deviceId = clientInfo.deviceId;
     } catch (Exception e) {
       executor.shutdown();
       throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
@@ -768,8 +768,7 @@ public class Pubber {
   }
 
   private String getClientId(String forRegistry) {
-    String cloudRegion = MqttPublisher.parseClientId(configuration.endpoint.client_id)
-        .get("cloudRegion");
+    String cloudRegion = MqttPublisher.parseClientId(configuration.endpoint.client_id).cloudRegion;
     return MqttPublisher.getClientId(projectId, cloudRegion, forRegistry, deviceId);
   }
 
