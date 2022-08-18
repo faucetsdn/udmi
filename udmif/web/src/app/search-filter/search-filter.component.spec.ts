@@ -41,9 +41,7 @@ describe('SearchFilterComponent', () => {
       imports: [SearchFilterModule, BrowserAnimationsModule],
       providers: [{ provide: DevicesService, useValue: mockDevicesService }],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(SearchFilterComponent);
     component = fixture.componentInstance;
     component.fields = { name: 'getDeviceNames', make: 'getDeviceMakes' };
