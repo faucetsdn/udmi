@@ -4,4 +4,5 @@ export interface SiteKey {
 
 export interface Site {
   name: string;
+  errorDevices?: string[];
 }

@@ -39,6 +39,7 @@ describe('SiteDocumentFactory.getSiteDocument', () => {
     );
 
     const siteDocument: Site = new SiteDocumentFactory().getSiteDocument(event);
-    expect(siteDocument).toEqual({ name: SITE_ID });
+    const expectedSiteDocumet: Site = { name: SITE_ID, errorDevices: ['AHU-1'] };
+    expect(siteDocument).toEqual(expectedSiteDocumet);
   });
 });

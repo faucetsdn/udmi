@@ -1,6 +1,7 @@
 import { handleUdmiEvent } from '../index';
 import * as DAO from '../dao/DAO';
 import UdmiMessageHandler from '../UdmiMessageHandler';
+import { InvalidMessageError } from '../InvalidMessageError';
 
 jest.mock('../UdmiMessageHandler');
 
@@ -50,6 +51,20 @@ describe('index', () => {
     jest.spyOn(global.console, 'error');
     mockHandleEvent.mockImplementation(() => {
       throw Error('some error');
+    });
+
+    // act
+    await handleUdmiEvent(event, {});
+
+    // assert
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  test('InvalidMessageError is logged', async () => {
+    // arrange
+    jest.spyOn(global.console, 'error');
+    mockHandleEvent.mockImplementation(() => {
+      throw new InvalidMessageError('some error');
     });
 
     // act

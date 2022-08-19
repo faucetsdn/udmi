@@ -1,13 +1,13 @@
 {
-    "attributes": {
-        "cloudRegion": "us-central1",
-        "deviceId": "_validator",
-        "deviceRegistryId": "ZZ-TRI-FECTA",
-        "projectId": "labs-333619",
-        "subFolder": "validation",
-        "subType": "event"
-    },
-    "data": "eyJ0aW1lc3RhbXAiOiIyMDIyLTA4LTAzVDE3OjI4OjUwWiIsInZlcnNpb24iOiIxLjMuMTQiLCJlcnJvcnMiOltdLCJzdW1tYXJ5Ijp7ImNvcnJlY3RfZGV2aWNlcyI6WyJBSFUtMSJdLCJleHRyYV9kZXZpY2VzIjpbXSwibWlzc2luZ19kZXZpY2VzIjpbIkFIVS0yMiIsIkdBVC0xMjMiLCJTTlMtNCJdLCJlcnJvcl9kZXZpY2VzIjpbXX0sImRldmljZXMiOnt9fQo=",
-    "messageId": "5260630364563760",
-    "publishTime": "2022-08-03T17:29:00.822Z"
+  "attributes": {
+    "cloudRegion": "us-central1",
+    "deviceId": "_validator",
+    "deviceRegistryId": "ZZ-TRI-FECTA",
+    "projectId": "labs-333619",
+    "subFolder": "validation",
+    "subType": "event"
+  },
+  "data": "e3ZlcnNpb246ICcxLjMuMTQnLHRpbWVzdGFtcDogJzIwMTgtMDgtMjZUMjE6Mzk6MjkuMzY0WicsbGFzdF91cGRhdGVkOiAnMjAyMi0wNy0xNlQxODoyNzoxOVonLHN1bW1hcnk6IHtjb3JyZWN0X2RldmljZXM6IFsnQUhVLTIyJ10sZXh0cmFfZGV2aWNlczogW10sbWlzc2luZ19kZXZpY2VzOiBbJ0dBVC0xMjMnLCAnU05TLTQnXSxlcnJvcl9kZXZpY2VzOiBbJ0FIVS0xJ10sfSxkZXZpY2VzOiB7J0FIVS0xJzoge2xhc3Rfc2VlbjogJzIwMjItMDctMTZUMTg6Mjc6MTlaJyxvbGRlc3RfbWFyazogJzIwMjItMDctMTZUMTg6Mjc6MTlaJyxzdGF0dXM6IHttZXNzYWdlOiAnVGlja2l0eSBCb28nLGNhdGVnb3J5OiAnc3lzdGVtLmNvbmZpZy5hcHBseScsdGltZXN0YW1wOiAnMjAxOC0wOC0yNlQyMTozOTozMC4zNjRaJyxsZXZlbDogNjAwLH0sfSx9Cg==",
+  "messageId": "5260630364563760",
+  "publishTime": "2022-08-03T17:29:00.822Z"
 }

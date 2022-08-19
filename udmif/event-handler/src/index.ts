@@ -15,7 +15,6 @@ let messageHandler: UdmiMessageHandler;
  * Triggered from a message on a Cloud Pub/Sub topic.
  *
  * @param {!Object} event Event payload.
- * @param {!Object} context Metadata for the event.
  */
 export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
@@ -26,7 +25,7 @@ export const handleUdmiEvent: EventFunction = async (event: any) => {
       messageHandler = new UdmiMessageHandler(deviceHandler, siteHandler);
     }
     const udmiMessage: UdmiMessage = decodeEventData(event);
-    await messageHandler.handleUdmiEvent(udmiMessage);
+    messageHandler.handleUdmiEvent(udmiMessage);
   } catch (e) {
     if (e instanceof InvalidMessageError) {
       console.error(e.message);

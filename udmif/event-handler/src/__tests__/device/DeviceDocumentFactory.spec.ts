@@ -1,4 +1,4 @@
-import { createDeviceDocument, DeviceDocumentFactory } from '../../device/DeviceDocumentFactory';
+import { buildPoint, createDeviceDocument, DeviceDocumentFactory } from '../../device/DeviceDocumentFactory';
 import { Device } from '../../device/model/Device';
 import {
   CONFIG,
@@ -110,7 +110,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, value: '78', meta: { code: faps }, state },
+      getFapsPoint('78', null),
       { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
@@ -142,7 +142,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, units: NO_UNITS, meta: { code: faps, units: NO_UNITS }, state },
+      getFapsPoint(null, NO_UNITS),
       { name: fdpsp, id: fdpsp, units: 'Bars', meta: { code: fdpsp, units: 'Bars' }, state },
       { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' }, state },
     ];
@@ -204,7 +204,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
 
   test('merges a device document with pointset', () => {
     // existing point has units and a value
-    existingPoints.push({ name: faps, id: faps, value: '70', units: 'Bars', meta: { code: faps, units: 'Bars' } });
+    existingPoints.push(getFapsPoint('70', 'Bars'));
 
     // arrange
     const inputMessage: UdmiMessage = {
@@ -220,7 +220,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     };
 
     const expectedPoints: Point[] = [
-      { name: faps, id: faps, value: '78', units: 'Bars', meta: { code: faps, units: 'Bars' }, state },
+      getFapsPoint('78', 'Bars'),
       { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
@@ -230,6 +230,49 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
     // act and assert
     expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
   });
+
+  test('uses existing point values if none are passed in', () => {
+    // existing point has units and a value
+    const point: Point = getFapsPoint('70', 'Bars');
+
+    // arrange
+    const inputMessage: UdmiMessage = {
+      attributes: { ...BASIC_POINTSET_ATTRIBUTES },
+      data: {
+        timestamp: '2022-04-25T17:00:26Z',
+        points: {
+          [faps]: {},
+        },
+      },
+    };
+
+    const resultingPoint = buildPoint(inputMessage, point, faps);
+    expect(resultingPoint).toEqual({
+      id: 'filter_alarm_pressure_status',
+      meta: {
+        code: 'filter_alarm_pressure_status',
+        units: 'Bars',
+      },
+      name: 'filter_alarm_pressure_status',
+      state: '',
+      units: 'Bars',
+      value: '70',
+    });
+  });
+
+  function getFapsPoint(value: string, units: string): Point {
+    const point: Point = { name: faps, id: faps };
+    point.state = state;
+    point.meta = { code: faps };
+    if (value) {
+      point.value = value;
+    }
+    if (units) {
+      point.units = units;
+      point.meta.units = units;
+    }
+    return point;
+  }
 });
 
 describe('DeviceDocumentFactory.createDeviceDocument.validation', () => {
