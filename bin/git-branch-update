@@ -1,0 +1,75 @@
+#!/bin/bash -e
+#
+# Automatically update configured branch dependencies.
+#
+# Configure with parent branch for local tracking, e.g.:
+#   git config branch.$branch.parent master
+#
+# Configure with description about what branch is for, e.g.:
+#   git config branch.$branch.description "Dependence changes"
+#
+
+# TODO: Maybe make upstream origin default remote configurable.
+origin=origin
+
+changes=$(git status -s)
+if [[ -n $changes ]]; then
+    echo Working branch not clean, please revert/commit/stash before proceeding.
+    false
+fi
+
+main=$(git config upstream.main) || true
+if [[ -z $main ]]; then
+    echo "Upstream main branch not defined, please set with (e.g.) 'git config upstream.main master'"
+    false
+fi
+
+upstream=$(git config upstream.remote) || true
+if [[ -z $upstream ]]; then
+    echo "Upstream remote not defined, please set with (e.g.) 'git config upstream.remote faucet'"
+    false
+fi
+
+echo Fetching upstream remote $upstream $main branch...
+git fetch -q $upstream $main
+
+echo Fetching upstream origin...
+git fetch -q $origin
+
+echo Updating local $main branch...
+git switch -q $main
+git merge -n -q $upstream/$main
+
+git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
+while read local remote; do
+    parent=$(git config branch.$local.parent) || true
+
+    if [[ -n $parent ]]; then
+        pmsg=" (parent not configured, try e.g. 'git config branch.$local.parent $main')"
+    else
+        pmsg=
+    fi
+    
+    echo Updating branch $local$pmsg...
+    git switch -q $local
+    
+    if [[ -n $parent ]]; then
+        mergebase=$(git merge-base $local $parent)
+        mergediff=$(git diff $parent $mergebase | wc -l)
+        if [[ $mergediff -ne 0 ]]; then
+            echo "  Merge from local $parent..."
+            git merge -n -q $parent
+        fi
+    fi
+    
+    if [[ -n $remote ]]; then
+        difflines=$(git diff $remote | wc -l)
+        if [[ $difflines -ne 0 ]]; then
+            echo "  Push to upstream $remote..."
+            git push
+        fi
+    fi
+done
+
+echo Returning to main branch $master...
+git switch -q $main

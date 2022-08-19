@@ -10,9 +10,8 @@
 #
 
 git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
-while read local remote
-do
-    if [ -n "$remote" ]; then
+  while read local remote; do
+    if [[ -n $remote ]]; then
 	git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || continue
 	LEFT_AHEAD=$(grep -c '^<' /tmp/git_upstream_status_delta)
 	RIGHT_AHEAD=$(grep -c '^>' /tmp/git_upstream_status_delta)
@@ -30,11 +29,8 @@ do
     fi
 
     parent=$(git config branch.$local.parent)
-    if [[ -z $parent && $local != master ]]; then
-        parent=master
-    fi
-    
-    if [ -n "$parent" ]; then
+
+    if [[ -n $parent ]]; then
         LEFT_PARENT=$(git rev-list --left-only --count $local...$parent)
         RIGHT_PARENT=$(git rev-list --right-only --count $local...$parent)
 	if [ "$LEFT_PARENT" != 0 -a "$RIGHT_PARENT" != 0 ]; then
@@ -52,7 +48,7 @@ do
     
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
-        description="git config branch.$local.description XXX"
+        description='(git config branch.$local.description "Test branch")'
     fi
     
     printf "%-15s%-30s%s\n" $local "$OFFSET$POFF" "$description"
