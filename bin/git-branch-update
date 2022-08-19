@@ -1,0 +1,94 @@
+#!/bin/bash -e
+#
+# Automatically update configured branch dependencies.
+#
+# Configure with parent branch for local tracking, e.g.:
+#   git config branch.$branch.parent master
+#
+# Configure with description about what branch is for, e.g.:
+#   git config branch.$branch.description "Dependence changes"
+#
+
+# TODO: Maybe make upstream origin default remote configurable.
+origin=origin
+
+current=$(git branch --show-current)
+
+changes=$(git status -s)
+if [[ -n $changes ]]; then
+    echo Working branch $current not clean, please revert/commit/stash before proceeding.
+    false
+fi
+
+main=$(git config upstream.main) || true
+if [[ -z $main ]]; then
+    echo "Upstream main branch not defined, please set with (e.g.) 'git config upstream.main master'"
+    false
+fi
+
+upstream=$(git config upstream.remote) || true
+if [[ -z $upstream ]]; then
+    echo "Upstream remote not defined, please set with (e.g.) 'git config upstream.remote faucet'"
+    false
+fi
+
+echo Fetching upstream remote $upstream $main branch...
+git fetch -q $upstream $main
+
+echo Fetching upstream origin...
+git fetch -q $origin
+
+echo Updating local $main branch...
+git switch -q $main
+git merge -n -q $upstream/$main
+
+git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
+while read local remote; do
+    parent=$(git config branch.$local.parent) || true
+
+    pmsg=
+    if [[ -z $parent ]]; then
+        pmsg=" (parent not configured, try e.g. 'git config branch.$local.parent $main')"
+    fi
+    
+    if [[ -z $pmsg && -z $remote ]]; then
+        pmsg=" (remote not configured, use `git push` to configure)"
+    fi
+    
+    echo Updating branch $local$pmsg...
+    git switch -q $local
+    
+    if [[ -n $parent ]]; then
+        mergebase=$(git merge-base $local $parent)
+        mergediff=$(git diff $parent $mergebase | wc -l)
+        if [[ $mergediff -ne 0 ]]; then
+            echo "  Merge from local $parent..."
+            git merge -n -q $parent
+        fi
+
+        masterdiff=$(git diff $parent | wc -l) || true
+        if [[ $local != $parent && $masterdiff -eq 0 ]]; then
+            echo "  git branch -D $local  # Branch is identical, consider deleting"
+        fi
+    fi
+
+    if [[ -n $remote ]]; then
+	git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || true
+	LEFT_AHEAD=$(grep -c '^<' /tmp/git_upstream_status_delta) || true
+	RIGHT_AHEAD=$(grep -c '^>' /tmp/git_upstream_status_delta) || true
+
+        if [[ $RIGHT_AHEAD != 0 ]]; then
+            echo "  Disjoint upstream, merging down..."
+            git pull
+        fi
+        
+        difflines=$(git diff $remote | wc -l)
+        if [[ $LEFT_AHEAD != 0 ]]; then
+            echo "  Push to upstream $remote..."
+            git push
+        fi
+    fi
+done
+
+echo Returning to local branch $current...
+git switch -q $current
