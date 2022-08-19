@@ -396,7 +396,7 @@ public class Pubber {
     }
   }
 
-  private void safeSleep(int duration) {
+  private void safeSleep(long duration) {
     try {
       Thread.sleep(duration);
     } catch (InterruptedException e) {
@@ -475,8 +475,8 @@ public class Pubber {
     try {
       updatePoints();
       sendDeviceMessage();
-      flushDirtyState();
       deferredConfigActions();
+      flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
       terminate();
@@ -782,12 +782,14 @@ public class Pubber {
     try {
       endpointState.phase = BlobPhase.UPDATING;
       endpointState.status = null;
+      publishStateMessage(true);
       disconnectMqtt();
       initializeMqtt();
       startConnection(connectionDone);
       endpointState.phase = BlobPhase.FINAL;
     } catch (Exception e) {
       endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
+      publishStateMessage();
       throw new RuntimeException("While redirecting connection endpoint", e);
     }
   }
@@ -1141,11 +1143,20 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
+    publishStateMessage(false);
+  }
+
+  private void publishStateMessage(boolean synchronous) {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      warn(String.format("State defer %dms", delay));
-      markStateDirty(delay);
-      return;
+      if (synchronous) {
+        warn(String.format("State update delay %dms", delay));
+        safeSleep(delay);
+      } else {
+        warn(String.format("State update defer %dms", delay));
+        markStateDirty(delay);
+        return;
+      }
     }
     deviceState.timestamp = new Date();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),

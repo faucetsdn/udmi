@@ -1,0 +1,5 @@
+{
+  "protocol": "mqtt",
+  "client_id": "projects/bos-corpops-testing/locations/us-central1/registries/UK-LON-GLAB/devices/FCU-102",
+  "hostname": "mqtt.googleapis.com"
+}
