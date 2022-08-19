@@ -1,0 +1,49 @@
+#!/bin/bash -e
+#
+# Automatically check remote branches
+#
+# Assumes remotes are already updated (e.g. using git-branch-update)
+#
+
+main=master
+
+git remote | while read remote; do
+    echo Updating/pruning remmote $remote...
+    git fetch -p $remote
+done
+
+echo Checking local remote references...
+git branch -a | while read branch; do
+    leader=${branch#remotes/}
+    if [[ $leader == $branch ]]; then
+        continue  # Not a remote branch, so skip...
+    fi
+    pointer=${leader#* -> }
+    if [[ $pointer != $leader ]]; then
+        continue  # Branch reference, not an actual branch...
+    fi
+    remote=${leader%%/*}
+    branch=${leader#$remote/}
+
+    if git branch | fgrep $branch > /dev/null; then
+        lremote=$(git config branch.$branch.remote) || true
+        if [[ -z $lremote ]]; then
+            echo "  git branch --set-upstream-to=$leader $branch  # Reconnect orphaned remote branch"
+        fi
+        continue  # Branch exists locally, ignore remote...
+    fi
+
+    rbranch=$remote/$branch
+    if [[ $rbranch != $leader ]]; then
+        echo huh
+        false
+    fi
+
+    mergebase=$(git merge-base $main $leader)
+    diffcount=$(git diff $leader $mergebase | wc -l)
+    if [[ $diffcount -eq 0 ]]; then
+        echo "  git push $remote -d $branch  # Delete branch, has remote parity."
+    else
+        echo "  git diff $leader $mergebase  # See remote branch orphaned contents."
+    fi
+done

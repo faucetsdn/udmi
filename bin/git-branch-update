@@ -68,7 +68,7 @@ while read local remote; do
 
         masterdiff=$(git diff $parent | wc -l) || true
         if [[ $local != $parent && $masterdiff -eq 0 ]]; then
-            echo "  git branch -D $local  # Branch is identical, consider deleting"
+            echo "  git branch -D $local  # Branch is identical, use to delete"
         fi
     fi
 
@@ -79,16 +79,16 @@ while read local remote; do
 
         if [[ $RIGHT_AHEAD != 0 ]]; then
             echo "  Disjoint upstream, merging down..."
-            git pull
+            git pull -q
         fi
         
         difflines=$(git diff $remote | wc -l)
         if [[ $LEFT_AHEAD != 0 ]]; then
             echo "  Push to upstream $remote..."
-            git push
+            git push -q
         fi
     fi
 done
 
-echo Returning to local branch $current...
+echo Returning to local branch $current.
 git switch -q $current
