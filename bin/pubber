@@ -48,6 +48,7 @@ else
     cat <<EOF > /tmp/pubber_config.json
 {
     "endpoint": {
+      "protocol": "mqtt",
       "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
       "hostname": "mqtt.googleapis.com"
     },

@@ -5,6 +5,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": true,
   "properties": {
+    "protocol": {
+      "enum": [
+        "mqtt"
+      ]
+    },
     "hostname": {
       "type": "string"
     },
@@ -17,6 +22,7 @@
     }
   },
   "required": [
+    "protocol",
     "hostname",
     "client_id"
   ]

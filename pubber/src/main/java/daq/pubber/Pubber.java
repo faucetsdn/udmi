@@ -1,8 +1,10 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -163,6 +165,7 @@ public class Pubber {
     try {
       configuration = sanitizeConfiguration(
           OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
+      checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
       ClientInfo clientInfo = MqttPublisher.parseClientId(configuration.endpoint.client_id);
       projectId = clientInfo.projectId;
       deviceId = clientInfo.deviceId;
@@ -1099,7 +1102,7 @@ public class Pubber {
     }
   }
 
-  private void publishStateMessage() {
+  private void publishStateM.essage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(String.format("State defer %dms", delay));
