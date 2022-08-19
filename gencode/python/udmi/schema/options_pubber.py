@@ -1,4 +1,4 @@
-"""Generated class for pubber_options.json"""
+"""Generated class for options_pubber.json"""
 
 
 class PubberOptions:

@@ -47,9 +47,9 @@ sleep 20
 
 cat <<EOF > out/endpoint.json
 {
-  "projectId": "$project_id",
-  "registryId": "reconfigure",
-  "cloudRegion": "$cloud_region"
+  "protocol": "mqtt",
+  "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
+  "hostname": "mqtt.googleapis.com"
 }
 EOF
 
