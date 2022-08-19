@@ -48,7 +48,7 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
     
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
-        description='(git config branch.$local.description "Test branch")'
+        description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
     
     printf "%-15s%-30s%s\n" $local "$OFFSET$POFF" "$description"

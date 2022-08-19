@@ -12,9 +12,11 @@
 # TODO: Maybe make upstream origin default remote configurable.
 origin=origin
 
+current=$(git branch --show-current)
+
 changes=$(git status -s)
 if [[ -n $changes ]]; then
-    echo Working branch not clean, please revert/commit/stash before proceeding.
+    echo Working branch $current not clean, please revert/commit/stash before proceeding.
     false
 fi
 
@@ -44,10 +46,13 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
 while read local remote; do
     parent=$(git config branch.$local.parent) || true
 
-    if [[ -n $parent ]]; then
+    pmsg=
+    if [[ -z $parent ]]; then
         pmsg=" (parent not configured, try e.g. 'git config branch.$local.parent $main')"
-    else
-        pmsg=
+    fi
+    
+    if [[ -z $pmsg && -z $remote ]]; then
+        pmsg=" (remote not configured, use `git push` to configure)"
     fi
     
     echo Updating branch $local$pmsg...
@@ -60,16 +65,30 @@ while read local remote; do
             echo "  Merge from local $parent..."
             git merge -n -q $parent
         fi
+
+        masterdiff=$(git diff $parent | wc -l) || true
+        if [[ $local != $parent && $masterdiff -eq 0 ]]; then
+            echo "  git branch -D $local  # Branch is identical, consider deleting"
+        fi
     fi
-    
+
     if [[ -n $remote ]]; then
+	git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || true
+	LEFT_AHEAD=$(grep -c '^<' /tmp/git_upstream_status_delta) || true
+	RIGHT_AHEAD=$(grep -c '^>' /tmp/git_upstream_status_delta) || true
+
+        if [[ $RIGHT_AHEAD != 0 ]]; then
+            echo "  Disjoint upstream, merging down..."
+            git pull
+        fi
+        
         difflines=$(git diff $remote | wc -l)
-        if [[ $difflines -ne 0 ]]; then
+        if [[ $LEFT_AHEAD != 0 ]]; then
             echo "  Push to upstream $remote..."
             git push
         fi
     fi
 done
 
-echo Returning to main branch $master...
-git switch -q $main
+echo Returning to local branch $current...
+git switch -q $current
