@@ -151,9 +151,13 @@ public class MqttPublisher {
     return getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
+  boolean isActive() {
+    return !publisherExecutor.isShutdown();
+  }
+
   void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
-    if (publisherExecutor.isShutdown()) {
+    if (!isActive()) {
       throw new RuntimeException("Publisher shutdown.");
     }
     debug("Publishing in background " + topic);
