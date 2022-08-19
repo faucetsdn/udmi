@@ -19,7 +19,7 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _parse_: (**DEBUG**) Parsing a received message
     * _apply_: (**NOTICE**) Application of a parsed config message
   * _network_: Network (IP) message handling
-    * _connect_: (**NOTICE**) Connected to the network
+    * _connection_: (**NOTICE**) Connected to the network
     * _disconnect_: (**NOTICE**) Disconnected from a network
   * _auth_: Authentication to local application (e.g. web server, SSH)
     * _login_: (**NOTICE**) Successful login. The entry message should include the username and application
@@ -41,6 +41,6 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _describe_: (**INFO**) Relating to describing a particular point
 * _blobset_: Handling update of device data blobs
   * _blob_: Conditions specific to an individual blob
-    * _received_: (**DEBUG**) Request for an update has been received
-    * _fetched_: (**DEBUG**) Update blob has been successfully fetched
-    * _applied_: (**NOTICE**) Update has been successfully applied
+    * _receive_: (**DEBUG**) About receiving a blob update
+    * _fetch_: (**DEBUG**) Fetching a blob update
+    * _apply_: (**NOTICE**) Applying a blob update

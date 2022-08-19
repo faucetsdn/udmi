@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import daq.pubber.MqttPublisher;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class SiteModel {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  private static final String DEFAULT_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;
@@ -36,10 +38,12 @@ public class SiteModel {
     this.sitePath = sitePath;
   }
 
-  public static EndpointConfiguration extractEndpointConfig(CloudIotConfig cloudIotConfig) {
+  public static EndpointConfiguration extractEndpointConfig(String projectId,
+      CloudIotConfig cloudIotConfig, String deviceId) {
     EndpointConfiguration endpoint = new EndpointConfiguration();
-    endpoint.registryId = cloudIotConfig.registry_id;
-    endpoint.cloudRegion = cloudIotConfig.cloud_region;
+    endpoint.client_id = MqttPublisher.getClientId(projectId,
+        cloudIotConfig.cloud_region, cloudIotConfig.registry_id, deviceId);
+    endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
     return endpoint;
   }
 
@@ -54,7 +58,7 @@ public class SiteModel {
 
   public static EndpointConfiguration makeEndpointConfig(Envelope attributes) {
     CloudIotConfig cloudIotConfig = makeCloudIotConfig(attributes);
-    return extractEndpointConfig(cloudIotConfig);
+    return extractEndpointConfig(attributes.projectId, cloudIotConfig, attributes.deviceId);
   }
 
   private Set<String> getAllDevices() {
@@ -89,14 +93,13 @@ public class SiteModel {
     allMetadata.forEach(consumer);
   }
 
-  private void loadEndpointConfig(String projectId) {
+  private void loadEndpointConfig(String projectId, String deviceId) {
     Preconditions.checkState(sitePath != null,
         "sitePath not defined in configuration");
     File cloudConfig = new File(new File(sitePath), "cloud_iot_config.json");
     try {
-      endpointConfig = extractEndpointConfig(
-          OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class));
-      endpointConfig.projectId = projectId;
+      endpointConfig = extractEndpointConfig(projectId,
+          OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class), deviceId);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
@@ -106,8 +109,8 @@ public class SiteModel {
     return endpointConfig;
   }
 
-  public void initialize(String projectId) {
-    loadEndpointConfig(projectId);
+  public void initialize(String projectId, String deviceId) {
+    loadEndpointConfig(projectId, deviceId);
     loadAllDeviceMetadata();
   }
 

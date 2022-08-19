@@ -59,9 +59,9 @@ class Common:
 
 
   SystemMode = SystemMode
+  BlobPhase = BlobPhase
   SystemBlobsets = SystemBlobsets
   Entry = Entry
-  EndpointConfiguration = EndpointConfiguration
 
   def __init__(self):
     pass
