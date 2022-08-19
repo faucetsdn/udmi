@@ -4,7 +4,7 @@
   "additionalProperties": true,
   "properties": {
     "endpoint": {
-      "$ref": "file:common.json#/definitions/endpoint"
+      "$ref": "file:configuration_endpoint.json#"
     },
     "deviceId": {
       "type": "string"
@@ -33,7 +33,7 @@
       "note": "Should be type byte[], which is not supported, so fall-back to generic default object"
     },
     "options": {
-      "$ref": "file:pubber_options.json"
+      "$ref": "file:options_pubber.json"
     }
   }
 }

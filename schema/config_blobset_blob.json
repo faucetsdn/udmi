@@ -5,9 +5,7 @@
   "additionalProperties": false,
   "properties": {
     "phase": {
-      "enum": [
-        "final"
-      ]
+      "$ref": "file:common.json#/definitions/phase"
     },
     "content_type": {
       "type": "string"
@@ -22,11 +20,12 @@
     },
     "sha256": {
       "type": "string",
+      "description": "Expected hash of the oded content",
       "pattern": "^[0-9a-f]{64}$"
     }
   },
   "oneOf": [
-    { "required": ["content_type", "base64"] },
-    { "required": ["url", "sha256"] }
+    { "required": ["content_type", "base64", "phase"] },
+    { "required": ["url", "sha256", "phase"] }
   ]
 }

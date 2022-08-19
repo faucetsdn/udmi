@@ -46,9 +46,9 @@ public class Category {
     static { LEVEL.put(SYSTEM_CONFIG_APPLY, NOTICE); }
 
     // Connected to the network
-    public static final String SYSTEM_NETWORK_CONNECT = "system.network.connect";
-    public static final Level SYSTEM_NETWORK_CONNECT_LEVEL = NOTICE;
-    static { LEVEL.put(SYSTEM_NETWORK_CONNECT, NOTICE); }
+    public static final String SYSTEM_NETWORK_CONNECTION = "system.network.connection";
+    public static final Level SYSTEM_NETWORK_CONNECTION_LEVEL = NOTICE;
+    static { LEVEL.put(SYSTEM_NETWORK_CONNECTION, NOTICE); }
 
     // Disconnected from a network
     public static final String SYSTEM_NETWORK_DISCONNECT = "system.network.disconnect";
@@ -110,18 +110,18 @@ public class Category {
     public static final Level DISCOVERY_POINT_DESCRIBE_LEVEL = INFO;
     static { LEVEL.put(DISCOVERY_POINT_DESCRIBE, INFO); }
 
-    // Request for an update has been received
-    public static final String BLOBSET_BLOB_RECEIVED = "blobset.blob.received";
-    public static final Level BLOBSET_BLOB_RECEIVED_LEVEL = DEBUG;
-    static { LEVEL.put(BLOBSET_BLOB_RECEIVED, DEBUG); }
+    // About receiving a blob update
+    public static final String BLOBSET_BLOB_RECEIVE = "blobset.blob.receive";
+    public static final Level BLOBSET_BLOB_RECEIVE_LEVEL = DEBUG;
+    static { LEVEL.put(BLOBSET_BLOB_RECEIVE, DEBUG); }
 
-    // Update blob has been successfully fetched
-    public static final String BLOBSET_BLOB_FETCHED = "blobset.blob.fetched";
-    public static final Level BLOBSET_BLOB_FETCHED_LEVEL = DEBUG;
-    static { LEVEL.put(BLOBSET_BLOB_FETCHED, DEBUG); }
+    // Fetching a blob update
+    public static final String BLOBSET_BLOB_FETCH = "blobset.blob.fetch";
+    public static final Level BLOBSET_BLOB_FETCH_LEVEL = DEBUG;
+    static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
-    // Update has been successfully applied
-    public static final String BLOBSET_BLOB_APPLIED = "blobset.blob.applied";
-    public static final Level BLOBSET_BLOB_APPLIED_LEVEL = NOTICE;
-    static { LEVEL.put(BLOBSET_BLOB_APPLIED, NOTICE); }
+    // Applying a blob update
+    public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
+    public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
+    static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
 }

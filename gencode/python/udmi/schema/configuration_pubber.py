@@ -1,4 +1,5 @@
-"""Generated class for pubber_configuration.json"""
+"""Generated class for configuration_pubber.json"""
+from .configuration_endpoint import EndpointConfiguration
 
 
 class PubberConfiguration:
@@ -21,7 +22,7 @@ class PubberConfiguration:
     if not source:
       return None
     result = PubberConfiguration()
-    result.endpoint = source.get('endpoint')
+    result.endpoint = EndpointConfiguration.from_dict(source.get('endpoint'))
     result.deviceId = source.get('deviceId')
     result.gatewayId = source.get('gatewayId')
     result.sitePath = source.get('sitePath')
@@ -52,7 +53,7 @@ class PubberConfiguration:
   def to_dict(self):
     result = {}
     if self.endpoint:
-      result['endpoint'] = self.endpoint # 5
+      result['endpoint'] = self.endpoint.to_dict() # 4
     if self.deviceId:
       result['deviceId'] = self.deviceId # 5
     if self.gatewayId:
