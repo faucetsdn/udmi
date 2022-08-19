@@ -52,7 +52,7 @@ while read local remote; do
     fi
     
     if [[ -z $pmsg && -z $remote ]]; then
-        pmsg=" (remote not configured, use `git push` to configure)"
+        pmsg=" (remote not configured, use 'git push --set-upstream-to $origin $local' to configure)"
     fi
     
     echo Updating branch $local$pmsg...
