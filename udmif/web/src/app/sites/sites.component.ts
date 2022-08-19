@@ -40,7 +40,7 @@ export class SitesComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.sitesSubscription.unsubscribe(); // cleanup
   }
 
