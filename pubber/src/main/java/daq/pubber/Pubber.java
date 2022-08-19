@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
@@ -49,7 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
@@ -149,7 +152,7 @@ public class Pubber {
   private ScheduledFuture<?> scheduledFuture;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
-  private Consumer<String> onDone;
+  private Consumer<String> connectionDone;
   private boolean publishingLog;
   private String appliedEndpoint;
   private EndpointConfiguration extractedEndpoint;
@@ -541,7 +544,7 @@ public class Pubber {
   }
 
   private void startConnection(Consumer<String> onDone) throws InterruptedException {
-    this.onDone = onDone;
+    this.connectionDone = onDone;
     connect();
     boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
     info("synchronized start config result " + result);
@@ -641,8 +644,8 @@ public class Pubber {
       publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
-      if (onDone != null) {
-        onDone.accept(configuration.deviceId);
+      if (connectionDone != null) {
+        connectionDone.accept(configuration.deviceId);
       }
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
@@ -727,7 +730,7 @@ public class Pubber {
       actualInterval = updateSystemConfig(config.pointset);
       updatePointsetConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
-      extractedEndpoint = extractEndpointBlobConfig();
+      extractEndpointBlobConfig();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
@@ -735,16 +738,28 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
-  private EndpointConfiguration extractEndpointBlobConfig() {
+  private void extractEndpointBlobConfig() {
+    if (deviceConfig.blobset == null) {
+      deviceState.blobset = null;
+      return;
+    }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       if (iotConfig == null) {
-        return null;
+        removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
+        return;
       }
-      return OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
+      extractedEndpoint = OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
+  }
+
+  private void removeBlobsetBlobState(SystemBlobsets blobId) {
+    if (deviceState.blobset == null) {
+      return;
+    }
+    deviceState.blobset.blobs.remove(blobId.value());
   }
 
   private void maybeRedirectEndpoint() {
@@ -762,13 +777,35 @@ public class Pubber {
     } else {
       return; // No need to redirect anything!
     }
+
+    BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
     try {
+      endpointState.phase = BlobPhase.UPDATING;
+      endpointState.status = null;
       disconnectMqtt();
       initializeMqtt();
-      startConnection(onDone);
+      startConnection(connectionDone);
+      endpointState.phase = BlobPhase.FINAL;
     } catch (Exception e) {
+      endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
       throw new RuntimeException("While redirecting connection endpoint", e);
     }
+  }
+
+  private Entry exceptionStatus(Exception e, String category) {
+    Entry entry = new Entry();
+    entry.message = e.getMessage();
+    entry.detail = stackTraceString(e);
+    entry.category = category;
+    entry.level = Level.ERROR.value();
+    return entry;
+  }
+
+  private BlobBlobsetState ensureBlobsetState(SystemBlobsets iotEndpointConfig) {
+    deviceState.blobset = ofNullable(deviceState.blobset).orElseGet(BlobsetState::new);
+    deviceState.blobset.blobs = ofNullable(deviceState.blobset.blobs).orElseGet(HashMap::new);
+    return deviceState.blobset.blobs.computeIfAbsent(iotEndpointConfig.value(),
+        key -> new BlobBlobsetState());
   }
 
   private String getClientId(String forRegistry) {
