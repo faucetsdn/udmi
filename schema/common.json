@@ -16,8 +16,7 @@
       "title": "BlobPhase",
       "description": "Phase for the management of a configuration blob.",
       "enum": [
-        "initial",
-        "updating",
+        "apply",
         "final"
       ]
     },
