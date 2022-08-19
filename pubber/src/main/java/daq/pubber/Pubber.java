@@ -151,6 +151,7 @@ public class Pubber {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
+
   /**
    * Start an instance from a configuration file.
    *
@@ -1120,7 +1121,6 @@ public class Pubber {
   }
 
   private void publishStateMessage(boolean synchronous) {
-    CountDownLatch latch = new CountDownLatch(1);
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0 && !synchronous) {
       warn(String.format("State defer %dms", delay));
@@ -1141,6 +1141,7 @@ public class Pubber {
     stateDirty.set(false);
     // TODO: Make this block until the callback is actually called.
     lastStateTimeMs = System.currentTimeMillis() + STATE_THROTTLE_MS;
+    CountDownLatch latch = new CountDownLatch(1);
     publishDeviceMessage(deviceState, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
