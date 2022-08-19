@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -736,7 +737,7 @@ public class Pubber {
 
   private EndpointConfiguration extractEndpointBlobConfig() {
     try {
-      String iotConfig = extractConfigBlob(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
+      String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       if (iotConfig == null) {
         return null;
       }
@@ -1102,7 +1103,7 @@ public class Pubber {
     }
   }
 
-  private void publishStateM.essage() {
+  private void publishStateMessage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(String.format("State defer %dms", delay));
