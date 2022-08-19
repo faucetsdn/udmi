@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "blobset": {
+    "blobs": {
+      "_iot_endpoint_config": {
+        "phase": "final",
+        "content_type": "application/json",
+        "base64": "ewogICJob3N0TmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAidGNwUG9ydCI6IDg4ODMsCiAgImxvY2F0aW9uIjogInVzLWNlbnRyYWwxIiwKICAicHJvamVjdCI6ICJib3MtY29ycG9wcy10ZXN0aW5nIiwKICAicmVnaXN0cnkiOiAiVUstTE9OLUdMQUIiLAogICJkZXZpY2UiOiAiRkNVLTEwMiIKfQo="
+      }
+    }
+  },
+  "timestamp": "2022-07-13T12:00:00.000Z"
+}
