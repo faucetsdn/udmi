@@ -30,6 +30,7 @@ cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
 PUBBER_OUT=pubber.out
+rm -f $PUBBER_OUT.*
 
 echo Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
@@ -81,8 +82,11 @@ bin/reset_config $site_path $project_id $device_id redirect_config.json
 echo Let pubber react to the new configuration...
 sleep 20
 
-# Ideally use lock files, not grep-and-kill...
-echo Killing running pubber instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+# Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
+now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
+echo Setting last_start time to $now_date for pubber shutdown...
+jq ".system.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
+echo bin/reset_config $site_path $project_id $device_id shutdown_config.json
+bin/reset_config $site_path $project_id $device_id shutdown_config.json
 
 echo Done with redirect test.

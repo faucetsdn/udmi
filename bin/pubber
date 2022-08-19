@@ -21,12 +21,8 @@ fi
 echo Cleaning output directory $ROOT_DIR/pubber/out/$serial_no
 rm -rf $ROOT_DIR/pubber/out/$serial_no
 
-newest=$(ls -rt `find pubber/src/ gencode/java -type f` | tail -n 1)
-library=pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar
-if [[ ! -f $library || $newest -nt $library ]]; then
-    echo Building pubber...
-    $ROOT_DIR/pubber/bin/build
-fi
+echo Building pubber...
+$ROOT_DIR/pubber/bin/build
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 

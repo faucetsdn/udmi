@@ -129,4 +129,4 @@ jobs:
         if: ${{ always() }}
         run: |
           cat pubber.out || true
-          more pubber/out/*.json
+          more pubber/out/*/*.json
