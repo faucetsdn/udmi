@@ -139,7 +139,7 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private final File outDir;
-  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);;
+  private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
@@ -181,7 +181,8 @@ public class Pubber {
       outDir = new File(PUBBER_OUT);
     } catch (Exception e) {
       terminate();
-      throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(), e);
+      throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(),
+          e);
     }
   }
 
@@ -538,8 +539,7 @@ public class Pubber {
   private void restartSystem(boolean restart) {
     deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
     publishSynchronousState();
-    System.err.println("Stopping system with extreme prejudice, restart " + restart);
-    System.err.flush();
+    error("Stopping system with extreme prejudice, restart " + restart);
     System.exit(restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE);
   }
 
@@ -685,9 +685,12 @@ public class Pubber {
         this::configHandler, Config.class);
   }
 
-  private String toJson(Object configuration) {
+  private String toJson(Object target) {
     try {
-      return OBJECT_MAPPER.writeValueAsString(configuration);
+      if (target == null) {
+        return null;
+      }
+      return OBJECT_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
       throw new RuntimeException("While converting object to string", e);
     }
@@ -844,19 +847,13 @@ public class Pubber {
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    String currentId = configuration.endpoint.client_id;
-    String redirectId = getClientId(redirectRegistry);
     String currentSignature = toJson(configuration.endpoint);
-    String extractedSignature = toJson(extractedEndpoint);
+    String extractedSignature =
+        redirectRegistry == null ? toJson(extractedEndpoint) : redirectedEndpoint(redirectRegistry);
 
-    if (extractedSignature != null && !extractedSignature.equals(currentSignature)
-        && !extractedSignature.equals(attemptedEndpoint)) {
+    if (extractedSignature != null && !extractedSignature.equals(
+        currentSignature) && !extractedSignature.equals(attemptedEndpoint)) {
       info("New config blob endpoint detected");
-      configuration.endpoint = extractedEndpoint;
-    } else if (redirectRegistry != null && configLatch.getCount() <= 0 && !redirectId.equals(
-        currentId)) {
-      info("Mismatched redirectRegistry detected, redirecting to " + redirectRegistry);
-      configuration.endpoint.client_id = redirectId;
     } else {
       return; // No need to redirect anything!
     }
@@ -884,9 +881,20 @@ public class Pubber {
     }
   }
 
-  private void resetConnection(String workingEndpoint) {
+  private String redirectedEndpoint(String redirectRegistry) {
     try {
-      configuration.endpoint = OBJECT_MAPPER.readValue(workingEndpoint,
+      EndpointConfiguration endpoint = OBJECT_MAPPER.readValue(toJson(configuration.endpoint),
+          EndpointConfiguration.class);
+      endpoint.client_id = getClientId(redirectRegistry);
+      return toJson(endpoint);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting redirected endpoint");
+    }
+  }
+
+  private void resetConnection(String targetEndpoint) {
+    try {
+      configuration.endpoint = OBJECT_MAPPER.readValue(targetEndpoint,
           EndpointConfiguration.class);
       disconnectMqtt();
       initializeMqtt();
@@ -1303,9 +1311,8 @@ public class Pubber {
   }
 
   private void publishDeviceMessage(Object message, Runnable callback) {
-    if (mqttPublisher == null) {
-      warn("Ignoring publish message b/c connection is shutdown");
-      return;
+    if (mqttPublisher == null || !mqttPublisher.isActive()) {
+      throw new RuntimeException("Ignoring publish message b/c connection is shutdown, stopping.");
     }
     String topic = MESSAGE_TOPIC_MAP.get(message.getClass());
     if (topic == null) {

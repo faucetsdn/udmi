@@ -158,7 +158,7 @@ public class MqttPublisher {
   void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     if (!isActive()) {
-      throw new RuntimeException("Publisher shutdown.");
+      throw new RuntimeException("Publisher already shutdown.");
     }
     debug("Publishing in background " + topic);
     Object marked = topic.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topic, data) : data;
