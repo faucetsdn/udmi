@@ -521,7 +521,7 @@ Object {
 exports[`Devices getSiteNames 1`] = `
 Object {
   "data": Object {
-    "sites": Array [
+    "siteNames": Array [
       "SG-SIN-MBC1",
       "SG-SIN-MBC10",
       "SG-SIN-MBC2",
@@ -586,6 +586,23 @@ Object {
     ],
   },
   "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
+exports[`Devices sites 1`] = `
+Object {
+  "data": Object {
+    "sites": null,
+  },
+  "errors": Array [
+    [GraphQLError: deviceDS.getSites is not a function],
+  ],
   "extensions": undefined,
   "http": Object {
     "headers": Headers {

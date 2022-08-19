@@ -1,4 +1,4 @@
-import { Device, DevicesResponse, Point, SearchOptions } from '../../device/model';
+import { Device, DevicesResponse, Point, SearchOptions, SitesResponse } from '../../device/model';
 import { DeviceDataSource } from '../../device/DeviceDataSource';
 import { createSearchOptions } from './data';
 import { DeviceDAO } from '../../device/dao/DeviceDAO';
@@ -12,17 +12,36 @@ describe('DeviceDataSource.getDevices()', () => {
 
   test('returns a set of devices', async () => {
     const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
-    await expect(result.devices).not.toBe([]);
+    expect(result.devices).not.toBe([]);
   });
 
   test('returns a total count', async () => {
     const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
-    await expect(result.totalCount).not.toBe(0);
+    expect(result.totalCount).not.toBe(0);
   });
 
   test('returns a total filtered count', async () => {
     const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
-    await expect(result.totalFilteredCount).not.toBe(0);
+    expect(result.totalFilteredCount).not.toBe(0);
+  });
+});
+
+describe('DeviceDataSource.getSites()', () => {
+  const searchOptions: SearchOptions = createSearchOptions();
+
+  test('returns a set of sites', async () => {
+    const result: SitesResponse = await deviceDS.getSites(searchOptions);
+    expect(result.sites).not.toBe([]);
+  });
+
+  test('returns a total count', async () => {
+    const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
+    expect(result.totalCount).not.toBe(0);
+  });
+
+  test('returns a total filtered count', async () => {
+    const result: DevicesResponse = await deviceDS.getDevices(searchOptions);
+    expect(result.totalFilteredCount).not.toBe(0);
   });
 });
 

@@ -30,6 +30,19 @@ const QUERY_DEVICES = gql`
   }
 `;
 
+const QUERY_SITES = gql`
+  query {
+    sites(searchOptions: { batchSize: 10, offset: 10, sortOptions: { direction: DESC, field: "name" }, filter: "" }) {
+      totalCount
+      totalFilteredCount
+      sites {
+        id
+        name
+      }
+    }
+  }
+`;
+
 const QUERY_DEVICE = gql`
   query {
     device(id: "some-id") {
@@ -85,9 +98,9 @@ const QUERY_DEVICE_MODELS = gql`
   }
 `;
 
-const QUERY_SITES = gql`
+const QUERY_SITE_NAMES = gql`
   query {
-    sites
+    siteNames
   }
 `;
 
@@ -117,6 +130,10 @@ describe('Devices', () => {
     const result = await runQuery(QUERY_DEVICES, {});
     expect(result).toMatchSnapshot();
   });
+  test('sites', async () => {
+    const result = await runQuery(QUERY_SITES, {});
+    expect(result).toMatchSnapshot();
+  });
   test('device', async () => {
     const result = await runQuery(QUERY_DEVICE, {});
     expect(result).toMatchSnapshot();
@@ -138,7 +155,7 @@ describe('Devices', () => {
     expect(result).toMatchSnapshot();
   });
   test('getSiteNames', async () => {
-    const result = await runQuery(QUERY_SITES);
+    const result = await runQuery(QUERY_SITE_NAMES);
     expect(result).toMatchSnapshot();
   });
   test('getSections', async () => {
