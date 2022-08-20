@@ -38,7 +38,7 @@ ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 bin/reset_config $site_path $project_id $device_id
 
 echo Running pubber with redirectRegistry on timeout
-#timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
+timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
 echo Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
