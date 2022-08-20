@@ -523,6 +523,8 @@ public class Pubber {
     if (systemConfig == null) {
       return;
     }
+    info(String.format("TAP mode %s and %s", deviceState.system.mode.value(),
+        systemConfig.mode.value()));
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
         && SystemMode.RESTART.equals(systemConfig.mode)) {
       restartSystem(true);
