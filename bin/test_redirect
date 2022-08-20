@@ -90,7 +90,7 @@ echo Restart the system...
 echo bin/reset_config $site_path $project_id $device_id restart_config.json
 bin/reset_config $site_path $project_id $device_id restart_config.json
 
-echo And let it settle again...
+echo And let it settle for restart...
 sleep 20
 
 # Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
@@ -99,5 +99,8 @@ echo Setting last_start time to $now_date for pubber shutdown...
 jq ".system.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
 echo bin/reset_config $site_path $project_id $device_id shutdown_config.json
 bin/reset_config $site_path $project_id $device_id shutdown_config.json
+
+echo And let it settle for last start...
+sleep 20
 
 echo Done with redirect test.
