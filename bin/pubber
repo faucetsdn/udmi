@@ -18,8 +18,8 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
     false
 fi
 
-echo Cleaning output direction $ROOT_DIR/pubber/out
-rm -rf $ROOT_DIR/pubber/out
+echo Cleaning output directory $ROOT_DIR/pubber/out/$serial_no
+rm -rf $ROOT_DIR/pubber/out/$serial_no
 
 echo Building pubber...
 $ROOT_DIR/pubber/bin/build

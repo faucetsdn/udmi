@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "last_config",
     "operational",
     "mode",
+    "last_start",
     "serial_no",
     "hardware",
     "software",
@@ -65,12 +66,19 @@ public class SystemState {
     /**
      * System Mode
      * <p>
-     * Operating mode for the device. Defaults is 'active'.
+     * Operating mode for the device. Default is 'active'.
      * 
      */
     @JsonProperty("mode")
-    @JsonPropertyDescription("Operating mode for the device. Defaults is 'active'.")
+    @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
     public udmi.schema.SystemConfig.SystemMode mode;
+    /**
+     * Last time the system started up.
+     * 
+     */
+    @JsonProperty("last_start")
+    @JsonPropertyDescription("Last time the system started up.")
+    public Date last_start;
     /**
      * The serial number of the physical device
      * (Required)
@@ -112,6 +120,7 @@ public class SystemState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
+        result = ((result* 31)+((this.last_start == null)? 0 :this.last_start.hashCode()));
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
         result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
@@ -133,7 +142,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return (((((((((((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((((((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.last_start == rhs.last_start)||((this.last_start!= null)&&this.last_start.equals(rhs.last_start))))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

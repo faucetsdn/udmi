@@ -266,6 +266,10 @@ function process_state_update(attributes, msgObject) {
   attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
+  const stateStart = msgObject.system && msgObject.system.last_start;
+  stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
+                                                   stateStart, currentTimestamp()));
+
   for (var block in msgObject) {
     let subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
@@ -325,11 +329,24 @@ function parse_old_config(oldConfig, resetConfig) {
   }
 }
 
+function update_last_start(config, stateStart) {
+  const configStart = config.system && config.system.last_start;
+  const shouldUpdate = stateStart && (!configStart || (stateStart > configStart));
+  console.log('State update last state/config', stateStart, configStart, shouldUpdate);
+  config.system.last_start = stateStart;
+  return shouldUpdate;
+}
+
 async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   var newConfig;
 
-  if (subFolder == 'update') {
+  if (subFolder == 'last_start') {
+    newConfig = parse_old_config(oldConfig, false);
+    if (!newConfig || !update_last_start(newConfig, subContents)) {
+      return;
+    }
+  } else if (subFolder == 'update') {
     console.log('Config replace version', version, startTime);
     newConfig = subContents;
   } else {
@@ -440,7 +457,7 @@ function consolidate_config(registryId, deviceId, subFolder) {
   if (subFolder == UPDATE_FOLDER) {
     return;
   }
-  
+
   console.log('consolidating config for', registryId, deviceId);
 
   const new_config = {
