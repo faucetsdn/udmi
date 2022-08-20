@@ -151,10 +151,14 @@ public class MqttPublisher {
     return getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
+  boolean isActive() {
+    return !publisherExecutor.isShutdown();
+  }
+
   void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
-    if (publisherExecutor.isShutdown()) {
-      throw new RuntimeException("Publisher shutdown.");
+    if (!isActive()) {
+      throw new RuntimeException("Publisher already shutdown.");
     }
     debug("Publishing in background " + topic);
     Object marked = topic.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topic, data) : data;
@@ -186,7 +190,6 @@ public class MqttPublisher {
       }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      e.printStackTrace();
       warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
@@ -523,7 +526,8 @@ public class MqttPublisher {
 
     @Override
     public void connectionLost(Throwable cause) {
-      warn("MQTT Connection Lost: " + cause);
+      boolean connected = mqttClients.remove(deviceId).isConnected();
+      warn("MQTT Connection Lost: " + connected + cause);
       onError.accept(new ConnectionClosedException());
     }
 

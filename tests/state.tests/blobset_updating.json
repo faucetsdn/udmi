@@ -16,7 +16,7 @@
   "blobset" : {
     "blobs" : {
       "_iot_endpoint_config" : {
-        "phase" : "updating"
+        "phase" : "apply"
       }
     }
   }

@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
@@ -78,6 +79,7 @@ import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.SystemConfig;
 import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
@@ -89,7 +91,7 @@ import udmi.schema.SystemState;
 public class Pubber {
 
   public static final int SCAN_DURATION_SEC = 10;
-  public static final String DISCOVERY_ID = "RANDOM_ID";
+  public static final String PUBBER_OUT = "pubber/out";
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -97,16 +99,12 @@ public class Pubber {
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-  private static final String POINTSET_TOPIC = "events/pointset";
-  private static final String SYSTEM_TOPIC = "events/system";
-  private static final String STATE_TOPIC = "state";
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
-  private static final int CONFIG_WAIT_TIME_MS = 10000;
+  private static final int CONFIG_WAIT_TIME_SEC = 10;
   private static final int STATE_THROTTLE_MS = 2000;
-  private static final String OUT_DIR = "pubber/out";
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
@@ -133,9 +131,14 @@ public class Pubber {
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
-  private static final Date DEVICE_START_TIME = new Date();
-  private static final int RESTART_EXIT_CODE = 192;
+  private static final Date DEVICE_START_TIME = getRoundedStartTime();
+  private static final int RESTART_EXIT_CODE = 192; // After exit, wrapper script should restart.
+  private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
   private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
+  private static final int CONNECT_RETRIES = 10;
+  private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
+  private static final long RESTART_DELAY_MS = 1000;
+  private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
@@ -146,15 +149,18 @@ public class Pubber {
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final String projectId;
   private final String deviceId;
+  private final Object reconnectLock = new Object();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
-  private ScheduledFuture<?> scheduledFuture;
+  private ScheduledFuture<?> periodicSender;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
-  private Consumer<String> connectionDone;
+  private Function<String, Boolean> connectionDone;
   private boolean publishingLog;
   private String appliedEndpoint;
+  private String workingEndpoint;
+  private String attemptedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
@@ -173,9 +179,11 @@ public class Pubber {
       ClientInfo clientInfo = MqttPublisher.parseClientId(configuration.endpoint.client_id);
       projectId = clientInfo.projectId;
       deviceId = clientInfo.deviceId;
+      outDir = new File(PUBBER_OUT);
     } catch (Exception e) {
-      executor.shutdown();
-      throw new RuntimeException("While reading config " + configFile.getAbsolutePath(), e);
+      terminate();
+      throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(),
+          e);
     }
   }
 
@@ -190,6 +198,7 @@ public class Pubber {
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
     this.projectId = projectId;
     this.deviceId = deviceId;
+    outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
     configuration.serialNo = serialNo;
@@ -198,6 +207,12 @@ public class Pubber {
     } else {
       configuration.sitePath = sitePath;
     }
+  }
+
+  private static Date getRoundedStartTime() {
+    long timestamp = new Date().getTime();
+    // Remove ms so that rounded conversions preserve equality.
+    return new Date(timestamp - (timestamp % 1000));
   }
 
   private static PointPointsetModel makePointPointsetModel(boolean writable, int value,
@@ -243,8 +258,10 @@ public class Pubber {
     }
     pubber.initialize();
     pubber.startConnection(deviceId -> {
-      LOG.info("Connection closed/finished " + deviceId);
-      pubber.terminate();
+      int retries = retriesRemaining.decrementAndGet();
+      LOG.info(String.format("Connection closed/finished for %s, %d retries remaining", deviceId,
+          retries));
+      return retries > 0 && pubber.maybeRestart();
     });
   }
 
@@ -272,9 +289,9 @@ public class Pubber {
       Pubber pubber = new Pubber(projectId, siteName, feedName, serialNo);
       pubber.initialize();
       pubber.startConnection(deviceId -> {
-        pubber.terminate();
         LOG.error("Connection terminated, restarting listener");
         startFeedListener(projectId, siteName, feedName, serialNo);
+        return false;
       });
     } catch (Exception e) {
       LOG.error("Exception starting instance " + serialNo, e);
@@ -287,6 +304,19 @@ public class Pubber {
       configuration.options = new PubberOptions();
     }
     return configuration;
+  }
+
+  private boolean maybeRestart() {
+    if (deviceConfig.system != null && (deviceConfig.system.last_start == null
+        || !deviceConfig.system.last_start.equals(DEVICE_START_TIME))) {
+      error("Local start_time is older than config start_time, terminating process.");
+      deviceState.system.status = exceptionStatus(new InterruptedException("Start time conflict"),
+          Category.SYSTEM_BASE_SHUTDOWN);
+      return false;
+    }
+    safeSleep(RESTART_DELAY_MS); // Prevent thrashing of reconnects.
+    startConnection(connectionDone);
+    return true;
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -317,8 +347,9 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.pointset = new PointsetState();
     deviceState.system.hardware = new SystemHardware();
+    deviceState.system.last_start = DEVICE_START_TIME;
+    deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
 
@@ -391,14 +422,14 @@ public class Pubber {
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
-        safeSleep(10000);
+        safeSleep(CONFIG_WAIT_TIME_SEC);
       }
     }
   }
 
-  private void safeSleep(long duration) {
+  private void safeSleep(long durationMs) {
     try {
-      Thread.sleep(duration);
+      Thread.sleep(durationMs);
     } catch (InterruptedException e) {
       throw new RuntimeException("Error sleeping", e);
     }
@@ -444,7 +475,7 @@ public class Pubber {
   }
 
   private synchronized void maybeRestartExecutor(int intervalMs) {
-    if (scheduledFuture == null || intervalMs != messageDelayMs.get()) {
+    if (periodicSender == null || intervalMs != messageDelayMs.get()) {
       cancelPeriodicSend();
       messageDelayMs.set(intervalMs);
       startPeriodicSend();
@@ -452,21 +483,21 @@ public class Pubber {
   }
 
   private synchronized void startPeriodicSend() {
-    Preconditions.checkState(scheduledFuture == null);
+    Preconditions.checkState(periodicSender == null);
     int delay = messageDelayMs.get();
     info("Starting executor with send message delay " + delay);
-    scheduledFuture = executor
-        .scheduleAtFixedRate(this::sendMessages, delay, delay, TimeUnit.MILLISECONDS);
+    periodicSender = executor.scheduleAtFixedRate(this::sendMessages, delay, delay,
+        TimeUnit.MILLISECONDS);
   }
 
   private synchronized void cancelPeriodicSend() {
-    if (scheduledFuture != null) {
+    if (periodicSender != null) {
       try {
-        scheduledFuture.cancel(false);
+        periodicSender.cancel(false);
       } catch (Exception e) {
         throw new RuntimeException("While cancelling executor", e);
       } finally {
-        scheduledFuture = null;
+        periodicSender = null;
       }
     }
   }
@@ -479,7 +510,6 @@ public class Pubber {
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
-      terminate();
     }
   }
 
@@ -489,29 +519,34 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    if (deviceConfig.system == null) {
+    SystemConfig systemConfig = deviceConfig.system;
+    if (systemConfig == null) {
       return;
     }
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
-        && SystemMode.RESTART.equals(deviceConfig.system.mode)) {
-      restartSystem();
+        && SystemMode.RESTART.equals(systemConfig.mode)) {
+      restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(deviceConfig.system.mode)) {
+    if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
       deviceState.system.mode = SystemMode.ACTIVE;
+    }
+    if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
+      System.err.printf("Device start time %s before last config start %s, terminating.",
+          isoConvert(DEVICE_START_TIME), isoConvert(systemConfig.last_start));
+      restartSystem(false);
     }
   }
 
-  private void restartSystem() {
-    deviceState.system.mode = SystemMode.RESTART;
-    publishStateMessage();
-    System.err.println("Restarting system with extreme prejudice.");
-    System.err.flush();
-    System.exit(RESTART_EXIT_CODE);
+  private void restartSystem(boolean restart) {
+    deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+    publishSynchronousState();
+    error("Stopping system with extreme prejudice, restart " + restart);
+    System.exit(restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE);
   }
 
   private void flushDirtyState() {
     if (stateDirty.get()) {
-      publishStateMessage();
+      publishAsynchronousState();
     }
   }
 
@@ -529,27 +564,57 @@ public class Pubber {
     }
   }
 
-  private void terminate() {
+  private void captureExceptions(String action, Runnable runnable) {
     try {
-      info("Terminating");
-      if (mqttPublisher != null) {
-        mqttPublisher.close();
-        mqttPublisher = null;
-      }
-      cancelPeriodicSend();
-      executor.shutdown();
+      runnable.run();
     } catch (Exception e) {
-      info("Error terminating: " + e.getMessage());
+      error(action, e);
     }
   }
 
-  private void startConnection(Consumer<String> onDone) throws InterruptedException {
-    this.connectionDone = onDone;
-    connect();
-    boolean result = configLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-    info("synchronized start config result " + result);
-    if (!result && mqttPublisher != null) {
-      mqttPublisher.close();
+  private void terminate() {
+    warn("Terminating");
+    deviceState.system.mode = SystemMode.SHUTDOWN;
+    captureExceptions("publishing shutdown state", this::publishSynchronousState);
+    stop();
+    captureExceptions("executor flush", this::stopExecutor);
+  }
+
+  private void stopExecutor() {
+    try {
+      cancelPeriodicSend();
+      executor.shutdown();
+      if (!executor.awaitTermination(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Failed to shutdown scheduled tasks");
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While stopping executor", e);
+    }
+  }
+
+  private void startConnection(Function<String, Boolean> connectionDone) {
+    try {
+      while (retriesRemaining.getAndDecrement() > 0) {
+        try {
+          this.connectionDone = connectionDone;
+          if (mqttPublisher == null) {
+            throw new RuntimeException("Mqtt publisher not initialized");
+          }
+          connect();
+          if (configLatch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+            return;
+          }
+          error("Configuration sync failed after " + CONFIG_WAIT_TIME_SEC);
+        } catch (Exception e) {
+          error("While waiting for connection start", e);
+        }
+        error("Attempt failed, retries remaining: " + retriesRemaining.get());
+        safeSleep(RESTART_DELAY_MS);
+      }
+      throw new RuntimeException("Failed connection attempt after retries");
+    } catch (Exception e) {
+      stop();
+      throw new RuntimeException("While attempting to start connection", e);
     }
   }
 
@@ -566,27 +631,40 @@ public class Pubber {
     try {
       initializeDevice();
 
-      File outDir = new File(OUT_DIR);
       try {
-        outDir.mkdir();
-        File logOut = new File(OUT_DIR, traceTimestamp("pubber") + ".log");
+        outDir.mkdirs();
+        File logOut = new File(outDir, traceTimestamp("pubber") + ".log");
         logPrintWriter = new PrintStream(logOut);
         logPrintWriter.println("Pubber log started at " + getTimestamp());
       } catch (Exception e) {
-        throw new RuntimeException("While initializing out dir " + outDir.getPath(), e);
+        throw new RuntimeException("While initializing out dir " + outDir.getAbsolutePath(), e);
       }
 
       initializeMqtt();
     } catch (Exception e) {
-      executor.shutdown();
+      terminate();
       throw new RuntimeException("While initializing main pubber class", e);
     }
   }
 
+  private void stop() {
+    captureExceptions("disconnecting mqtt", this::disconnectMqtt);
+    captureExceptions("closing log", this::closeLogWriter);
+    captureExceptions("stopping periodic send", this::cancelPeriodicSend);
+  }
+
+  private void closeLogWriter() {
+    if (logPrintWriter != null) {
+      logPrintWriter.close();
+      logPrintWriter = null;
+    }
+  }
+
   private void disconnectMqtt() {
-    Preconditions.checkState(mqttPublisher != null, "mqttPublisher not defined");
-    mqttPublisher.close();
-    mqttPublisher = null;
+    if (mqttPublisher != null) {
+      captureExceptions("closing mqtt publisher", mqttPublisher::close);
+      mqttPublisher = null;
+    }
   }
 
   private void initializeMqtt() {
@@ -608,9 +686,12 @@ public class Pubber {
         this::configHandler, Config.class);
   }
 
-  private String toJson(Object configuration) {
+  private String toJson(Object target) {
     try {
-      return OBJECT_MAPPER.writeValueAsString(configuration);
+      if (target == null) {
+        return null;
+      }
+      return OBJECT_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
       throw new RuntimeException("While converting object to string", e);
     }
@@ -630,8 +711,10 @@ public class Pubber {
     try {
       mqttPublisher.connect(configuration.deviceId);
       info("Connection complete.");
+      workingEndpoint = toJson(configuration.endpoint);
+      retriesRemaining.set(CONNECT_RETRIES);
     } catch (Exception e) {
-      error("Connection error", e);
+      throw new RuntimeException("Connection error", e);
     }
   }
 
@@ -644,8 +727,12 @@ public class Pubber {
       publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
-      if (connectionDone != null) {
-        connectionDone.accept(configuration.deviceId);
+      synchronized (reconnectLock) {
+        if (connectionDone != null) {
+          while (connectionDone.apply(configuration.deviceId)) {
+            warn("Retrying reconnect handler...");
+          }
+        }
       }
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
@@ -662,7 +749,7 @@ public class Pubber {
     publishLogMessage(report);
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishStateMessage();
+    publishAsynchronousState();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
@@ -703,11 +790,10 @@ public class Pubber {
   private void configHandler(Config config) {
     try {
       info("Config handler");
-      File configOut = new File(OUT_DIR, traceTimestamp("config") + ".json");
+      File configOut = new File(outDir, traceTimestamp("config") + ".json");
       try {
         OBJECT_MAPPER.writeValue(configOut, config);
-        debug(String.format("Config update%s", getTestingTag(config)),
-            OBJECT_MAPPER.writeValueAsString(config));
+        debug(String.format("Config update%s", getTestingTag(config)), toJson(config));
       } catch (Exception e) {
         throw new RuntimeException("While writing config " + configOut.getPath(), e);
       }
@@ -716,9 +802,8 @@ public class Pubber {
       publisherConfigLog("apply", null);
     } catch (Exception e) {
       publisherConfigLog("apply", e);
-      trace(stackTraceString(e));
     }
-    publishStateMessage();
+    publishAsynchronousState();
   }
 
   private void processConfigUpdate(Config config) {
@@ -764,33 +849,64 @@ public class Pubber {
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    String currentId = configuration.endpoint.client_id;
-    String redirectId = getClientId(redirectRegistry);
+    String currentSignature = toJson(configuration.endpoint);
+    String extractedSignature =
+        redirectRegistry == null ? toJson(extractedEndpoint) : redirectedEndpoint(redirectRegistry);
 
-    if (extractedEndpoint != null && !toJson(extractedEndpoint).equals(appliedEndpoint)) {
+    if (extractedSignature != null && !extractedSignature.equals(
+        currentSignature) && !extractedSignature.equals(attemptedEndpoint)) {
       info("New config blob endpoint detected");
-      configuration.endpoint = extractedEndpoint;
-    } else if (redirectRegistry != null && configLatch.getCount() <= 0 && !redirectId.equals(
-        currentId)) {
-      info("Mismatched redirectRegistry detected, redirecting to " + redirectRegistry);
-      configuration.endpoint.client_id = redirectId;
     } else {
       return; // No need to redirect anything!
     }
 
     BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
     try {
-      endpointState.phase = BlobPhase.UPDATING;
+      endpointState.phase = BlobPhase.APPLY;
       endpointState.status = null;
-      publishStateMessage(true);
-      disconnectMqtt();
-      initializeMqtt();
-      startConnection(connectionDone);
+      publishSynchronousState();
+      attemptedEndpoint = extractedSignature;
+      resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
+      appliedEndpoint = null;
     } catch (Exception e) {
-      endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
-      publishStateMessage();
-      throw new RuntimeException("While redirecting connection endpoint", e);
+      try {
+        error("Reconfigure failed, attempting connection to last working endpoint", e);
+        endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
+        resetConnection(workingEndpoint);
+        publishAsynchronousState();
+        notice("Endpoint connection restored to last working endpoint");
+      } catch (Exception e2) {
+        throw new RuntimeException("While restoring working endpoint", e2);
+      }
+      error("While redirecting connection endpoint", e);
+    }
+  }
+
+  private String redirectedEndpoint(String redirectRegistry) {
+    try {
+      EndpointConfiguration endpoint = OBJECT_MAPPER.readValue(toJson(configuration.endpoint),
+          EndpointConfiguration.class);
+      endpoint.client_id = getClientId(redirectRegistry);
+      return toJson(endpoint);
+    } catch (Exception e) {
+      throw new RuntimeException("While getting redirected endpoint");
+    }
+  }
+
+  private void resetConnection(String targetEndpoint) {
+    try {
+      configuration.endpoint = OBJECT_MAPPER.readValue(targetEndpoint,
+          EndpointConfiguration.class);
+      synchronized (reconnectLock) {
+        disconnectMqtt();
+        initializeMqtt();
+        retriesRemaining.set(CONNECT_RETRIES);
+        startConnection(connectionDone);
+      }
+    } catch (Exception e) {
+      stop();
+      throw new RuntimeException("While resetting connection", e);
     }
   }
 
@@ -940,6 +1056,9 @@ public class Pubber {
   }
 
   private long scheduleFuture(Date futureTime, Runnable futureTask) {
+    if (executor.isShutdown() || executor.isTerminated()) {
+      throw new RuntimeException("Executor shutdown/terminated, not scheduling");
+    }
     long delay = futureTime.getTime() - new Date().getTime();
     debug(String.format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
@@ -965,7 +1084,7 @@ public class Pubber {
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.active = true;
-    publishStateMessage();
+    publishAsynchronousState();
     Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
     scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
   }
@@ -1031,7 +1150,7 @@ public class Pubber {
         } else {
           info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
           familyDiscoveryState.active = false;
-          publishStateMessage();
+          publishAsynchronousState();
         }
       }
     } catch (Exception e) {
@@ -1073,7 +1192,7 @@ public class Pubber {
       if (timestamp == null) {
         return "null";
       }
-      String dateString = OBJECT_MAPPER.writeValueAsString(timestamp);
+      String dateString = toJson(timestamp);
       // Strip off the leading and trailing quotes from the JSON string-as-string representation.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
@@ -1142,28 +1261,42 @@ public class Pubber {
     }
   }
 
-  private void publishStateMessage() {
-    publishStateMessage(false);
-  }
-
-  private void publishStateMessage(boolean synchronous) {
+  private void publishAsynchronousState() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
-      if (synchronous) {
-        warn(String.format("State update delay %dms", delay));
-        safeSleep(delay);
-      } else {
-        warn(String.format("State update defer %dms", delay));
-        markStateDirty(delay);
-        return;
-      }
+      warn(String.format("State update defer %dms", delay));
+      markStateDirty(delay);
+    } else {
+      publishStateMessage(null);
     }
+  }
+
+  private void publishSynchronousState() {
+    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+    if (delay > 0) {
+      warn(String.format("State update delay %dms", delay));
+      safeSleep(delay);
+    }
+
+    CountDownLatch latch = new CountDownLatch(1);
+    publishStateMessage(latch);
+
+    try {
+      info("Waiting for synchronous state send...");
+      if (!latch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+        error("Timeout waiting for synchronous state send");
+      }
+    } catch (Exception e) {
+      error("Exception while waiting for synchronous state send", e);
+    }
+  }
+
+  private void publishStateMessage(CountDownLatch latch) {
     deviceState.timestamp = new Date();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug(String.format("State update%s", getTestingTag(deviceConfig)),
-          OBJECT_MAPPER.writeValueAsString(deviceState));
+      debug(String.format("State update%s", getTestingTag(deviceConfig)), toJson(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1172,6 +1305,9 @@ public class Pubber {
     lastStateTimeMs = System.currentTimeMillis() + STATE_THROTTLE_MS;
     publishDeviceMessage(deviceState, () -> {
       lastStateTimeMs = System.currentTimeMillis();
+      if (latch != null) {
+        latch.countDown();
+      }
     });
   }
 
@@ -1180,21 +1316,22 @@ public class Pubber {
   }
 
   private void publishDeviceMessage(Object message, Runnable callback) {
-    if (mqttPublisher == null) {
-      warn("Ignoring publish message b/c connection is shutdown");
-      return;
-    }
     String topic = MESSAGE_TOPIC_MAP.get(message.getClass());
     if (topic == null) {
       error("Unknown message class " + message.getClass());
       return;
     }
-    augmentDeviceMessage(message);
-    mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
+    augmentDeviceMessage(message);
+    synchronized (reconnectLock) {
+      if (!publisherActive()) {
+        throw new RuntimeException("Connection already shutdown, stopping.");
+      }
+      mqttPublisher.publish(configuration.deviceId, topic, message, callback);
+    }
     String messageBase = topic.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
-    File messageOut = new File(OUT_DIR, fileName);
+    File messageOut = new File(outDir, fileName);
     try {
       OBJECT_MAPPER.writeValue(messageOut, message);
     } catch (Exception e) {
@@ -1222,6 +1359,10 @@ public class Pubber {
     }
   }
 
+  private boolean publisherActive() {
+    return mqttPublisher != null && mqttPublisher.isActive();
+  }
+
   private void cloudLog(String message, Level level) {
     cloudLog(message, level, null);
   }
@@ -1230,7 +1371,7 @@ public class Pubber {
     String timestamp = getTimestamp();
     localLog(message, level, timestamp, detail);
 
-    if (publishingLog || mqttPublisher == null) {
+    if (publishingLog || !publisherActive()) {
       return;
     }
 
@@ -1286,6 +1427,10 @@ public class Pubber {
     cloudLog(message, Level.INFO);
   }
 
+  private void notice(String message) {
+    cloudLog(message, Level.NOTICE);
+  }
+
   private void warn(String message) {
     cloudLog(message, Level.WARNING);
   }
@@ -1297,7 +1442,6 @@ public class Pubber {
   private void error(String message, Throwable e) {
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
-    trace(stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {
