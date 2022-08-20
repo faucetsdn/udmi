@@ -25,7 +25,7 @@
         }
       },
       "_firmware_update": {
-        "phase": "updating",
+        "phase": "apply",
         "status": {
           "message": "Processing firmware update",
           "category": "blobset.blob.apply",
@@ -34,7 +34,7 @@
         }
       },
       "_iot_endpoint_config": {
-        "phase": "initial",
+        "phase": "apply",
         "status": {
           "message": "Received endpoint config",
           "category": "blobset.blob.receive",

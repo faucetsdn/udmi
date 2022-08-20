@@ -28,6 +28,11 @@
     "mode": {
       "$ref": "file:common.json#/definitions/mode"
     },
+    "last_start": {
+      "description": "Last time the system started up.",
+      "type": "string",
+      "format": "date-time"
+    },
     "serial_no": {
       "description": "The serial number of the physical device",
       "type": "string",

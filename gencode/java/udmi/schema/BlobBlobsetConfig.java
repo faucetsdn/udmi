@@ -86,8 +86,7 @@ public class BlobBlobsetConfig {
     @Generated("jsonschema2pojo")
     public enum BlobPhase {
 
-        INITIAL("initial"),
-        UPDATING("updating"),
+        APPLY("apply"),
         FINAL("final");
         private final String value;
         private final static Map<String, BlobBlobsetConfig.BlobPhase> CONSTANTS = new HashMap<String, BlobBlobsetConfig.BlobPhase>();
