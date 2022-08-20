@@ -86,7 +86,6 @@ public class BlobBlobsetConfig {
     @Generated("jsonschema2pojo")
     public enum BlobPhase {
 
-        INITIAL("initial"),
         APPLY("apply"),
         FINAL("final");
         private final String value;
