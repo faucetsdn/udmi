@@ -34,7 +34,7 @@
         }
       },
       "_iot_endpoint_config": {
-        "phase": "initial",
+        "phase": "apply",
         "status": {
           "message": "Received endpoint config",
           "category": "blobset.blob.receive",

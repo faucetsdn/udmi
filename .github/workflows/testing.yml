@@ -84,6 +84,9 @@ jobs:
           fgrep registries/reconfigure/devices pubber.out.2
           fgrep 'While waiting for connection start: Connection error' pubber.out.2
           fgrep 'Endpoint connection restored to last working endpoint' pubber.out.2
+          fgrep 'Stopping system with extreme prejudice, restart true' pubber.out.2  # restart config
+          fgrep 'Stopping system with extreme prejudice, restart false' pubber.out.2  # auto-kill
+          fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
     
   udmi:
     name: Sequence tests
