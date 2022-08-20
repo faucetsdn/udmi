@@ -42,6 +42,7 @@ Each local branch also works with tracking information to help sort through the 
 
 The `branch-status` utility only works with local information (so it's fast) and gives a view of
 the current state of the repo. It does _not_ automatically sync with any designated remote, so can
+<<<<<<< Updated upstream
 show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`).
 
 * `ahead X`
@@ -57,6 +58,35 @@ registrar      insync; ahead master 85       SiteModel abstraction for registrar
 ```
 
 ## git branch-update
+
+show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`). In
+the output, the keywords before the `;` are against any configured upstream, and keywords after
+`;` are against the locally configured parent (in this case `master`).
+
+* `ahead X`: Branch is X commits ahead of its upstream/parent.
+* `behind X`: Branch is X commits behind its upstream/parent.
+* `insync`: Branch is neither ahead-nor-behind its upstream/parent.
+* `disjoint`: Indicates that the branch is forked from the parent, and is both ahead and behind.
+
+```
+~/udmi$ git branch-status 
+gittools       ahead 1; ahead master 6            Tools for working with git
+mapping        behind 3; disjoint master 40/1     Mapping agent
+master         insync; insync master
+registrar      insync; ahead master 85            SiteModel abstraction for registrar
+```
+
+## git branch-update
+
+The `branch-update` tool does a bunch of routine things to make everything as up-to-date as possible.
+Any merge conflicts or similar issues will need to be manually resolved. Roughly speaking, the tool
+does the following operations:
+* Syncs with configured upstream remote.
+* Syncs local `$main` branch with upstream remote `$main`.
+* Syncs merges configured parent branches into local branches.
+* Pulls origin changes down (and merges).
+* Pushes pending updates to origin.
+
 ```
 ~/udmi$ git branch-update
 Fetching upstream remote faucet master branch...
@@ -71,6 +101,11 @@ Returning to local branch gittools.
 ```
 
 ## git branch-remote
+
+The `branch-remote` tool scans the origin remotes and tries to clean some junk out. It will
+suggest deleting an origin branch if it's identical to the `$main` branch, or if it
+hasn't been merged in quite some time. The output can just be cut-and-pasted into a terminal
+window to perform the operations.
 
 ```
 :~/udmi$ git branch-remote

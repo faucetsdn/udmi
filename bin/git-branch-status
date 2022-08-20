@@ -51,5 +51,5 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
         description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
     
-    printf "%-15s%-30s%s\n" $local "$OFFSET$POFF" "$description"
+    printf "%-15s%-35s%s\n" $local "$OFFSET$POFF" "$description"
 done
