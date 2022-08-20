@@ -8,9 +8,9 @@ with git branches. They really have nothing to do with UDMI, but rather just
 using git will still require some detailed knowledge of how it works to resolve conflicts,
 etc...
 
-* git-branch-status: Shows the status of all local branches as configured against their origin or parents.
-* git-branch-update: Updates all local branches and upstream repo to keep things in sync.
-* git-branch-remote: Scans upstream remote branches and makes suggestions for purging them.
+* `git-branch-status`: Shows the status of all local branches as configured against their origin or parents.
+* `git-branch-update`: Updates all local branches and upstream repo to keep things in sync.
+* `git-branch-remote`: Scans upstream remote branches and makes suggestions for purging them.
 
 # Tool Setup
 
