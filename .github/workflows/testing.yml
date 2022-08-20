@@ -68,9 +68,9 @@ jobs:
           echo :::::::
           echo Simple checks that a redirect happened and failed
           fgrep registries/ZZ-TRI-FECTA/devices pubber.out.1
-          fgrep 'system.config.parse success' pubber.out.1
           fgrep registries/missing/devices pubber.out.1
-          fgrep 'Not authorized to connect' pubber.out.1
+          fgrep 'While waiting for connection start: Connection error' pubber.out.1
+          fgrep 'Endpoint connection restored to last working endpoint' pubber.out.1
       - name: pubber config checks
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -81,9 +81,9 @@ jobs:
           echo :::::::
           echo Check the redirect-by-config setup
           fgrep registries/ZZ-TRI-FECTA/devices pubber.out.2
-          fgrep 'system.config.parse success' pubber.out.2
           fgrep registries/reconfigure/devices pubber.out.2
-          fgrep 'Not authorized to connect' pubber.out.2
+          fgrep 'While waiting for connection start: Connection error' pubber.out.2
+          fgrep 'Endpoint connection restored to last working endpoint' pubber.out.2
     
   udmi:
     name: Sequence tests
