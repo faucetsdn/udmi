@@ -40,7 +40,56 @@ Each local branch also works with tracking information to help sort through the 
 
 ## git branch-status
 
+The `branch-status` utility only works with local information (so it's fast) and gives a view of
+the current state of the repo. It does _not_ automatically sync with any designated remote, so can
+show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`).
+
+* `ahead X`
+* `insync`: Equivalent to `ahead 0`, indicates that the branch is up-to-date and doesn't require any merge.
+* `disjoint`: Indicates 
+
+```
+~/udmi$ git branch-status 
+gittools       ahead 1; ahead master 5       Tools for working with git
+mapping        insync; ahead master 41       Mapping agent
+master         insync; insync master         
+registrar      insync; ahead master 85       SiteModel abstraction for registrar
+```
+
 ## git branch-update
+```
+~/udmi$ git branch-update
+Fetching upstream remote faucet master branch...
+Fetching upstream origin...
+Updating local master branch...
+Updating branch gittools...
+  Push to upstream origin/gittools...
+Updating branch mapping...
+Updating branch master...
+Updating branch registrar...
+Returning to local branch gittools.
+```
 
 ## git branch-remote
 
+```
+:~/udmi$ git branch-remote
+Updating/pruning remmote faucet...
+Updating/pruning remmote john...
+Updating/pruning remmote origin...
+Checking local remote references...
+  git push john -d auth_login_line  # Stale, last merged 1 year, 10 months ago
+  git push john -d dependabot/npm_and_yarn/udms/follow-redirects-1.14.8  # Stale, last merged 6 months ago
+  git push john -d dependabot/npm_and_yarn/udms/karma-6.3.14  # Stale, last merged 7 months ago
+  git push john -d jrand  # Upstream branch is same as master
+  git push john -d renovate/actions-setup-java-2.x  # Stale, last merged 1 year, 1 month ago
+  git push john -d renovate/angular-monorepo  # Stale, last merged 1 year, 1 month ago
+  git push origin -d feature  # Stale, last merged 6 months ago
+  git push origin -d fix_schema  # Stale, last merged 3 months ago
+  git push origin -d fixes  # Stale, last merged 10 months ago
+  git push origin -d logging  # Stale, last merged 5 months ago
+  git push origin -d merging  # Stale, last merged 3 months ago
+  git push origin -d partial  # Stale, last merged 10 months ago
+  git push origin -d provisioner  # Stale, last merged 1 year, 11 months ago
+  git push origin -d regfix  # Stale, last merged 1 year, 7 months ago
+```
