@@ -30,7 +30,7 @@ git branch -a | while read branch; do
         if [[ -z $lremote ]]; then
             echo "  git branch --set-upstream-to=$leader $branch  # Reconnect orphaned remote branch"
         fi
-        continue  # Branch exists locally, ignore remote...
+        continue  # Branch locally, ignore remote...
     fi
 
     rbranch=$remote/$branch
@@ -41,9 +41,12 @@ git branch -a | while read branch; do
 
     mergebase=$(git merge-base $main $leader)
     diffcount=$(git diff $leader $mergebase | wc -l)
+    merged=$(git log -n 1 --pretty=format:"%cd" --date relative $mergebase)
+    read num unit extra <<< $merged
     if [[ $diffcount -eq 0 ]]; then
-        echo "  git push $remote -d $branch  # Delete branch, has remote parity."
-    else
-        echo "  git diff $leader $mergebase  # See remote branch orphaned contents."
+        echo "  git push $remote -d $branch  # Upstream branch is same as $main"
+    elif [[ $unit == month* || $unit == year* ]]; then
+        # Note one month is reported in terms of weeks, so not considered stale.
+        echo "  git push $remote -d $branch  # Stale, last merged $merged"
     fi
 done
