@@ -149,6 +149,7 @@ public class Pubber {
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final String projectId;
   private final String deviceId;
+  private final Object reconnectLock = new Object();
   private Config deviceConfig = new Config();
   private int deviceMessageCount = -1;
   private MqttPublisher mqttPublisher;
@@ -726,9 +727,11 @@ public class Pubber {
       publisherHandler(((PublisherException) toReport).type, ((PublisherException) toReport).phase,
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
-      if (connectionDone != null) {
-        while (connectionDone.apply(configuration.deviceId)) {
-          warn("Retrying reconnect handler...");
+      synchronized (reconnectLock) {
+        if (connectionDone != null) {
+          while (connectionDone.apply(configuration.deviceId)) {
+            warn("Retrying reconnect handler...");
+          }
         }
       }
     } else {
@@ -799,7 +802,6 @@ public class Pubber {
       publisherConfigLog("apply", null);
     } catch (Exception e) {
       publisherConfigLog("apply", e);
-      trace(stackTraceString(e));
     }
     publishAsynchronousState();
   }
@@ -896,11 +898,14 @@ public class Pubber {
     try {
       configuration.endpoint = OBJECT_MAPPER.readValue(targetEndpoint,
           EndpointConfiguration.class);
-      disconnectMqtt();
-      initializeMqtt();
-      retriesRemaining.set(CONNECT_RETRIES);
-      startConnection(connectionDone);
+      synchronized (reconnectLock) {
+        disconnectMqtt();
+        initializeMqtt();
+        retriesRemaining.set(CONNECT_RETRIES);
+        startConnection(connectionDone);
+      }
     } catch (Exception e) {
+      stop();
       throw new RuntimeException("While resetting connection", e);
     }
   }
@@ -1311,17 +1316,19 @@ public class Pubber {
   }
 
   private void publishDeviceMessage(Object message, Runnable callback) {
-    if (mqttPublisher == null || !mqttPublisher.isActive()) {
-      throw new RuntimeException("Ignoring publish message b/c connection is shutdown, stopping.");
-    }
     String topic = MESSAGE_TOPIC_MAP.get(message.getClass());
     if (topic == null) {
       error("Unknown message class " + message.getClass());
       return;
     }
-    augmentDeviceMessage(message);
-    mqttPublisher.publish(configuration.deviceId, topic, message, callback);
 
+    augmentDeviceMessage(message);
+    synchronized (reconnectLock) {
+      if (!publisherActive()) {
+        throw new RuntimeException("Connection already shutdown, stopping.");
+      }
+      mqttPublisher.publish(configuration.deviceId, topic, message, callback);
+    }
     String messageBase = topic.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
@@ -1356,11 +1363,15 @@ public class Pubber {
     cloudLog(message, level, null);
   }
 
+  private boolean publisherActive() {
+    return mqttPublisher != null && mqttPublisher.isActive();
+  }
+
   private void cloudLog(String message, Level level, String detail) {
     String timestamp = getTimestamp();
     localLog(message, level, timestamp, detail);
 
-    if (publishingLog || mqttPublisher == null) {
+    if (publishingLog || !publisherActive()) {
       return;
     }
 
@@ -1431,7 +1442,6 @@ public class Pubber {
   private void error(String message, Throwable e) {
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
-    trace(stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {
