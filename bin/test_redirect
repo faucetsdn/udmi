@@ -86,8 +86,6 @@ bin/reset_config $site_path $project_id $device_id redirect_config.json
 echo Let pubber react to the new configuration...
 sleep 20
 
-false #TAP
-
 echo Restart the system...
 echo bin/reset_config $site_path $project_id $device_id restart_config.json
 bin/reset_config $site_path $project_id $device_id restart_config.json
