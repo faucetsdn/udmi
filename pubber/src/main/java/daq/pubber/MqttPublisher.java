@@ -190,7 +190,6 @@ public class MqttPublisher {
       }
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      e.printStackTrace();
       warn(String.format("Publish failed for %s: %s", deviceId, e));
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
