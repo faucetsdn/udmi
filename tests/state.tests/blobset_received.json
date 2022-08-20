@@ -25,7 +25,7 @@
         }
       },
       "_firmware_update": {
-        "phase": "updating",
+        "phase": "apply",
         "status": {
           "message": "Processing firmware update",
           "category": "blobset.blob.apply",
