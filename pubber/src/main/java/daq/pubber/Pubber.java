@@ -1359,12 +1359,12 @@ public class Pubber {
     }
   }
 
-  private void cloudLog(String message, Level level) {
-    cloudLog(message, level, null);
-  }
-
   private boolean publisherActive() {
     return mqttPublisher != null && mqttPublisher.isActive();
+  }
+
+  private void cloudLog(String message, Level level) {
+    cloudLog(message, level, null);
   }
 
   private void cloudLog(String message, Level level, String detail) {
