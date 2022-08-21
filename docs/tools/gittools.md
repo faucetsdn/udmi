@@ -9,6 +9,7 @@ using git will still require some detailed knowledge of how it works to resolve 
 etc...
 
 * `git-branch-status`: Shows the status of all local branches as configured against their origin or parents.
+* `git-branch-create`: Create a new clean branch with provided description.
 * `git-branch-update`: Updates all local branches and upstream repo to keep things in sync.
 * `git-branch-remote`: Scans upstream remote branches and makes suggestions for purging them.
 
@@ -31,7 +32,8 @@ you want to synchronize with:
 
 ## Branch Configuration
 
-Each local branch also works with tracking information to help sort through the needful:
+Each local branch also works with tracking information to help sort through the needful. This is
+handled automatically by `git-branch-create`:
 
 * `git config branch.$branch.description "SOME WORDS HERE"` as a reminder of what the branch is for.
 * `git config branch.$branch.parent $main` to set the parent (local) branch that $branch should track.
@@ -42,38 +44,31 @@ Each local branch also works with tracking information to help sort through the 
 
 The `branch-status` utility only works with local information (so it's fast) and gives a view of
 the current state of the repo. It does _not_ automatically sync with any designated remote, so can
-<<<<<<< Updated upstream
 show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`).
 
-* `ahead X`
-* `insync`: Equivalent to `ahead 0`, indicates that the branch is up-to-date and doesn't require any merge.
-* `disjoint`: Indicates 
+* `ahead X`: Branch is X commits ahead of its upstream/parent.
+* `behind X`: Branch is X commits behind its upstream/parent.
+* `insync`: Branch is neither ahead-nor-behind its upstream/parent.
+* `disjoint`: Indicates that the branch has forked from the parent, and is both ahead and behind.
 
 ```
 ~/udmi$ git branch-status 
 gittools       ahead 1; ahead master 5       Tools for working with git
 mapping        insync; ahead master 41       Mapping agent
-master         insync; insync master         
+master         insync; insync master
 registrar      insync; ahead master 85       SiteModel abstraction for registrar
 ```
 
-## git branch-update
+## git branch-create
 
-show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`). In
-the output, the keywords before the `;` are against any configured upstream, and keywords after
-`;` are against the locally configured parent (in this case `master`).
-
-* `ahead X`: Branch is X commits ahead of its upstream/parent.
-* `behind X`: Branch is X commits behind its upstream/parent.
-* `insync`: Branch is neither ahead-nor-behind its upstream/parent.
-* `disjoint`: Indicates that the branch is forked from the parent, and is both ahead and behind.
+Creates a new branch and configures the relevant properties for other git-branch-* tools. Really
+not very exciting but streamlines a few things and hopefully avoids some mistakes.
 
 ```
-~/udmi$ git branch-status 
-gittools       ahead 1; ahead master 6            Tools for working with git
-mapping        behind 3; disjoint master 40/1     Mapping agent
-master         insync; insync master
-registrar      insync; ahead master 85            SiteModel abstraction for registrar
+~/udmi$ git branch-create sequences Programmatically create sequences
+Already on 'master'
+Your branch is up to date with 'origin/master'.
+Switched to a new branch 'sequences'
 ```
 
 ## git branch-update
