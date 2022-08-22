@@ -1,5 +1,6 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Device, DevicesResponse, Point, SearchOptions } from '../../device/model';
+import { SearchOptions } from '../../common/model';
+import { Device, DevicesResponse, Point } from '../../device/model';
 import { createDevices } from './data';
 
 export default class MockDeviceDataSource extends GraphQLDataSource<object> {
@@ -39,12 +40,6 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
   async getDeviceModels(): Promise<string[]> {
     return createDevices(10)
       .map((d) => d.model)
-      .sort();
-  }
-
-  async getSiteNames(): Promise<string[]> {
-    return createDevices(10)
-      .map((d) => d.site)
       .sort();
   }
 

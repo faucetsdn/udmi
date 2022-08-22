@@ -2,8 +2,9 @@ import { ApolloServer, gql } from 'apollo-server';
 import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode } from 'graphql';
 import MockDeviceDataSource from './MockDeviceDataSource';
+import MockSiteDataSource from './MockSiteDataSource';
 import { typeDefs } from '../../server/schema';
-import { resolvers } from '../../device/resolvers';
+import { resolvers } from '../../server/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
 
 let testServer: ApolloServer;
@@ -114,6 +115,7 @@ beforeAll(async () => {
   const dataSources = () => {
     return {
       deviceDS: new MockDeviceDataSource(),
+      siteDS: new MockSiteDataSource(),
     };
   };
 

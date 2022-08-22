@@ -1,4 +1,4 @@
-import { SORT_DIRECTION } from '../../device/model';
+import { SORT_DIRECTION } from '../../common/model';
 import { getSort } from '../../mongo/MongoSortBuilder';
 
 describe('MongoSortBuilder.getSort', () => {

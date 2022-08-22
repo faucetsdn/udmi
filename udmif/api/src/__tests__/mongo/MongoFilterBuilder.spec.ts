@@ -1,4 +1,4 @@
-import { Filter } from '../../device/model';
+import { Filter } from '../../common/model';
 import { getFilter } from '../../mongo/MongoFilterBuilder';
 
 describe('MongoFilterBuilder.getFilter', () => {
