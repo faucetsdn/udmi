@@ -1,7 +1,8 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { SearchOptions, Site, SitesResponse, SiteNamesSearchOptions, ValidatedSiteNamesSearchOptions } from './model';
-import { validate, validateSiteNamesSearchOptions } from './SearchOptionsValidator';
+import { Site, SitesResponse } from './model';
 import { DAO } from '../dao/DAO';
+import { ValidatedDistinctSearchOptions, DistinctSearchOptions, SearchOptions } from '../common/model';
+import { validate, validateDistinctSearchOptions } from '../common/SearchOptionsValidator';
 
 export class SiteDataSource extends GraphQLDataSource {
   constructor(private siteDAO: DAO<Site>) {
@@ -12,8 +13,8 @@ export class SiteDataSource extends GraphQLDataSource {
     super.initialize(config);
   }
 
-  async getSiteNames(searchOptions?: SiteNamesSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedSiteNamesSearchOptions = validateSiteNamesSearchOptions(searchOptions);
+  async getSiteNames(searchOptions?: DistinctSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.siteDAO.getDistinct('name', validatedSearchOptions);
   }
 

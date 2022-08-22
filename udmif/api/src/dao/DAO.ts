@@ -1,12 +1,13 @@
 import { Collection, Filter } from 'mongodb';
 import { Configuration } from '../server/config';
-import { fromString } from '../device/FilterParser';
-import { Device, SearchOptions, ValidatedCommonSearchOptions } from '../device/model';
+import { Device } from '../device/model';
 import { Site } from '../site/model';
 import { getMongoCollection } from '../mongo/MongoCollectionProvider';
 import { getAggregate } from '../mongo/MongoAggregateBuilder';
 import { getFilter } from '../mongo/MongoFilterBuilder';
 import { getSort } from '../mongo/MongoSortBuilder';
+import { fromString } from '../common/FilterParser';
+import { SearchOptions, ValidatedCommonSearchOptions } from '../common/model';
 
 export async function getDeviceDAO(systemConfiguration: Configuration): Promise<DefaultDAO<Device>> {
   return new DefaultDAO<Device>(await getMongoCollection<Device>('device', systemConfiguration));

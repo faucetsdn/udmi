@@ -1,6 +1,7 @@
 import { ApolloServer } from 'apollo-server';
 import dataSources from './server/datasources';
 import { typeDefs } from './server/schema';
+import { resolvers as commonResolvers } from './common/resolvers';
 import { resolvers as deviceResolvers } from './device/resolvers';
 import { resolvers as siteResolvers } from './site/resolvers';
 import { logger } from './common/logger';
@@ -24,7 +25,7 @@ import { merge } from 'lodash';
   // server initialization
   const server: ApolloServer = new ApolloServer({
     typeDefs,
-    resolvers: merge(deviceResolvers, siteResolvers),
+    resolvers: merge(commonResolvers, deviceResolvers, siteResolvers),
     context,
     dataSources: dataSources(deviceDAO, siteDAO),
   });

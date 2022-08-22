@@ -1,35 +1,3 @@
-input SearchOptions {
-  # the number of records to retrieve
-  batchSize: Int!
-  # the records to start at
-  offset: Int
-  # the search options
-  sortOptions: SortOptions
-  # the search filter
-  filter: String
-}
-
-input SiteNamesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SortOptions {
-  # the direction the data should be sorted
-  direction: SORT_DIRECTION
-  # the field that the sorting should be applied to
-  field: String!
-}
-
-enum SORT_DIRECTION {
-  # Descending
-  DESC
-  # Ascending
-  ASC
-}
-
 type SitesResponse {
   # the sites that matched the search options
   sites: [Site!]!
@@ -48,7 +16,7 @@ type Site {
 
 type Query {
   # Get a list of sites
-  siteNames(searchOptions: SiteNamesSearchOptions) : [String!]!
-  # Get a list of sites
   sites(searchOptions: SearchOptions!) : SitesResponse
+  # Get a list of sites
+  siteNames(searchOptions: DistinctSearchOptions) : [String!]!
 }

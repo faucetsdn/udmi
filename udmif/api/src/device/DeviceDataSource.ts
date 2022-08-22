@@ -1,26 +1,8 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import {
-  Device,
-  DeviceMakesSearchOptions,
-  DeviceModelsSearchOptions,
-  DeviceNamesSearchOptions,
-  DevicesResponse,
-  Point,
-  SearchOptions,
-  SectionsSearchOptions,
-  ValidatedDeviceMakesSearchOptions,
-  ValidatedDeviceModelsSearchOptions,
-  ValidatedDeviceNamesSearchOptions,
-  ValidatedSectionsSearchOptions,
-} from './model';
-import {
-  validate,
-  validateDeviceMakesSearchOptions,
-  validateDeviceModelsSearchOptions,
-  validateDeviceNamesSearchOptions,
-  validateSectionsSearchOptions,
-} from './SearchOptionsValidator';
+import { Device, DevicesResponse, Point } from './model';
+import { validate, validateDistinctSearchOptions } from '../common/SearchOptionsValidator';
 import { DAO } from '../dao/DAO';
+import { ValidatedDistinctSearchOptions, DistinctSearchOptions, SearchOptions } from '../common/model';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DAO<Device>) {
@@ -49,23 +31,23 @@ export class DeviceDataSource extends GraphQLDataSource {
     return (await this.getDevice(deviceId))?.points ?? [];
   }
 
-  async getDeviceNames(searchOptions?: DeviceNamesSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedDeviceNamesSearchOptions = validateDeviceNamesSearchOptions(searchOptions);
+  async getDeviceNames(searchOptions?: DistinctSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.deviceDAO.getDistinct('name', validatedSearchOptions);
   }
 
-  async getDeviceMakes(searchOptions?: DeviceMakesSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedDeviceMakesSearchOptions = validateDeviceMakesSearchOptions(searchOptions);
+  async getDeviceMakes(searchOptions?: DistinctSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.deviceDAO.getDistinct('make', validatedSearchOptions);
   }
 
-  async getDeviceModels(searchOptions?: DeviceModelsSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedDeviceModelsSearchOptions = validateDeviceModelsSearchOptions(searchOptions);
+  async getDeviceModels(searchOptions?: DistinctSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.deviceDAO.getDistinct('model', validatedSearchOptions);
   }
 
-  async getSections(searchOptions?: SectionsSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedSectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
+  async getSections(searchOptions?: DistinctSearchOptions): Promise<string[]> {
+    const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.deviceDAO.getDistinct('section', validatedSearchOptions);
   }
 }
