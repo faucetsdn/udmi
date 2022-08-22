@@ -1,4 +1,4 @@
-import { SortOptions, SORT_DIRECTION } from '../../device/model';
+import { SortOptions, SORT_DIRECTION } from '../device/model';
 
 export function getSort(sortOptions: SortOptions): any {
   let direction = 1;

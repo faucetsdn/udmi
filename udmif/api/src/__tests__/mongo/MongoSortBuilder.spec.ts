@@ -1,5 +1,5 @@
-import { SortOptions, SORT_DIRECTION } from '../../../../device/model';
-import { getSort } from '../../../../dao/mongodb/MongoSortBuilder';
+import { SORT_DIRECTION } from '../../device/model';
+import { getSort } from '../../mongo/MongoSortBuilder';
 
 describe('MongoSortBuilder.getSort', () => {
   test('returns a sort ASC object with the direction set', async () => {

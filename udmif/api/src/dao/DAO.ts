@@ -3,10 +3,10 @@ import { Configuration } from '../server/config';
 import { fromString } from '../device/FilterParser';
 import { Device, SearchOptions, ValidatedCommonSearchOptions } from '../device/model';
 import { Site } from '../site/model';
-import { getMongoCollection } from './MongoCollectionProvider';
-import { getAggregate } from './mongodb/MongoAggregateBuilder';
-import { getFilter } from './mongodb/MongoFilterBuilder';
-import { getSort } from './mongodb/MongoSortBuilder';
+import { getMongoCollection } from '../mongo/MongoCollectionProvider';
+import { getAggregate } from '../mongo/MongoAggregateBuilder';
+import { getFilter } from '../mongo/MongoFilterBuilder';
+import { getSort } from '../mongo/MongoSortBuilder';
 
 export async function getDeviceDAO(systemConfiguration: Configuration): Promise<DefaultDAO<Device>> {
   return new DefaultDAO<Device>(await getMongoCollection<Device>('device', systemConfiguration));

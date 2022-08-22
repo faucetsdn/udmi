@@ -1,4 +1,4 @@
-import { getAggregate } from '../../../../dao/mongodb/MongoAggregateBuilder';
+import { getAggregate } from '../../mongo/MongoAggregateBuilder';
 
 describe('MongoAggregateBuilder.getAggregate', () => {
   test('return a propery built aggregate', () => {
