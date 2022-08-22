@@ -1,16 +1,10 @@
 import { logger } from '../common/logger';
 import {
   CommonSearchOptions,
-  DeviceMakesSearchOptions,
-  DeviceModelsSearchOptions,
-  DeviceNamesSearchOptions,
   SearchOptions,
-  SectionsSearchOptions,
+  SiteNamesSearchOptions,
   ValidatedCommonSearchOptions,
-  ValidatedDeviceMakesSearchOptions,
-  ValidatedDeviceModelsSearchOptions,
-  ValidatedDeviceNamesSearchOptions,
-  ValidatedSectionsSearchOptions,
+  ValidatedSiteNamesSearchOptions,
 } from './model';
 
 export function validate(searchOptions: SearchOptions): SearchOptions {
@@ -31,31 +25,9 @@ export function validate(searchOptions: SearchOptions): SearchOptions {
   return validatedSearchOption;
 }
 
-export function validateDeviceNamesSearchOptions(
-  searchOptions?: DeviceNamesSearchOptions
-): ValidatedDeviceNamesSearchOptions {
-  return {
-    ...validateCommonSearchOptions(searchOptions),
-  };
-}
-
-export function validateDeviceMakesSearchOptions(
-  searchOptions?: DeviceMakesSearchOptions
-): ValidatedDeviceMakesSearchOptions {
-  return {
-    ...validateCommonSearchOptions(searchOptions),
-  };
-}
-
-export function validateDeviceModelsSearchOptions(
-  searchOptions?: DeviceModelsSearchOptions
-): ValidatedDeviceModelsSearchOptions {
-  return {
-    ...validateCommonSearchOptions(searchOptions),
-  };
-}
-
-export function validateSectionsSearchOptions(searchOptions?: SectionsSearchOptions): ValidatedSectionsSearchOptions {
+export function validateSiteNamesSearchOptions(
+  searchOptions?: SiteNamesSearchOptions
+): ValidatedSiteNamesSearchOptions {
   return {
     ...validateCommonSearchOptions(searchOptions),
   };

@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, FindCursor } from 'mongodb';
-import { MongoDeviceDAO } from '../../../../device/dao/mongodb/MongoDeviceDAO';
+import { MongoDeviceDAO } from '../../../../dao/mongodb/MongoDeviceDAO';
 import { Device, Point, SearchOptions, SORT_DIRECTION } from '../../../../device/model';
 import { createDevices } from '../../data';
 

@@ -8,6 +8,7 @@ const readSchema = (path: string, file: string): string => {
 };
 
 const deviceSchema: string = readSchema('./src/device', 'schema.graphql');
+const siteSchema: string = readSchema('./src/site', 'schema.graphql');
 
 // build up master schema from individual schema files
-export const typeDefs: DocumentNode = gql(deviceSchema);
+export const typeDefs: DocumentNode = gql(deviceSchema + siteSchema);

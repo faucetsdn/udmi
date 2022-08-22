@@ -30,13 +30,6 @@ input DeviceModelsSearchOptions {
   limit: Int
 }
 
-input SiteNamesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
 input SectionsSearchOptions {
   # the string to search for
   search: String
@@ -65,22 +58,6 @@ type DevicesResponse {
   totalCount: Int!
   # the total number of devices after the filter in the search options has been applied
   totalFilteredCount: Int!
-}
-
-type SitesResponse {
-  # the sites that matched the search options
-  sites: [Site!]!
-  # the total number of sites in the system
-  totalCount: Int!
-  # the total number of sites after the filter in the search options has been applied
-  totalFilteredCount: Int!
-}
-
-type Site {
-  # the ID of the site
-  id: ID!
-  # the name of the site
-  name: String!
 }
 
 type Point{
@@ -136,10 +113,6 @@ type Query {
   deviceMakes(searchOptions: DeviceMakesSearchOptions) : [String!]!
   # Get a list of device models
   deviceModels(searchOptions: DeviceModelsSearchOptions) : [String!]!
-  # Get a list of sites
-  siteNames(searchOptions: SiteNamesSearchOptions) : [String!]!
   # Get a list of sections
   sections(searchOptions: SectionsSearchOptions) : [String!]!
-  # Get a list of sites
-  sites(searchOptions: SearchOptions!) : SitesResponse
 }

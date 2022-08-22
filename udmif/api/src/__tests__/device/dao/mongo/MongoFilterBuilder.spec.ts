@@ -1,5 +1,5 @@
 import { Filter } from '../../../../device/model';
-import { getFilter } from '../../../../device/dao/mongodb/MongoFilterBuilder';
+import { getFilter } from '../../../../dao/mongodb/MongoFilterBuilder';
 
 describe('MongoFilterBuilder.getFilter', () => {
   test('multiple contains filters on the different field results in a ANDed filter where the same field uses an in clause', () => {

@@ -1,6 +1,6 @@
 import { Device, SearchOptions } from '../../../../device/model';
-import { DeviceDAO } from '../../../../device/dao/DeviceDAO';
-import { StaticDeviceDAO } from '../../../../device/dao/static/StaticDeviceDAO';
+import { DeviceDAO } from '../../../../dao/DeviceDAO';
+import { StaticDeviceDAO } from '../../../../dao/StaticDeviceDAO';
 import { createSearchOptions } from '../../data';
 
 const deviceDAO: DeviceDAO = new StaticDeviceDAO();

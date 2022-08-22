@@ -4,12 +4,6 @@ export interface DevicesResponse {
   totalFilteredCount: number;
 }
 
-export interface SitesResponse {
-  sites: Site[];
-  totalCount: number;
-  totalFilteredCount: number;
-}
-
 export interface SearchOptions {
   batchSize: number;
   offset?: number;
@@ -25,7 +19,6 @@ export interface ValidatedCommonSearchOptions {
 export interface ValidatedDeviceNamesSearchOptions extends ValidatedCommonSearchOptions {}
 export interface ValidatedDeviceMakesSearchOptions extends ValidatedCommonSearchOptions {}
 export interface ValidatedDeviceModelsSearchOptions extends ValidatedCommonSearchOptions {}
-export interface ValidatedSiteNamesSearchOptions extends ValidatedCommonSearchOptions {}
 export interface ValidatedSectionsSearchOptions extends ValidatedCommonSearchOptions {}
 
 export interface CommonSearchOptions {
@@ -36,7 +29,6 @@ export interface CommonSearchOptions {
 export interface DeviceNamesSearchOptions extends CommonSearchOptions {}
 export interface DeviceMakesSearchOptions extends CommonSearchOptions {}
 export interface DeviceModelsSearchOptions extends CommonSearchOptions {}
-export interface SiteNamesSearchOptions extends CommonSearchOptions {}
 export interface SectionsSearchOptions extends CommonSearchOptions {}
 
 export interface Point {
@@ -60,11 +52,6 @@ export interface Device {
   serialNumber: string;
   tags?: string[];
   points?: Point[];
-}
-
-export interface Site {
-  id: string;
-  name: string;
 }
 
 export interface SortOptions {

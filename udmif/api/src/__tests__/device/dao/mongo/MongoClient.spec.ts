@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { getMongoDb } from '../../../../device/dao/mongodb/MongoClient';
+import { getMongoDb } from '../../../../dao/mongodb/MongoClient';
 import { Configuration } from '../../../../server/config';
 
 const mockDb = jest.fn();

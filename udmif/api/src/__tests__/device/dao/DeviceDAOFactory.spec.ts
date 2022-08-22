@@ -1,7 +1,7 @@
 import { loadConfig } from '../../../server/config';
-import { getDeviceDAO } from '../../../device/dao/DeviceDAOFactory';
-import { StaticDeviceDAO } from '../../../device/dao/static/StaticDeviceDAO';
-import { MongoDeviceDAO } from '../../../device/dao/mongodb/MongoDeviceDAO';
+import { getDeviceDAO } from '../../../dao/DeviceDAOFactory';
+import { StaticDeviceDAO } from '../../../dao/StaticDeviceDAO';
+import { MongoDeviceDAO } from '../../../dao/mongodb/MongoDeviceDAO';
 import { MongoClient } from 'mongodb';
 
 const mockClient = jest.fn().mockImplementation(() => {

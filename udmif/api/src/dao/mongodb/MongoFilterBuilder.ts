@@ -1,4 +1,4 @@
-import { Filter } from '../../../device/model';
+import { Filter } from '../../device/model';
 
 // list of possible columns to search on
 const filterableColumns = ['name', 'make', 'model', 'site', 'section'];

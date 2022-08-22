@@ -8,27 +8,22 @@ import {
   Point,
   SearchOptions,
   SectionsSearchOptions,
-  Site,
-  SitesResponse,
-  SiteNamesSearchOptions,
   ValidatedDeviceMakesSearchOptions,
   ValidatedDeviceModelsSearchOptions,
   ValidatedDeviceNamesSearchOptions,
   ValidatedSectionsSearchOptions,
-  ValidatedSiteNamesSearchOptions,
 } from './model';
-import { DeviceDAO } from './dao/DeviceDAO';
 import {
   validate,
   validateDeviceMakesSearchOptions,
   validateDeviceModelsSearchOptions,
   validateDeviceNamesSearchOptions,
   validateSectionsSearchOptions,
-  validateSiteNamesSearchOptions,
 } from './SearchOptionsValidator';
+import { DAO } from '../dao/DAO';
 
 export class DeviceDataSource extends GraphQLDataSource {
-  constructor(private deviceDAO: DeviceDAO) {
+  constructor(private deviceDAO: DAO<Device>) {
     super();
   }
 
@@ -39,53 +34,38 @@ export class DeviceDataSource extends GraphQLDataSource {
   async getDevices(searchOptions: SearchOptions): Promise<DevicesResponse> {
     const validatedSearchOptions: SearchOptions = validate(searchOptions);
 
-    const devices: Device[] = await this.deviceDAO.getDevices(validatedSearchOptions);
-    const totalCount = await this.deviceDAO.getDeviceCount();
-    const totalFilteredCount: number = await this.deviceDAO.getFilteredDeviceCount(validatedSearchOptions);
+    const devices: Device[] = await this.deviceDAO.getAll(validatedSearchOptions);
+    const totalCount = await this.deviceDAO.getCount();
+    const totalFilteredCount: number = await this.deviceDAO.getFilteredCount(validatedSearchOptions);
 
     return { devices, totalCount, totalFilteredCount };
   }
 
   async getDevice(id: string): Promise<Device> {
-    return this.deviceDAO.getDevice(id);
+    return this.deviceDAO.getOne({ id });
   }
 
   async getPoints(deviceId: string): Promise<Point[]> {
-    return this.deviceDAO.getPoints(deviceId);
+    return (await this.getDevice(deviceId))?.points ?? [];
   }
 
   async getDeviceNames(searchOptions?: DeviceNamesSearchOptions): Promise<string[]> {
     const validatedSearchOptions: ValidatedDeviceNamesSearchOptions = validateDeviceNamesSearchOptions(searchOptions);
-    return this.deviceDAO.getDeviceNames(validatedSearchOptions);
+    return this.deviceDAO.getDistinct('name', validatedSearchOptions);
   }
 
   async getDeviceMakes(searchOptions?: DeviceMakesSearchOptions): Promise<string[]> {
     const validatedSearchOptions: ValidatedDeviceMakesSearchOptions = validateDeviceMakesSearchOptions(searchOptions);
-    return this.deviceDAO.getDeviceMakes(validatedSearchOptions);
+    return this.deviceDAO.getDistinct('make', validatedSearchOptions);
   }
 
   async getDeviceModels(searchOptions?: DeviceModelsSearchOptions): Promise<string[]> {
     const validatedSearchOptions: ValidatedDeviceModelsSearchOptions = validateDeviceModelsSearchOptions(searchOptions);
-    return this.deviceDAO.getDeviceModels(validatedSearchOptions);
-  }
-
-  async getSiteNames(searchOptions?: SiteNamesSearchOptions): Promise<string[]> {
-    const validatedSearchOptions: ValidatedSiteNamesSearchOptions = validateSiteNamesSearchOptions(searchOptions);
-    return this.deviceDAO.getSiteNames(validatedSearchOptions);
+    return this.deviceDAO.getDistinct('model', validatedSearchOptions);
   }
 
   async getSections(searchOptions?: SectionsSearchOptions): Promise<string[]> {
     const validatedSearchOptions: ValidatedSectionsSearchOptions = validateSectionsSearchOptions(searchOptions);
-    return this.deviceDAO.getSections(validatedSearchOptions);
-  }
-
-  async getSites(searchOptions: SearchOptions): Promise<SitesResponse> {
-    const validatedSearchOptions: SearchOptions = validate(searchOptions);
-
-    const sites: Site[] = await this.deviceDAO.getSites(validatedSearchOptions);
-    const totalCount = await this.deviceDAO.getSiteCount();
-    const totalFilteredCount: number = await this.deviceDAO.getFilteredSiteCount(validatedSearchOptions);
-
-    return { sites, totalCount, totalFilteredCount };
+    return this.deviceDAO.getDistinct('section', validatedSearchOptions);
   }
 }

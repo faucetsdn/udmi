@@ -1,8 +1,8 @@
 import { Device, DevicesResponse, Point, SearchOptions, SitesResponse } from '../../device/model';
 import { DeviceDataSource } from '../../device/DeviceDataSource';
 import { createSearchOptions } from './data';
-import { DeviceDAO } from '../../device/dao/DeviceDAO';
-import { StaticDeviceDAO } from '../../device/dao/static/StaticDeviceDAO';
+import { DeviceDAO } from '../../dao/DeviceDAO';
+import { StaticDeviceDAO } from '../../dao/StaticDeviceDAO';
 
 const deviceDAO: DeviceDAO = new StaticDeviceDAO();
 const deviceDS = new DeviceDataSource(deviceDAO);
