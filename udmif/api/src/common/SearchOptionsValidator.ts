@@ -1,4 +1,4 @@
-import { logger } from '../common/logger';
+import { logger } from './logger';
 import {
   CommonSearchOptions,
   SearchOptions,

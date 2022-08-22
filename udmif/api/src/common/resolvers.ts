@@ -1,4 +1,4 @@
-import { SORT_DIRECTION } from '../common/model';
+import { SORT_DIRECTION } from './model';
 
 export const resolvers = {
   SORT_DIRECTION: {
