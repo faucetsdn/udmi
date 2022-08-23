@@ -5,6 +5,6 @@ export interface SitesResponse {
 }
 
 export interface Site {
-  id: string;
+  id?: string;
   name: string;
 }

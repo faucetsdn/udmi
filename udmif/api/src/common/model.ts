@@ -5,17 +5,21 @@ export interface SearchOptions {
   filter?: string;
 }
 
-export interface ValidatedCommonSearchOptions {
-  search?: string;
-  limit: number;
+export interface ValidatedSearchOptions {
+  batchSize: number;
+  offset: number;
+  sortOptions?: SortOptions;
+  filter?: string;
 }
 
-export interface DistinctSearchOptions extends CommonSearchOptions {}
-export interface ValidatedDistinctSearchOptions extends ValidatedCommonSearchOptions {}
-
-export interface CommonSearchOptions {
+export interface DistinctSearchOptions {
   search?: string;
   limit?: number;
+}
+
+export interface ValidatedDistinctSearchOptions {
+  search?: string;
+  limit: number;
 }
 
 export interface SortOptions {

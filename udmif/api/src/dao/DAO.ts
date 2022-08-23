@@ -7,7 +7,7 @@ import { getAggregate } from '../mongo/MongoAggregateBuilder';
 import { getFilter } from '../mongo/MongoFilterBuilder';
 import { getSort } from '../mongo/MongoSortBuilder';
 import { fromString } from '../common/FilterParser';
-import { SearchOptions, ValidatedCommonSearchOptions } from '../common/model';
+import { ValidatedDistinctSearchOptions, ValidatedSearchOptions } from '../common/model';
 
 export async function getDeviceDAO(systemConfiguration: Configuration): Promise<DefaultDAO<Device>> {
   return new DefaultDAO<Device>(await getMongoCollection<Device>('device', systemConfiguration));
@@ -18,11 +18,11 @@ export async function getSiteDAO(systemConfiguration: Configuration): Promise<De
 }
 
 export interface DAO<Type> {
-  getAll(searchOptions: SearchOptions): Promise<Type[]>;
+  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]>;
   getOne(filterQuery: any): Promise<Type>;
-  getFilteredCount(searchOptions: SearchOptions): Promise<number>;
+  getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number>;
   getCount(): Promise<number>;
-  getDistinct(field: string, searchOptions: ValidatedCommonSearchOptions): Promise<string[]>;
+  getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]>;
 }
 
 /**
@@ -35,7 +35,7 @@ export class DefaultDAO<Type> implements DAO<Type> {
    * Returns all the entries for the type of collection specified
    * based on any search options provided.
    */
-  async getAll(searchOptions: SearchOptions): Promise<Type[]> {
+  async getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
     return this.collection
       .find<Type>(this.getFilter(searchOptions))
       .sort(this.getSort(searchOptions))
@@ -56,7 +56,7 @@ export class DefaultDAO<Type> implements DAO<Type> {
    * Returns the number of entries in the collection
    * based on any search options provided.
    */
-  async getFilteredCount(searchOptions: SearchOptions): Promise<number> {
+  async getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number> {
     return this.collection.countDocuments(this.getFilter(searchOptions));
   }
 
@@ -71,18 +71,18 @@ export class DefaultDAO<Type> implements DAO<Type> {
    * Returns an array of unique results off a field based on any search
    * options provided.
    */
-  async getDistinct(field: string, searchOptions: ValidatedCommonSearchOptions): Promise<string[]> {
+  async getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]> {
     return this.collection
       .aggregate(getAggregate(field, searchOptions.limit, searchOptions.search))
       .map((entity: Type) => entity[field])
       .toArray();
   }
 
-  private getFilter(searchOptions: SearchOptions): Filter<Type> {
+  private getFilter(searchOptions: ValidatedSearchOptions): Filter<Type> {
     return searchOptions.filter ? getFilter(fromString(searchOptions.filter)) : {};
   }
 
-  private getSort(searchOptions: SearchOptions): any {
+  private getSort(searchOptions: ValidatedSearchOptions): any {
     return searchOptions.sortOptions ? getSort(searchOptions.sortOptions) : {};
   }
 }
