@@ -1,6 +1,6 @@
 import { validateSearchOptions, validateDistinctSearchOptions } from '../../common/SearchOptionsValidator';
 
-describe('validateSearchOptions', () => {
+describe('SearchOptionsValidator.validateSearchOptions', () => {
   test('defaults offset if not provided', () => {
     expect(validateSearchOptions({ batchSize: 100 })).toEqual({ batchSize: 100, offset: 0 });
   });
@@ -15,7 +15,7 @@ describe('validateSearchOptions', () => {
   });
 });
 
-describe('validateDistinctSearchOptions', () => {
+describe('SearchOptionsValidator.validateDistinctSearchOptions', () => {
   test.each([
     [0, 0],
     [null, 10],

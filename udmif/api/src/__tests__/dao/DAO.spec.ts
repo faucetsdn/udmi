@@ -3,21 +3,13 @@ import { DAO } from '../../dao/DAO';
 import { DefaultDAO } from '../../dao/DAO';
 import { Device } from '../../device/model';
 
-const mockClient = jest.fn().mockImplementation(() => {
-  return {
-    db: () => {
-      return { collection: jest.fn() };
-    },
-  };
-});
-
-// mongo collection
-let connection: MongoClient;
-let db: Db;
-
 describe('DAO', () => {
   let deviceDao: DAO<Device>; // test with Device as an example
   let deviceCollection: Collection<Device>;
+  let connection: MongoClient;
+  let db: Db;
+
+  const mockClient = jest.fn();
 
   beforeAll(async () => {
     // in memory mongo
@@ -26,6 +18,12 @@ describe('DAO', () => {
   });
 
   beforeEach(async () => {
+    mockClient.mockReturnValue({
+      db: () => {
+        return { collection: jest.fn() };
+      },
+    });
+
     // mock the static MongoClient.connect here
     MongoClient.connect = mockClient;
 
