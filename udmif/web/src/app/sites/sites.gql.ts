@@ -14,7 +14,7 @@ export const GET_SITES = gql`
 `;
 
 export const GET_SITE_NAMES = gql`
-  query GetSiteNames($searchOptions: SiteNamesSearchOptions) {
+  query GetSiteNames($searchOptions: DistinctSearchOptions) {
     siteNames(searchOptions: $searchOptions)
   }
 `;
