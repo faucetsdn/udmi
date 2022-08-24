@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.validator.validations;
 
-import static com.google.daq.mqtt.validator.CleanDateFormat.cleanDate;
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
