@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.validator.ConfigDiffEngine.convertTo;
 import static com.google.daq.mqtt.validator.ConfigDiffEngine.toJsonString;
 import static java.util.Optional.ofNullable;
-import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -225,7 +224,9 @@ public abstract class SequenceValidator {
 
     @Override
     protected void finished(org.junit.runner.Description description) {
-      assert testName.equals(description.getMethodName());
+      if (!testName.equals(description.getMethodName())) {
+        throw new IllegalStateException("Unexpected test method name");
+      }
       long stopTimeMs = System.currentTimeMillis();
       notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
       testName = null;
@@ -264,7 +265,7 @@ public abstract class SequenceValidator {
         level = Level.ERROR;
       }
       recordCompletion(type, level, description, message);
-      recordSequence("Test failed: " + message);
+      withRecordSequence(true, () -> recordSequence("Test failed: " + message));
     }
 
     private void recordCompletion(String result, Level level,
@@ -280,6 +281,16 @@ public abstract class SequenceValidator {
       writeSystemLog(logEntry);
     }
   };
+
+  private void withRecordSequence(boolean value, Runnable operation) {
+    boolean saved = recordSequence;
+    recordSequence = value;
+    try {
+      operation.run();
+    } finally {
+      recordSequence = saved;
+    }
+  }
 
   private static void setReflectorState() {
     ReflectorState reflectorState = new ReflectorState();
@@ -409,8 +420,7 @@ public abstract class SequenceValidator {
 
   protected void resetConfig() {
     recordSequence("Force reset config");
-    boolean savedRecord = recordSequence;
-    try {
+    withRecordSequence(false, () -> {
       recordSequence = false;
       debug("Starting reset_config");
       resetDeviceConfig(true);
@@ -422,9 +432,7 @@ public abstract class SequenceValidator {
       resetDeviceConfig();
       waitForConfigSync();
       debug("Done with reset_config");
-    } finally {
-      recordSequence = savedRecord;
-    }
+    });
   }
 
   private void waitForConfigSync() {
@@ -443,7 +451,7 @@ public abstract class SequenceValidator {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    assertEquals("received serial no", serialNo, lastSerialNo);
+    checkThat("received serial no matches", serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -698,8 +706,8 @@ public abstract class SequenceValidator {
       lastSerialNo = deviceSerial;
     }
     boolean serialValid = deviceSerial != null && Objects.equals(serialNo, deviceSerial);
-    if (!serialValid && enforceSerial) {
-      assertEquals("state serial no", serialNo, deviceSerial);
+    if (!serialValid && enforceSerial && Objects.equals(serialNo, deviceSerial)) {
+      throw new IllegalStateException("Serial no mismatch " + serialNo + " != " + deviceSerial);
     }
     enforceSerial = serialValid;
     return serialValid;

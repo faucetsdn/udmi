@@ -82,6 +82,7 @@ Check that the device correctly handles an extra out-of-schema field
     * Add `discovery` = { "enumeration": { "generation": _generation start time_ } }
 1. Wait for enumeration generation
 1. Wait for enumeration still not active
+1. Test failed: matching event generation expected:<Wed Aug 24 08:40:04 PDT 2022> but was:<Wed Aug 24 08:39:49 PDT 2022>
 
 ## single_scan
 
@@ -111,6 +112,8 @@ Check that the min log-level config is honored by the device.
 
 ## valid_serial_no
 
+1. received serial no matches
 
 ## writeback_states
 
+1. Test failed: Missing 'invalid' target specification
