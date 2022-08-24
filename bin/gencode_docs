@@ -25,8 +25,8 @@ if [[ -n $1 ]]; then
     shift
 fi
 
-OUTPUT_DIR=$ROOT_DIR/gencode/docs
-TMP_DIR=$ROOT_DIR/tmp/schema
+OUTPUT_DIR=gencode/docs
+TMP_DIR=tmp/schema
 
 schema_files=`ls schema/*.json`
 
