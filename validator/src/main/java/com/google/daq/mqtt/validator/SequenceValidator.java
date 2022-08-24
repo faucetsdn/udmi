@@ -451,7 +451,7 @@ public abstract class SequenceValidator {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    checkThat("received serial no matches", serialNo.equals(lastSerialNo));
+    checkThat("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -752,12 +752,11 @@ public abstract class SequenceValidator {
     return outputStream.toString();
   }
 
-  protected void checkThat(String description, boolean condition) {
-    String message = "Check that " + description;
-    recordSequence(description);
-    if (!condition) {
-      throw new AssertionError(message);
+  protected void checkThat(String description, Supplier<Boolean> condition) {
+    if (!catchToFalse(condition)) {
+      throw new IllegalStateException("Failed check that " + description);
     }
+    recordSequence("Check that " + description);
   }
 
   protected List<Map<String, Object>> clearLogs() {

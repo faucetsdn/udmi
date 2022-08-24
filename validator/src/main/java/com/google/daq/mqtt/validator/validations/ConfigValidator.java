@@ -60,7 +60,7 @@ public class ConfigValidator extends SequenceValidator {
     info("initial stable_config " + getTimestamp(stableConfig));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
-        dateEquals(stableConfig, deviceState.system.last_config));
+        () -> dateEquals(stableConfig, deviceState.system.last_config));
     clearLogs();
     extraField = "break_json";
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
