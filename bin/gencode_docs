@@ -67,6 +67,18 @@ if [ "$OP" == check_links ]; then
         exit 1
     fi
 
+    missing=
+    echo Checking references to externally linked files...
+    fgrep -v \# etc/external_refs.txt | while read file comment; do
+        if [[ -n $file && ! -f $file ]]; then
+            echo "Reference to missing file '$file': $comment"
+            missing=y
+        fi
+    done
+
+    if [[ -n $missing ]]; then
+        exit 1
+    fi
     exit 0
 fi 
 

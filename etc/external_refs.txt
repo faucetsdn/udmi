@@ -1,0 +1,6 @@
+# This is a list of files that are (or might be) externally referenced.
+# This list is automatically checked, and if a file goes missing an error will be raised!
+# This is not sophisticated enough to check the _usage_ of any files.
+
+dashboard/deploy_dashboard_gcloud Referenced in MSI learning materials and documentation.
+
