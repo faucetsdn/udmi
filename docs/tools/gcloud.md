@@ -5,12 +5,12 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 
 # Viewing subscription
 
-bin/pull_message:gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack
+`bin/pull_message:gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack`
 
 # View cloud function logs
 
-gcloud --project=bos-peringknife-ci functions logs read udmi_config --sort-by=time_utc --limit=1000
+`gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000`
 
-# Update devices' GCP IoT Core configuration (sent down to the device)
+# Update a device's GCP IoT Core configuration
 
-bin/reset_config
+`bin/reset_config`
