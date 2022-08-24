@@ -8,8 +8,14 @@
 main=master
 
 git remote | while read remote; do
-    echo Updating/pruning remmote $remote...
-    git fetch -p $remote
+    rprune=$(git config remote.$remote.upstream) || true
+    if [[ $rprune == "ignore" ]]; then
+        echo "Updating remote $remote (prune ignored).."
+        git fetch $remote
+    else
+        echo Updating/pruning remmote $remote...
+        git fetch -p $remote
+    fi
 done
 
 echo Checking local remote references...
@@ -25,6 +31,11 @@ git branch -a | while read branch; do
     remote=${leader%%/*}
     branch=${leader#$remote/}
 
+    rprune=$(git config remote.$remote.upstream) || true
+    if [[ $rprune == "ignore" ]]; then
+        continue
+    fi
+
     if git branch | fgrep $branch > /dev/null; then
         lremote=$(git config branch.$branch.remote) || true
         if [[ -z $lremote ]]; then
@@ -35,11 +46,15 @@ git branch -a | while read branch; do
 
     rbranch=$remote/$branch
     if [[ $rbranch != $leader ]]; then
-        echo huh
+        echo huh. that was unexpected.
         false
     fi
 
-    mergebase=$(git merge-base $main $leader)
+    mergebase=$(git merge-base $main $leader) || true
+    if [[ -z $mergebase ]]; then
+        echo "  git push $remote -d $branch  # Orphaned upstream (no merge-base with $main)"
+        continue
+    fi
     diffcount=$(git diff $leader $mergebase | wc -l)
     merged=$(git log -n 1 --pretty=format:"%cd" --date relative $mergebase)
     read num unit extra <<< $merged
