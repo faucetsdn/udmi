@@ -9,7 +9,8 @@
 - [sequencer](sequencer.md) - a utility to validate device [sequences](../specs/sequences/) (GCP)
 - [validator](validator.md) - a utility for validating messages (GCP)
 - [gittools](gittools.md) - collection of utiliities for working with git branches
+- [gcloud](gcloud.md) - various tips and tricks for working with gcloud on GCP
 
 ## Setup
 
-[Setup instructions (GCP)](setup.md) are provided to set up the local environment for using tools
+[Setup instructions (GCP)](setup.md) are provided to set up the local environment for using tools.

@@ -11,6 +11,7 @@ fi
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
+bin/gencode_seq
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...

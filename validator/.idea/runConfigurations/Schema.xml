@@ -6,7 +6,7 @@
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../schema" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.daq.mqtt.validator.*" />
+        <option name="PATTERN" value="com.google.daq.mqtt.validator.semantic.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
