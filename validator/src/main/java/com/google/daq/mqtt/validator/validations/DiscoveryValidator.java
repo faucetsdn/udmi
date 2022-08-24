@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import com.google.daq.mqtt.validator.CleanDateFormat;
 import com.google.daq.mqtt.validator.SequenceValidator;
 import com.google.daq.mqtt.validator.SkipTest;
+import com.google.daq.mqtt.validator.semantic.SemanticDate;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,12 +40,12 @@ public class DiscoveryValidator extends SequenceValidator {
       throw new SkipTest("No metadata pointset points defined");
     }
     untilUntrue("enumeration not active", () -> deviceState.discovery.enumeration.active);
-    Date startTime = CleanDateFormat.cleanDate();
+    Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
     deviceConfig.discovery.enumeration.generation = startTime;
     info("Starting enumeration at " + getTimestamp(startTime));
-    updateConfig();
+    updateConfig("discovery generation");
     untilTrue("enumeration generation",
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );

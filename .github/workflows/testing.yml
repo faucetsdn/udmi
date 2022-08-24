@@ -91,7 +91,7 @@ jobs:
   udmi:
     name: Sequence tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
     steps:
       - uses: actions/checkout@v2
@@ -109,8 +109,8 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out
-          echo Comparing test run results with golden file:
-          diff -u /tmp/sequencer.out etc/sequencer.out && echo No output diff detected.
+          diff -u /tmp/sequencer.out etc/sequencer.out && echo No sequencer.out diff
+          diff -u /tmp/generated.md docs/specs/sequences/generated.md && echo No generated.md diff
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

@@ -10,9 +10,9 @@
 * The device can asynchronously update `state` if some other condition changes independent of
   `config` message, including when:
   * There is an update from an external source, e.g. a BMS or local controller
-  * There is an update from internal logic 
+  * There is an update from internal logic
 * Other [sequences](./) such as [writeback](writeback.md) may have specific behaviors relating to
-  state messages 
+  state messages
 * A device should of continuously operating when recieving an erroneous config message. The
 
 ![State and config](images/state.png)
@@ -24,7 +24,7 @@ participant Broker
 participantspacing 5
 Broker->Device: **CONFIG**
 Device->Broker: **STATE**
-[->Device:Update from external\nsource, e.g. BMS 
+[->Device:Update from external\nsource, e.g. BMS
 Device->Broker: **STATE**
 [->Device:Change
 Device->Broker: **STATE**
@@ -47,7 +47,7 @@ Device->Broker: **STATE**
 A device should be capable of interpreting erroneous messages without distrupting operation. There are
 three types of errors which may be encountered when interpreting config messages:
 * Hard-errors
-* Soft-errors 
+* Soft-errors
 * Non-errors
 
 This behavior is tested by the `config` [sequencer](../../tools/sequencer.md) tests.
@@ -92,5 +92,3 @@ backwards compatibility. This can happen when:
 When this happens, the device should:
   * Silently ignore the extra field(s) as if there was nothing wrong.
   * Generally can be implemented by setting some JSON parsers to "ignore unrecognized fields"
-
-  
