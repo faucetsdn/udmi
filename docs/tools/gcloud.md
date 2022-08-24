@@ -1,4 +1,4 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Registrar](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [gcloud](#)
 
 Various notes and tips and tricks for working with GCP. These are more or less hints as to what can be done, but don't expect
 them to work out-of-the-box without a deeper understanding of what's going on!
