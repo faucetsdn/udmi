@@ -92,7 +92,11 @@ class MqttPublisher implements MessagePublisher {
   public void publish(String deviceId, String topic, String data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+    try {
+      publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing message", e);
+    }
   }
 
   private void publishCore(String deviceId, String topic, String payload) {
@@ -152,8 +156,11 @@ class MqttPublisher implements MessagePublisher {
 
   public void close() {
     try {
+      LOG.debug(String.format("Shutting down executor %x" , publisherExecutor.hashCode()));
       publisherExecutor.shutdownNow();
-      publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS);
+      if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
+        LOG.error("Executor tasks still remaining");
+      }
       if (mqttClient.isConnected()) {
         mqttClient.disconnect();
       }

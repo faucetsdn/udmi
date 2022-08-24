@@ -87,22 +87,22 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
-  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message));
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), message.nonce);
 }
 
-function sendCommandStr(registryId, deviceId, subFolder, messageStr) {
+function sendCommandStr(registryId, deviceId, subFolder, messageStr, nonce) {
   return registry_promise.then(() => {
-    return sendCommandSafe(registryId, deviceId, subFolder, messageStr);
+    return sendCommandSafe(registryId, deviceId, subFolder, messageStr, nonce);
   });
 }
 
-function sendCommandSafe(registryId, deviceId, subFolder, messageStr) {
+function sendCommandSafe(registryId, deviceId, subFolder, messageStr, nonce) {
   const cloudRegion = registry_regions[registryId];
 
   const formattedName =
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
-  console.log('command', formattedName, subFolder);
+  console.log('command', subFolder, nonce, formattedName);
 
   const binaryData = Buffer.from(messageStr);
   const request = {
@@ -364,6 +364,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
       delete subContents.version;
       delete subContents.timestamp;
       newConfig[subFolder] = subContents;
+      newConfig.nonce = subContents.nonce;
     } else {
       if (!newConfig[subFolder]) {
         console.log('Config target already null', subFolder, version, startTime);
@@ -424,6 +425,7 @@ function update_device_config(message, attributes, preVersion) {
   const normalJson = extraField !== 'break_json';
   console.log('Config extra field is ' + extraField + ' ' + normalJson);
 
+  const nonce = message.nonce;
   const msgString = normalJson ? JSON.stringify(message) :
         '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
@@ -445,7 +447,7 @@ function update_device_config(message, attributes, preVersion) {
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString));
+    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString, nonce));
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {

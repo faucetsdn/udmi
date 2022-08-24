@@ -25,7 +25,7 @@ credentials.json
 /venv/
 /local/
 .pubber.pid
-pubber.out.*
+pubber.out*
 __pycache__/
 /tests/downgrade.site/devices/*/out/
 

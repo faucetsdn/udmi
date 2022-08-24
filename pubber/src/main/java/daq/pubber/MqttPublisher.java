@@ -157,12 +157,13 @@ public class MqttPublisher {
 
   void publish(String deviceId, String topic, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
-    if (!isActive()) {
-      throw new RuntimeException("Publisher already shutdown.");
-    }
     debug("Publishing in background " + topic);
     Object marked = topic.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topic, data) : data;
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, marked, callback));
+    try {
+      publisherExecutor.submit(() -> publishCore(deviceId, topic, marked, callback));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to topic " + topic, e);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -194,8 +195,8 @@ public class MqttPublisher {
       if (configuration.gatewayId == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
-          warn("Last client closed, shutting down publisher");
-          publisherExecutor.shutdown();
+          warn("Last client closed, shutting down connection.");
+          close();
         }
       } else {
         close();
@@ -430,10 +431,29 @@ public class MqttPublisher {
 
   private void sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
-    checkAuthentication(deviceId);
-    MqttClient connectedClient = getConnectedClient(deviceId);
+    MqttClient connectedClient = getActiveClient(deviceId);
     connectedClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, SHOULD_RETAIN);
     publishCounter.incrementAndGet();
+  }
+
+  private MqttClient getActiveClient(String deviceId) {
+    while (true) {
+      checkAuthentication(deviceId);
+      MqttClient connectedClient = getConnectedClient(deviceId);
+      if (connectedClient.isConnected()) {
+        return connectedClient;
+      }
+      info("Client not active, deferring message...");
+      safeSleep(CONFIG_WAIT_TIME_MS);
+    }
+  }
+
+  private void safeSleep(long timeoutMs) {
+    try {
+      Thread.sleep(timeoutMs);
+    } catch (Exception e) {
+      throw new RuntimeException("Interrupted sleep", e);
+    }
   }
 
   private void checkAuthentication(String deviceId) {
@@ -529,6 +549,7 @@ public class MqttPublisher {
       boolean connected = mqttClients.remove(deviceId).isConnected();
       warn("MQTT Connection Lost: " + connected + cause);
       onError.accept(new ConnectionClosedException());
+      close();
     }
 
     @Override

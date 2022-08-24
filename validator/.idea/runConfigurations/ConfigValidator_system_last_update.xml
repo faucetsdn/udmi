@@ -3,7 +3,7 @@
     <module name="validator" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.daq.mqtt.validator.*" />
+        <option name="PATTERN" value="com.google.daq.mqtt.validator.semantic.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

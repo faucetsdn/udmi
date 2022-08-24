@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.validator.validations;
 
-import static com.google.daq.mqtt.validator.CleanDateFormat.cleanDate;
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -22,18 +21,18 @@ import udmi.schema.Level;
  */
 public class ConfigValidator extends SequenceValidator {
 
-  @Test
+  @Test()
+  @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
-    untilTrue("state last_config match", () -> {
+    untilTrue("state last_config matches config timestamp", () -> {
       Date expectedConfig = deviceConfig.timestamp;
       Date lastConfig = deviceState.system.last_config;
-      debug("date match  " + getTimestamp(cleanDate(expectedConfig)) + " "
-          + getTimestamp(cleanDate(lastConfig)));
       return dateEquals(expectedConfig, lastConfig);
     });
   }
 
   @Test
+  @Description("Check that the min log-level config is honored by the device.")
   public void system_min_loglevel() {
     clearLogs();
     Integer savedLevel = deviceConfig.system.min_loglevel;
@@ -44,11 +43,13 @@ public class ConfigValidator extends SequenceValidator {
   }
 
   @Test
+  @Description("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
   @Test
+  @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilFalse("no interesting status", this::hasInterestingStatus);
@@ -57,8 +58,8 @@ public class ConfigValidator extends SequenceValidator {
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial stable_config " + getTimestamp(stableConfig));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
-    assertTrue("initial stable_config matches last_config",
-        dateEquals(stableConfig, deviceState.system.last_config));
+    checkThat("initial stable_config matches last_config",
+        () -> dateEquals(stableConfig, deviceState.system.last_config));
     clearLogs();
     extraField = "break_json";
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
@@ -82,8 +83,8 @@ public class ConfigValidator extends SequenceValidator {
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operational);
-    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
 
   private boolean hasInterestingStatus() {
@@ -92,6 +93,7 @@ public class ConfigValidator extends SequenceValidator {
   }
 
   @Test
+  @Description("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
