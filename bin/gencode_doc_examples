@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+""" Inline update documents with JSON payloads from tests directory"""
+
+import glob
+import re
+import sys
+import argparse
+
+from datetime import datetime
+
+
+REGEX_NORMALIZE = r'(?s)(<!--example:\w+\/\w+.json-->\n)(```json.*?```)'
+REGEX_INCLUDE = r'<!--example:(\w+)\/(\w+).json-->\n'
+
+
+def parse_command_line_args():
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument('check', nargs='?', default=False,
+            help='Check in-line examples match examples in tests directory')
+
+  return parser.parse_args()
+
+
+def validate_code_blocks(file_contents):
+  """ Run some very primitive checks to validate templated placeholder code
+  blocks within file to prevent unwanted deletion of parts of documents. Works
+  by checking the code blocks for lines which start unlike a JSON line (caused
+  by mismatched ``` which result in the regex match extending into the of the
+  document) or the letter F(ile not found)
+
+  Arguments
+    file_contents contents of file
+  Returns
+    true/false if file is valid
+  """
+  matches = re.findall(REGEX_NORMALIZE, file_contents)
+  for match in matches:
+    code_block_removed = re.sub(r'(?s)```json(.*)```', r'\g<1>', match[1])
+    if re.search(r'(?m)^[^{}"\sF]', code_block_removed):
+      return False
+  return True
+
+
+def read_example_file(match):
+  """
+  Used as re.sub callback to read example from a file
+  Arguments
+    match   match object
+  Returns
+    json from example file appended to original expression
+  """
+  expression = match.group(0)
+  schema = match.group(1)
+  file = match.group(2)
+
+  include_path = f'tests/{schema}.tests/{file}.json'
+
+  try:
+    with open(include_path, 'r', encoding='utf-8') as f:
+      return f'{expression}```json\n{f.read().rstrip()}\n```'
+  except FileNotFoundError:
+    # Append time for not found errors so there's always a diff
+    return f'{expression}```json\nFILE NOT FOUND ({datetime.now()})\n```'
+
+
+def include_examples(file_contents):
+  """ Replaces examples within a string
+  Arguments
+    file_contents   string to replace in (contents of documentation file)
+  Returns
+    string contents of file
+  """
+  normalized_file = re.sub(REGEX_NORMALIZE, r'\g<1>', file_contents)
+  return re.sub(REGEX_INCLUDE, read_example_file, normalized_file)
+
+
+def diff_examples(original, updated):
+  """ Compares documentation before and after external sources are updated
+  and returns a list of JSON code blocks which are different between the two
+  Arguments:
+    original  original documentation file contents
+    updated   updated (in memory) documentation file contents
+  Returns:
+    list  list of expressions (<!--example:metadata/tutorial_hvac_min.json-->)
+          which differ
+  """
+  diffs = []
+
+  matches_original = re.findall(REGEX_NORMALIZE, original)
+  matches_updated = re.findall(REGEX_NORMALIZE, updated)
+
+  for match_original, match_updated in zip(matches_original, matches_updated):
+    if match_original[1] != match_updated[1]:
+      diffs.append(match_original[0].rstrip())
+
+  return diffs
+
+
+def main():
+  file_paths = glob.glob('docs/**/*.md', recursive=True)
+
+  args = parse_command_line_args()
+  example_diffs = {}
+  error = False
+
+  for file_path in file_paths:
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+      file_contents = f.read()
+
+    if not validate_code_blocks(file_contents):
+      error = True
+      print(f'Error processing {file_path}:')
+      print('\tMismatched code block termination (```) ',
+            'or invalid JSON in codeblock')
+      continue
+
+    updated_file_contents = include_examples(file_contents)
+
+    if updated_file_contents != file_contents:
+      if args.check:
+        example_diffs[file_path] = diff_examples(file_contents,
+            updated_file_contents)
+      else:
+        with open(file_path, 'w', encoding='utf-8') as f:
+          f.write(updated_file_contents)
+  if args.check:
+    if example_diffs:
+      error = True
+      print('Examples do not match source in following files:')
+      for file, diffs in example_diffs.items():
+        print(f'{file}')
+        for diff in diffs:
+          print(f'** {diff}')
+    else:
+      print('Documentation in line examples match source examples')
+  if error:
+    sys.exit(1)
+
+
+if __name__ == '__main__':
+  main()
