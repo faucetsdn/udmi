@@ -102,18 +102,20 @@ suggest deleting an origin branch if it's identical to the `$main` branch, or if
 hasn't been merged in quite some time. The output can just be cut-and-pasted into a terminal
 window to perform the operations.
 
+To ignore the prune commentaty for upstream remotes (e.g. a coworker's repo), set an appropriate
+configuration value `remote.${remote}.upstream=ignore`.
+
 ```
 :~/udmi$ git branch-remote
 Updating/pruning remmote faucet...
-Updating/pruning remmote john...
+Updating/pruning remmote quincy...
 Updating/pruning remmote origin...
 Checking local remote references...
-  git push john -d auth_login_line  # Stale, last merged 1 year, 10 months ago
-  git push john -d dependabot/npm_and_yarn/udms/follow-redirects-1.14.8  # Stale, last merged 6 months ago
-  git push john -d dependabot/npm_and_yarn/udms/karma-6.3.14  # Stale, last merged 7 months ago
-  git push john -d jrand  # Upstream branch is same as master
-  git push john -d renovate/actions-setup-java-2.x  # Stale, last merged 1 year, 1 month ago
-  git push john -d renovate/angular-monorepo  # Stale, last merged 1 year, 1 month ago
+  git push quincy -d auth_login_line  # Stale, last merged 1 year, 10 months ago
+  git push quincy -d dependabot/npm_and_yarn/udms/follow-redirects-1.14.8  # Stale, last merged 6 months ago
+  git push quincy -d dependabot/npm_and_yarn/udms/karma-6.3.14  # Stale, last merged 7 months ago
+  git push quincy -d renovate/actions-setup-java-2.x  # Stale, last merged 1 year, 1 month ago
+  git push quincy -d renovate/angular-monorepo  # Stale, last merged 1 year, 1 month ago
   git push origin -d feature  # Stale, last merged 6 months ago
   git push origin -d fix_schema  # Stale, last merged 3 months ago
   git push origin -d fixes  # Stale, last merged 10 months ago
