@@ -497,8 +497,8 @@ public class Pubber {
   private void sendMessages() {
     try {
       updatePoints();
-      sendDeviceMessage();
       deferredConfigActions();
+      sendDeviceMessage();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
@@ -531,9 +531,14 @@ public class Pubber {
 
   private void restartSystem(boolean restart) {
     deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
-    publishSynchronousState();
-    error("Stopping system with extreme prejudice, restart " + restart);
-    System.exit(restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE);
+    try {
+      publishSynchronousState();
+    } catch (Exception e) {
+      error("Squashing error publishing state while shutting down", e);
+    }
+    int exitCode = restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE;
+    error("Stopping system with extreme prejudice, restart " + restart + " with code " + exitCode);
+    System.exit(exitCode);
   }
 
   private void flushDirtyState() {
@@ -1269,7 +1274,7 @@ public class Pubber {
         if (delay > 0) {
           markStateDirty(delay);
         } else {
-          publishStateRaw();
+          publishStateMessage();
         }
       } finally {
         stateLock.release();
@@ -1282,7 +1287,7 @@ public class Pubber {
   private void publishSynchronousState() {
     try {
       stateLock.acquire();
-      publishStateRaw();
+      publishStateMessage();
     } catch (Exception e) {
       throw new RuntimeException("While sending synchronous state", e);
     } finally {
@@ -1290,27 +1295,13 @@ public class Pubber {
     }
   }
 
-  private void publishStateRaw() {
+  private void publishStateMessage() {
     long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
     if (delay > 0) {
       warn(String.format("State update delay %dms", delay));
       safeSleep(delay);
     }
 
-    CountDownLatch latch = new CountDownLatch(1);
-    publishStateMessage(latch);
-
-    try {
-      info("Waiting for synchronous state send...");
-      if (!latch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
-        error("Timeout waiting for synchronous state send");
-      }
-    } catch (Exception e) {
-      error("Exception while waiting for synchronous state send", e);
-    }
-  }
-
-  private void publishStateMessage(CountDownLatch latch) {
     deviceState.timestamp = new Date();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
@@ -1321,13 +1312,13 @@ public class Pubber {
     }
     stateDirty.set(false);
     lastStateTimeMs = System.currentTimeMillis();
-    CountDownLatch useLatch = latch == null ? new CountDownLatch(1) : latch;
+    CountDownLatch latch = new CountDownLatch(1);
     publishDeviceMessage(deviceState, () -> {
       lastStateTimeMs = System.currentTimeMillis();
-      useLatch.countDown();
+      latch.countDown();
     });
     try {
-      if (!useLatch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!latch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
