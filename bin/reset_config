@@ -3,7 +3,7 @@
 ROOT=$(realpath $(dirname $0)/..)
 
 if [[ $# != 3 && $# != 4 ]]; then
-    echo Usage: $0 site_dir project_id device_id [config_file]
+    echo Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE]
     false
 fi
 
@@ -22,6 +22,7 @@ cd ${ROOT}
 
 dst_config=/tmp/${device_id}_config.json
 src_config=${site_dir}/devices/${device_id}/out/$config_file
+ls -l ${src_config}
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting config timestamp ${now_date}
 jq < ${src_config} .timestamp=\"${now_date}\" |\
