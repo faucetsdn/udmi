@@ -54,7 +54,7 @@ export type DeviceModelsQueryResponse = {
 export interface DeviceModelsQueryVariables extends CommonSearchQueryVariables {}
 
 export type DeviceSitesQueryResponse = {
-  sites: string[];
+  siteNames: string[];
 };
 
 export interface DeviceSitesQueryVariables extends CommonSearchQueryVariables {}

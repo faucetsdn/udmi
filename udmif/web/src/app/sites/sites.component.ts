@@ -2,30 +2,21 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { SearchFilterItem } from '../search-filter/search-filter';
-import { Device, DeviceModel } from '../device/device';
-import { DevicesQueryResponse, DevicesQueryVariables, SortOptions } from './devices';
-import { DevicesService } from './devices.service';
+import { Site, SiteModel } from '../site/site';
+import { SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
+import { SitesService } from './sites.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 
 @Component({
-  templateUrl: './devices.component.html',
-  styleUrls: ['./devices.component.scss'],
+  templateUrl: './sites.component.html',
+  styleUrls: ['./sites.component.scss'],
 })
-export class DevicesComponent implements OnInit, OnDestroy {
-  private devicesSubscription!: Subscription;
-  private devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
-  displayedColumns: (keyof DeviceModel)[] = [
-    'name',
-    'make',
-    'model',
-    'site',
-    'section',
-    'lastPayload',
-    'operational',
-    'tags',
-  ];
-  devices: Device[] = [];
+export class SitesComponent implements OnInit, OnDestroy {
+  private sitesSubscription!: Subscription;
+  private sitesQuery!: QueryRef<SitesQueryResponse, SitesQueryVariables>;
+  displayedColumns: (keyof SiteModel)[] = ['name'];
+  sites: Site[] = [];
   totalCount: number = 0;
   totalFilteredCount: number = 0;
   currentPage: number = 0;
@@ -34,27 +25,23 @@ export class DevicesComponent implements OnInit, OnDestroy {
   sortOptions?: SortOptions;
   filter?: string;
   searchFields: Record<string, string> = {
-    name: 'getDeviceNames',
-    make: 'getDeviceMakes',
-    model: 'getDeviceModels',
-    site: 'getDeviceSites',
-    section: 'getDeviceSections',
+    name: 'getSiteNames',
   };
 
-  constructor(private devicesService: DevicesService) {}
+  constructor(private sitesService: SitesService) {}
 
   ngOnInit(): void {
-    this.devicesQuery = this.devicesService.getDevices(0, this.pageSize); // start off on first page, i.e. offset 0
+    this.sitesQuery = this.sitesService.getSites(0, this.pageSize); // start off on first page, i.e. offset 0
 
-    this.devicesSubscription = this.devicesQuery.valueChanges.subscribe(({ data }) => {
-      this.devices = data.devices?.devices ?? [];
-      this.totalCount = data.devices?.totalCount ?? 0;
-      this.totalFilteredCount = data.devices?.totalFilteredCount ?? 0;
+    this.sitesSubscription = this.sitesQuery.valueChanges.subscribe(({ data }) => {
+      this.sites = data.sites?.sites ?? [];
+      this.totalCount = data.sites?.totalCount ?? 0;
+      this.totalFilteredCount = data.sites?.totalFilteredCount ?? 0;
     });
   }
 
   ngOnDestroy(): void {
-    this.devicesSubscription.unsubscribe(); // cleanup
+    this.sitesSubscription.unsubscribe(); // cleanup
   }
 
   pageChanged(e: PageEvent): void {
@@ -83,7 +70,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   };
 
   private _refetch(offset: number = 0): void {
-    this.devicesQuery.refetch({
+    this.sitesQuery.refetch({
       searchOptions: {
         offset,
         batchSize: this.pageSize,

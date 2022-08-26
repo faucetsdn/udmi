@@ -1,6 +1,7 @@
 <mat-toolbar color="primary" *ngIf="isLoggedIn | async">
   <h1>UDMI</h1>
   <nav role="navigation" aria-label="Main navigation">
+    <a mat-button routerLink="/sites" routerLinkActive="active">Sites</a>
     <a mat-button routerLink="/devices" routerLinkActive="active">Devices</a>
   </nav>
   <span class="spacer"></span>

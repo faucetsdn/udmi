@@ -23,31 +23,31 @@ export const GET_DEVICES = gql`
 `;
 
 export const GET_DEVICE_NAMES = gql`
-  query GetDeviceNames($searchOptions: DeviceNamesSearchOptions) {
+  query GetDeviceNames($searchOptions: DistinctSearchOptions) {
     deviceNames(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_MAKES = gql`
-  query GetDeviceMakes($searchOptions: DeviceMakesSearchOptions) {
+  query GetDeviceMakes($searchOptions: DistinctSearchOptions) {
     deviceMakes(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_MODELS = gql`
-  query GetDeviceModels($searchOptions: DeviceModelsSearchOptions) {
+  query GetDeviceModels($searchOptions: DistinctSearchOptions) {
     deviceModels(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_SITES = gql`
-  query GetDeviceSites($searchOptions: SitesSearchOptions) {
-    sites(searchOptions: $searchOptions)
+  query GetDeviceSites($searchOptions: DistinctSearchOptions) {
+    siteNames(searchOptions: $searchOptions)
   }
 `;
 
 export const GET_DEVICE_SECTIONS = gql`
-  query GetDeviceSections($searchOptions: SectionsSearchOptions) {
+  query GetDeviceSections($searchOptions: DistinctSearchOptions) {
     sections(searchOptions: $searchOptions)
   }
 `;
