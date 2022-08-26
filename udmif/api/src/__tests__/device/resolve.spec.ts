@@ -3,7 +3,7 @@ import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode } from 'graphql';
 import MockDeviceDataSource from './MockDeviceDataSource';
 import { typeDefs } from '../../server/schema';
-import { resolvers } from '../../device/resolvers';
+import { resolvers } from '../../server/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
 
 let testServer: ApolloServer;
@@ -25,6 +25,19 @@ const QUERY_DEVICES = gql`
         lastPayload
         operational
         tags
+      }
+    }
+  }
+`;
+
+const QUERY_SITES = gql`
+  query {
+    sites(searchOptions: { batchSize: 10, offset: 10, sortOptions: { direction: DESC, field: "name" }, filter: "" }) {
+      totalCount
+      totalFilteredCount
+      sites {
+        id
+        name
       }
     }
   }
@@ -85,9 +98,9 @@ const QUERY_DEVICE_MODELS = gql`
   }
 `;
 
-const QUERY_SITES = gql`
+const QUERY_SITE_NAMES = gql`
   query {
-    sites
+    siteNames
   }
 `;
 
@@ -117,30 +130,32 @@ describe('Devices', () => {
     const result = await runQuery(QUERY_DEVICES, {});
     expect(result).toMatchSnapshot();
   });
+
   test('device', async () => {
     const result = await runQuery(QUERY_DEVICE, {});
     expect(result).toMatchSnapshot();
   });
+
   test('points', async () => {
     const result = await runQuery(QUERY_POINTS, {});
     expect(result).toMatchSnapshot();
   });
+
   test('getDeviceNames', async () => {
     const result = await runQuery(QUERY_DEVICE_NAMES);
     expect(result).toMatchSnapshot();
   });
+
   test('getDeviceMakes', async () => {
     const result = await runQuery(QUERY_DEVICE_MAKES);
     expect(result).toMatchSnapshot();
   });
+
   test('getDeviceModels', async () => {
     const result = await runQuery(QUERY_DEVICE_MODELS);
     expect(result).toMatchSnapshot();
   });
-  test('getSites', async () => {
-    const result = await runQuery(QUERY_SITES);
-    expect(result).toMatchSnapshot();
-  });
+
   test('getSections', async () => {
     const result = await runQuery(QUERY_SECTIONS);
     expect(result).toMatchSnapshot();

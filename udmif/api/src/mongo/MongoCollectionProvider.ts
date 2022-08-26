@@ -1,6 +1,15 @@
-import { logger } from '../../../common/logger';
-import { MongoClient, Db, MongoClientOptions } from 'mongodb';
-import { Configuration } from '../../../server/config';
+import { logger } from '../common/logger';
+import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb';
+import { Configuration } from '../server/config';
+
+export async function getMongoCollection<Type>(
+  collectionName: string,
+  systemConfiguration: Configuration
+): Promise<Collection<Type>> {
+  console.log(`Getting the Mongo Collection collection: ${collectionName}`);
+  const db: Db = await getMongoDb(systemConfiguration);
+  return db.collection<Type>(collectionName);
+}
 
 export async function getMongoDb(systemConfiguration: Configuration): Promise<Db> {
   const uri = getUri(systemConfiguration);

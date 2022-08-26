@@ -1,6 +1,6 @@
-import { get } from 'lodash';
 import { Context, ContextFunction } from 'apollo-server-core';
 import { ExpressContext } from 'apollo-server-express/dist/ApolloServer';
+import { get } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../common/logger';
 import { authenticateIdToken } from './google';
@@ -22,7 +22,7 @@ export class ContextProcessor {
       throw new Error('Invalid Headers');
     }
 
-    await authenticateIdToken(req.headers.idtoken, this.clientIds);
+    await authenticateIdToken(req.headers.idtoken.toString(), this.clientIds);
 
     // initialize the context
     const context: Context<any> = {};

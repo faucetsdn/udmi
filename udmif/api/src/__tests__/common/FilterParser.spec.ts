@@ -1,5 +1,5 @@
-import { fromString } from '../../device/FilterParser';
-import { Filter } from '../../device/model';
+import { fromString } from '../../common/FilterParser';
+import { Filter } from '../../common/model';
 
 describe('FilterParser.fromString', () => {
   test('converts a string into a filter object', () => {
