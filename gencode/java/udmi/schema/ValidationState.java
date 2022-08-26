@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "timestamp",
     "version",
     "last_updated",
+    "status",
     "summary",
     "devices"
 })
@@ -50,6 +51,14 @@ public class ValidationState {
     @JsonPropertyDescription("Last time this validation report was updated")
     public Date last_updated;
     /**
+     * Entry
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("status")
+    public Entry status;
+    /**
      * Validation Summary
      * <p>
      * 
@@ -71,9 +80,10 @@ public class ValidationState {
         int result = 1;
         result = ((result* 31)+((this.summary == null)? 0 :this.summary.hashCode()));
         result = ((result* 31)+((this.last_updated == null)? 0 :this.last_updated.hashCode()));
-        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
+        result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
 
@@ -86,7 +96,7 @@ public class ValidationState {
             return false;
         }
         ValidationState rhs = ((ValidationState) other);
-        return ((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

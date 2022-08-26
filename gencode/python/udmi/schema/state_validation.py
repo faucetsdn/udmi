@@ -1,4 +1,5 @@
 """Generated class for state_validation.json"""
+from .common import Entry
 
 
 class ValidationSummary:
@@ -58,6 +59,7 @@ class ValidationState:
     self.timestamp = None
     self.version = None
     self.last_updated = None
+    self.status = None
     self.summary = None
     self.devices = None
 
@@ -69,6 +71,7 @@ class ValidationState:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_updated = source.get('last_updated')
+    result.status = Entry.from_dict(source.get('status'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
     return result
@@ -97,6 +100,8 @@ class ValidationState:
       result['version'] = self.version # 5
     if self.last_updated:
       result['last_updated'] = self.last_updated # 5
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     if self.summary:
       result['summary'] = self.summary.to_dict() # 4
     if self.devices:

@@ -120,7 +120,7 @@ public class Category {
     public static final Level BLOBSET_BLOB_FETCH_LEVEL = DEBUG;
     static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
-    // Applying a blob updat
+    // Applying a blob update
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
