@@ -11,5 +11,7 @@
   },
   "pointset": {
     "missing" : [ "filter_differential_pressure_setpoint" ]
-  }
+  },
+  "errors": [
+  ]
 }
