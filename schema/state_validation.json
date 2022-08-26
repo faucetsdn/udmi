@@ -20,6 +20,9 @@
       "format": "date-time",
       "type": "string"
     },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    },
     "summary": {
       "title": "Validation Summary",
       "type": "object",

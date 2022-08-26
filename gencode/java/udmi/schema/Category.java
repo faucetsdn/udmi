@@ -120,8 +120,23 @@ public class Category {
     public static final Level BLOBSET_BLOB_FETCH_LEVEL = DEBUG;
     static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
-    // Applying a blob update
+    // Applying a blob updat
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
+
+    // Receiving/processing a message for validation.
+    public static final String VALIDATION_DEVICE_RECEIVE = "validation.device.receive";
+    public static final Level VALIDATION_DEVICE_RECEIVE_LEVEL = DEBUG;
+    static { LEVEL.put(VALIDATION_DEVICE_RECEIVE, DEBUG); }
+
+    // Regarging the actual validation results.
+    public static final String VALIDATION_DEVICE_RESULT = "validation.device.result";
+    public static final Level VALIDATION_DEVICE_RESULT_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_RESULT, INFO); }
+
+    // The validation summary report.
+    public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
+    public static final Level VALIDATION_SUMMARY_REPORT_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_SUMMARY_REPORT, INFO); }
 }

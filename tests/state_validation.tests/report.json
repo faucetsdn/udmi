@@ -8,15 +8,21 @@
     "missing_devices" : [ "GAT-123", "SNS-4" ],
     "error_devices" : [ "AHU-1" ]
   },
+  "status": {
+    "message": "Site is completed validation",
+    "category": "validation.summary.report",
+    "timestamp": "2018-08-26T21:39:30.364Z",
+    "level": 200
+  },
   "devices": {
     "AHU-1": {
       "last_seen": "2022-07-16T18:27:19Z",
       "oldest_mark": "2022-07-16T18:27:19Z",
       "status": {
         "message": "Tickity Boo",
-        "category": "system.config.apply",
+        "category": "validation.device.result",
         "timestamp": "2018-08-26T21:39:30.364Z",
-        "level": 600
+        "level": 400
       }
     }
   }

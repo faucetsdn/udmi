@@ -4,13 +4,12 @@
   "sub_type": "event",
   "sub_folder": "discovery",
   "status": {
-    "message": "Tickity Boo",
-    "category": "system.config.apply",
+    "message": "All systems normal",
+    "category": "validation.device.result",
     "timestamp": "2018-08-26T21:39:30.364Z",
-    "level": 600
+    "level": 400
   },
   "pointset": {
-    "missing" : [ "filter_differential_pressure_setpoint" ]
   },
   "errors": [
   ]
