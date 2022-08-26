@@ -103,7 +103,8 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
-schemas="state event_system event_pointset event_discovery event_validation config metadata envelope"
+schemas=$((cd tests/; ls -d *.tests) | sed s/.tests//)
+echo Processing schemas $schemas
 
 for schema in $schemas; do
     echo == Processing $schema.json
@@ -133,3 +134,5 @@ find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.
 
 find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
     <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;
+
+echo Done with $0

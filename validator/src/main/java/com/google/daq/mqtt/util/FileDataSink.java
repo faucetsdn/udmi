@@ -58,7 +58,7 @@ public class FileDataSink implements MessagePublisher {
   }
 
   private boolean isValidation(String topic) {
-    return topic.equals("validation/event");
+    return topic.startsWith("validation/");
   }
 
   private File getOutputFile(String deviceId, String topic) {
