@@ -51,6 +51,6 @@ If everything worked as intended, there should be periodic validation messages t
 
 <pre>
   attribute.subFolder = 'validation'
-  attribute.subType = 'state' <i>or</i> '_validator'
-  attribute.deviceId = '_validator' or <i>deviceId of validated device</i>
+  attribute.subType = 'event' <i>or</i> 'state'
+  attribute.deviceId = deviceId <i>or</i> '_validator'
 </pre>
