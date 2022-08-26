@@ -23,8 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "gateway",
     "discovery",
     "blobset",
-    "pointset",
-    "validation"
+    "pointset"
 })
 @Generated("jsonschema2pojo")
 public class State {
@@ -90,15 +89,6 @@ public class State {
     @JsonProperty("pointset")
     @JsonPropertyDescription("A set of points reporting telemetry data.")
     public PointsetState pointset;
-    /**
-     * Validation State
-     * <p>
-     * Validation state summary
-     * 
-     */
-    @JsonProperty("validation")
-    @JsonPropertyDescription("Validation state summary")
-    public ValidationState validation;
 
     @Override
     public int hashCode() {
@@ -109,7 +99,6 @@ public class State {
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blobset == null)? 0 :this.blobset.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
-        result = ((result* 31)+((this.validation == null)? 0 :this.validation.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
@@ -123,7 +112,7 @@ public class State {
             return false;
         }
         State rhs = ((State) other);
-        return (((((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.validation == rhs.validation)||((this.validation!= null)&&this.validation.equals(rhs.validation))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobset == rhs.blobset)||((this.blobset!= null)&&this.blobset.equals(rhs.blobset))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

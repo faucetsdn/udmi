@@ -29,7 +29,6 @@ public class ValidationState {
 
     /**
      * RFC 3339 timestamp the discover telemetry event was generated
-     * (Required)
      * 
      */
     @JsonProperty("timestamp")
@@ -37,7 +36,6 @@ public class ValidationState {
     public Date timestamp;
     /**
      * Version of the UDMI schema
-     * (Required)
      * 
      */
     @JsonProperty("version")
