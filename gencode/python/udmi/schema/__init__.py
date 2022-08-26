@@ -1,5 +1,5 @@
 from .ancillary_properties import AncillaryProperties
-from .category import Object500CB771
+from .category import Object4DEED257
 from .cloud_iot_config import CloudIotConfig
 from .command_discovery import DiscoveryCommand
 from .common import Common
@@ -53,3 +53,4 @@ from .state_pointset import PointsetState
 from .state_pointset_point import PointPointsetState
 from .state_system import SystemState
 from .state_system_hardware import SystemHardware
+from .state_validation import ValidationState

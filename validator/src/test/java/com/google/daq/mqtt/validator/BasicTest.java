@@ -11,6 +11,7 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationState;
 
 /**
  * Unit test suite for the validator.
@@ -33,7 +34,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, new PointsetEvent());
     bundle.message.remove("system");
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("One error summary", 1, report.summary.error_devices.size());
     assertEquals("One error device", 1, report.devices.size());
   }
@@ -42,7 +43,7 @@ public class BasicTest extends TestBase {
   public void emptyPointsetEvent() {
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, new PointsetEvent());
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("One error summary", 1, report.summary.error_devices.size());
     assertEquals("One error device", 1, report.devices.size());
   }
@@ -52,7 +53,7 @@ public class BasicTest extends TestBase {
     PointsetEvent messageObject = basePointsetEvent();
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("No error devices", 0, report.devices.size());
   }
 
@@ -62,7 +63,7 @@ public class BasicTest extends TestBase {
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("One error devices", 1, report.devices.size());
     ValidationEvent result = getValidationResult(DEVICE_ID, EVENT_SUBTYPE, POINTSET_SUBFOLDER);
     PointsetSummary pointset = result.pointset;
@@ -77,7 +78,7 @@ public class BasicTest extends TestBase {
     messageObject.points.put(FLUX_READING, new PointPointsetEvent());
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
     ValidationEvent result = getValidationResult(DEVICE_ID, EVENT_SUBTYPE, POINTSET_SUBFOLDER);
     PointsetSummary points = result.pointset;
@@ -92,7 +93,7 @@ public class BasicTest extends TestBase {
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
     MessageBundle bundle = getMessageBundle(STATE_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
-    ValidationEvent report = getValidationReport();
+    ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
     ValidationEvent result = getValidationResult(DEVICE_ID, STATE_SUBTYPE, POINTSET_SUBFOLDER);
     List<String> missingPoints = result.pointset.missing;

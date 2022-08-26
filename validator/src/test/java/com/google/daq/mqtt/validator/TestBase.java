@@ -15,6 +15,7 @@ import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationState;
 
 /**
  * Base class for validator tests.
@@ -90,9 +91,9 @@ public class TestBase {
     return bundle;
   }
 
-  protected ValidationEvent getValidationReport() {
+  protected ValidationState getValidationReport() {
     try {
-      return OBJECT_MAPPER.readValue(REPORT_FILE, ValidationEvent.class);
+      return OBJECT_MAPPER.readValue(REPORT_FILE, ValidationState.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading " + REPORT_FILE.getAbsolutePath(), e);
     }
