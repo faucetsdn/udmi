@@ -1,7 +1,6 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.3.14",
-  "errors" : [ ],
   "summary" : {
     "correct_devices" : [ "AHU-1", "AHU-22" ],
     "extra_devices" : [ ],

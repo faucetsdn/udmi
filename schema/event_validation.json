@@ -1,6 +1,6 @@
 {
   "title": "Validation Event",
-  "description": "Validation result",
+  "description": "Validation device result",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -13,11 +13,6 @@
     },
     "version": {
       "description": "Version of the UDMI schema",
-      "type": "string"
-    },
-    "last_updated": {
-      "description": "Last time this validation report was updated",
-      "format": "date-time",
       "type": "string"
     },
     "sub_folder": {
@@ -59,52 +54,13 @@
       "items": {
         "$ref": "file:common.json#/definitions/entry"
       }
-    },
-    "summary": {
-      "title": "Validation Summary",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "correct_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extra_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "missing_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "error_devices": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "devices": {
-      "type": "object",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, DeviceValidationEvent>",
-      "patternProperties": {
-        "^[A-Z]{2,6}-[0-9]{1,6}$": {
-          "$ref": "file:event_validation_device.json"
-        }
-      }
-
     }
   },
   "required": [
     "timestamp",
-    "version"
+    "version",
+    "sub_folder",
+    "sub_type",
+    "errors"
   ]
 }
