@@ -6,6 +6,7 @@
 #
 
 main=master
+ACCDIR=/tmp/git-branch-remote/
 
 git remote | while read remote; do
     rprune=$(git config remote.$remote.upstream) || true
@@ -17,6 +18,9 @@ git remote | while read remote; do
         git fetch -p $remote
     fi
 done
+
+rm -rf $ACCDIR
+mkdir -p $ACCDIR
 
 echo Checking local remote references...
 git branch -a | while read branch; do
@@ -58,10 +62,21 @@ git branch -a | while read branch; do
     diffcount=$(git diff $leader $mergebase | wc -l)
     merged=$(git log -n 1 --pretty=format:"%cd" --date relative $mergebase)
     read num unit extra <<< $merged
+    mkdir -p $ACCDIR/${leader%/*}
     if [[ $diffcount -eq 0 ]]; then
         echo "  git push $remote -d $branch  # Upstream branch is same as $main"
+        touch $ACCDIR/$leader
     elif [[ $unit == month* || $unit == year* ]]; then
         # Note one month is reported in terms of weeks, so not considered stale.
         echo "  git push $remote -d $branch  # Stale, last merged $merged"
+        touch $ACCDIR/$leader
+    fi
+done
+
+for path in $ACCDIR/*; do
+    remote=${path#$ACCDIR/}
+    count=$(find $path -type f | wc -l)
+    if [[ $count -gt 10 ]]; then
+        echo "That's a lot of stale branches for remote $remote, consider ignoring: git config remote.$remote.upstream ignore"
     fi
 done
