@@ -4,6 +4,7 @@ from .state_gateway import GatewayState
 from .state_discovery import DiscoveryState
 from .state_blobset import BlobsetState
 from .state_pointset import PointsetState
+from .state_validation import ValidationState
 
 
 class State:
@@ -17,6 +18,7 @@ class State:
     self.discovery = None
     self.blobset = None
     self.pointset = None
+    self.validation = None
 
   @staticmethod
   def from_dict(source):
@@ -30,6 +32,7 @@ class State:
     result.discovery = DiscoveryState.from_dict(source.get('discovery'))
     result.blobset = BlobsetState.from_dict(source.get('blobset'))
     result.pointset = PointsetState.from_dict(source.get('pointset'))
+    result.validation = ValidationState.from_dict(source.get('validation'))
     return result
 
   @staticmethod
@@ -64,4 +67,6 @@ class State:
       result['blobset'] = self.blobset.to_dict() # 4
     if self.pointset:
       result['pointset'] = self.pointset.to_dict() # 4
+    if self.validation:
+      result['validation'] = self.validation.to_dict() # 4
     return result
