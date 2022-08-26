@@ -70,6 +70,7 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationState;
 import udmi.schema.ValidationSummary;
 
 /**
@@ -107,6 +108,7 @@ public class Validator {
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
+  private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -403,7 +405,7 @@ public class Validator {
 
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      sendValidationResult(attributes, message, reportingDevice);
+      sendValidationResult(attributes, reportingDevice);
     }
     processValidationReport();
   }
@@ -499,50 +501,45 @@ public class Validator {
     return reportingDevice;
   }
 
-  private void sendValidationResult(Map<String, String> origAttributes, Object message,
+  private void sendValidationResult(Map<String, String> origAttributes,
       ReportingDevice reportingDevice) {
     try {
-      ValidationEvent validationEvent = makeValidationEvent();
+      ValidationEvent event = new ValidationEvent();
+      event.version = UDMI_VERSION;
+      event.timestamp = new Date();
       String subFolder = origAttributes.get("subFolder");
-      validationEvent.sub_folder = subFolder;
-      validationEvent.sub_type = origAttributes.get("subType");
-      validationEvent.status = reportingDevice.getErrorStatus();
+      event.sub_folder = subFolder;
+      event.sub_type = origAttributes.get("subType");
+      event.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
-      validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
+      event.errors = errors != null && errors.size() > 1 ? errors : null;
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
         pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
-        validationEvent.pointset = pointsSummary;
+        event.pointset = pointsSummary;
       }
-      sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
+      sendValidationMessage(reportingDevice.getDeviceId(), event, VALIDATION_EVENT_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
     }
   }
 
-  private void sendValidationReport(ValidationEvent report) {
+  private void sendValidationReport(ValidationState report) {
     try {
-      sendValidationEvent(VALIDATION_REPORT_DEVICE, report);
+      sendValidationMessage(VALIDATION_REPORT_DEVICE, report, VALIDATION_STATE_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation report", e);
     }
   }
 
-  private void sendValidationEvent(String deviceId, ValidationEvent validationEvent) {
+  private void sendValidationMessage(String deviceId, Object message, String topic) {
     try {
-      String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
-      dataSinks.forEach(sink -> sink.publish(deviceId, VALIDATION_EVENT_TOPIC, messageString));
+      String messageString = OBJECT_MAPPER.writeValueAsString(message);
+      dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
     } catch (Exception e) {
       throw new RuntimeException("While sending validation event for " + deviceId, e);
     }
-  }
-
-  private ValidationEvent makeValidationEvent() {
-    ValidationEvent validationEvent = new ValidationEvent();
-    validationEvent.version = UDMI_VERSION;
-    validationEvent.timestamp = new Date();
-    return validationEvent;
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
@@ -669,10 +666,18 @@ public class Validator {
       }
     }
 
-    ValidationEvent report = makeValidationEvent();
+    ValidationState report = makeValidationReport(summary, devices);
+    sendValidationReport(report);
+  }
+
+  private ValidationState makeValidationReport(ValidationSummary summary,
+      Map<String, DeviceValidationEvent> devices) {
+    ValidationState report = new ValidationState();
+    report.version = UDMI_VERSION;
+    report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
-    sendValidationReport(report);
+    return report;
   }
 
   private <T> ArrayList<T> arrayIfNotEmpty(Set<T> items) {

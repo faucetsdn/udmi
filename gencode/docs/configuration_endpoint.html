@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Overpass:300,400,600,800">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="schema_doc.css">
+    <script src="https://use.fontawesome.com/facf9fa52c.js"></script>
+    <script src="schema_doc.min.js"></script>
+    <meta charset="utf-8"/>
+        
+    
+    <title>Endpoint Configuration</title>
+<script src="schema_extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>Endpoint Configuration</h1><div class="text-right">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
+        </div>
+
+    <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Parameters to define an MQTT endpoint</p>
+</span>
+            
+
+            
+            
+
+            
+<div class="accordion" id="accordionprotocol">
+    <div class="card">
+        <div class="card-header" id="headingprotocol">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#protocol"
+                        aria-expanded="" aria-controls="protocol" onclick="setAnchor('#protocol')"><span class="property-name">protocol</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="protocol"
+             class="collapse property-definition-div" aria-labelledby="headingprotocol"
+             data-parent="#accordionprotocol">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#protocol" onclick="anchorLink('protocol')">protocol</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="protocol_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"mqtt"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionhostname">
+    <div class="card">
+        <div class="card-header" id="headinghostname">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#hostname"
+                        aria-expanded="" aria-controls="hostname" onclick="setAnchor('#hostname')"><span class="property-name">hostname</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="hostname"
+             class="collapse property-definition-div" aria-labelledby="headinghostname"
+             data-parent="#accordionhostname">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#hostname" onclick="anchorLink('hostname')">hostname</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionport">
+    <div class="card">
+        <div class="card-header" id="headingport">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#port"
+                        aria-expanded="" aria-controls="port" onclick="setAnchor('#port')"><span class="property-name">port</span></button>
+            </h2>
+        </div>
+
+        <div id="port"
+             class="collapse property-definition-div" aria-labelledby="headingport"
+             data-parent="#accordionport">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#port" onclick="anchorLink('port')">port</a></div><span class="badge badge-dark value-type">Type: string</span> <span class="badge badge-success default-value">Default: "8883"</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionclient_id">
+    <div class="card">
+        <div class="card-header" id="headingclient_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#client_id"
+                        aria-expanded="" aria-controls="client_id" onclick="setAnchor('#client_id')"><span class="property-name">client_id</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="client_id"
+             class="collapse property-definition-div" aria-labelledby="headingclient_id"
+             data-parent="#accordionclient_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#client_id" onclick="anchorLink('client_id')">client_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionadditionalProperties">
+    <div class="card">
+        <div class="card-header" id="headingadditionalProperties">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#additionalProperties"
+                        aria-expanded="" aria-controls="additionalProperties" onclick="setAnchor('#additionalProperties')"><em><span class="property-name">Additional Properties</span></em></button>
+            </h2>
+        </div>
+
+        <div id="additionalProperties"
+             class="collapse property-definition-div" aria-labelledby="headingadditionalProperties"
+             data-parent="#accordionadditionalProperties">
+            <div class="card-body pl-5"><p class="additional-properties">Additional Properties of any type are allowed.</p>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#additionalProperties" onclick="anchorLink('additionalProperties')">additionalProperties</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a></p>
+    </footer></body>
+</html>

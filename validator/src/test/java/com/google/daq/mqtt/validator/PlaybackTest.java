@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import org.junit.Test;
 import udmi.schema.Level;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationState;
 
 /**
  * Tests based on validation of message trace playback.
@@ -24,7 +25,7 @@ public class PlaybackTest extends TestBase {
     assertEquals("trace message count", 8, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
-    ValidationEvent finalReport = asValidationEvent(lastBundle.message);
+    ValidationState finalReport = asValidationState(lastBundle.message);
     assertEquals("correct devices", 2, finalReport.summary.correct_devices.size());
     assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
     assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
@@ -53,12 +54,21 @@ public class PlaybackTest extends TestBase {
     assertEquals("trace message count", 8, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     TreeMap<String, Object> lastMessage = outputMessages.get(outputMessages.size() - 1).message;
-    ValidationEvent finalReport = asValidationEvent(lastMessage);
+    ValidationState finalReport = asValidationState(lastMessage);
     assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
     assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
     assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
     assertEquals("error devices", 1, finalReport.summary.error_devices.size());
     assertEquals("device summaries", 1, finalReport.devices.size());
+  }
+
+  private ValidationState asValidationState(TreeMap<String, Object> message) {
+    try {
+      String stringValue = OBJECT_MAPPER.writeValueAsString(message);
+      return OBJECT_MAPPER.readValue(stringValue, ValidationState.class);
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message", e);
+    }
   }
 
   private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {

@@ -1,0 +1,73 @@
+{
+  "title": "Validation State",
+  "description": "Validation state summary",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the discover telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "last_updated": {
+      "description": "Last time this validation report was updated",
+      "format": "date-time",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    },
+    "summary": {
+      "title": "Validation Summary",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "correct_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extra_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "error_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "devices": {
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, DeviceValidationEvent>",
+      "patternProperties": {
+        "^[A-Z]{2,6}-[0-9]{1,6}$": {
+          "$ref": "file:event_validation_device.json"
+        }
+      }
+    }
+  },
+  "required": [
+    "last_updated",
+    "summary",
+    "devices"
+  ]
+}

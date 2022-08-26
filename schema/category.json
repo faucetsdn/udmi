@@ -22,6 +22,9 @@
     { "pattern": "^discovery\\.point\\.describe$" },
     { "pattern": "^blobset\\.blob\\.receive$" },
     { "pattern": "^blobset\\.blob\\.fetch$" },
-    { "pattern": "^blobset\\.blob\\.apply$" }
+    { "pattern": "^blobset\\.blob\\.apply$" },
+    { "pattern": "^validation\\.device\\.receive$" },
+    { "pattern": "^validation\\.device\\.result$" },
+    { "pattern": "^validation\\.summary\\.report$" }
     ]
 }
