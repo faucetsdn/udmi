@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.semantic;
+package com.google.daq.mqtt.util.semantic;
 
 /**
  * Class of objects that hold a description for semantic understanding.

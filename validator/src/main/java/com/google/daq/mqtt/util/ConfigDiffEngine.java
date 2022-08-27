@@ -1,11 +1,11 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.validator.SequenceValidator.OBJECT_MAPPER;
+import static com.google.daq.mqtt.sequencer.SequenceValidator.OBJECT_MAPPER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.validator.semantic.SemanticValue;
+import com.google.daq.mqtt.util.semantic.SemanticValue;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +37,13 @@ public class ConfigDiffEngine {
     return message == null ? null : convertTo(targetClass, toJsonString(message));
   }
 
-  static String toJsonString(Object message) {
+  /**
+   * Convert an object to a json string.
+   *
+   * @param target object to convert
+   * @return json string representation
+   */
+  public static String toJsonString(Object message) {
     try {
       return OBJECT_MAPPER.writeValueAsString(message);
     } catch (Exception e) {

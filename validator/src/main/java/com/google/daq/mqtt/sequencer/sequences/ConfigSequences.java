@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
@@ -10,7 +10,7 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.daq.mqtt.validator.SequenceValidator;
+import com.google.daq.mqtt.sequencer.SequenceValidator;
 import java.util.Date;
 import org.junit.Test;
 import udmi.schema.Entry;
@@ -19,7 +19,7 @@ import udmi.schema.Level;
 /**
  * Validate basic device configuration handling operation, not specific to any device function.
  */
-public class ConfigValidator extends SequenceValidator {
+public class ConfigSequences extends SequenceValidator {
 
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")

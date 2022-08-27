@@ -1,8 +1,7 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.validator.ConfigDiffEngine.convertTo;
-import static com.google.daq.mqtt.validator.ConfigDiffEngine.toJsonString;
+import static com.google.daq.mqtt.util.ConfigDiffEngine.toJsonString;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -16,10 +15,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.Common;
+import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
-import com.google.daq.mqtt.validator.semantic.SemanticDate;
-import com.google.daq.mqtt.validator.semantic.SemanticValue;
+import com.google.daq.mqtt.util.semantic.SemanticDate;
+import com.google.daq.mqtt.util.semantic.SemanticValue;
+import com.google.daq.mqtt.validator.AugmentedState;
+import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -524,7 +527,7 @@ public abstract class SequenceValidator {
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
       Preconditions.checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
-      SystemEvent event = convertTo(SystemEvent.class, message);
+      SystemEvent event = ConfigDiffEngine.convertTo(SystemEvent.class, message);
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
@@ -773,7 +776,7 @@ public abstract class SequenceValidator {
         return false;
       }
       for (Map<String, Object> message : messages) {
-        SystemEvent systemEvent = convertTo(SystemEvent.class, message);
+        SystemEvent systemEvent = ConfigDiffEngine.convertTo(SystemEvent.class, message);
         if (systemEvent.logentries == null) {
           continue;
         }
@@ -854,7 +857,7 @@ public abstract class SequenceValidator {
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
-    ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
+    ReflectorConfig reflectorConfig = ConfigDiffEngine.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
     if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
       info("Cloud UDMI version " + reflectorConfig.version);
@@ -907,7 +910,7 @@ public abstract class SequenceValidator {
         debug("Ignoring reflector exception:\n" + toJsonString(message));
         return;
       }
-      Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
+      Object converted = ConfigDiffEngine.convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
           .incrementAndGet();
@@ -974,7 +977,7 @@ public abstract class SequenceValidator {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(convertTo(SystemEvent.class, message));
+      writeSystemLogs(ConfigDiffEngine.convertTo(SystemEvent.class, message));
     }
   }
 
@@ -1030,7 +1033,7 @@ public abstract class SequenceValidator {
     if (events == null) {
       return ImmutableList.of();
     }
-    return events.stream().map(message -> convertTo(clazz, message)).collect(Collectors.toList());
+    return events.stream().map(message -> ConfigDiffEngine.convertTo(clazz, message)).collect(Collectors.toList());
   }
 
   /**

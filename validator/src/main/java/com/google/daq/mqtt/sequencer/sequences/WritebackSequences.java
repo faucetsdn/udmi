@@ -1,6 +1,6 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.sequencer.sequences;
 
-import com.google.daq.mqtt.validator.PointValidator;
+import com.google.daq.mqtt.sequencer.PointValidator;
 import java.util.Objects;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
@@ -9,7 +9,7 @@ import udmi.schema.TargetTestingModel;
 /**
  * Validate UDMI writeback capabilities.
  */
-public class WritebackValidator extends PointValidator {
+public class WritebackSequences extends PointValidator {
 
   public static final String INVALID_STATE = "invalid";
   public static final String FAILURE_STATE = "failure";

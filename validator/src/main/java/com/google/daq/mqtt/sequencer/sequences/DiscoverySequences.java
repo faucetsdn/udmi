@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.sequencer.sequences;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.daq.mqtt.validator.CleanDateFormat;
-import com.google.daq.mqtt.validator.SequenceValidator;
-import com.google.daq.mqtt.validator.SkipTest;
-import com.google.daq.mqtt.validator.semantic.SemanticDate;
+import com.google.daq.mqtt.sequencer.SequenceValidator;
+import com.google.daq.mqtt.sequencer.SkipTest;
+import com.google.daq.mqtt.util.semantic.SemanticDate;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import udmi.schema.FamilyDiscoveryState;
 /**
  * Validation tests for discovery scan and enumeration capabilities.
  */
-public class DiscoveryValidator extends SequenceValidator {
+public class DiscoverySequences extends SequenceValidator {
 
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
