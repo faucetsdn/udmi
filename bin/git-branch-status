@@ -52,12 +52,12 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
     
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
-        description="(git config branch.$local.description 'TEST DESCRIPTION') "
+        description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
 
-    if [[ $local == $current ]]; then
-        local="${local}*"
+    if [[ -n $description ]]; then
+        description="$description "
     fi
-    
+
     printf "%-15s%-35s%s(%s)\n" $local "$OFFSET$POFF" "$description" "$merged"
 done
