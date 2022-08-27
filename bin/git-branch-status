@@ -48,6 +48,7 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
         POFF=
     fi
 
+    # Find the first "real" commit on this branch: one that's not of a merge
     merged="$(git log -n 1 --pretty=format:"%cd" --first-parent --no-merges --date relative $local --)"
     
     description=$(git config branch.$local.description)
@@ -55,8 +56,14 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
         description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
 
+    # Add a space after description if it exists
     if [[ -n $description ]]; then
         description="$description "
+    fi
+
+    # Mark current branch with a *
+    if [[ $local == $current ]]; then
+        local="${local}*"
     fi
 
     printf "%-15s%-35s%s(%s)\n" $local "$OFFSET$POFF" "$description" "$merged"
