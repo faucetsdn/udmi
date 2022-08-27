@@ -81,7 +81,7 @@ public abstract class SequenceRunner {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
-  public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
+  public static final String PACKAGE_MATCH_SNIPPET = SequenceRunner.class.getPackageName();
   public static final String LOCAL_CONFIG = "local_config";
   protected static final Metadata deviceMetadata;
   private static final String EMPTY_MESSAGE = "{}";
