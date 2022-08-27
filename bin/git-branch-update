@@ -68,7 +68,7 @@ while read local remote; do
 
         masterdiff=$(git diff $parent | wc -l) || true
         if [[ $local != $parent && $masterdiff -eq 0 ]]; then
-            echo "  git branch -D $local  # Branch is identical, use to delete"
+            echo "  git branch -D $local  # Branch is identical to $parent, use to delete"
         fi
     fi
 
