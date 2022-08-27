@@ -32,8 +32,8 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.ValidationException;
-import com.google.daq.mqtt.validator.MessageUpgrader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -247,16 +247,16 @@ class LocalDevice {
     }
   }
 
+  static boolean deviceExists(File devicesDir, String deviceName) {
+    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
+  }
+
   private void prepareOutDir() {
     if (!outDir.exists()) {
       outDir.mkdir();
     }
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     exceptionLog.delete();
-  }
-  
-  static boolean deviceExists(File devicesDir, String deviceName) {
-    return new File(new File(devicesDir, deviceName), METADATA_JSON).isFile();
   }
 
   public void validateExpected() {

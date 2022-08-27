@@ -1,6 +1,6 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.sequencer;
 
-import com.google.daq.mqtt.validator.validations.WritebackValidator;
+import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
 import java.util.HashMap;
 import java.util.Optional;
 import org.junit.Before;
@@ -9,9 +9,9 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.TargetTestingModel;
 
 /**
- * Class used for validating test about sequences with points.
+ * Class used for testing sequences with points.
  */
-public abstract class PointValidator extends SequenceValidator {
+public abstract class PointSequencer extends SequenceRunner {
 
   /**
    * Make the required set of points in the config block.
@@ -22,9 +22,9 @@ public abstract class PointValidator extends SequenceValidator {
     deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points)
         .orElse(new HashMap<>());
     try {
-      ensurePointConfig(WritebackValidator.INVALID_STATE);
-      ensurePointConfig(WritebackValidator.FAILURE_STATE);
-      ensurePointConfig(WritebackValidator.APPLIED_STATE);
+      ensurePointConfig(WritebackSequences.INVALID_STATE);
+      ensurePointConfig(WritebackSequences.FAILURE_STATE);
+      ensurePointConfig(WritebackSequences.APPLIED_STATE);
     } catch (SkipTest skipTest) {
       info("Not setting config points: " + skipTest.getMessage());
     }

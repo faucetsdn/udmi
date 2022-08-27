@@ -7,13 +7,15 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Class for managing a map of exceptions (named by category).
+ */
 public class ExceptionMap extends RuntimeException {
 
   private static final byte[] NEWLINE_BYTES = "\n".getBytes();
@@ -25,26 +27,13 @@ public class ExceptionMap extends RuntimeException {
     super(description);
   }
 
-  private void forEach(BiConsumer<String, Exception> consumer) {
-    exceptions.forEach(consumer);
-  }
-
-  public boolean isEmpty() {
-    return exceptions.isEmpty();
-  }
-
-  public void throwIfNotEmpty() {
-    if (!exceptions.isEmpty() || getCause() != null) {
-      throw this;
-    }
-  }
-
-  public void put(String key, Exception exception) {
-    if (exceptions.put(key, exception) != null) {
-      throw new IllegalArgumentException("Exception key already defined: " + key);
-    }
-  }
-
+  /**
+   * Format the given exception with indicated level.
+   *
+   * @param e      exception (tree) to format
+   * @param indent indent level
+   * @return formatted error tree
+   */
   public static ErrorTree format(Exception e, String indent) {
     return format(e, "", indent);
   }
@@ -76,22 +65,63 @@ public class ExceptionMap extends RuntimeException {
     return errorTree;
   }
 
+  private void forEach(BiConsumer<String, Exception> consumer) {
+    exceptions.forEach(consumer);
+  }
+
+  public boolean isEmpty() {
+    return exceptions.isEmpty();
+  }
+
+  /**
+   * Throw an exception if the map is not empty, otherwise do nothing.
+   */
+  public void throwIfNotEmpty() {
+    if (!exceptions.isEmpty() || getCause() != null) {
+      throw this;
+    }
+  }
+
+  /**
+   * Put a new entry into the map.
+   *
+   * @param key       entry key
+   * @param exception exception to add
+   */
+  public void put(String key, Exception exception) {
+    if (exceptions.put(key, exception) != null) {
+      throw new IllegalArgumentException("Exception key already defined: " + key);
+    }
+  }
+
   public Stream<Map.Entry<String, Exception>> stream() {
     return exceptions.entrySet().stream();
   }
 
+  /**
+   * Simple size getter.
+   *
+   * @return number of exceptions in the tree
+   */
   public int size() {
     return exceptions.size();
   }
 
-  public void purgeErrors(Set<String> ignoreErrors) {}
-
+  /**
+   * Tree of errors.
+   */
   public static class ErrorTree {
+
     public String prefix;
     public String message;
     public ErrorTree child;
     public Map<String, ErrorTree> children = new TreeMap<>();
 
+    /**
+     * Render the tree as a string.
+     *
+     * @return rendered tree
+     */
     public String asString() {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       try (PrintStream printStream = new PrintStream(byteArrayOutputStream)) {
@@ -100,15 +130,21 @@ public class ExceptionMap extends RuntimeException {
       return byteArrayOutputStream.toString();
     }
 
-    public void write(PrintStream err) {
-      write(err, null);
-    }
-
+    /**
+     * Write the tree to the output stream.
+     *
+     * @param err output stream to write
+     */
     public void write(OutputStream err) {
-      write(new PrintStream(err), null);
+      write(new PrintStream(err));
     }
 
-    public void write(PrintStream err, Set<String> ignoreSet) {
+    /**
+     * Write the tree to the print stream.
+     *
+     * @param err output print stream
+     */
+    public void write(PrintStream err) {
       if (message == null && children == null && child == null) {
         throw new RuntimeException("Empty ErrorTree object");
       }
@@ -129,6 +165,12 @@ public class ExceptionMap extends RuntimeException {
       }
     }
 
+    /**
+     * Purge the indicated error patterns for the map.
+     *
+     * @param ignoreErrors list of patterns to purge
+     * @return true if the resulting map is empty
+     */
     public boolean purge(List<Pattern> ignoreErrors) {
       if (message == null) {
         return true;

@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.sequencer;
 
 import java.util.ArrayList;
 import java.util.List;
