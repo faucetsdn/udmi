@@ -1,14 +1,15 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.sequencer.sequences;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.daq.mqtt.sequencer.SequenceRunner;
+import com.google.daq.mqtt.sequencer.SkipTest;
+import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.CleanDateFormat;
-import com.google.daq.mqtt.validator.SequenceValidator;
-import com.google.daq.mqtt.validator.SkipTest;
-import com.google.daq.mqtt.validator.semantic.SemanticDate;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import udmi.schema.FamilyDiscoveryState;
 /**
  * Validation tests for discovery scan and enumeration capabilities.
  */
-public class DiscoveryValidator extends SequenceValidator {
+public class DiscoverySequences extends SequenceRunner {
 
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
@@ -44,7 +45,7 @@ public class DiscoveryValidator extends SequenceValidator {
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
     deviceConfig.discovery.enumeration.generation = startTime;
-    info("Starting enumeration at " + getTimestamp(startTime));
+    info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
     updateConfig("discovery generation");
     untilTrue("enumeration generation",
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
@@ -53,7 +54,7 @@ public class DiscoveryValidator extends SequenceValidator {
     List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
     assertTrue("a few events received", events.size() >= 1 && events.size() <= 2);
     DiscoveryEvent discoveryEvent = events.get(0);
-    info("Received discovery generation " + getTimestamp(discoveryEvent.generation));
+    info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
     assertEquals("matching event generation", startTime, discoveryEvent.generation);
     int discoveredPoints = discoveryEvent.uniqs == null ? 0 : discoveryEvent.uniqs.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
