@@ -1,11 +1,11 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.validator.SequenceValidator.OBJECT_MAPPER;
+import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.validator.semantic.SemanticValue;
+import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,20 +33,41 @@ public class ConfigDiffEngine {
     }
   }
 
-  static <T> T convertTo(Class<T> targetClass, Object message) {
+  /**
+   * Convert a generic object ot one of a specific class.
+   *
+   * @param targetClass result class
+   * @param message     object to convert
+   * @param <T>         class parameter
+   * @return converted object
+   */
+  public static <T> T convertTo(Class<T> targetClass, Object message) {
     return message == null ? null : convertTo(targetClass, toJsonString(message));
   }
 
-  static String toJsonString(Object message) {
+  /**
+   * Convert an object to a json string.
+   *
+   * @param target object to convert
+   * @return json string representation
+   */
+  public static String toJsonString(Object target) {
     try {
-      return OBJECT_MAPPER.writeValueAsString(message);
+      return OBJECT_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
-      throw new RuntimeException("While stringifying message", e);
+      throw new RuntimeException("While stringifying object", e);
     }
   }
 
+  /**
+   * Compute the changes in a config object from the previous config, as
+   * stored in the class.
+   *
+   * @param deviceConfig new config
+   * @return list of differences against the previous config
+   */
   @SuppressWarnings("unchecked")
-  List<String> computeChanges(Config deviceConfig) {
+  public List<String> computeChanges(Config deviceConfig) {
     Map<String, Object> updated = convertSemantics(deviceConfig);
     List<String> configUpdates = new ArrayList<>();
     accumulateDifference("", previous, updated, configUpdates);
@@ -148,7 +169,14 @@ public class ConfigDiffEngine {
     return semanticValue(map.get(key));
   }
 
-  boolean equals(Config deviceConfig, Object receivedConfig) {
+  /**
+   * Compare two objects, taking into consideration any semantic tags/values.
+   *
+   * @param deviceConfig   one config object
+   * @param receivedConfig another config object
+   * @return equality comparison with semantic considerations
+   */
+  public boolean equals(Config deviceConfig, Object receivedConfig) {
     Map<String, Object> left = convertSemantics(deviceConfig);
     Map<String, Object> right = convertSemantics(receivedConfig);
     List<String> configUpdates = new ArrayList<>();
