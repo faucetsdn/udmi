@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.semantic;
+package com.google.daq.mqtt.sequencer.semantic;
 
 import java.util.Date;
 

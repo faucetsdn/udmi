@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

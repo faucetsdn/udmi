@@ -1,25 +1,25 @@
-package com.google.daq.mqtt.validator;
+package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.validator.ConfigDiffEngine.convertTo;
-import static com.google.daq.mqtt.validator.ConfigDiffEngine.toJsonString;
+import static com.google.daq.mqtt.util.ConfigDiffEngine.toJsonString;
 import static java.util.Optional.ofNullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.Common;
+import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.ValidatorConfig;
-import com.google.daq.mqtt.validator.semantic.SemanticDate;
-import com.google.daq.mqtt.validator.semantic.SemanticValue;
+import com.google.daq.mqtt.validator.AugmentedState;
+import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,7 +68,7 @@ import udmi.schema.TestingSystemConfig;
 /**
  * Validate a device using a sequence of message exchanges.
  */
-public abstract class SequenceValidator {
+public abstract class SequenceRunner {
 
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
@@ -81,15 +81,9 @@ public abstract class SequenceValidator {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
-  public static final String PACKAGE_MATCH_SNIPPET = "validator.validations";
+  public static final String PACKAGE_MATCH_SNIPPET = SequenceRunner.class.getPackageName();
   public static final String LOCAL_CONFIG = "local_config";
   protected static final Metadata deviceMetadata;
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .enable(SerializationFeature.INDENT_OUTPUT)
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-      .setDateFormat(new CleanDateFormat())
-      .setSerializationInclusion(Include.NON_NULL);
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -282,16 +276,6 @@ public abstract class SequenceValidator {
     }
   };
 
-  private void withRecordSequence(boolean value, Runnable operation) {
-    boolean saved = recordSequence;
-    recordSequence = value;
-    try {
-      operation.run();
-    } finally {
-      recordSequence = saved;
-    }
-  }
-
   private static void setReflectorState() {
     ReflectorState reflectorState = new ReflectorState();
     stateTimestamp = new Date();
@@ -301,7 +285,7 @@ public abstract class SequenceValidator {
     reflectorState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
-          UDMI_VERSION, getTimestamp(stateTimestamp));
+          UDMI_VERSION, JsonUtil.getTimestamp(stateTimestamp));
       client.setReflectorState(toJsonString(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -312,34 +296,19 @@ public abstract class SequenceValidator {
     File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
     try {
       System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      return JsonUtil.OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
-  protected static String getTimestamp(Date date) {
+  private void withRecordSequence(boolean value, Runnable operation) {
+    boolean saved = recordSequence;
+    recordSequence = value;
     try {
-      if (date == null) {
-        return "null";
-      }
-      String dateString = toJsonString(date);
-      // Remove the encapsulating quotes included because it's a JSON string-in-a-string.
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
-  protected static String getTimestamp() {
-    return getTimestamp(CleanDateFormat.cleanDate());
-  }
-
-  static void safeSleep(long logClearTimeMs) {
-    try {
-      Thread.sleep(logClearTimeMs);
-    } catch (Exception e) {
-      throw new RuntimeException("Interruped sleep", e);
+      operation.run();
+    } finally {
+      recordSequence = saved;
     }
   }
 
@@ -386,7 +355,7 @@ public abstract class SequenceValidator {
     File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
     try {
       debug("Reading generated config file " + deviceConfigFile.getPath());
-      Config generatedConfig = OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
+      Config generatedConfig = JsonUtil.OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
       return ofNullable(generatedConfig).orElse(new Config());
     } catch (Exception e) {
       throw new RuntimeException("While loading " + deviceConfigFile.getAbsolutePath(), e);
@@ -442,7 +411,7 @@ public abstract class SequenceValidator {
   private Date syncConfig() {
     updateConfig();
     waitForConfigSync();
-    debug("config synced to " + getTimestamp(deviceConfig.timestamp));
+    debug("config synced to " + JsonUtil.getTimestamp(deviceConfig.timestamp));
     return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
 
@@ -470,8 +439,9 @@ public abstract class SequenceValidator {
     }
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
-    String messageBase = String.format("%s_%s", subType, subFolder, getTimestamp());
+    String timestamp =
+        message == null ? JsonUtil.getTimestamp() : (String) message.get("timestamp");
+    String messageBase = String.format("%s_%s", subType, subFolder, JsonUtil.getTimestamp());
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
     }
@@ -480,7 +450,7 @@ public abstract class SequenceValidator {
 
     File attributeFile = new File(testDir, messageBase + ".attr");
     try {
-      OBJECT_MAPPER.writeValue(attributeFile, attributes);
+      JsonUtil.OBJECT_MAPPER.writeValue(attributeFile, attributes);
     } catch (Exception e) {
       throw new RuntimeException("While writing attributes to " + attributeFile.getAbsolutePath(),
           e);
@@ -488,10 +458,11 @@ public abstract class SequenceValidator {
   }
 
   private void recordRawMessage(Object message, String messageBase) {
-    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(message, new TypeReference<>() {
-    });
+    Map<String, Object> objectMap = JsonUtil.OBJECT_MAPPER.convertValue(message,
+        new TypeReference<>() {
+        });
     if (traceLogLevel()) {
-      messageBase = messageBase + "_" + getTimestamp();
+      messageBase = messageBase + "_" + JsonUtil.getTimestamp();
     }
     recordRawMessage(objectMap, messageBase);
   }
@@ -504,7 +475,7 @@ public abstract class SequenceValidator {
     String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
     try {
-      OBJECT_MAPPER.writeValue(messageFile, message);
+      JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
       boolean traceMessage =
           traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG));
       String postfix =
@@ -524,14 +495,14 @@ public abstract class SequenceValidator {
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
       Preconditions.checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
-      SystemEvent event = convertTo(SystemEvent.class, message);
+      SystemEvent event = ConfigDiffEngine.convertTo(SystemEvent.class, message);
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
         for (Entry logEntry : event.logentries) {
           debug(String.format("%s%s %s %s %s: %s", "received ", messageBase,
               Level.fromValue(logEntry.level).name(), logEntry.category,
-              getTimestamp(logEntry.timestamp), logEntry.message));
+              JsonUtil.getTimestamp(logEntry.timestamp), logEntry.message));
         }
       }
     } catch (Exception e) {
@@ -564,7 +535,7 @@ public abstract class SequenceValidator {
     if (logEntry.timestamp == null) {
       throw new RuntimeException("log entry timestamp is null");
     }
-    String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
+    String messageStr = String.format("%s %s %s %s", JsonUtil.getTimestamp(logEntry.timestamp),
         Level.fromValue(logEntry.level),
         logEntry.category,
         logEntry.message);
@@ -637,7 +608,7 @@ public abstract class SequenceValidator {
       }
       if (traceLogLevel()) {
         String messageData = toJsonString(data);
-        Map<String, Long> map = OBJECT_MAPPER.readValue(messageData, Map.class);
+        Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
         map.put("nonce", System.currentTimeMillis());
         return map;
       } else {
@@ -667,7 +638,7 @@ public abstract class SequenceValidator {
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
     try {
       String conversionString = toJsonString(system);
-      AugmentedSystemConfig augmentedConfig = OBJECT_MAPPER.readValue(conversionString,
+      AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(conversionString,
           AugmentedSystemConfig.class);
       debug("system config extra field " + extraField);
       augmentedConfig.extraField = extraField;
@@ -689,7 +660,7 @@ public abstract class SequenceValidator {
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
         debug(String.format("updating %s state", subFolder));
-        T state = OBJECT_MAPPER.readValue(messageString, target);
+        T state = JsonUtil.OBJECT_MAPPER.readValue(messageString, target);
         handler.accept(state);
       }
       return updated;
@@ -761,7 +732,7 @@ public abstract class SequenceValidator {
 
   protected List<Map<String, Object>> clearLogs() {
     info("clearing system logs...");
-    safeSleep(LOG_CLEAR_TIME_MS);
+    JsonUtil.safeSleep(LOG_CLEAR_TIME_MS);
     lastLog = null;
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
@@ -773,7 +744,7 @@ public abstract class SequenceValidator {
         return false;
       }
       for (Map<String, Object> message : messages) {
-        SystemEvent systemEvent = convertTo(SystemEvent.class, message);
+        SystemEvent systemEvent = ConfigDiffEngine.convertTo(SystemEvent.class, message);
         if (systemEvent.logentries == null) {
           continue;
         }
@@ -781,7 +752,7 @@ public abstract class SequenceValidator {
           boolean validEntry = lastLog == null || !logEntry.timestamp.before(lastLog);
           if (validEntry && category.equals(logEntry.category) && level.value() == logEntry.level) {
             lastLog = logEntry.timestamp;
-            debug("Advancing log marker to " + getTimestamp(lastLog));
+            debug("Advancing log marker to " + JsonUtil.getTimestamp(lastLog));
             return true;
           }
         }
@@ -854,7 +825,7 @@ public abstract class SequenceValidator {
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
-    ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
+    ReflectorConfig reflectorConfig = ConfigDiffEngine.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
     if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
       info("Cloud UDMI version " + reflectorConfig.version);
@@ -862,7 +833,7 @@ public abstract class SequenceValidator {
         warning("Local/cloud UDMI version mismatch!");
       }
     } else {
-      info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
+      info("Ignoring mismatch state/config timestamp " + JsonUtil.getTimestamp(lastState));
     }
   }
 
@@ -907,7 +878,7 @@ public abstract class SequenceValidator {
         debug("Ignoring reflector exception:\n" + toJsonString(message));
         return;
       }
-      Object converted = convertTo(expectedUpdates.get(subFolderRaw), message);
+      Object converted = ConfigDiffEngine.convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
           .incrementAndGet();
@@ -921,7 +892,7 @@ public abstract class SequenceValidator {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        info("Updated config with timestamp " + getTimestamp(config.timestamp));
+        info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
             toJsonString(converted)));
         recordDeviceConfig("received config message");
@@ -931,7 +902,8 @@ public abstract class SequenceValidator {
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        info("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
+        info("Updated state has last_config " + JsonUtil.getTimestamp(
+            deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
@@ -974,7 +946,7 @@ public abstract class SequenceValidator {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(convertTo(SystemEvent.class, message));
+      writeSystemLogs(ConfigDiffEngine.convertTo(SystemEvent.class, message));
     }
   }
 
@@ -1030,7 +1002,8 @@ public abstract class SequenceValidator {
     if (events == null) {
       return ImmutableList.of();
     }
-    return events.stream().map(message -> convertTo(clazz, message)).collect(Collectors.toList());
+    return events.stream().map(message -> ConfigDiffEngine.convertTo(clazz, message))
+        .collect(Collectors.toList());
   }
 
   /**

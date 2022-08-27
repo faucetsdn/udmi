@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator.validations;
+package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
@@ -10,7 +10,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.daq.mqtt.validator.SequenceValidator;
+import com.google.daq.mqtt.sequencer.SequenceRunner;
+import com.google.daq.mqtt.util.JsonUtil;
 import java.util.Date;
 import org.junit.Test;
 import udmi.schema.Entry;
@@ -19,7 +20,7 @@ import udmi.schema.Level;
 /**
  * Validate basic device configuration handling operation, not specific to any device function.
  */
-public class ConfigValidator extends SequenceValidator {
+public class ConfigSequences extends SequenceRunner {
 
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")
@@ -56,8 +57,8 @@ public class ConfigValidator extends SequenceValidator {
     untilTrue("clean config/state synced", this::configUpdateComplete);
     Date stableConfig = deviceConfig.timestamp;
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
-    info("initial stable_config " + getTimestamp(stableConfig));
-    info("initial last_config " + getTimestamp(deviceState.system.last_config));
+    info("initial stable_config " + JsonUtil.getTimestamp(stableConfig));
+    info("initial last_config " + JsonUtil.getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
     clearLogs();
@@ -69,8 +70,8 @@ public class ConfigValidator extends SequenceValidator {
     info("Error detail: " + stateStatus.detail);
     assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-    info("following stable_config " + getTimestamp(stableConfig));
-    info("following last_config " + getTimestamp(deviceState.system.last_config));
+    info("following stable_config " + JsonUtil.getTimestamp(stableConfig));
+    info("following last_config " + JsonUtil.getTimestamp(deviceState.system.last_config));
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operational);
