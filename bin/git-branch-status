@@ -9,6 +9,8 @@
 #   git config branch.$branch.description "Dependence changes"
 #
 
+current=$(git branch --show-current)
+
 git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
   while read local remote; do
     if [[ -n $remote ]]; then
@@ -49,6 +51,10 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
         description="(git config branch.$local.description 'TEST DESCRIPTION')"
+    fi
+
+    if [[ $local == $current ]]; then
+        local="${local}*"
     fi
     
     printf "%-15s%-35s%s\n" $local "$OFFSET$POFF" "$description"
