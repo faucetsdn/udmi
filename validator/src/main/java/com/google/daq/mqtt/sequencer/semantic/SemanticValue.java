@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util.semantic;
+package com.google.daq.mqtt.sequencer.semantic;
 
 /**
  * Class of objects that hold a description for semantic understanding.
