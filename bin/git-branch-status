@@ -47,15 +47,17 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
     else
         POFF=
     fi
+
+    merged="$(git log -n 1 --pretty=format:"%cd" --first-parent --no-merges --date relative $local --)"
     
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
-        description="(git config branch.$local.description 'TEST DESCRIPTION')"
+        description="(git config branch.$local.description 'TEST DESCRIPTION') "
     fi
 
     if [[ $local == $current ]]; then
         local="${local}*"
     fi
     
-    printf "%-15s%-35s%s\n" $local "$OFFSET$POFF" "$description"
+    printf "%-15s%-35s%s(%s)\n" $local "$OFFSET$POFF" "$description" "$merged"
 done
