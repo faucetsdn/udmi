@@ -49,11 +49,11 @@ EXPECTED_SEQUENCES=2
 validator/bin/build
 
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.validator.SequenceTestRunner"
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceTestRunner"
 
 rm -rf $site_model/out/devices/$device_id
 
-test_srces=`cd validator/src/main/java/com/google/daq/mqtt/validator/validations; ls *.java`
+test_srces=`cd validator/src/main/java/com/google/daq/mqtt/sequencer/sequences; ls *.java`
 echo Processing test sources $test_srces
 
 exit_code=2
@@ -64,7 +64,7 @@ for test_name in $test_names; do
   for test_src in $test_srces; do
     test_class=${test_src%.java}
     target=$test_class$test_prefix$test_name
-    CLASS=com.google.daq.mqtt.validator.validations.$target
+    CLASS=com.google.daq.mqtt.sequencer.sequences.$target
     echo $JAVA_CMD $CLASS
     result=0
     timeout 5m $JAVA_CMD $CLASS || result=$?
