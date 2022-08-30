@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Building Config
+ * Mapping Command
  * <p>
- * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+ * [Mapping command](../docs/specs/mapping.md) for provisioning
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "translation"
 })
 @Generated("jsonschema2pojo")
-public class BuildingConfig {
+public class MappingCommand {
 
     /**
      * RFC 3339 timestamp the configuration was generated
@@ -57,12 +57,14 @@ public class BuildingConfig {
     @JsonProperty("status")
     public Entry status;
     /**
-     * Point translations
+     * Building Config
+     * <p>
+     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
      * 
      */
     @JsonProperty("translation")
-    @JsonPropertyDescription("Point translations")
-    public HashMap<String, BuildingConfigTranslation> translation;
+    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
+    public HashMap<String, BuildingTranslation> translation;
 
     @Override
     public int hashCode() {
@@ -80,10 +82,10 @@ public class BuildingConfig {
         if (other == this) {
             return true;
         }
-        if ((other instanceof BuildingConfig) == false) {
+        if ((other instanceof MappingCommand) == false) {
             return false;
         }
-        BuildingConfig rhs = ((BuildingConfig) other);
+        MappingCommand rhs = ((MappingCommand) other);
         return ((((((this.translation == rhs.translation)||((this.translation!= null)&&this.translation.equals(rhs.translation)))&&((this.guid == rhs.guid)||((this.guid!= null)&&this.guid.equals(rhs.guid))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

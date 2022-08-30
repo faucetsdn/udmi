@@ -118,8 +118,7 @@ public class SiteModel {
 
   private Metadata loadDeviceMetadata(String deviceId) {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
+    File deviceDir = getDeviceDir(deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
       return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
@@ -127,6 +126,12 @@ public class SiteModel {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
+  }
+
+  private File getDeviceDir(String deviceId) {
+    File devicesFile = new File(new File(sitePath), "devices");
+    File deviceDir = new File(devicesFile, deviceId);
+    return deviceDir;
   }
 
   public Metadata getMetadata(String deviceId) {
@@ -200,6 +205,10 @@ public class SiteModel {
     return cloudIotConfig.update_topic;
   }
 
+  public Device getDevice(String deviceId) {
+    return allDevices.get(deviceId);
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;
@@ -213,6 +222,10 @@ public class SiteModel {
 
     public Device(String deviceId) {
       this.deviceId = deviceId;
+    }
+
+    public File getFile() {
+      return getDeviceDir(deviceId);
     }
   }
 }

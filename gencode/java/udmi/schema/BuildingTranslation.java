@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Building Config Translation
+ * Building Translation
  * <p>
  * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
  * 
@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "states"
 })
 @Generated("jsonschema2pojo")
-public class BuildingConfigTranslation {
+public class BuildingTranslation {
 
     /**
      * dotted path to present_value field
@@ -49,10 +49,10 @@ public class BuildingConfigTranslation {
         if (other == this) {
             return true;
         }
-        if ((other instanceof BuildingConfigTranslation) == false) {
+        if ((other instanceof BuildingTranslation) == false) {
             return false;
         }
-        BuildingConfigTranslation rhs = ((BuildingConfigTranslation) other);
+        BuildingTranslation rhs = ((BuildingTranslation) other);
         return ((((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units)))&&((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))));
     }
 

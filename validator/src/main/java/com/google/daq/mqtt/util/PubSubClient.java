@@ -21,6 +21,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private final boolean flushSubscription;
   private final Map<String, HandlerConsumer<Object>> handlers = new HashMap<>();
   private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
-  private final Map<Class<?>, Pair<SubType, SubFolder>> classTypes = new HashMap<>();
+  private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
 
   /**
    * Create a simple proxy instance.
@@ -136,7 +137,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     Class<?> messageClass = getMessageClass(type, folder);
     if (messageClass != null) {
       typeClasses.put(mapKey, messageClass);
-      classTypes.put(messageClass, new Pair<>(type, folder));
+      classTypes.put(messageClass, new SimpleEntry<>(type, folder));
     }
   }
 
@@ -226,8 +227,8 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   @Override
   public void publishMessage(String deviceId, Object message) {
-    Pair<SubType, SubFolder> typePair = classTypes.get(message.getClass());
-    String mqttTopic = getMapKey(typePair.valueOne, typePair.valueTwo);
+    SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
+    String mqttTopic = getMapKey(typePair.getKey(), typePair.getValue());
     publish(deviceId, mqttTopic, JsonUtil.stringify(message));
   }
 

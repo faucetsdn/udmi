@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.function.BiConsumer;
 import udmi.schema.Envelope;
 
@@ -24,7 +25,7 @@ public interface MessageHandler {
   /**
    * Represent a type-happy consumer into a more generic specification.
    */
-  class HandlerSpecification extends Pair<Class<?>, HandlerConsumer<?>> {
+  class HandlerSpecification extends SimpleEntry<Class<?>, HandlerConsumer<?>> {
     public <T> HandlerSpecification(Class<T> valueOne, HandlerConsumer<T> valueTwo) {
       super(valueOne, valueTwo);
     }
