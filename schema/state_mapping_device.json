@@ -1,0 +1,41 @@
+{
+  "title": "Device Mapping State",
+  "description": "State for [mapping](../docs/specs/mapping.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "guid": {
+      "description": "Device guid",
+      "type": "string"
+    },
+    "imported": {
+      "description": "Last time the mapping was imported",
+      "type": "string",
+      "format": "date-time"
+    },
+    "discovered": {
+      "description": "Last received discovery message",
+      "type": "string",
+      "format": "date-time"
+    },
+    "predicted": {
+      "description": "Last recommendation staging (result of automatic prediction)",
+      "type": "string",
+      "format": "date-time"
+    },
+    "promoted": {
+      "description": "Last recommendation promotion (result of manual QA)",
+      "type": "string",
+      "format": "date-time"
+    },
+    "exported": {
+      "description": "Last time this device mapping was exported",
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    }
+  }
+}

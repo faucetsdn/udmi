@@ -5,7 +5,9 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 
 # Viewing subscription
 
-`bin/pull_message:gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack`
+`bin/pull_message`
+
+`gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack`
 
 # View cloud function logs
 

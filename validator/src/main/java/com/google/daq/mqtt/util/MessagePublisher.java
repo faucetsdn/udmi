@@ -1,4 +1,4 @@
-package com.google.bos.iot.core.proxy;
+package com.google.daq.mqtt.util;
 
 import java.util.Map;
 import java.util.function.BiConsumer;

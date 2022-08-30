@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.daq.mqtt.util.ConfigDiffEngine.toJsonString;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -35,7 +35,7 @@ public abstract class JsonUtil {
       if (date == null) {
         return "null";
       }
-      String dateString = toJsonString(date);
+      String dateString = stringify(date);
       // Remove the encapsulating quotes included because it's a JSON string-in-a-string.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
@@ -62,6 +62,40 @@ public abstract class JsonUtil {
       Thread.sleep(logClearTimeMs);
     } catch (Exception e) {
       throw new RuntimeException("Interruped sleep", e);
+    }
+  }
+
+  static <T> T convertTo(Class<T> targetClass, String messageString) {
+    try {
+      return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+    }
+  }
+
+  /**
+   * Convert a generic object ot one of a specific class.
+   *
+   * @param targetClass result class
+   * @param message     object to convert
+   * @param <T>         class parameter
+   * @return converted object
+   */
+  public static <T> T convertTo(Class<T> targetClass, Object message) {
+    return message == null ? null : convertTo(targetClass, stringify(message));
+  }
+
+  /**
+   * Convert an object to a json string.
+   *
+   * @param target object to convert
+   * @return json string representation
+   */
+  public static String stringify(Object target) {
+    try {
+      return OBJECT_MAPPER.writeValueAsString(target);
+    } catch (Exception e) {
+      throw new RuntimeException("While stringifying object", e);
     }
   }
 }
