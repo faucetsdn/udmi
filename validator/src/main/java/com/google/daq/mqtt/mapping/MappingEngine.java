@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import udmi.schema.BuildingTranslation;
 import udmi.schema.DeviceMappingState;
@@ -74,8 +75,9 @@ public class MappingEngine extends MappingBase {
   private void updateTranslation(String deviceId, Map<String, PointEnumerationEvent> uniqs) {
     MappingEvent result = new MappingEvent();
     result.guid = deviceGuid(deviceId);
-    result.translation = uniqs.entrySet().stream().map(this::makeTranslation)
-        .collect(Collectors.toMap(key -> "hello", value -> null));
+    result.translation = uniqs.entrySet()
+        .stream().map(this::makeTranslation).collect(Collectors.toMap(SimpleEntry::getKey,
+            SimpleEntry::getValue, (existing, replacement) -> replacement, HashMap::new));
     result.timestamp = new Date();
     publishMessage(deviceId, result);
     getDeviceState(deviceId).exported = new Date();
@@ -84,8 +86,9 @@ public class MappingEngine extends MappingBase {
   private SimpleEntry<String, BuildingTranslation> makeTranslation(
       Entry<String, PointEnumerationEvent> entry) {
     BuildingTranslation buildingTranslation = new BuildingTranslation();
-    buildingTranslation.present_value = entry.getKey();
-    buildingTranslation.units = entry.getValue().units;
+    PointEnumerationEvent value = entry.getValue();
+    buildingTranslation.present_value = value.name;
+    buildingTranslation.units = value.units;
     return new SimpleEntry<>(entry.getKey(), buildingTranslation);
   }
 
