@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import udmi.schema.BuildingTranslation;
 import udmi.schema.DeviceMappingState;

@@ -17,6 +17,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.MappingCommand;
 import udmi.schema.MappingEvent;
+import udmi.schema.ValidationState;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -42,6 +43,7 @@ public class MappingAgent extends MappingBase {
   }
 
   private void activate(String[] args) {
+    mappingEngineId = "_mapping_engine";
     initialize("agent", args, handlers);
     initializeSink();
     startDiscovery();

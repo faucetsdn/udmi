@@ -18,7 +18,7 @@ abstract class MappingBase {
   private PubSubClient client;
   private String pubsubSubscription;
   private String discoveryNodeId;
-  private String mappingEngineId;
+  String mappingEngineId;
   private String selfId;
 
   private void processArgs(String[] args) {
