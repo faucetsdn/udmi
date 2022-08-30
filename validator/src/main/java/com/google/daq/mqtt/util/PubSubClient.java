@@ -238,7 +238,8 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       try {
         processMessage(this::handlerHandler);
       } catch (Exception e) {
-        System.err.println("Exception processing received message: " + e.getMessage());
+        System.err.println("Exception processing received message:");
+        e.printStackTrace();
       }
     }
   }

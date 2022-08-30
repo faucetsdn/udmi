@@ -731,13 +731,13 @@ public class Pubber {
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
-      if (connectionDone != null) {
-        while (retriesRemaining.getAndDecrement() > 0) {
-          if (attemptConnection()) {
-            return;
-          }
+      stop();
+      while (retriesRemaining.getAndDecrement() > 0) {
+        if (attemptConnection()) {
+          return;
         }
       }
+      terminate();
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
     }
