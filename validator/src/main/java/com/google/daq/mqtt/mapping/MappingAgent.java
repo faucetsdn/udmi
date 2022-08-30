@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.mapping;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
 import java.util.Date;
@@ -71,7 +72,8 @@ public class MappingAgent extends MappingBase {
   private void processFamilyState(String family, FamilyDiscoveryState state) {
     FamilyDiscoveryState previous = familyStates.put(family, state);
     if (previous == null || !Objects.equals(previous.generation, state.generation)) {
-      System.err.println("Received new family " + family + " generation " + state.generation);
+      System.err.printf("Received family %s generation %s active %s%n", family,
+          JsonUtil.getTimestamp(state.generation), state.active);
     }
   }
 
