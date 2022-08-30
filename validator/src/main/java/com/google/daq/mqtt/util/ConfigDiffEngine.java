@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -23,40 +22,6 @@ public class ConfigDiffEngine {
   private Map<String, Object> previous;
 
   public ConfigDiffEngine() {
-  }
-
-  static <T> T convertTo(Class<T> targetClass, String messageString) {
-    try {
-      return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
-    }
-  }
-
-  /**
-   * Convert a generic object ot one of a specific class.
-   *
-   * @param targetClass result class
-   * @param message     object to convert
-   * @param <T>         class parameter
-   * @return converted object
-   */
-  public static <T> T convertTo(Class<T> targetClass, Object message) {
-    return message == null ? null : convertTo(targetClass, toJsonString(message));
-  }
-
-  /**
-   * Convert an object to a json string.
-   *
-   * @param target object to convert
-   * @return json string representation
-   */
-  public static String toJsonString(Object target) {
-    try {
-      return OBJECT_MAPPER.writeValueAsString(target);
-    } catch (Exception e) {
-      throw new RuntimeException("While stringifying object", e);
-    }
   }
 
   /**

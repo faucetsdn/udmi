@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
-import daq.pubber.MqttPublisher.ClientInfo;
+import com.google.udmi.util.SiteModel.ClientInfo;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -177,7 +177,7 @@ public class Pubber {
       configuration = sanitizeConfiguration(
           OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
       checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
-      ClientInfo clientInfo = MqttPublisher.parseClientId(configuration.endpoint.client_id);
+      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
       projectId = clientInfo.projectId;
       deviceId = clientInfo.deviceId;
       outDir = new File(PUBBER_OUT);
@@ -347,8 +347,8 @@ public class Pubber {
 
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
-      siteModel.initialize(projectId, deviceId);
-      configuration.endpoint = siteModel.getEndpointConfig();
+      siteModel.initialize();
+      configuration.endpoint = siteModel.makeEndpointConfig(projectId, deviceId);
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
@@ -929,8 +929,8 @@ public class Pubber {
   }
 
   private String getClientId(String forRegistry) {
-    String cloudRegion = MqttPublisher.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return MqttPublisher.getClientId(projectId, cloudRegion, forRegistry, deviceId);
+    String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
+    return SiteModel.getClientId(projectId, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {

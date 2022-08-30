@@ -1,0 +1,26 @@
+{
+  "title": "Device Mapping Config",
+  "description": "Configuration for [mapping](../docs/specs/mapping.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "guid": {
+      "description": "Device guid",
+      "type": "string"
+    },
+    "applied": {
+      "description": "Last time the mapping was successfully applied for this device",
+      "type": "string",
+      "format": "date-time"
+    },
+    "requested": {
+      "description": "Timestamp of requested device model export",
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
+    }
+  }
+}

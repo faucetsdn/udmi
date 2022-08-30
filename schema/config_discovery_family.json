@@ -24,5 +24,8 @@
       "description": "Indicates implicit enumeration of discovered devices",
       "type": "boolean"
     }
-  }
+  },
+  "required": [
+    "generation"
+  ]
 }
