@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 
 public class ConfigUtil {
 
-  public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   public static final String EXCEPTIONS_JSON = "exceptions.json";
   public static final String UDMI_VERSION = "1.3.14";
 

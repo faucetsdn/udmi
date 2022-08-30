@@ -39,6 +39,9 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _enumerate_: (**INFO**) Handling point enumeration for a given device
   * _point_: Conditions specific to point enumeration
     * _describe_: (**INFO**) Relating to describing a particular point
+* _mapping_: Mapping processing for devices
+  * _device_: Relating to a specific individual device
+    * _apply_: (**INFO**) Stage of applying a device mapping
 * _blobset_: Handling update of device data blobs
   * _blob_: Conditions specific to an individual blob
     * _receive_: (**DEBUG**) About receiving a blob update

@@ -8,6 +8,7 @@
   "discovery": {
     "families": {
       "bacnet": {
+        "generation": "2018-08-26T21:39:29.364Z",
         "scan_interval_sec": 600
       }
     }

@@ -1,0 +1,41 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/../..)
+
+if [[ $# -ne 3 && $# -ne 4 ]]; then
+    echo Usage: $0 mode site_dir project_id [device_id]
+    echo "  mode is one of [ agent, engine ]"
+    false
+fi
+
+mode=$1
+site_dir=$(realpath $2)
+project_id=$3
+device_id=$4
+shift 3
+cd $ROOT
+
+echo Building...
+validator/bin/build
+
+jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+
+if [[ $mode == agent ]]; then
+    if [[ -z $device_id ]]; then
+        echo Mapping agent requires device_id
+        false
+    fi
+    extra_args="-d $device_id"
+    mainclass=com.google.daq.mqtt.mapping.MappingAgent
+elif [[ $mode == engine ]]; then
+    if [[ -n $device_id ]]; then
+        echo Mapping agent requires no device_id
+        false
+    fi
+    mainclass=com.google.daq.mqtt.mapping.MappingEngine
+else
+    echo Mode $mode not understood, expecting one of "[ agent, engine ]"
+    false
+fi
+
+java -cp $jarfile $mainclass -p $project_id -s $site_dir $extra_args
