@@ -251,7 +251,12 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const msgString = Buffer.from(base64, 'base64').toString();
   const msgObject = JSON.parse(msgString);
 
-  return process_state_update(attributes, msgObject);
+  if (attributes.subFolder) {
+    attributes.subType = STATE_TYPE;
+    return process_state_block(attributes, msgObject);
+  } else {
+    return process_state_update(attributes, msgObject);
+  }
 });
 
 function process_state_update(attributes, msgObject) {
@@ -261,7 +266,7 @@ function process_state_update(attributes, msgObject) {
 
   const commandFolder = `devices/${deviceId}/${STATE_TYPE}/${UPDATE_FOLDER}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
-
+  
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
@@ -276,14 +281,21 @@ function process_state_update(attributes, msgObject) {
       attributes.subFolder = block;
       subMsg.timestamp = msgObject.timestamp;
       subMsg.version = msgObject.version;
-      promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
-      const new_promises = recordMessage(attributes, subMsg);
-      promises.push(...new_promises);
+      promises = promises.concat(process_state_block(attributes, subMsg));
     }
   }
 
   return Promise.all(promises);
 };
+
+function process_state_block(attributes, subMsg) {
+  console.log('Publishing udmi_target', attributes.subType, attributes.subFolder);
+  promises = []
+  promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
+  const new_promises = recordMessage(attributes, subMsg);
+  promises.push(...new_promises);
+  return promises;
+}
 
 exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
   const attributes = event.attributes;

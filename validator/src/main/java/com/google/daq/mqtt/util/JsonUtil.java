@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.daq.mqtt.validator.CleanDateFormat;
+import java.io.File;
 import java.util.Date;
+import udmi.schema.MappingEvent;
 
 /**
  * Collection of utilities for working with json things.
@@ -96,6 +98,37 @@ public abstract class JsonUtil {
       return OBJECT_MAPPER.writeValueAsString(target);
     } catch (Exception e) {
       throw new RuntimeException("While stringifying object", e);
+    }
+  }
+
+  /**
+   * Load a file to given type.
+   *
+   * @param clazz class of result
+   * @param file  file to load
+   * @param <T>   type of result
+   *
+   * @return loaded object
+   */
+  public static <T> T loadFile(Class<T> clazz, File file) {
+    try {
+      return file.exists() ? OBJECT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Write json representation to a file.
+   *
+   * @param target object to write
+   * @param file   output file
+   */
+  public static void writeFile(Object target, File file) {
+    try {
+      OBJECT_MAPPER.writeValue(file, target);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
     }
   }
 }

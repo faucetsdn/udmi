@@ -55,7 +55,7 @@ sequenceDiagram
 
 1. **[Discovery Config](../../tests/config.tests/discovery.json)** indicates that the _spotter_ should do the needful and scan the local network.
 1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
-  * "I am device `78F936`, with points { `room_temp`, `step_size`, and `operation_count` }, and public key `XYZZYZ`"
+  * "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
 2. **[Discovery Events](../../tests/event_discovery.tests/enumeration.json)** wraps the device info from the _spotter_ into a UDMI-normalized format, e.g.:
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
 3. **[Mapping Config](../../tests/config_mapping.tests/mapping.json)** from the _agent_ indicates that the _engine_ should export responses.
