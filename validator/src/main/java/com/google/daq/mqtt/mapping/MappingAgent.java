@@ -61,6 +61,7 @@ public class MappingAgent extends MappingBase {
         key -> new FamilyDiscoveryConfig());
     familyConfig.generation = generation;
     familyConfig.scan_interval_sec = SCAN_INTERVAL_SEC;
+    familyConfig.enumerate = true;
     discoveryPublish(discoveryConfig);
     System.err.println("Started discovery generation " + generation);
   }
@@ -87,6 +88,7 @@ public class MappingAgent extends MappingBase {
 
     DeviceMappingConfig config = mappingSink.ensureDeviceConfig(deviceId);
     config.applied = mappingEvent.timestamp;
+    config.guid = mappingEvent.guid;
     enginePublish(mappingSink.getMappingConfig());
     mappingSink.updateConfig(envelope, config);
 

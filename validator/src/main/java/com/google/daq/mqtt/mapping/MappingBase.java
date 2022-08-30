@@ -95,4 +95,8 @@ abstract class MappingBase {
   protected void publishMessage(String deviceId, Object message) {
     client.publishMessage(deviceId, message);
   }
+
+  protected void publishMessage(Object message) {
+    publishMessage(selfId, message);
+  }
 }

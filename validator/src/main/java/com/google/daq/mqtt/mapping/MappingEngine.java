@@ -1,22 +1,32 @@
 package com.google.daq.mqtt.mapping;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import udmi.schema.BuildingTranslation;
+import udmi.schema.DeviceMappingState;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 import udmi.schema.MappingConfig;
 import udmi.schema.MappingEvent;
+import udmi.schema.MappingState;
+import udmi.schema.PointEnumerationEvent;
 
 /**
  * Engine for mapping discovery results to point names.
  */
 public class MappingEngine extends MappingBase {
 
+  private final MappingState mappingState = new MappingState();
   private final List<HandlerSpecification> handlers = ImmutableList.of(
       MessageHandler.handlerSpecification(DiscoveryEvent.class, this::discoveryEventHandler),
       MessageHandler.handlerSpecification(MappingConfig.class, this::mappingConfigHandler)
@@ -37,6 +47,7 @@ public class MappingEngine extends MappingBase {
 
   void activate(String[] args) {
     initialize("engine", args, handlers);
+    mappingState.devices = new HashMap<>();
     messageLoop();
   }
 
@@ -45,12 +56,47 @@ public class MappingEngine extends MappingBase {
   }
 
   private void discoveryEventHandler(Envelope envelope, DiscoveryEvent message) {
-    System.err.printf("Processing device %s generation %s%n", message.scan_id, message.generation);
+    String deviceId = message.scan_id;
+    System.err.printf("Processing device %s generation %s%n", deviceId, message.generation);
+
+    getDeviceState(deviceId).discovered = message.timestamp;
+    updateTranslation(deviceId, message.uniqs);
+    publishEngineState();
+  }
+
+  private DeviceMappingState getDeviceState(String deviceId) {
+    DeviceMappingState state = mappingState.devices.computeIfAbsent(deviceId,
+        key -> new DeviceMappingState());
+    state.guid = deviceGuid(deviceId);
+    return state;
+  }
+
+  private void updateTranslation(String deviceId, Map<String, PointEnumerationEvent> uniqs) {
     MappingEvent result = new MappingEvent();
-    result.guid = String.format("%08x", Math.abs(Objects.hashCode(message.scan_id)));
-    result.translation = new HashMap<>();
-    result.translation.computeIfAbsent("hello", this::getTranslation);
-    publishMessage(message.scan_id, result);
+    result.guid = deviceGuid(deviceId);
+    result.translation = uniqs.entrySet().stream().map(this::makeTranslation)
+        .collect(Collectors.toMap(key -> "hello", value -> null));
+    result.timestamp = new Date();
+    publishMessage(deviceId, result);
+    getDeviceState(deviceId).exported = new Date();
+  }
+
+  private SimpleEntry<String, BuildingTranslation> makeTranslation(
+      Entry<String, PointEnumerationEvent> entry) {
+    BuildingTranslation buildingTranslation = new BuildingTranslation();
+    buildingTranslation.present_value = entry.getKey();
+    buildingTranslation.units = entry.getValue().units;
+    return new SimpleEntry<>(entry.getKey(), buildingTranslation);
+  }
+
+  private String deviceGuid(String deviceId) {
+    return String.format("%08x", Math.abs(Objects.hashCode(deviceId)));
+  }
+
+  private void publishEngineState() {
+    mappingState.timestamp = new Date();
+    publishMessage(mappingState);
+    System.err.println(JsonUtil.stringify(mappingState));
   }
 
   private BuildingTranslation getTranslation(String key) {
