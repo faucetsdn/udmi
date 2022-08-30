@@ -142,6 +142,10 @@ public class SiteModel {
     return allDevices.values();
   }
 
+  public Collection<String> allDeviceIds() {
+    return allDevices.keySet();
+  }
+
   public void forEachDevice(Consumer<Device> consumer) {
     allDevices.values().forEach(consumer);
   }
@@ -218,6 +222,7 @@ public class SiteModel {
   }
 
   public class Device {
+
     public final String deviceId;
 
     public Device(String deviceId) {

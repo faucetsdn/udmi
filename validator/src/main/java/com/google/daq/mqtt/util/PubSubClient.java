@@ -243,7 +243,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     }
   }
 
-  private void ignoreMessage(Object message, Envelope attributes) {
+  private void ignoreMessage(Envelope attributes, Object message) {
   }
 
   private void handlerHandler(Map<String, Object> message, Map<String, String> attributes) {
@@ -257,7 +257,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       Object messageObject = JsonUtil.convertTo(handlerType, message);
       HandlerConsumer<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
           key -> this::ignoreMessage);
-      handlerConsumer.accept(messageObject, envelope);
+      handlerConsumer.accept(envelope, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }

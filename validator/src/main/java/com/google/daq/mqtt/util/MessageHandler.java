@@ -20,14 +20,14 @@ public interface MessageHandler {
    *
    * @param <T> message type consumed
    */
-  interface HandlerConsumer<T> extends BiConsumer<T, Envelope> { }
+  interface HandlerConsumer<T> extends BiConsumer<Envelope, T> { }
 
   /**
    * Represent a type-happy consumer into a more generic specification.
    */
   class HandlerSpecification extends SimpleEntry<Class<?>, HandlerConsumer<?>> {
-    public <T> HandlerSpecification(Class<T> valueOne, HandlerConsumer<T> valueTwo) {
-      super(valueOne, valueTwo);
+    public <T> HandlerSpecification(Class<T> clazz, HandlerConsumer<T> consumer) {
+      super(clazz, consumer);
     }
   }
 

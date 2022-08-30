@@ -40,11 +40,11 @@ public class MappingEngine extends MappingBase {
     messageLoop();
   }
 
-  private void mappingConfigHandler(MappingConfig mappingConfig, Envelope envelope) {
+  private void mappingConfigHandler(Envelope envelope, MappingConfig mappingConfig) {
     System.err.printf("Processing mapping config%n");
   }
 
-  private void discoveryEventHandler(DiscoveryEvent message, Envelope envelope) {
+  private void discoveryEventHandler(Envelope envelope, DiscoveryEvent message) {
     System.err.printf("Processing device %s generation %s%n", message.scan_id, message.generation);
     MappingEvent result = new MappingEvent();
     result.guid = String.format("%08x", Math.abs(Objects.hashCode(message.scan_id)));
