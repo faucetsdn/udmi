@@ -1,0 +1,10 @@
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js" defer="true"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll("pre>code.language-mermaid").forEach($element => {
+        $element.parentElement.outerHTML = `<div class="mermaid">${$element.textContent}</div>`
+      });
+     mermaid.initialize();
+});
+
+</script>

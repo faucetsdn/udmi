@@ -1,6 +1,10 @@
 #!/bin/bash -e
+#
+# For simple debugging, just run in a shell loop:
+#   while true; do bin/pull_message PROJECT_ID; done
+#
 
-subscription=validation-debug
+subscription=$USER-debug
 out_file=/tmp/captured.json
 
 if [[ $# -ne 1 ]]; then
@@ -13,12 +17,17 @@ shift
 
 gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --auto-ack > $out_file || true
 
+subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
 subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
 timestamp=$(jq -r '.[0].message.data' $out_file 2>/dev/null | base64 --decode | jq -r .timestamp 2> /dev/null) || true
 
+if [[ $subType == null ]]; then
+    subType=event
+fi
+
 if [[ $subFolder != null ]]; then
-    echo $subFolder $deviceId $timestamp
+    echo $subFolder $subType for $deviceId at $timestamp
 else
     echo No matching messages found.
 fi
