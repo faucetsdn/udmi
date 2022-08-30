@@ -9,9 +9,11 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,6 +38,7 @@ public class SiteModel {
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;
+  private Map<String, Device> allDevices;
   private CloudIotConfig cloudIotConfig;
 
   public SiteModel(String sitePath) {
@@ -97,7 +100,7 @@ public class SiteModel {
     return makeEndpointConfig(projectId, cloudIotConfig, deviceId);
   }
 
-  private Set<String> getAllDevices() {
+  private Set<String> getDeviceIds() {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
     File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
@@ -105,7 +108,12 @@ public class SiteModel {
   }
 
   private void loadAllDeviceMetadata() {
-    allMetadata = getAllDevices().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allMetadata = getDeviceIds().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allDevices = getDeviceIds().stream().collect(toMap(key -> key, this::newDevice));
+  }
+
+  private Device newDevice(String deviceId) {
+    return new SiteModel.Device(deviceId);
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
@@ -125,7 +133,15 @@ public class SiteModel {
     return allMetadata.get(deviceId);
   }
 
-  public void forEachDevice(BiConsumer<String, Metadata> consumer) {
+  public Collection<Device> allDevices() {
+    return allDevices.values();
+  }
+
+  public void forEachDevice(Consumer<Device> consumer) {
+    allDevices.values().forEach(consumer);
+  }
+
+  public void forEachMetadata(BiConsumer<String, Metadata> consumer) {
     allMetadata.forEach(consumer);
   }
 
@@ -190,5 +206,13 @@ public class SiteModel {
     public String projectId;
     public String registryId;
     public String deviceId;
+  }
+
+  public class Device {
+    public final String deviceId;
+
+    public Device(String deviceId) {
+      this.deviceId = deviceId;
+    }
   }
 }
