@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotConfig;
+import com.google.daq.mqtt.util.MessagePublisher;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;

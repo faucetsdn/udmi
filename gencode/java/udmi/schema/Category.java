@@ -110,6 +110,11 @@ public class Category {
     public static final Level DISCOVERY_POINT_DESCRIBE_LEVEL = INFO;
     static { LEVEL.put(DISCOVERY_POINT_DESCRIBE, INFO); }
 
+    // Stage of applying a device mapping
+    public static final String MAPPING_DEVICE_APPLY = "mapping.device.apply";
+    public static final Level MAPPING_DEVICE_APPLY_LEVEL = INFO;
+    static { LEVEL.put(MAPPING_DEVICE_APPLY, INFO); }
+
     // About receiving a blob update
     public static final String BLOBSET_BLOB_RECEIVE = "blobset.blob.receive";
     public static final Level BLOBSET_BLOB_RECEIVE_LEVEL = DEBUG;

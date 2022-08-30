@@ -26,8 +26,8 @@
     "subFolder": {
       "enum": [
         "update",
-        "audit",
         "discovery",
+        "mapping",
         "system",
         "gateway",
         "swarm",

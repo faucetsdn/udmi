@@ -8,8 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
+import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.ClientInfo;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -30,8 +31,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -51,7 +50,6 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttPublisher {
 
-  private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -66,8 +64,6 @@ public class MqttPublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
   private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
-  private static final Pattern ID_PATTERN = Pattern.compile(
-      "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
@@ -99,47 +95,12 @@ public class MqttPublisher {
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    ClientInfo clientIdParts = parseClientId(configuration.endpoint.client_id);
+    ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
     this.projectId = clientIdParts.projectId;
     this.cloudRegion = clientIdParts.cloudRegion;
     this.registryId = clientIdParts.registryId;
     this.onError = onError;
     validateCloudIotOptions();
-  }
-
-  static class ClientInfo {
-    String projectId;
-    String cloudRegion;
-    String registryId;
-    String deviceId;
-  }
-
-  /**
-   * Parse a GCP clientId string into component parts including project, etc...
-   *
-   * @param clientId client id to parse
-   * @return bucket of parameters
-   */
-  public static ClientInfo parseClientId(String clientId) {
-    if (clientId == null) {
-      throw new IllegalArgumentException("client_id not specified");
-    }
-    Matcher matcher = ID_PATTERN.matcher(clientId);
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException(
-          String.format("client_id %s does not match pattern %s", clientId, ID_PATTERN.pattern()));
-    }
-    ClientInfo clientInfo = new ClientInfo();
-    clientInfo.projectId = matcher.group(1);
-    clientInfo.cloudRegion = matcher.group(2);
-    clientInfo.registryId = matcher.group(3);
-    clientInfo.deviceId = matcher.group(4);
-    return clientInfo;
-  }
-
-  public static String getClientId(String projectId, String cloudRegion, String registryId,
-      String deviceId) {
-    return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
   }
 
   private String getClientId(String deviceId) {
@@ -148,7 +109,7 @@ public class MqttPublisher {
     if (configuration.endpoint.client_id != null) {
       return configuration.endpoint.client_id;
     }
-    return getClientId(projectId, cloudRegion, registryId, deviceId);
+    return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
   boolean isActive() {
