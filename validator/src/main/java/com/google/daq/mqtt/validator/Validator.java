@@ -18,7 +18,6 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
-import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -30,6 +29,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
@@ -184,7 +184,7 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            initializeCloudIoT();
+            cloudIotManager = new CloudIotManager(projectId, new File(siteDir));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -277,15 +277,6 @@ public class Validator {
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
-    }
-  }
-
-  private void initializeCloudIoT() {
-    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    try {
-      this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing cloud IoT for project " + projectId, e);
     }
   }
 

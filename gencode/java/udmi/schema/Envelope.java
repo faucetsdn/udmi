@@ -99,8 +99,8 @@ public class Envelope {
     public enum SubFolder {
 
         UPDATE("update"),
-        AUDIT("audit"),
         DISCOVERY("discovery"),
+        MAPPING("mapping"),
         SYSTEM("system"),
         GATEWAY("gateway"),
         SWARM("swarm"),

@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 public class CloudIotManager {
 
   public static final String UDMI_METADATA = "udmi_metadata";
+  public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final String UDMI_CONFIG = "udmi_config";
   private static final String UDMI_GENERATION = "udmi_generation";
@@ -53,7 +54,6 @@ public class CloudIotManager {
   private final String projectId;
   private final String cloudRegion;
   private final Map<String, Device> deviceMap = new ConcurrentHashMap<>();
-  private final String schemaName;
   private CloudIot cloudIotService;
   private String projectPath;
   private CloudIot.Projects.Locations.Registries cloudIotRegistries;
@@ -61,17 +61,24 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId     project id
-   * @param iotConfigFile configuration file
-   * @param schemaName    schema name to use for this device
+   * @param projectId project id
+   * @param siteDir   site model directory
    */
-  public CloudIotManager(String projectId, File iotConfigFile, String schemaName) {
-    this.projectId = projectId;
-    this.schemaName = schemaName;
-    cloudIotConfig = validate(readCloudIotConfig(iotConfigFile), projectId);
-    registryId = cloudIotConfig.registry_id;
-    cloudRegion = cloudIotConfig.cloud_region;
-    initializeCloudIoT();
+  public CloudIotManager(String projectId, File siteDir) {
+    Preconditions.checkNotNull(siteDir, "site directory undefined");
+    this.projectId = Preconditions.checkNotNull(projectId, "project id undefined");
+    File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
+    try {
+      System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
+      cloudIotConfig = validate(readCloudIotConfig(cloudConfig), projectId);
+      registryId = cloudIotConfig.registry_id;
+      cloudRegion = cloudIotConfig.cloud_region;
+      initializeCloudIoT();
+    } catch (Exception e) {
+      throw new RuntimeException(
+          String.format("While initializing project %s from file %s", projectId,
+              cloudConfig.getAbsolutePath()));
+    }
   }
 
   /**

@@ -27,6 +27,7 @@ public class FamilyDiscoveryConfig {
 
     /**
      * Generational marker for controlling discovery
+     * (Required)
      * 
      */
     @JsonProperty("generation")

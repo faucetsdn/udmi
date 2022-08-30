@@ -1,0 +1,29 @@
+{
+  "title": "Mapping State",
+  "description": "State for [mapping](../docs/specs/mapping.md)",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 timestamp the configuration was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "devices": {
+      "description": "Mapping state for all devices",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, DeviceMappingState>",
+      "patternProperties": {
+        "": {
+          "$ref": "file:state_mapping_device.json"
+        }
+      }
+    }
+  }
+}

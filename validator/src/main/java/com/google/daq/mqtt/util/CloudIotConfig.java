@@ -5,6 +5,7 @@ package com.google.daq.mqtt.util;
  */
 @SuppressWarnings("MemberName")
 public class CloudIotConfig {
+
   public String registry_id;
   public String cloud_region;
   public String reflect_region;

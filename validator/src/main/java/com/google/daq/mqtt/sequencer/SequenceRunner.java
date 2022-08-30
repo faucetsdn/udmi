@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.ConfigDiffEngine.toJsonString;
+import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -286,7 +286,7 @@ public abstract class SequenceRunner {
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
           UDMI_VERSION, JsonUtil.getTimestamp(stateTimestamp));
-      client.setReflectorState(toJsonString(reflectorState));
+      client.setReflectorState(stringify(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
@@ -479,7 +479,7 @@ public abstract class SequenceRunner {
       boolean traceMessage =
           traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG));
       String postfix =
-          traceMessage ? (message == null ? ": (null)" : ":\n" + toJsonString(message)) : "";
+          traceMessage ? (message == null ? ": (null)" : ":\n" + stringify(message)) : "";
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
         logSystemEvent(messageBase, message);
       } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
@@ -495,7 +495,7 @@ public abstract class SequenceRunner {
   private void logSystemEvent(String messageBase, Map<String, Object> message) {
     try {
       Preconditions.checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
-      SystemEvent event = ConfigDiffEngine.convertTo(SystemEvent.class, message);
+      SystemEvent event = JsonUtil.convertTo(SystemEvent.class, message);
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug("received " + SYSTEM_EVENT_MESSAGE_BASE + " (no logs)");
       } else {
@@ -582,12 +582,12 @@ public abstract class SequenceRunner {
 
   private void updateConfig(SubFolder subBlock, Object data) {
     try {
-      String messageData = toJsonString(data);
+      String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
         final Object tracedObject = augmentTrace(data);
-        String augmentedMessage = toJsonString(tracedObject);
+        String augmentedMessage = stringify(tracedObject);
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
         debug(String.format("update %s_%s", "config", subBlock));
@@ -607,7 +607,7 @@ public abstract class SequenceRunner {
         return null;
       }
       if (traceLogLevel()) {
-        String messageData = toJsonString(data);
+        String messageData = stringify(data);
         Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
         map.put("nonce", System.currentTimeMillis());
         return map;
@@ -637,7 +637,7 @@ public abstract class SequenceRunner {
 
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
     try {
-      String conversionString = toJsonString(system);
+      String conversionString = stringify(system);
       AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(conversionString,
           AugmentedSystemConfig.class);
       debug("system config extra field " + extraField);
@@ -656,7 +656,7 @@ public abstract class SequenceRunner {
       }
       message.remove("timestamp");
       message.remove("version");
-      String messageString = toJsonString(message);
+      String messageString = stringify(message);
       boolean updated = !messageString.equals(receivedState.get(subFolder));
       if (updated) {
         debug(String.format("updating %s state", subFolder));
@@ -744,7 +744,7 @@ public abstract class SequenceRunner {
         return false;
       }
       for (Map<String, Object> message : messages) {
-        SystemEvent systemEvent = ConfigDiffEngine.convertTo(SystemEvent.class, message);
+        SystemEvent systemEvent = JsonUtil.convertTo(SystemEvent.class, message);
         if (systemEvent.logentries == null) {
           continue;
         }
@@ -825,7 +825,7 @@ public abstract class SequenceRunner {
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
-    ReflectorConfig reflectorConfig = ConfigDiffEngine.convertTo(ReflectorConfig.class, message);
+    ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
     if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
       info("Cloud UDMI version " + reflectorConfig.version);
@@ -875,10 +875,10 @@ public abstract class SequenceRunner {
       Map<String, Object> message) {
     try {
       if (message.containsKey("exception")) {
-        debug("Ignoring reflector exception:\n" + toJsonString(message));
+        debug("Ignoring reflector exception:\n" + stringify(message));
         return;
       }
-      Object converted = ConfigDiffEngine.convertTo(expectedUpdates.get(subFolderRaw), message);
+      Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
           .incrementAndGet();
@@ -894,11 +894,11 @@ public abstract class SequenceRunner {
         updateDeviceConfig(config);
         info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
-            toJsonString(converted)));
+            stringify(converted)));
         recordDeviceConfig("received config message");
       } else if (converted instanceof AugmentedState) {
         debug(String.format("Updated state #%03d:\n%s", updateCount,
-            toJsonString(converted)));
+            stringify(converted)));
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
@@ -946,7 +946,7 @@ public abstract class SequenceRunner {
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
     receivedEvents.computeIfAbsent(subFolder, key -> new ArrayList<>()).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
-      writeSystemLogs(ConfigDiffEngine.convertTo(SystemEvent.class, message));
+      writeSystemLogs(JsonUtil.convertTo(SystemEvent.class, message));
     }
   }
 
@@ -1002,7 +1002,7 @@ public abstract class SequenceRunner {
     if (events == null) {
       return ImmutableList.of();
     }
-    return events.stream().map(message -> ConfigDiffEngine.convertTo(clazz, message))
+    return events.stream().map(message -> JsonUtil.convertTo(clazz, message))
         .collect(Collectors.toList());
   }
 
