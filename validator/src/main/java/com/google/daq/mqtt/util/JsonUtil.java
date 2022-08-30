@@ -118,6 +118,12 @@ public abstract class JsonUtil {
     }
   }
 
+  /**
+   * Write json representation to a file.
+   *
+   * @param target object to write
+   * @param file   output file
+   */
   public static void writeFile(Object target, File file) {
     try {
       OBJECT_MAPPER.writeValue(file, target);

@@ -14,6 +14,9 @@ import udmi.schema.MappingCommand;
 import udmi.schema.MappingConfig;
 import udmi.schema.MappingState;
 
+/**
+ * Basic sink for mapping output that writes to files.
+ */
 public class MappingSink {
 
   private static final String MAPPING_CONFIG_FILE = "out/mapping_config.json";
