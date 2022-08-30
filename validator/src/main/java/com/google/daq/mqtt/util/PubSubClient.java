@@ -287,7 +287,8 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
           .putAllAttributes(attributesMap)
           .build();
       ApiFuture<String> publish = publisher.publish(message);
-      System.err.printf("Published to %s/%s (%s)%n", registryId, subFolder, publish.get());
+      publish.get(); // Wait for publish to complete.
+      System.err.printf("Published to %s/%s%n", registryId, subFolder);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
