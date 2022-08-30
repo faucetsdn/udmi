@@ -11,7 +11,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class MappingBase {
+abstract class MappingBase {
 
   private String projectId;
   private SiteModel siteModel;
