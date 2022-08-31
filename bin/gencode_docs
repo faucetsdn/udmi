@@ -41,13 +41,13 @@ if [ "$OP" == gen_bucket ]; then
     cp $input_file $tmp_file
 
     # Blank Lines
-    gsed -E -i '/^\s*$/d' $tmp_file
+    sed -E -i '/^\s*$/d' $tmp_file
     # Top level headings
-    gsed -E -i 's;^([a-zA-Z0-9 .\-_\/]+)\t+$;*\t**\1**;g' $tmp_file
+    sed -E -i 's;^([a-zA-Z0-9 .\-_\/]+)\t+$;*\t**\1**;g' $tmp_file
     # Subheadings
-    gsed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
     # List Items
-    gsed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t`\2` - \3;g' $tmp_file
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t`\2` - \3;g' $tmp_file
     # Convert tabs to spaces (comply with style guide)
     expand -t 4 $tmp_file > $output_file
     
@@ -97,11 +97,11 @@ mkdir -p $TMP_DIR
 cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works
-find $TMP_DIR -type f -exec gsed -i 's/file://' {} \;
+find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 
 # Redirect links to internal documentation for the hosted as the output folder 
 # is one level down
-find $TMP_DIR -type f -exec gsed -i 's;(../docs/;(../../docs/;' {} \;
+find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
 schemas=$(bin/list_root_schemas schema/)
 echo Processing schemas $schemas
@@ -117,25 +117,25 @@ rm -rf $TMP_DIR
 cp etc/schema_index.md $OUTPUT_DIR/readme.md
 
 for schema in $schemas; do
-    category=$(grep "^$schema " etc/schema_categories.txt | gsed -E 's/^[A-Za-z_.]* (.*)$/\1/g')
+    category=$(grep "^$schema " etc/schema_categories.txt | sed -E 's/^[A-Za-z_.]* (.*)$/\1/g')
     if [[ -z $category || $(grep -c "## $category\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
         category=Other
     fi
-    gsed -i "s/## $category/## $category\n[$schema]($schema.html)/" $OUTPUT_DIR/readme.md
+    sed -i "s/## $category/## $category\n[$schema]($schema.html)/" $OUTPUT_DIR/readme.md
 done
 
 
 # Add navbar
 navbar=$(cat etc/schema_navbar.html)
 navbar=$(printf '%q ' $navbar)
-find $OUTPUT_DIR -type f -exec gsed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
+find $OUTPUT_DIR -type f -exec sed -i -E "s;(<body[^>]*>);\1$navbar;g" {} \;
 
 # Add dynamic documentation link rewriting
 cp etc/schema_extras.js $OUTPUT_DIR/schema_extras.js
 
-find $OUTPUT_DIR -type f -exec gsed -i -E "s;</head>;<script src=\"schema_extras.js\" ></script></head>;" {} \;
+find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.js\" ></script></head>;" {} \;
 
-find $OUTPUT_DIR -type f -exec gsed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
+find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
     <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;
 
 echo Done with $0
