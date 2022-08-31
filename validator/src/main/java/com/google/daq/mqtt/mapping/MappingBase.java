@@ -14,10 +14,12 @@ import java.util.List;
 abstract class MappingBase {
 
   private String projectId;
-  private SiteModel siteModel;
+  SiteModel siteModel;
   private PubSubClient client;
   private String pubsubSubscription;
   private String discoveryNodeId;
+  String mappingEngineId;
+  private String selfId;
 
   private void processArgs(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
@@ -37,6 +39,9 @@ abstract class MappingBase {
           case "-d":
             discoveryNodeId = removeNextArg(argList);
             break;
+          case "-e":
+            mappingEngineId = removeNextArg(argList);
+            break;
           case "--":
             remainingArgs(argList);
             return;
@@ -51,6 +56,7 @@ abstract class MappingBase {
 
   void initialize(String flavor, String[] args, List<HandlerSpecification> handlers) {
     pubsubSubscription = "mapping-" + flavor;
+    selfId = "_mapping_" + flavor;
     processArgs(args);
     siteModel.initialize();
     checkNotNull(siteModel, "site model not defined");
@@ -70,8 +76,8 @@ abstract class MappingBase {
 
   @SuppressWarnings("unchecked")
   private <T> void registerHandler(HandlerSpecification handlerSpecification) {
-    client.registerHandler((Class<T>) handlerSpecification.valueOne,
-        (HandlerConsumer<T>) handlerSpecification.valueTwo);
+    client.registerHandler((Class<T>) handlerSpecification.getKey(),
+        (HandlerConsumer<T>) handlerSpecification.getValue());
   }
 
   protected void messageLoop() {
@@ -80,5 +86,17 @@ abstract class MappingBase {
 
   protected void discoveryPublish(Object message) {
     client.publishMessage(checkNotNull(discoveryNodeId, "discovery node id undefined"), message);
+  }
+
+  protected void enginePublish(Object message) {
+    client.publishMessage(checkNotNull(mappingEngineId, "mapping engine id undefined"), message);
+  }
+
+  protected void publishMessage(String deviceId, Object message) {
+    client.publishMessage(deviceId, message);
+  }
+
+  protected void publishMessage(Object message) {
+    publishMessage(selfId, message);
   }
 }
