@@ -7,6 +7,7 @@
 - [**Specifications**](specs/)
 - [**Messages**](messages/)
 - [**Guides**](guides/)
+- [**Learning**](learning/)
 - [**Cloud Platforms**](cloud/)
 - [**Tools**](tools/)
 - [**Schema**](https://github.com/faucetsdn/udmi/tree/master/schema)
