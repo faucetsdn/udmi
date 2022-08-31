@@ -88,7 +88,8 @@ if __name__ == '__main__':
 
   for single_ref in ref_schemas:
     try:
-      root_schemas.remove(single_ref)
+      if single_ref not in ALWAYS_ROOT:
+        root_schemas.remove(single_ref)
     except Exception:
       pass
 
