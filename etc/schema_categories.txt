@@ -1,0 +1,7 @@
+event_pointset Messages
+event_discovery Messages
+state Messages
+config Messages
+envelope Messages
+metadata Site Model
+cloud_iot_config Site Model

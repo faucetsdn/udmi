@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""
+Prints a space seperated list of all root (non referenced) schemas in a
+directory
+
+Usage: bin/list_root_schemas PATH_TO_SCHEMA_DIR
+
+Example output: state command_discovery command_mapping ...
+"""
+
+import glob
+import re
+import os
+import json
+import argparse
+
+# FILES TO IGNORE
+IGNORE_LIST = ['event.json']
+
+def parse_command_line_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('path', type=str,
+            help='path to schema directory')
+  return parser.parse_args()
+
+def nested_key_extract(key, obj):
+  """ Searches all elements (inc nested elements) in a dictionary
+  for elements with the given key, and returns a list of their values
+
+  Arguments:
+    key   key to search for
+    obj   object to look in
+
+  Returns:
+    list of all values for given key in given object
+
+  """
+  values = []
+  for k, v in obj.items():
+    if k == key:
+      values.append(v)
+    if isinstance(v, dict):
+      values += nested_key_extract(key, v)
+  return values
+
+def strip_extension(file):
+  root, ext = os.path.splitext(file)
+  return root
+
+def file_from_json_ref(ref):
+  """ Returns a file (if exists) from a JSON Schema $REF r
+
+  Arguments:
+    ref   Value of $REF field in json schema
+
+  Returns:
+    file name if a file was found, else None
+  """
+  try:
+    m = re.match(r'^file:([A-Za-z_0-9/\\\.]*\.json)#?.*$', ref)
+    return m.group(1)
+  except Exception:
+    return None
+
+if __name__ == '__main__':
+  args = parse_command_line_args()
+  schema_dir = args.path
+
+  ref_schemas = []
+
+  file_paths = glob.glob(f'{schema_dir}/*.json', recursive=True)
+  root_schemas = file_paths
+  for file_path in file_paths:
+    directory, schema_file = os.path.split(file_path)
+    if schema_file in IGNORE_LIST:
+      continue
+    with open(file_path) as f:
+      schema_json = json.load(f)
+    refs = nested_key_extract('$ref', schema_json)
+    refs = [file_from_json_ref(ref) for ref in refs]
+    ref_schemas += refs
+
+  for single_ref in ref_schemas:
+    try:
+      root_schemas.remove(single_ref)
+    except Exception:
+      pass
+
+  root_schemas.sort(reverse=True)
+  print(' '.join([strip_extension(file) for file in root_schemas]))
