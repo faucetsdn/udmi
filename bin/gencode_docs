@@ -116,7 +116,7 @@ rm -rf $TMP_DIR
 echo Generating schema index page...
 
 # Create index page with links to different schemas
-cp etc/schema_index.md $OUTPUT_DIR/readme.md
+cp etc/schema_readme_template.md $OUTPUT_DIR/readme.md
 
 for schema in $schemas; do
     section=$(jq -r '.["$section"]' schema/$schema.json)
