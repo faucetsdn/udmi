@@ -113,13 +113,15 @@ done
 
 rm -rf $TMP_DIR
 
+echo Generating schema index page...
+
 # Create index page with links to different schemas
 cp etc/schema_index.md $OUTPUT_DIR/readme.md
 
 for schema in $schemas; do
-    category=$(grep "^$schema " etc/schema_categories.txt | sed -E 's/^[A-Za-z_.]* (.*)$/\1/g')
-    if [[ -z $category || $(grep -c "## $category\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
-        category=Other
+    section=$(jq -r '.["$section"]' schema/$schema.json)
+    if [[ -z $section || $(grep -c "## $section\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
+        section=Other
     fi
     description=$(jq -r .description schema/$schema.json)
     if [[ $description == null ]]; then
@@ -127,7 +129,7 @@ for schema in $schemas; do
     else
         description=$(echo " - $description" | sed 's@(\.\./@(\.\./\.\./@g')
     fi
-    sed -i "s@## $category@## $category\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
+    sed -i "s@## $section@## $section\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
 
 
