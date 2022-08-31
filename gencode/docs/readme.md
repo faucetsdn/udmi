@@ -9,10 +9,11 @@
 * [event_pointset](event_pointset.html)
 * [state](state.html)
 
-## Cloud Infrastructure
+## Site Model
+* [cloud_iot_config](cloud_iot_config.html)
+* [metadata](metadata.html)
 
 ## Other
-* [cloud_iot_config](cloud_iot_config.html)
 * [command_discovery](command_discovery.html)
 * [command_mapping](command_mapping.html)
 * [config_mapping](config_mapping.html)
@@ -21,7 +22,6 @@
 * [event_mapping](event_mapping.html)
 * [event_system](event_system.html)
 * [event_validation](event_validation.html)
-* [metadata](metadata.html)
 * [properties](properties.html)
 * [reflect_config](reflect_config.html)
 * [reflect_state](reflect_state.html)

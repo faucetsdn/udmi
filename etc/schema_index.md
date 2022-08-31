@@ -4,6 +4,6 @@
 
 ## Messages
 
-## Cloud Infrastructure
+## Site Model
 
 ## Other
