@@ -121,7 +121,13 @@ for schema in $schemas; do
     if [[ -z $category || $(grep -c "## $category\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
         category=Other
     fi
-    sed -i "s/## $category/## $category\n* [$schema]($schema.html)/" $OUTPUT_DIR/readme.md
+    description=$(jq -r .description schema/$schema.json)
+    if [[ $description == null ]]; then
+        description=""
+    else
+        description=" - $description"
+    fi
+    sed -i "s@## $category@## $category\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
 
 
