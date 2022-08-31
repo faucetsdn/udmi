@@ -12,10 +12,15 @@ If these tests are failing, check you are using a compatible system (Linux with
 GNU `sed` and `find`) and the python modules installed match those (including
 the same versions) in `etc/requirements.txt` 
 
-If documents are missing from the index page, check if they needed to be added
+If documents are missing from the index `readme.md`, check if they needed to be added
 to the `ALWAYS_ROOT` list in `bin/list_root_schemas`. Important schemas may
 sometimes be referenced by other files (e.g. pubber schemas) and therefore need
 be explicitly made root
+
+Schemas sections are according to the value of `$section` in the shema. These
+section must also exist in `etc/schema_readme_template.md`, and must match (case
+sensitive) the value of `$section` otherwise they are inserted into the `Other`
+category
 
 ## Configuring Cloud CI Tests
 
