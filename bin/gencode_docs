@@ -125,7 +125,7 @@ for schema in $schemas; do
     if [[ $description == null ]]; then
         description=""
     else
-        description=" - $description"
+        description=$(echo " - $description" | sed 's@(\.\./@(\.\./\.\./@g')
     fi
     sed -i "s@## $category@## $category\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
