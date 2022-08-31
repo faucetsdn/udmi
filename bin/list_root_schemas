@@ -14,8 +14,12 @@ import os
 import json
 import argparse
 
-# FILES TO IGNORE
+# Files to compeltely ignore
 IGNORE_LIST = ['event.json']
+
+# Files to always include as root schema
+# These are sometimes referenced (e.g. by pubber) but should be considered root
+ALWAYS_ROOT = ['configuration_endpoint.json']
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
