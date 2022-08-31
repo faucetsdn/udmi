@@ -121,7 +121,7 @@ for schema in $schemas; do
     if [[ -z $category || $(grep -c "## $category\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
         category=Other
     fi
-    sed -i "s/## $category/## $category\n[$schema]($schema.html)/" $OUTPUT_DIR/readme.md
+    sed -i "s/## $category/## $category\n* [$schema]($schema.html)/" $OUTPUT_DIR/readme.md
 done
 
 
