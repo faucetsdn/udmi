@@ -4,33 +4,10 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "properties": {
-    "timestamp": {
-      "description": "RFC 3339 timestamp the configuration was generated",
-      "type": "string",
-      "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
-    },
-    "version": {
-      "description": "Version of the UDMI schema",
-      "type": "string"
-    },
-    "guid": {
-      "description": "device guid",
-      "type": "string"
-    },
-    "status": {
-      "$ref": "file:common.json#/definitions/entry"
-    },
-    "translation": {
-      "description": "Point translations",
-      "existingJavaType": "java.util.HashMap<String, BuildingConfigTranslation>",
-      "additionalProperties": false,
-      "patternProperties": {
-        "": {
-          "$ref": "file:building_config_translation.json"
-        }
-      }
+  "existingJavaType": "java.util.HashMap<String, BuildingTranslation>",
+  "patternProperties": {
+    "": {
+      "$ref": "file:building_translation.json"
     }
   }
 }

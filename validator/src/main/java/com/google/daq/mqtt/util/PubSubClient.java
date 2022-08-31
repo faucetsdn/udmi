@@ -21,6 +21,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private final boolean flushSubscription;
   private final Map<String, HandlerConsumer<Object>> handlers = new HashMap<>();
   private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
-  private final Map<Class<?>, Pair<SubType, SubFolder>> classTypes = new HashMap<>();
+  private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
 
   /**
    * Create a simple proxy instance.
@@ -136,7 +137,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     Class<?> messageClass = getMessageClass(type, folder);
     if (messageClass != null) {
       typeClasses.put(mapKey, messageClass);
-      classTypes.put(messageClass, new Pair<>(type, folder));
+      classTypes.put(messageClass, new SimpleEntry<>(type, folder));
     }
   }
 
@@ -226,8 +227,8 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   @Override
   public void publishMessage(String deviceId, Object message) {
-    Pair<SubType, SubFolder> typePair = classTypes.get(message.getClass());
-    String mqttTopic = getMapKey(typePair.valueOne, typePair.valueTwo);
+    SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
+    String mqttTopic = getMapKey(typePair.getKey(), typePair.getValue());
     publish(deviceId, mqttTopic, JsonUtil.stringify(message));
   }
 
@@ -237,12 +238,13 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       try {
         processMessage(this::handlerHandler);
       } catch (Exception e) {
-        System.err.println("Exception processing received message: " + e.getMessage());
+        System.err.println("Exception processing received message:");
+        e.printStackTrace();
       }
     }
   }
 
-  private void ignoreMessage(Object message, Envelope attributes) {
+  private void ignoreMessage(Envelope attributes, Object message) {
   }
 
   private void handlerHandler(Map<String, Object> message, Map<String, String> attributes) {
@@ -256,7 +258,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       Object messageObject = JsonUtil.convertTo(handlerType, message);
       HandlerConsumer<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
           key -> this::ignoreMessage);
-      handlerConsumer.accept(messageObject, envelope);
+      handlerConsumer.accept(envelope, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }
@@ -285,7 +287,8 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
           .putAllAttributes(attributesMap)
           .build();
       ApiFuture<String> publish = publisher.publish(message);
-      System.err.printf("Published to %s/%s (%s)%n", registryId, subFolder, publish.get());
+      publish.get(); // Wait for publish to complete.
+      System.err.printf("Published to %s/%s%n", registryId, subFolder);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }

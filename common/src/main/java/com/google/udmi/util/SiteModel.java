@@ -9,9 +9,11 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,6 +38,7 @@ public class SiteModel {
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;
+  private Map<String, Device> allDevices;
   private CloudIotConfig cloudIotConfig;
 
   public SiteModel(String sitePath) {
@@ -97,7 +100,7 @@ public class SiteModel {
     return makeEndpointConfig(projectId, cloudIotConfig, deviceId);
   }
 
-  private Set<String> getAllDevices() {
+  private Set<String> getDeviceIds() {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
     File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
@@ -105,13 +108,17 @@ public class SiteModel {
   }
 
   private void loadAllDeviceMetadata() {
-    allMetadata = getAllDevices().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allMetadata = getDeviceIds().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allDevices = getDeviceIds().stream().collect(toMap(key -> key, this::newDevice));
+  }
+
+  private Device newDevice(String deviceId) {
+    return new SiteModel.Device(deviceId);
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
+    File deviceDir = getDeviceDir(deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
       return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
@@ -121,11 +128,29 @@ public class SiteModel {
     }
   }
 
+  private File getDeviceDir(String deviceId) {
+    File devicesFile = new File(new File(sitePath), "devices");
+    File deviceDir = new File(devicesFile, deviceId);
+    return deviceDir;
+  }
+
   public Metadata getMetadata(String deviceId) {
     return allMetadata.get(deviceId);
   }
 
-  public void forEachDevice(BiConsumer<String, Metadata> consumer) {
+  public Collection<Device> allDevices() {
+    return allDevices.values();
+  }
+
+  public Collection<String> allDeviceIds() {
+    return allDevices.keySet();
+  }
+
+  public void forEachDevice(Consumer<Device> consumer) {
+    allDevices.values().forEach(consumer);
+  }
+
+  public void forEachMetadata(BiConsumer<String, Metadata> consumer) {
     allMetadata.forEach(consumer);
   }
 
@@ -184,11 +209,28 @@ public class SiteModel {
     return cloudIotConfig.update_topic;
   }
 
+  public Device getDevice(String deviceId) {
+    return allDevices.get(deviceId);
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;
     public String projectId;
     public String registryId;
     public String deviceId;
+  }
+
+  public class Device {
+
+    public final String deviceId;
+
+    public Device(String deviceId) {
+      this.deviceId = deviceId;
+    }
+
+    public File getFile() {
+      return getDeviceDir(deviceId);
+    }
   }
 }
