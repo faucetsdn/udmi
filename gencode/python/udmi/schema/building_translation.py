@@ -1,7 +1,7 @@
-"""Generated class for building_config_translation.json"""
+"""Generated class for building_translation.json"""
 
 
-class BuildingConfigTranslation:
+class BuildingTranslation:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class BuildingConfigTranslation:
   def from_dict(source):
     if not source:
       return None
-    result = BuildingConfigTranslation()
+    result = BuildingTranslation()
     result.present_value = source.get('present_value')
     result.units = source.get('units')
     result.states = source.get('states')
@@ -25,7 +25,7 @@ class BuildingConfigTranslation:
       return None
     result = {}
     for key in source:
-      result[key] = BuildingConfigTranslation.from_dict(source[key])
+      result[key] = BuildingTranslation.from_dict(source[key])
     return result
 
   @staticmethod

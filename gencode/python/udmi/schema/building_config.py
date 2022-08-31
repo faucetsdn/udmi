@@ -1,28 +1,17 @@
 """Generated class for building_config.json"""
-from .common import Entry
-from .building_config_translation import BuildingConfigTranslation
 
 
 class BuildingConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.timestamp = None
-    self.version = None
-    self.guid = None
-    self.status = None
-    self.translation = None
+    pass
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = BuildingConfig()
-    result.timestamp = source.get('timestamp')
-    result.version = source.get('version')
-    result.guid = source.get('guid')
-    result.status = Entry.from_dict(source.get('status'))
-    result.translation = BuildingConfigTranslation.map_from(source.get('translation'))
     return result
 
   @staticmethod
@@ -43,14 +32,4 @@ class BuildingConfig:
 
   def to_dict(self):
     result = {}
-    if self.timestamp:
-      result['timestamp'] = self.timestamp # 5
-    if self.version:
-      result['version'] = self.version # 5
-    if self.guid:
-      result['guid'] = self.guid # 5
-    if self.status:
-      result['status'] = self.status.to_dict() # 4
-    if self.translation:
-      result['translation'] = BuildingConfigTranslation.expand_dict(self.translation) # 2
     return result

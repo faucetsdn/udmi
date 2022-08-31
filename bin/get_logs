@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+project_id=$1
+
+if [[ -z $project_id ]]; then
+   echo $0 [project_id]
+   false
+fi
+
+for function in udmi_config udmi_target udmi_state udmi_reflect; do
+    echo Capturing $function.log...
+    gcloud --project=$project_id functions logs read $function --sort-by=time_utc --limit=1000 > $function.log
+done
+

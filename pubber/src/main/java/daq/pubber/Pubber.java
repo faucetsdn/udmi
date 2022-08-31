@@ -731,13 +731,13 @@ public class Pubber {
           toReport.getCause());
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
-      if (connectionDone != null) {
-        while (retriesRemaining.getAndDecrement() > 0) {
-          if (attemptConnection()) {
-            return;
-          }
+      stop();
+      while (retriesRemaining.getAndDecrement() > 0) {
+        if (attemptConnection()) {
+          return;
         }
       }
+      terminate();
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
     }
@@ -1099,7 +1099,7 @@ public class Pubber {
     if (scanGeneration.equals(familyDiscoveryState.generation)
         && familyDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
-      siteModel.forEachDevice((deviceId, targetMetadata) -> {
+      siteModel.forEachMetadata((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
         if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
