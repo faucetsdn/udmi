@@ -1,23 +1,21 @@
-import { InvalidMessageError } from '../InvalidMessageError';
 import { DAO } from '../dao/DAO';
 import { Handler } from '../Handler';
 import { UdmiMessage } from '../model/UdmiMessage';
-import { Site, SiteKey } from './model/Site';
-import { SiteDocumentFactory } from './SiteDocumentFactory';
+import { Site, SiteKey, SiteValidation } from './model/Site';
+import { getSiteDocument, getSiteKey, getSiteValidationMessage } from './SiteDocumentUtils';
 
 export class SiteHandler implements Handler {
-  constructor(private siteDao: DAO<Site>, private documentFactory: SiteDocumentFactory) {}
+  constructor(private siteDao: DAO<Site>, private siteValidationDao: DAO<SiteValidation>) {}
 
   async handle(udmiMessage: UdmiMessage): Promise<void> {
-    const siteKey: SiteKey = this.getSiteKey(udmiMessage);
-    const site: Site = this.documentFactory.getSiteDocument(udmiMessage);
-    this.siteDao.upsert(siteKey, site);
-  }
+    const siteKey: SiteKey = getSiteKey(udmiMessage);
 
-  getSiteKey(udmiMessage: UdmiMessage): SiteKey {
-    if (!udmiMessage.attributes.deviceRegistryId) {
-      throw new InvalidMessageError('An invalid site name was submitted');
-    }
-    return { name: udmiMessage.attributes.deviceRegistryId };
+    // we'll upsert the site document in case it exists
+    const site: Site = getSiteDocument(udmiMessage);
+    this.siteDao.upsert(siteKey, site);
+
+    // we want to insert new validation message and leave the old ones alone
+    const siteValidation: SiteValidation = getSiteValidationMessage(udmiMessage);
+    this.siteValidationDao.insert(siteValidation);
   }
 }

@@ -1,12 +1,12 @@
-import { DAO, DefaultDAO, getDeviceDAO, getSiteDAO } from '../../dao/DAO';
+import { DAO, DefaultDAO, getDeviceDAO, getSiteDAO, getSiteValidationDAO } from '../../dao/DAO';
 import { Collection, MongoClient, Db } from 'mongodb';
 import { Device, DeviceKey } from '../../device/model/Device';
-import { Site } from '../../site/model/Site';
+import { Site, SiteValidation } from '../../site/model/Site';
 
 const mockClient = jest.fn().mockImplementation(() => {
   return {
     db: () => {
-      return { collection: jest.fn() };
+      return { collection: jest.fn(), collections: jest.fn().mockReturnValue([]), createCollection: jest.fn() };
     },
   };
 });
@@ -39,8 +39,12 @@ describe('DAO.getxxxDAO()', () => {
     expect(getDeviceDAO()).toBeTruthy();
   });
 
-  test('returns a SystemDAO object', () => {
+  test('returns a SiteDAO object', () => {
     expect(getSiteDAO()).toBeTruthy();
+  });
+
+  test('returns a SiteValidationDAO object', () => {
+    expect(getSiteValidationDAO()).toBeTruthy();
   });
 });
 
@@ -54,8 +58,8 @@ describe('DAO<Device>', () => {
 
   beforeEach(async () => {
     deviceCollection = db.collection('device');
-    deviceDao = new DefaultDAO<Device>(deviceCollection);
     await deviceCollection.deleteMany({});
+    deviceDao = new DefaultDAO<Device>(deviceCollection);
   });
 
   test('upsert calls the updateOne method on the provided collection', () => {
@@ -94,13 +98,13 @@ describe('DAO<Site>', () => {
 
   beforeEach(async () => {
     siteCollection = db.collection('site');
-    siteDao = new DefaultDAO<Site>(siteCollection);
     await siteCollection.deleteMany({});
+    siteDao = new DefaultDAO<Site>(siteCollection);
   });
 
   test('upsert calls the updateOne method on the provided collection', () => {
     // arrange
-    const site: Site = { name: 'site' };
+    const site: Site = { name: 'site', lastMessage: { name: '' } };
     const updateOneSpy = jest.spyOn(siteCollection, 'updateOne').mockImplementation(jest.fn());
 
     // act
@@ -113,7 +117,7 @@ describe('DAO<Site>', () => {
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(siteCollection, 'findOne');
-    const insertedDocument: Site = { name: siteName };
+    const insertedDocument: Site = { name: siteName, lastMessage: { name: '' } };
     siteCollection.insertOne(insertedDocument);
 
     // act
@@ -122,5 +126,28 @@ describe('DAO<Site>', () => {
     // assert
     expect(retrievedDocument).toEqual(insertedDocument);
     expect(findOneSpy).toHaveBeenCalledWith(siteKey);
+  });
+});
+
+describe('DAO<SiteValidation>', () => {
+  let siteValidationDao: DAO<SiteValidation>;
+  let siteValidationCollection: Collection<SiteValidation>;
+
+  beforeEach(async () => {
+    siteValidationCollection = db.collection('site_validation');
+    await siteValidationCollection.deleteMany({});
+    siteValidationDao = new DefaultDAO<SiteValidation>(siteValidationCollection);
+  });
+
+  test('insert calls the insertOne method on the provided collection', () => {
+    // arrange
+    const siteValidation: SiteValidation = { timestamp: new Date(), siteName: 'siteValidation', message: {} };
+    const insertOneSpy = jest.spyOn(siteValidationCollection, 'insertOne').mockImplementation(jest.fn());
+
+    // act
+    siteValidationDao.insert(siteValidation);
+
+    // assert
+    expect(insertOneSpy).toHaveBeenCalledWith(siteValidation);
   });
 });

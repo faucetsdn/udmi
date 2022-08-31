@@ -3,14 +3,13 @@ import { SYSTEM_SUB_FOLDER, VALIDATION_SUB_FOLDER } from '../../MessageUtils';
 import { Handler } from '../../Handler';
 import { SiteHandler } from '../../site/SiteHandler';
 import { createMessage } from '../dataUtils';
-
-const SITE_ID: string = 'reg-1';
+import { insertMock, mockDAO, upsertMock } from '../MockDAO';
 
 describe('SiteHandler', () => {
   const event: UdmiMessage = createMessage(
     {
       deviceId: '_validator',
-      deviceRegistryId: SITE_ID,
+      deviceRegistryId: 'reg-1',
       subFolder: VALIDATION_SUB_FOLDER,
     },
     {
@@ -39,19 +38,17 @@ describe('SiteHandler', () => {
   );
 
   let siteHandler: Handler;
-  const upsertMock = jest.fn();
-  const getMock = jest.fn();
-  const getDocumentMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    siteHandler = new SiteHandler({ upsert: upsertMock, get: getMock }, { getSiteDocument: getDocumentMock });
+    siteHandler = new SiteHandler(mockDAO, mockDAO);
   });
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
     await siteHandler.handle(event);
 
     expect(upsertMock).toHaveBeenCalled();
+    expect(insertMock).toHaveBeenCalled();
   });
 
   test('throws an exception if a mandatory field deviceRegistryId is null', async () => {

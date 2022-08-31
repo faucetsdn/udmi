@@ -3,6 +3,7 @@ import { MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../Mess
 import { Handler } from '../../Handler';
 import { DeviceHandler } from '../../device/DeviceHandler';
 import { createMessage, createMessageFromTypes } from '../dataUtils';
+import { getMock, mockDAO, upsertMock } from '../MockDAO';
 
 const AHU_ID: string = 'AHU-1';
 const AHU_REGISTRY_ID: string = 'reg-1';
@@ -24,13 +25,10 @@ describe('DeviceHandler', () => {
   );
 
   let deviceHandler: Handler;
-  const upsertMock = jest.fn();
-  const getMock = jest.fn();
-  const createMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    deviceHandler = new DeviceHandler({ upsert: upsertMock, get: getMock }, { createDeviceDocument: createMock });
+    deviceHandler = new DeviceHandler(mockDAO);
   });
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
@@ -76,7 +74,6 @@ describe('DeviceHandler', () => {
     await deviceHandler.handle(message);
     // assert
     expect(getMock).toHaveBeenCalled();
-    expect(createMock).toHaveBeenCalledWith(message, []);
     expect(upsertMock).toHaveBeenCalled();
   });
 
@@ -85,7 +82,6 @@ describe('DeviceHandler', () => {
     getMock.mockResolvedValue([]);
     await deviceHandler.handle(message);
     expect(getMock).toHaveBeenCalled();
-    expect(createMock).toHaveBeenCalledWith(message, []);
     expect(upsertMock).toHaveBeenCalled();
   });
 });

@@ -1,13 +1,11 @@
 import type { EventFunction } from '@google-cloud/functions-framework/build/src/functions';
-import { getDeviceDAO, getSiteDAO } from './dao/DAO';
+import { getDeviceDAO, getSiteDAO, getSiteValidationDAO } from './dao/DAO';
 import UdmiMessageHandler from './UdmiMessageHandler';
 import { UdmiMessage } from './model/UdmiMessage';
-import { DeviceDocumentFactory } from './device/DeviceDocumentFactory';
 import { InvalidMessageError } from './InvalidMessageError';
 import { SiteHandler } from './site/SiteHandler';
 import { Handler } from './Handler';
 import { DeviceHandler } from './device/DeviceHandler';
-import { SiteDocumentFactory } from './site/SiteDocumentFactory';
 
 let messageHandler: UdmiMessageHandler;
 
@@ -20,8 +18,8 @@ export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
     if (!messageHandler) {
       console.log('Creating Message Handler');
-      const siteHandler: Handler = new SiteHandler(await getSiteDAO(), new SiteDocumentFactory());
-      const deviceHandler: Handler = new DeviceHandler(await getDeviceDAO(), new DeviceDocumentFactory());
+      const siteHandler: Handler = new SiteHandler(await getSiteDAO(), await getSiteValidationDAO());
+      const deviceHandler: Handler = new DeviceHandler(await getDeviceDAO());
       messageHandler = new UdmiMessageHandler(deviceHandler, siteHandler);
     }
     const udmiMessage: UdmiMessage = decodeEventData(event);

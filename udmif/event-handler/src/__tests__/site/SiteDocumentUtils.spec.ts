@@ -1,10 +1,10 @@
 import { Site } from '../../site/model/Site';
 import { VALIDATION_SUB_FOLDER } from '../../MessageUtils';
 import { UdmiMessage } from '../../model/UdmiMessage';
-import { SiteDocumentFactory } from '../../site/SiteDocumentFactory';
 import { createMessage } from '../dataUtils';
+import { getSiteDocument } from '../../site/SiteDocumentUtils';
 
-describe('SiteDocumentFactory.getSiteDocument', () => {
+describe('SiteDocumentUtils.getSiteDocument', () => {
   const SITE_ID: string = 'reg-1';
   test('returns a site document', () => {
     const event: UdmiMessage = createMessage(
@@ -38,8 +38,8 @@ describe('SiteDocumentFactory.getSiteDocument', () => {
       }
     );
 
-    const siteDocument: Site = new SiteDocumentFactory().getSiteDocument(event);
-    const expectedSiteDocumet: Site = { name: SITE_ID, errorDevices: ['AHU-1'] };
+    const siteDocument: Site = getSiteDocument(event);
+    const expectedSiteDocumet: Site = { name: SITE_ID, lastMessage: event.data };
     expect(siteDocument).toEqual(expectedSiteDocumet);
   });
 });

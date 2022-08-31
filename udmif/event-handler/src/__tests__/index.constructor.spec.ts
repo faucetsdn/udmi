@@ -18,9 +18,6 @@ const event = {
   publishTime: '2022-04-25T17:05:33.162Z',
 };
 
-const codedData: string =
-  'ewogICJsb2NhdGlvbiIgOiB7CiAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICJzZWN0aW9uIiA6ICIyLTNOOEMiLAogICAgInBvc2l0aW9uIiA6IHsKICAgICAgIngiIDogMTExLjAsCiAgICAgICJ5IiA6IDEwMi4zCiAgICB9CiAgfSwKICAicGh5c2ljYWxfdGFnIiA6IHsKICAgICJhc3NldCIgOiB7CiAgICAgICJndWlkIiA6ICJkcnc6Ly9UQkMiLAogICAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICAgIm5hbWUiIDogIkFIVS0xIgogICAgfQogIH0KfQ==';
-
 describe('index.constructor', () => {
   let handleUdmiEventMock = jest.fn();
 
@@ -30,6 +27,7 @@ describe('index.constructor', () => {
     // arrange
     jest.spyOn(dao, 'getDeviceDAO').mockImplementation(jest.fn());
     jest.spyOn(dao, 'getSiteDAO').mockImplementation(jest.fn());
+    jest.spyOn(dao, 'getSiteValidationDAO').mockImplementation(jest.fn());
     jest.spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent').mockImplementation(handleUdmiEventMock);
   });
 

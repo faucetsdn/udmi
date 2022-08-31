@@ -1,4 +1,4 @@
-import { buildPoint, createDeviceDocument, DeviceDocumentFactory } from '../../device/DeviceDocumentFactory';
+import { buildPoint, createDeviceDocument } from '../../device/DeviceDocumentUtils';
 import { Device } from '../../device/model/Device';
 import {
   CONFIG,
@@ -18,17 +18,7 @@ const site: string = 'site-1';
 const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: SYSTEM_SUB_FOLDER };
 const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: POINTSET_SUB_FOLDER };
 
-describe('DeviceDocumentFactory.constructor', () => {
-  const tags: string[] = [];
-
-  test('creates a default device document', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDeviceDocument: Device = { name, site, tags };
-    expect(new DeviceDocumentFactory().createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
-  });
-});
-
-describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
+describe('DeviceDocumentUtils.createDeviceDocument.default', () => {
   const tags: string[] = [];
 
   test('creates a default device document', () => {
@@ -45,7 +35,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.default', () => {
   });
 });
 
-describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
+describe('DeviceDocumentUtils.createDeviceDocument.system', () => {
   const tags: string[] = [];
 
   test('creates a device document with system state', () => {
@@ -82,7 +72,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.system', () => {
   });
 });
 
-describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
+describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
   const NO_UNITS = 'No-units';
   const faps = 'filter_alarm_pressure_status';
   const fdpsp = 'filter_differential_pressure_setpoint';
@@ -93,6 +83,32 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
 
   beforeEach(() => {
     existingPoints = [];
+  });
+
+  test('creates a device document when existing points are undefined', () => {
+    // arrange
+    const inputMessage: UdmiMessage = {
+      attributes: { ...BASIC_POINTSET_ATTRIBUTES },
+      data: {
+        timestamp: '2022-04-25T17:00:26Z',
+        points: {
+          [faps]: { present_value: 78 },
+          [fdpsp]: { present_value: 71 },
+          [fdps]: { present_value: 82 },
+        },
+      },
+    };
+
+    const expectedPoints: Point[] = [
+      getFapsPoint('78', null),
+      { name: fdpsp, id: fdpsp, value: '71', meta: { code: fdpsp }, state },
+      { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
+    ];
+
+    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+
+    // act and assert
+    expect(createDeviceDocument(inputMessage, undefined)).toEqual(expectedDeviceDocument);
   });
 
   test('creates a device document with pointset', () => {
@@ -275,7 +291,7 @@ describe('DeviceDocumentFactory.createDeviceDocument.pointset', () => {
   }
 });
 
-describe('DeviceDocumentFactory.createDeviceDocument.validation', () => {
+describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
   const inputMessage: UdmiMessage = {
     attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subFolder: VALIDATION_SUB_FOLDER, subType: EVENT },
     data: {

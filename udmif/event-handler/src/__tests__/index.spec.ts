@@ -20,8 +20,9 @@ const event = {
 };
 
 describe('index', () => {
-  let deviceFactorySpy;
-  let siteFactorySpy;
+  let deviceDAOSpy;
+  let siteDAOSpy;
+  let siteValidationDAOSpy;
   let handleUdmiEventSpy;
   const mockHandleEvent = jest.fn();
 
@@ -29,8 +30,9 @@ describe('index', () => {
     jest.clearAllMocks();
 
     // arrange
-    deviceFactorySpy = jest.spyOn(DAO, 'getDeviceDAO').mockImplementation(jest.fn());
-    siteFactorySpy = jest.spyOn(DAO, 'getSiteDAO').mockImplementation(jest.fn());
+    deviceDAOSpy = jest.spyOn(DAO, 'getDeviceDAO').mockImplementation(jest.fn());
+    siteDAOSpy = jest.spyOn(DAO, 'getSiteDAO').mockImplementation(jest.fn());
+    siteValidationDAOSpy = jest.spyOn(DAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
     handleUdmiEventSpy = jest
       .spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent')
       .mockImplementation(mockHandleEvent);
@@ -42,8 +44,9 @@ describe('index', () => {
 
     // assert
     expect(handleUdmiEventSpy).toHaveBeenCalled();
-    expect(deviceFactorySpy).toHaveBeenCalled();
-    expect(siteFactorySpy).toHaveBeenCalled();
+    expect(deviceDAOSpy).toHaveBeenCalled();
+    expect(siteDAOSpy).toHaveBeenCalled();
+    expect(siteValidationDAOSpy).toHaveBeenCalled();
   });
 
   test('Exception is logged', async () => {

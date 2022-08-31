@@ -4,5 +4,11 @@ export interface SiteKey {
 
 export interface Site {
   name: string;
-  errorDevices?: string[];
+  lastMessage: any;
+}
+
+export interface SiteValidation {
+  siteName: string;
+  timestamp: Date;
+  message: any;
 }

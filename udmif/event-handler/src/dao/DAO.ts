@@ -1,17 +1,31 @@
-import { Collection, Filter } from 'mongodb';
-import { Site } from '../site/model/Site';
+import { Collection, Filter, TimeSeriesCollectionOptions } from 'mongodb';
+import { Site, SiteValidation } from '../site/model/Site';
 import { Device } from '../device/model/Device';
-import { getMongoCollection } from './MongoCollectionProvider';
+import { getCollection, getTimeSeriesCollection } from './MongoCollectionProvider';
 
 export async function getDeviceDAO(): Promise<DefaultDAO<Device>> {
-  return new DefaultDAO<Device>(await getMongoCollection<Device>('device'));
+  return new DefaultDAO<Device>(await getCollection<Device>('device'));
 }
 
 export async function getSiteDAO(): Promise<DefaultDAO<Site>> {
-  return new DefaultDAO<Site>(await getMongoCollection<Site>('site'));
+  return new DefaultDAO<Site>(await getCollection<Site>('site'));
+}
+
+export async function getSiteValidationDAO(): Promise<DefaultDAO<SiteValidation>> {
+  const collectionOptions: TimeSeriesCollectionOptions = {
+    timeField: 'timestamp',
+    metaField: 'siteName',
+    granularity: 'minutes',
+  };
+  const collection: Collection<SiteValidation> = await getTimeSeriesCollection<SiteValidation>(
+    'site_validation',
+    collectionOptions
+  );
+  return new DefaultDAO<SiteValidation>(collection);
 }
 
 export interface DAO<Type> {
+  insert(document: Type): Promise<void>;
   upsert(filterQuery: any, updateQuery: any): Promise<void>;
   get(filterQuery: any): Promise<Type>;
 }
@@ -44,5 +58,11 @@ export class DefaultDAO<Type> implements DAO<Type> {
    */
   async get(filter: Filter<Type>): Promise<Type> {
     return this.collection.findOne<Type>(filter);
+  }
+
+  async insert(document: Type): Promise<void> {
+    const result = await this.collection.insertOne(document as any);
+    // let's log the result to give us some feedback on what occurred during the insert
+    console.log('insert result: ' + JSON.stringify(result));
   }
 }

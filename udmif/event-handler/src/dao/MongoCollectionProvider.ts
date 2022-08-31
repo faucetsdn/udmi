@@ -1,14 +1,37 @@
-import { Collection, Db, MongoClient } from 'mongodb';
+import { Collection, Db, MongoClient, TimeSeriesCollectionOptions } from 'mongodb';
 
 let mongoClient: MongoClient;
 
-export async function getMongoCollection<Type>(collectionName: string): Promise<Collection<Type>> {
+export async function getCollection<Type>(collectionName: string): Promise<Collection<Type>> {
   console.log(`Getting the Mongo Collection collection: ${collectionName}`);
   const db: Db = await getMongoDb();
   return db.collection<Type>(collectionName);
 }
 
-export async function getMongoDb(): Promise<Db> {
+export async function getTimeSeriesCollection<Type>(
+  collectionName: string,
+  options: TimeSeriesCollectionOptions
+): Promise<Collection<Type>> {
+  const db: Db = await getMongoDb();
+  await createTimeSeriesCollection<Type>(db, collectionName, options);
+  console.log(`Getting the Mongo Collection collection: ${collectionName}`);
+  return db.collection<Type>(collectionName);
+}
+
+async function createTimeSeriesCollection<Type>(
+  db: Db,
+  collectionName: string,
+  options?: TimeSeriesCollectionOptions
+): Promise<void> {
+  const YEAR_IN_SECONDS: number = 31536000;
+  const collections: Collection[] = await db.collections({ nameOnly: true });
+  if (!collections.find((collection) => collection.collectionName === collectionName)) {
+    console.log(`Creating the ${collectionName} collection.`);
+    await db.createCollection<Type>(collectionName, { timeseries: options, expireAfterSeconds: YEAR_IN_SECONDS });
+  }
+}
+
+async function getMongoDb(): Promise<Db> {
   if (!mongoClient) {
     mongoClient = await MongoClient.connect(getUri(), {});
   }

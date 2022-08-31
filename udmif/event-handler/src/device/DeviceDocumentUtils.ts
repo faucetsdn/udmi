@@ -4,12 +4,6 @@ import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from '
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
 
-export class DeviceDocumentFactory {
-  public createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
-    return createDeviceDocument(udmiMessage, existingPoints);
-  }
-}
-
 export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
   const builder: DeviceBuilder = new DeviceBuilder();
   builder.site(udmiMessage.attributes.deviceRegistryId).name(udmiMessage.attributes.deviceId);
@@ -17,7 +11,7 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
   if (isSystemSubType(udmiMessage)) {
     return buildDeviceDocumentFromSystem(udmiMessage, builder);
   } else if (isPointsetSubType(udmiMessage)) {
-    return buildDeviceDocumentFromPointset(udmiMessage, existingPoints, builder);
+    return buildDeviceDocumentFromPointset(udmiMessage, builder, existingPoints);
   } else if (isValidationSubType(udmiMessage)) {
     return buildDeviceDocumentFromValidation(udmiMessage, builder);
   }
@@ -61,8 +55,8 @@ function buildDeviceDocumentFromValidation(udmiMessage: ValidationMessage, build
  */
 function buildDeviceDocumentFromPointset(
   udmiMessage: PointsetMessage,
-  existingPoints: Point[],
-  deviceBuilder: DeviceBuilder
+  deviceBuilder: DeviceBuilder,
+  existingPoints: Point[] = []
 ): Device {
   const points: Point[] = [];
 

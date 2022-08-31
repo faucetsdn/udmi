@@ -1,4 +1,4 @@
-import { DeviceDocumentFactory } from './DeviceDocumentFactory';
+import { createDeviceDocument } from './DeviceDocumentUtils';
 import { Handler } from '../Handler';
 import { InvalidMessageError } from '../InvalidMessageError';
 import { Device, DeviceKey } from './model/Device';
@@ -6,16 +6,13 @@ import { UdmiMessage } from '../model/UdmiMessage';
 import { DAO } from '../dao/DAO';
 
 export class DeviceHandler implements Handler {
-  constructor(private deviceDao: DAO<Device>, private deviceDocumentFactory: DeviceDocumentFactory) {}
+  constructor(private deviceDao: DAO<Device>) {}
 
   async handle(udmiMessage: UdmiMessage): Promise<void> {
     const deviceKey: DeviceKey = this.getDeviceKey(udmiMessage);
     if (deviceKey) {
       const existingDeviceDocument: Device = await this.deviceDao.get(deviceKey);
-      const document: Device = this.deviceDocumentFactory.createDeviceDocument(
-        udmiMessage,
-        existingDeviceDocument?.points || []
-      );
+      const document: Device = createDeviceDocument(udmiMessage, existingDeviceDocument.points);
       this.deviceDao.upsert(deviceKey, document);
     }
   }
