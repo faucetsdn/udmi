@@ -23,9 +23,9 @@ public class ReportingDevice {
   private static final long THRESHOLD_SEC = 3600;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
-  private final ReportingPointset reportingPointset = new ReportingPointset();
   private final Map<String, Date> messageMarks = new HashMap<>();
   private final Date lastSeen = new Date(0); // Always defined, just start a long time ago!
+  private ReportingPointset reportingPointset;
   private Metadata metadata;
 
   /**
@@ -74,6 +74,38 @@ public class ReportingDevice {
   }
 
   /**
+   * Create a single status Entry for this device (which may have multiple internal Entries).
+   *
+   * @param entries list of Entry to summarize
+   * @return status entry
+   */
+  public static Entry getSummaryEntry(List<Entry> entries) {
+    if (entries.isEmpty()) {
+      return null;
+    }
+
+    if (entries.size() == 1) {
+      return entries.get(0);
+    }
+
+    Entry entry = new Entry();
+    entry.category = "validation.error.multiple";
+    entry.message = "Multiple validation errors";
+    entry.detail = Joiner.on("; ")
+        .join(entries.stream()
+            .map(ReportingDevice::makeEntrySummary)
+            .collect(Collectors.toList()));
+    entry.level = entries.stream().map(item -> item.level).max(Integer::compareTo)
+        .orElse(Level.ERROR.value());
+    entry.timestamp = new Date();
+    return entry;
+  }
+
+  private static String makeEntrySummary(Entry entry) {
+    return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
+  }
+
+  /**
    * Get the device's iot id.
    *
    * @return device's iot id
@@ -106,11 +138,14 @@ public class ReportingDevice {
    * @param message Message to validate
    */
   public void validateMessageType(Object message) {
+    if (reportingPointset == null) {
+      return;
+    }
     final MetadataDiff metadataDiff;
     if (message instanceof PointsetEvent) {
-      metadataDiff = reportingPointset.validateMessage((PointsetEvent) message, metadata);
+      metadataDiff = reportingPointset.validateMessage((PointsetEvent) message);
     } else if (message instanceof PointsetState) {
-      metadataDiff = reportingPointset.validateMessage((PointsetState) message, metadata);
+      metadataDiff = reportingPointset.validateMessage((PointsetState) message);
     } else {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
@@ -131,42 +166,18 @@ public class ReportingDevice {
   }
 
   /**
-   * Create a single status Entry for this device (which may have multiple internal Entries).
+   * Get the error Entries associated with this device.
    *
-   * @param entries list of Entry to summarize
-   * @return status entry
+   * @param threshold date threshold beyond which to ignore (null for all)
+   *
+   * @return Entry list or errors.
    */
-  public static Entry getSummaryEntry(List<Entry> entries) {
-    if (entries.isEmpty()) {
-      return null;
-    }
-
-    if (entries.size() == 1) {
-      return entries.get(0);
-    }
-
-    Entry entry = new Entry();
-    entry.category = "validation.error.multiple";
-    entry.message = "Multiple validation errors";
-    entry.detail = Joiner.on("; ")
-        .join(entries.stream()
-            .map(ReportingDevice::makeEntrySummary)
-            .collect(Collectors.toList()));
-    entry.level = entries.stream().map(item -> item.level).max(Integer::compareTo)
-        .orElse(Level.ERROR.value());
-    entry.timestamp = new Date();
-    return entry;
-  }
-
-  private static String makeEntrySummary(Entry entry) {
-    return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
-  }
-
   public List<Entry> getErrors(Date threshold) {
     if (threshold == null) {
       return entries;
     }
-    return entries.stream().filter(entry -> entry.timestamp.after(threshold))
+    return entries.stream()
+        .filter(entry -> entry.timestamp.after(threshold))
         .collect(Collectors.toList());
   }
 
@@ -188,6 +199,7 @@ public class ReportingDevice {
    */
   public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
+    this.reportingPointset = new ReportingPointset(metadata);
   }
 
   public Set<String> getMissingPoints() {

@@ -12,24 +12,30 @@ import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 
+/**
+ * Manage pointset validation.
+ */
 public class ReportingPointset {
 
-  public ReportingPointset() {
+  private final Metadata metadata;
+
+  public ReportingPointset(Metadata metadata) {
+    this.metadata = metadata;
   }
 
-  MetadataDiff validateMessage(PointsetEvent message, Metadata metadata) {
-    MetadataDiff metadataDiff = validateMessage(metadata, getPoints(message).keySet());
+  MetadataDiff validateMessage(PointsetEvent message) {
+    MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (message.partial_update != null && message.partial_update) {
       metadataDiff.missingPoints = null;
     }
     return metadataDiff;
   }
 
-  MetadataDiff validateMessage(PointsetState message, Metadata metadata) {
-    return validateMessage(metadata, getPoints(message).keySet());
+  MetadataDiff validateMessage(PointsetState message) {
+    return validateMessage(getPoints(message).keySet());
   }
 
-  private MetadataDiff validateMessage(Metadata metadata, Set<String> strings) {
+  private MetadataDiff validateMessage(Set<String> strings) {
     Set<String> deliveredPoints = new TreeSet<>(strings);
     Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
     MetadataDiff metadataDiff = new MetadataDiff();

@@ -9,15 +9,15 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class DeviceExceptionManager {
+class DeviceExceptionManager {
 
   private final AllDeviceExceptions allDeviceExceptions;
 
-  public DeviceExceptionManager(File siteConfig) {
+  DeviceExceptionManager(File siteConfig) {
     allDeviceExceptions = ConfigUtil.loadExceptions(siteConfig);
   }
 
-  public List<Pattern> forDevice(String id) {
+  List<Pattern> forDevice(String id) {
     if (allDeviceExceptions == null) {
       return List.of();
     }
