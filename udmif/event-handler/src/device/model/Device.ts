@@ -7,6 +7,12 @@ export interface DeviceKey {
   site: string;
 }
 
+export interface DeviceValidation {
+  deviceKey: DeviceKey;
+  timestamp: Date;
+  message: any;
+}
+
 /**
  * Sample Device Document
  * {

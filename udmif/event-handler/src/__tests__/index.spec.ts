@@ -1,26 +1,14 @@
 import { handleUdmiEvent } from '../index';
-import * as DAO from '../dao/DAO';
+import * as MongoDAO from '../dao/mongo/MongoDAO';
 import UdmiMessageHandler from '../UdmiMessageHandler';
 import { InvalidMessageError } from '../InvalidMessageError';
+import { event } from './dataUtils';
 
 jest.mock('../UdmiMessageHandler');
 
-const event = {
-  attributes: {
-    deviceId: 'AHU-1',
-    deviceNumId: '2625324262579600',
-    deviceRegistryId: 'ZZ-TRI-FECTA',
-    projectId: 'labs-333619',
-    subFolder: 'system',
-    subType: 'model',
-  },
-  data: 'ewogICJsb2NhdGlvbiIgOiB7CiAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICJzZWN0aW9uIiA6ICIyLTNOOEMiLAogICAgInBvc2l0aW9uIiA6IHsKICAgICAgIngiIDogMTExLjAsCiAgICAgICJ5IiA6IDEwMi4zCiAgICB9CiAgfSwKICAicGh5c2ljYWxfdGFnIiA6IHsKICAgICJhc3NldCIgOiB7CiAgICAgICJndWlkIiA6ICJkcnc6Ly9UQkMiLAogICAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICAgIm5hbWUiIDogIkFIVS0xIgogICAgfQogIH0KfQ==',
-  messageId: '4498812851299125',
-  publishTime: '2022-04-25T17:05:33.162Z',
-};
-
 describe('index', () => {
   let deviceDAOSpy;
+  let deviceValidationDAOSpy;
   let siteDAOSpy;
   let siteValidationDAOSpy;
   let handleUdmiEventSpy;
@@ -30,9 +18,10 @@ describe('index', () => {
     jest.clearAllMocks();
 
     // arrange
-    deviceDAOSpy = jest.spyOn(DAO, 'getDeviceDAO').mockImplementation(jest.fn());
-    siteDAOSpy = jest.spyOn(DAO, 'getSiteDAO').mockImplementation(jest.fn());
-    siteValidationDAOSpy = jest.spyOn(DAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
+    deviceDAOSpy = jest.spyOn(MongoDAO, 'getDeviceDAO').mockImplementation(jest.fn());
+    siteDAOSpy = jest.spyOn(MongoDAO, 'getSiteDAO').mockImplementation(jest.fn());
+    siteValidationDAOSpy = jest.spyOn(MongoDAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
+    deviceValidationDAOSpy = jest.spyOn(MongoDAO, 'getDeviceValidationDAO').mockImplementation(jest.fn());
     handleUdmiEventSpy = jest
       .spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent')
       .mockImplementation(mockHandleEvent);
@@ -47,6 +36,7 @@ describe('index', () => {
     expect(deviceDAOSpy).toHaveBeenCalled();
     expect(siteDAOSpy).toHaveBeenCalled();
     expect(siteValidationDAOSpy).toHaveBeenCalled();
+    expect(deviceValidationDAOSpy).toHaveBeenCalled();
   });
 
   test('Exception is logged', async () => {

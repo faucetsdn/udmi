@@ -1,6 +1,6 @@
-import { getCollection, getTimeSeriesCollection, getUri } from '../../dao/MongoCollectionProvider';
+import { getCollection, getTimeSeriesCollection, getUri } from '../../../dao/mongo/MongoCollectionProvider';
 import { Collection, MongoClient, TimeSeriesCollectionOptions } from 'mongodb';
-import { Site, SiteValidation } from '../../site/model/Site';
+import { Site, SiteValidation } from '../../../site/model/Site';
 
 const mockCollection = jest.fn();
 const mockCollections = jest.fn();

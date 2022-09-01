@@ -11,6 +11,7 @@ import {
   isValidationSubType,
 } from '../MessageUtils';
 import { UdmiMessage } from '../model/UdmiMessage';
+import { createMessageFromTypes } from './dataUtils';
 
 describe('MessageUtils.System', () => {
   const systemSubFolder = SYSTEM_SUB_FOLDER;
@@ -22,7 +23,7 @@ describe('MessageUtils.System', () => {
     [systemSubFolder, CONFIG, true],
     [systemSubFolder, EVENT, false],
   ])('is a system sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessage(subFolder, subType);
+    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
     expect(isSystemSubType(inputMessage)).toEqual(expected);
   });
 });
@@ -37,7 +38,7 @@ describe('MessageUtils.PointSet', () => {
     [pointSubFolder, CONFIG, true],
     [pointSubFolder, EVENT, false],
   ])('is a pointset sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessage(subFolder, subType);
+    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
     expect(isPointsetSubType(inputMessage)).toEqual(expected);
   });
 });
@@ -52,20 +53,7 @@ describe('MessageUtils.Validation', () => {
     [validationSubFolder, CONFIG, true],
     [validationSubFolder, EVENT, true],
   ])('is a pointset sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessage(subFolder, subType);
+    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
     expect(isValidationSubType(inputMessage)).toEqual(expected);
   });
 });
-
-function createMessage(subFolder: string, subType?: string): UdmiMessage {
-  const deviceId: string = 'name';
-  const deviceRegistryId: string = 'id';
-
-  const defaultAttributes = {
-    deviceId,
-    deviceRegistryId,
-    subFolder,
-    subType,
-  };
-  return { attributes: { ...defaultAttributes }, data: {} };
-}

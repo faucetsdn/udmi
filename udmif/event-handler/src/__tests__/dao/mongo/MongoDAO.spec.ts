@@ -1,7 +1,14 @@
-import { DAO, DefaultDAO, getDeviceDAO, getSiteDAO, getSiteValidationDAO } from '../../dao/DAO';
+import { DAO } from '../../../dao/DAO';
+import {
+  MongoDAO,
+  getDeviceDAO,
+  getSiteDAO,
+  getSiteValidationDAO,
+  getDeviceValidationDAO,
+} from '../../../dao/mongo/MongoDAO';
 import { Collection, MongoClient, Db } from 'mongodb';
-import { Device, DeviceKey } from '../../device/model/Device';
-import { Site, SiteValidation } from '../../site/model/Site';
+import { Device, DeviceKey } from '../../../device/model/Device';
+import { Site, SiteValidation } from '../../../site/model/Site';
 
 const mockClient = jest.fn().mockImplementation(() => {
   return {
@@ -46,6 +53,10 @@ describe('DAO.getxxxDAO()', () => {
   test('returns a SiteValidationDAO object', () => {
     expect(getSiteValidationDAO()).toBeTruthy();
   });
+
+  test('returns a DeviceValidationDAO object', () => {
+    expect(getDeviceValidationDAO()).toBeTruthy();
+  });
 });
 
 describe('DAO<Device>', () => {
@@ -59,7 +70,7 @@ describe('DAO<Device>', () => {
   beforeEach(async () => {
     deviceCollection = db.collection('device');
     await deviceCollection.deleteMany({});
-    deviceDao = new DefaultDAO<Device>(deviceCollection);
+    deviceDao = new MongoDAO<Device>(deviceCollection);
   });
 
   test('upsert calls the updateOne method on the provided collection', () => {
@@ -99,7 +110,7 @@ describe('DAO<Site>', () => {
   beforeEach(async () => {
     siteCollection = db.collection('site');
     await siteCollection.deleteMany({});
-    siteDao = new DefaultDAO<Site>(siteCollection);
+    siteDao = new MongoDAO<Site>(siteCollection);
   });
 
   test('upsert calls the updateOne method on the provided collection', () => {
@@ -136,7 +147,7 @@ describe('DAO<SiteValidation>', () => {
   beforeEach(async () => {
     siteValidationCollection = db.collection('site_validation');
     await siteValidationCollection.deleteMany({});
-    siteValidationDao = new DefaultDAO<SiteValidation>(siteValidationCollection);
+    siteValidationDao = new MongoDAO<SiteValidation>(siteValidationCollection);
   });
 
   test('insert calls the insertOne method on the provided collection', () => {

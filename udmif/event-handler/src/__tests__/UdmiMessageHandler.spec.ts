@@ -10,6 +10,7 @@ import {
   VALIDATION_SUB_FOLDER,
 } from '../MessageUtils';
 import { Handler } from '../Handler';
+import { createMessage, createMessageFromTypes } from './dataUtils';
 
 const AHU_ID: string = 'AHU-1';
 const SITE_ID: string = 'site-1';
@@ -85,17 +86,3 @@ describe('UdmiMessageHandler', () => {
     expect(mockDeviceHandle).toHaveBeenCalled();
   });
 });
-
-function createMessageFromTypes(subFolder: string, subType: string, deviceId: string = 'AHU-1'): UdmiMessage {
-  const defaultAttributes = {
-    deviceId,
-    deviceRegistryId: SITE_ID,
-    subFolder,
-    subType,
-  };
-  return { attributes: { ...defaultAttributes }, data: {} };
-}
-
-function createMessage(attributes: any, data: object = {}): UdmiMessage {
-  return { attributes, data };
-}

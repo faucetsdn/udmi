@@ -1,8 +1,21 @@
-import { DeviceBuilder, Device } from './model/Device';
+import { DeviceBuilder, Device, DeviceKey, DeviceValidation } from './model/Device';
 import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../MessageUtils';
 import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from '../model/UdmiMessage';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
+import { InvalidMessageError } from '../InvalidMessageError';
+
+export function getDeviceKey(message: UdmiMessage): DeviceKey {
+  if (!message.attributes.deviceId) {
+    throw new InvalidMessageError('An invalid device id was submitted');
+  }
+
+  if (!message.attributes.deviceRegistryId) {
+    throw new InvalidMessageError('An invalid site was submitted');
+  }
+
+  return { name: message.attributes.deviceId, site: message.attributes.deviceRegistryId };
+}
 
 export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
   const builder: DeviceBuilder = new DeviceBuilder();
@@ -15,6 +28,10 @@ export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: P
   } else if (isValidationSubType(udmiMessage)) {
     return buildDeviceDocumentFromValidation(udmiMessage, builder);
   }
+}
+
+export function getDeviceValidationMessage(udmiMessage: ValidationMessage, deviceKey: DeviceKey): DeviceValidation {
+  return { timestamp: new Date(udmiMessage.data.timestamp), deviceKey, message: udmiMessage.data };
 }
 
 /**

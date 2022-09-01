@@ -1,31 +1,25 @@
-import { createDeviceDocument } from './DeviceDocumentUtils';
+import { createDeviceDocument, getDeviceKey, getDeviceValidationMessage } from './DeviceDocumentUtils';
 import { Handler } from '../Handler';
-import { InvalidMessageError } from '../InvalidMessageError';
-import { Device, DeviceKey } from './model/Device';
+import { Device, DeviceKey, DeviceValidation } from './model/Device';
 import { UdmiMessage } from '../model/UdmiMessage';
 import { DAO } from '../dao/DAO';
+import { isValidationSubType } from '../MessageUtils';
 
 export class DeviceHandler implements Handler {
-  constructor(private deviceDao: DAO<Device>) {}
+  constructor(private deviceDao: DAO<Device>, private deviceValidationDao: DAO<DeviceValidation>) {}
 
   async handle(udmiMessage: UdmiMessage): Promise<void> {
-    const deviceKey: DeviceKey = this.getDeviceKey(udmiMessage);
-    if (deviceKey) {
-      const existingDeviceDocument: Device = await this.deviceDao.get(deviceKey);
-      const document: Device = createDeviceDocument(udmiMessage, existingDeviceDocument.points);
-      this.deviceDao.upsert(deviceKey, document);
-    }
-  }
+    const deviceKey: DeviceKey = getDeviceKey(udmiMessage);
 
-  private getDeviceKey(message: UdmiMessage): DeviceKey {
-    if (!message.attributes.deviceId) {
-      throw new InvalidMessageError('An invalid device id was submitted');
-    }
+    // let's upsert the existing document
+    const existingDeviceDocument: Device = await this.deviceDao.get(deviceKey);
+    const document: Device = createDeviceDocument(udmiMessage, existingDeviceDocument.points);
+    this.deviceDao.upsert(deviceKey, document);
 
-    if (!message.attributes.deviceRegistryId) {
-      throw new InvalidMessageError('An invalid site was submitted');
+    // if this is a validation message, we will record the validation message
+    if (isValidationSubType(udmiMessage)) {
+      const deviceValidationMessage: DeviceValidation = getDeviceValidationMessage(udmiMessage, deviceKey);
+      this.deviceValidationDao.insert(deviceValidationMessage);
     }
-
-    return { name: message.attributes.deviceId, site: message.attributes.deviceRegistryId };
   }
 }

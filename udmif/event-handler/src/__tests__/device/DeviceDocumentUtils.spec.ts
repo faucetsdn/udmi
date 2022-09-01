@@ -1,22 +1,22 @@
-import { buildPoint, createDeviceDocument } from '../../device/DeviceDocumentUtils';
-import { Device } from '../../device/model/Device';
 import {
-  CONFIG,
-  EVENT,
-  MODEL,
-  POINTSET_SUB_FOLDER,
-  STATE,
-  SYSTEM_SUB_FOLDER,
-  VALIDATION_SUB_FOLDER,
-} from '../../MessageUtils';
+  buildPoint,
+  createDeviceDocument,
+  getDeviceKey,
+  getDeviceValidationMessage,
+} from '../../device/DeviceDocumentUtils';
+import { Device, DeviceValidation } from '../../device/model/Device';
+import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../MessageUtils';
 import { UdmiMessage } from '../../model/UdmiMessage';
 import { Point } from '../../device/model/Point';
 import { Validation } from '../../model/Validation';
+import { createMessage, DEVICE_VALIDATION_EVENT } from '../dataUtils';
 
 const name: string = 'name';
 const site: string = 'site-1';
 const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: SYSTEM_SUB_FOLDER };
 const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: POINTSET_SUB_FOLDER };
+const AHU_ID: string = 'AHU-1';
+const AHU_REGISTRY_ID: string = 'reg-1';
 
 describe('DeviceDocumentUtils.createDeviceDocument.default', () => {
   const tags: string[] = [];
@@ -292,35 +292,9 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
 });
 
 describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
-  const inputMessage: UdmiMessage = {
-    attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subFolder: VALIDATION_SUB_FOLDER, subType: EVENT },
-    data: {
-      timestamp: '2022-08-03T17:28:49Z',
-      version: '1.3.14',
-      status: {
-        timestamp: '2022-08-03T17:28:49Z',
-        message: 'Multiple validation errors',
-        detail:
-          'While converting to json node: 2 schema violations found; While converting to json node: 1 schema violations found',
-        category: 'category-x',
-        level: 600,
-      },
-      errors: [
-        {
-          message: 'While converting to json node: 2 schema violations found',
-          level: 500,
-          category: 'category-x',
-        },
-        {
-          message: 'While converting to json node: 1 schema violations found',
-          level: 500,
-          category: 'category-x',
-        },
-      ],
-    },
-  };
-
   test('a device document with the validation is populated', () => {
+    // arrange
+    const inputMessage: UdmiMessage = DEVICE_VALIDATION_EVENT;
     const expectedValidations: Validation = {
       timestamp: '2022-08-03T17:28:49Z',
       version: '1.3.14',
@@ -354,5 +328,52 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
 
     // act and assert
     expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+  });
+});
+
+describe('getDeviceValidationDocument', () => {
+  const inputMessage: UdmiMessage = DEVICE_VALIDATION_EVENT;
+
+  test('returns a device validation document', () => {
+    // arrange and act
+    const validationMessage: DeviceValidation = getDeviceValidationMessage(inputMessage, {
+      name: 'name',
+      site: 'string',
+    });
+    const expectedMessage = {
+      timestamp: new Date(inputMessage.data.timestamp),
+      deviceKey: { name: 'name', site: 'string' },
+      message: inputMessage.data,
+    };
+    // assert
+    expect(validationMessage).toEqual(expectedMessage);
+  });
+
+  test('throws an exception if a mandatory field deviceId is null', () => {
+    // arrange
+    const message = createMessage({
+      deviceId: null,
+      deviceRegistryId: AHU_REGISTRY_ID,
+      subFolder: SYSTEM_SUB_FOLDER,
+      subType: MODEL,
+    });
+    // act and assert
+    expect(() => {
+      getDeviceKey(message);
+    }).toThrowError('An invalid device id was submitted');
+  });
+
+  test('throws an exception if a mandatory field deviceRegistryId) is null', () => {
+    // arrange
+    const message = createMessage({
+      deviceId: AHU_ID,
+      deviceRegistryId: null,
+      subFolder: SYSTEM_SUB_FOLDER,
+      subType: MODEL,
+    });
+    // act and assert
+    expect(() => {
+      getDeviceKey(message);
+    }).toThrowError('An invalid site was submitted');
   });
 });

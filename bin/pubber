@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/local/bin/bash -e
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 

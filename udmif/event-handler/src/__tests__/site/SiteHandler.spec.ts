@@ -1,41 +1,12 @@
 import { UdmiMessage } from '../../model/UdmiMessage';
-import { SYSTEM_SUB_FOLDER, VALIDATION_SUB_FOLDER } from '../../MessageUtils';
+import { SYSTEM_SUB_FOLDER } from '../../MessageUtils';
 import { Handler } from '../../Handler';
 import { SiteHandler } from '../../site/SiteHandler';
-import { createMessage } from '../dataUtils';
+import { createMessage, SITE_VALIDATION_EVENT } from '../dataUtils';
 import { insertMock, mockDAO, upsertMock } from '../MockDAO';
 
 describe('SiteHandler', () => {
-  const event: UdmiMessage = createMessage(
-    {
-      deviceId: '_validator',
-      deviceRegistryId: 'reg-1',
-      subFolder: VALIDATION_SUB_FOLDER,
-    },
-    {
-      version: '1.3.14',
-      timestamp: '2018-08-26T21:39:29.364Z',
-      last_updated: '2022-07-16T18:27:19Z',
-      summary: {
-        correct_devices: ['AHU-22'],
-        extra_devices: [],
-        missing_devices: ['GAT-123', 'SNS-4'],
-        error_devices: ['AHU-1'],
-      },
-      devices: {
-        'AHU-1': {
-          last_seen: '2022-07-16T18:27:19Z',
-          oldest_mark: '2022-07-16T18:27:19Z',
-          status: {
-            message: 'Tickity Boo',
-            category: 'system.config.apply',
-            timestamp: '2018-08-26T21:39:30.364Z',
-            level: 600,
-          },
-        },
-      },
-    }
-  );
+  const event: UdmiMessage = SITE_VALIDATION_EVENT;
 
   let siteHandler: Handler;
 
