@@ -395,9 +395,10 @@ public class Validator {
       writeMessageCapture(message, attributes);
     }
 
+    Date validationStart = new Date();
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      sendValidationResult(attributes, reportingDevice);
+      sendValidationResult(attributes, reportingDevice, validationStart);
     }
     processValidationReport();
   }
@@ -474,7 +475,7 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            reportingDevice.validateMessage(messageObject);
+            reportingDevice.validateMessageType(messageObject);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
@@ -494,7 +495,7 @@ public class Validator {
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,
-      ReportingDevice reportingDevice) {
+      ReportingDevice reportingDevice, Date validationStart) {
     try {
       ValidationEvent event = new ValidationEvent();
       event.version = UDMI_VERSION;
@@ -502,13 +503,13 @@ public class Validator {
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.get("subType");
-      event.status = reportingDevice.getErrorStatus();
-      List<Entry> errors = reportingDevice.getErrors();
+      List<Entry> errors = reportingDevice.getErrors(validationStart);
+      event.status = ReportingDevice.getSummaryEntry(errors);
       event.errors = errors != null && errors.size() > 1 ? errors : null;
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
-        pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
-        pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
+        pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
+        pointsSummary.extra = arrayIfNotNull(reportingDevice.getExtraPoints());
         event.pointset = pointsSummary;
       }
       sendValidationMessage(reportingDevice.getDeviceId(), event, VALIDATION_EVENT_TOPIC);
@@ -646,20 +647,22 @@ public class Validator {
       ReportingDevice deviceInfo = expectedDevices.get(deviceId);
       if (deviceInfo == null) {
         summary.missing_devices.add(deviceId);
-      } else if (deviceInfo.hasErrors()) {
+        continue;
+      }
+      deviceInfo.expireEntries();
+      if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());
-        deviceValidationEvent.status = deviceInfo.getErrorStatus();
-      } else if (deviceInfo.hasBeenValidated()) {
+        deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+      } else if (deviceInfo.hasBeenSeen()) {
         summary.correct_devices.add(deviceId);
       } else {
         summary.missing_devices.add(deviceId);
       }
     }
 
-    ValidationState report = makeValidationReport(summary, devices);
-    sendValidationReport(report);
+    sendValidationReport(makeValidationReport(summary, devices));
   }
 
   private ValidationState makeValidationReport(ValidationSummary summary,
@@ -672,11 +675,8 @@ public class Validator {
     return report;
   }
 
-  private <T> ArrayList<T> arrayIfNotEmpty(Set<T> items) {
-    if (items == null || items.isEmpty()) {
-      return null;
-    }
-    return new ArrayList<>(items);
+  private <T> ArrayList<T> arrayIfNotNull(Set<T> items) {
+    return items == null ? null : new ArrayList<>(items);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
