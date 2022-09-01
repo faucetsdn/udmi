@@ -1,10 +1,10 @@
 import { handleUdmiEvent } from '../index';
 import * as MongoDAO from '../dao/mongo/MongoDAO';
-import UdmiMessageHandler from '../UdmiMessageHandler';
-import { InvalidMessageError } from '../InvalidMessageError';
-import { event } from './dataUtils';
+import UdmiEventHandler from '../UdmiEventHandler';
+import { InvalidEventError } from '../InvalidEventError';
+import { SYSTEM_MODEL_EVENT } from './dataUtils';
 
-jest.mock('../UdmiMessageHandler');
+jest.mock('../UdmiEventHandler');
 
 describe('index', () => {
   let deviceDAOSpy;
@@ -22,14 +22,12 @@ describe('index', () => {
     siteDAOSpy = jest.spyOn(MongoDAO, 'getSiteDAO').mockImplementation(jest.fn());
     siteValidationDAOSpy = jest.spyOn(MongoDAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
     deviceValidationDAOSpy = jest.spyOn(MongoDAO, 'getDeviceValidationDAO').mockImplementation(jest.fn());
-    handleUdmiEventSpy = jest
-      .spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent')
-      .mockImplementation(mockHandleEvent);
+    handleUdmiEventSpy = jest.spyOn(UdmiEventHandler.prototype, 'handleUdmiEvent').mockImplementation(mockHandleEvent);
   });
 
   test('handleUdmiEvent is called when an event is passed in', async () => {
     // act
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
     expect(handleUdmiEventSpy).toHaveBeenCalled();
@@ -47,21 +45,21 @@ describe('index', () => {
     });
 
     // act
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
     expect(console.error).toHaveBeenCalled();
   });
 
-  test('InvalidMessageError is logged', async () => {
+  test('InvalidEventError is logged', async () => {
     // arrange
     jest.spyOn(global.console, 'error');
     mockHandleEvent.mockImplementation(() => {
-      throw new InvalidMessageError('some error');
+      throw new InvalidEventError('some error');
     });
 
     // act
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
     expect(console.error).toHaveBeenCalled();

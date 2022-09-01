@@ -1,22 +1,22 @@
-import { InvalidMessageError } from '../InvalidMessageError';
-import { UdmiMessage, ValidationMessage } from '../model/UdmiMessage';
+import { InvalidEventError } from '../InvalidEventError';
+import { UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
 import { Site, SiteKey, SiteValidation } from './model/Site';
 
-export function getSiteDocument(udmiMessage: ValidationMessage): Site {
-  return { name: udmiMessage.attributes.deviceRegistryId, lastMessage: udmiMessage.data };
+export function getSiteDocument(udmiEvent: ValidationEvent): Site {
+  return { name: udmiEvent.attributes.deviceRegistryId, lastMessage: udmiEvent.data };
 }
 
-export function getSiteKey(udmiMessage: UdmiMessage): SiteKey {
-  if (!udmiMessage.attributes.deviceRegistryId) {
-    throw new InvalidMessageError('An invalid site name was submitted');
+export function getSiteKey(udmiEvent: UdmiEvent): SiteKey {
+  if (!udmiEvent.attributes.deviceRegistryId) {
+    throw new InvalidEventError('An invalid site name was submitted');
   }
-  return { name: udmiMessage.attributes.deviceRegistryId };
+  return { name: udmiEvent.attributes.deviceRegistryId };
 }
 
-export function getSiteValidationMessage(udmiMessage: ValidationMessage): SiteValidation {
+export function getSiteValidationDocument(udmiEvent: ValidationEvent): SiteValidation {
   return {
-    timestamp: new Date(udmiMessage.data.timestamp),
-    siteName: udmiMessage.attributes.deviceRegistryId,
-    message: udmiMessage.data,
+    timestamp: new Date(udmiEvent.data.timestamp),
+    siteName: udmiEvent.attributes.deviceRegistryId,
+    data: udmiEvent.data,
   };
 }

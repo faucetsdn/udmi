@@ -10,5 +10,5 @@ export interface Site {
 export interface SiteValidation {
   siteName: string;
   timestamp: Date;
-  message: any;
+  data: any;
 }

@@ -1,5 +1,5 @@
-import { Error, Status } from './UdmiMessage';
-import { InvalidMessageError } from '../InvalidMessageError';
+import { Error, Status } from './UdmiEvent';
+import { InvalidEventError } from '../InvalidEventError';
 
 /**
  * Sample incoming validation.
@@ -40,7 +40,7 @@ export class ValidationBuilder {
 
   timestamp(timestamp: string): ValidationBuilder {
     if (!timestamp) {
-      throw new InvalidMessageError('Validation timestamp can not be empty');
+      throw new InvalidEventError('Validation timestamp can not be empty');
     }
     this._timestamp = timestamp;
     return this;
@@ -48,7 +48,7 @@ export class ValidationBuilder {
 
   version(version: string): ValidationBuilder {
     if (!version) {
-      throw new InvalidMessageError('Validation version can not be empty');
+      throw new InvalidEventError('Validation version can not be empty');
     }
     this._version = version;
     return this;

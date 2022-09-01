@@ -1,67 +1,67 @@
 import { DeviceBuilder, Device, DeviceKey, DeviceValidation } from './model/Device';
-import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../MessageUtils';
-import { PointsetMessage, SystemMessage, UdmiMessage, ValidationMessage } from '../model/UdmiMessage';
+import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../EventUtils';
+import { PointsetEvent, SystemEvent, UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
-import { InvalidMessageError } from '../InvalidMessageError';
+import { InvalidEventError } from '../InvalidEventError';
 
-export function getDeviceKey(message: UdmiMessage): DeviceKey {
+export function getDeviceKey(message: UdmiEvent): DeviceKey {
   if (!message.attributes.deviceId) {
-    throw new InvalidMessageError('An invalid device id was submitted');
+    throw new InvalidEventError('An invalid device id was submitted');
   }
 
   if (!message.attributes.deviceRegistryId) {
-    throw new InvalidMessageError('An invalid site was submitted');
+    throw new InvalidEventError('An invalid site was submitted');
   }
 
   return { name: message.attributes.deviceId, site: message.attributes.deviceRegistryId };
 }
 
-export function createDeviceDocument(udmiMessage: UdmiMessage, existingPoints: Point[]): Device {
+export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Device {
   const builder: DeviceBuilder = new DeviceBuilder();
-  builder.site(udmiMessage.attributes.deviceRegistryId).name(udmiMessage.attributes.deviceId);
+  builder.site(udmiEvent.attributes.deviceRegistryId).name(udmiEvent.attributes.deviceId);
 
-  if (isSystemSubType(udmiMessage)) {
-    return buildDeviceDocumentFromSystem(udmiMessage, builder);
-  } else if (isPointsetSubType(udmiMessage)) {
-    return buildDeviceDocumentFromPointset(udmiMessage, builder, existingPoints);
-  } else if (isValidationSubType(udmiMessage)) {
-    return buildDeviceDocumentFromValidation(udmiMessage, builder);
+  if (isSystemSubType(udmiEvent)) {
+    return buildDeviceDocumentFromSystem(udmiEvent, builder);
+  } else if (isPointsetSubType(udmiEvent)) {
+    return buildDeviceDocumentFromPointset(udmiEvent, builder, existingPoints);
+  } else if (isValidationSubType(udmiEvent)) {
+    return buildDeviceDocumentFromValidation(udmiEvent, builder);
   }
 }
 
-export function getDeviceValidationMessage(udmiMessage: ValidationMessage, deviceKey: DeviceKey): DeviceValidation {
-  return { timestamp: new Date(udmiMessage.data.timestamp), deviceKey, message: udmiMessage.data };
+export function getDeviceValidation(udmiEvent: ValidationEvent, deviceKey: DeviceKey): DeviceValidation {
+  return { timestamp: new Date(udmiEvent.data.timestamp), deviceKey, data: udmiEvent.data };
 }
 
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
  */
-function buildDeviceDocumentFromSystem(udmiMessage: SystemMessage, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromSystem(udmiEvent: SystemEvent, builder: DeviceBuilder): Device {
   return builder
-    .lastPayload(udmiMessage.data.timestamp)
-    .operational(udmiMessage.data.operational)
-    .serialNumber(udmiMessage.data.serial_no)
-    .make(udmiMessage.data.hardware?.make)
-    .model(udmiMessage.data.hardware?.model)
-    .firmware(udmiMessage.data.software?.firmware)
-    .section(udmiMessage.data.location?.section)
-    .id(udmiMessage.attributes.deviceNumId)
+    .lastPayload(udmiEvent.data.timestamp)
+    .operational(udmiEvent.data.operational)
+    .serialNumber(udmiEvent.data.serial_no)
+    .make(udmiEvent.data.hardware?.make)
+    .model(udmiEvent.data.hardware?.model)
+    .firmware(udmiEvent.data.software?.firmware)
+    .section(udmiEvent.data.location?.section)
+    .id(udmiEvent.attributes.deviceNumId)
     .build();
 }
 
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_validation.html  describes the incoming schema for an event validation message
  */
-function buildDeviceDocumentFromValidation(udmiMessage: ValidationMessage, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromValidation(udmiEvent: ValidationEvent, builder: DeviceBuilder): Device {
   const validation: Validation = new ValidationBuilder()
-    .timestamp(udmiMessage.data.timestamp)
-    .version(udmiMessage.data.version)
-    .status(udmiMessage.data.status)
-    .category(udmiMessage.data.status.category)
-    .message(udmiMessage.data.status.message)
-    .detail(udmiMessage.data.status.detail)
-    .errors(udmiMessage.data.errors)
+    .timestamp(udmiEvent.data.timestamp)
+    .version(udmiEvent.data.version)
+    .status(udmiEvent.data.status)
+    .category(udmiEvent.data.status.category)
+    .message(udmiEvent.data.status.message)
+    .detail(udmiEvent.data.status.detail)
+    .errors(udmiEvent.data.errors)
     .build();
 
   return builder.validation(validation).build();
@@ -71,23 +71,24 @@ function buildDeviceDocumentFromValidation(udmiMessage: ValidationMessage, build
  * https://faucetsdn.github.io/udmi/gencode/docs/event_pointset.html describes the incoming schema for an event pointset message
  */
 function buildDeviceDocumentFromPointset(
-  udmiMessage: PointsetMessage,
+  udmiEvent: PointsetEvent,
   deviceBuilder: DeviceBuilder,
   existingPoints: Point[] = []
 ): Device {
   const points: Point[] = [];
 
-  for (let pointCode in udmiMessage.data.points) {
+  console.log('buildDeviceDocumentFromPointset ' + existingPoints);
+  for (let pointCode in udmiEvent.data.points) {
     const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
-    const point: Point = buildPoint(udmiMessage, existingPoint, pointCode);
+    const point: Point = buildPoint(udmiEvent, existingPoint, pointCode);
     points.push(point);
   }
 
   return deviceBuilder.points(points).build();
 }
 
-export function buildPoint(udmiMessage: UdmiMessage, existingPoint: Point, pointCode: string): Point {
-  const pointValue = udmiMessage.data.points[pointCode];
+export function buildPoint(udmiEvent: UdmiEvent, existingPoint: Point, pointCode: string): Point {
+  const pointValue = udmiEvent.data.points[pointCode];
 
   // we get the value from either the message or the existing point
   const value: number = pointValue.present_value ?? existingPoint?.value;

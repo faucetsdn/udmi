@@ -16,7 +16,7 @@ export async function getSiteValidationDAO(): Promise<DAO<SiteValidation>> {
   const collectionOptions: TimeSeriesCollectionOptions = {
     timeField: 'timestamp',
     metaField: 'siteName',
-    granularity: 'minutes',
+    granularity: 'seconds',
   };
   const collection: Collection<SiteValidation> = await getTimeSeriesCollection<SiteValidation>(
     'site_validation',
@@ -29,7 +29,7 @@ export async function getDeviceValidationDAO(): Promise<DAO<DeviceValidation>> {
   const collectionOptions: TimeSeriesCollectionOptions = {
     timeField: 'timestamp',
     metaField: 'deviceKey',
-    granularity: 'minutes',
+    granularity: 'seconds',
   };
   const collection: Collection<DeviceValidation> = await getTimeSeriesCollection<DeviceValidation>(
     'device_validation',

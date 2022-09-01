@@ -1,4 +1,4 @@
-import { InvalidMessageError } from '../../InvalidMessageError';
+import { InvalidEventError } from '../../InvalidEventError';
 
 /**
  * Sample point.
@@ -99,10 +99,10 @@ export class PointBuilder {
 
   build(): Point {
     if (this._document.id === '') {
-      throw new InvalidMessageError('Point id can not be empty');
+      throw new InvalidEventError('Point id can not be empty');
     }
     if (this._document.name === '') {
-      throw new InvalidMessageError('Point name can not be empty');
+      throw new InvalidEventError('Point name can not be empty');
     }
     return this._document;
   }

@@ -1,15 +1,10 @@
-import {
-  buildPoint,
-  createDeviceDocument,
-  getDeviceKey,
-  getDeviceValidationMessage,
-} from '../../device/DeviceDocumentUtils';
+import { buildPoint, createDevice, getDeviceKey, getDeviceValidation } from '../../device/DeviceDocumentUtils';
 import { Device, DeviceValidation } from '../../device/model/Device';
-import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../MessageUtils';
-import { UdmiMessage } from '../../model/UdmiMessage';
+import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../EventUtils';
+import { UdmiEvent } from '../../model/UdmiEvent';
 import { Point } from '../../device/model/Point';
 import { Validation } from '../../model/Validation';
-import { createMessage, DEVICE_VALIDATION_EVENT } from '../dataUtils';
+import { createEvent, DEVICE_VALIDATION_EVENT } from '../dataUtils';
 
 const name: string = 'name';
 const site: string = 'site-1';
@@ -18,24 +13,24 @@ const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subF
 const AHU_ID: string = 'AHU-1';
 const AHU_REGISTRY_ID: string = 'reg-1';
 
-describe('DeviceDocumentUtils.createDeviceDocument.default', () => {
+describe('DeviceDocumentUtils.createDevice.default', () => {
   const tags: string[] = [];
 
   test('creates a default device document', () => {
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDeviceDocument: Device = { name, site, tags };
-    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+    const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
+    const expectedDevice: Device = { name, site, tags };
+    expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
-    const inputMessage: UdmiMessage = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
-    const expectedDeviceDocument: Device = { name, site, lastPayload: timestamp, tags };
-    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+    const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
+    const expectedDevice: Device = { name, site, lastPayload: timestamp, tags };
+    expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
 
-describe('DeviceDocumentUtils.createDeviceDocument.system', () => {
+describe('DeviceDocumentUtils.createDevice.system', () => {
   const tags: string[] = [];
 
   test('creates a device document with system state', () => {
@@ -45,7 +40,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.system', () => {
     const serialNumber: string = 'serial-no';
     const firmware: string = 'v1';
 
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: STATE },
       data: {
         software: { firmware },
@@ -54,25 +49,25 @@ describe('DeviceDocumentUtils.createDeviceDocument.system', () => {
         serial_no: serialNumber,
       },
     };
-    const expectedDeviceDocument: Device = { name, site, make, model, operational, serialNumber, firmware, tags };
-    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+    const expectedDevice: Device = { name, site, make, model, operational, serialNumber, firmware, tags };
+    expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
   test('creates a device document with system model', () => {
     const section: string = 'section-a';
 
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: MODEL },
       data: {
         location: { section, site },
       },
     };
-    const expectedDeviceDocument: Device = { name, section, site, tags };
-    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+    const expectedDevice: Device = { name, section, site, tags };
+    expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
 
-describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
+describe('DeviceDocumentUtils.createDevice.pointset', () => {
   const NO_UNITS = 'No-units';
   const faps = 'filter_alarm_pressure_status';
   const fdpsp = 'filter_differential_pressure_setpoint';
@@ -87,7 +82,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
 
   test('creates a device document when existing points are undefined', () => {
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
         timestamp: '2022-04-25T17:00:26Z',
@@ -105,15 +100,15 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, undefined)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, undefined)).toEqual(expectedDevice);
   });
 
   test('creates a device document with pointset', () => {
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
         timestamp: '2022-04-25T17:00:26Z',
@@ -131,14 +126,14 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
   });
 
   test('creates a device document with pointset model', () => {
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: MODEL },
       data: {
         points: {
@@ -163,15 +158,15 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' }, state },
     ];
 
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
   });
 
   test('creates a device document with pointset state', () => {
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: STATE },
       data: {
         points: {
@@ -188,15 +183,15 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
   });
 
   test('creates a device document with pointset config', () => {
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: CONFIG },
       data: {
         points: {
@@ -212,10 +207,10 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
   });
 
   test('merges a device document with pointset', () => {
@@ -223,7 +218,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
     existingPoints.push(getFapsPoint('70', 'Bars'));
 
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
         timestamp: '2022-04-25T17:00:26Z',
@@ -241,10 +236,10 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDeviceDocument: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, existingPoints)).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
   });
 
   test('uses existing point values if none are passed in', () => {
@@ -252,7 +247,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
     const point: Point = getFapsPoint('70', 'Bars');
 
     // arrange
-    const inputMessage: UdmiMessage = {
+    const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
         timestamp: '2022-04-25T17:00:26Z',
@@ -262,7 +257,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
       },
     };
 
-    const resultingPoint = buildPoint(inputMessage, point, faps);
+    const resultingPoint = buildPoint(inputEvent, point, faps);
     expect(resultingPoint).toEqual({
       id: 'filter_alarm_pressure_status',
       meta: {
@@ -294,7 +289,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.pointset', () => {
 describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
   test('a device document with the validation is populated', () => {
     // arrange
-    const inputMessage: UdmiMessage = DEVICE_VALIDATION_EVENT;
+    const inputEvent: UdmiEvent = DEVICE_VALIDATION_EVENT;
     const expectedValidations: Validation = {
       timestamp: '2022-08-03T17:28:49Z',
       version: '1.3.14',
@@ -324,34 +319,34 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
       ],
     };
 
-    const expectedDeviceDocument: Device = { name, site, tags: [], validation: expectedValidations };
+    const expectedDevice: Device = { name, site, tags: [], validation: expectedValidations };
 
     // act and assert
-    expect(createDeviceDocument(inputMessage, [])).toEqual(expectedDeviceDocument);
+    expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
 
 describe('getDeviceValidationDocument', () => {
-  const inputMessage: UdmiMessage = DEVICE_VALIDATION_EVENT;
+  const inputEvent: UdmiEvent = DEVICE_VALIDATION_EVENT;
 
   test('returns a device validation document', () => {
     // arrange and act
-    const validationMessage: DeviceValidation = getDeviceValidationMessage(inputMessage, {
+    const validation: DeviceValidation = getDeviceValidation(inputEvent, {
       name: 'name',
       site: 'string',
     });
-    const expectedMessage = {
-      timestamp: new Date(inputMessage.data.timestamp),
+    const expectedValidationn = {
+      timestamp: new Date(inputEvent.data.timestamp),
       deviceKey: { name: 'name', site: 'string' },
-      message: inputMessage.data,
+      data: inputEvent.data,
     };
     // assert
-    expect(validationMessage).toEqual(expectedMessage);
+    expect(validation).toEqual(expectedValidationn);
   });
 
   test('throws an exception if a mandatory field deviceId is null', () => {
     // arrange
-    const message = createMessage({
+    const event = createEvent({
       deviceId: null,
       deviceRegistryId: AHU_REGISTRY_ID,
       subFolder: SYSTEM_SUB_FOLDER,
@@ -359,13 +354,13 @@ describe('getDeviceValidationDocument', () => {
     });
     // act and assert
     expect(() => {
-      getDeviceKey(message);
+      getDeviceKey(event);
     }).toThrowError('An invalid device id was submitted');
   });
 
   test('throws an exception if a mandatory field deviceRegistryId) is null', () => {
     // arrange
-    const message = createMessage({
+    const event = createEvent({
       deviceId: AHU_ID,
       deviceRegistryId: null,
       subFolder: SYSTEM_SUB_FOLDER,
@@ -373,7 +368,7 @@ describe('getDeviceValidationDocument', () => {
     });
     // act and assert
     expect(() => {
-      getDeviceKey(message);
+      getDeviceKey(event);
     }).toThrowError('An invalid site was submitted');
   });
 });

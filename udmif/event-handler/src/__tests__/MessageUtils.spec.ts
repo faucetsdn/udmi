@@ -9,11 +9,11 @@ import {
   isSystemSubType,
   isPointsetSubType,
   isValidationSubType,
-} from '../MessageUtils';
-import { UdmiMessage } from '../model/UdmiMessage';
-import { createMessageFromTypes } from './dataUtils';
+} from '../EventUtils';
+import { UdmiEvent } from '../model/UdmiEvent';
+import { createEventFromTypes } from './dataUtils';
 
-describe('MessageUtils.System', () => {
+describe('EventUtils.System', () => {
   const systemSubFolder = SYSTEM_SUB_FOLDER;
 
   test.each([
@@ -23,12 +23,12 @@ describe('MessageUtils.System', () => {
     [systemSubFolder, CONFIG, true],
     [systemSubFolder, EVENT, false],
   ])('is a system sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
-    expect(isSystemSubType(inputMessage)).toEqual(expected);
+    const inputEvent: UdmiEvent = createEventFromTypes(subFolder, subType);
+    expect(isSystemSubType(inputEvent)).toEqual(expected);
   });
 });
 
-describe('MessageUtils.PointSet', () => {
+describe('EventUtils.PointSet', () => {
   const pointSubFolder = POINTSET_SUB_FOLDER;
 
   test.each([
@@ -38,12 +38,12 @@ describe('MessageUtils.PointSet', () => {
     [pointSubFolder, CONFIG, true],
     [pointSubFolder, EVENT, false],
   ])('is a pointset sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
-    expect(isPointsetSubType(inputMessage)).toEqual(expected);
+    const inputEvent: UdmiEvent = createEventFromTypes(subFolder, subType);
+    expect(isPointsetSubType(inputEvent)).toEqual(expected);
   });
 });
 
-describe('MessageUtils.Validation', () => {
+describe('EventUtils.Validation', () => {
   const validationSubFolder = VALIDATION_SUB_FOLDER;
 
   test.each([
@@ -53,7 +53,7 @@ describe('MessageUtils.Validation', () => {
     [validationSubFolder, CONFIG, true],
     [validationSubFolder, EVENT, true],
   ])('is a pointset sub type %p %p', (subFolder: string, subType: string, expected: boolean) => {
-    const inputMessage: UdmiMessage = createMessageFromTypes(subFolder, subType);
-    expect(isValidationSubType(inputMessage)).toEqual(expected);
+    const inputEvent: UdmiEvent = createEventFromTypes(subFolder, subType);
+    expect(isValidationSubType(inputEvent)).toEqual(expected);
   });
 });

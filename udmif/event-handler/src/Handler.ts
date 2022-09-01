@@ -1,8 +1,8 @@
-import { UdmiMessage } from './model/UdmiMessage';
+import { UdmiEvent } from './model/UdmiEvent';
 
 /**
  * Interface for handlers
  */
 export interface Handler {
-  handle(udmiMessage: UdmiMessage);
+  handle(udmiEvent: UdmiEvent);
 }

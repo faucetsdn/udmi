@@ -152,7 +152,7 @@ describe('DAO<SiteValidation>', () => {
 
   test('insert calls the insertOne method on the provided collection', () => {
     // arrange
-    const siteValidation: SiteValidation = { timestamp: new Date(), siteName: 'siteValidation', message: {} };
+    const siteValidation: SiteValidation = { timestamp: new Date(), siteName: 'siteValidation', data: {} };
     const insertOneSpy = jest.spyOn(siteValidationCollection, 'insertOne').mockImplementation(jest.fn());
 
     // act

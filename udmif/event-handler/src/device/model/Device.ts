@@ -1,6 +1,6 @@
 import { Point } from './Point';
 import { Validation } from '../../model/Validation';
-import { InvalidMessageError } from '../../InvalidMessageError';
+import { InvalidEventError } from '../../InvalidEventError';
 
 export interface DeviceKey {
   name: string;
@@ -10,7 +10,7 @@ export interface DeviceKey {
 export interface DeviceValidation {
   deviceKey: DeviceKey;
   timestamp: Date;
-  message: any;
+  data: any;
 }
 
 /**
@@ -144,10 +144,10 @@ export class DeviceBuilder {
 
   build(): Device {
     if (this._document.site === '') {
-      throw new InvalidMessageError('Device site can not be empty');
+      throw new InvalidEventError('Device site can not be empty');
     }
     if (this._document.name === '') {
-      throw new InvalidMessageError('Device name can not be empty');
+      throw new InvalidEventError('Device name can not be empty');
     }
     return this._document;
   }

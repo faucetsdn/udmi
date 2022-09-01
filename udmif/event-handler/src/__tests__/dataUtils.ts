@@ -1,11 +1,11 @@
-import { EVENT, VALIDATION_SUB_FOLDER } from '../MessageUtils';
-import { UdmiMessage } from '../model/UdmiMessage';
+import { EVENT, POINTSET_SUB_FOLDER, STATE, VALIDATION_SUB_FOLDER } from '../EventUtils';
+import { UdmiEvent } from '../model/UdmiEvent';
 
-export function createMessage(attributes: any, data: object = {}): UdmiMessage {
+export function createEvent(attributes: any, data: object = {}): UdmiEvent {
   return { attributes, data };
 }
 
-export function createMessageFromTypes(subFolder: string, subType: string, deviceId: string = 'AHU-1'): UdmiMessage {
+export function createEventFromTypes(subFolder: string, subType: string, deviceId: string = 'AHU-1'): UdmiEvent {
   const defaultAttributes = {
     deviceId,
     deviceRegistryId: 'reg-1',
@@ -15,7 +15,7 @@ export function createMessageFromTypes(subFolder: string, subType: string, devic
   return { attributes: { ...defaultAttributes }, data: {} };
 }
 
-export const event = {
+export const SYSTEM_MODEL_EVENT = {
   attributes: {
     deviceId: 'AHU-1',
     deviceNumId: '2625324262579600',
@@ -29,7 +29,7 @@ export const event = {
   publishTime: '2022-04-25T17:05:33.162Z',
 };
 
-export const SITE_VALIDATION_EVENT: UdmiMessage = createMessage(
+export const SITE_VALIDATION_EVENT: UdmiEvent = createEvent(
   {
     deviceId: '_validator',
     deviceRegistryId: 'reg-1',
@@ -60,7 +60,9 @@ export const SITE_VALIDATION_EVENT: UdmiMessage = createMessage(
   }
 );
 
-export const DEVICE_VALIDATION_EVENT: UdmiMessage = {
+export const POINTSET_STATE_EVENT = createEventFromTypes(POINTSET_SUB_FOLDER, STATE, 'AHU-1');
+
+export const DEVICE_VALIDATION_EVENT: UdmiEvent = {
   attributes: { deviceId: 'name', deviceRegistryId: 'site-1', subFolder: VALIDATION_SUB_FOLDER, subType: EVENT },
   data: {
     timestamp: '2022-08-03T17:28:49Z',

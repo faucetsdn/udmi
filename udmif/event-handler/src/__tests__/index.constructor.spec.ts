@@ -1,9 +1,9 @@
 import { handleUdmiEvent } from '../index';
 import * as MongoDao from '../dao/mongo/MongoDAO';
-import UdmiMessageHandler from '../UdmiMessageHandler';
-import { event } from './dataUtils';
+import { SYSTEM_MODEL_EVENT } from './dataUtils';
+import UdmiEventHandler from '../UdmiEventHandler';
 
-jest.mock('../UdmiMessageHandler');
+jest.mock('../UdmiEventHandler');
 
 describe('index.constructor', () => {
   let handleUdmiEventMock = jest.fn();
@@ -16,16 +16,16 @@ describe('index.constructor', () => {
     jest.spyOn(MongoDao, 'getSiteDAO').mockImplementation(jest.fn());
     jest.spyOn(MongoDao, 'getSiteValidationDAO').mockImplementation(jest.fn());
     jest.spyOn(MongoDao, 'getDeviceValidationDAO').mockImplementation(jest.fn());
-    jest.spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent').mockImplementation(handleUdmiEventMock);
+    jest.spyOn(UdmiEventHandler.prototype, 'handleUdmiEvent').mockImplementation(handleUdmiEventMock);
   });
 
-  test('UdmiMessageHandler is not created if it has already been created', async () => {
+  test('UdmiEventHandler is not created if it has already been created', async () => {
     // act
-    await handleUdmiEvent(event, {});
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
-    expect(UdmiMessageHandler).toHaveBeenCalledTimes(1);
+    expect(UdmiEventHandler).toHaveBeenCalledTimes(1);
     expect(handleUdmiEventMock).toHaveBeenCalledTimes(2);
   });
 });

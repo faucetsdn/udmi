@@ -1,4 +1,4 @@
-export interface UdmiMessage {
+export interface UdmiEvent {
   attributes: {
     deviceId: string;
     deviceRegistryId: string;
@@ -10,14 +10,14 @@ export interface UdmiMessage {
   data: any;
 }
 
-export interface PointsetMessage extends UdmiMessage {
+export interface PointsetEvent extends UdmiEvent {
   data: {
     // pointset
     points?: any;
   };
 }
 
-export interface SystemMessage extends UdmiMessage {
+export interface SystemEvent extends UdmiEvent {
   data: {
     // system
     hardware?: {
@@ -67,7 +67,7 @@ export interface PointSet {
   extra: string[];
 }
 
-export interface ValidationMessage extends UdmiMessage {
+export interface ValidationEvent extends UdmiEvent {
   data: {
     version: string;
     timestamp: string;
