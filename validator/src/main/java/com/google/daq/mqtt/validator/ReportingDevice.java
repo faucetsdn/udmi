@@ -2,7 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.util.Common;
-import com.google.daq.mqtt.util.JsonUtil;
+import com.google.daq.mqtt.util.ValidationException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,12 +67,17 @@ public class ReportingDevice {
     List<String> messages = new ArrayList<>();
     String previousMessage = null;
     while (exception != null) {
-      String message = Common.getExceptionMessage(exception);
-      String line = Common.getExceptionLine(exception, Validator.class);
-      String use = message + (line == null ? "" : " @" + line);
-      if (previousMessage == null || !previousMessage.endsWith(use)) {
-        messages.add(use);
-        previousMessage = use;
+      final String useMessage;
+      if (exception instanceof ValidationException) {
+        useMessage = Joiner.on(", ").join(((ValidationException) exception).getAllMessages());
+      } else {
+        String message = Common.getExceptionMessage(exception);
+        String line = Common.getExceptionLine(exception, Validator.class);
+        useMessage = message + (line == null ? "" : " @" + line);
+      }
+      if (previousMessage == null || !previousMessage.equals(useMessage)) {
+        messages.add(useMessage);
+        previousMessage = useMessage;
       }
       exception = exception.getCause();
     }
@@ -189,7 +194,7 @@ public class ReportingDevice {
    * @param error Exception to add
    */
   public void addError(Exception error) {
-    entries.add(makeEntry(error));
+    addEntry(makeEntry(error));
   }
 
   /**
