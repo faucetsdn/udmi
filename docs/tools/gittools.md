@@ -28,7 +28,7 @@ To work with upstream remotes, that is some canonical source that is not your pe
 you want to synchronize with:
 
 * `git config upstream.main $main` will set the main branch, `$main` is usually `main` or `master`
-* `git config upstream.remote $remote` sets the upstream remote to `$remote` (as listed in `git remote`
+* `git config upstream.remote $remote` sets the upstream remote to `$remote` (as listed in `git remote`)
 
 ## Branch Configuration
 
