@@ -1,6 +1,7 @@
 {
   "$comment": "Auto-generated category mappings from bin/gencode_categories.",
   "oneOf": [
+    { "pattern": "^device[\\.a-z]+$" },
     { "pattern": "^system\\.base\\.start$" },
     { "pattern": "^system\\.base\\.shutdown$" },
     { "pattern": "^system\\.base\\.ready$" },

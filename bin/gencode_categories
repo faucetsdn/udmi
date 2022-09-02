@@ -9,8 +9,10 @@ import sys
 
 GENCODE_MARKER = '@@ '
 CATEGORY_MARKER = '* '
+WILDCARD_REGEX = ' *\\* _\?\?\?_: (.*)'
 CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
+DEVICE_PREFIX = 'device['
 
 JAVA_DESCRIPTION = "\n%s// %s\n"
 JAVA_TARGET = '%spublic static final String %s = "%s";\n'
@@ -31,6 +33,11 @@ def read_categories():
     with open(doc_in) as doc:
         while line := doc.readline():
             indent = line.find(CATEGORY_MARKER)//2
+            wildcard = re.match(WILDCARD_REGEX, line)
+            if wildcard:
+                entry = (group + '[.a-z]+', 'INFO', wildcard.group(1))
+                categories.append(entry)
+                continue
             match = re.match(CATEGORY_REGEX, line)
             if indent < 0 or not match:
                 continue
@@ -83,6 +90,8 @@ def write_java_out(categories):
 def write_java_categories(out, indent, categories):
     for category in categories:
         target = category[0]
+        if target.startswith(DEVICE_PREFIX):
+            continue
         level = category[1]
         desc = category[2]
         const = target.replace('.', '_').upper()

@@ -28,10 +28,10 @@ public class PlaybackTest extends TestBase {
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
     ValidationState finalReport = asValidationState(lastBundle.message);
     try {
-      assertEquals("correct devices", 2, finalReport.summary.correct_devices.size());
+      assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
       assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
-      assertEquals("error devices", 1, finalReport.summary.error_devices.size());
+      assertEquals("error devices", 2, finalReport.summary.error_devices.size());
 
       assertEquals("device summaries", 1, finalReport.devices.size());
       ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");

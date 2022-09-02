@@ -22,7 +22,11 @@ import udmi.schema.PointsetState;
  */
 public class ReportingDevice {
 
+  public static final String DETAIL_SEPARATOR = "; ";
   private static final long THRESHOLD_SEC = 3600;
+  private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  private static final String CATEGORY_MISSING_MESSAGE = "instance failed to match exactly one schema (matched 0 out of ";
+  private static final String CATEGORY_MISSING_REPLACEMENT = "instance entry category not recognized";
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
@@ -69,7 +73,7 @@ public class ReportingDevice {
     while (exception != null) {
       final String useMessage;
       if (exception instanceof ValidationException) {
-        useMessage = Joiner.on(", ").join(((ValidationException) exception).getAllMessages());
+        useMessage = validationMessage((ValidationException) exception);
       } else {
         String message = Common.getExceptionMessage(exception);
         String line = Common.getExceptionLine(exception, Validator.class);
@@ -81,7 +85,17 @@ public class ReportingDevice {
       }
       exception = exception.getCause();
     }
-    return Joiner.on("; ").join(messages);
+    return DETAIL_JOINER.join(messages);
+  }
+
+  private static String validationMessage(ValidationException exception) {
+    return exception.getAllMessages().stream()
+        .map(ReportingDevice::replaceCategoryMissing)
+        .collect(Collectors.joining(DETAIL_SEPARATOR));
+  }
+
+  private static String replaceCategoryMissing(String message) {
+    return message.startsWith(CATEGORY_MISSING_MESSAGE) ? CATEGORY_MISSING_REPLACEMENT : message;
   }
 
   /**
@@ -102,7 +116,7 @@ public class ReportingDevice {
     Entry entry = new Entry();
     entry.category = "validation.error.multiple";
     entry.message = "Multiple validation errors";
-    entry.detail = Joiner.on("; ")
+    entry.detail = DETAIL_JOINER
         .join(entries.stream()
             .map(ReportingDevice::makeEntrySummary)
             .collect(Collectors.toList()));
@@ -133,7 +147,6 @@ public class ReportingDevice {
    * Check if this device has been seen recently (any kind of message).
    *
    * @param now current instant
-   *
    * @return {@code true} if this has been seen since threshold
    */
   public boolean seenRecently(Instant now) {
@@ -152,7 +165,7 @@ public class ReportingDevice {
   /**
    * Validate a message against specific message-type expectations (outside of base schema).
    *
-   * @param message Message to validate
+   * @param message   Message to validate
    * @param timestamp message timestamp string (rather than pull from typed object)
    */
   public void validateMessageType(Object message, Date timestamp) {
@@ -201,7 +214,6 @@ public class ReportingDevice {
    * Get the error Entries associated with this device.
    *
    * @param threshold date threshold beyond which to ignore (null for all)
-   *
    * @return Entry list or errors.
    */
   public List<Entry> getErrors(Date threshold) {
