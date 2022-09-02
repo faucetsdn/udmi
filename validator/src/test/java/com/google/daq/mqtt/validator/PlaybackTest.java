@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
@@ -47,7 +48,7 @@ public class PlaybackTest extends TestBase {
       ValidationEvent lastReport = deviceReports.get(deviceReports.size() - 1);
       assertEquals("missing points", 0, lastReport.pointset.missing.size());
       assertEquals("extra points", 0, lastReport.pointset.extra.size());
-      assertEquals("device status", null, lastReport.status);
+      assertNull("device status", lastReport.status);
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
       throw e;
@@ -68,11 +69,16 @@ public class PlaybackTest extends TestBase {
     List<OutputBundle> outputMessages = client.getOutputMessages();
     TreeMap<String, Object> lastMessage = outputMessages.get(outputMessages.size() - 1).message;
     ValidationState finalReport = asValidationState(lastMessage);
-    assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
-    assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-    assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
-    assertEquals("error devices", 1, finalReport.summary.error_devices.size());
-    assertEquals("device summaries", 1, finalReport.devices.size());
+    try {
+      assertEquals("correct devices", 0, finalReport.summary.correct_devices.size());
+      assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
+      assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
+      assertEquals("error devices", 2, finalReport.summary.error_devices.size());
+      assertEquals("device summaries", 2, finalReport.devices.size());
+    } catch (Throwable e) {
+      outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
+      throw e;
+    }
   }
 
   private ValidationState asValidationState(TreeMap<String, Object> message) {
