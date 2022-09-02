@@ -8,19 +8,22 @@ The schema documentation in [`gencode/docs`](../../gencode/docs) must be kept up
 
 ### Troubleshooting
 
-If these tests are failing, check you are using a compatible system (Linux with
-GNU `sed` and `find`) and the python modules installed match those (including
-the same versions) in `etc/requirements.txt` 
+`gendocs` requires a compatible system - required python modules installed match
+the versions in `etc/requirements.txt`, and GNU `sed` and `find`. An unsupported
+system will generate documentation with changes, even when the underlying schema
+has not changed. `gendocs` works best under Linux. 
 
-If documents are missing from the index `readme.md`, check if they needed to be added
-to the `ALWAYS_ROOT` list in `bin/list_root_schemas`. Important schemas may
-sometimes be referenced by other files (e.g. pubber schemas) and therefore need
-be explicitly made root
+New schema files should automatically receive an entry in the index
+`gencode/docs/readme.md` file if they are not referenced by any other schema
+file. If a schema file is referenced by another schema file, but should still
+have an entry in the index page, then the name should be added to the  to the
+`ALWAYS_ROOT` list in `bin/gencode_root_schemas`. 
 
-Schemas sections are according to the value of `$section` in the shema. These
-section must also exist in `etc/schema_readme_template.md`, and must match (case
-sensitive) the value of `$section` otherwise they are inserted into the `Other`
-category
+Entries in the index `gencode/docs/readme.md` page sectioned according to the
+value of `$section` in the schema file. The section must also exist in the
+template `etc/schema_readme_template.md`, and must match (case sensitive) the
+value of `$section`, otherwise the schema entry is inserted under the `Other`
+section
 
 ## Configuring Cloud CI Tests
 
