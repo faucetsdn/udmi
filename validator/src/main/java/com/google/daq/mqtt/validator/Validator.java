@@ -398,6 +398,7 @@ public class Validator {
 
     if (simulatedMessages) {
       mockNow = Instant.parse((String) message.get("timestamp"));
+      ReportingDevice.setMockNow(mockNow);
     }
     Date validationStart = simulatedMessages ? Date.from(mockNow) : new Date();
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
@@ -428,11 +429,10 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    final ReportingDevice reportingDevice = getReportingDevice(deviceId);
-    reportingDevice.clearErrors();
+    ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     try {
       String schemaName = messageSchema(attributes);
-      if (!reportingDevice.markMessageType(schemaName, getNow())) {
+      if (!device.markMessageType(schemaName, getNow())) {
         return null;
       }
 
@@ -455,14 +455,14 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
-        reportingDevice.addError(e);
+        device.addError(e);
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e);
-        reportingDevice.addError(e);
+        device.addError(e);
       }
 
       if (schemaMap.containsKey(schemaName)) {
@@ -470,7 +470,7 @@ public class Validator {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
-          reportingDevice.addError(e);
+          device.addError(e);
         }
       }
 
@@ -482,23 +482,23 @@ public class Validator {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
             Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
-            reportingDevice.validateMessageType(messageObject, timestamp);
+            device.validateMessageType(messageObject, timestamp);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          reportingDevice.addError(e);
+          device.addError(e);
         }
       } else {
         extraDevices.add(deviceId);
       }
 
-      if (!reportingDevice.hasErrors()) {
+      if (!device.hasErrors()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
-      reportingDevice.addError(e);
+      device.addError(e);
     }
-    return reportingDevice;
+    return device;
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,
@@ -629,14 +629,6 @@ public class Validator {
     }
 
     return String.format("%s_%s", subType, subFolder);
-  }
-
-  private ReportingDevice getReportingDevice(String deviceId) {
-    if (expectedDevices.containsKey(deviceId)) {
-      return expectedDevices.get(deviceId);
-    } else {
-      return new ReportingDevice(deviceId);
-    }
   }
 
   private void processValidationReport() {

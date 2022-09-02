@@ -23,6 +23,7 @@ import udmi.schema.PointsetState;
 public class ReportingDevice {
 
   private static final long THRESHOLD_SEC = 3600;
+  private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
@@ -54,8 +55,12 @@ public class ReportingDevice {
     entry.detail = entry.message.equals(detail) ? null : detail;
     entry.category = "validation.error.simple";
     entry.level = Level.ERROR.value();
-    entry.timestamp = new Date();
+    entry.timestamp = getTimestamp();
     return entry;
+  }
+
+  private static Date getTimestamp() {
+    return mockNow != null ? mockNow : new Date();
   }
 
   private static String getExceptionDetail(Throwable exception) {
@@ -98,12 +103,16 @@ public class ReportingDevice {
             .collect(Collectors.toList()));
     entry.level = entries.stream().map(item -> item.level).max(Integer::compareTo)
         .orElse(Level.ERROR.value());
-    entry.timestamp = new Date();
+    entry.timestamp = getTimestamp();
     return entry;
   }
 
   private static String makeEntrySummary(Entry entry) {
     return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
+  }
+
+  static void setMockNow(Instant now) {
+    mockNow = Date.from(now);
   }
 
   /**
@@ -237,7 +246,7 @@ public class ReportingDevice {
   }
 
   public boolean markMessageType(String schemaName, Instant now) {
-    Date previous = messageMarks.put(schemaName, new Date());
+    Date previous = messageMarks.put(schemaName, getTimestamp());
     return previous == null || previous.before(getThreshold(now));
   }
 
