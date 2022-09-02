@@ -8,10 +8,11 @@ The schema documentation in [`gencode/docs`](../../gencode/docs) must be kept up
 
 ### Troubleshooting
 
-`gendocs` requires a compatible system - required python modules installed match
-the versions in `etc/requirements.txt`, and GNU `sed` and `find`. An unsupported
-system will generate documentation with changes, even when the underlying schema
-has not changed. `gendocs` works best under Linux. 
+If documentation CI tests are failing, check the basic system requirements -
+python modules installed and matching versions in `etc/requirements.txt`, and
+GNU variants `sed` and `find`. An unsupported system will generate documentation
+with changes, even when the underlying schema has not changed. `gendocs` works
+best under Linux.
 
 New schema files should automatically receive an entry in the index
 `gencode/docs/readme.md` file if they are not referenced by any other schema

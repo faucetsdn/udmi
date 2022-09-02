@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Prints a space seperated list of all root (non referenced) schemas in a
+Prints a space separated list of all root (non referenced) schemas in a
 directory
 
-Usage: bin/list_root_schemas PATH_TO_SCHEMA_DIR
+Usage: bin/gencode_root_schemas PATH_TO_SCHEMA_DIR
 
 Example output: state command_discovery command_mapping ...
 """
