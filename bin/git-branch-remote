@@ -1,0 +1,82 @@
+#!/bin/bash -e
+#
+# Automatically check remote branches
+#
+# Assumes remotes are already updated (e.g. using git-branch-update)
+#
+
+main=master
+ACCDIR=/tmp/git-branch-remote/
+
+git remote | while read remote; do
+    rprune=$(git config remote.$remote.upstream) || true
+    if [[ $rprune == "ignore" ]]; then
+        echo "Updating remote $remote (prune ignored).."
+        git fetch $remote
+    else
+        echo Updating/pruning remmote $remote...
+        git fetch -p $remote
+    fi
+done
+
+rm -rf $ACCDIR
+mkdir -p $ACCDIR
+
+echo Checking local remote references...
+git branch -a | while read branch; do
+    leader=${branch#remotes/}
+    if [[ $leader == $branch ]]; then
+        continue  # Not a remote branch, so skip...
+    fi
+    pointer=${leader#* -> }
+    if [[ $pointer != $leader ]]; then
+        continue  # Branch reference, not an actual branch...
+    fi
+    remote=${leader%%/*}
+    branch=${leader#$remote/}
+
+    rprune=$(git config remote.$remote.upstream) || true
+    if [[ $rprune == "ignore" ]]; then
+        continue
+    fi
+
+    if git branch | fgrep $branch > /dev/null; then
+        lremote=$(git config branch.$branch.remote) || true
+        if [[ -z $lremote ]]; then
+            echo "  git branch --set-upstream-to=$leader $branch  # Reconnect orphaned remote branch"
+        fi
+        continue  # Branch locally, ignore remote...
+    fi
+
+    rbranch=$remote/$branch
+    if [[ $rbranch != $leader ]]; then
+        echo huh. that was unexpected.
+        false
+    fi
+
+    mergebase=$(git merge-base $main $leader) || true
+    if [[ -z $mergebase ]]; then
+        echo "  git push $remote -d $branch  # Orphaned upstream (no merge-base with $main)"
+        continue
+    fi
+    diffcount=$(git diff $leader $mergebase | wc -l)
+    merged=$(git log -n 1 --pretty=format:"%cd" --date relative $mergebase)
+    read num unit extra <<< $merged
+    mkdir -p $ACCDIR/${leader%/*}
+    if [[ $diffcount -eq 0 ]]; then
+        echo "  git push $remote -d $branch  # Upstream branch is same as $main"
+        touch $ACCDIR/$leader
+    elif [[ $unit == month* || $unit == year* ]]; then
+        # Note one month is reported in terms of weeks, so not considered stale.
+        echo "  git push $remote -d $branch  # Stale, last merged $merged"
+        touch $ACCDIR/$leader
+    fi
+done
+
+for path in $ACCDIR/*; do
+    remote=${path#$ACCDIR/}
+    count=$(find $path -type f | wc -l)
+    if [[ $count -gt 10 ]]; then
+        echo "That's a lot of stale branches for remote $remote, consider ignoring: git config remote.$remote.upstream ignore"
+    fi
+done

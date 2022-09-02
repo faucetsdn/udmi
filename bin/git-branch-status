@@ -9,6 +9,8 @@
 #   git config branch.$branch.description "Dependence changes"
 #
 
+current=$(git branch --show-current)
+
 git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
   while read local remote; do
     if [[ -n $remote ]]; then
@@ -45,11 +47,24 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
     else
         POFF=
     fi
+
+    # Find the first "real" commit on this branch: one that's not of a merge
+    merged="$(git log -n 1 --pretty=format:"%cd" --first-parent --no-merges --date relative $local --)"
     
     description=$(git config branch.$local.description)
     if [[ -z $description && $local != master ]]; then
         description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
-    
-    printf "%-15s%-30s%s\n" $local "$OFFSET$POFF" "$description"
+
+    # Add a space after description if it exists
+    if [[ -n $description ]]; then
+        description="$description "
+    fi
+
+    # Mark current branch with a *
+    if [[ $local == $current ]]; then
+        local="${local}*"
+    fi
+
+    printf "%-15s%-35s%s(%s)\n" $local "$OFFSET$POFF" "$description" "$merged"
 done
