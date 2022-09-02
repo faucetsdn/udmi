@@ -68,8 +68,9 @@ public class FileDataSink implements MessagePublisher {
   private File getOutputFile(String deviceId, String subType, String subFolder, String suffix) {
     File deviceDir = getDeviceDir(deviceId);
     deviceDir.mkdirs();
-    return new File(deviceDir, String.format("%s%s.%s", subType,
-            ("update".equals(subFolder) ? "" : "_" + subFolder), suffix));
+    boolean invalid = subFolder == null || "update".equals(subFolder);
+    return new File(deviceDir,
+        String.format("%s%s.%s", subType, invalid ? "" : "_" + subFolder, suffix));
   }
 
   private File getDeviceDir(String deviceId) {
