@@ -27,7 +27,7 @@ public class BasicTest extends TestBase {
       "-a", SCHEMA_SPEC,
       "-s", SITE_DIR);
   private static final String FLUX_READING = "FLUX_READING";
-  private final Validator validator = new Validator(TEST_ARGS);
+  private final Validator validator = new Validator(TEST_ARGS).prepForMock();
 
   @org.junit.Test
   public void emptySystemBlock() {

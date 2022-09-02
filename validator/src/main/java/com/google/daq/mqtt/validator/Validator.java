@@ -29,6 +29,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
@@ -219,7 +220,12 @@ public class Validator {
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
     dataSinks.add(client);
+    prepForMock();
+  }
+
+  Validator prepForMock() {
     simulatedMessages = true;
+    return this;
   }
 
   /**
@@ -475,7 +481,8 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            reportingDevice.validateMessageType(messageObject, (String) message.get("timestamp"));
+            Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
+            reportingDevice.validateMessageType(messageObject, timestamp);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());

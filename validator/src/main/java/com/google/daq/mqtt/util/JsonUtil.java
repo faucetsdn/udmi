@@ -133,6 +133,6 @@ public abstract class JsonUtil {
   }
 
   public static Date getDate(String timestamp) {
-    return Date.from(Instant.parse(timestamp));
+    return timestamp == null ? null : Date.from(Instant.parse(timestamp));
   }
 }

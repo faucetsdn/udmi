@@ -141,8 +141,8 @@ public class ReportingDevice {
    * @param message Message to validate
    * @param timestamp message timestamp string (rather than pull from typed object)
    */
-  public void validateMessageType(Object message, String timestamp) {
-    lastSeen = JsonUtil.getDate(timestamp);
+  public void validateMessageType(Object message, Date timestamp) {
+    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
     if (reportingPointset == null) {
       return;
     }
