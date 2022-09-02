@@ -13,6 +13,11 @@ etc...
 * `git-branch-update`: Updates all local branches and upstream repo to keep things in sync.
 * `git-branch-remote`: Scans upstream remote branches and makes suggestions for purging them.
 
+Generally speaking, a usual workflow consists of running `git status` a lot, `git branch-status`
+frequently (if working with multiple branches), `git branch-upate` daily or when getting close to
+finalization, `git branch-create` as needed, and then `git branch-remote` rarely just to keep
+things sober.
+
 # Tool Setup
 
 ## Installing
