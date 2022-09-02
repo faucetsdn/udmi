@@ -7,6 +7,7 @@ import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Level;
 import udmi.schema.ValidationEvent;
@@ -32,25 +33,32 @@ public class PlaybackTest extends TestBase {
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
       assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
       assertEquals("error devices", 2, finalReport.summary.error_devices.size());
-
       assertEquals("device summaries", 2, finalReport.devices.size());
-      ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
-      assertEquals("missing points", 0, deviceReport.pointset.missing.size());
-      assertEquals("extra points", 0, deviceReport.pointset.extra.size());
-      assertEquals("device status", (Integer) Level.ERROR.value(), deviceReport.status.level);
+
+      List<ValidationEvent> deviceReports = reports(outputMessages, "AHU-1");
+
+      ValidationEvent firstReport = deviceReports.get(0);
+      assertEquals("missing points", 1, firstReport.pointset.missing.size());
+      String missingPointName = firstReport.pointset.missing.get(0);
+      assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, missingPointName);
+      assertEquals("extra points", 0, firstReport.pointset.extra.size());
+      assertEquals("device status", (Integer) Level.ERROR.value(), firstReport.status.level);
+
+      ValidationEvent lastReport = deviceReports.get(deviceReports.size() - 1);
+      assertEquals("missing points", 0, lastReport.pointset.missing.size());
+      assertEquals("extra points", 0, lastReport.pointset.extra.size());
+      assertEquals("device status", null, lastReport.status);
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
       throw e;
     }
   }
 
-  private ValidationEvent forDevice(List<OutputBundle> outputMessages, String deviceId) {
-    for (OutputBundle bundle : outputMessages) {
-      if (bundle.deviceId.equals(deviceId)) {
-        return asValidationEvent(bundle.message);
-      }
-    }
-    throw new RuntimeException("Event match for device not found " + deviceId);
+  private List<ValidationEvent> reports(List<OutputBundle> outputMessages, String deviceId) {
+    return outputMessages.stream()
+        .filter(bundle -> bundle.deviceId.equals(deviceId))
+        .map(bundle -> asValidationEvent(bundle.message))
+        .collect(Collectors.toList());
   }
 
   @Test
