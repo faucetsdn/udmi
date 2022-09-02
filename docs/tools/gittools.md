@@ -19,7 +19,7 @@ etc...
 
 The tools are located in `bin/git-*` in the UDMI repo. To use them, either copy them to somewhere
 in your environment's $PATH, add `udmi/bin` to the $PATH, or invoke them directly. If installed
-in the $PATH you should be able to use (e.g.) either `git branch-status` or `git branch-status`
+in the $PATH you should be able to use (e.g.) either `git branch-status` or `git-branch-status`
 from anywhere, or `bin/git-branchstatus` to access them direct.
 
 ## Upstream Configuration
