@@ -152,10 +152,13 @@ public class MessageReadingClient implements MessagePublisher {
     String timestamp = deviceNextTimestamp.remove(deviceId);
     System.out.printf("Replay %s for %s%n", timestamp, deviceId);
     messageCount++;
-    validator.accept(message, attributes);
-    prepNextMessage(deviceId);
-    if (deviceMessages.isEmpty()) {
-      isActive = false;
+    try {
+      validator.accept(message, attributes);
+      prepNextMessage(deviceId);
+    } finally {
+      if (deviceMessages.isEmpty()) {
+        isActive = false;
+      }
     }
   }
 

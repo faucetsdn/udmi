@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +27,22 @@ public class PlaybackTest extends TestBase {
     List<OutputBundle> outputMessages = client.getOutputMessages();
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
     ValidationState finalReport = asValidationState(lastBundle.message);
-    assertEquals("correct devices", 2, finalReport.summary.correct_devices.size());
-    assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-    assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
-    assertEquals("error devices", 1, finalReport.summary.error_devices.size());
+    try {
+      assertEquals("correct devices", 2, finalReport.summary.correct_devices.size());
+      assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
+      assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
+      assertEquals("error devices", 1, finalReport.summary.error_devices.size());
 
-    assertEquals("device summaries", 1, finalReport.devices.size());
-    ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
-    String missingPointName = deviceReport.pointset.missing.get(0);
-    assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, missingPointName);
-    assertEquals("extra points", 0, deviceReport.pointset.extra.size());
-    assertEquals("device status", (Integer) Level.ERROR.value(), deviceReport.status.level);
+      assertEquals("device summaries", 1, finalReport.devices.size());
+      ValidationEvent deviceReport = forDevice(outputMessages, "AHU-1");
+      String missingPointName = deviceReport.pointset.missing.get(0);
+      assertEquals("missing point", FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, missingPointName);
+      assertEquals("extra points", 0, deviceReport.pointset.extra.size());
+      assertEquals("device status", (Integer) Level.ERROR.value(), deviceReport.status.level);
+    } catch (Throwable e) {
+      outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
+      throw e;
+    }
   }
 
   private ValidationEvent forDevice(List<OutputBundle> outputMessages, String deviceId) {

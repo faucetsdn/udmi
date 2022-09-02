@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
+import com.google.daq.mqtt.util.Common;
+import com.google.daq.mqtt.util.JsonUtil;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,9 +26,11 @@ public class ReportingDevice {
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
-  private final Date lastSeen = new Date(0); // Always defined, just start a long time ago!
+  private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
   private ReportingPointset reportingPointset;
   private Metadata metadata;
+  private Set<String> missingPoints;
+  private Set<String> extraPoints;
 
   /**
    * Create device with the given id.
@@ -45,8 +49,8 @@ public class ReportingDevice {
    */
   private static Entry makeEntry(Exception error) {
     Entry entry = new Entry();
-    entry.message = getExceptionMessage(error);
-    String detail = getExceptionCauses(error);
+    entry.message = Common.getExceptionMessage(error);
+    String detail = getExceptionDetail(error);
     entry.detail = entry.message.equals(detail) ? null : detail;
     entry.category = "validation.error.simple";
     entry.level = Level.ERROR.value();
@@ -54,23 +58,20 @@ public class ReportingDevice {
     return entry;
   }
 
-  private static String getExceptionCauses(Throwable exception) {
+  private static String getExceptionDetail(Throwable exception) {
     List<String> messages = new ArrayList<>();
     String previousMessage = null;
     while (exception != null) {
-      String newMessage = getExceptionMessage(exception);
-      if (previousMessage == null || !previousMessage.endsWith(newMessage)) {
-        messages.add(newMessage);
-        previousMessage = newMessage;
+      String message = Common.getExceptionMessage(exception);
+      String line = Common.getExceptionLine(exception, Validator.class);
+      String use = message + (line == null ? "" : " @" + line);
+      if (previousMessage == null || !previousMessage.endsWith(use)) {
+        messages.add(use);
+        previousMessage = use;
       }
       exception = exception.getCause();
     }
     return Joiner.on("; ").join(messages);
-  }
-
-  private static String getExceptionMessage(Throwable exception) {
-    String message = exception.getMessage();
-    return message != null ? message : exception.toString();
   }
 
   /**
@@ -115,12 +116,14 @@ public class ReportingDevice {
   }
 
   /**
-   * Check if this device has been seen (any kind of message).
+   * Check if this device has been seen recently (any kind of message).
    *
-   * @return {@code true} if this has been seen
+   * @param now current instant
+   *
+   * @return {@code true} if this has been seen since threshold
    */
-  public boolean hasBeenSeen() {
-    return lastSeen.after(getThreshold());
+  public boolean seenRecently(Instant now) {
+    return lastSeen.after(getThreshold(now));
   }
 
   /**
@@ -136,8 +139,10 @@ public class ReportingDevice {
    * Validate a message against specific message-type expectations (outside of base schema).
    *
    * @param message Message to validate
+   * @param timestamp
    */
-  public void validateMessageType(Object message) {
+  public void validateMessageType(Object message, String timestamp) {
+    lastSeen = JsonUtil.getDate(timestamp);
     if (reportingPointset == null) {
       return;
     }
@@ -149,7 +154,20 @@ public class ReportingDevice {
     } else {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
-    metadataDiff.errors.forEach(this::addEntry);
+
+    missingPoints = metadataDiff.missingPoints;
+    if (!missingPoints.isEmpty()) {
+      addError(new IllegalStateException("Missing device points"));
+    }
+
+    extraPoints = metadataDiff.extraPoints;
+    if (!extraPoints.isEmpty()) {
+      addError(new IllegalStateException("Missing device points"));
+    }
+
+    if (metadataDiff.errors != null) {
+      metadataDiff.errors.forEach(this::addEntry);
+    }
   }
 
   private void addEntry(Entry entry) {
@@ -177,7 +195,7 @@ public class ReportingDevice {
       return entries;
     }
     return entries.stream()
-        .filter(entry -> entry.timestamp.after(threshold))
+        .filter(entry -> !entry.timestamp.before(threshold))
         .collect(Collectors.toList());
   }
 
@@ -203,24 +221,24 @@ public class ReportingDevice {
   }
 
   public Set<String> getMissingPoints() {
-    throw new RuntimeException("Not yet implemented");
+    return missingPoints;
   }
 
   public Set<String> getExtraPoints() {
-    throw new RuntimeException("Not yet implemented");
+    return extraPoints;
   }
 
-  public void expireEntries() {
-    entries.removeIf(entry -> entry.timestamp.before(getThreshold()));
+  public void expireEntries(Instant now) {
+    entries.removeIf(entry -> entry.timestamp.before(getThreshold(now)));
   }
 
-  private Date getThreshold() {
-    return Date.from(Instant.now().minusSeconds(THRESHOLD_SEC));
+  private Date getThreshold(Instant now) {
+    return Date.from(now.minusSeconds(THRESHOLD_SEC));
   }
 
-  public boolean markMessageType(String schemaName) {
+  public boolean markMessageType(String schemaName, Instant now) {
     Date previous = messageMarks.put(schemaName, new Date());
-    return previous == null || previous.before(getThreshold());
+    return previous == null || previous.before(getThreshold(now));
   }
 
   /**

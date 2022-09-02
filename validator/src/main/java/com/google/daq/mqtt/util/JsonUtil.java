@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.File;
+import java.time.Instant;
 import java.util.Date;
-import udmi.schema.MappingEvent;
 
 /**
  * Collection of utilities for working with json things.
@@ -130,5 +130,9 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
     }
+  }
+
+  public static Date getDate(String timestamp) {
+    return Date.from(Instant.parse(timestamp));
   }
 }

@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,7 +61,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Entry;
@@ -130,7 +130,8 @@ public class Validator {
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File traceDir;
-  private boolean reportAfterEveryMessage;
+  private boolean simulatedMessages;
+  private Instant mockNow = null;
 
   /**
    * Create validator with the given args.
@@ -218,7 +219,7 @@ public class Validator {
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
     dataSinks.add(client);
-    reportAfterEveryMessage = true;
+    simulatedMessages = true;
   }
 
   /**
@@ -314,11 +315,6 @@ public class Validator {
     return schemaMap;
   }
 
-  private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    processValidationReport();
-    return (message, attributes) -> validateMessage(message, attributes);
-  }
-
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
@@ -345,14 +341,13 @@ public class Validator {
     }
     sendInitializationQuery();
     System.err.println("Entering message loop on " + client.getSubscriptionId());
-    BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationReport,
+        simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
         try {
-          client.processMessage(validator);
+          client.processMessage(this::validateMessage);
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -395,12 +390,17 @@ public class Validator {
       writeMessageCapture(message, attributes);
     }
 
-    Date validationStart = new Date();
+    if (simulatedMessages) {
+      mockNow = Instant.parse((String) message.get("timestamp"));
+    }
+    Date validationStart = simulatedMessages ? Date.from(mockNow) : new Date();
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
       sendValidationResult(attributes, reportingDevice, validationStart);
     }
-    processValidationReport();
+    if (simulatedMessages) {
+      processValidationReport();
+    }
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -426,7 +426,7 @@ public class Validator {
     reportingDevice.clearErrors();
     try {
       String schemaName = messageSchema(attributes);
-      if (!reportingDevice.markMessageType(schemaName)) {
+      if (!reportingDevice.markMessageType(schemaName, getNow())) {
         return null;
       }
 
@@ -475,7 +475,7 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            reportingDevice.validateMessageType(messageObject);
+            reportingDevice.validateMessageType(messageObject, (String) message.get("timestamp"));
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
@@ -649,13 +649,13 @@ public class Validator {
         summary.missing_devices.add(deviceId);
         continue;
       }
-      deviceInfo.expireEntries();
+      deviceInfo.expireEntries(getNow());
       if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());
         deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
-      } else if (deviceInfo.hasBeenSeen()) {
+      } else if (deviceInfo.seenRecently(getNow())) {
         summary.correct_devices.add(deviceId);
       } else {
         summary.missing_devices.add(deviceId);
@@ -663,6 +663,10 @@ public class Validator {
     }
 
     sendValidationReport(makeValidationReport(summary, devices));
+  }
+
+  private Instant getNow() {
+    return mockNow == null ? Instant.now() : mockNow;
   }
 
   private ValidationState makeValidationReport(ValidationSummary summary,
