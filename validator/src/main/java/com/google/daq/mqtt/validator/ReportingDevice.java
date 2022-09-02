@@ -139,7 +139,7 @@ public class ReportingDevice {
    * Validate a message against specific message-type expectations (outside of base schema).
    *
    * @param message Message to validate
-   * @param timestamp
+   * @param timestamp message timestamp string (rather than pull from typed object)
    */
   public void validateMessageType(Object message, String timestamp) {
     lastSeen = JsonUtil.getDate(timestamp);
