@@ -24,6 +24,6 @@ for file in `find $site_out -type f`; do
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'
 done
 
-diff -r $trace_out $site_out
+diff -r $site_out $trace_out
 
 echo Diff complete, no deviation found.

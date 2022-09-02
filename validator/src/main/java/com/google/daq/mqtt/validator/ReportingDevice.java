@@ -186,17 +186,22 @@ public class ReportingDevice {
 
     missingPoints = metadataDiff.missingPoints;
     if (!missingPoints.isEmpty()) {
-      addError(new IllegalStateException("Missing device points"));
+      addError(pointValidationError("missing points", missingPoints));
     }
 
     extraPoints = metadataDiff.extraPoints;
     if (!extraPoints.isEmpty()) {
-      addError(new IllegalStateException("Missing device points"));
+      addError(pointValidationError("extra points", extraPoints));
     }
 
     if (metadataDiff.errors != null) {
       metadataDiff.errors.forEach(this::addEntry);
     }
+  }
+
+  private Exception pointValidationError(String description, Set<String> points) {
+    return new ValidationException(
+        String.format("Device has %s: %s", description, Joiner.on(", ").join(points)));
   }
 
   private void addEntry(Entry entry) {

@@ -2,16 +2,26 @@
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.3.14",
   "summary" : {
-    "correct_devices" : [ "AHU-1", "AHU-22" ],
+    "correct_devices" : [ "AHU-1" ],
     "extra_devices" : [ ],
     "missing_devices" : [ "GAT-123" ],
-    "error_devices" : [ "SNS-4" ]
+    "error_devices" : [ "AHU-22", "SNS-4" ]
   },
   "devices" : {
+    "AHU-22" : {
+      "status" : {
+        "message" : "Multiple validation errors",
+        "detail" : "validation.error.simple:While converting to json node: 2 schema violations found (500); validation.error.simple:While converting to json node: 1 schema violations found (500)",
+        "category" : "validation.error.multiple",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 500
+      }
+    },
     "SNS-4" : {
       "status" : {
-        "message" : "Metadata validation failed: Extra points: rocket_count",
+        "message" : "Device has extra points: rocket_count",
         "category" : "validation.error.simple",
+        "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
       }
     }

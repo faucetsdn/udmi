@@ -5,8 +5,13 @@
   "sub_type" : "event",
   "status" : {
     "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "While converting to json node: 2 schema violations found @Validator.validateMessage(Validator.java:417); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
     "category" : "validation.error.simple",
+    "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
-  "pointset" : { }
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ ]
+  }
 }
