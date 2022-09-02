@@ -25,8 +25,10 @@ public class ReportingDevice {
   public static final String DETAIL_SEPARATOR = "; ";
   private static final long THRESHOLD_SEC = 3600;
   private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
-  private static final String CATEGORY_MISSING_MESSAGE = "instance failed to match exactly one schema (matched 0 out of ";
-  private static final String CATEGORY_MISSING_REPLACEMENT = "instance entry category not recognized";
+  private static final String CATEGORY_MISSING_MESSAGE
+      = "instance failed to match exactly one schema (matched 0 out of ";
+  private static final String CATEGORY_MISSING_REPLACEMENT
+      = "instance entry category not recognized";
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
