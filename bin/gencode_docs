@@ -103,7 +103,7 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
-schemas=$(bin/list_root_schemas schema/)
+schemas=$(bin/gencode_root_schemas schema/)
 echo Processing schemas $schemas
 
 for schema in $schemas; do
