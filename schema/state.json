@@ -1,5 +1,6 @@
 {
   "title": "State",
+  "$section": "Messages",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "[State](../docs/messages/state.md) message, defined by [`state.json`]",
