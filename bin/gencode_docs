@@ -103,7 +103,7 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
-schemas=$((cd tests/; ls -d *.tests) | sed s/.tests//)
+schemas=$(bin/gencode_root_schemas schema/)
 echo Processing schemas $schemas
 
 for schema in $schemas; do
@@ -113,14 +113,25 @@ done
 
 rm -rf $TMP_DIR
 
+echo Generating schema index page...
+
 # Create index page with links to different schemas
-cp etc/schema_index_template.html $OUTPUT_DIR/index.html
+cp etc/schema_readme_template.md $OUTPUT_DIR/readme.md
 
 for schema in $schemas; do
-    sed -i "s/<!--SCHEMALINK-->/\
-        <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
-        $OUTPUT_DIR/index.html
+    section=$(jq -r '.["$section"]' schema/$schema.json)
+    if [[ -z $section || $(grep -c "## $section\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
+        section=Other
+    fi
+    description=$(jq -r .description schema/$schema.json)
+    if [[ $description == null ]]; then
+        description=""
+    else
+        description=$(echo " - $description" | sed 's@(\.\./@(\.\./\.\./@g')
+    fi
+    sed -i "s@## $section@## $section\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
+
 
 # Add navbar
 navbar=$(cat etc/schema_navbar.html)
