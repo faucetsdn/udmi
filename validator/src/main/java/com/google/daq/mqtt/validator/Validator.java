@@ -509,7 +509,7 @@ public class Validator {
       event.timestamp = new Date();
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
-      event.sub_type = origAttributes.get("subType");
+      event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
       List<Entry> errors = reportingDevice.getErrors(validationStart);
       event.status = ReportingDevice.getSummaryEntry(errors);
       event.errors = errors != null && errors.size() > 1 ? errors : null;
