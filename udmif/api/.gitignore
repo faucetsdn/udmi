@@ -21,4 +21,6 @@ globalConfig.json
 # mongo output
 .mongodb
 
-/util/devices.json
+.jest
+
+.cache
