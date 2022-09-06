@@ -1,25 +1,16 @@
 import { handleUdmiEvent } from '../index';
-import * as factory from '../DeviceDaoFactory';
-import UdmiMessageHandler from '../UdmiMessageHandler';
+import * as MongoDAO from '../dao/mongo/MongoDAO';
+import UdmiEventHandler from '../UdmiEventHandler';
+import { InvalidEventError } from '../InvalidEventError';
+import { SYSTEM_MODEL_EVENT } from './dataUtils';
 
-jest.mock('../UdmiMessageHandler');
-
-const event = {
-  attributes: {
-    deviceId: 'AHU-1',
-    deviceNumId: '2625324262579600',
-    deviceRegistryId: 'ZZ-TRI-FECTA',
-    projectId: 'labs-333619',
-    subFolder: 'system',
-    subType: 'model',
-  },
-  data: 'ewogICJsb2NhdGlvbiIgOiB7CiAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICJzZWN0aW9uIiA6ICIyLTNOOEMiLAogICAgInBvc2l0aW9uIiA6IHsKICAgICAgIngiIDogMTExLjAsCiAgICAgICJ5IiA6IDEwMi4zCiAgICB9CiAgfSwKICAicGh5c2ljYWxfdGFnIiA6IHsKICAgICJhc3NldCIgOiB7CiAgICAgICJndWlkIiA6ICJkcnc6Ly9UQkMiLAogICAgICAic2l0ZSIgOiAiWlotVFJJLUZFQ1RBIiwKICAgICAgIm5hbWUiIDogIkFIVS0xIgogICAgfQogIH0KfQ==',
-  messageId: '4498812851299125',
-  publishTime: '2022-04-25T17:05:33.162Z',
-};
+jest.mock('../UdmiEventHandler');
 
 describe('index', () => {
-  let factorySpy;
+  let deviceDAOSpy;
+  let deviceValidationDAOSpy;
+  let siteDAOSpy;
+  let siteValidationDAOSpy;
   let handleUdmiEventSpy;
   const mockHandleEvent = jest.fn();
 
@@ -27,19 +18,23 @@ describe('index', () => {
     jest.clearAllMocks();
 
     // arrange
-    factorySpy = jest.spyOn(factory, 'getDeviceDAO').mockImplementation(jest.fn());
-    handleUdmiEventSpy = jest
-      .spyOn(UdmiMessageHandler.prototype, 'handleUdmiEvent')
-      .mockImplementation(mockHandleEvent);
+    deviceDAOSpy = jest.spyOn(MongoDAO, 'getDeviceDAO').mockImplementation(jest.fn());
+    siteDAOSpy = jest.spyOn(MongoDAO, 'getSiteDAO').mockImplementation(jest.fn());
+    siteValidationDAOSpy = jest.spyOn(MongoDAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
+    deviceValidationDAOSpy = jest.spyOn(MongoDAO, 'getDeviceValidationDAO').mockImplementation(jest.fn());
+    handleUdmiEventSpy = jest.spyOn(UdmiEventHandler.prototype, 'handleUdmiEvent').mockImplementation(mockHandleEvent);
   });
 
   test('handleUdmiEvent is called when an event is passed in', async () => {
     // act
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
-    expect(factorySpy).toHaveBeenCalled();
     expect(handleUdmiEventSpy).toHaveBeenCalled();
+    expect(deviceDAOSpy).toHaveBeenCalled();
+    expect(siteDAOSpy).toHaveBeenCalled();
+    expect(siteValidationDAOSpy).toHaveBeenCalled();
+    expect(deviceValidationDAOSpy).toHaveBeenCalled();
   });
 
   test('Exception is logged', async () => {
@@ -50,7 +45,21 @@ describe('index', () => {
     });
 
     // act
-    await handleUdmiEvent(event, {});
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
+
+    // assert
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  test('InvalidEventError is logged', async () => {
+    // arrange
+    jest.spyOn(global.console, 'error');
+    mockHandleEvent.mockImplementation(() => {
+      throw new InvalidEventError('some error');
+    });
+
+    // act
+    await handleUdmiEvent(SYSTEM_MODEL_EVENT, {});
 
     // assert
     expect(console.error).toHaveBeenCalled();

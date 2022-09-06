@@ -20,3 +20,7 @@ globalConfig.json
 
 # mongo output
 .mongodb
+
+.jest
+
+.cache

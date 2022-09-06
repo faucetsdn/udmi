@@ -124,7 +124,7 @@ export class DevicesService {
       })
       .valueChanges.pipe(
         map(({ data }) => {
-          return { values: data.sites };
+          return { values: data.siteNames };
         })
       );
   }

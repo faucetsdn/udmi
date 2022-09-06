@@ -21,6 +21,7 @@ describe('config.loadConfig', () => {
   });
 
   test('config has a default log level entry of info', () => {
+    delete process.env.LOG_LEVEL;
     expect(loadConfig().logLevel).toBe('info');
   });
 
@@ -55,6 +56,7 @@ describe('config.loadConfig', () => {
   });
 
   test('config has default client ids of empty array', () => {
+    delete process.env.CLIENT_IDS;
     expect(loadConfig().clientIds).toEqual([]);
   });
 

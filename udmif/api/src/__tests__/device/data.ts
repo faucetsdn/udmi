@@ -1,4 +1,5 @@
-import { Device, Point, SearchOptions, SORT_DIRECTION } from '../../device/model';
+import { Device, Point } from '../../device/model';
+import { SearchOptions, SORT_DIRECTION } from '../../common/model';
 
 export function createDevices(count: number): Device[] {
   const devices: Device[] = [];
