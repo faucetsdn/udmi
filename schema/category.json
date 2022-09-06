@@ -1,7 +1,6 @@
 {
   "$comment": "Auto-generated category mappings from bin/gencode_categories.",
   "oneOf": [
-    { "pattern": "^device[\\.a-z]+$" },
     { "pattern": "^system\\.base\\.start$" },
     { "pattern": "^system\\.base\\.shutdown$" },
     { "pattern": "^system\\.base\\.ready$" },
@@ -27,6 +26,7 @@
     { "pattern": "^blobset\\.blob\\.apply$" },
     { "pattern": "^validation\\.device\\.receive$" },
     { "pattern": "^validation\\.device\\.result$" },
-    { "pattern": "^validation\\.summary\\.report$" }
+    { "pattern": "^validation\\.summary\\.report$" },
+    { "pattern": "^device[\\.a-z]+$" }
     ]
 }
