@@ -69,7 +69,6 @@ dependencies {
     }
     implementation 'joda-time:joda-time:2.10.10'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    implementation 'com.bugsnag:bugsnag:3.6.3'
     implementation('io.moquette:moquette-broker:0.15') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     }
