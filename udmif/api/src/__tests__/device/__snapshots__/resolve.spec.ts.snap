@@ -518,32 +518,6 @@ Object {
 }
 `;
 
-exports[`Devices getSites 1`] = `
-Object {
-  "data": Object {
-    "sites": Array [
-      "SG-SIN-MBC1",
-      "SG-SIN-MBC10",
-      "SG-SIN-MBC2",
-      "SG-SIN-MBC3",
-      "SG-SIN-MBC4",
-      "SG-SIN-MBC5",
-      "SG-SIN-MBC6",
-      "SG-SIN-MBC7",
-      "SG-SIN-MBC8",
-      "SG-SIN-MBC9",
-    ],
-  },
-  "errors": undefined,
-  "extensions": undefined,
-  "http": Object {
-    "headers": Headers {
-      Symbol(map): Object {},
-    },
-  },
-}
-`;
-
 exports[`Devices points 1`] = `
 Object {
   "data": Object {

@@ -7,9 +7,11 @@ import { map, startWith, switchMap } from 'rxjs/operators';
 import { ChipItem, SearchFilterItem } from './search-filter';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { DevicesService } from '../devices/devices.service';
+import { SitesService } from '../sites/sites.service';
 
 const services: any = {
   DevicesService,
+  SitesService,
 };
 
 @Component({

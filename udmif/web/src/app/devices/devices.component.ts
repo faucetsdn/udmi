@@ -53,7 +53,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.devicesSubscription.unsubscribe(); // cleanup
   }
 
