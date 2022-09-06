@@ -11,6 +11,11 @@ const routes: Routes = [
     canActivate: [LoginGuard],
   },
   {
+    path: 'sites',
+    loadChildren: () => import('./sites/sites.module').then((m) => m.SitesModule),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'devices',
     loadChildren: () => import('./devices/devices.module').then((m) => m.DevicesModule),
     canActivate: [AuthGuard],

@@ -1,63 +1,3 @@
-input SearchOptions {
-  # the number of records to retrieve
-  batchSize: Int!
-  # the records to start at
-  offset: Int
-  # the search options
-  sortOptions: SortOptions
-  # the search filter
-  filter: String
-}
-
-input DeviceNamesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input DeviceMakesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input DeviceModelsSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SitesSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SectionsSearchOptions {
-  # the string to search for
-  search: String
-  # the number of values to return, defaults to 10
-  limit: Int
-}
-
-input SortOptions {
-  # the direction the data should be sorted
-  direction: SORT_DIRECTION
-  # the field that the sorting should be applied to
-  field: String!
-}
-
-enum SORT_DIRECTION {
-  # Descending
-  DESC
-  # Ascending
-  ASC
-}
-
 type DevicesResponse {
   # the devices that matched the search options
   devices: [Device!]!
@@ -115,13 +55,11 @@ type Query {
   # Get points by a Device ID
   points( deviceId: ID!) : [Point!]!
   # Get a list of device names
-  deviceNames(searchOptions: DeviceNamesSearchOptions) : [String!]!
+  deviceNames(searchOptions: DistinctSearchOptions) : [String!]!
   # Get a list of device makes
-  deviceMakes(searchOptions: DeviceMakesSearchOptions) : [String!]!
+  deviceMakes(searchOptions: DistinctSearchOptions) : [String!]!
   # Get a list of device models
-  deviceModels(searchOptions: DeviceModelsSearchOptions) : [String!]!
-  # Get a list of sites
-  sites(searchOptions: SitesSearchOptions) : [String!]!
+  deviceModels(searchOptions: DistinctSearchOptions) : [String!]!
   # Get a list of sections
-  sections(searchOptions: SectionsSearchOptions) : [String!]!
+  sections(searchOptions: DistinctSearchOptions) : [String!]!
 }
