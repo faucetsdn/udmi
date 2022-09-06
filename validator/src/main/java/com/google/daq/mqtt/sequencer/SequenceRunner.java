@@ -81,9 +81,9 @@ public abstract class SequenceRunner {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
-  public static final String PACKAGE_MATCH_SNIPPET = SequenceRunner.class.getPackageName();
   public static final String LOCAL_CONFIG = "local_config";
   protected static final Metadata deviceMetadata;
+  private static final String PACKAGE_MATCH_SNIPPET = SequenceRunner.class.getPackageName();
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -705,22 +705,7 @@ public abstract class SequenceRunner {
   }
 
   private String getTraceString(Exception e) {
-    String[] lines = stackTraceString(e).split("\n");
-    for (String line : lines) {
-      if (line.contains(PACKAGE_MATCH_SNIPPET)) {
-        return line;
-      }
-    }
-    throw new RuntimeException(
-        "No matching stack trace line found with " + PACKAGE_MATCH_SNIPPET, e);
-  }
-
-  private String stackTraceString(Exception e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
-    }
-    return outputStream.toString();
+    return Common.getExceptionLine(e, SequenceRunner.class);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
