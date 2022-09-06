@@ -1,12 +1,13 @@
 import { ApolloServer } from 'apollo-server';
 import dataSources from './server/datasources';
 import { typeDefs } from './server/schema';
-import { resolvers } from './device/resolvers';
 import { logger } from './common/logger';
 import { getDefaultContextProcessor } from './server/context';
-import { DeviceDAO } from './device/dao/DeviceDAO';
 import { Configuration, loadConfig } from './server/config';
-import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
+import { DAO, getDeviceDAO, getSiteDAO } from './dao/DAO';
+import { Device } from './device/model';
+import { Site } from './site/model';
+import { resolvers } from './server/resolvers';
 
 (async () => {
   // load the configuration from the .env
@@ -15,14 +16,15 @@ import { getDeviceDAO } from './device/dao/DeviceDAOFactory';
   // required context processor
   const context = await getDefaultContextProcessor(config.clientIds);
 
-  const deviceDAO: DeviceDAO = await getDeviceDAO(config);
+  const deviceDAO: DAO<Device> = await getDeviceDAO(config);
+  const siteDAO: DAO<Site> = await getSiteDAO(config);
 
   // server initialization
   const server: ApolloServer = new ApolloServer({
     typeDefs,
     resolvers,
     context,
-    dataSources: dataSources(deviceDAO),
+    dataSources: dataSources(deviceDAO, siteDAO),
   });
 
   // start our server

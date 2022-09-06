@@ -5,6 +5,9 @@ module.exports = {
   },
   reporters: [
     "default",
+    ["./node_modules/jest-html-reporter", {
+      "pageTitle": "Test Report"
+    }]
   ],
   collectCoverage: true,
   coveragePathIgnorePatterns: ["/node_modules/", "/src/__tests__/"],

@@ -51,7 +51,10 @@ validator/bin/build
 JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceTestRunner"
 
-rm -rf $site_model/out/devices/$device_id
+if [[ $test_names == . ]]; then
+    # Only clear out tests if running complete battery, else keep to allow incremental upates.
+    rm -rf $site_model/out/devices/$device_id
+fi
 
 test_srces=`cd validator/src/main/java/com/google/daq/mqtt/sequencer/sequences; ls *.java`
 echo Processing test sources $test_srces
