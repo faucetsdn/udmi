@@ -29,9 +29,9 @@ OUTPUT_DIR=gencode/docs
 TMP_DIR=tmp/schema
 
 schema_files=`ls schema/*.json`
+rm -rf $OUTPUT_DIR $TMP_DIR
 
 if [ "$OP" == gen_bucket ]; then
-    rm -rf $OUTPUT_DIR $TMP_DIR
 
     input_file=$OP
     output_file=$2
