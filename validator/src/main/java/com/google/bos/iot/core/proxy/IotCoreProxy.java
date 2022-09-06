@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.cloud.ServiceOptions;
+import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.PubSubPusher;
 import java.io.File;
 import java.util.Date;
@@ -18,6 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class for proxying messages from one instance to another.
+ */
 public class IotCoreProxy {
 
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
@@ -56,6 +60,11 @@ public class IotCoreProxy {
     }
   }
 
+  /**
+   * Create an instance with args.
+   *
+   * @param args command-line args
+   */
   public static void main(String[] args) {
     long startTime = System.currentTimeMillis();
     int exitCode = 0;
@@ -177,11 +186,11 @@ public class IotCoreProxy {
   private int terminate() {
     info("Terminating");
     if (proxySubscription != null) {
-      proxySubscription.stop();
+      proxySubscription.close();
       proxySubscription = null;
     }
     if (stateSubscription != null) {
-      stateSubscription.stop();
+      stateSubscription.close();
       stateSubscription = null;
     }
     proxyTargets.values().forEach(ProxyTarget::terminate);

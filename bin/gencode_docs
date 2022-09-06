@@ -25,8 +25,8 @@ if [[ -n $1 ]]; then
     shift
 fi
 
-OUTPUT_DIR=$ROOT_DIR/gencode/docs
-TMP_DIR=$ROOT_DIR/tmp/schema
+OUTPUT_DIR=gencode/docs
+TMP_DIR=tmp/schema
 
 schema_files=`ls schema/*.json`
 
@@ -67,6 +67,18 @@ if [ "$OP" == check_links ]; then
         exit 1
     fi
 
+    missing=
+    echo Checking references to externally linked files...
+    fgrep -v \# etc/external_refs.txt | while read file comment; do
+        if [[ -n $file && ! -f $file ]]; then
+            echo "Reference to missing file '$file': $comment"
+            missing=y
+        fi
+    done
+
+    if [[ -n $missing ]]; then
+        exit 1
+    fi
     exit 0
 fi 
 
@@ -91,7 +103,8 @@ find $TMP_DIR -type f -exec sed -i 's/file://' {} \;
 # is one level down
 find $TMP_DIR -type f -exec sed -i 's;(../docs/;(../../docs/;' {} \;
 
-schemas="state event_system event_pointset event_discovery event_validation config metadata envelope"
+schemas=$(bin/gencode_root_schemas schema/)
+echo Processing schemas $schemas
 
 for schema in $schemas; do
     echo == Processing $schema.json
@@ -100,14 +113,25 @@ done
 
 rm -rf $TMP_DIR
 
+echo Generating schema index page...
+
 # Create index page with links to different schemas
-cp etc/schema_index_template.html $OUTPUT_DIR/index.html
+cp etc/schema_readme_template.md $OUTPUT_DIR/readme.md
 
 for schema in $schemas; do
-    sed -i "s/<!--SCHEMALINK-->/\
-        <div class=\"card\"><a href=\"$schema.html\">$schema<\/a><\/div><!--SCHEMALINK-->/"\
-        $OUTPUT_DIR/index.html
+    section=$(jq -r '.["$section"]' schema/$schema.json)
+    if [[ -z $section || $(grep -c "## $section\$" $OUTPUT_DIR/readme.md) -eq 0 ]]; then
+        section=Other
+    fi
+    description=$(jq -r .description schema/$schema.json)
+    if [[ $description == null ]]; then
+        description=""
+    else
+        description=$(echo " - $description" | sed 's@(\.\./@(\.\./\.\./@g')
+    fi
+    sed -i "s@## $section@## $section\n* [**$schema**]($schema.html)$description@" $OUTPUT_DIR/readme.md
 done
+
 
 # Add navbar
 navbar=$(cat etc/schema_navbar.html)
@@ -121,3 +145,5 @@ find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.
 
 find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
     <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;
+
+echo Done with $0

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.bos.iot.core.proxy.MessagePublisher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -58,7 +57,7 @@ public class FileDataSink implements MessagePublisher {
   }
 
   private boolean isValidation(String topic) {
-    return topic.equals("validation/event");
+    return topic.startsWith("validation/");
   }
 
   private File getOutputFile(String deviceId, String topic) {

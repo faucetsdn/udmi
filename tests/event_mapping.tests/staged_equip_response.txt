@@ -1,0 +1,52 @@
+{
+    "building_name": "US-MTV-1804",  // building id from discovery message
+    "equipment":
+    [
+        {
+            "data":
+              {
+                "device_id": "4b:9a:84:17:17:6c",  // from UDMI discovery, ties back to a specific device
+                "model.equip_type_predictions":  // top five predictions
+                  {
+                    "AHU": 0.10,
+                    "BLR": 0.15,
+                    "HX": 0.20,
+                    "MAU": 0.25,
+                    "VAV": 0.30
+                  },
+                "entity_type": "VAV",  // top prediction
+                "model.equip_name": "VAV-1",  // predicted equipment instance ID
+                "guid": "8cf8c6ea-c8aa-412c-914d-947947fa51ba",  // UUID V4
+                "model.parent": "AHU-1",  // predicted parent equipment ID
+              },
+            "created": "2022-03-25T18:16:36+00:00",
+            "last_promoted": null,
+            "modified": null,
+        }
+    ],
+    "points_by_equip_name":
+    {
+      "VAV-1":
+        [
+            {
+                "data":
+                {
+                    "object_identifier": "('analogInupt', 1)",  // from UDMI discovery 
+                    "model.point_type_predictions":  // top five predictions
+                    {
+                        "building_air_static_pressure_sensor": 0.10,
+                        "condensing_supply_water_temperature_sensor": 0.15,
+                        "exhaust_fan_power_sensor": 0.20,
+                        "discharge_fan_speed_percentage_sensor": 0.25,
+                        "zone_air_relative_humidity_sensor": 0.30
+                    },
+                    "telemetry_field_name": "zone_air_relative_humidity_sensor",  // top prediction
+                },
+              "created": "2022-03-25T18:16:36+00:00",
+              "last_promoted": null,
+              "modified": null,
+              "entity.guid": "8cf8c6ea-c8aa-412c-914d-947947fa51ba",
+            }
+        ]
+      }
+}

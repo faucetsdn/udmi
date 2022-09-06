@@ -1,12 +1,9 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.util.Common.NO_SITE;
+import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -19,7 +16,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
@@ -65,12 +61,6 @@ public class Registrar {
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper()
-          .enable(SerializationFeature.INDENT_OUTPUT)
-          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .setDateFormat(new ISO8601DateFormat())
-          .setSerializationInclusion(Include.NON_NULL);
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
   private static final String VERSION_MAIN_KEY = "main";
@@ -114,7 +104,7 @@ public class Registrar {
     registrar.execute();
   }
 
-  public static void processArgs(List<String> argList, Registrar registrar) {
+  static void processArgs(List<String> argList, Registrar registrar) {
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
@@ -153,7 +143,7 @@ public class Registrar {
     }
   }
 
-  public void execute() {
+  void execute() {
     try {
       if (schemaBase == null) {
         setToolRoot(null);
@@ -249,9 +239,7 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    File cloudIotConfig = new File(siteDir, ConfigUtil.CLOUD_IOT_CONFIG_JSON);
-    System.err.println("Reading Cloud IoT config from " + cloudIotConfig.getAbsolutePath());
-    cloudIotManager = new CloudIotManager(projectId, cloudIotConfig, SCHEMA_NAME);
+    cloudIotManager = new CloudIotManager(projectId, siteDir);
     System.err.println(
         String.format(
             "Working with project %s registry %s/%s",

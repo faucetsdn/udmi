@@ -1,5 +1,6 @@
 package com.google.bos.iot.core.proxy;
 
+import com.google.daq.mqtt.util.MessagePublisher;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import org.slf4j.Logger;

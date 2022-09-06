@@ -7,7 +7,7 @@
     { "pattern": "^system\\.config\\.receive$" },
     { "pattern": "^system\\.config\\.parse$" },
     { "pattern": "^system\\.config\\.apply$" },
-    { "pattern": "^system\\.network\\.connect$" },
+    { "pattern": "^system\\.network\\.connection$" },
     { "pattern": "^system\\.network\\.disconnect$" },
     { "pattern": "^system\\.auth\\.login$" },
     { "pattern": "^system\\.auth\\.logout$" },
@@ -20,8 +20,12 @@
     { "pattern": "^discovery\\.family\\.scan$" },
     { "pattern": "^discovery\\.device\\.enumerate$" },
     { "pattern": "^discovery\\.point\\.describe$" },
-    { "pattern": "^blobset\\.blob\\.received$" },
-    { "pattern": "^blobset\\.blob\\.fetched$" },
-    { "pattern": "^blobset\\.blob\\.applied$" }
+    { "pattern": "^mapping\\.device\\.apply$" },
+    { "pattern": "^blobset\\.blob\\.receive$" },
+    { "pattern": "^blobset\\.blob\\.fetch$" },
+    { "pattern": "^blobset\\.blob\\.apply$" },
+    { "pattern": "^validation\\.device\\.receive$" },
+    { "pattern": "^validation\\.device\\.result$" },
+    { "pattern": "^validation\\.summary\\.report$" }
     ]
 }

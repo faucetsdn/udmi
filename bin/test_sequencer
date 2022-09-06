@@ -55,7 +55,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer -vv $site_path $project_id $device_id $serial_no
+bin/sequencer -v $site_path $project_id $device_id $serial_no
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
@@ -69,5 +69,9 @@ else
     echo No pubber pids found, likely due to premature termination: failing test run.
     false
 fi
+
+generated=docs/specs/sequences/generated.md
+cp $generated /tmp/  # Save for test/comparison later
+bin/gencode_seq
 
 echo Done with base test_sequencer run.

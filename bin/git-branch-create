@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+if [[ $# -lt 2 ]]; then
+    echo Usage: $0 branch-name branch description
+    echo "  branch-name is one word, and the rest of the line make up the description"
+    false
+fi
+
+branch=$1
+shift
+description=$*
+
+current=$(git branch --show-current)
+changes=$(git status -s)
+if [[ -n $changes ]]; then
+    echo Working branch $current not clean, please revert/commit/stash before proceeding.
+    false
+fi
+
+main=$(git config upstream.main) || true
+if [[ -z $main ]]; then
+    echo "Upstream main branch not defined, please set with (e.g.) 'git config upstream.main master'"
+    false
+fi
+
+git switch $main
+git checkout -b $branch
+
+git config branch.$branch.parent $main
+git config branch.$branch.description "$description"
+
+
+

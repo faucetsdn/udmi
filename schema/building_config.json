@@ -1,0 +1,13 @@
+{
+  "title": "Building Config",
+  "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "existingJavaType": "java.util.HashMap<String, BuildingTranslation>",
+  "patternProperties": {
+    "": {
+      "$ref": "file:building_translation.json"
+    }
+  }
+}

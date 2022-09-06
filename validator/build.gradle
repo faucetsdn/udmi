@@ -26,13 +26,14 @@ sourceSets {
     main {
         java {
             srcDirs '../gencode/java'
+            srcDirs '../common/src/main/java'
         }
     }
 }
 
 checkstyle {
     ignoreFailures = false
-    maxWarnings = 44
+    maxWarnings = 29
 }
 checkstyleMain.source = 'src/main/java'
 

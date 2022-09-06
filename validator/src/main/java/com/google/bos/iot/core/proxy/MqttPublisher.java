@@ -4,6 +4,7 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.daq.mqtt.util.MessagePublisher;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
-class MqttPublisher implements MessagePublisher {
+public class MqttPublisher implements MessagePublisher {
 
   public static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
   public static final String BRIDGE_PORT = "8883";
@@ -92,7 +93,11 @@ class MqttPublisher implements MessagePublisher {
   public void publish(String deviceId, String topic, String data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
-    publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+    try {
+      publisherExecutor.submit(() -> publishCore(deviceId, topic, data));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing message", e);
+    }
   }
 
   private void publishCore(String deviceId, String topic, String payload) {
@@ -152,8 +157,11 @@ class MqttPublisher implements MessagePublisher {
 
   public void close() {
     try {
+      LOG.debug(String.format("Shutting down executor %x", publisherExecutor.hashCode()));
       publisherExecutor.shutdownNow();
-      publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS);
+      if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
+        LOG.error("Executor tasks still remaining");
+      }
       if (mqttClient.isConnected()) {
         mqttClient.disconnect();
       }
@@ -260,7 +268,7 @@ class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private String getClientId(String deviceId) {
+  String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
     return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
@@ -329,7 +337,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   /**
-   * Create a Cloud IoT JWT for the given project id, signed with the given private key
+   * Create a Cloud IoT JWT for the given project id, signed with the given private key.
    */
   private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
       throws Exception {

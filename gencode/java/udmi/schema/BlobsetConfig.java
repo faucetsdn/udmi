@@ -68,7 +68,7 @@ public class BlobsetConfig {
     @Generated("jsonschema2pojo")
     public enum SystemBlobsets {
 
-        IOT_CONFIG("_iot_config");
+        IOT_ENDPOINT_CONFIG("_iot_endpoint_config");
         private final java.lang.String value;
         private final static Map<java.lang.String, BlobsetConfig.SystemBlobsets> CONSTANTS = new HashMap<java.lang.String, BlobsetConfig.SystemBlobsets>();
 

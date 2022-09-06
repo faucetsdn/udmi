@@ -1,13 +1,13 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
-import static com.google.daq.mqtt.util.Common.JSON_SUFFIX;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
-import static com.google.daq.mqtt.util.Common.OBJECT_MAPPER;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_ATTRIBUTE;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.daq.mqtt.util.JsonUtil.JSON_SUFFIX;
+import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,7 +18,6 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
-import com.google.bos.iot.core.proxy.MessagePublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -30,6 +29,8 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
@@ -70,6 +71,7 @@ import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.ValidationEvent;
+import udmi.schema.ValidationState;
 import udmi.schema.ValidationSummary;
 
 /**
@@ -107,6 +109,7 @@ public class Validator {
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
+  private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
@@ -181,7 +184,7 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            initializeCloudIoT();
+            cloudIotManager = new CloudIotManager(projectId, new File(siteDir));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -274,15 +277,6 @@ public class Validator {
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
-    }
-  }
-
-  private void initializeCloudIoT() {
-    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-    try {
-      this.cloudIotManager = new CloudIotManager(projectId, cloudConfig, "foobar");
-    } catch (Exception e) {
-      throw new RuntimeException("While initializing cloud IoT for project " + projectId, e);
     }
   }
 
@@ -403,7 +397,7 @@ public class Validator {
 
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      sendValidationResult(attributes, message, reportingDevice);
+      sendValidationResult(attributes, reportingDevice);
     }
     processValidationReport();
   }
@@ -499,50 +493,45 @@ public class Validator {
     return reportingDevice;
   }
 
-  private void sendValidationResult(Map<String, String> origAttributes, Object message,
+  private void sendValidationResult(Map<String, String> origAttributes,
       ReportingDevice reportingDevice) {
     try {
-      ValidationEvent validationEvent = makeValidationEvent();
+      ValidationEvent event = new ValidationEvent();
+      event.version = UDMI_VERSION;
+      event.timestamp = new Date();
       String subFolder = origAttributes.get("subFolder");
-      validationEvent.sub_folder = subFolder;
-      validationEvent.sub_type = origAttributes.get("subType");
-      validationEvent.status = reportingDevice.getErrorStatus();
+      event.sub_folder = subFolder;
+      event.sub_type = origAttributes.get("subType");
+      event.status = reportingDevice.getErrorStatus();
       List<Entry> errors = reportingDevice.getErrors();
-      validationEvent.errors = errors != null && errors.size() > 1 ? errors : null;
+      event.errors = errors != null && errors.size() > 1 ? errors : null;
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
         pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
-        validationEvent.pointset = pointsSummary;
+        event.pointset = pointsSummary;
       }
-      sendValidationEvent(reportingDevice.getDeviceId(), validationEvent);
+      sendValidationMessage(reportingDevice.getDeviceId(), event, VALIDATION_EVENT_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation result", e);
     }
   }
 
-  private void sendValidationReport(ValidationEvent report) {
+  private void sendValidationReport(ValidationState report) {
     try {
-      sendValidationEvent(VALIDATION_REPORT_DEVICE, report);
+      sendValidationMessage(VALIDATION_REPORT_DEVICE, report, VALIDATION_STATE_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation report", e);
     }
   }
 
-  private void sendValidationEvent(String deviceId, ValidationEvent validationEvent) {
+  private void sendValidationMessage(String deviceId, Object message, String topic) {
     try {
-      String messageString = OBJECT_MAPPER.writeValueAsString(validationEvent);
-      dataSinks.forEach(sink -> sink.publish(deviceId, VALIDATION_EVENT_TOPIC, messageString));
+      String messageString = OBJECT_MAPPER.writeValueAsString(message);
+      dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
     } catch (Exception e) {
       throw new RuntimeException("While sending validation event for " + deviceId, e);
     }
-  }
-
-  private ValidationEvent makeValidationEvent() {
-    ValidationEvent validationEvent = new ValidationEvent();
-    validationEvent.version = UDMI_VERSION;
-    validationEvent.timestamp = new Date();
-    return validationEvent;
   }
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
@@ -669,10 +658,18 @@ public class Validator {
       }
     }
 
-    ValidationEvent report = makeValidationEvent();
+    ValidationState report = makeValidationReport(summary, devices);
+    sendValidationReport(report);
+  }
+
+  private ValidationState makeValidationReport(ValidationSummary summary,
+      Map<String, DeviceValidationEvent> devices) {
+    ValidationState report = new ValidationState();
+    report.version = UDMI_VERSION;
+    report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
-    sendValidationReport(report);
+    return report;
   }
 
   private <T> ArrayList<T> arrayIfNotEmpty(Set<T> items) {

@@ -1,29 +1,16 @@
 package com.google.daq.mqtt.registrar;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.LogLevel;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import org.junit.Test;
-import udmi.schema.Metadata;
 
+/**
+ * Test suite for basic registrar functionality.
+ */
 public class RegistrarTest {
 
   private static final String SCHEMA_BASE_PATH = "schema";
@@ -36,7 +23,7 @@ public class RegistrarTest {
   private static final String DEVICE_NAME = "AHU-1";
   private ObjectMapper mapper = new ObjectMapper();
 
-  public class RegistrarUnderTest extends Registrar {
+  private static class RegistrarUnderTest extends Registrar {
     protected JsonSchema getJsonSchema(String schemaName) {
       return getSchemas().get(schemaName);
     }

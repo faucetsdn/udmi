@@ -16,25 +16,28 @@
   "blobset": {
     "blobs": {
       "arbitrary_manufacturer_id": {
+        "phase": "final",
         "status": {
-          "message": "Received arbitrary_manufacturer_id",
-          "category": "blobset.blob.received",
+          "message": "Fetching arbitrary_manufacturer_id",
+          "category": "blobset.blob.fetch",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
       },
       "_firmware_update": {
+        "phase": "apply",
         "status": {
-          "message": "Received firmware update",
-          "category": "blobset.blob.received",
+          "message": "Processing firmware update",
+          "category": "blobset.blob.apply",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
       },
-      "_endpoint_redirect": {
+      "_iot_endpoint_config": {
+        "phase": "apply",
         "status": {
-          "message": "Received endpoint redirect",
-          "category": "blobset.blob.received",
+          "message": "Received endpoint config",
+          "category": "blobset.blob.receive",
           "timestamp": "2022-07-13T12:00:08.000Z",
           "level": 100 
         }
