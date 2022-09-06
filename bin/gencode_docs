@@ -28,9 +28,6 @@ fi
 OUTPUT_DIR=gencode/docs
 TMP_DIR=tmp/schema
 
-schema_files=`ls schema/*.json`
-rm -rf $OUTPUT_DIR $TMP_DIR
-
 if [ "$OP" == gen_bucket ]; then
 
     input_file=$OP
@@ -89,11 +86,10 @@ if [ -d venv ]; then
     source venv/bin/activate
 fi
 
-mkdir -p $OUTPUT_DIR
+rm -rf $OUTPUT_DIR $TMP_DIR
+mkdir -p $OUTPUT_DIR $TMP_DIR
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
-rm -rf $TMP_DIR
-mkdir -p $TMP_DIR
 cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works
