@@ -21,7 +21,12 @@ public class ValidationException extends RuntimeException {
     this.causingExceptions = causingExceptions;
   }
 
-  private ValidationException(String message) {
+  /**
+   * Create a simple validation exception.
+   *
+   * @param message exception message
+   */
+  public ValidationException(String message) {
     this(message, ImmutableList.of());
   }
 

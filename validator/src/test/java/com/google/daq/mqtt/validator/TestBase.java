@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,6 +86,7 @@ public class TestBase {
     try {
       String messageStr = OBJECT_MAPPER.writeValueAsString(messageObject);
       bundle.message = OBJECT_MAPPER.readValue(messageStr, TreeMap.class);
+      bundle.message.put("timestamp", Instant.now().toString());
     } catch (Exception e) {
       throw new RuntimeException("While converting message bundle object", e);
     }

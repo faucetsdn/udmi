@@ -53,3 +53,5 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _result_: (**INFO**) Regarging the actual validation results.
   * _summary_: Conditions specific to an overall site summary.
     * _report_: (**INFO**) The validation summary report.
+* _device_: Device specific messages (ignored by UDMI system)
+  * _???_: (**INFO**) Special wildcard category, anything prefixed by 'device.' lands here!

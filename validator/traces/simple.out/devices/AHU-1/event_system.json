@@ -1,7 +1,7 @@
 {
   "logentries" : [ {
     "message" : "1999-10-20T01:02:03Z sending test message #70",
-    "category" : "pubber",
+    "category" : "device.testing",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 200
   } ],

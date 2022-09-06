@@ -3,9 +3,6 @@
     "filter_alarm_pressure_status" : {
       "present_value" : false
     },
-    "filter_differential_pressure" : {
-      "present_value" : 95
-    },
     "filter_differential_pressure_sensor" : {
       "present_value" : 76
     }
