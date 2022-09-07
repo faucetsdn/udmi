@@ -10,7 +10,6 @@ docs/tools/registrar.md referenced in MSI learning materials and documentation
 docs/tools/validator.md referenced in MSI learning materials and documentation
 docs/tools/sequencer.md referenced in MSI learning materials and documentation
 docs/specs/sequences/readme.md referenced in MSI learning materials and documentation
-readme.md referenced in MSI learning materials and documentation
 docs/specs/message_walk.md referenced in MSI learning materials and documentation
 docs/cloud/gcp/readme.md referenced in MSI learning materials and documentation
 docs/specs/site_model.md referenced in MSI learning materials and documentation
