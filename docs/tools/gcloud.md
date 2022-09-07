@@ -11,6 +11,8 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 
 # View cloud function logs
 
+`bin/cloud_logs $project_id`
+
 `gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000`
 
 # Update a device's GCP IoT Core configuration
