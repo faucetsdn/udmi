@@ -4,3 +4,23 @@
 # This is not sophisticated enough to check the _usage_ of any files.
 
 dashboard/deploy_dashboard_gcloud referenced in MSI learning materials and documentation
+docs/tools/keygen.md referenced in MSI learning materials and documentation
+docs/tools/pubber.md referenced in MSI learning materials and documentation
+docs/tools/registrar.md referenced in MSI learning materials and documentation
+docs/tools/validator.md referenced in MSI learning materials and documentation
+docs/tools/sequencer.md referenced in MSI learning materials and documentation
+docs/specs/sequences/readme.md.md referenced in MSI learning materials and documentation
+readme.md referenced in MSI learning materials and documentation
+docs/specs/message_walk.md.md referenced in MSI learning materials and documentation
+tree/master/docs/cloud/gcp.md referenced in MSI learning materials and documentation
+docs/specs/site_model.md.md referenced in MSI learning materials and documentation
+gencode/docs/metadata.md referenced in MSI learning materials and documentation
+docs/specs/metadata.md referenced in MSI learning materials and documentation
+docs/tools/validator.md.md referenced in MSI learning materials and documentation
+gencode/docs/readme.md.md referenced in MSI learning materials and documentation
+docs/specs/connecting.md referenced in MSI learning materials and documentation
+docs/specs/gateway.md referenced in MSI learning materials and documentation
+gencode/docs/state.md referenced in MSI learning materials and documentation
+docs/messages/state.md referenced in MSI learning materials and documentation
+docs/messages/config.md referenced in MSI learning materials and documentation
+docs/specs/sequences/writeback.md referenced in MSI learning materials and documentation
