@@ -77,7 +77,6 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
-  private SiteModel siteModel;
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
@@ -92,6 +91,8 @@ public class Registrar {
   private Map<String, Map<String, String>> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
+  private boolean blockUnknown;
+  private File siteDir;
 
   /**
    * Main entry point for registrar.
@@ -177,6 +178,8 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
+    assert cloudIotManager == null;
+    blockUnknown = false;
   }
 
   private void setFeedTopic(String feedTopic) {
@@ -251,6 +254,7 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
+    blockUnknown = cloudIotManager.cloudIotConfig.block_unknown;
   }
 
   private String getGenerationString() {
@@ -264,11 +268,7 @@ public class Registrar {
   }
 
   private void processDevices() {
-    processDevices(this.deviceList);
-  }
-
-  private void processDevices(List<String> devices) {
-    Set<String> deviceSet = calculateDevices(devices);
+    Set<String> deviceSet = calculateDevices();
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
@@ -414,11 +414,11 @@ public class Registrar {
     }
   }
 
-  private Set<String> calculateDevices(List<String> devices) {
-    if (devices == null) {
+  private Set<String> calculateDevices() {
+    if (deviceList == null) {
       return null;
     }
-    return devices.stream().map(this::deviceNameFromPath).collect(Collectors.toSet());
+    return deviceList.stream().map(this::deviceNameFromPath).collect(Collectors.toSet());
   }
 
   private String deviceNameFromPath(String device) {
@@ -434,7 +434,7 @@ public class Registrar {
 
   private ExceptionMap blockExtraDevices(Set<String> extraDevices) {
     ExceptionMap exceptionMap = new ExceptionMap("Block devices errors");
-    if (!cloudIotManager.cloudIotConfig.block_unknown) {
+    if (!blockUnknown) {
       return exceptionMap;
     }
     for (String extraName : extraDevices) {

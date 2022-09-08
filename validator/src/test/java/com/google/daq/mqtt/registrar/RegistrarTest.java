@@ -13,21 +13,9 @@ import org.junit.Test;
  */
 public class RegistrarTest {
 
-  private static final String SCHEMA_BASE_PATH = "schema";
-  private static final String METADATA_JSON = "metadata.json";
   private static final String PROJECT_ID = "unit-testing";
   private static final String SITE_PATH = "../sites/udmi_site_model";
   private static final String TOOL_ROOT = "../";
-
-  private static final String SYSTEM_LOCATION_SITE = "ZZ-TRI-FECTA";
-  private static final String DEVICE_NAME = "AHU-1";
-  private ObjectMapper mapper = new ObjectMapper();
-
-  private static class RegistrarUnderTest extends Registrar {
-    protected JsonSchema getJsonSchema(String schemaName) {
-      return getSchemas().get(schemaName);
-    }
-  }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
     if ((summary == null) || (summary.get("Validating") == null)
@@ -54,7 +42,8 @@ public class RegistrarTest {
     return registrar;
   }
 
-  @Test public void metadataValidateSuccessTest() {
+  @Test
+  public void metadataValidateSuccessTest() {
     final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
     ArrayList<String> argList = new ArrayList<String>();
@@ -65,7 +54,8 @@ public class RegistrarTest {
     assertErrorSummaryValidateSuccess(registrar.getLastErrorSummary());
   }
 
-  @Test public void metadataValidateFailureTest() {
+  @Test
+  public void metadataValidateFailureTest() {
     final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
     ArrayList<String> argList = new ArrayList<String>();
@@ -75,6 +65,13 @@ public class RegistrarTest {
     Registrar.processArgs(argList, registrar);
     registrar.execute();
     assertErrorSummaryValidateFailure(registrar.getLastErrorSummary());
+  }
+
+  private static class RegistrarUnderTest extends Registrar {
+
+    protected JsonSchema getJsonSchema(String schemaName) {
+      return getSchemas().get(schemaName);
+    }
   }
 
 }
