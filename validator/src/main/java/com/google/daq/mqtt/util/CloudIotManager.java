@@ -358,7 +358,7 @@ public class CloudIotManager {
       }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("While fetching device configurations for " + deviceId);
+      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
     }
   }
 
@@ -379,7 +379,7 @@ public class CloudIotManager {
       cloudIotRegistries.devices().modifyCloudToDeviceConfig(getDevicePath(deviceId), req)
           .execute();
     } catch (Exception e) {
-      throw new RuntimeException("While setting device config for " + deviceId);
+      throw new RuntimeException("While setting device config for " + deviceId, e);
     }
   }
 }
