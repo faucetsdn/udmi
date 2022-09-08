@@ -35,18 +35,23 @@ public class RegistrarTest {
   }
 
   private RegistrarUnderTest getRegistrarUnderTest() {
-    RegistrarUnderTest registrar = new RegistrarUnderTest();
-    registrar.setSitePath(SITE_PATH);
-    registrar.setProjectId(PROJECT_ID);
-    registrar.setToolRoot(TOOL_ROOT);
-    return registrar;
+    try {
+      RegistrarUnderTest registrar = new RegistrarUnderTest();
+      registrar.setSitePath(SITE_PATH);
+      registrar.setProjectId(PROJECT_ID);
+      registrar.setToolRoot(TOOL_ROOT);
+      return registrar;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 
   @Test
   public void metadataValidateSuccessTest() {
     final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
-    ArrayList<String> argList = new ArrayList<String>();
+    ArrayList<String> argList = new ArrayList<>();
     argList.add("-s");
     argList.add(SITE_PATH);
     Registrar.processArgs(argList, registrar);
@@ -58,7 +63,7 @@ public class RegistrarTest {
   public void metadataValidateFailureTest() {
     final RegistrarUnderTest registrar = getRegistrarUnderTest();
 
-    ArrayList<String> argList = new ArrayList<String>();
+    ArrayList<String> argList = new ArrayList<>();
     argList.add("-t");
     argList.add("-s");
     argList.add(SITE_PATH);
