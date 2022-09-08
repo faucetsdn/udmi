@@ -25,7 +25,7 @@ jobs:
         run: |
           bin/gencode check
           pubber/bin/build check
-          validator/bin/build check
+          validator/bin/build check --debug
       - name: Schema conformance tests
         if: ${{ always() }}
         run: |
