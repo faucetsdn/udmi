@@ -77,7 +77,7 @@ public class CloudIotManager {
     } catch (Exception e) {
       throw new RuntimeException(
           String.format("While initializing project %s from file %s", projectId,
-              cloudConfig.getAbsolutePath()));
+              cloudConfig.getAbsolutePath()), e);
     }
   }
 
