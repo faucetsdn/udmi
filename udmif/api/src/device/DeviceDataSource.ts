@@ -2,7 +2,12 @@ import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSou
 import { Device, DevicesResponse, Point } from './model';
 import { validateSearchOptions, validateDistinctSearchOptions } from '../common/SearchOptionsValidator';
 import { DAO } from '../dao/DAO';
-import { ValidatedDistinctSearchOptions, DistinctSearchOptions, ValidatedSearchOptions } from '../common/model';
+import {
+  ValidatedDistinctSearchOptions,
+  DistinctSearchOptions,
+  ValidatedSearchOptions,
+  SearchOptions,
+} from '../common/model';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DAO<Device>) {
@@ -13,7 +18,7 @@ export class DeviceDataSource extends GraphQLDataSource {
     super.initialize(config);
   }
 
-  async getDevices(searchOptions: ValidatedSearchOptions): Promise<DevicesResponse> {
+  async getDevices(searchOptions?: SearchOptions): Promise<DevicesResponse> {
     const validatedSearchOptions: ValidatedSearchOptions = validateSearchOptions(searchOptions);
 
     const devices: Device[] = await this.deviceDAO.getAll(validatedSearchOptions);

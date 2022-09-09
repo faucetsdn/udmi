@@ -1,38 +1,43 @@
+import { ApolloContext } from '../server/datasources';
 import { Site } from './model';
 
 export const resolvers = {
   Query: {
-    siteNames: (_, { searchOptions }, { dataSources: { siteDS } }) => {
+    siteNames: (_: any, { searchOptions }, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSiteNames(searchOptions);
     },
-    sites: (_, { searchOptions }, { dataSources: { siteDS } }) => {
+    sites: (_: any, { searchOptions }, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSites(searchOptions);
     },
   },
   Site: {
-    totalDevicesCount: (site: Site, _args: any, { dataSources: { deviceDS } }) => {
-      return deviceDS.getSiteDevicesCount(site.name);
+    totalDevicesCount: ({ name }: Site, _args: any, { dataSources: { deviceDS } }: ApolloContext) => {
+      return deviceDS.getSiteDevicesCount(name);
     },
-    correctDevicesCount: (site: Site, _args: any, { dataSources: { siteDS } }) => {
-      return siteDS.getCorrectDevicesCount(site.id);
+    correctDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getCorrectDevicesCount(id);
     },
-    missingDevicesCount: (site: Site, _args: any, { dataSources: { siteDS } }) => {
-      return siteDS.getMissingDevicesCount(site.id);
+    missingDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getMissingDevicesCount(id);
     },
-    errorDevicesCount: (site: Site, _args: any, { dataSources: { siteDS } }) => {
-      return siteDS.getErrorDevicesCount(site.id);
+    errorDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getErrorDevicesCount(id);
     },
-    extraDevicesCount: (site: Site, _args: any, { dataSources: { siteDS } }) => {
-      return siteDS.getExtraDevicesCount(site.id);
+    extraDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getExtraDevicesCount(id);
     },
-    lastValidated: (site: Site, _args: any, { dataSources: { siteDS } }) => {
-      return siteDS.getLastValidated(site.id);
+    lastValidated: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getLastValidated(id);
     },
-    percentValidated: async (site: Site, _args: any, { dataSources: { deviceDS, siteDS } }) => {
-      return siteDS.getPercentValidated(site.id, await deviceDS.getSiteDevicesCount(site.name));
+    percentValidated: async ({ id, name }: Site, _args: any, { dataSources: { deviceDS, siteDS } }: ApolloContext) => {
+      return siteDS.getPercentValidated(id, await deviceDS.getSiteDevicesCount(name));
     },
-    totalDeviceErrorsCount: async (site: Site, _args: any, { dataSources: { deviceDS, siteDS } }) => {
-      return siteDS.getTotalDeviceErrorsCount((await deviceDS.getSiteDevices(site.name)).devices);
+    totalDeviceErrorsCount: async (
+      { name }: Site,
+      _args: any,
+      { dataSources: { deviceDS, siteDS } }: ApolloContext
+    ) => {
+      return siteDS.getTotalDeviceErrorsCount((await deviceDS.getSiteDevices(name)).devices);
     },
   },
 };
