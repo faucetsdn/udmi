@@ -19,7 +19,7 @@ export const GET_SITES = gql`
       totalFilteredCount
     }
   }
-`;
+`
 
 export const GET_SITE_NAMES = gql`
   query GetSiteNames($searchOptions: DistinctSearchOptions) {

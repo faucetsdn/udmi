@@ -8,7 +8,7 @@ interface SiteModel {
   extraDevicesCount: number;
   lastValidated: string;
   percentValidated: number;
-  totalDeviceErrorsCount: number;
+  totalDeviceErrorsCount: number
 }
 
 export type Site = Partial<SiteModel>;

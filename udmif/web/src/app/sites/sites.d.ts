@@ -19,7 +19,7 @@ export interface SitesResponse {
 }
 
 export type SitesQueryResponse = {
-  sites?: SitesResponse;
+  sites?: SitesResponse
 };
 
 export type SitesQueryVariables = {
