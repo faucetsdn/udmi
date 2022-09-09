@@ -111,6 +111,10 @@ jobs:
           more /tmp/sequencer.out
           diff -u /tmp/sequencer.out etc/sequencer.out && echo No sequencer.out diff
           diff -u /tmp/generated.md docs/specs/sequences/generated.md && echo No generated.md diff
+          (ls -1 validator/sequences | xargs -I% diff -u \
+              sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
+              validator/sequences/%/sequence.md) \
+              && echo Sequences in validator/sequences up to date
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
