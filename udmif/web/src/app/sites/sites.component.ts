@@ -15,8 +15,7 @@ import { Subscription } from 'rxjs';
 export class SitesComponent implements OnInit, OnDestroy {
   private sitesSubscription!: Subscription;
   private sitesQuery!: QueryRef<SitesQueryResponse, SitesQueryVariables>;
-  displayedColumns: (keyof SiteModel)[] = ['name',
-  'totalDevicesCount', 'correctDevicesCount', 'missingDevicesCount', 'errorDevicesCount', 'extraDevicesCount', 'lastValidated', 'percentValidated', 'totalDeviceErrorsCount'];
+  displayedColumns: (keyof SiteModel)[] = ['name', 'totalDevicesCount', 'correctDevicesCount', 'missingDevicesCount', 'errorDevicesCount', 'extraDevicesCount', 'lastValidated', 'percentValidated', 'totalDeviceErrorsCount'];
   sites: Site[] = [];
   totalCount: number = 0;
   totalFilteredCount: number = 0;
