@@ -14,7 +14,7 @@
   },
   "private": true,
   "lint-staged": {
-    "*.{js,html,ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
+    "./**/*.{js,html,ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   },
   "dependencies": {
     "@abacritt/angularx-social-login": "~1.0.2",
