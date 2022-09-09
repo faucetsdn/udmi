@@ -37,40 +37,4 @@ export class SiteDataSource extends GraphQLDataSource {
   async getSite(id: string): Promise<Site> {
     return this.siteDAO.getOne({ id });
   }
-
-  async getCorrectDevicesCount(id: string): Promise<number> {
-    return (await this.getSite(id)).validation.summary.correct_devices.length;
-  }
-
-  async getMissingDevicesCount(id: string): Promise<number> {
-    return (await this.getSite(id)).validation.summary.missing_devices.length;
-  }
-
-  async getErrorDevicesCount(id: string): Promise<number> {
-    return (await this.getSite(id)).validation.summary.error_devices.length;
-  }
-
-  async getExtraDevicesCount(id: string): Promise<number> {
-    return (await this.getSite(id)).validation.summary.extra_devices.length;
-  }
-
-  async getLastValidated(id: string): Promise<string> {
-    return (await this.getSite(id)).validation.last_updated;
-  }
-
-  async getPercentValidated(id: string, totalDevicesCount: number): Promise<number> {
-    return (
-      ((await this.getCorrectDevicesCount(id)) +
-        (await this.getMissingDevicesCount(id)) +
-        (await this.getErrorDevicesCount(id)) +
-        (await this.getExtraDevicesCount(id))) /
-      totalDevicesCount
-    );
-  }
-
-  async getTotalDeviceErrorsCount(devices: Device[]): Promise<number> {
-    return devices.reduce((n: number, device: Device) => {
-      return n + (device.validation?.errors.length ?? 0);
-    }, 0);
-  }
 }

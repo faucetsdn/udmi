@@ -1,43 +1,48 @@
+import { sum } from 'lodash';
 import { ApolloContext } from '../server/datasources';
-import { Site } from './model';
+import { Site, SiteNamesArgs, SitesArgs } from './model';
 
 export const resolvers = {
   Query: {
-    siteNames: (_: any, { searchOptions }, { dataSources: { siteDS } }: ApolloContext) => {
+    siteNames: (_query, { searchOptions }: SiteNamesArgs, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSiteNames(searchOptions);
     },
-    sites: (_: any, { searchOptions }, { dataSources: { siteDS } }: ApolloContext) => {
+    sites: (_query, { searchOptions }: SitesArgs, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSites(searchOptions);
     },
   },
   Site: {
-    totalDevicesCount: ({ name }: Site, _args: any, { dataSources: { deviceDS } }: ApolloContext) => {
-      return deviceDS.getSiteDevicesCount(name);
+    totalDevicesCount: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      return (await deviceDS.getDevicesBySite(site.name)).totalFilteredCount;
     },
-    correctDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getCorrectDevicesCount(id);
+    correctDevicesCount: (site: Site) => {
+      return site.validation?.summary.correct_devices.length;
     },
-    missingDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getMissingDevicesCount(id);
+    missingDevicesCount: (site: Site) => {
+      return site.validation?.summary.missing_devices.length;
     },
-    errorDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getErrorDevicesCount(id);
+    errorDevicesCount: (site: Site) => {
+      return site.validation?.summary.error_devices.length;
     },
-    extraDevicesCount: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getExtraDevicesCount(id);
+    extraDevicesCount: (site: Site) => {
+      return site.validation?.summary.extra_devices.length;
     },
-    lastValidated: ({ id }: Site, _args: any, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getLastValidated(id);
+    lastValidated: (site: Site) => {
+      return site.validation?.last_updated;
     },
-    percentValidated: async ({ id, name }: Site, _args: any, { dataSources: { deviceDS, siteDS } }: ApolloContext) => {
-      return siteDS.getPercentValidated(id, await deviceDS.getSiteDevicesCount(name));
+    percentValidated: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      return (
+        sum([
+          0,
+          site.validation?.summary.correct_devices.length,
+          site.validation?.summary.missing_devices.length,
+          site.validation?.summary.error_devices.length,
+          site.validation?.summary.extra_devices.length,
+        ]) / (await deviceDS.getDevicesBySite(site.name)).totalFilteredCount
+      );
     },
-    totalDeviceErrorsCount: async (
-      { name }: Site,
-      _args: any,
-      { dataSources: { deviceDS, siteDS } }: ApolloContext
-    ) => {
-      return siteDS.getTotalDeviceErrorsCount((await deviceDS.getSiteDevices(name)).devices);
+    totalDeviceErrorsCount: (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      return deviceDS.getDeviceErrorsCountBySite(site.name);
     },
   },
 };

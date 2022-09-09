@@ -56,7 +56,7 @@ export class DeviceDataSource extends GraphQLDataSource {
     return this.deviceDAO.getDistinct('section', validatedSearchOptions);
   }
 
-  async getSiteDevices(siteName: string): Promise<DevicesResponse> {
+  async getDevicesBySite(siteName: string): Promise<DevicesResponse> {
     return this.getDevices({
       offset: 0,
       filter: JSON.stringify([
@@ -69,7 +69,11 @@ export class DeviceDataSource extends GraphQLDataSource {
     });
   }
 
-  async getSiteDevicesCount(siteName: string): Promise<number> {
-    return (await this.getSiteDevices(siteName)).totalFilteredCount;
+  async getDeviceErrorsCountBySite(siteName: string): Promise<number> {
+    const { devices } = await this.getDevicesBySite(siteName);
+
+    return devices.reduce((n: number, device: Device) => {
+      return n + (device.validation?.errors.length ?? 0);
+    }, 0);
   }
 }
