@@ -20,7 +20,7 @@ export const GET_DEVICES = gql`
       totalFilteredCount
     }
   }
-`
+`;
 
 export const GET_DEVICE_NAMES = gql`
   query GetDeviceNames($searchOptions: DistinctSearchOptions) {
