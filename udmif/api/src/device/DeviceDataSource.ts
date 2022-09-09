@@ -8,6 +8,7 @@ import {
   ValidatedSearchOptions,
   SearchOptions,
 } from '../common/model';
+import { sum } from 'lodash';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DAO<Device>) {
@@ -73,7 +74,7 @@ export class DeviceDataSource extends GraphQLDataSource {
     const { devices } = await this.getDevicesBySite(siteName);
 
     return devices.reduce((n: number, device: Device) => {
-      return n + (device.validation?.errors.length ?? 0);
+      return sum([n, device.validation?.errors.length]);
     }, 0);
   }
 }

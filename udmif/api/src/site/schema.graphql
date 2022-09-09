@@ -23,7 +23,7 @@ type Site {
   # Number of extra devices in the message
   extraDevicesCount: Int!
   # Last time the validation message was updated
-  lastValidated: String!
+  lastValidated: String
   # Percent of devices validated i.e. 0.97
   percentValidated: Float!
   # Total number of errors across all devices
