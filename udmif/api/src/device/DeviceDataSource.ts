@@ -50,4 +50,21 @@ export class DeviceDataSource extends GraphQLDataSource {
     const validatedSearchOptions: ValidatedDistinctSearchOptions = validateDistinctSearchOptions(searchOptions);
     return this.deviceDAO.getDistinct('section', validatedSearchOptions);
   }
+
+  async getSiteDevices(siteName: string): Promise<DevicesResponse> {
+    return this.getDevices({
+      offset: 0,
+      filter: JSON.stringify([
+        {
+          field: 'site',
+          operator: '=',
+          value: siteName,
+        },
+      ]),
+    });
+  }
+
+  async getSiteDevicesCount(siteName: string): Promise<number> {
+    return (await this.getSiteDevices(siteName)).totalFilteredCount;
+  }
 }

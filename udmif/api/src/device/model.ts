@@ -13,7 +13,7 @@ export interface Point {
 }
 
 export interface Device {
-  id?: string;
+  id: string;
   name: string;
   make?: string;
   model?: string;
@@ -25,4 +25,5 @@ export interface Device {
   serialNumber?: string;
   tags?: string[];
   points?: Point[];
+  validation?: any;
 }

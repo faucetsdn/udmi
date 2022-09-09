@@ -7,7 +7,7 @@ input DistinctSearchOptions {
 
 input SearchOptions {
   # the number of records to retrieve
-  batchSize: Int!
+  batchSize: Int
   # the records to start at
   offset: Int
   # the search options

@@ -36,12 +36,17 @@ export class DefaultDAO<Type> implements DAO<Type> {
    * based on any search options provided.
    */
   async getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
-    return this.collection
-      .find<Type>(this.getFilter(searchOptions))
-      .sort(this.getSort(searchOptions))
-      .skip(searchOptions.offset)
-      .limit(searchOptions.batchSize)
-      .toArray();
+    const collection = this.collection.find<Type>(this.getFilter(searchOptions)).sort(this.getSort(searchOptions));
+
+    if (searchOptions.offset) {
+      collection.skip(searchOptions.offset);
+    }
+
+    if (searchOptions.batchSize) {
+      collection.limit(searchOptions.batchSize);
+    }
+
+    return collection.toArray();
   }
 
   /**
