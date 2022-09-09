@@ -1,0 +1,72 @@
+2022-09-09T03:14:49Z WARNING pubber State update defer 1642ms
+2022-09-09T03:14:49Z WARNING pubber State update defer 1642ms
+2022-09-09T03:14:49Z INFO pubber Clearing scheduled discovery family virtual
+2022-09-09T03:14:49Z INFO pubber 2022-09-09T03:14:49Z received config 2022-09-09T03:14:49Z
+2022-09-09T03:14:49Z NOTICE system.config.apply success
+2022-09-09T03:14:49Z WARNING pubber State update defer 1633ms
+2022-09-09T03:14:49Z INFO pubber Config handler
+2022-09-09T03:14:49Z WARNING pubber State update defer 1632ms
+2022-09-09T03:14:51Z WARNING pubber State update defer 0ms
+2022-09-09T03:14:51Z INFO pubber update state 2022-09-09T03:14:51Z last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:51Z NOTICE system.config.apply success
+2022-09-09T03:14:51Z WARNING pubber State update defer 1806ms
+2022-09-09T03:14:51Z WARNING pubber State update defer 1800ms
+2022-09-09T03:14:51Z INFO pubber Config handler
+2022-09-09T03:14:51Z INFO pubber 2022-09-09T03:14:51Z received config 2022-09-09T03:14:49Z
+2022-09-09T03:14:51Z WARNING pubber State update defer 1807ms
+2022-09-09T03:14:51Z WARNING pubber State update defer 1800ms
+2022-09-09T03:14:53Z INFO pubber update state 2022-09-09T03:14:53Z last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:53Z INFO pubber Config handler
+2022-09-09T03:14:53Z NOTICE system.config.apply success
+2022-09-09T03:14:53Z WARNING pubber State update defer 1999ms
+2022-09-09T03:14:53Z WARNING pubber State update defer 1998ms
+2022-09-09T03:14:53Z WARNING pubber State update defer 1999ms
+2022-09-09T03:14:53Z INFO pubber 2022-09-09T03:14:53Z received config 2022-09-09T03:14:52Z
+2022-09-09T03:14:53Z WARNING pubber State update defer 0ms
+2022-09-09T03:14:54Z WARNING pubber State update defer 893ms
+2022-09-09T03:14:54Z WARNING pubber State update defer 893ms
+2022-09-09T03:14:54Z INFO pubber Config handler
+2022-09-09T03:14:54Z WARNING pubber State update defer 890ms
+2022-09-09T03:14:55Z WARNING pubber State update defer 0ms
+2022-09-09T03:14:55Z INFO pubber update state 2022-09-09T03:14:55Z last_config 2022-09-09T03:14:54Z
+2022-09-09T03:14:55Z INFO pubber 2022-09-09T03:14:55Z received config 2022-09-09T03:14:54Z
+2022-09-09T03:14:55Z INFO pubber Config handler
+2022-09-09T03:14:55Z NOTICE system.config.apply success
+2022-09-09T03:14:55Z WARNING pubber State update defer 1654ms
+2022-09-09T03:14:55Z WARNING pubber State update defer 1645ms
+2022-09-09T03:14:54Z WARNING pubber State update defer 891ms
+2022-09-09T03:14:54Z INFO pubber 2022-09-09T03:14:54Z received config 2022-09-09T03:14:54Z
+2022-09-09T03:14:54Z NOTICE system.config.apply success
+2022-09-09T03:14:55Z WARNING pubber State update defer 1653ms
+2022-09-09T03:14:57Z WARNING pubber State update defer 0ms
+2022-09-09T03:14:55Z WARNING pubber State update defer 1646ms
+2022-09-09T03:14:57Z INFO pubber update state 2022-09-09T03:14:57Z last_config 2022-09-09T03:14:54Z
+2022-09-09T03:14:57Z INFO pubber Config handler
+2022-09-09T03:14:57Z WARNING pubber State update defer 1935ms
+2022-09-09T03:14:57Z NOTICE system.config.apply success
+2022-09-09T03:14:57Z WARNING pubber State update defer 1933ms
+2022-09-09T03:14:57Z INFO pubber 2022-09-09T03:14:57Z received config 2022-09-09T03:14:58Z
+2022-09-09T03:14:57Z WARNING pubber State update defer 1934ms
+2022-09-09T03:14:57Z WARNING pubber State update defer 1933ms
+2022-09-09T03:14:58Z WARNING pubber State update defer 1082ms
+2022-09-09T03:14:59Z INFO pubber 2022-09-09T03:14:59Z received config 2022-09-09T03:15:00Z
+2022-09-09T03:14:59Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:14:59Z
+2022-09-09T03:14:59Z INFO pubber Discovery scan generation virtual is 2022-09-09T03:14:59Z
+2022-09-09T03:14:59Z INFO pubber Config handler
+2022-09-09T03:14:59Z WARNING pubber State update defer 16ms
+2022-09-09T03:14:59Z NOTICE system.config.apply success
+2022-09-09T03:14:59Z WARNING pubber State update defer 15ms
+2022-09-09T03:14:59Z WARNING pubber State update defer 15ms
+2022-09-09T03:14:59Z WARNING pubber State update defer 0ms
+2022-09-09T03:14:59Z WARNING pubber State update defer 22ms
+2022-09-09T03:14:59Z WARNING pubber State update defer 23ms
+2022-09-09T03:14:59Z INFO pubber update state 2022-09-09T03:14:59Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:04Z INFO pubber Sent 1 discovery events from virtual for Thu Sep 08 20:14:59 PDT 2022
+2022-09-09T03:15:09Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:15:09Z
+2022-09-09T03:15:09Z INFO pubber update state 2022-09-09T03:15:09Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:09Z WARNING pubber State update defer -7791ms
+2022-09-09T03:15:14Z INFO pubber Sent 1 discovery events from virtual for Thu Sep 08 20:15:09 PDT 2022
+2022-09-09T03:15:19Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:15:19Z
+2022-09-09T03:15:19Z INFO pubber update state 2022-09-09T03:15:19Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:19Z WARNING pubber State update defer -7840ms
+2022-09-09T03:15:25Z INFO sequencer Sequence complete

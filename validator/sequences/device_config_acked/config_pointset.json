@@ -1,0 +1,15 @@
+{
+  "points" : {
+    "filter_alarm_pressure_status" : {
+      "ref" : "BV11.present_value"
+    },
+    "filter_differential_pressure_setpoint" : {
+      "set_value" : 98
+    },
+    "filter_differential_pressure_sensor" : {
+      "ref" : "AV12.present_value"
+    }
+  },
+  "timestamp" : "2022-09-09T03:13:32.040Z",
+  "version" : "1.3.14-44-gecf30496-dirty"
+}

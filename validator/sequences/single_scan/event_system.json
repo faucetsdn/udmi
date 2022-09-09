@@ -1,0 +1,10 @@
+{
+  "logentries" : [ {
+    "message" : "update state 2022-09-09T03:14:49Z last_config 2022-09-09T03:14:42Z",
+    "category" : "pubber",
+    "timestamp" : "2022-09-09T03:14:49Z",
+    "level" : 200
+  } ],
+  "timestamp" : "2022-09-09T03:14:49.543Z",
+  "version" : "1.3.14"
+}

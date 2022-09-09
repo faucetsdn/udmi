@@ -1,0 +1,10 @@
+{
+  "logentries" : [ {
+    "message" : "Config handler",
+    "category" : "pubber",
+    "timestamp" : "2022-09-09T03:15:55Z",
+    "level" : 200
+  } ],
+  "timestamp" : "2022-09-09T03:15:55.748Z",
+  "version" : "1.3.14"
+}
