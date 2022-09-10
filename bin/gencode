@@ -8,6 +8,11 @@ if [[ $1 == check ]]; then
     shift
 fi
 
+if [[ -n $check ]]; then
+    # This check must be run before gencode_docs is run
+    bin/gencode_docs_examples check
+fi
+
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
@@ -18,12 +23,12 @@ if [[ -n $check ]]; then
     bin/gencode_docs_checklinks
 
     echo "Checking gencode hash (dynamic/static)..."
-    files=`find gencode/ docs/ -type f | sort`
+    files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
     diff /tmp/gencode.hash .gencode_hash.txt
 else
     echo Updating gencode hash...
-    files=`find gencode/ docs/ -type f | sort`
+    files=`find gencode/ -type f | sort`
     sha256sum $files > .gencode_hash.txt
 fi
 

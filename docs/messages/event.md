@@ -36,7 +36,7 @@ Events are sent to the `events/<TYPE>` MQTT topic, e.g. `events/pointset` for po
     "status": {  // Status scoped to overall pointset operation
       "message": "Invalid sample time",
       "category": "pointset.point.invalid",
-      "timestamp": "2018-08-26T21:39:28.364Z",
+      "time
       "level": 800
     },
     "points": {
