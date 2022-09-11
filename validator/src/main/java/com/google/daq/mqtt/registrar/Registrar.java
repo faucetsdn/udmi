@@ -532,6 +532,7 @@ public class Registrar {
   }
 
   private Set<String> fetchCloudDevices() {
+    System.err.println("TAP updateCloudIoT " + updateCloudIoT);
     boolean requiresCloud = updateCloudIoT || (idleLimit != null);
     if (requiresCloud) {
       Set<String> devices = cloudIotManager.fetchDeviceList();
