@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -196,8 +197,8 @@ public class CloudIotManager {
    *
    * @return registered device list
    */
-  public Set<String> fetchDeviceList() {
-    return iotProvider.fetchDeviceList();
+  public Set<String> fetchDeviceIds() {
+    return iotProvider.fetchDeviceIds();
   }
 
   public Device fetchDevice(String deviceId) {
@@ -265,5 +266,9 @@ public class CloudIotManager {
    */
   public String getDeviceConfig(String deviceId) {
     return iotProvider.getDeviceConfig(deviceId);
+  }
+
+  public List<Object> getMockActions() {
+    return iotProvider.getMockActions();
   }
 }

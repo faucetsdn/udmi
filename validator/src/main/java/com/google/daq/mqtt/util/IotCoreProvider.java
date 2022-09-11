@@ -122,7 +122,7 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceList() {
+  public Set<String> fetchDeviceIds() {
     Set<Device> allDevices = new HashSet<>();
     String nextPageToken = null;
     try {
@@ -166,4 +166,8 @@ class IotCoreProvider implements IotProvider {
     return getRegistryPath() + "/devices/" + deviceId;
   }
 
+  @Override
+  public List<Object> getMockActions() {
+    throw new RuntimeException("This is not a mock provider!");
+  }
 }

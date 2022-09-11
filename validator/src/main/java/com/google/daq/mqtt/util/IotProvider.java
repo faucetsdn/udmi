@@ -1,6 +1,8 @@
 package com.google.daq.mqtt.util;
 
 import com.google.api.services.cloudiot.v1.model.Device;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -20,7 +22,9 @@ public interface IotProvider {
 
   void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId);
 
-  Set<String> fetchDeviceList();
+  Set<String> fetchDeviceIds();
 
   String getDeviceConfig(String deviceId);
+
+  List<Object> getMockActions();
 }

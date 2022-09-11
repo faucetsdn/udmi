@@ -29,6 +29,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -131,7 +132,8 @@ public class Registrar {
           registrar.setValidateMetadata(true);
           break;
         case "--":
-          break;
+          registrar.setDeviceList(argList);
+          return;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
@@ -177,7 +179,7 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
-    assert cloudIotManager == null;
+    Preconditions.checkNotNull(cloudIotManager, "cloudIotManager not yet defined");
     blockUnknown = false;
   }
 
@@ -533,7 +535,7 @@ public class Registrar {
   private Set<String> fetchCloudDevices() {
     boolean requiresCloud = updateCloudIoT || (idleLimit != null);
     if (requiresCloud) {
-      Set<String> devices = cloudIotManager.fetchDeviceList();
+      Set<String> devices = cloudIotManager.fetchDeviceIds();
       System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
           cloudIotManager.getRegistryId());
       return devices;
@@ -729,6 +731,10 @@ public class Registrar {
 
   protected Map<String, JsonSchema> getSchemas() {
     return schemas;
+  }
+
+  public List<Object> getMockActions() {
+    return cloudIotManager.getMockActions();
   }
 
   class RelativeDownloader implements URIDownloader {
