@@ -98,24 +98,25 @@ public class RegistrarTest {
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);
     assertEquals("bind actions", 2, bindActions.size());
-    assertTrue("bind gateway", bindActions.stream().allMatch(action -> action.data.equals("GAT-123")));
-    assertEquals("bind devices", ImmutableSet.of("SNS-4", "AHU-22"), bindActions.stream().map(action -> action.deviceId).collect(
-        Collectors.toSet()));
+    assertTrue("bind gateway",
+        bindActions.stream().allMatch(action -> action.data.equals("GAT-123")));
+    assertEquals("bind devices", ImmutableSet.of("SNS-4", "AHU-22"),
+        bindActions.stream().map(action -> action.deviceId).collect(
+            Collectors.toSet()));
   }
 
   private Boolean isNotBlocking(MockAction action) {
     return !TRUE.equals(((Device) action.data).getBlocked());
   }
 
-  private List<MockAction> filterActions(List<MockAction> mockActions, String blockDeviceAction) {
-    List<MockAction> blockActions = mockActions.stream()
-        .filter(action -> action.action.equals(blockDeviceAction))
+  private List<MockAction> filterActions(List<MockAction> mockActions, String actionKey) {
+    return mockActions.stream()
+        .filter(action -> action.action.equals(actionKey))
         .collect(Collectors.toList());
-    return blockActions;
   }
 
-  private List<MockAction> getMockedActions(ImmutableList<String> of) {
-    Registrar registrar = getRegistrar(of);
+  private List<MockAction> getMockedActions(ImmutableList<String> optArgs) {
+    Registrar registrar = getRegistrar(optArgs);
     registrar.execute();
     return registrar.getMockActions().stream().map(a -> (MockAction) a)
         .collect(Collectors.toList());

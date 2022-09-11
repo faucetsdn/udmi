@@ -90,6 +90,9 @@ public class IotMockProvider implements IotProvider {
     return savedActions;
   }
 
+  /**
+   * Holder class for mocked actions.
+   */
   public static class MockAction {
     public String action;
     public String deviceId;
