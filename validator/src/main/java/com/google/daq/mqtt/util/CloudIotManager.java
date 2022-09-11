@@ -2,36 +2,20 @@ package com.google.daq.mqtt.util;
 
 import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.cloudiot.v1.CloudIot;
-import com.google.api.services.cloudiot.v1.CloudIotScopes;
-import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
 import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.api.services.cloudiot.v1.model.DeviceConfig;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.GatewayConfig;
-import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
-import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -40,13 +24,11 @@ public class CloudIotManager {
 
   public static final String UDMI_METADATA = "udmi_metadata";
   public static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
-  private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final String UDMI_CONFIG = "udmi_config";
   private static final String UDMI_GENERATION = "udmi_generation";
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
-  private static final int LIST_PAGE_SIZE = 1000;
 
   public final CloudIotConfig cloudIotConfig;
 
@@ -54,9 +36,7 @@ public class CloudIotManager {
   private final String projectId;
   private final String cloudRegion;
   private final Map<String, Device> deviceMap = new ConcurrentHashMap<>();
-  private CloudIot cloudIotService;
-  private String projectPath;
-  private CloudIot.Projects.Locations.Registries cloudIotRegistries;
+  private IoTCoreProvider ioTCoreProvider;
 
   /**
    * Create a new CloudIoTManager.
@@ -119,28 +99,12 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  public String getRegistryPath() {
-    return projectPath + "/registries/" + registryId;
-  }
-
-  private String getDevicePath(String deviceId) {
-    return getRegistryPath() + "/devices/" + deviceId;
-  }
-
   private void initializeCloudIoT() {
-    projectPath = "projects/" + projectId + "/locations/" + cloudRegion;
     try {
-      System.err.println("Initializing with default credentials...");
-      GoogleCredentials credential = GoogleCredentials.getApplicationDefault()
-          .createScoped(CloudIotScopes.all());
-      JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-      HttpRequestInitializer init = new HttpCredentialsAdapter(credential);
-      cloudIotService = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-          jsonFactory, init).setApplicationName("com.google.iot.bos").build();
-      cloudIotRegistries = cloudIotService.projects().locations().registries();
-      System.err.println("Created service for project " + projectPath);
+      ioTCoreProvider = new IoTCoreProvider(projectId, registryId, cloudRegion);
+      System.err.println("Created service for project " + projectId);
     } catch (Exception e) {
-      throw new RuntimeException("While initializing Cloud IoT project " + projectPath, e);
+      throw new RuntimeException("While initializing Cloud IoT project " + projectId, e);
     }
   }
 
@@ -153,7 +117,6 @@ public class CloudIotManager {
    */
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     try {
-      Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
       Preconditions.checkNotNull(deviceMap, "deviceMap not initialized");
       Device device = deviceMap.get(deviceId);
       boolean isNewDevice = device == null;
@@ -170,13 +133,7 @@ public class CloudIotManager {
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
-    try {
-      cloudIotRegistries.devices().modifyCloudToDeviceConfig(getDevicePath(deviceId),
-          new ModifyCloudToDeviceConfigRequest().setBinaryData(
-              Base64.getEncoder().encodeToString(config.getBytes()))).execute();
-    } catch (Exception e) {
-      throw new RuntimeException("While modifying device config", e);
-    }
+    ioTCoreProvider.updateConfig(deviceId, config);
   }
 
   /**
@@ -186,15 +143,7 @@ public class CloudIotManager {
    * @param blocked  should this device be blocked?
    */
   public void blockDevice(String deviceId, boolean blocked) {
-    try {
-      Device device = new Device();
-      device.setBlocked(blocked);
-      String path = getDevicePath(deviceId);
-      cloudIotRegistries.devices().patch(path, device).setUpdateMask("blocked").execute();
-    } catch (Exception e) {
-      throw new RuntimeException(
-          String.format("While (un)blocking device %s/%s=%s", registryId, deviceId, blocked), e);
-    }
+    ioTCoreProvider.setBlocked(deviceId, blocked);
   }
 
   private Device makeDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
@@ -231,22 +180,12 @@ public class CloudIotManager {
   }
 
   private void createDevice(String deviceId, CloudDeviceSettings settings) throws IOException {
-    try {
-      cloudIotRegistries.devices().create(getRegistryPath(), makeDevice(deviceId, settings, null))
-          .execute();
-    } catch (GoogleJsonResponseException e) {
-      throw new RuntimeException("Remote error creating device " + deviceId, e);
-    }
+    ioTCoreProvider.createDevice(makeDevice(deviceId, settings, null));
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
-    try {
-      Device device = makeDevice(deviceId, settings, oldDevice).setId(null).setNumId(null);
-      cloudIotRegistries.devices().patch(getDevicePath(deviceId), device)
-          .setUpdateMask(DEVICE_UPDATE_MASK).execute();
-    } catch (Exception e) {
-      throw new RuntimeException("Remote error patching device " + deviceId, e);
-    }
+    Device device = makeDevice(deviceId, settings, oldDevice).setId(null).setNumId(null);
+    ioTCoreProvider.updateDevice(deviceId, device);
   }
 
   /**
@@ -255,22 +194,7 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Set<String> fetchDeviceList() {
-    Preconditions.checkNotNull(cloudIotService, "CloudIoT service not initialized");
-    Set<Device> allDevices = new HashSet<>();
-    String nextPageToken = null;
-    try {
-      do {
-        ListDevicesResponse response = cloudIotRegistries.devices().list(getRegistryPath())
-            .setPageToken(nextPageToken).setPageSize(LIST_PAGE_SIZE).execute();
-        List<Device> devices = response.getDevices();
-        allDevices.addAll(devices == null ? ImmutableList.of() : devices);
-        System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());
-        nextPageToken = response.getNextPageToken();
-      } while (nextPageToken != null);
-      return allDevices.stream().map(Device::getId).collect(Collectors.toSet());
-    } catch (Exception e) {
-      throw new RuntimeException("While listing devices for registry " + registryId, e);
-    }
+    return ioTCoreProvider.fetchDeviceList();
   }
 
   public Device fetchDevice(String deviceId) {
@@ -278,15 +202,7 @@ public class CloudIotManager {
   }
 
   private Device fetchDeviceRaw(String deviceId) {
-    try {
-      return cloudIotRegistries.devices().get(getDevicePath(deviceId)).execute();
-    } catch (Exception e) {
-      if (e instanceof GoogleJsonResponseException
-          && ((GoogleJsonResponseException) e).getDetails().getCode() == 404) {
-        return null;
-      }
-      throw new RuntimeException("While fetching " + deviceId, e);
-    }
+      return ioTCoreProvider.fetchDevice(deviceId);
   }
 
   /**
@@ -334,13 +250,8 @@ public class CloudIotManager {
     return cloudRegion;
   }
 
-  public void bindDevice(String proxyDeviceId, String gatewayDeviceId) throws IOException {
-    cloudIotRegistries.bindDeviceToGateway(getRegistryPath(),
-        getBindRequest(proxyDeviceId, gatewayDeviceId)).execute();
-  }
-
-  private BindDeviceToGatewayRequest getBindRequest(String deviceId, String gatewayId) {
-    return new BindDeviceToGatewayRequest().setDeviceId(deviceId).setGatewayId(gatewayId);
+  public void bindDevice(String proxyDeviceId, String gatewayDeviceId) {
+    ioTCoreProvider.bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
   }
 
   /**
@@ -350,36 +261,6 @@ public class CloudIotManager {
    * @return device configuration
    */
   public String getDeviceConfig(String deviceId) {
-    try {
-      List<DeviceConfig> deviceConfigs = cloudIotRegistries.devices().configVersions()
-          .list(getDevicePath(deviceId)).execute().getDeviceConfigs();
-      if (deviceConfigs.size() > 0) {
-        return new String(Base64.getDecoder().decode(deviceConfigs.get(0).getBinaryData()));
-      }
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException("While fetching device configurations for " + deviceId, e);
-    }
-  }
-
-  /**
-   * Set the device configuration.
-   *
-   * @param deviceId target device
-   * @param data     configuration to set
-   */
-  public void setDeviceConfig(String deviceId, String data) {
-    try {
-      ModifyCloudToDeviceConfigRequest req = new ModifyCloudToDeviceConfigRequest();
-
-      String encPayload = Base64.getEncoder()
-          .encodeToString(data.getBytes(StandardCharsets.UTF_8.name()));
-      req.setBinaryData(encPayload);
-
-      cloudIotRegistries.devices().modifyCloudToDeviceConfig(getDevicePath(deviceId), req)
-          .execute();
-    } catch (Exception e) {
-      throw new RuntimeException("While setting device config for " + deviceId, e);
-    }
+    return ioTCoreProvider.getDeviceConfig(deviceId);
   }
 }

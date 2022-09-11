@@ -19,7 +19,6 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -532,12 +531,11 @@ public class Registrar {
   }
 
   private Set<String> fetchCloudDevices() {
-    System.err.println("TAP updateCloudIoT " + updateCloudIoT);
     boolean requiresCloud = updateCloudIoT || (idleLimit != null);
     if (requiresCloud) {
       Set<String> devices = cloudIotManager.fetchDeviceList();
-      System.err.printf("Fetched %d devices from cloud registry %s%n",
-          devices.size(), cloudIotManager.getRegistryPath());
+      System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
+          cloudIotManager.getRegistryId());
       return devices;
     } else {
       System.err.println("Skipping remote registry fetch");
