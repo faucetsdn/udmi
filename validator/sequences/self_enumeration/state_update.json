@@ -1,0 +1,41 @@
+{
+  "discovery" : {
+    "enumeration" : {
+      "generation" : "2022-09-09T03:15:35Z"
+    },
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "system" : {
+    "last_config" : "2022-09-09T03:15:35Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:15:35Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2022-09-09T03:15:36Z",
+  "version" : "1.3.14"
+}

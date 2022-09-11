@@ -1,0 +1,11 @@
+{
+  "families" : {
+    "virtual" : {
+      "generation" : "2022-09-09T03:14:59Z",
+      "scan_interval_sec" : 10,
+      "enumerate" : true
+    }
+  },
+  "timestamp" : "2022-09-09T03:15:00.056Z",
+  "version" : "1.3.14-44-gecf30496-dirty"
+}
