@@ -36,7 +36,7 @@ public class CloudIotManager {
   private final String projectId;
   private final String cloudRegion;
   private final Map<String, Device> deviceMap = new ConcurrentHashMap<>();
-  private IoTCoreProvider ioTCoreProvider;
+  private IotProvider iotProvider;
 
   /**
    * Create a new CloudIoTManager.
@@ -53,7 +53,7 @@ public class CloudIotManager {
       cloudIotConfig = validate(readCloudIotConfig(cloudConfig), projectId);
       registryId = cloudIotConfig.registry_id;
       cloudRegion = cloudIotConfig.cloud_region;
-      initializeCloudIoT();
+      initializeIotProvider();
     } catch (Exception e) {
       throw new RuntimeException(
           String.format("While initializing project %s from file %s", projectId,
@@ -99,9 +99,9 @@ public class CloudIotManager {
     return deviceCredential;
   }
 
-  private void initializeCloudIoT() {
+  private void initializeIotProvider() {
     try {
-      ioTCoreProvider = new IoTCoreProvider(projectId, registryId, cloudRegion);
+      iotProvider = new IotCoreProvider(projectId, registryId, cloudRegion);
       System.err.println("Created service for project " + projectId);
     } catch (Exception e) {
       throw new RuntimeException("While initializing Cloud IoT project " + projectId, e);
@@ -133,7 +133,7 @@ public class CloudIotManager {
   }
 
   private void writeDeviceConfig(String deviceId, String config) {
-    ioTCoreProvider.updateConfig(deviceId, config);
+    iotProvider.updateConfig(deviceId, config);
   }
 
   /**
@@ -143,7 +143,7 @@ public class CloudIotManager {
    * @param blocked  should this device be blocked?
    */
   public void blockDevice(String deviceId, boolean blocked) {
-    ioTCoreProvider.setBlocked(deviceId, blocked);
+    iotProvider.setBlocked(deviceId, blocked);
   }
 
   private Device makeDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
@@ -180,12 +180,12 @@ public class CloudIotManager {
   }
 
   private void createDevice(String deviceId, CloudDeviceSettings settings) throws IOException {
-    ioTCoreProvider.createDevice(makeDevice(deviceId, settings, null));
+    iotProvider.createDevice(makeDevice(deviceId, settings, null));
   }
 
   private void updateDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
     Device device = makeDevice(deviceId, settings, oldDevice).setId(null).setNumId(null);
-    ioTCoreProvider.updateDevice(deviceId, device);
+    iotProvider.updateDevice(deviceId, device);
   }
 
   /**
@@ -194,7 +194,7 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Set<String> fetchDeviceList() {
-    return ioTCoreProvider.fetchDeviceList();
+    return iotProvider.fetchDeviceList();
   }
 
   public Device fetchDevice(String deviceId) {
@@ -202,7 +202,7 @@ public class CloudIotManager {
   }
 
   private Device fetchDeviceRaw(String deviceId) {
-      return ioTCoreProvider.fetchDevice(deviceId);
+    return iotProvider.fetchDevice(deviceId);
   }
 
   /**
@@ -251,7 +251,7 @@ public class CloudIotManager {
   }
 
   public void bindDevice(String proxyDeviceId, String gatewayDeviceId) {
-    ioTCoreProvider.bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
+    iotProvider.bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
   }
 
   /**
@@ -261,6 +261,6 @@ public class CloudIotManager {
    * @return device configuration
    */
   public String getDeviceConfig(String deviceId) {
-    return ioTCoreProvider.getDeviceConfig(deviceId);
+    return iotProvider.getDeviceConfig(deviceId);
   }
 }

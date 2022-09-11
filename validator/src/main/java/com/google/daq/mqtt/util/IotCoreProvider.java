@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class IoTCoreProvider {
+class IotCoreProvider implements IotProvider {
 
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final int LIST_PAGE_SIZE = 1000;
@@ -31,7 +31,7 @@ public class IoTCoreProvider {
   private final String cloudRegion;
   private final String registryId;
 
-  public IoTCoreProvider(String projectId, String registryId, String cloudRegion) {
+  IotCoreProvider(String projectId, String registryId, String cloudRegion) {
     try {
       this.projectId = projectId;
       this.registryId = registryId;
@@ -49,6 +49,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public void updateConfig(String deviceId, String config) {
     try {
       registries.devices().modifyCloudToDeviceConfig(
@@ -60,6 +61,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public void setBlocked(String deviceId, boolean blocked) {
     try {
       Device device = new Device();
@@ -72,6 +74,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public void updateDevice(String deviceId, Device device) {
     try {
       registries.devices().patch(getDevicePath(deviceId), device).setUpdateMask(DEVICE_UPDATE_MASK)
@@ -81,6 +84,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public void createDevice(Device makeDevice) {
     String deviceId = makeDevice.getId();
     try {
@@ -90,6 +94,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public Device fetchDevice(String deviceId) {
     try {
       return registries.devices().get(getDevicePath(deviceId)).execute();
@@ -102,10 +107,13 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId) {
     try {
       registries.bindDeviceToGateway(getRegistryPath(),
-              new BindDeviceToGatewayRequest().setDeviceId(proxyDeviceId).setGatewayId(gatewayDeviceId))
+              new BindDeviceToGatewayRequest()
+                  .setDeviceId(proxyDeviceId)
+                  .setGatewayId(gatewayDeviceId))
           .execute();
     } catch (Exception e) {
       throw new RuntimeException(
@@ -113,6 +121,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public Set<String> fetchDeviceList() {
     Set<Device> allDevices = new HashSet<>();
     String nextPageToken = null;
@@ -131,6 +140,7 @@ public class IoTCoreProvider {
     }
   }
 
+  @Override
   public String getDeviceConfig(String deviceId) {
     try {
       List<DeviceConfig> deviceConfigs = registries.devices().configVersions()
