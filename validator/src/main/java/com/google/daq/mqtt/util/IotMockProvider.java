@@ -3,9 +3,9 @@ package com.google.daq.mqtt.util;
 import com.google.api.services.cloudiot.v1.model.Device;
 import java.util.Set;
 
-public class IotMockProvider implements IotProvider {
+class IotMockProvider implements IotProvider {
 
-  public IotMockProvider(String projectId, String registryId, String cloudRegion) {
+  IotMockProvider(String projectId, String registryId, String cloudRegion) {
   }
 
   @Override
