@@ -29,6 +29,7 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
+  private static final String MOCK_PROJECT = "unit-testing";
 
   public final CloudIotConfig cloudIotConfig;
 
@@ -101,7 +102,9 @@ public class CloudIotManager {
 
   private void initializeIotProvider() {
     try {
-      iotProvider = new IotCoreProvider(projectId, registryId, cloudRegion);
+      iotProvider = projectId.equals(MOCK_PROJECT)
+          ? new IotMockProvider(projectId, registryId, cloudRegion)
+          : new IotCoreProvider(projectId, registryId, cloudRegion);
       System.err.println("Created service for project " + projectId);
     } catch (Exception e) {
       throw new RuntimeException("While initializing Cloud IoT project " + projectId, e);
