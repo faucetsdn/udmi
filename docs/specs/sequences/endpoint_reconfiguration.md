@@ -25,7 +25,7 @@ sequenceDiagram
     D-->>E':CONNECTION ATTEMPT
     E'-->>D:SUCCESS
     E'->>D:CONFIG
-    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "applied"
+    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "final"
     note over D: Reboot device
     D-->>E':CONNECTION ATTEMPT
     E'-->>D:SUCCESS
