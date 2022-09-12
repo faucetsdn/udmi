@@ -14,36 +14,42 @@ The [endpoint configuration blob](https://github.com/faucetsdn/udmi/blob/master/
 ### Valid Endpoint (Successful) Reconfiguration
 
 ```mermaid
+%%{wrap}%%
 sequenceDiagram
     autonumber
-    participant E as Original Endpoint
     participant D as Device
+    participant E as Original Endpoint
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "preparing"
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
     E'-->>D:SUCCESS
+    E'->>D:CONFIG
     D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "applied"
     note over D: Reboot device
     D-->>E':CONNECTION ATTEMPT
-    
+    E'-->>D:SUCCESS
+    E'->>D:CONFIG
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
 
 ```mermaid
+%%{wrap}%%
 sequenceDiagram
     autonumber
-    participant E as Original Endpoint
     participant D as Device
+    participant E as Original Endpoint
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
     D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "preparing"
     D-->>E':CONNECTION ATTEMPT
-    note over D,E': Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
+    note over D: Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
     D-->>E:CONNECTION ATTEMPT
     E-->>D:SUCCESS
+    E->>D:CONFIG
     D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint.blob.phase = "failed"
+
 ```
 
 ## Message Examples
@@ -76,7 +82,8 @@ The base64 encoded value decodes to:
 }
 ```
 
-Example state message from device, when the `phase` is `applied`
+Example successful state message from device, when the `phase` is `final` and the
+reconfiguration has completed successfully 
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
@@ -91,13 +98,13 @@ Example state message from device, when the `phase` is `applied`
       "firmware": "1.2"
     },
     "serial_no": "000000",
-    "last_config": "2022-07-11T00:00:10.000Z",
+    "last_config": "2022-07-13T12:00:00.000Z",
     "operational": true
   },
   "blobset": {
     "blobs": {
       "_iot_endpoint_config": {
-        "phase": "preparing"
+        "phase": "final"
       }
     }
   }

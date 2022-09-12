@@ -10,13 +10,13 @@
       "firmware": "1.2"
     },
     "serial_no": "000000",
-    "last_config": "2022-07-11T00:00:10.000Z",
+    "last_config": "2022-07-13T12:00:00.000Z",
     "operational": true
   },
   "blobset": {
     "blobs": {
       "_iot_endpoint_config": {
-        "phase": "preparing"
+        "phase": "final"
       }
     }
   }
