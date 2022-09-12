@@ -1,6 +1,6 @@
 import { sum } from 'lodash';
 import { ApolloContext } from '../server/datasources';
-import { Site, SiteNamesArgs, SitesArgs } from './model';
+import { Site, SiteArgs, SiteNamesArgs, SitesArgs } from './model';
 
 export const resolvers = {
   Query: {
@@ -9,6 +9,9 @@ export const resolvers = {
     },
     sites: (_query, { searchOptions }: SitesArgs, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSites(searchOptions);
+    },
+    site: (_query, { id }: SiteArgs, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getSite(id);
     },
   },
   Site: {

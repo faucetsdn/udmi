@@ -9,8 +9,13 @@ export interface SitesResponse {
 export interface SiteNamesArgs {
   searchOptions: DistinctSearchOptions;
 }
+
 export interface SitesArgs {
   searchOptions: SearchOptions;
+}
+
+export interface SiteArgs {
+  id: string;
 }
 
 export interface Site {

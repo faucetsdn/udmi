@@ -33,6 +33,8 @@ type Site {
 type Query {
   # Get a list of sites
   sites(searchOptions: SearchOptions) : SitesResponse
+  # Get a site by ID
+  site(id: ID!): Site
   # Get a list of sites
   siteNames(searchOptions: DistinctSearchOptions) : [String!]!
 }
