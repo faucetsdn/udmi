@@ -19,14 +19,6 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 
 `bin/reset_config`
 
-# Viewing Device GCP Cloud Logging logs by Device ID
+# Viewing Device GCP Cloud Logging
 
-Using `log.py` from [noursaidi/devicetrace](https://github.com/noursaidi/devicetrace)
-
-# Viewing/Storing Messages GCP Cloud Logging logs by Device ID
-
-Using `trace.py` from [noursaidi/devicetrace](https://github.com/noursaidi/devicetrace)
-
-# Updating Device Config from JSON File on Disk
-
-Using `config.py` [noursaidi/devicetrace](https://github.com/noursaidi/devicetrace)
+`bin/gcloud_device_logs PROJECT_ID DEVICE_ID [DEVICE_ID ...]`
