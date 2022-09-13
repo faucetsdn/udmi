@@ -16,6 +16,9 @@ import java.util.stream.Collectors;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
+/**
+ * Simple web server used as an endpoint for a cron scheduling job.
+ */
 public class WebServer {
 
   public static final String SITE_PREFIX = "sites/";
