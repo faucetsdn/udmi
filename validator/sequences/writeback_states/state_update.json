@@ -1,25 +1,29 @@
 {
-  "discovery" : {
-    "enumeration" : {
-      "generation" : "2022-09-09T03:15:35Z"
-    },
-    "families" : {
-      "virtual" : { }
-    }
-  },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
-      "filter_differential_pressure_setpoint" : { },
-      "filter_differential_pressure_sensor" : { }
+      "filter_alarm_pressure_status" : {
+        "value_state" : "failure",
+        "status" : {
+          "message" : "Point is not writable"
+        }
+      },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "value_state" : "invalid",
+        "status" : {
+          "message" : "Written value is not valid"
+        }
+      }
     }
   },
   "system" : {
-    "last_config" : "2022-09-09T03:15:53Z",
+    "last_config" : "2022-09-13T09:33:13Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-09T03:12:37Z",
-    "serial_no" : "sequencer-5321",
+    "last_start" : "2022-09-13T09:32:46Z",
+    "serial_no" : "123",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -30,10 +34,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-09T03:15:54Z",
+      "timestamp" : "2022-09-13T09:33:14Z",
       "level" : 300
     }
   },
-  "timestamp" : "2022-09-09T03:15:55Z",
+  "timestamp" : "2022-09-13T09:33:15Z",
   "version" : "1.3.14"
 }
