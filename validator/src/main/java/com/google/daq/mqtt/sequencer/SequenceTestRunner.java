@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.sequencer.sequences.DiscoverySequences;
 import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -29,16 +28,24 @@ public class SequenceTestRunner {
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  private static final int EXIT_STATUS_NO_TESTS = 2;
 
   /**
    * Thundercats are go.
    *
    * @param args Test classes/method to test.
-   *
-   * @throws ClassNotFoundException For bad test class
    */
-  public static void main(String... args) throws ClassNotFoundException {
+  public static void main(String... args) {
+    System.exit(process(args));
+  }
+
+  /**
+   * Execute sequence tests.
+   *
+   * @param args individual tests to run
+   *
+   * @return status code
+   */
+  public static int process(String... args) {
     int successes = 0;
     List<Failure> failures = new ArrayList<>();
     Set<String> remainingMethods = new HashSet<>(Arrays.asList(args));
@@ -64,10 +71,11 @@ public class SequenceTestRunner {
           Result result = new JUnitCore().run(request);
           if (hasActualTestResults(result)) {
             failures.addAll(result.getFailures());
-            successes += result.getRunCount() - failures.size();
+            successes += result.getRunCount();
           }
         }
     }
+    successes -= failures.size();
     System.err.println("Test successes: " + successes);
     failures.forEach(failure -> {
       System.err.println(
@@ -79,14 +87,12 @@ public class SequenceTestRunner {
       }
     });
     if (!remainingMethods.isEmpty()) {
-      System.err.println("Failed to find methods " + Joiner.on(", ").join(remainingMethods));
-      System.exit(EXIT_STATUS_NO_TESTS);
+      throw new RuntimeException("Failed to find methods " + Joiner.on(", ").join(remainingMethods));
     }
     if (successes == 0 && failures.isEmpty()) {
-      System.err.println("No matching tests found");
-      System.exit(EXIT_STATUS_NO_TESTS);
+      throw new RuntimeException("No matching tests found");
     }
-    System.exit(failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE);
+    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
   }
 
   private static boolean hasActualTestResults(Result result) {
