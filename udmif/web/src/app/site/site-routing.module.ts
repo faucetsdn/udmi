@@ -7,7 +7,7 @@ const routes: Routes = [
     path: '',
     component: SiteComponent,
     children: [
-      { path: '', redirectTo: 'points', pathMatch: 'full' },
+      { path: '', redirectTo: 'devices', pathMatch: 'full' },
       { path: 'devices', loadChildren: () => import('../devices/devices.module').then((m) => m.DevicesModule) },
     ],
   },
