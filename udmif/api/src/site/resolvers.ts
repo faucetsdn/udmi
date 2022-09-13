@@ -34,13 +34,15 @@ export const resolvers = {
       return site.validation?.last_updated;
     },
     percentValidated: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      const validationSummary = site.validation?.summary;
+
       return (
         sum([
           0,
-          site.validation?.summary.correct_devices.length,
-          site.validation?.summary.missing_devices.length,
-          site.validation?.summary.error_devices.length,
-          site.validation?.summary.extra_devices.length,
+          validationSummary?.correct_devices.length,
+          validationSummary?.missing_devices.length,
+          validationSummary?.error_devices.length,
+          validationSummary?.extra_devices.length,
         ]) / ((await deviceDS.getDevicesBySite(site.name)).totalFilteredCount || 1)
       );
     },

@@ -5,16 +5,16 @@ import { Site } from '../site/model';
 import { DeviceDataSource } from '../device/DeviceDataSource';
 import { SiteDataSource } from '../site/SiteDataSource';
 
-interface DS {
+interface ApiDataSources {
   deviceDS: DeviceDataSource;
   siteDS: SiteDataSource;
 }
 
 export interface ApolloContext {
-  dataSources: DS;
+  dataSources: ApiDataSources;
 }
 
-export default function dataSources(deviceDAO: DAO<Device>, siteDAO: DAO<Site>): () => DataSources<DS> {
+export default function dataSources(deviceDAO: DAO<Device>, siteDAO: DAO<Site>): () => DataSources<ApiDataSources> {
   return () => ({
     deviceDS: new DeviceDataSource(deviceDAO),
     siteDS: new SiteDataSource(siteDAO),
