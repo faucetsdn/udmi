@@ -11,4 +11,5 @@ public class ValidatorConfig {
   public String key_file;
   public String serial_no;
   public String log_level;
+  public String udmi_version;
 }

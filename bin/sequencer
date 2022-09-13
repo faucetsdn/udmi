@@ -32,25 +32,39 @@ serial_no=${1:-//}
 shift || true
 
 test_names="$@"
+udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
 
-echo Writing config to /tmp/validator_config.json:
-cat <<EOF > /tmp/validator_config.json
+if [[ ! -d $site_path ]]; then
+    echo Site model $site_path not found.
+    false
+fi
+
+validator/bin/build
+
+export VALIDATOR_CONFIG=/tmp/validator_config.json
+
+echo Writing config to $VALIDATOR_CONFIG:
+cat <<EOF > $VALIDATOR_CONFIG
 {
   "project_id": "$project_id",
   "site_model": "$site_path",
   "device_id": "$device_id",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
+  "udmi_version": "$udmi_version",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }
 EOF
 
-cat /tmp/validator_config.json
-echo Running tools version `(cd $ROOT_DIR; git describe)`
+cat $VALIDATOR_CONFIG
 
-bin/loop_sequences $test_names 2>&1 | tee $TEST_LOG
+JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceTestRunner"
+echo $JAVA_CMD $test_names
+result=0
+timeout 5m $JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
 
 echo
 # Sort by test name (6th field)

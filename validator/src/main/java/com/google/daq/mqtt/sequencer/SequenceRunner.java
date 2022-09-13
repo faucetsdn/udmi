@@ -20,11 +20,8 @@ import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.CleanDateFormat;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -91,6 +88,7 @@ public abstract class SequenceRunner {
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String projectId;
   private static final String deviceId;
+  private static final String udmiVersion;
   private static final String siteModel;
   private static final String serialNo;
   private static final int logLevel;
@@ -108,8 +106,6 @@ public abstract class SequenceRunner {
       "config", Config.class,
       "state", AugmentedState.class
   );
-  private static final String UDMI_VERSION = Objects.requireNonNullElse(
-      System.getenv("UDMI_VERSION"), "unknown");
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final long LOG_CLEAR_TIME_MS = 1000;
   private static final String LOCAL_PREFIX = "local_";
@@ -132,12 +128,14 @@ public abstract class SequenceRunner {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
+      udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
       serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
           .value();
       key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException("While loading " + configFile, e);
     }
 
@@ -280,12 +278,12 @@ public abstract class SequenceRunner {
     ReflectorState reflectorState = new ReflectorState();
     stateTimestamp = new Date();
     reflectorState.timestamp = stateTimestamp;
-    reflectorState.version = UDMI_VERSION;
+    reflectorState.version = udmiVersion;
     reflectorState.setup = new SetupReflectorState();
     reflectorState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
-          UDMI_VERSION, JsonUtil.getTimestamp(stateTimestamp));
+          udmiVersion, JsonUtil.getTimestamp(stateTimestamp));
       client.setReflectorState(stringify(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -814,7 +812,7 @@ public abstract class SequenceRunner {
     Date lastState = reflectorConfig.setup.last_state;
     if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
       info("Cloud UDMI version " + reflectorConfig.version);
-      if (!UDMI_VERSION.equals(reflectorConfig.version)) {
+      if (!udmiVersion.equals(reflectorConfig.version)) {
         warning("Local/cloud UDMI version mismatch!");
       }
     } else {
