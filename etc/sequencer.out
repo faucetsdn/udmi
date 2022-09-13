@@ -9,4 +9,4 @@ RESULT pass system_min_loglevel Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
-RESULT skip writeback_states Missing 'invalid' target specification
+RESULT pass writeback_states Sequence complete
