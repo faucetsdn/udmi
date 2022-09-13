@@ -1,7 +1,25 @@
-<div class="table-controls"></div>
+<div class="table-controls">
+  <app-search-filter
+    serviceName="SitesService"
+    [fields]="searchFields"
+    [limit]="15"
+    [handleFilterChange]="filterData"
+  ></app-search-filter>
+  <mat-paginator
+    [length]="totalFilteredCount"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="pageChanged($event)"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
 <mat-table [dataSource]="sites" matSort (matSortChange)="sortData($event)" aria-label="List of sites">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
-    <mat-header-cell *matHeaderCellDef>{{ columnName | capitalize }}</mat-header-cell>
+    <mat-header-cell *matHeaderCellDef mat-sort-header>{{
+      columnName.replace('Count', '') | capitalize
+    }}</mat-header-cell>
     <div *ngIf="columnName === 'lastValidated'">
       <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'MM/dd/yy h:mm a' }}</mat-cell>
     </div>
