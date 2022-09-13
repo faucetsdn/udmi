@@ -112,7 +112,7 @@ public abstract class SequenceRunner {
   private static File resultSummary;
   private static IotReflectorClient client;
   private static Date stateTimestamp;
-  private static ValidatorConfig validatorConfig;
+  static ValidatorConfig validatorConfig;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
@@ -234,7 +234,9 @@ public abstract class SequenceRunner {
   };
 
   private static void ensureValidatorConfig() {
-    if (validatorConfig == null) {
+    if (SequenceTestRunner.validationConfig != null) {
+      validatorConfig = SequenceTestRunner.validationConfig;
+    } else {
       if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
         throw new RuntimeException(CONFIG_ENV + " env not defined.");
       }

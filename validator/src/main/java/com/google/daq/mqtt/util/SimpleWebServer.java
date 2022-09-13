@@ -23,26 +23,25 @@ import org.apache.http.client.utils.URLEncodedUtils;
  */
 public class SimpleWebServer implements HttpHandler {
 
-  private final String projectId;
-  private final Consumer<Map<String, String>> handler;
+  private Consumer<Map<String, String>> handler;
 
-  private SimpleWebServer(List<String> args,
-      Consumer<Map<String, String>> handler) {
+  protected SimpleWebServer(List<String> args) {
     try {
-      if (args.size() < 2) {
-        throw new RuntimeException("Need port and project id args");
+      if (args.size() < 1) {
+        throw new RuntimeException("Need server port argument");
       }
-      this.handler = handler;
       int port = Integer.parseInt(args.remove(0));
-      projectId = args.remove(0);
       HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-      System.out.println("server started at " + port + " for project " + projectId);
+      System.out.println("server started on port " + port);
       server.createContext("/", this);
-      server.setExecutor(null);
       server.start();
     } catch (Exception e) {
       throw new RuntimeException("While creating web server: " + Joiner.on(" ").join(args), e);
     }
+  }
+
+  public void setHandler(Consumer<Map<String, String>> handler) {
+    this.handler = handler;
   }
 
   @Override
@@ -65,11 +64,5 @@ public class SimpleWebServer implements HttpHandler {
     } catch (Throwable e) {
       return Common.stackTraceString(e);
     }
-  }
-
-  public static List<String> setup(String[] staticArgs, Consumer<Map<String, String>> handler) {
-    List<String> args = new ArrayList<>(Arrays.asList(staticArgs));
-    new SimpleWebServer(args, handler);
-    return args;
   }
 }

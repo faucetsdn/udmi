@@ -5,10 +5,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.sequencer.sequences.DiscoverySequences;
 import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
+import com.google.daq.mqtt.util.ValidatorConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -28,6 +30,7 @@ public class SequenceTestRunner {
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
+  private static ValidatorConfig validationConfig;
 
   /**
    * Thundercats are go.
@@ -98,5 +101,10 @@ public class SequenceTestRunner {
   private static boolean hasActualTestResults(Result result) {
     return (result.getFailures().size() != 1
         || !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
+  }
+
+  public static void process(ValidatorConfig config) {
+    validationConfig = config;
+    process();
   }
 }
