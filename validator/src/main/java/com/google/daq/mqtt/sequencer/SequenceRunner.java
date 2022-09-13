@@ -79,24 +79,13 @@ public abstract class SequenceRunner {
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
   public static final String LOCAL_CONFIG = "local_config";
-  protected static final Metadata deviceMetadata;
-  private static final String PACKAGE_MATCH_SNIPPET = SequenceRunner.class.getPackageName();
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
-  private static final String projectId;
-  private static final String deviceId;
-  private static final String udmiVersion;
-  private static final String siteModel;
-  private static final String serialNo;
-  private static final int logLevel;
-  private static final File deviceOutputDir;
-  private static final File resultSummary;
-  private static final IotReflectorClient client;
-  private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
-  private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
+  private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
+  private static final String CONFIG_PATH = System.getenv(CONFIG_ENV);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -112,54 +101,24 @@ public abstract class SequenceRunner {
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
+  protected static Metadata deviceMetadata;
+  private static String projectId;
+  private static String deviceId;
+  private static String udmiVersion;
+  private static String siteModel;
+  private static String serialNo;
+  private static int logLevel;
+  private static File deviceOutputDir;
+  private static File resultSummary;
+  private static IotReflectorClient client;
   private static Date stateTimestamp;
+  private static ValidatorConfig validatorConfig;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
   static {
-    final String key_file;
-    if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
-      throw new RuntimeException(VALIDATOR_CONFIG + " env not defined.");
-    }
-    final File configFile = new File(CONFIG_PATH);
-    try {
-      System.err.println("Reading config file " + configFile.getAbsolutePath());
-      ValidatorConfig validatorConfig = ConfigUtil.readValidatorConfig(configFile);
-      siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
-      deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
-      projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
-      udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
-      String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
-      serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
-      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
-          .value();
-      key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("While loading " + configFile, e);
-    }
-
-    File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
-    final CloudIotConfig cloudIotConfig;
-    try {
-      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
-    }
-
-    deviceMetadata = readDeviceMetadata();
-
-    deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
-    deviceOutputDir.mkdirs();
-
-    resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
-    resultSummary.delete();
-    System.err.println("Writing results to " + resultSummary.getAbsolutePath());
-
-    System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
-    System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
-    setReflectorState();
+    ensureValidatorConfig();
+    setupSequencer();
   }
 
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
@@ -273,6 +232,61 @@ public abstract class SequenceRunner {
       writeSystemLog(logEntry);
     }
   };
+
+  private static void ensureValidatorConfig() {
+    if (validatorConfig == null) {
+      if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
+        throw new RuntimeException(CONFIG_ENV + " env not defined.");
+      }
+      final File configFile = new File(CONFIG_PATH);
+      try {
+        System.err.println("Reading config file " + configFile.getAbsolutePath());
+        validatorConfig = ConfigUtil.readValidatorConfig(configFile);
+      } catch (Exception e) {
+        throw new RuntimeException("While loading " + configFile, e);
+      }
+    }
+  }
+
+  private static void setupSequencer() {
+    final String key_file;
+    try {
+      siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
+      deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
+      projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
+      udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
+      String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
+      serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
+      logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
+          .value();
+      key_file = checkNotNull(validatorConfig.key_file, "key_file not defined");
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("While processing validator config", e);
+    }
+
+    File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
+    final CloudIotConfig cloudIotConfig;
+    try {
+      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
+    }
+
+    deviceMetadata = readDeviceMetadata();
+
+    deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
+    deviceOutputDir.mkdirs();
+
+    resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
+    resultSummary.delete();
+    System.err.println("Writing results to " + resultSummary.getAbsolutePath());
+
+    System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
+    System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
+    client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
+    setReflectorState();
+  }
 
   private static void setReflectorState() {
     ReflectorState reflectorState = new ReflectorState();
