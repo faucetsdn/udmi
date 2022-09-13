@@ -44,7 +44,8 @@ public class DiscoverySequences extends SequenceRunner {
     Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
-    deviceConfig.discovery.enumeration.generation = startTime;
+    deviceConfig.discovery.enumeration.generation =
+        SemanticDate.describe("generation start time", startTime);
     info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
     updateConfig("discovery generation");
     untilTrue("enumeration generation",
@@ -137,7 +138,7 @@ public class DiscoverySequences extends SequenceRunner {
   private void scheduleScan(Date startTime, Integer scanIntervalSec, boolean enumerate) {
     info("Scan start scheduled for " + startTime);
     families.forEach(family -> {
-      getConfigFamily(family).generation = startTime;
+      getConfigFamily(family).generation = SemanticDate.describe("family generation", startTime);
       getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });

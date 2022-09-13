@@ -92,6 +92,8 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
+1. Update config:
+    * Add `discovery.families.virtual` = { "generation": _family generation_, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
 ## self_enumeration
@@ -107,6 +109,8 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
+1. Update config:
+    * Add `discovery.families.virtual` = { "generation": _family generation_, "enumerate": `true` }
 1. Wait for scheduled scan start
 1. Wait for scan activation
 1. Wait for scan completed
@@ -137,7 +141,7 @@ Check that the min log-level config is honored by the device.
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
-1. Update config to for writeback:
+1. Update config:
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
     * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
