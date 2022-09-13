@@ -38,7 +38,7 @@ describe('DAO', () => {
   });
 
   test('getAll', async () => {
-    const insertedDeviceDocument: Device = { name: 'device-1', site: 'LOC' };
+    const insertedDeviceDocument: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
 
     deviceCollection.insertOne(insertedDeviceDocument);
 

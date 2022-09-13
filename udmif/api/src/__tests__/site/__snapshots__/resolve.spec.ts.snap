@@ -1,5 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Sites getSite 1`] = `
+Object {
+  "data": Object {
+    "site": Object {
+      "correctDevicesCount": 1,
+      "errorDevicesCount": 1,
+      "extraDevicesCount": 0,
+      "id": "00000000-0000-0000-0000-0000000001",
+      "lastValidated": "2022-07-16T18:27:19Z",
+      "missingDevicesCount": 2,
+      "name": "LOC-1",
+      "percentValidated": 0.4,
+      "totalDeviceErrorsCount": 0,
+      "totalDevicesCount": 10,
+    },
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
 exports[`Sites getSiteNames 1`] = `
 Object {
   "data": Object {

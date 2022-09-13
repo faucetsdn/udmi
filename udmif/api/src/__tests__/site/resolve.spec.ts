@@ -5,6 +5,7 @@ import MockSiteDataSource from './MockSiteDataSource';
 import { typeDefs } from '../../server/schema';
 import { resolvers } from '../../server/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
+import MockDeviceDataSource from '../device/MockDeviceDataSource';
 
 let testServer: ApolloServer;
 const clientIds: string[] = ['', ''];
@@ -29,10 +30,28 @@ const QUERY_SITE_NAMES = gql`
   }
 `;
 
+const QUERY_SITE = gql`
+  query {
+    site(id: "00000000-0000-0000-0000-0000000001") {
+      id
+      name
+      totalDevicesCount
+      correctDevicesCount
+      missingDevicesCount
+      errorDevicesCount
+      extraDevicesCount
+      lastValidated
+      percentValidated
+      totalDeviceErrorsCount
+    }
+  }
+`;
+
 beforeAll(async () => {
   const dataSources = () => {
     return {
       siteDS: new MockSiteDataSource(),
+      deviceDS: new MockDeviceDataSource(),
     };
   };
 
@@ -46,12 +65,17 @@ beforeAll(async () => {
 
 describe('Sites', () => {
   test('sites', async () => {
-    const result = await runQuery(QUERY_SITES, {});
+    const result = await runQuery(QUERY_SITES);
     expect(result).toMatchSnapshot();
   });
 
   test('getSiteNames', async () => {
     const result = await runQuery(QUERY_SITE_NAMES);
+    expect(result).toMatchSnapshot();
+  });
+
+  test('getSite', async () => {
+    const result = await runQuery(QUERY_SITE);
     expect(result).toMatchSnapshot();
   });
 });

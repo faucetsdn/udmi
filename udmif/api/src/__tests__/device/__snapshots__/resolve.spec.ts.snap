@@ -50,7 +50,7 @@ Object {
       ],
       "section": "SIN-MBC1",
       "serialNumber": "serialNo-1",
-      "site": "SG-SIN-MBC1",
+      "site": "LOC-1",
       "tags": Array [],
     },
   },
@@ -77,7 +77,7 @@ Object {
           "name": "CDS-1",
           "operational": true,
           "section": "SIN-MBC1",
-          "site": "SG-SIN-MBC1",
+          "site": "LOC-1",
           "tags": Array [],
         },
         Object {
@@ -88,7 +88,7 @@ Object {
           "name": "AHU-2",
           "operational": true,
           "section": "SIN-MBC2",
-          "site": "SG-SIN-MBC2",
+          "site": "SITE-2",
           "tags": Array [],
         },
         Object {
@@ -99,7 +99,7 @@ Object {
           "name": "CDS-3",
           "operational": false,
           "section": "SIN-MBC3",
-          "site": "SG-SIN-MBC3",
+          "site": "LOC-3",
           "tags": Array [],
         },
         Object {
@@ -110,7 +110,7 @@ Object {
           "name": "AHU-4",
           "operational": true,
           "section": "SIN-MBC4",
-          "site": "SG-SIN-MBC4",
+          "site": "SITE-4",
           "tags": Array [],
         },
         Object {
@@ -121,7 +121,7 @@ Object {
           "name": "CDS-5",
           "operational": true,
           "section": "SIN-MBC5",
-          "site": "SG-SIN-MBC5",
+          "site": "LOC-5",
           "tags": Array [],
         },
         Object {
@@ -132,7 +132,7 @@ Object {
           "name": "AHU-6",
           "operational": false,
           "section": "SIN-MBC6",
-          "site": "SG-SIN-MBC6",
+          "site": "SITE-6",
           "tags": Array [],
         },
         Object {
@@ -143,7 +143,7 @@ Object {
           "name": "CDS-7",
           "operational": true,
           "section": "SIN-MBC7",
-          "site": "SG-SIN-MBC7",
+          "site": "LOC-7",
           "tags": Array [],
         },
         Object {
@@ -154,7 +154,7 @@ Object {
           "name": "AHU-8",
           "operational": true,
           "section": "SIN-MBC8",
-          "site": "SG-SIN-MBC8",
+          "site": "SITE-8",
           "tags": Array [],
         },
         Object {
@@ -165,7 +165,7 @@ Object {
           "name": "CDS-9",
           "operational": false,
           "section": "SIN-MBC9",
-          "site": "SG-SIN-MBC9",
+          "site": "LOC-9",
           "tags": Array [],
         },
         Object {
@@ -176,7 +176,7 @@ Object {
           "name": "AHU-10",
           "operational": true,
           "section": "SIN-MBC10",
-          "site": "SG-SIN-MBC10",
+          "site": "SITE-10",
           "tags": Array [],
         },
         Object {
@@ -187,7 +187,7 @@ Object {
           "name": "CDS-11",
           "operational": true,
           "section": "SIN-MBC11",
-          "site": "SG-SIN-MBC11",
+          "site": "LOC-11",
           "tags": Array [],
         },
         Object {
@@ -198,7 +198,7 @@ Object {
           "name": "AHU-12",
           "operational": false,
           "section": "SIN-MBC12",
-          "site": "SG-SIN-MBC12",
+          "site": "SITE-12",
           "tags": Array [],
         },
         Object {
@@ -209,7 +209,7 @@ Object {
           "name": "CDS-13",
           "operational": true,
           "section": "SIN-MBC13",
-          "site": "SG-SIN-MBC13",
+          "site": "LOC-13",
           "tags": Array [],
         },
         Object {
@@ -220,7 +220,7 @@ Object {
           "name": "AHU-14",
           "operational": true,
           "section": "SIN-MBC14",
-          "site": "SG-SIN-MBC14",
+          "site": "SITE-14",
           "tags": Array [],
         },
         Object {
@@ -231,7 +231,7 @@ Object {
           "name": "CDS-15",
           "operational": false,
           "section": "SIN-MBC15",
-          "site": "SG-SIN-MBC15",
+          "site": "LOC-15",
           "tags": Array [],
         },
         Object {
@@ -242,7 +242,7 @@ Object {
           "name": "AHU-16",
           "operational": true,
           "section": "SIN-MBC16",
-          "site": "SG-SIN-MBC16",
+          "site": "SITE-16",
           "tags": Array [],
         },
         Object {
@@ -253,7 +253,7 @@ Object {
           "name": "CDS-17",
           "operational": true,
           "section": "SIN-MBC17",
-          "site": "SG-SIN-MBC17",
+          "site": "LOC-17",
           "tags": Array [],
         },
         Object {
@@ -264,7 +264,7 @@ Object {
           "name": "AHU-18",
           "operational": false,
           "section": "SIN-MBC18",
-          "site": "SG-SIN-MBC18",
+          "site": "SITE-18",
           "tags": Array [],
         },
         Object {
@@ -275,7 +275,7 @@ Object {
           "name": "CDS-19",
           "operational": true,
           "section": "SIN-MBC19",
-          "site": "SG-SIN-MBC19",
+          "site": "LOC-19",
           "tags": Array [],
         },
         Object {
@@ -286,7 +286,7 @@ Object {
           "name": "AHU-20",
           "operational": true,
           "section": "SIN-MBC20",
-          "site": "SG-SIN-MBC20",
+          "site": "SITE-20",
           "tags": Array [],
         },
         Object {
@@ -297,7 +297,7 @@ Object {
           "name": "CDS-21",
           "operational": false,
           "section": "SIN-MBC21",
-          "site": "SG-SIN-MBC21",
+          "site": "LOC-21",
           "tags": Array [],
         },
         Object {
@@ -308,7 +308,7 @@ Object {
           "name": "AHU-22",
           "operational": true,
           "section": "SIN-MBC22",
-          "site": "SG-SIN-MBC22",
+          "site": "SITE-22",
           "tags": Array [],
         },
         Object {
@@ -319,7 +319,7 @@ Object {
           "name": "CDS-23",
           "operational": true,
           "section": "SIN-MBC23",
-          "site": "SG-SIN-MBC23",
+          "site": "LOC-23",
           "tags": Array [],
         },
         Object {
@@ -330,7 +330,7 @@ Object {
           "name": "AHU-24",
           "operational": false,
           "section": "SIN-MBC24",
-          "site": "SG-SIN-MBC24",
+          "site": "SITE-24",
           "tags": Array [],
         },
         Object {
@@ -341,7 +341,7 @@ Object {
           "name": "CDS-25",
           "operational": true,
           "section": "SIN-MBC25",
-          "site": "SG-SIN-MBC25",
+          "site": "LOC-25",
           "tags": Array [],
         },
         Object {
@@ -352,7 +352,7 @@ Object {
           "name": "AHU-26",
           "operational": true,
           "section": "SIN-MBC26",
-          "site": "SG-SIN-MBC26",
+          "site": "SITE-26",
           "tags": Array [],
         },
         Object {
@@ -363,7 +363,7 @@ Object {
           "name": "CDS-27",
           "operational": false,
           "section": "SIN-MBC27",
-          "site": "SG-SIN-MBC27",
+          "site": "LOC-27",
           "tags": Array [],
         },
         Object {
@@ -374,7 +374,7 @@ Object {
           "name": "AHU-28",
           "operational": true,
           "section": "SIN-MBC28",
-          "site": "SG-SIN-MBC28",
+          "site": "SITE-28",
           "tags": Array [],
         },
         Object {
@@ -385,7 +385,7 @@ Object {
           "name": "CDS-29",
           "operational": true,
           "section": "SIN-MBC29",
-          "site": "SG-SIN-MBC29",
+          "site": "LOC-29",
           "tags": Array [],
         },
         Object {
@@ -396,7 +396,7 @@ Object {
           "name": "AHU-30",
           "operational": false,
           "section": "SIN-MBC30",
-          "site": "SG-SIN-MBC30",
+          "site": "SITE-30",
           "tags": Array [],
         },
       ],

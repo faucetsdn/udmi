@@ -2,7 +2,15 @@
 <mat-table [dataSource]="sites" matSort (matSortChange)="sortData($event)" aria-label="List of sites">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
     <mat-header-cell *matHeaderCellDef>{{ columnName | capitalize }}</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+    <div *ngIf="columnName === 'lastValidated'">
+      <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+    </div>
+    <div *ngIf="columnName === 'percentValidated'">
+      <mat-cell *matCellDef="let element">{{ element.percentValidated | percent: '1.0-2' }}</mat-cell>
+    </div>
+    <div *ngIf="columnName !== 'lastValidated' && columnName !== 'percentValidated'">
+      <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+    </div>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>

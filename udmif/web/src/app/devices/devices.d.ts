@@ -1,7 +1,7 @@
 import { Device } from '../device/device';
 
 export interface SearchOptions {
-  batchSize: number;
+  batchSize?: number;
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;

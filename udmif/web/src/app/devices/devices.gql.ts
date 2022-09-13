@@ -1,7 +1,7 @@
 import { gql } from 'apollo-angular';
 
 export const GET_DEVICES = gql`
-  query GetDevices($searchOptions: SearchOptions!) {
+  query GetDevices($searchOptions: SearchOptions) {
     devices(searchOptions: $searchOptions) {
       devices {
         id

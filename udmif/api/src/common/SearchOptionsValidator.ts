@@ -1,31 +1,29 @@
+import { isNil } from 'lodash';
 import { logger } from './logger';
 import { SearchOptions, DistinctSearchOptions, ValidatedDistinctSearchOptions, ValidatedSearchOptions } from './model';
 
-export function validateSearchOptions(searchOptions: SearchOptions): ValidatedSearchOptions {
-  let { offset, batchSize } = searchOptions;
+export function validateSearchOptions(searchOptions?: SearchOptions): ValidatedSearchOptions {
+  const { offset } = searchOptions ?? {};
 
-  if (offset === undefined) {
+  if (isNil(offset)) {
     logger.warn('An offset was not provided, defaulting to 0');
-    offset = 0;
-  }
-
-  if (batchSize > 1000) {
-    logger.warn(`The batch size ${batchSize} exceeds max of 1000, restricting to 1000 records`);
-    batchSize = 1000;
   }
 
   return {
     ...searchOptions,
-    offset,
-    batchSize,
+    offset: offset ?? 0, // default to 0
   };
 }
 
 export function validateDistinctSearchOptions(searchOptions?: DistinctSearchOptions): ValidatedDistinctSearchOptions {
-  const { search, limit } = searchOptions ?? {};
+  const { limit } = searchOptions ?? {};
+
+  if (isNil(limit)) {
+    logger.warn('A limit was not provided, defaulting to 10');
+  }
 
   return {
+    ...searchOptions,
     limit: limit ?? 10, // default to 10
-    search,
   };
 }

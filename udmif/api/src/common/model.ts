@@ -1,12 +1,12 @@
 export interface SearchOptions {
-  batchSize: number;
+  batchSize?: number;
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;
 }
 
 export interface ValidatedSearchOptions {
-  batchSize: number;
+  batchSize?: number;
   offset: number;
   sortOptions?: SortOptions;
   filter?: string;

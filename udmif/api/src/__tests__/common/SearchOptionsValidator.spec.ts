@@ -1,17 +1,16 @@
 import { validateSearchOptions, validateDistinctSearchOptions } from '../../common/SearchOptionsValidator';
 
 describe('SearchOptionsValidator.validateSearchOptions', () => {
-  test('defaults offset if not provided', () => {
-    expect(validateSearchOptions({ batchSize: 100 })).toEqual({ batchSize: 100, offset: 0 });
-  });
-
   test.each([
     [0, 0],
-    [999, 999],
-    [1000, 1000],
-    [1001, 1000],
-  ])('limit is reduced to 1000 if a value greater than 1000', async (batchSize, expected) => {
-    expect(validateSearchOptions({ batchSize })).toEqual({ batchSize: expected, offset: 0 });
+    [null, 0],
+    [undefined, 0],
+  ])('offset defaults to 0 when not supplied', async (offset, expected) => {
+    expect(validateSearchOptions({ offset }).offset).toEqual(expected);
+  });
+
+  test('offset still defaults to 0 when no searchOptions are supplied', () => {
+    expect(validateSearchOptions().offset).toEqual(0);
   });
 });
 

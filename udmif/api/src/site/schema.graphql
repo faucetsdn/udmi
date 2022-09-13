@@ -8,15 +8,33 @@ type SitesResponse {
 }
 
 type Site {
-  # the ID of the site
+  # ID of the site
   id: ID!
-  # the name of the site
+  # Name of the site
   name: String!
+  # Total number of devices associated to the site
+  totalDevicesCount: Int!
+  # Number of correct devices in the message
+  correctDevicesCount: Int!
+  # Number of missing devices in the message
+  missingDevicesCount: Int!
+  # Number of error devices in the message
+  errorDevicesCount: Int!
+  # Number of extra devices in the message
+  extraDevicesCount: Int!
+  # Last time the validation message was updated
+  lastValidated: String
+  # Percent of devices validated i.e. 0.97
+  percentValidated: Float!
+  # Total number of errors across all devices
+  totalDeviceErrorsCount: Int!
 }
 
 type Query {
   # Get a list of sites
-  sites(searchOptions: SearchOptions!) : SitesResponse
+  sites(searchOptions: SearchOptions) : SitesResponse
+  # Get a site by ID
+  site(id: ID!): Site
   # Get a list of sites
   siteNames(searchOptions: DistinctSearchOptions) : [String!]!
 }
