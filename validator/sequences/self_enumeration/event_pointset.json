@@ -1,15 +1,15 @@
 {
   "points" : {
     "filter_alarm_pressure_status" : {
-      "present_value" : false
+      "present_value" : true
     },
     "filter_differential_pressure_setpoint" : {
-      "present_value" : 33
+      "present_value" : 16
     },
     "filter_differential_pressure_sensor" : {
-      "present_value" : 9
+      "present_value" : 11
     }
   },
-  "timestamp" : "2022-09-09T03:15:28.017Z",
+  "timestamp" : "2022-09-13T14:56:59.039Z",
   "version" : "1.3.14"
 }

@@ -1,7 +1,7 @@
 {
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
-  "last_start" : "2022-09-09T03:12:37Z",
+  "last_start" : "1970-01-01T00:00:00Z",
   "testing" : {
     "sequence_name" : "system_min_loglevel"
   }

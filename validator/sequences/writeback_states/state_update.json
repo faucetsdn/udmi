@@ -1,4 +1,12 @@
 {
+  "discovery" : {
+    "enumeration" : {
+      "generation" : "2022-09-13T14:55:45Z"
+    },
+    "families" : {
+      "virtual" : { }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -19,10 +27,10 @@
     }
   },
   "system" : {
-    "last_config" : "2022-09-13T09:33:13Z",
+    "last_config" : "2022-09-13T14:56:13Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-13T09:32:46Z",
+    "last_start" : "2022-09-13T14:50:27Z",
     "serial_no" : "123",
     "hardware" : {
       "make" : "BOS",
@@ -34,10 +42,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-13T09:33:14Z",
+      "timestamp" : "2022-09-13T14:56:13Z",
       "level" : 300
     }
   },
-  "timestamp" : "2022-09-13T09:33:15Z",
+  "timestamp" : "2022-09-13T14:56:14Z",
   "version" : "1.3.14"
 }

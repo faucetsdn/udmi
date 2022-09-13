@@ -1,4 +1,9 @@
 {
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : { },
@@ -7,11 +12,11 @@
     }
   },
   "system" : {
-    "last_config" : "2022-09-09T03:12:50Z",
+    "last_config" : "2022-09-13T14:52:52Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-09T03:12:37Z",
-    "serial_no" : "sequencer-5321",
+    "last_start" : "2022-09-13T14:50:27Z",
+    "serial_no" : "123",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -22,10 +27,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-09T03:12:50Z",
+      "timestamp" : "2022-09-13T14:52:53Z",
       "level" : 300
     }
   },
-  "timestamp" : "2022-09-09T03:12:50Z",
+  "timestamp" : "2022-09-13T14:52:54Z",
   "version" : "1.3.14"
 }
