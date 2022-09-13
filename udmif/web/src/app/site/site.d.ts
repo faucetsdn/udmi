@@ -12,3 +12,11 @@ interface SiteModel {
 }
 
 export type Site = Partial<SiteModel>;
+
+export type SiteQueryResponse = {
+  site?: Site;
+};
+
+export type SiteQueryVariables = {
+  id: string;
+};
