@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class ConfigUtil {
+/**
+ * Collection of utilities for managing configuration.
+ */
+public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
   public static final String UDMI_VERSION = "1.3.14";
@@ -22,6 +25,12 @@ public class ConfigUtil {
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new ISO8601DateFormat());
 
+  /**
+   * Read cloud configuration from a file.
+   *
+   * @param configFile file ot parse
+   * @return cloud configuration information
+   */
   public static CloudIotConfig readCloudIotConfig(File configFile) {
     try {
       return OBJECT_MAPPER.readValue(configFile, CloudIotConfig.class);
@@ -40,7 +49,7 @@ public class ConfigUtil {
     }
   }
 
-  public static AllDeviceExceptions loadExceptions(File siteConfig) {
+  static AllDeviceExceptions loadExceptions(File siteConfig) {
     File exceptionsFile = new File(siteConfig, EXCEPTIONS_JSON);
     if (!exceptionsFile.exists()) {
       return null;
@@ -57,6 +66,12 @@ public class ConfigUtil {
     }
   }
 
+  /**
+   * Read a validator configuration file.
+   *
+   * @param configFile file to read
+   * @return parsed validator config
+   */
   public static ValidatorConfig readValidatorConfig(File configFile) {
     try {
       return OBJECT_MAPPER.readValue(configFile, ValidatorConfig.class);
@@ -65,20 +80,11 @@ public class ConfigUtil {
     }
   }
 
-  public static String getTimestamp() {
-    try {
-      String dateString = OBJECT_MAPPER.writeValueAsString(new Date());
-      return dateString.substring(1, dateString.length() - 1);
-    } catch (Exception e) {
-      throw new RuntimeException("Creating timestamp", e);
-    }
-  }
-
-  public static class AllDeviceExceptions extends HashMap<String, DeviceExceptions> {
+  static class AllDeviceExceptions extends HashMap<String, DeviceExceptions> {
 
   }
 
-  public static class DeviceExceptions extends HashMap<String, Object> {
+  static class DeviceExceptions extends HashMap<String, Object> {
 
     public List<Pattern> patterns = new ArrayList<>();
   }

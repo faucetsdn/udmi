@@ -19,17 +19,22 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Validation wrapper for processing individual messages.
+ */
 public class MessageValidator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MessageValidator.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  Map<String, JsonSchema> schemaMap = Maps.newConcurrentMap();
+  private final Map<String, JsonSchema> schemaMap = Maps.newConcurrentMap();
   private final File schemaRoot;
 
+  /**
+   * Create a message validator for the given schema root path.
+   *
+   * @param schemaRootPath path to schema
+   */
   public MessageValidator(String schemaRootPath) {
     schemaRoot = new File(schemaRootPath);
     if (!schemaRoot.isDirectory()) {
@@ -38,6 +43,13 @@ public class MessageValidator {
     }
   }
 
+  /**
+   * Validate the indicated message.
+   *
+   * @param subFolder indicates the type of message for validation
+   * @param data message data
+   * @return list of validation results
+   */
   public List<String> validateMessage(String subFolder, String data) {
     JsonSchema schema = schemaMap.computeIfAbsent(subFolder, this::getSchema);
     try {
