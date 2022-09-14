@@ -21,7 +21,13 @@ fi
 
 export UDMI_VERSION=`git describe --always --dirty`
 
+if [[ ! -f $VALIDATOR_CONFIG ]]; then
+  echo Missing $VALIDATOR_CONFIG
+  false
+fi
+
 echo Parsing $VALIDATOR_CONFIG:
+
 cat $VALIDATOR_CONFIG
 project_id=`jq -r .project_id $VALIDATOR_CONFIG`
 site_model=`jq -r .site_model $VALIDATOR_CONFIG`

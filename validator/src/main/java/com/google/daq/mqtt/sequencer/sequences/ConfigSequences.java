@@ -13,7 +13,11 @@ import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.JsonUtil;
 import java.util.Date;
+import java.util.HashMap;
 import org.junit.Test;
+import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobsetConfig;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 
@@ -21,6 +25,29 @@ import udmi.schema.Level;
  * Validate basic device configuration handling operation, not specific to any device function.
  */
 public class ConfigSequences extends SequenceRunner {
+
+  @Test
+  @Description("Push endpoint config message to device, resulting in success")
+  public void endpoint_config_success() {
+    // blob _iot_endpoint_config = ...
+  }
+
+  @Test
+  @Description("Push endpoint config message to device, resulting in invalid")
+  public void endpoint_config_invalid() {
+    // blob _iot_endpoint_config = ...
+    BlobBlobsetConfig cfg = new BlobBlobsetConfig();
+    cfg.phase = BlobPhase.FINAL;
+    // { protocol=mqtt, client_id=test_project/device; hostname=localhost }
+    cfg.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp" +
+        "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
+    cfg.content_type = "application/json";
+    deviceConfig.blobset = new BlobsetConfig();
+    deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
+    deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
+    updateConfig();
+    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+  }
 
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")
