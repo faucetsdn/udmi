@@ -22,11 +22,11 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "apply"
+    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint.phase = "final"
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
     E'->>D:CONFIG MESSAGE
-    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "final"
+    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "final"
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
@@ -39,12 +39,12 @@ sequenceDiagram
     participant E as Original Endpoint
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "apply"
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
     note over D: Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
     D-->>E:CONNECTION ATTEMPT
     E->>D:CONFIG MESSAGE
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "final"<BR/>blobset.blobs._iot_endpoint_config.blob.status.level=500(ERROR) 
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "final"<BR/>blobset.blobs._iot_endpoint_config.status.level=500 (ERROR) 
 
 ```
 
