@@ -51,6 +51,7 @@ const QUERY_DEVICE = gql`
         units
         state
       }
+      validation
     }
   }
 `;
