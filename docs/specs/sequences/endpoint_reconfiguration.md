@@ -78,8 +78,8 @@ The base64 encoded value decodes to:
 }
 ```
 
-Example successful state message from device with a successful reconfiguration
-has completed successfully 
+Example successful state message sent to the new endpoint from device following
+a successful reconfiguration
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
@@ -107,6 +107,7 @@ has completed successfully
 }
 ```
 
+This is an example of the state message sent to the original endpoint after a failure
 <!--example:state/endpoint_reconfiguration_failed.json-->
 ```json
 {
