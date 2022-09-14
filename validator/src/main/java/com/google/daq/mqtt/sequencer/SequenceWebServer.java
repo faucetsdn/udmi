@@ -43,13 +43,19 @@ public class SequenceWebServer extends SimpleWebServer {
     if (params.isEmpty()) {
       throw new IllegalArgumentException("Unexpected arguments: " + JOINER.join(params.keySet()));
     }
-    processSiteModel(siteModel);
+    processSite(siteModel);
   }
 
-  void processSiteModel(String sitePath) {
+  void processSite(String sitePath) {
     SiteModel siteModel = new SiteModel(sitePath);
     siteModel.initialize();
     siteModel.forEachDevice(device -> processDevice(siteModel, device));
+  }
+
+  void processSiteDevice(String sitePath, String deviceId) {
+    SiteModel siteModel = new SiteModel(sitePath);
+    siteModel.initialize();
+    processDevice(siteModel, siteModel.getDevice(deviceId));
   }
 
   private void processDevice(SiteModel siteModel, Device device) {
