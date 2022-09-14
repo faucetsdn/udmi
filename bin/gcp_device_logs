@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+""" View GCP Cloud Logging logs for given device(s) based on device ID. Will
+return any device in a project matching the device ID (e.g. in different
+registries)
+
+Usage: bin/gcp_device_logs PROJECT_ID DEVICE_ID [DEVICE_ID ....]
+
+"""
+import sys
+import datetime
+import time
+import subprocess
+import json
+import dateutil.parser
+import argparse
+
+SHELL_TEMPLATE = 'gcloud logging read "logName=projects/{}/logs/cloudiot.googleapis.com%2Fdevice_activity AND ({}) AND timestamp>=\\\"{}\\\"" --limit 1000 --format json --project {}'
+TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ' #timestamp >= "2016-11-29T23:00:00Z"
+
+def parse_command_line_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('project_id', type=str,
+    help='GCP Project ID')
+  parser.add_argument('device_ids', type=str, nargs='+',
+    help='Device ID')
+  return parser.parse_args()
+
+args = parse_command_line_args()
+target_devices = args.device_ids
+project_id = args.project_id
+
+device_filter = ' OR '.join([f'labels.device_id={target}' for target in target_devices])
+
+# sleep duration - balance of speed and accuracy for ordering as some entries
+# can be delayed by about 10 seconds
+dt = 10
+
+search_window = 60
+search_timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=5)
+
+seen = []
+
+while True:
+  try:
+    shell_command = SHELL_TEMPLATE.format(project_id, device_filter, search_timestamp.strftime(TIMESTAMP_FORMAT), project_id)
+    output = subprocess.run(shell_command, capture_output=True, shell=True, check=True)
+
+    data = json.loads(output.stdout)
+
+    entries = []
+
+    for entry in data:
+      insert_id = entry['insertId']
+
+      if insert_id in seen:
+        continue
+
+      seen.append(insert_id)
+
+      event_type = entry['jsonPayload']['eventType']
+      timestamp = entry['timestamp']
+      registry_id = entry['resource']['labels']['device_registry_id']
+      log_device_id = entry['labels']['device_id']
+      metadata = ''
+
+      if event_type == 'PUBLISH':
+        metadata = entry['jsonPayload'].get('publishFromDeviceTopicType')
+        publishToDeviceTopicType = entry['jsonPayload'].get('publishToDeviceTopicType')
+        if publishToDeviceTopicType == 'CONFIG':
+          event_type = 'CONFIG'
+          metadata = ''
+        elif not metadata and publishToDeviceTopicType:
+          metadata = f'TO DEVICE {publishToDeviceTopicType}'
+
+      if event_type == 'PUBACK':
+        metadata = entry['jsonPayload']['publishToDeviceTopicType']
+
+      if event_type == 'SUBSCRIBE':
+        metadata =  entry['jsonPayload']['mqttTopic']
+
+      if event_type == 'ATTACH_TO_GATEWAY':
+        metadata = entry['jsonPayload']['gateway']['id']
+
+      if event_type == 'DISCONNECT':
+        metadata = entry['jsonPayload']['disconnectType']
+
+      if entry['jsonPayload']['status'].get('code') != 0:
+        metadata = (f"{metadata}"
+                    f"({entry['jsonPayload']['status'].get('description')}"
+                    f"{entry['jsonPayload']['status'].get('message', '')})")
+
+      entries.append({'timestamp_obj': dateutil.parser.parse(timestamp),
+              'timestamp': timestamp,
+              'registry_id':registry_id,
+              'event_type':event_type,
+              'metadata':metadata,
+              'device_id': log_device_id })
+
+    entries.sort(key=lambda item: item['timestamp_obj'])
+
+    for entry in entries:
+      print(f"{entry['timestamp_obj']}  {entry['device_id']:<10} "
+            f"{entry['registry_id']:<15} {entry['event_type']} "
+            f"{entry['metadata']}")
+
+    td = datetime.datetime.utcnow() - search_timestamp
+    if td.total_seconds() > search_window:
+      search_timestamp = (search_timestamp
+        + datetime.timedelta(seconds=(td.total_seconds() - search_window)))
+  except subprocess.CalledProcessError as e :
+    print(e)
+    print('Ensure gcloud is authenticated and account has permissions')
+    print('to access cloud logging')
+    sys.exit(1)
+  except Exception:
+    pass
+  finally:
+    time.sleep(dt)
