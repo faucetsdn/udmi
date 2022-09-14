@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
+import java.util.Optional;
 
 /**
  * Collection of common constants and minor utilities.
@@ -15,6 +16,7 @@ public abstract class Common {
   public static final String TIMESTAMP_ATTRIBUTE = "timestamp";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
+  private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
 
   /**
    * Remove the next item from the list in an exception-safe way.
@@ -70,5 +72,9 @@ public abstract class Common {
   public static String getExceptionMessage(Throwable exception) {
     String message = exception.getMessage();
     return message != null ? message : exception.toString();
+  }
+
+  public static String getUdmiVersion() {
+    return Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
   }
 }

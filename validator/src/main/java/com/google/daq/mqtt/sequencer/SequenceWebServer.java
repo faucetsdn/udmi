@@ -1,17 +1,16 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.sequencer.SequenceTestRunner.validationConfig;
-
 import com.google.common.base.Joiner;
-import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.SimpleWebServer;
 import com.google.daq.mqtt.util.ValidatorConfig;
+import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.SiteModel.Device;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
+import udmi.schema.Level;
 
 public class SequenceWebServer extends SimpleWebServer {
 
@@ -39,20 +38,32 @@ public class SequenceWebServer extends SimpleWebServer {
     projectId = remaining.remove(0);
   }
 
-  private void handler(Map<String, Object> message, Map<String, String> attributes) {
-    ValidatorConfig config = new ValidatorConfig();
-    SequenceTestRunner.process(config);
-  }
-
   private void handle(Map<String, String> params) {
-    String subscriptionId = params.remove("subscription");
+    String siteModel = params.remove("site_model");
     if (params.isEmpty()) {
       throw new IllegalArgumentException("Unexpected arguments: " + JOINER.join(params.keySet()));
     }
-    PubSubClient pubSubClient = new PubSubClient(checkNotNull(projectId, "projectId not defined"), subscriptionId);
-    while (pubSubClient.isActive()) {
-      pubSubClient.processMessage(this::handler);
-    }
+    processSiteModel(siteModel);
   }
+
+  void processSiteModel(String sitePath) {
+    SiteModel siteModel = new SiteModel(sitePath);
+    siteModel.initialize();
+    siteModel.forEachDevice(device -> processDevice(siteModel, device));
+  }
+
+  private void processDevice(SiteModel siteModel, Device device) {
+    String deviceId = device.deviceId;
+    ValidatorConfig config = new ValidatorConfig();
+    config.project_id = projectId;
+    config.site_model = siteModel.getSitePath();
+    config.device_id = deviceId;
+    config.key_file = siteModel.validatorKey();
+    config.udmi_version = Common.getUdmiVersion();
+    config.serial_no = SequenceRunner.SERIAL_NO_MISSING;
+    config.log_level = Level.INFO.name();
+    SequenceTestRunner.process(config);
+  }
+
 
 }

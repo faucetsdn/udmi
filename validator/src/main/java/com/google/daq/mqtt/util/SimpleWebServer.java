@@ -31,10 +31,14 @@ public class SimpleWebServer implements HttpHandler {
         throw new RuntimeException("Need server port argument");
       }
       int port = Integer.parseInt(args.remove(0));
-      HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-      System.out.println("server started on port " + port);
-      server.createContext("/", this);
-      server.start();
+      if (port > 0) {
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        System.err.println("server started on port " + port);
+        server.createContext("/", this);
+        server.start();
+      } else {
+        System.err.println("skipping server port 0");
+      }
     } catch (Exception e) {
       throw new RuntimeException("While creating web server: " + Joiner.on(" ").join(args), e);
     }

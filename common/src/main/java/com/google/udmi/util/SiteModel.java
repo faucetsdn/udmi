@@ -213,6 +213,14 @@ public class SiteModel {
     return allDevices.get(deviceId);
   }
 
+  public String getSitePath() {
+    return sitePath;
+  }
+
+  public String validatorKey() {
+    return sitePath + "/validator/rsa_private.pkcs8";
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;
@@ -224,6 +232,7 @@ public class SiteModel {
   public class Device {
 
     public final String deviceId;
+    public String key_algo;
 
     public Device(String deviceId) {
       this.deviceId = deviceId;

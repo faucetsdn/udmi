@@ -30,7 +30,7 @@ public class SequenceTestRunner {
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  private static ValidatorConfig validationConfig;
+  static ValidatorConfig validationConfig;
 
   /**
    * Thundercats are go.
