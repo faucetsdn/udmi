@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Metadata;
 
-public class ProxyTarget {
+class ProxyTarget {
 
   static final String STATE_TOPIC = "state";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -49,7 +49,7 @@ public class ProxyTarget {
   private final Map<String, LocalDateTime> configTimes = new ConcurrentHashMap<>();
   private final Map<String, Metadata> udmiMetadata = new ConcurrentHashMap<>();
 
-  public ProxyTarget(Map<String, String> configMap, String registryId,
+  ProxyTarget(Map<String, String> configMap, String registryId,
       Consumer<MessageBundle> bundleOut) {
     info("Creating new proxy target for " + registryId);
     this.srcRegistryId = registryId;
@@ -109,7 +109,7 @@ public class ProxyTarget {
     return cloudIotConfig;
   }
 
-  public MessagePublisher getMqttPublisher(String deviceId) {
+  MessagePublisher getMqttPublisher(String deviceId) {
     Metadata udmi = getUdmiMetadata(deviceId);
     String gatewayId = extractGateway(udmi);
     if (gatewayId != null) {
@@ -122,11 +122,11 @@ public class ProxyTarget {
     return messagePublishers.computeIfAbsent(deviceId, deviceKey -> newMqttPublisher(deviceId));
   }
 
-  public boolean hasMqttPublisher(String deviceId) {
+  boolean hasMqttPublisher(String deviceId) {
     return messagePublishers.containsKey(deviceId);
   }
 
-  public void clearMqttPublisher(String deviceId) {
+  void clearMqttPublisher(String deviceId) {
     info("Publishers remove " + deviceId);
     MessagePublisher publisher = messagePublishers.remove(deviceId);
     if (publisher != null) {
@@ -176,7 +176,7 @@ public class ProxyTarget {
     }
   }
 
-  public boolean publish(String deviceId, String subFolder, String data) {
+  boolean publish(String deviceId, String subFolder, String data) {
     if (proxyConfig == null) {
       return false;
     }
@@ -218,7 +218,7 @@ public class ProxyTarget {
     return now.isBefore(initializedTime.plusSeconds(DEVICE_REFRESH_SEC));
   }
 
-  public void terminate() {
+  void terminate() {
     messagePublishers.values().forEach(MessagePublisher::close);
     messagePublishers.clear();
   }
