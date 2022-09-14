@@ -10,7 +10,7 @@ import { SiteService } from './site.service';
   styleUrls: ['./site.component.scss'],
 })
 export class SiteComponent implements OnInit, OnDestroy {
-  private siteSubscription!: Subscription;
+  siteSubscription!: Subscription;
   fields: (keyof SiteModel)[] = [
     'totalDevicesCount',
     'correctDevicesCount',

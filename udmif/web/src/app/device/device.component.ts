@@ -10,7 +10,7 @@ import { DeviceService } from './device.service';
   styleUrls: ['./device.component.scss'],
 })
 export class DeviceComponent implements OnInit, OnDestroy {
-  private deviceSubscription!: Subscription;
+  deviceSubscription!: Subscription;
   fields: (keyof DeviceModel)[] = [
     'make',
     'model',
