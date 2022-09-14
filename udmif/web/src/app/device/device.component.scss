@@ -1,7 +1,6 @@
 @use '../../styles/variables' as *;
 
 .summary {
-  margin-top: $gutter-width;
   margin-bottom: $gutter-width;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
