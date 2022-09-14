@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Abstraction for a cloud-based IoT provider.
+ * Abstraction for a cloud-based IoT provider. Provides methods for all the
+ * different operations that UDMI tools need to do on the target registry.
+ * Nominally for GCP IoT Core, but can also be mocked or backed by different providers.
  */
 public interface IotProvider {
 
