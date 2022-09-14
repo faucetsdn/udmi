@@ -4,9 +4,9 @@ describe('ParsePipe', () => {
   const pipe = new ParsePipe();
 
   const testCases = [
-    { value: null, expected: undefined },
+    { value: null, expected: null },
     { value: undefined, expected: undefined },
-    { value: '', expected: undefined },
+    { value: '', expected: '' },
     { value: '{}', expected: {} },
     { value: '{"id":"123"}', expected: { id: '123' } },
   ];
