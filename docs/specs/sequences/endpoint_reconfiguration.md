@@ -78,8 +78,8 @@ The base64 encoded value decodes to:
 }
 ```
 
-Example successful state message from device, when the `phase` is `final` and the
-reconfiguration has completed successfully 
+Example successful state message from device with a successful reconfiguration
+has completed successfully 
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
@@ -101,6 +101,39 @@ reconfiguration has completed successfully
     "blobs": {
       "_iot_endpoint_config": {
         "phase": "final"
+      }
+    }
+  }
+}
+```
+
+<!--example:state/endpoint_reconfiguration_failed.json-->
+```json
+{
+  "version": 1,
+  "timestamp": "2022-07-13T12:00:11.000Z",
+  "system": {
+    "hardware": {
+      "make": "ACME",
+      "model": "Bird Trap"
+    },
+    "software": {
+      "firmware": "1.2"
+    },
+    "serial_no": "000000",
+    "last_config": "2022-07-13T12:00:00.000Z",
+    "operational": true
+  },
+  "blobset": {
+    "blobs": {
+      "_iot_endpoint_config": {
+        "phase": "final",
+        "status": {
+          "message": "Could not connect to new endpoint",
+          "category": "blobset.blob.fail",
+          "timestamp": "2022-07-13T12:00:11.000Z",
+          "level": 500
+        }
       }
     }
   }
