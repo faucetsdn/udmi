@@ -38,6 +38,7 @@ describe('DeviceService', () => {
         serialNumber: 's123',
         firmware: 'V3',
         tags: [],
+        validation: '',
       },
     };
 
