@@ -42,7 +42,7 @@ sequenceDiagram
     participant E as Original Endpoint
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "preparing"
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
     note over D: Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
     D-->>E:CONNECTION ATTEMPT
