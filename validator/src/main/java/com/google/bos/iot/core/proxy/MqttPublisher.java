@@ -34,10 +34,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
-public class MqttPublisher implements MessagePublisher {
+class MqttPublisher implements MessagePublisher {
 
-  public static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
-  public static final String BRIDGE_PORT = "8883";
+  static final String BRIDGE_HOSTNAME = "mqtt.googleapis.com";
+  static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_SHOULD_RETAIN = false;
   private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
@@ -90,6 +90,7 @@ public class MqttPublisher implements MessagePublisher {
     connectMqttClient(deviceId);
   }
 
+  @Override
   public void publish(String deviceId, String topic, String data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
@@ -155,6 +156,7 @@ public class MqttPublisher implements MessagePublisher {
     publishCounter.incrementAndGet();
   }
 
+  @Override
   public void close() {
     try {
       LOG.debug(String.format("Shutting down executor %x", publisherExecutor.hashCode()));
@@ -311,7 +313,7 @@ public class MqttPublisher implements MessagePublisher {
     }
   }
 
-  public String getDeviceId() {
+  String getDeviceId() {
     return deviceId;
   }
 
@@ -369,24 +371,18 @@ public class MqttPublisher implements MessagePublisher {
     MqttCallbackHandler() {
     }
 
-    /**
-     * @see MqttCallback#connectionLost(Throwable)
-     */
+    @Override
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT connection lost " + deviceId, cause);
       connectWait.release();
       onError.accept(MqttPublisher.this, cause);
     }
 
-    /**
-     * @see MqttCallback#deliveryComplete(IMqttDeliveryToken)
-     */
+    @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
     }
 
-    /**
-     * @see MqttCallback#messageArrived(String, MqttMessage)
-     */
+    @Override
     public void messageArrived(String topic, MqttMessage message) {
       onMessage.accept(topic, message.toString());
     }

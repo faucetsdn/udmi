@@ -6,6 +6,9 @@ import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Very dumb publisher that just drops all messages.
+ */
 public class NullPublisher implements MessagePublisher {
   private static final Logger LOG = LoggerFactory.getLogger(ProxyTarget.class);
 
