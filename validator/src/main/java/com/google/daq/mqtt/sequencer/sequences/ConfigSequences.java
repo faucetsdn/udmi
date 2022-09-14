@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
@@ -46,7 +47,7 @@ public class ConfigSequences extends SequenceRunner {
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
     deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
     updateConfig();
-    hasLogged(SYSTEM_CONFIG_RECEIVE, Level.INFO);
+    hasLogged(BLOBSET_BLOB_APPLY, Level.ERROR);
   }
 
   @Test()
