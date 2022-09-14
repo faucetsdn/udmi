@@ -1,7 +1,9 @@
+<app-validation-status [validation]="device?.validation"></app-validation-status>
+
 <mat-card class="summary">
   <div class="item" *ngFor="let field of fields">
     <span class="mat-body-2">{{ field | capitalize }}</span>
-    <p *ngIf="field === 'lastPayload'; else elseBlock">{{ device?.[field] | date : 'MM/dd/yy h:mm a' }}</p>
+    <p *ngIf="field === 'lastPayload'; else elseBlock">{{ device?.lastPayload | date: 'MM/dd/yy h:mm a' }}</p>
     <ng-template #elseBlock
       ><p>{{ device?.[field] }}</p></ng-template
     >

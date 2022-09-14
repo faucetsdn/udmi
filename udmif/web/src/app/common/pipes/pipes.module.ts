@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
 import { CapitalizePipe } from './capitalize.pipe';
+import { ParsePipe } from './parse.pipe';
 
 @NgModule({
-  declarations: [CapitalizePipe],
-  exports: [CapitalizePipe],
+  declarations: [CapitalizePipe, ParsePipe],
+  exports: [CapitalizePipe, ParsePipe],
 })
 export class PipesModule {}

@@ -1,3 +1,5 @@
+<app-validation-status [validation]="site?.validation"></app-validation-status>
+
 <mat-card class="summary">
   <div class="item" *ngFor="let field of fields">
     <span class="mat-body-2">{{ field.replace('Count', '') | capitalize }}</span>

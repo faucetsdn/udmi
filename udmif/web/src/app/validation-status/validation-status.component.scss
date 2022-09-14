@@ -1,0 +1,35 @@
+@use '@angular/material' as mat;
+@use '../../styles/variables' as *;
+
+.validation {
+  margin-bottom: $gutter-width;
+
+  .mat-card-header {
+    display: flex;
+    align-items: center;
+
+    .mat-icon.mat-card-avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 40px;
+    }
+
+    .mat-card-subtitle {
+      margin-bottom: 0;
+
+      &:empty {
+        margin-top: -12px;
+      }
+    }
+  }
+}
+
+.success {
+  color: mat.get-color-from-palette(mat.$green-palette, 500);
+}
+.warning {
+  color: mat.get-color-from-palette(mat.$orange-palette, 500);
+}
+.error {
+  color: mat.get-color-from-palette(mat.$red-palette, 500);
+}
