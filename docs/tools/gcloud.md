@@ -18,3 +18,20 @@ them to work out-of-the-box without a deeper understanding of what's going on!
 # Update a device's GCP IoT Core configuration
 
 `bin/reset_config`
+
+# Viewing Device GCP Cloud Logging
+
+`bin/gcloud_device_logs PROJECT_ID DEVICE_ID [DEVICE_ID ...]`
+
+```
+2022-09-01 14:35:07.677668+00:00  GAT-100    ZZ-TRI-FECTA    PUBLISH STATE (RESOURCE_EXHAUSTED The device "2582332477650079" could not be updated. Device state can be updated only once every 1s.)
+2022-09-01 14:35:07.679536+00:00  GAT-100    ZZ-TRI-FECTA    DISCONNECT  (RESOURCE_EXHAUSTED The device "2582332477650079" could not be updated. Device state can be updated only once every 1s.)
+2022-09-01 14:35:19.115078+00:00  GAT-100    ZZ-TRI-FECTA    CONNECT 
+2022-09-01 14:35:23.637210+00:00  GAT-100    ZZ-TRI-FECTA    SUBSCRIBE /devices/GAT-100/config
+2022-09-01 14:35:23.653924+00:00  GAT-100    ZZ-TRI-FECTA    SUBSCRIBE /devices/GAT-100/commands/#
+2022-09-01 14:35:23.654129+00:00  GAT-100    ZZ-TRI-FECTA    SUBSCRIBE /devices/GAT-100/errors
+2022-09-01 14:35:24.491455+00:00  GAT-100    ZZ-TRI-FECTA    PUBACK CONFIG
+2022-09-01 14:35:24.491506+00:00  GAT-100    ZZ-TRI-FECTA    CONFIG 
+2022-09-01 14:35:24.632056+00:00  GAT-100    ZZ-TRI-FECTA    PUBLISH STATE
+2022-09-01 14:35:25.094994+00:00  ACT-1      ZZ-TRI-FECTA    ATTACH_TO_GATEWAY GAT-100
+```
