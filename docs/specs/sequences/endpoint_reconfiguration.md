@@ -13,6 +13,8 @@ The [endpoint configuration blob](https://github.com/faucetsdn/udmi/blob/master/
 
 ### Valid Endpoint (Successful) Reconfiguration
 
+Note - `<ENDPOINT>` is a **base64** encoded endpoint object
+
 ```mermaid
 %%{wrap}%%
 sequenceDiagram
@@ -20,16 +22,11 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
+    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
     D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
-    E'-->>D:SUCCESS
-    E'->>D:CONFIG
+    E'->>D:CONFIG MESSAGE
     D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "final"
-    note over D: Reboot device
-    D-->>E':CONNECTION ATTEMPT
-    E'-->>D:SUCCESS
-    E'->>D:CONFIG
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
@@ -46,9 +43,8 @@ sequenceDiagram
     D-->>E':CONNECTION ATTEMPT
     note over D: Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
     D-->>E:CONNECTION ATTEMPT
-    E-->>D:SUCCESS
-    E->>D:CONFIG
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "failed"
+    E->>D:CONFIG MESSAGE
+    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.blob.phase = "final"<BR/>blobset.blobs._iot_endpoint_config.blob.status.level=500(ERROR) 
 
 ```
 
