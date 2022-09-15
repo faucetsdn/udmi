@@ -19,30 +19,29 @@ exit_status=0
 echo Found ${devices} clean devices.
 [ "${devices}" == 4 ] || exit_status=1
 
-if [[ -f ${TEST_SITE}/site_metadata.json ]]; then
+# Test site_metadata settings for system.location.site.
+site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
 
-  # Test site_metadata settings for system.location.site.
-  site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
-
-  sm_devices=0
-  for name in ${TEST_SITE}/devices/* ; do
+sm_devices=0
+for name in ${TEST_SITE}/devices/* ; do
     if [[ -f ${name}/out/metadata_norm.json ]]; then
-      supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
-      # If no site value is supplied in per-device metadata, expect default.
-      if [[ "${supplied_site}" == "null" ]]; then
-        jq -e ".system.location.site == \"${site}\"" \
-            ${name}/out/metadata_norm.json > /dev/null \
-            && sm_devices=$[sm_devices+1]
-      else
-        jq -e ".system.location.site == \"${supplied_site}\"" \
-            ${name}/out/metadata_norm.json > /dev/null \
-            && sm_devices=$[sm_devices+1]
-      fi
+        supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
+        # If no site value is supplied in per-device metadata, expect default.
+        if [[ "${supplied_site}" == "null" ]]; then
+            jq -e ".system.location.site == \"${site}\"" \
+               ${name}/out/metadata_norm.json > /dev/null \
+                && sm_devices=$[sm_devices+1]
+        else
+            jq -e ".system.location.site == \"${supplied_site}\"" \
+               ${name}/out/metadata_norm.json > /dev/null \
+                && sm_devices=$[sm_devices+1]
+        fi
     fi
-  done
+done
 
-  echo Found ${sm_devices} devices with correct site_metadata values.
-  [ "${sm_devices}" == "${devices}" ] || exit_status=1
-fi
+echo Found ${sm_devices} devices with correct site_metadata values.
+[ "${sm_devices}" == "${devices}" ] || exit_status=1
 
+echo Done with registrar test, exit code $exit_status
 exit $exit_status
+

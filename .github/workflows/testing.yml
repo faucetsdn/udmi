@@ -89,7 +89,7 @@ jobs:
           fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
     
   udmi:
-    name: Sequence tests
+    name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
