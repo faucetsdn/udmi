@@ -46,8 +46,16 @@ public class ConfigSequences extends SequenceRunner {
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
     deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
+    info("Before updateConfig");
     updateConfig();
-    hasLogged(BLOBSET_BLOB_APPLY, Level.ERROR);
+    info("After updateConfig");
+    hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);  // jrand
+    info("After hasLogged");
+    Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
+    info("Error message: " + stateStatus.message);
+    info("Error detail: " + stateStatus.detail);
+    assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
+    assertEquals(Level.ERROR.value(), (int) stateStatus.level);
   }
 
   @Test()
