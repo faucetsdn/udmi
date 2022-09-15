@@ -21,7 +21,6 @@ describe('DevicesComponent', () => {
     {
       id: 'device-id-123',
       name: 'device one',
-      tags: [],
     },
   ];
 

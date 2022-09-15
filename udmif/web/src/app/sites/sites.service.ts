@@ -20,7 +20,7 @@ export class SitesService {
 
   getSites(
     offset?: number,
-    batchSize: number = 10,
+    batchSize?: number,
     sortOptions?: SortOptions,
     filter?: string
   ): QueryRef<SitesQueryResponse, SitesQueryVariables> {

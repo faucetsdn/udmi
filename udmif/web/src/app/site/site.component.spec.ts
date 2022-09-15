@@ -50,7 +50,7 @@ describe('SiteComponent', () => {
           useValue: {
             snapshot: {
               params: {
-                id: 'site-id-123',
+                siteId: 'site-id-123',
               },
             },
           },

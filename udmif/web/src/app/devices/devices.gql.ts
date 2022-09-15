@@ -14,7 +14,6 @@ export const GET_DEVICES = gql`
         operational
         firmware
         serialNumber
-        tags
       }
       totalCount
       totalFilteredCount

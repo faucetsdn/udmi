@@ -20,7 +20,7 @@ export class PointsComponent implements OnInit {
   constructor(private route: ActivatedRoute, private pointsService: PointsService) {}
 
   ngOnInit(): void {
-    const deviceId: string = this.route.parent?.snapshot.parent?.params['id'];
+    const deviceId: string = this.route.snapshot.params['deviceId'];
 
     this.pointsService.getPoints(deviceId).subscribe(({ data, loading }) => {
       this.loading = loading;

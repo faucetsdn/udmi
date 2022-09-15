@@ -39,7 +39,6 @@ describe('DevicesService', () => {
             operational: false,
             serialNumber: 's123',
             firmware: 'V3',
-            tags: [],
           },
         ],
         totalCount: 1,

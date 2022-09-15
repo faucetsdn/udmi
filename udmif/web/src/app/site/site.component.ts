@@ -31,7 +31,7 @@ export class SiteComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const siteId: string = this.route.snapshot.params['id'];
+    const siteId: string = this.route.snapshot.params['siteId'];
 
     this.siteSubscription = this.siteService.getSite(siteId).subscribe(({ data, loading }) => {
       this.loading = loading;

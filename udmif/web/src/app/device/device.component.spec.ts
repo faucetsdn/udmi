@@ -17,7 +17,6 @@ describe('DeviceComponent', () => {
   let device: Device = {
     id: 'device-id-123',
     name: 'device one',
-    tags: [],
   };
 
   beforeEach(async () => {
@@ -42,7 +41,7 @@ describe('DeviceComponent', () => {
           useValue: {
             snapshot: {
               params: {
-                id: 'device-id-123',
+                deviceId: 'device-id-123',
               },
             },
           },

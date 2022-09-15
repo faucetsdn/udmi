@@ -35,7 +35,7 @@ export class DevicesService {
 
   getDevices(
     offset?: number,
-    batchSize: number = 10,
+    batchSize?: number,
     sortOptions?: SortOptions,
     filter?: string
   ): QueryRef<DevicesQueryResponse, DevicesQueryVariables> {
