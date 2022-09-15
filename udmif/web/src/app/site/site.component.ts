@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { NavigationService } from '../navigation/navigation.service';
 import { Site, SiteModel } from './site';
 import { SiteService } from './site.service';
 
@@ -7,9 +9,9 @@ import { SiteService } from './site.service';
   templateUrl: './site.component.html',
   styleUrls: ['./site.component.scss'],
 })
-export class SiteComponent implements OnInit {
+export class SiteComponent implements OnInit, OnDestroy {
+  siteSubscription!: Subscription;
   fields: (keyof SiteModel)[] = [
-    'name',
     'totalDevicesCount',
     'correctDevicesCount',
     'missingDevicesCount',
@@ -22,14 +24,25 @@ export class SiteComponent implements OnInit {
   site?: Site;
   loading: boolean = true;
 
-  constructor(private route: ActivatedRoute, private siteService: SiteService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private siteService: SiteService,
+    private navigationService: NavigationService
+  ) {}
 
   ngOnInit(): void {
     const siteId: string = this.route.snapshot.params['id'];
 
-    this.siteService.getSite(siteId).subscribe(({ data, loading }) => {
+    this.siteSubscription = this.siteService.getSite(siteId).subscribe(({ data, loading }) => {
       this.loading = loading;
       this.site = data.site;
+
+      this.navigationService.setTitle(this.site?.name);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.siteSubscription.unsubscribe();
+    this.navigationService.clearTitle();
   }
 }
