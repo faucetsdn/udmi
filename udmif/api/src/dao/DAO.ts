@@ -78,7 +78,7 @@ export class DefaultDAO<Type> implements DAO<Type> {
    */
   async getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]> {
     return this.collection
-      .aggregate(getAggregate(field, searchOptions.limit, searchOptions.search))
+      .aggregate(getAggregate(field, searchOptions))
       .map((entity: Type) => entity[field])
       .toArray();
   }
