@@ -49,5 +49,8 @@ export const resolvers = {
     totalDeviceErrorsCount: (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
       return deviceDS.getDeviceErrorsCountBySite(site.name);
     },
+    validation: (site: Site) => {
+      return JSON.stringify(site.validation);
+    },
   },
 };

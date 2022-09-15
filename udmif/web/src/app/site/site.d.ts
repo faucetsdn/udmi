@@ -9,6 +9,7 @@ interface SiteModel {
   lastValidated: string;
   percentValidated: number;
   totalDeviceErrorsCount: number;
+  validation: string;
 }
 
 export type Site = Partial<SiteModel>;

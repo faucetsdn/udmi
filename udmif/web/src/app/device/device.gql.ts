@@ -14,6 +14,7 @@ export const GET_DEVICE = gql`
       firmware
       serialNumber
       tags
+      validation
     }
   }
 `;

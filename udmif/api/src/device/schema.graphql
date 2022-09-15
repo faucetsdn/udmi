@@ -45,6 +45,8 @@ type Device {
   tags: [String!]!
   # the points on a device
   points: [Point!]!
+  # JSON validation message
+  validation: String
 }
 
 type Query {

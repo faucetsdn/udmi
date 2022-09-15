@@ -1,3 +1,5 @@
+import { Device } from './model';
+
 export const resolvers = {
   Query: {
     devices: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
@@ -20,6 +22,11 @@ export const resolvers = {
     },
     sections: (_, { searchOptions }, { dataSources: { deviceDS } }) => {
       return deviceDS.getSections(searchOptions);
+    },
+  },
+  Device: {
+    validation: (device: Device) => {
+      return JSON.stringify(device.validation);
     },
   },
 };

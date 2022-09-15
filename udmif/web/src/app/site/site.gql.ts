@@ -13,6 +13,7 @@ export const GET_SITE = gql`
       lastValidated
       percentValidated
       totalDeviceErrorsCount
+      validation
     }
   }
 `;

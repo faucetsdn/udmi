@@ -28,6 +28,8 @@ type Site {
   percentValidated: Float!
   # Total number of errors across all devices
   totalDeviceErrorsCount: Int!
+  # JSON validation message
+  validation: String
 }
 
 type Query {

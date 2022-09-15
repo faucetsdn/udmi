@@ -5,7 +5,7 @@ import { startCase } from 'lodash-es';
   name: 'capitalize',
 })
 export class CapitalizePipe implements PipeTransform {
-  transform(value: string): string {
-    return startCase(value);
+  transform(value?: string | null): string {
+    return startCase(value ?? '');
   }
 }
