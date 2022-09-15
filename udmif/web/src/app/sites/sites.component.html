@@ -32,5 +32,7 @@
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="row.id">
+    <mat-row></mat-row>
+  </a>
 </mat-table>
