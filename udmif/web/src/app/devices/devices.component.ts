@@ -28,7 +28,8 @@ export class DevicesComponent implements OnInit, OnDestroy {
   sortOptions?: SortOptions;
   siteFilter?: SearchFilterItem = this.siteId ? { field: 'site', operator: '=', value: this.siteId } : undefined;
   defaultFilters: SearchFilterItem[] = compact([this.siteFilter]);
-  filter?: string = this.defaultFilters.length ? JSON.stringify(this.defaultFilters) : undefined;
+  stringifiedDefaultFilters?: string = this.defaultFilters.length ? JSON.stringify(this.defaultFilters) : undefined;
+  filter?: string = this.stringifiedDefaultFilters;
   searchFields: Record<string, string> = this.route.snapshot.data['searchFields'];
 
   constructor(private devicesService: DevicesService, private route: ActivatedRoute) {}

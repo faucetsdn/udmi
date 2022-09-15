@@ -16,11 +16,12 @@ const services: any = {
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange'],
+  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange', 'filter'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
+  filter?: string;
   serviceName!: string;
   fields!: Record<string, string>;
   limit: number = 5;
@@ -48,7 +49,7 @@ export class SearchFilterComponent implements OnInit {
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
           <Observable<ChipItem[]>>this.injector
             .get<any>(services[this.serviceName])
-            [this.fields[this.filterEntry.field]]?.(term, this.limit)
+            [this.fields[this.filterEntry.field]]?.(term, this.limit, this.filter)
             .pipe(
               map(({ values }) => {
                 this.allItems = values.map((value: string): ChipItem => ({ label: value, value }));

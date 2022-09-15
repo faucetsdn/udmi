@@ -53,7 +53,7 @@ export class DevicesService {
     });
   }
 
-  getDeviceNames(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceNames(search?: string, limit?: number, filter?: string): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceNamesQueryResponse, DeviceNamesQueryVariables>({
         query: GET_DEVICE_NAMES,
@@ -62,6 +62,7 @@ export class DevicesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })
@@ -72,7 +73,7 @@ export class DevicesService {
       );
   }
 
-  getDeviceMakes(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceMakes(search?: string, limit?: number, filter?: string): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceMakesQueryResponse, DeviceMakesQueryVariables>({
         query: GET_DEVICE_MAKES,
@@ -81,6 +82,7 @@ export class DevicesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })
@@ -91,7 +93,7 @@ export class DevicesService {
       );
   }
 
-  getDeviceModels(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceModels(search?: string, limit?: number, filter?: string): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceModelsQueryResponse, DeviceModelsQueryVariables>({
         query: GET_DEVICE_MODELS,
@@ -100,6 +102,7 @@ export class DevicesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })
@@ -110,7 +113,7 @@ export class DevicesService {
       );
   }
 
-  getDeviceSites(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceSites(search?: string, limit?: number, filter?: string): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceSitesQueryResponse, DeviceSitesQueryVariables>({
         query: GET_DEVICE_SITES,
@@ -119,6 +122,7 @@ export class DevicesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })
@@ -129,7 +133,7 @@ export class DevicesService {
       );
   }
 
-  getDeviceSections(search?: string, limit?: number): Observable<DeviceDistinctQueryResult> {
+  getDeviceSections(search?: string, limit?: number, filter?: string): Observable<DeviceDistinctQueryResult> {
     return this.apollo
       .watchQuery<DeviceSectionsQueryResponse, DeviceSectionsQueryVariables>({
         query: GET_DEVICE_SECTIONS,
@@ -138,6 +142,7 @@ export class DevicesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })
