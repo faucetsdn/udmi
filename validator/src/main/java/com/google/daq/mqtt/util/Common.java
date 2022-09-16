@@ -84,6 +84,12 @@ public abstract class Common {
     return Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
   }
 
+  /**
+   * Find all classes (by name) in the given package.
+   *
+   * @param packageName package to look for
+   * @return classes in the indicated package
+   */
   public static Set<String> findAllClassesUsingClassLoader(String packageName) {
     InputStream stream = ClassLoader.getSystemClassLoader()
         .getResourceAsStream(packageName.replaceAll("[.]", "/"));
@@ -98,6 +104,13 @@ public abstract class Common {
     return packageName + "." + line.substring(0, line.lastIndexOf("."));
   }
 
+  /**
+   * Load a java class given the name. Converts ClassNotFoundException to
+   * RuntimeException for convenience.
+   *
+   * @param className class to load
+   * @return loaded class
+   */
   public static Class<?> classForName(String className) {
     try {
       return ConfigSequences.class.getClassLoader().loadClass(className);
