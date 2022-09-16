@@ -19,7 +19,7 @@
         "phase": "final",
         "status": {
           "message": "Could not connect to new endpoint",
-          "category": "blobset.blob.failure",
+          "category": "blobset.blob.apply",
           "timestamp": "2022-07-13T12:00:11.000Z",
           "level": 500
         }

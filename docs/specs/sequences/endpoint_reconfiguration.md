@@ -11,9 +11,11 @@ The [endpoint configuration blob](https://github.com/faucetsdn/udmi/blob/master/
 
 ## Tests
 
-### Valid Endpoint (Successful) Reconfiguration
+### Valid Endpoint (Successful Reconfiguration)
 
-Note - `<ENDPOINT>` is a **base64** encoded endpoint object
+**Notes**
+- `<ENDPOINT>` is a **base64** encoded endpoint object
+- `blobset.blobs_iot_endpoint_config` block is only present in a device's state messages when it is present in the last received config message
 
 ```mermaid
 %%{wrap}%%
@@ -22,11 +24,15 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "apply"
+    E->>D:CONFIG MESSAGE<br>timestamp = t0<br/>blobset.blobs._iot_endpoint_config = null (unset)
+    D->>E:STATE MESSAGE<br/>system.last_update = t0<br/>blobset.blobs._iot_endpoint_config = null (unset)
+    E->>D:CONFIG MESSAGE<br>timestamp = t1<br/>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E:STATE MESSAGE<br/>system.last_update = t1<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
     D-->>E':CONNECTION ATTEMPT
-    E'->>D:CONFIG MESSAGE
-    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "final"
+    E'->>D:CONFIG MESSAGE<br>timestamp = t2<br/>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E':STATE MESSAGE<br/>system.last_update = t2<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config = null (unset)
+    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config = null (unset)
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
@@ -38,13 +44,15 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint.blob.phase = "final"
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "apply"
+    E->>D:CONFIG MESSAGE<br/>timestamp = t0<br/>blobset.blobs._iot_endpoint_config.blob = <ENDPOINT><br>blobset.blobs._iot_endpoint_config.blob.phase = "final"
+    D->>E:STATE MESSAGE<br/>system.last_update = t0<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    critical: Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
-    note over D: Failure, e.g. endpoint doesn't exist, incorrect credentials, ...
-    D-->>E:CONNECTION ATTEMPT
+    note over D: Failure, e.g. endpoint cannot be reached, incorrect credentials...
+    D-->>E:CONNECTION ATTEMPT 
+    end
     E->>D:CONFIG MESSAGE
-    D->>E:STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config.phase = "final"<BR/>blobset.blobs._iot_endpoint_config.status.level=500 (ERROR) 
+    D->>E:STATE MESSAGE<br/>system.last_update = t0 <br/>blobset.blobs._iot_endpoint_config.phase = "final"<br/>blobset.blobs._iot_endpoint_config.status.level = 500 (ERROR)<br/>blobset.blobs._iot_endpoint_config.status.category = "blobset.blob.apply"
 
 ```
 
@@ -131,7 +139,7 @@ This is an example of the state message sent to the original endpoint after a fa
         "phase": "final",
         "status": {
           "message": "Could not connect to new endpoint",
-          "category": "blobset.blob.fail",
+          "category": "blobset.blob.apply",
           "timestamp": "2022-07-13T12:00:11.000Z",
           "level": 500
         }
