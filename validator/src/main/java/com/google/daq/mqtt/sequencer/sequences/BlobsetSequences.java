@@ -11,6 +11,10 @@ import udmi.schema.BlobsetConfig;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 
+/**
+ * Validation tests for instances that involve blobconfig messages.
+ */
+
 public class BlobsetSequences extends SequenceRunner {
 
   @Test
