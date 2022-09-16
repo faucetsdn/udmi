@@ -34,8 +34,8 @@ public class ConfigSequences extends SequenceRunner {
     BlobBlobsetConfig cfg = new BlobBlobsetConfig();
     cfg.phase = BlobPhase.FINAL;
     // { protocol=mqtt, client_id=test_project/device; hostname=localhost }
-    cfg.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp" +
-        "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
+    cfg.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp"
+        + "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
     cfg.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
