@@ -1,11 +1,9 @@
 package com.google.daq.mqtt.sequencer;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
-import com.google.daq.mqtt.sequencer.sequences.DiscoverySequences;
-import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
@@ -26,15 +24,12 @@ import udmi.schema.Level;
  */
 public class SequenceRunner {
 
-  private static final Set<Class<?>> sequenceClasses = ImmutableSet.of(
-      ConfigSequences.class,
-      DiscoverySequences.class,
-      WritebackSequences.class);
-
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   static ValidatorConfig validationConfig;
+  private final Set<String> sequenceClasses = Common.findAllClassesUsingClassLoader(
+      ConfigSequences.class.getPackageName());
   private int successes = -1;
   private List<Failure> failures;
 
@@ -117,7 +112,8 @@ public class SequenceRunner {
     successes = 0;
     failures = new ArrayList<>();
     Set<String> remainingMethods = new HashSet<>(targetMethods);
-    for (Class<?> clazz : sequenceClasses) {
+    for (String className : sequenceClasses) {
+      Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
       if (!targetMethods.isEmpty()) {
         for (String method : targetMethods) {
@@ -154,11 +150,11 @@ public class SequenceRunner {
       }
     });
     if (!remainingMethods.isEmpty()) {
-      throw new RuntimeException(
-          "Failed to find methods " + Joiner.on(", ").join(remainingMethods));
+      throw new RuntimeException("Failed to find " + Joiner.on(", ").join(remainingMethods));
     }
     if (successes == 0 && failures.isEmpty()) {
       throw new RuntimeException("No matching tests found");
     }
   }
+
 }

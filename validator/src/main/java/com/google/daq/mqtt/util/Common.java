@@ -1,11 +1,17 @@
 package com.google.daq.mqtt.util;
 
+import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Collection of common constants and minor utilities.
@@ -76,5 +82,27 @@ public abstract class Common {
 
   public static String getUdmiVersion() {
     return Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
+  }
+
+  public static Set<String> findAllClassesUsingClassLoader(String packageName) {
+    InputStream stream = ClassLoader.getSystemClassLoader()
+        .getResourceAsStream(packageName.replaceAll("[.]", "/"));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+    return reader.lines()
+        .filter(line -> line.endsWith(".class"))
+        .map(line -> className(packageName, line))
+        .collect(Collectors.toSet());
+  }
+
+  private static String className(String packageName, String line) {
+    return packageName + "." + line.substring(0, line.lastIndexOf("."));
+  }
+
+  public static Class<?> classForName(String className) {
+    try {
+      return ConfigSequences.class.getClassLoader().loadClass(className);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Class not found " + className, e);
+    }
   }
 }
