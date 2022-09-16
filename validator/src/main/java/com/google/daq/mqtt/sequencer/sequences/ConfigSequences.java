@@ -27,39 +27,6 @@ import udmi.schema.Level;
  */
 public class ConfigSequences extends SequenceRunner {
 
-  @Test
-  @Description("Push endpoint config message to device that results in a connection error.")
-  public void endpoint_config_connection_error() {
-    // blob _iot_endpoint_config = ...
-    BlobBlobsetConfig cfg = new BlobBlobsetConfig();
-    cfg.phase = BlobPhase.FINAL;
-    // { protocol=mqtt, client_id=test_project/device; hostname=localhost }
-    cfg.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp"
-        + "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
-    cfg.content_type = "application/json";
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
-    deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
-
-    updateConfig();
-    untilTrue("pubber has attempted endpoint reconfig", () -> {
-      try {
-        if (deviceState.blobset.blobs.get("_iot_endpoint_config").status == null) {
-          return false;
-        }
-      } catch (NullPointerException e) {
-        return false;
-      }
-      Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
-      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
-          && stateStatus.level == Level.ERROR.value();
-    });
-
-    Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
-    assertEquals(BLOBSET_BLOB_APPLY, stateStatus.category);
-    assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-  }
-
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
