@@ -29,6 +29,7 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -64,6 +65,15 @@ Check that the device correctly handles a broken (non-json) config message.
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
+
+## endpoint_config_connection_error
+
+Push endpoint config message to device that results in a connection error.
+
+1. Update config:
+    * Add `blobset` = { "blobs": {  } }
+1. Wait for device tried endpoint config which resulted in connection error
+1. Test failed: timeout waiting for device tried endpoint config which resulted in connection error
 
 ## extra_config
 
