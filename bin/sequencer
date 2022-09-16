@@ -31,9 +31,7 @@ shift 3
 serial_no=${1:-//}
 shift || true
 
-#test_names="$@"
-#jrand
-test_names="endpoint_config_invalid"
+test_names="$@"
 
 cd $ROOT_DIR
 
