@@ -256,6 +256,7 @@ public abstract class SequencesBase {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
       deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
+      udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
       serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       logLevel = Level.valueOf(checkNotNull(validatorConfig.log_level, "log_level not defined"))
