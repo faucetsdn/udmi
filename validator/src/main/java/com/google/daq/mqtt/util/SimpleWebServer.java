@@ -9,8 +9,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -21,9 +19,9 @@ import org.apache.http.client.utils.URLEncodedUtils;
 /**
  * Simple web server used as an endpoint for a cron scheduling job.
  */
-public class SimpleWebServer implements HttpHandler {
+public class SimpleWebServer {
 
-  private Consumer<Map<String, String>> handler;
+  private final HttpServer server;
 
   protected SimpleWebServer(List<String> args) {
     try {
@@ -32,35 +30,32 @@ public class SimpleWebServer implements HttpHandler {
       }
       int port = Integer.parseInt(args.remove(0));
       if (port > 0) {
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server = HttpServer.create(new InetSocketAddress(port), 0);
         System.err.println("server started on port " + port);
-        server.createContext("/", this);
         server.start();
       } else {
         System.err.println("skipping server port 0");
+        server = null;
       }
     } catch (Exception e) {
       throw new RuntimeException("While creating web server: " + Joiner.on(" ").join(args), e);
     }
   }
 
-  public void setHandler(Consumer<Map<String, String>> handler) {
-    this.handler = handler;
+  protected void setHandler(String keyword, Consumer<Map<String, String>> handler) {
+    server.createContext("/" + keyword, exchange -> {
+      Map<String, String> params = URLEncodedUtils.parse(exchange.getRequestURI(),
+              StandardCharsets.UTF_8).stream()
+          .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+      String response = tryAction(handler, params);
+      exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
+      OutputStream os = exchange.getResponseBody();
+      os.write(response.getBytes());
+      os.close();
+    });
   }
 
-  @Override
-  public void handle(HttpExchange exchange) throws IOException {
-    Map<String, String> params = URLEncodedUtils.parse(exchange.getRequestURI(),
-            StandardCharsets.UTF_8).stream()
-        .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
-    String response = tryAction(params);
-    exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-    OutputStream os = exchange.getResponseBody();
-    os.write(response.getBytes());
-    os.close();
-  }
-
-  private String tryAction(Map<String, String> params) {
+  private String tryAction(Consumer<Map<String, String>> handler, Map<String, String> params) {
     try {
       System.err.println("Handling request " + params);
       handler.accept(params);
