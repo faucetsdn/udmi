@@ -9,11 +9,12 @@ import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 
 /**
- * Validation tests for instances that involve blobconfig messages.
+ * Validation tests for instances that involve blobset config messages.
  */
 
 public class BlobsetSequences extends SequenceRunner {
@@ -35,11 +36,10 @@ public class BlobsetSequences extends SequenceRunner {
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
-    deviceConfig.blobset.blobs.put("_iot_endpoint_config", config);
+    deviceConfig.blobset.blobs.put(String.valueOf(SystemBlobsets.IOT_ENDPOINT_CONFIG), config);
 
-    updateConfig();
     untilTrue("device tried endpoint config which resulted in connection error", () -> {
-      Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
+      Entry stateStatus = deviceState.blobset.blobs.get(SystemBlobsets.IOT_ENDPOINT_CONFIG).status;
       return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && stateStatus.level == Level.ERROR.value();
     });
