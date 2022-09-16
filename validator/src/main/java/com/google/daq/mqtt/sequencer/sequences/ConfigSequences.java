@@ -51,23 +51,21 @@ public class ConfigSequences extends SequenceRunner {
     info("After updateConfig");
     untilTrue("pubber has attempted endpoint reconfig", () -> {
       try {
-      if (deviceState.blobset.blobs.get("_iot_endpoint_config").status == null) {
-        return false;
-      }
+        if (deviceState.blobset.blobs.get("_iot_endpoint_config").status == null) {
+          return false;
+        }
       } catch (NullPointerException e) {
         return false;
       }
       Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
-      if ((stateStatus.category == SYSTEM_CONFIG_PARSE) && ((int)stateStatus.level == Level.ERROR.value())) {
-        return true;
-      }
-      return false;
+      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
+          && stateStatus.level == Level.ERROR.value();
     });
     info("After hasLogged");
     Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
     info("Error message: " + stateStatus.message);
     info("Error detail: " + stateStatus.detail);
-    assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
+    assertEquals(BLOBSET_BLOB_APPLY, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
   }
 
