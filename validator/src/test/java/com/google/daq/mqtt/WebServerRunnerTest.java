@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
+/**
+ * Tests for overall suite of web services to invoke subcomponents.
+ */
 public class WebServerRunnerTest {
 
   private static final List<String> SERVER_ARGS = ImmutableList.of("0", TestCommon.PROJECT_ID);
@@ -29,7 +32,7 @@ public class WebServerRunnerTest {
     params.put("site", TestCommon.SITE_DIR);
     params.put("device", TestCommon.DEVICE_ID);
     String sequencerResult = webServerRunner.tryHandler("sequencer", params);
-    // TODO: Expand this limited test that only checks that the requests (not tests) were successful.
+    // TODO: Expand limited test that only checks that the requests (not tests) were successful.
     assertEquals("sequence success", "success", sequencerResult);
   }
 

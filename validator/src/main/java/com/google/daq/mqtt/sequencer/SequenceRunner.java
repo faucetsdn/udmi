@@ -64,7 +64,7 @@ public class SequenceRunner {
         || !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
   }
 
-  public static SequenceRunner processConfig(ValidatorConfig config) {
+  static SequenceRunner processConfig(ValidatorConfig config) {
     validationConfig = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     sequenceRunner.process(List.of());
@@ -113,7 +113,7 @@ public class SequenceRunner {
     return failures;
   }
 
-  public void process(List<String> targetMethods) {
+  private void process(List<String> targetMethods) {
     successes = 0;
     failures = new ArrayList<>();
     Set<String> remainingMethods = new HashSet<>(targetMethods);
