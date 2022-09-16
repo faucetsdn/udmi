@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceRunner;
+import java.util.Base64;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
@@ -17,14 +18,23 @@ import udmi.schema.Level;
 
 public class BlobsetSequences extends SequenceRunner {
 
+  private String ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD =
+    "{ " +
+    "  \"protocol\": \"mqtt\",\n" +
+    "  \"client_id\": \"test_project/device\",\n" +
+    "  \"hostname\": \"localhost\"\n" +
+    "}";
+
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
     // { protocol=mqtt, client_id=test_project/device; hostname=localhost }
-    config.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp"
-        + "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
+    //config.base64 = "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZp"
+    //    + "Y2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0K";
+    config.base64 = String.valueOf(
+        Base64.getEncoder().encode(ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD.getBytes()));
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
