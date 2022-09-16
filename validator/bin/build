@@ -22,7 +22,7 @@ export JAVA_HOME=$JAVA_HOME_11_X64
 echo Building validataor in $PWD
 
 rm -rf build
-./gradlew shadow $check
+./gradlew shadow $check $*
 
 ls -l $jarfile
 

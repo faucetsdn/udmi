@@ -19,6 +19,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 
+/**
+ * Publish messages using the iot core reflector.
+ */
 public class IotReflectorClient implements MessagePublisher {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -39,6 +42,13 @@ public class IotReflectorClient implements MessagePublisher {
   private final String projectId;
   private boolean active;
 
+  /**
+   * Create a new reflector instance.
+   *
+   * @param projectId target project
+   * @param iotConfig configuration file
+   * @param keyFile auth key file
+   */
   public IotReflectorClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
     final byte[] keyBytes;
     try {
@@ -133,14 +143,17 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
+  @Override
   public String getSubscriptionId() {
     return subscriptionId;
   }
 
+  @Override
   public boolean isActive() {
     return active;
   }
 
+  @Override
   public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
     try {
       MessageBundle message = messages.take();

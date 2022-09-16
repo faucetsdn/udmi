@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
@@ -29,6 +30,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -76,7 +78,6 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
-  private File siteDir;
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
@@ -91,6 +92,8 @@ public class Registrar {
   private Map<String, Map<String, String>> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
+  private boolean blockUnknown;
+  private File siteDir;
 
   /**
    * Main entry point for registrar.
@@ -130,7 +133,8 @@ public class Registrar {
           registrar.setValidateMetadata(true);
           break;
         case "--":
-          break;
+          registrar.setDeviceList(argList);
+          return;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
@@ -176,6 +180,8 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
+    Preconditions.checkNotNull(cloudIotManager, "cloudIotManager not yet defined");
+    blockUnknown = false;
   }
 
   private void setFeedTopic(String feedTopic) {
@@ -250,6 +256,7 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
+    blockUnknown = cloudIotManager.cloudIotConfig.block_unknown;
   }
 
   private String getGenerationString() {
@@ -263,11 +270,7 @@ public class Registrar {
   }
 
   private void processDevices() {
-    processDevices(this.deviceList);
-  }
-
-  private void processDevices(List<String> devices) {
-    Set<String> deviceSet = calculateDevices(devices);
+    Set<String> deviceSet = calculateDevices();
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
@@ -413,11 +416,11 @@ public class Registrar {
     }
   }
 
-  private Set<String> calculateDevices(List<String> devices) {
-    if (devices == null) {
+  private Set<String> calculateDevices() {
+    if (deviceList == null) {
       return null;
     }
-    return devices.stream().map(this::deviceNameFromPath).collect(Collectors.toSet());
+    return deviceList.stream().map(this::deviceNameFromPath).collect(Collectors.toSet());
   }
 
   private String deviceNameFromPath(String device) {
@@ -433,7 +436,7 @@ public class Registrar {
 
   private ExceptionMap blockExtraDevices(Set<String> extraDevices) {
     ExceptionMap exceptionMap = new ExceptionMap("Block devices errors");
-    if (!cloudIotManager.cloudIotConfig.block_unknown) {
+    if (!blockUnknown) {
       return exceptionMap;
     }
     for (String extraName : extraDevices) {
@@ -533,9 +536,9 @@ public class Registrar {
   private Set<String> fetchCloudDevices() {
     boolean requiresCloud = updateCloudIoT || (idleLimit != null);
     if (requiresCloud) {
-      Set<String> devices = cloudIotManager.fetchDeviceList();
-      System.err.printf("Fetched %d devices from cloud registry %s%n",
-          devices.size(), cloudIotManager.getRegistryPath());
+      Set<String> devices = cloudIotManager.fetchDeviceIds();
+      System.err.printf("Fetched %d devices from cloud registry %s%n", devices.size(),
+          cloudIotManager.getRegistryId());
       return devices;
     } else {
       System.err.println("Skipping remote registry fetch");
@@ -729,6 +732,10 @@ public class Registrar {
 
   protected Map<String, JsonSchema> getSchemas() {
     return schemas;
+  }
+
+  public List<Object> getMockActions() {
+    return cloudIotManager.getMockActions();
   }
 
   class RelativeDownloader implements URIDownloader {
