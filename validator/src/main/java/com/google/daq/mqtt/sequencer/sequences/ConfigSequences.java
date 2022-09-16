@@ -28,14 +28,8 @@ import udmi.schema.Level;
 public class ConfigSequences extends SequenceRunner {
 
   @Test
-  @Description("Push endpoint config message to device, resulting in success")
-  public void endpoint_config_success() {
-    // blob _iot_endpoint_config = ...
-  }
-
-  @Test
-  @Description("Push endpoint config message to device, resulting in invalid")
-  public void endpoint_config_invalid() {
+  @Description("Push endpoint config message to device that results in a connection error.")
+  public void endpoint_config_connection_error() {
     // blob _iot_endpoint_config = ...
     BlobBlobsetConfig cfg = new BlobBlobsetConfig();
     cfg.phase = BlobPhase.FINAL;
@@ -46,9 +40,8 @@ public class ConfigSequences extends SequenceRunner {
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
     deviceConfig.blobset.blobs.put("_iot_endpoint_config", cfg);
-    info("Before updateConfig");
+
     updateConfig();
-    info("After updateConfig");
     untilTrue("pubber has attempted endpoint reconfig", () -> {
       try {
         if (deviceState.blobset.blobs.get("_iot_endpoint_config").status == null) {
@@ -61,10 +54,8 @@ public class ConfigSequences extends SequenceRunner {
       return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && stateStatus.level == Level.ERROR.value();
     });
-    info("After hasLogged");
+
     Entry stateStatus = deviceState.blobset.blobs.get("_iot_endpoint_config").status;
-    info("Error message: " + stateStatus.message);
-    info("Error detail: " + stateStatus.detail);
     assertEquals(BLOBSET_BLOB_APPLY, stateStatus.category);
     assertEquals(Level.ERROR.value(), (int) stateStatus.level);
   }
