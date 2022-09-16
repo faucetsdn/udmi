@@ -60,7 +60,7 @@ describe('DevicesService', () => {
     expect(op.operation.variables).toEqual({
       searchOptions: {
         offset: undefined,
-        batchSize: 10,
+        batchSize: undefined,
         sortOptions: undefined,
         filter: undefined,
       },

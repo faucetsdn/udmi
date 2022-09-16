@@ -15,8 +15,8 @@ import { compact, union } from 'lodash';
   styleUrls: ['./devices.component.scss'],
 })
 export class DevicesComponent implements OnInit, OnDestroy {
-  private devicesSubscription!: Subscription;
-  private devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
+  devicesSubscription!: Subscription;
+  devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
   displayedColumns: (keyof DeviceModel)[] = this.route.snapshot.data['displayedColumns'];
   siteId?: string = this.route.snapshot.params['siteId'];
   devices: Device[] = [];

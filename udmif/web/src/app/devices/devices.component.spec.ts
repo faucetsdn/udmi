@@ -11,6 +11,8 @@ import { SearchFilterItem } from '../search-filter/search-filter';
 import { Device } from '../device/device';
 import { ApolloQueryResult } from '@apollo/client/core';
 import { QueryRef } from 'apollo-angular';
+import { ActivatedRoute } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('DevicesComponent', () => {
   let component: DevicesComponent;
@@ -43,8 +45,22 @@ describe('DevicesComponent', () => {
     }));
 
     await TestBed.configureTestingModule({
-      imports: [DevicesModule, BrowserAnimationsModule],
-      providers: [{ provide: DevicesService, useValue: mockDevicesService }],
+      imports: [DevicesModule, BrowserAnimationsModule, RouterTestingModule],
+      providers: [
+        { provide: DevicesService, useValue: mockDevicesService },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              data: {
+                searchFields: [],
+                displayedColumns: [],
+              },
+              params: {},
+            },
+          },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -59,7 +75,7 @@ describe('DevicesComponent', () => {
   });
 
   it('should store the devices in memory', () => {
-    expect(mockDevicesService.getDevices).toHaveBeenCalledWith(0, 10);
+    expect(mockDevicesService.getDevices).toHaveBeenCalledWith(0, 10, undefined, undefined);
     expect(component.devices).toEqual(devices);
     expect(component.totalCount).toEqual(1);
     expect(component.totalFilteredCount).toEqual(1);
