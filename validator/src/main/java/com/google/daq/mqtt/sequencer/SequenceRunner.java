@@ -110,6 +110,9 @@ public class SequenceRunner {
   }
 
   private void process(List<String> targetMethods) {
+    if (sequenceClasses.isEmpty()) {
+      throw new RuntimeException("No testing classes found");
+    }
     successes = 0;
     failures = new ArrayList<>();
     Set<String> remainingMethods = new HashSet<>(targetMethods);

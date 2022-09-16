@@ -91,10 +91,15 @@ public abstract class Common {
    * @return classes in the indicated package
    */
   public static Set<String> findAllClassesUsingClassLoader(String packageName) {
-    InputStream stream = ClassLoader.getSystemClassLoader()
+    InputStream stream = ConfigSequences.class.getClassLoader()
         .getResourceAsStream(packageName.replaceAll("[.]", "/"));
     BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+    System.err.println("Filtering classes for package " + packageName);
     return reader.lines()
+        .map(line -> {
+          System.err.println(line);
+          return line;
+        })
         .filter(line -> line.endsWith(".class"))
         .map(line -> className(packageName, line))
         .collect(Collectors.toSet());
