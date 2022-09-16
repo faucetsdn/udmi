@@ -36,7 +36,7 @@ public class BlobsetSequences extends SequenceRunner {
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<String, BlobBlobsetConfig>();
-    deviceConfig.blobset.blobs.put(String.valueOf(SystemBlobsets.IOT_ENDPOINT_CONFIG), config);
+    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
 
     untilTrue("device tried endpoint config which resulted in connection error", () -> {
       Entry stateStatus = deviceState.blobset.blobs.get(SystemBlobsets.IOT_ENDPOINT_CONFIG).status;
