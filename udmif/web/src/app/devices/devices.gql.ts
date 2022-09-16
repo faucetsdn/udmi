@@ -14,6 +14,12 @@ export const GET_DEVICES = gql`
         operational
         firmware
         serialNumber
+        level
+        message
+        details
+        lastSeen
+        state
+        errorsCount
       }
       totalCount
       totalFilteredCount

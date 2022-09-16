@@ -18,8 +18,10 @@
 </div>
 <mat-table [dataSource]="devices" matSort (matSortChange)="sortData($event)" aria-label="List of devices">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
-    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ columnName | capitalize }}</mat-header-cell>
-    <div *ngIf="columnName === 'lastPayload'; else elseBlock">
+    <mat-header-cell *matHeaderCellDef mat-sort-header>{{
+      columnName.replace('Count', '') | capitalize
+    }}</mat-header-cell>
+    <div *ngIf="columnName === 'lastPayload' || columnName === 'lastSeen'; else elseBlock">
       <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
     </div>
     <ng-template #elseBlock

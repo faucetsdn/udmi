@@ -34,7 +34,15 @@ const routes: Routes = [
       searchFields: <Record<string, string>>{
         name: 'getDeviceNames',
       },
-      displayedColumns: <(keyof DeviceModel)[]>['name'],
+      displayedColumns: <(keyof DeviceModel)[]>[
+        'name',
+        'level',
+        'message',
+        'details',
+        'lastSeen',
+        'state',
+        'errorsCount',
+      ],
     },
   },
   { path: ':deviceId', loadChildren: () => import('../device/device.module').then((m) => m.DeviceModule) },
