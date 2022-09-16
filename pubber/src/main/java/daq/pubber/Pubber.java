@@ -868,7 +868,7 @@ public class Pubber {
     BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
 
     if (extractedSignature.equals(currentSignature) 
-       || extractedSignature.equals(attemptedEndpoint)) {
+        || extractedSignature.equals(attemptedEndpoint)) {
       return; // No need to redirect anything!
     }
 
