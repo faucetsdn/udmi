@@ -31,8 +31,8 @@ sequenceDiagram
     D-->>E':CONNECTION ATTEMPT
     E'->>D:CONFIG MESSAGE<br>timestamp = t2<br/>blobset.blobs._iot_endpoint_config.base64 = <ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
     D->>E':STATE MESSAGE<br/>system.last_update = t2<br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    E->>D:CONFIG MESSAGE<br>blobset.blobs._iot_endpoint_config = null (unset)
-    D->>E':STATE MESSAGE<BR>blobset.blobs._iot_endpoint_config = null (unset)
+    E->>D:CONFIG MESSAGE<br/>timestamp = t3<br/>blobset.blobs._iot_endpoint_config = null (unset)
+    D->>E':STATE MESSAGE<br/>system.last_update = t3<br/>blobset.blobs._iot_endpoint_config = null (unset)
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
