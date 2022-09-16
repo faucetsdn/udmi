@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.TestCommon.PROJECT_ID;
+import static com.google.daq.mqtt.TestCommon.SITE_DIR;
+import static com.google.daq.mqtt.TestCommon.TOOL_ROOT;
 import static com.google.daq.mqtt.util.IotMockProvider.BIND_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.BLOCK_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
@@ -24,10 +27,6 @@ import org.junit.Test;
  */
 public class RegistrarTest {
 
-  private static final String PROJECT_ID = "unit-testing";
-  private static final String SITE_PATH = "../sites/udmi_site_model";
-  private static final String TOOL_ROOT = "../";
-
   private void assertErrorSummaryValidateSuccess(Map<String, Map<String, String>> summary) {
     if ((summary == null) || (summary.get("Validating") == null)
         || (summary.get("Validating").size() == 0)) {
@@ -48,7 +47,7 @@ public class RegistrarTest {
   private Registrar getRegistrar(List<String> args) {
     try {
       Registrar registrar = new Registrar();
-      registrar.setSitePath(SITE_PATH);
+      registrar.setSitePath(SITE_DIR);
       registrar.setProjectId(PROJECT_ID);
       registrar.setToolRoot(TOOL_ROOT);
       if (args != null) {

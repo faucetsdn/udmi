@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Web server for the entire suite of validation tools, including sequencer and registrar.
@@ -29,8 +30,7 @@ public class WebServerRunner extends SimpleWebServer {
   public WebServerRunner(List<String> args) {
     super(args);
     processArgs(args);
-    setHandler("sequencer", params -> handle(params,
-        (projectId1, params1) -> SequenceRunner.handleRequest(params1)));
+    setHandler("sequencer", params -> handle(params, SequenceRunner::handleRequest));
   }
 
   /**
@@ -46,11 +46,11 @@ public class WebServerRunner extends SimpleWebServer {
     }
   }
 
-  private void handle(Map<String, String> params, BiConsumer<String, Map<String, String>> handler) {
+  private void handle(Map<String, String> params, Consumer<Map<String, String>> handler) {
     if (params.put(PROJECT_PARAM, projectId) != null) {
       throw new RuntimeException("Redundant project specified in request params");
     }
-    handler.accept(projectId, params);
+    handler.accept(params);
     if (!params.isEmpty()) {
       throw new RuntimeException("Unknown extra params: " + JOINER.join(params.keySet()));
     }

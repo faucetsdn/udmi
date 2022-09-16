@@ -35,71 +35,28 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   static ValidatorConfig validationConfig;
+  private int successes = -1;
+  private List<Failure> failures;
 
   /**
    * Thundercats are go.
    *
    * @param args Test classes/method to test.
    */
-  public static void main(String... args) {
-    System.exit(process(args));
+  public static void main(String[] args) {
+    System.exit(processResult(Arrays.asList(args)));
   }
 
   /**
    * Execute sequence tests.
    *
-   * @param args individual tests to run
+   * @param targets individual tests to run
    * @return status code
    */
-  public static int process(String... args) {
-    int successes = 0;
-    List<Failure> failures = new ArrayList<>();
-    Set<String> remainingMethods = new HashSet<>(Arrays.asList(args));
-    for (Class<?> clazz : sequenceClasses) {
-      List<Request> requests = new ArrayList<>();
-      if (args.length > 0) {
-        for (String method : args) {
-          try {
-            clazz.getMethod(method);
-          } catch (Exception e) {
-            continue;
-          }
-          System.err.println("Running " + clazz + "#" + method);
-          requests.add(Request.method(clazz, method));
-          remainingMethods.remove(method);
-        }
-      } else {
-        System.err.println("Running " + clazz + " (all tests)");
-        requests.add(Request.aClass(clazz));
-      }
-
-      for (Request request : requests) {
-        Result result = new JUnitCore().run(request);
-        if (hasActualTestResults(result)) {
-          failures.addAll(result.getFailures());
-          successes += result.getRunCount();
-        }
-      }
-    }
-    successes -= failures.size();
-    System.err.println("Test successes: " + successes);
-    failures.forEach(failure -> {
-      System.err.println(
-          "Test failure: " + failure.getDescription().getMethodName() + " "
-              + failure.getMessage());
-      Throwable exception = failure.getException();
-      if (exception != null) {
-        exception.printStackTrace();
-      }
-    });
-    if (!remainingMethods.isEmpty()) {
-      throw new RuntimeException(
-          "Failed to find methods " + Joiner.on(", ").join(remainingMethods));
-    }
-    if (successes == 0 && failures.isEmpty()) {
-      throw new RuntimeException("No matching tests found");
-    }
-    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
+  public static int processResult(List<String> targets) {
+    SequenceRunner sequenceRunner = new SequenceRunner();
+    sequenceRunner.process(targets);
+    return sequenceRunner.resultCode();
   }
 
   private static boolean hasActualTestResults(Result result) {
@@ -107,9 +64,11 @@ public class SequenceRunner {
         || !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
   }
 
-  public static void processConfig(ValidatorConfig config) {
+  public static SequenceRunner processConfig(ValidatorConfig config) {
     validationConfig = config;
-    process();
+    SequenceRunner sequenceRunner = new SequenceRunner();
+    sequenceRunner.process(List.of());
+    return sequenceRunner;
   }
 
   /**
@@ -130,7 +89,7 @@ public class SequenceRunner {
     config.device_id = deviceId;
     config.key_file = siteModel.validatorKey();
     String serialNo = params.remove(WebServerRunner.SERIAL_PARAM);
-    config.serial_no = Optional.of(serialNo).orElse(SequencesBase.SERIAL_NO_MISSING);
+    config.serial_no = Optional.ofNullable(serialNo).orElse(SequencesBase.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
 
     if (deviceId != null) {
@@ -140,6 +99,66 @@ public class SequenceRunner {
         config.device_id = device.deviceId;
         SequenceRunner.processConfig(config);
       });
+    }
+  }
+
+  private int resultCode() {
+    if (successes < 0) {
+      throw new RuntimeException("Sequences have not been processed");
+    }
+    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
+  }
+
+  public List<Failure> getFailures() {
+    return failures;
+  }
+
+  public void process(List<String> targetMethods) {
+    successes = 0;
+    failures = new ArrayList<>();
+    Set<String> remainingMethods = new HashSet<>(targetMethods);
+    for (Class<?> clazz : sequenceClasses) {
+      List<Request> requests = new ArrayList<>();
+      if (!targetMethods.isEmpty()) {
+        for (String method : targetMethods) {
+          try {
+            clazz.getMethod(method);
+          } catch (Exception e) {
+            continue;
+          }
+          System.err.println("Running " + clazz + "#" + method);
+          requests.add(Request.method(clazz, method));
+          remainingMethods.remove(method);
+        }
+      } else {
+        System.err.println("Running " + clazz + " (all tests)");
+        requests.add(Request.aClass(clazz));
+      }
+
+      for (Request request : requests) {
+        Result result = new JUnitCore().run(request);
+        if (hasActualTestResults(result)) {
+          failures.addAll(result.getFailures());
+          successes += result.getRunCount() - result.getFailureCount();
+        }
+      }
+    }
+    System.err.println("Test successes: " + successes);
+    failures.forEach(failure -> {
+      System.err.println(
+          "Test failure: " + failure.getDescription().getMethodName() + " "
+              + failure.getMessage());
+      Throwable exception = failure.getException();
+      if (exception != null) {
+        exception.printStackTrace();
+      }
+    });
+    if (!remainingMethods.isEmpty()) {
+      throw new RuntimeException(
+          "Failed to find methods " + Joiner.on(", ").join(remainingMethods));
+    }
+    if (successes == 0 && failures.isEmpty()) {
+      throw new RuntimeException("No matching tests found");
     }
   }
 }
