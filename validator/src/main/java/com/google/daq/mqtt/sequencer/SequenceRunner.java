@@ -86,6 +86,7 @@ public class SequenceRunner {
     String serialNo = params.remove(WebServerRunner.SERIAL_PARAM);
     config.serial_no = Optional.ofNullable(serialNo).orElse(SequencesBase.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
+    config.udmi_version = Common.getUdmiVersion();
 
     if (deviceId != null) {
       SequenceRunner.processConfig(config);

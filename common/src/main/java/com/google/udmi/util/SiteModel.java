@@ -232,7 +232,6 @@ public class SiteModel {
   public class Device {
 
     public final String deviceId;
-    public String key_algo;
 
     public Device(String deviceId) {
       this.deviceId = deviceId;
