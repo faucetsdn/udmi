@@ -1,7 +1,21 @@
+import { SearchOptions } from '../common/model';
+
 export interface DevicesResponse {
   devices: Device[];
   totalCount: number;
   totalFilteredCount: number;
+}
+
+export interface DevicesArgs {
+  searchOptions: SearchOptions;
+}
+
+export interface DeviceArgs {
+  id: string;
+}
+
+export interface PointsArgs {
+  deviceId: string;
 }
 
 export interface Point {

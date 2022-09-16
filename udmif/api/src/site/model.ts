@@ -1,13 +1,9 @@
-import { DistinctSearchOptions, SearchOptions } from '../common/model';
+import { SearchOptions } from '../common/model';
 
 export interface SitesResponse {
   sites: Site[];
   totalCount: number;
   totalFilteredCount: number;
-}
-
-export interface SiteNamesArgs {
-  searchOptions: DistinctSearchOptions;
 }
 
 export interface SitesArgs {
