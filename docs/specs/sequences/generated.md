@@ -143,9 +143,4 @@ Check that the min log-level config is honored by the device.
 
 ## writeback_states
 
-1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
-1. Wait for point filter_alarm_pressure_status to have value_state default (null)
-1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
-1. Wait for point filter_differential_pressure_sensor to have value_state invalid
-1. Wait for point filter_differential_pressure_sensor to have value_state failure
-1. Wait for point filter_differential_pressure_sensor to have value_state applied
+1. Test failed: Missing 'invalid' target specification
