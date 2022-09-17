@@ -109,15 +109,8 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out
-          diff -u /tmp/sequencer.out etc/sequencer.out && echo No sequencer.out diff
-          echo $?
           diff -u /tmp/sequencer.out etc/sequencer.out
-          echo $?
-          diff -u /tmp/generated.md docs/specs/sequences/generated.md && echo No generated.md diff
-          echo $?
           diff -u /tmp/generated.md docs/specs/sequences/generated.md
-          echo $?
-          false
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -126,7 +119,7 @@ jobs:
           bin/test_validator $GCP_TARGET_PROJECT
           more /tmp/validator.out
           echo Comparing test run results with golden file:
-          diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
+          diff -u /tmp/validator.out etc/validator.out
       - name: output logs
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
