@@ -72,8 +72,7 @@ Push endpoint config message to device that results in a connection error.
 
 1. Update config:
     * Add `blobset` = { "blobs": {  } }
-1. Wait for device tried endpoint config which resulted in connection error
-1. Test failed: timeout waiting for device tried endpoint config which resulted in connection error
+1. Wait for blobset entry config status is error
 
 ## extra_config
 
