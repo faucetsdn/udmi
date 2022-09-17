@@ -98,7 +98,9 @@ public abstract class SequenceRunner {
   private static final File resultSummary;
   private static final IotReflectorClient client;
   private static final String VALIDATOR_CONFIG = "VALIDATOR_CONFIG";
-  private static final String CONFIG_PATH = System.getenv(VALIDATOR_CONFIG);
+  public static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
+  private static final String CONFIG_PATH =
+      Objects.requireNonNullElse(System.getenv(VALIDATOR_CONFIG), DEFAULT_CONFIG);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
