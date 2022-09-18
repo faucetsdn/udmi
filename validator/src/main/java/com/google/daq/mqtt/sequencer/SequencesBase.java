@@ -85,7 +85,9 @@ public abstract class SequencesBase {
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
-  private static final String CONFIG_PATH = System.getenv(CONFIG_ENV);
+  private static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
+  private static final String CONFIG_PATH =
+      Objects.requireNonNullElse(System.getenv(CONFIG_ENV), DEFAULT_CONFIG);
   private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
       SystemEvent.class, SubFolder.SYSTEM,
       PointsetEvent.class, SubFolder.POINTSET,
@@ -102,6 +104,7 @@ public abstract class SequencesBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   protected static Metadata deviceMetadata;
+  static ValidatorConfig validatorConfig;
   private static String projectId;
   private static String deviceId;
   private static String udmiVersion;
@@ -112,7 +115,6 @@ public abstract class SequencesBase {
   private static File resultSummary;
   private static IotReflectorClient client;
   private static Date stateTimestamp;
-  static ValidatorConfig validatorConfig;
 
   // Because of the way tests are run and configured, these parameters need to be
   // a singleton to avoid runtime conflicts.
