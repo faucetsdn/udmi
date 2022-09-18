@@ -113,6 +113,7 @@ public class SequenceRunner {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
+    System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     successes = 0;
     failures = new ArrayList<>();
     Set<String> remainingMethods = new HashSet<>(targetMethods);

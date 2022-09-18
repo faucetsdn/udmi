@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.util;
 
+import com.google.common.base.Joiner;
+import com.google.common.reflect.ClassPath;
+import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -91,22 +94,16 @@ public abstract class Common {
    * @return classes in the indicated package
    */
   public static Set<String> findAllClassesUsingClassLoader(String packageName) {
-    InputStream stream = ConfigSequences.class.getClassLoader()
-        .getResourceAsStream(packageName.replaceAll("[.]", "/"));
-    BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-    System.err.println("Filtering classes for package " + packageName);
-    return reader.lines()
-        .map(line -> {
-          System.err.println(line);
-          return line;
-        })
-        .filter(line -> line.endsWith(".class"))
-        .map(line -> className(packageName, line))
-        .collect(Collectors.toSet());
-  }
-
-  private static String className(String packageName, String line) {
-    return packageName + "." + line.substring(0, line.lastIndexOf("."));
+    try {
+      ClassPath classPath = ClassPath.from(Common.class.getClassLoader());
+      Set<String> classes = classPath.getAllClasses().stream()
+          .filter(info -> info.getPackageName().equals(packageName))
+          .map(ClassInfo::getName)
+          .collect(Collectors.toSet());
+      return classes;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading classes for package " + packageName);
+    }
   }
 
   /**
