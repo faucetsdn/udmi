@@ -90,8 +90,8 @@ public abstract class Common {
    * @return set of class names in the indicated package
    */
   public static Set<String> allClassesInPackage(Class<?> clazz) {
+    String packageName = clazz.getPackageName();
     try {
-      String packageName = clazz.getPackageName();
       ClassPath classPath = ClassPath.from(Common.class.getClassLoader());
       Set<String> classes = classPath.getAllClasses().stream()
           .filter(info -> info.getPackageName().equals(packageName))
