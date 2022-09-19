@@ -5,6 +5,7 @@ import MockDeviceDataSource from './MockDeviceDataSource';
 import { typeDefs } from '../../server/schema';
 import { resolvers } from '../../server/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
+import MockSiteDataSource from '../site/MockSiteDataSource';
 
 let testServer: ApolloServer;
 const clientIds: string[] = ['', ''];
@@ -52,6 +53,12 @@ const QUERY_DEVICE = gql`
         state
       }
       validation
+      level
+      message
+      details
+      lastSeen
+      state
+      errorsCount
     }
   }
 `;
@@ -96,6 +103,7 @@ beforeAll(async () => {
   const dataSources = () => {
     return {
       deviceDS: new MockDeviceDataSource(),
+      siteDS: new MockSiteDataSource(),
     };
   };
 
