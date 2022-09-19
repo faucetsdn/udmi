@@ -4,6 +4,7 @@
     [fields]="searchFields"
     [limit]="15"
     [handleFilterChange]="filterData"
+    [filter]="stringifiedDefaultFilters"
   ></app-search-filter>
   <mat-paginator
     [length]="totalFilteredCount"
@@ -27,7 +28,7 @@
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="row.id">
+  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="'/devices/' + row.id">
     <mat-row></mat-row>
   </a>
 </mat-table>

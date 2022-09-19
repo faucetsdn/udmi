@@ -20,7 +20,6 @@ export class DeviceComponent implements OnInit, OnDestroy {
     'serialNumber',
     'firmware',
     'lastPayload',
-    'tags',
   ];
   device?: Device;
   loading: boolean = true;
@@ -32,7 +31,7 @@ export class DeviceComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const deviceId: string = this.route.snapshot.params['id'];
+    const deviceId: string = this.route.snapshot.params['deviceId'];
 
     this.deviceSubscription = this.deviceService.getDevice(deviceId).subscribe(({ data, loading }) => {
       this.loading = loading;

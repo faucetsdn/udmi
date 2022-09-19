@@ -4,7 +4,7 @@ import { SitesComponent } from './sites.component';
 
 const routes: Routes = [
   { path: '', component: SitesComponent },
-  { path: ':id', loadChildren: () => import('../site/site.module').then((m) => m.SiteModule) },
+  { path: ':siteId', loadChildren: () => import('../site/site.module').then((m) => m.SiteModule) },
 ];
 
 @NgModule({

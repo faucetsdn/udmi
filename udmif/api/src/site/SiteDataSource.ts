@@ -8,7 +8,6 @@ import {
   SearchOptions,
 } from '../common/model';
 import { validateSearchOptions, validateDistinctSearchOptions } from '../common/SearchOptionsValidator';
-import { Device } from '../device/model';
 
 export class SiteDataSource extends GraphQLDataSource {
   constructor(private siteDAO: DAO<Site>) {
@@ -35,6 +34,6 @@ export class SiteDataSource extends GraphQLDataSource {
   }
 
   async getSite(id: string): Promise<Site> {
-    return this.siteDAO.getOne({ id });
+    return this.siteDAO.getOne({ name: id }); //TODO:: for now, lookup by name
   }
 }

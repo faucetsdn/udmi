@@ -13,8 +13,8 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./sites.component.scss'],
 })
 export class SitesComponent implements OnInit, OnDestroy {
-  private sitesSubscription!: Subscription;
-  private sitesQuery!: QueryRef<SitesQueryResponse, SitesQueryVariables>;
+  sitesSubscription!: Subscription;
+  sitesQuery!: QueryRef<SitesQueryResponse, SitesQueryVariables>;
   displayedColumns: (keyof SiteModel)[] = [
     'name',
     'totalDevicesCount',

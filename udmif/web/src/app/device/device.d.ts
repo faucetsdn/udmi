@@ -9,7 +9,6 @@ interface DeviceModel {
   operational: boolean;
   firmware: string;
   serialNumber: string;
-  tags: string[];
   points: string[];
   validation: string;
 }

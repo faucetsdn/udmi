@@ -29,6 +29,7 @@ export type SitesQueryVariables = {
 export interface CommonSearchOptions {
   search?: string;
   limit?: number;
+  filter?: string;
 }
 
 export interface CommonSearchQueryVariables {
