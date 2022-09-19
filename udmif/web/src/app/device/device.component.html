@@ -11,8 +11,11 @@
 </mat-card>
 
 <nav mat-tab-nav-bar [tabPanel]="tabPanel">
-  <a mat-tab-link routerLink="points" routerLinkActive="active" #rla="routerLinkActive" [active]="rla.isActive"
+  <a mat-tab-link routerLink="points" routerLinkActive="active" #points="routerLinkActive" [active]="points.isActive"
     >Points</a
+  >
+  <a mat-tab-link routerLink="errors" routerLinkActive="active" #errors="routerLinkActive" [active]="errors.isActive"
+    >Errors</a
   >
 </nav>
 <mat-tab-nav-panel #tabPanel>
