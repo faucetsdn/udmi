@@ -11,7 +11,7 @@ import udmi.schema.TargetTestingModel;
 /**
  * Class used for testing sequences with points.
  */
-public abstract class PointSequencer extends SequencesBase {
+public abstract class PointSequencer extends SequencesTestBase {
 
   /**
    * Make the required set of points in the config block.

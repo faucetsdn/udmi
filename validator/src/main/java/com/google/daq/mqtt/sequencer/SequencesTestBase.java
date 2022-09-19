@@ -65,7 +65,7 @@ import udmi.schema.TestingSystemConfig;
 /**
  * Validate a device using a sequence of message exchanges.
  */
-public abstract class SequencesBase {
+public abstract class SequencesTestBase {
 
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
@@ -236,8 +236,8 @@ public abstract class SequencesBase {
   };
 
   private static void ensureValidatorConfig() {
-    if (SequenceRunner.validationConfig != null) {
-      validatorConfig = SequenceRunner.validationConfig;
+    if (SequenceTestRunner.validationConfig != null) {
+      validatorConfig = SequenceTestRunner.validationConfig;
     } else {
       if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
         throw new RuntimeException(CONFIG_ENV + " env not defined.");
@@ -721,7 +721,7 @@ public abstract class SequencesBase {
   }
 
   private String getTraceString(Exception e) {
-    return Common.getExceptionLine(e, SequencesBase.class);
+    return Common.getExceptionLine(e, SequencesTestBase.class);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {

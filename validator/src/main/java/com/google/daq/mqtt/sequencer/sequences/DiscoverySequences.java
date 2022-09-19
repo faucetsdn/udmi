@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.daq.mqtt.sequencer.SequencesBase;
+import com.google.daq.mqtt.sequencer.SequencesTestBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.util.JsonUtil;
@@ -28,7 +28,7 @@ import udmi.schema.FamilyDiscoveryState;
 /**
  * Validation tests for discovery scan and enumeration capabilities.
  */
-public class DiscoverySequences extends SequencesBase {
+public class DiscoverySequences extends SequencesTestBase {
 
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;

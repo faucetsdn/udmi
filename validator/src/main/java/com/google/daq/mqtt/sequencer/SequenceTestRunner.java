@@ -22,7 +22,7 @@ import udmi.schema.Level;
 /**
  * Custom test runner that can execute a specific method to test.
  */
-public class SequenceRunner {
+public class SequenceTestRunner {
 
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
@@ -49,7 +49,7 @@ public class SequenceRunner {
    * @return status code
    */
   public static int processResult(List<String> targets) {
-    SequenceRunner sequenceRunner = new SequenceRunner();
+    SequenceTestRunner sequenceRunner = new SequenceTestRunner();
     sequenceRunner.process(targets);
     return sequenceRunner.resultCode();
   }
@@ -59,9 +59,9 @@ public class SequenceRunner {
         || !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
   }
 
-  static SequenceRunner processConfig(ValidatorConfig config) {
+  static SequenceTestRunner processConfig(ValidatorConfig config) {
     validationConfig = config;
-    SequenceRunner sequenceRunner = new SequenceRunner();
+    SequenceTestRunner sequenceRunner = new SequenceTestRunner();
     sequenceRunner.process(List.of());
     return sequenceRunner;
   }
@@ -84,16 +84,16 @@ public class SequenceRunner {
     config.device_id = deviceId;
     config.key_file = siteModel.validatorKey();
     String serialNo = params.remove(WebServerRunner.SERIAL_PARAM);
-    config.serial_no = Optional.ofNullable(serialNo).orElse(SequencesBase.SERIAL_NO_MISSING);
+    config.serial_no = Optional.ofNullable(serialNo).orElse(SequencesTestBase.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
     config.udmi_version = Common.getUdmiVersion();
 
     if (deviceId != null) {
-      SequenceRunner.processConfig(config);
+      SequenceTestRunner.processConfig(config);
     } else {
       siteModel.forEachDevice(device -> {
         config.device_id = device.deviceId;
-        SequenceRunner.processConfig(config);
+        SequenceTestRunner.processConfig(config);
       });
     }
   }

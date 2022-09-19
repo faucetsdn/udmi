@@ -1,13 +1,12 @@
 package com.google.daq.mqtt;
 
 import com.google.common.base.Joiner;
-import com.google.daq.mqtt.sequencer.SequenceRunner;
+import com.google.daq.mqtt.sequencer.SequenceTestRunner;
 import com.google.daq.mqtt.util.SimpleWebServer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -30,7 +29,7 @@ public class WebServerRunner extends SimpleWebServer {
   public WebServerRunner(List<String> args) {
     super(args);
     processArgs(args);
-    setHandler("sequencer", params -> handle(params, SequenceRunner::handleRequest));
+    setHandler("sequencer", params -> handle(params, SequenceTestRunner::handleRequest));
   }
 
   /**

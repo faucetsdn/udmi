@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
-import com.google.daq.mqtt.sequencer.SequencesBase;
+import com.google.daq.mqtt.sequencer.SequencesTestBase;
 import java.util.Base64;
 import java.util.HashMap;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import udmi.schema.Level;
  * Validation tests for instances that involve blobset config messages.
  */
 
-public class BlobsetSequences extends SequencesBase {
+public class BlobsetSequences extends SequencesTestBase {
 
   private static final String ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD =
       "{ "
