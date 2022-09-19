@@ -213,6 +213,14 @@ public class SiteModel {
     return allDevices.get(deviceId);
   }
 
+  public String getSitePath() {
+    return sitePath;
+  }
+
+  public String validatorKey() {
+    return sitePath + "/validator/rsa_private.pkcs8";
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;

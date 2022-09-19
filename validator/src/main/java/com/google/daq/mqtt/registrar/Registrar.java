@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -39,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -63,7 +63,6 @@ public class Registrar {
   static final String GENERATED_CONFIG_JSON = "generated_config.json";
   private static final String DEVICES_DIR = "devices";
   private static final String ERROR_FORMAT_INDENT = "  ";
-  private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   private static final String VERSION_KEY = "Version";
   private static final String VERSION_MAIN_KEY = "main";
   private static final String SCHEMA_SUFFIX = ".json";
@@ -231,7 +230,7 @@ public class Registrar {
     errorSummary.forEach(
         (key, value) -> System.err.println("  Device " + key + ": " + value.size()));
     System.err.println("Out of " + localDevices.size() + " total.");
-    String version = Optional.ofNullable(System.getenv(UDMI_VERSION_KEY)).orElse("unknown");
+    String version = Common.getUdmiVersion();
     errorSummary.put(VERSION_KEY, Map.of(VERSION_MAIN_KEY, version));
     OBJECT_MAPPER.writeValue(summaryFile, errorSummary);
     lastErrorSummary = errorSummary;

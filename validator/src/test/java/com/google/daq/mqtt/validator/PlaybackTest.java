@@ -3,6 +3,7 @@ package com.google.daq.mqtt.validator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import java.util.ArrayList;
@@ -83,8 +84,8 @@ public class PlaybackTest extends TestBase {
 
   private ValidationState asValidationState(TreeMap<String, Object> message) {
     try {
-      String stringValue = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(stringValue, ValidationState.class);
+      String stringValue = TestCommon.OBJECT_MAPPER.writeValueAsString(message);
+      return TestCommon.OBJECT_MAPPER.readValue(stringValue, ValidationState.class);
     } catch (Exception e) {
       throw new RuntimeException("While converting message", e);
     }
@@ -92,8 +93,8 @@ public class PlaybackTest extends TestBase {
 
   private ValidationEvent asValidationEvent(TreeMap<String, Object> message) {
     try {
-      String stringValue = OBJECT_MAPPER.writeValueAsString(message);
-      return OBJECT_MAPPER.readValue(stringValue, ValidationEvent.class);
+      String stringValue = TestCommon.OBJECT_MAPPER.writeValueAsString(message);
+      return TestCommon.OBJECT_MAPPER.readValue(stringValue, ValidationEvent.class);
     } catch (Exception e) {
       throw new RuntimeException("While converting message", e);
     }
@@ -108,9 +109,9 @@ public class PlaybackTest extends TestBase {
 
     List<String> testArgs = new ArrayList<>();
     testArgs.addAll(List.of(
-        "-p", PROJECT_ID,
-        "-a", SCHEMA_SPEC,
-        "-s", SITE_DIR,
+        "-p", TestCommon.PROJECT_ID,
+        "-a", TestCommon.SCHEMA_SPEC,
+        "-s", TestCommon.SITE_DIR,
         "-r", tracePath));
     testArgs.addAll(additionalArgs);
     Validator validator = new Validator(testArgs);
