@@ -23,6 +23,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
  */
 public class SimpleWebServer {
 
+  public static final int MIN_SERVER_PORT = 1024;
   private final HttpServer server;
   private final Map<String, Consumer<Map<String, String>>> mockHandlers;
 
@@ -32,15 +33,17 @@ public class SimpleWebServer {
         throw new RuntimeException("Need server port argument");
       }
       int port = Integer.parseInt(args.remove(0));
-      if (port > 0) {
+      if (port >= MIN_SERVER_PORT) {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         System.err.println("server started on port " + port);
         server.start();
         mockHandlers = null;
-      } else {
+      } else if (port == 0) {
         System.err.println("skipping server port 0");
         server = null;
         mockHandlers = new HashMap<>();
+      } else {
+        throw new IllegalArgumentException("Invalid server port " + port);
       }
     } catch (Exception e) {
       throw new RuntimeException("While creating web server: " + Joiner.on(" ").join(args), e);
