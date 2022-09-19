@@ -65,7 +65,7 @@ import udmi.schema.TestingSystemConfig;
 /**
  * Validate a device using a sequence of message exchanges.
  */
-public abstract class SequencesTestBase {
+public abstract class SequenceRunner {
 
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
@@ -721,7 +721,7 @@ public abstract class SequencesTestBase {
   }
 
   private String getTraceString(Exception e) {
-    return Common.getExceptionLine(e, SequencesTestBase.class);
+    return Common.getExceptionLine(e, SequenceRunner.class);
   }
 
   protected void checkThat(String description, Supplier<Boolean> condition) {

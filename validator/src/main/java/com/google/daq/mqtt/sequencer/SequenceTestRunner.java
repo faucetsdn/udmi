@@ -84,7 +84,7 @@ public class SequenceTestRunner {
     config.device_id = deviceId;
     config.key_file = siteModel.validatorKey();
     String serialNo = params.remove(WebServerRunner.SERIAL_PARAM);
-    config.serial_no = Optional.ofNullable(serialNo).orElse(SequencesTestBase.SERIAL_NO_MISSING);
+    config.serial_no = Optional.ofNullable(serialNo).orElse(SequenceRunner.SERIAL_NO_MISSING);
     config.log_level = Level.INFO.name();
     config.udmi_version = Common.getUdmiVersion();
 

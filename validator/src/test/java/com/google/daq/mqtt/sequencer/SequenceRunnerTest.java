@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.daq.mqtt.sequencer.SequencesTestBase.SERIAL_NO_MISSING;
+import static com.google.daq.mqtt.sequencer.SequenceRunner.SERIAL_NO_MISSING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
