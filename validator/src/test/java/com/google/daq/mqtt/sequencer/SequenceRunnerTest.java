@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.daq.mqtt.sequencer.SequenceRunner.SERIAL_NO_MISSING;
+import static com.google.daq.mqtt.sequencer.SequenceBase.SERIAL_NO_MISSING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -28,7 +28,7 @@ public class SequenceRunnerTest {
   @Test
   public void processSite() {
     ValidatorConfig config = getValidatorConfig();
-    SequenceTestRunner sequenceRunner = SequenceTestRunner.processConfig(config);
+    SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertTrue("many failures", sequenceRunner.getFailures().size() > 10);
   }
@@ -37,7 +37,7 @@ public class SequenceRunnerTest {
   public void processDevice() {
     ValidatorConfig config = getValidatorConfig();
     config.device_id = TEST_DEVICE;
-    SequenceTestRunner sequenceRunner = SequenceTestRunner.processConfig(config);
+    SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertTrue("many failures", sequenceRunner.getFailures().size() > 10);
   }

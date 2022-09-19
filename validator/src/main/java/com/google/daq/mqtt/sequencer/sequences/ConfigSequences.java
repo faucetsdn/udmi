@@ -10,7 +10,7 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.daq.mqtt.sequencer.SequenceRunner;
+import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.JsonUtil;
 import java.util.Date;
 import org.junit.Test;
@@ -20,7 +20,7 @@ import udmi.schema.Level;
 /**
  * Validate basic device configuration handling operation, not specific to any device function.
  */
-public class ConfigSequences extends SequenceRunner {
+public class ConfigSequences extends SequenceBase {
 
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")

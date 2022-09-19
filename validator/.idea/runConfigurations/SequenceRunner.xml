@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SequenceTestRunner" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="SequenceRunner" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
       <env name="VALIDATOR_CONFIG" value="/tmp/validator_config.json" />
     </envs>
-    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.sequencer.SequenceTestRunner" />
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.sequencer.SequenceRunner" />
     <module name="validator" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
