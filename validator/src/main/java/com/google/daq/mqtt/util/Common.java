@@ -1,13 +1,9 @@
 package com.google.daq.mqtt.util;
 
-import com.google.common.base.Joiner;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -90,11 +86,12 @@ public abstract class Common {
   /**
    * Find all classes (by name) in the given package.
    *
-   * @param packageName package to look for
-   * @return classes in the indicated package
+   * @param clazz existing class that's in the package-of-interest
+   * @return set of class names in the indicated package
    */
-  public static Set<String> findAllClassesUsingClassLoader(String packageName) {
+  public static Set<String> allClassesInPackage(Class<?> clazz) {
     try {
+      String packageName = clazz.getPackageName();
       ClassPath classPath = ClassPath.from(Common.class.getClassLoader());
       Set<String> classes = classPath.getAllClasses().stream()
           .filter(info -> info.getPackageName().equals(packageName))

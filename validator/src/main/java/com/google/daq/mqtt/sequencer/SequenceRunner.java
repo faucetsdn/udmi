@@ -28,8 +28,7 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   static ValidatorConfig validationConfig;
-  private final Set<String> sequenceClasses = Common.findAllClassesUsingClassLoader(
-      ConfigSequences.class.getPackageName());
+  private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
   private int successes = -1;
   private List<Failure> failures;
 
