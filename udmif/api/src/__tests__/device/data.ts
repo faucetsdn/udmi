@@ -7,7 +7,7 @@ export function createDevices(count: number): Device[] {
   let n = 1;
   while (n <= count) {
     const id = '00000000-0000-0000-0000-000000000' + pad(n);
-    const name = n % 2 == 0 ? `AHU-${n}` : `CDS-${n}`;
+    const name = n % 2 == 0 ? `CDS-${n}` : `AHU-${n}`;
     const make: string = `make-${n}`;
     const model: string = n % 3 == 0 ? `AAAA-${n}` : `BBBB-${n}`;
     const site: string = n % 2 == 0 ? `SITE-${n}` : `LOC-${n}`;

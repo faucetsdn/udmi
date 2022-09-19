@@ -5,6 +5,10 @@ export interface SearchOptions {
   filter?: string;
 }
 
+export interface DistinctArgs {
+  searchOptions: DistinctSearchOptions;
+}
+
 export interface ValidatedSearchOptions {
   batchSize?: number;
   offset: number;

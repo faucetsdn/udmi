@@ -1,10 +1,11 @@
 import { sum } from 'lodash';
+import { DistinctArgs } from '../common/model';
 import { ApolloContext } from '../server/datasources';
-import { Site, SiteArgs, SiteNamesArgs, SitesArgs } from './model';
+import { Site, SiteArgs, SitesArgs } from './model';
 
 export const resolvers = {
   Query: {
-    siteNames: (_query, { searchOptions }: SiteNamesArgs, { dataSources: { siteDS } }: ApolloContext) => {
+    siteNames: (_query, { searchOptions }: DistinctArgs, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSiteNames(searchOptions);
     },
     sites: (_query, { searchOptions }: SitesArgs, { dataSources: { siteDS } }: ApolloContext) => {
@@ -19,16 +20,16 @@ export const resolvers = {
       return (await deviceDS.getDevicesBySite(site.name)).totalFilteredCount;
     },
     correctDevicesCount: (site: Site) => {
-      return site.validation?.summary.correct_devices.length ?? 0;
+      return site.validation?.summary.correct_devices?.length ?? 0;
     },
     missingDevicesCount: (site: Site) => {
-      return site.validation?.summary.missing_devices.length ?? 0;
+      return site.validation?.summary.missing_devices?.length ?? 0;
     },
     errorDevicesCount: (site: Site) => {
-      return site.validation?.summary.error_devices.length ?? 0;
+      return site.validation?.summary.error_devices?.length ?? 0;
     },
     extraDevicesCount: (site: Site) => {
-      return site.validation?.summary.extra_devices.length ?? 0;
+      return site.validation?.summary.extra_devices?.length ?? 0;
     },
     lastValidated: (site: Site) => {
       return site.validation?.last_updated;
@@ -39,10 +40,10 @@ export const resolvers = {
       return (
         sum([
           0,
-          validationSummary?.correct_devices.length,
-          validationSummary?.missing_devices.length,
-          validationSummary?.error_devices.length,
-          validationSummary?.extra_devices.length,
+          validationSummary?.correct_devices?.length,
+          validationSummary?.missing_devices?.length,
+          validationSummary?.error_devices?.length,
+          validationSummary?.extra_devices?.length,
         ]) / ((await deviceDS.getDevicesBySite(site.name)).totalFilteredCount || 1)
       );
     },

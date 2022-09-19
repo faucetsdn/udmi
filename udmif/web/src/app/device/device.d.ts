@@ -11,6 +11,12 @@ interface DeviceModel {
   serialNumber: string;
   points: string[];
   validation: string;
+  level: number;
+  message: string;
+  details: string;
+  lastSeen: string;
+  state: string;
+  errorsCount: number;
 }
 
 export type Device = Partial<DeviceModel>;
