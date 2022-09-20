@@ -43,8 +43,7 @@ def validate_code_blocks(file_contents):
 
 
 def read_example_file(match):
-  """
-  Used as re.sub callback to read example from a file
+  """ Used as re.sub callback to read example from a file
   Arguments
     match   match object
   Returns
