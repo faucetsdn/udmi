@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.util.List;
+import org.junit.Test;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -23,15 +25,16 @@ public class BasicTest extends TestBase {
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final List<String> TEST_ARGS = ImmutableList.of(
       "-n",
-      "-p", PROJECT_ID,
-      "-a", SCHEMA_SPEC,
-      "-s", SITE_DIR);
+      "-p", TestCommon.PROJECT_ID,
+      "-a", TestCommon.SCHEMA_SPEC,
+      "-s", TestCommon.SITE_DIR);
   private static final String FLUX_READING = "FLUX_READING";
   private final Validator validator = new Validator(TEST_ARGS).prepForMock();
 
-  @org.junit.Test
+  @Test
   public void emptySystemBlock() {
-    MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, new PointsetEvent());
+    Validator.MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER,
+        new PointsetEvent());
     bundle.message.remove("system");
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
@@ -39,7 +42,7 @@ public class BasicTest extends TestBase {
     assertEquals("One error device", 1, report.devices.size());
   }
 
-  @org.junit.Test
+  @Test
   public void emptyPointsetEvent() {
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, new PointsetEvent());
     validator.validateMessage(bundle);
@@ -48,7 +51,7 @@ public class BasicTest extends TestBase {
     assertEquals("One error device", 1, report.devices.size());
   }
 
-  @org.junit.Test
+  @Test
   public void validPointsetEvent() {
     PointsetEvent messageObject = basePointsetEvent();
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
@@ -57,7 +60,7 @@ public class BasicTest extends TestBase {
     assertEquals("No error devices", 0, report.devices.size());
   }
 
-  @org.junit.Test
+  @Test
   public void missingPointsetEvent() {
     PointsetEvent messageObject = basePointsetEvent();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
@@ -65,14 +68,15 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("One error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(DEVICE_ID, EVENT_SUBTYPE, POINTSET_SUBFOLDER);
+    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, EVENT_SUBTYPE,
+        POINTSET_SUBFOLDER);
     PointsetSummary pointset = result.pointset;
     assertEquals("Missing one point", 1, pointset.missing.size());
     assertTrue("Missing correct point", pointset.missing.contains(FILTER_ALARM_PRESSURE_STATUS));
     assertEquals("No extra points", 0, pointset.extra.size());
   }
 
-  @org.junit.Test
+  @Test
   public void additionalPointsetEvent() {
     PointsetEvent messageObject = basePointsetEvent();
     messageObject.points.put(FLUX_READING, new PointPointsetEvent());
@@ -80,14 +84,15 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(DEVICE_ID, EVENT_SUBTYPE, POINTSET_SUBFOLDER);
+    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, EVENT_SUBTYPE,
+        POINTSET_SUBFOLDER);
     PointsetSummary points = result.pointset;
     assertEquals("No missing points", 0, points.missing.size());
     assertEquals("One extra point", 1, points.extra.size());
     assertTrue("Missing correct point", points.extra.contains(FLUX_READING));
   }
 
-  @org.junit.Test
+  @Test
   public void missingPointsetState() {
     PointsetState messageObject = basePointsetState();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
@@ -95,7 +100,8 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
-    ValidationEvent result = getValidationResult(DEVICE_ID, STATE_SUBTYPE, POINTSET_SUBFOLDER);
+    ValidationEvent result = getValidationResult(TestCommon.DEVICE_ID, STATE_SUBTYPE,
+        POINTSET_SUBFOLDER);
     List<String> missingPoints = result.pointset.missing;
     assertEquals("Missing one point", 1, missingPoints.size());
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));

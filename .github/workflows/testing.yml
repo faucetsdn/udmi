@@ -89,7 +89,7 @@ jobs:
           fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
     
   udmi:
-    name: Sequence tests
+    name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
@@ -109,12 +109,11 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out
-          diff -u /tmp/sequencer.out etc/sequencer.out && echo No sequencer.out diff
-          diff -u /tmp/generated.md docs/specs/sequences/generated.md && echo No generated.md diff
-          (ls -1 validator/sequences | xargs -I% diff -u \
+          diff -u /tmp/sequencer.out etc/sequencer.out
+          diff -u /tmp/generated.md docs/specs/sequences/generated.md
+          ls -1 validator/sequences | xargs -I% diff -u \
               sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
-              validator/sequences/%/sequence.md) \
-              && echo Sequences in validator/sequences up to date
+              validator/sequences/%/sequence.md
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -123,7 +122,7 @@ jobs:
           bin/test_validator $GCP_TARGET_PROJECT
           more /tmp/validator.out
           echo Comparing test run results with golden file:
-          diff -u /tmp/validator.out etc/validator.out && echo No validator diff detected.
+          diff -u /tmp/validator.out etc/validator.out
       - name: output logs
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

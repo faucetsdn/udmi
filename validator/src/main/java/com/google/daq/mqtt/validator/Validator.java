@@ -830,7 +830,10 @@ public class Validator {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
   }
 
-  static class MessageBundle {
+  /**
+   * Simple bundle of things associated with a validation message.
+   */
+  public static class MessageBundle {
 
     public Map<String, Object> message;
     public Map<String, String> attributes;

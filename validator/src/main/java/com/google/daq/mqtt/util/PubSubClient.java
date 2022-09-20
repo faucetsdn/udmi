@@ -49,7 +49,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
   private static final String WAS_BASE_64 = "wasBase64";
-  private static final String UDMI_REFLECT = "udmi_reflect";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final BlockingQueue<PubsubMessage> messages = new LinkedBlockingDeque<>();

@@ -165,6 +165,7 @@ public class Pubber {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
+  private Entry endpointStatus;
 
   /**
    * Start an instance from a configuration file.
@@ -829,16 +830,13 @@ public class Pubber {
 
   private void extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
-      deviceState.blobset = null;
+      extractedEndpoint = null;
       return;
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
-      if (iotConfig == null) {
-        removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
-        return;
-      }
-      extractedEndpoint = OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
+      extractedEndpoint = iotConfig == null ? null
+          : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
@@ -849,6 +847,10 @@ public class Pubber {
       return;
     }
     deviceState.blobset.blobs.remove(blobId.value());
+    if (deviceState.blobset.blobs.isEmpty()) {
+      deviceState.blobset = null;
+    }
+    markStateDirty(0);
   }
 
   private void maybeRedirectEndpoint() {
@@ -857,25 +859,33 @@ public class Pubber {
     String extractedSignature =
         redirectRegistry == null ? toJson(extractedEndpoint) : redirectedEndpoint(redirectRegistry);
 
-    if (extractedSignature == null || extractedSignature.equals(
-        currentSignature) || extractedSignature.equals(attemptedEndpoint)) {
+    if (extractedSignature == null) {
+      attemptedEndpoint = null;
+      removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
+      return;
+    }
+
+    BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
+
+    if (extractedSignature.equals(currentSignature) 
+        || extractedSignature.equals(attemptedEndpoint)) {
       return; // No need to redirect anything!
     }
 
     info("New config blob endpoint detected");
-    BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
 
     try {
+      attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
       endpointState.status = null;
       publishSynchronousState();
-      attemptedEndpoint = extractedSignature;
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
       appliedEndpoint = null;
     } catch (Exception e) {
       try {
         error("Reconfigure failed, attempting connection to last working endpoint", e);
+        endpointState.phase = BlobPhase.FINAL;
         endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
         resetConnection(workingEndpoint);
         publishAsynchronousState();
