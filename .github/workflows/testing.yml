@@ -111,7 +111,7 @@ jobs:
           more /tmp/sequencer.out
           diff -u /tmp/sequencer.out etc/sequencer.out
           diff -u /tmp/generated.md docs/specs/sequences/generated.md
-          ls -1 validator/sequences | xargs -I% diff -u \
+          ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ | xargs -I% diff -u \
               sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
               validator/sequences/%/sequence.md
       - name: telemetry validator

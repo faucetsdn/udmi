@@ -1,7 +1,6 @@
 
 ## writeback_states
 
-1. Add line to trigger CI failure
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
