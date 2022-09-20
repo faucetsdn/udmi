@@ -26,8 +26,9 @@ public class BlobsetSequences extends SequenceBase {
           + "  \"hostname\": \"%s\"\n"
           + "}";
 
+  // TODO: Build this from the site model config.
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
-      "projects/bos-corpops-testing/locations/us-central1/registries/UK-LON-GLAB/devices/FCU-102";
+      "projects/bos-johnrandolph-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/ZZ-TRI-FECTA";
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
 
   private String endpointConfigPayloadBase64(String hostname) {
