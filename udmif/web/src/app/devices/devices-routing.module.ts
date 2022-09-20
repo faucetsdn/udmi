@@ -36,11 +36,11 @@ const routes: Routes = [
       },
       displayedColumns: <(keyof DeviceModel)[]>[
         'name',
-        'level',
         'message',
         'details',
-        'lastSeen',
+        'level',
         'state',
+        'lastSeen',
         'errorsCount',
       ],
     },
