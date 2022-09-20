@@ -24,15 +24,15 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>timestamp = t1<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E:STATE MESSAGE<br/>system.last_update = t1<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    E->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E:STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
     loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
     end
-    E'->>D:CONFIG MESSAGE<br>timestamp = t2<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E':STATE MESSAGE<br/>system.last_update = t2<br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    E'->>D:CONFIG MESSAGE<br/>timestamp = t3<br/>blobset.blobs._iot_endpoint_config = null
-    D->>E':STATE MESSAGE<br/>system.last_update = t3<br/>blobset.blobs._iot_endpoint_config = null
+    E'->>D:CONFIG MESSAGE<br>timestamp = T<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E':STATE MESSAGE<br/>system.last_update = T<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
 ```
 
 ### Invalid Endpoint (Unsuccessful Reconfiguration)
@@ -44,8 +44,8 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br/>timestamp = t0<br/>blobset.blobs._iot_endpoint_config.blob = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.blob.phase = "final"
-    D->>E:STATE MESSAGE<br/>system.last_update = t0<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    E->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.blob = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.blob.phase = "final"
+    D->>E:STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
     loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
     note over D: Failure, e.g. endpoint cannot be reached, incorrect credentials...
