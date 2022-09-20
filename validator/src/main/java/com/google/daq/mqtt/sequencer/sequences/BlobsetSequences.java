@@ -19,20 +19,28 @@ import udmi.schema.Level;
 
 public class BlobsetSequences extends SequenceBase {
 
-  private static final String ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD =
+  private static final String ENDPOINT_CONFIG_HOSTNAME_PAYLOAD =
       "{ "
           + "  \"protocol\": \"mqtt\",\n"
-          + "  \"client_id\": \"test_project/device\",\n"
-          + "  \"hostname\": \"localhost\"\n"
+          + "  \"client_id\": \"%s\",\n"
+          + "  \"hostname\": \"%s\"\n"
           + "}";
+
+  private static final String ENDPOINT_CONFIG_CLIENT_ID =
+      "projects/bos-corpops-testing/locations/us-central1/registries/UK-LON-GLAB/devices/FCU-102";
+  private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
+
+  private String endpointConfigPayloadBase64(String hostname) {
+    String payload = String.format(ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
+    return Base64.getEncoder().encodeToString(payload.getBytes());
+  }
 
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = Base64.getEncoder()
-        .encodeToString(ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD.getBytes());
+    config.base64 = endpointConfigPayloadBase64("localhost");
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
@@ -46,4 +54,22 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
+  @Test
+  @Description("Push endpoint config message to device that results in success.")
+  public void endpoint_config_connection_success() {
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.phase = BlobPhase.FINAL;
+    config.base64 = endpointConfigPayloadBase64(ENDPOINT_CONFIG_HOSTNAME);
+    config.content_type = "application/json";
+    deviceConfig.blobset = new BlobsetConfig();
+    deviceConfig.blobset.blobs = new HashMap<>();
+    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+
+    untilTrue("blobset entry config status is error", () -> {
+      Entry stateStatus = deviceState.blobset.blobs.get(
+          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
+      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
+          && stateStatus.level == Level.ERROR.value();
+    });
+  }
 }
