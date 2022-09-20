@@ -10,5 +10,4 @@ RESULT pass system_min_loglevel Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
-RESULT pass valid_serial_no Sequence complete
 RESULT pass writeback_states Sequence complete
