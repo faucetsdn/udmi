@@ -75,6 +75,7 @@ public class ConfigDiffEngine {
   private boolean isBaseType(Object value) {
     Class<?> type = value instanceof Field ? ((Field) value).getType() : value.getClass();
     return type.isPrimitive()
+        || type.isEnum()
         || Boolean.class.isAssignableFrom(type)
         || Integer.class.isAssignableFrom(type)
         || String.class.isAssignableFrom(type)
