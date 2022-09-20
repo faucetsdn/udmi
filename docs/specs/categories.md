@@ -46,7 +46,7 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
   * _blob_: Conditions specific to an individual blob
     * _receive_: (**DEBUG**) About receiving a blob update
     * _fetch_: (**DEBUG**) Fetching a blob update
-    * _apply_: (**NOTICE**) Applying a blob update. **ERROR** When there is a failure applying a blob update
+    * _apply_: (**NOTICE**) Applying a blob update
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.
     * _receive_: (**DEBUG**) Receiving/processing a message for validation.
