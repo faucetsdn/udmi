@@ -15,7 +15,7 @@ The [endpoint configuration blob](https://github.com/faucetsdn/udmi/blob/master/
 
 **Notes**
 - `<NEW_ENDPOINT>` is a **base64** encoded endpoint object
-- `blobset.blobs_iot_endpoint_config` block is only present in a device's state messages when it is present in the last received config message
+- `blobset.blobs_iot_endpoint_config` is present in a device's state message if, and only if,   the last received config message has a `blobset.blobs_iot_endpoint_config` block.
 
 ```mermaid
 %%{wrap}%%
@@ -24,11 +24,11 @@ sequenceDiagram
     participant D as Device
     participant E as Original Endpoint
     participant E' as New Endpoint
-    E->>D:CONFIG MESSAGE<br>timestamp = t0<br/>blobset.blobs._iot_endpoint_config = null
-    D->>E:STATE MESSAGE<br/>system.last_update = t0<br/>blobset.blobs._iot_endpoint_config = null
     E->>D:CONFIG MESSAGE<br>timestamp = t1<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
     D->>E:STATE MESSAGE<br/>system.last_update = t1<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
+    end
     E'->>D:CONFIG MESSAGE<br>timestamp = t2<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
     D->>E':STATE MESSAGE<br/>system.last_update = t2<br/>blobset.blobs._iot_endpoint_config.phase = "final"
     E'->>D:CONFIG MESSAGE<br/>timestamp = t3<br/>blobset.blobs._iot_endpoint_config = null
@@ -46,13 +46,13 @@ sequenceDiagram
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br/>timestamp = t0<br/>blobset.blobs._iot_endpoint_config.blob = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.blob.phase = "final"
     D->>E:STATE MESSAGE<br/>system.last_update = t0<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
-    loop: Total duration < 30 seconds
+    loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
     note over D: Failure, e.g. endpoint cannot be reached, incorrect credentials...
     end
     D-->>E:CONNECTION ATTEMPT
     E->>D:CONFIG MESSAGE
-    D->>E:STATE MESSAGE<br/>system.last_update = t0 <br/>blobset.blobs._iot_endpoint_config.phase = "final"<br/>blobset.blobs._iot_endpoint_config.status.level = 500 (ERROR)<br/>blobset.blobs._iot_endpoint_config.status.category = "blobset.blob.apply"
+    D->>E:STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"<br/>blobset.blobs._iot_endpoint_config.status.level = 500 (ERROR)<br/>blobset.blobs._iot_endpoint_config.status.category = "blobset.blob.apply"
 
 ```
 
