@@ -1,10 +1,10 @@
 {
   "logentries" : [ {
-    "message" : "State update defer -1ms",
+    "message" : "update state 2022-09-09T03:13:34Z last_config 2022-09-09T03:13:32Z",
     "category" : "pubber",
-    "timestamp" : "2022-09-13T14:53:40Z",
-    "level" : 400
+    "timestamp" : "2022-09-09T03:13:34Z",
+    "level" : 200
   } ],
-  "timestamp" : "2022-09-13T14:53:40.370Z",
+  "timestamp" : "2022-09-09T03:13:34.263Z",
   "version" : "1.3.14"
 }

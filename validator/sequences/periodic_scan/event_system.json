@@ -1,10 +1,10 @@
 {
   "logentries" : [ {
-    "message" : "Sent 1 discovery events from virtual for Tue Sep 13 14:55:29 UTC 2022",
+    "message" : "State update defer -7840ms",
     "category" : "pubber",
-    "timestamp" : "2022-09-13T14:55:35Z",
-    "level" : 200
+    "timestamp" : "2022-09-09T03:15:19Z",
+    "level" : 400
   } ],
-  "timestamp" : "2022-09-13T14:55:35.756Z",
+  "timestamp" : "2022-09-09T03:15:19.613Z",
   "version" : "1.3.14"
 }

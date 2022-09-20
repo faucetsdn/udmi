@@ -1,10 +1,10 @@
-2022-09-13T14:56:15Z NOTICE sequencer starting test valid_serial_no
-2022-09-13T14:56:15Z DEBUG sequencer Starting reset_config
-2022-09-13T14:56:15Z INFO sequencer start waiting for device config sync after 0s
-2022-09-13T14:56:15Z DEBUG sequencer system config extra field reset_config
-2022-09-13T14:56:15Z DEBUG sequencer update config_system
-2022-09-13T14:56:15Z DEBUG sequencer local local_system
-2022-09-13T14:56:17Z DEBUG sequencer local local_config:
+2022-09-09T03:15:59Z NOTICE sequencer starting test valid_serial_no
+2022-09-09T03:15:59Z DEBUG sequencer Starting reset_config
+2022-09-09T03:15:59Z INFO sequencer start waiting for device config sync after 0s
+2022-09-09T03:15:59Z DEBUG sequencer system config extra field reset_config
+2022-09-09T03:15:59Z DEBUG sequencer update config_system
+2022-09-09T03:15:59Z DEBUG sequencer local local_system
+2022-09-09T03:16:01Z DEBUG sequencer local local_config:
 {
   "timestamp" : "1970-01-01T00:00:00Z",
   "version" : "@@@cloud udmi version###null",
@@ -16,14 +16,173 @@
     }
   }
 }
-2022-09-13T14:56:17Z DEBUG sequencer received config_system
-2022-09-13T14:56:17Z DEBUG sequencer received config_update
-2022-09-13T14:56:17Z DEBUG sequencer Update with config reset
-2022-09-13T14:56:17Z INFO sequencer Updated config with timestamp 2022-09-13T14:56:15Z
-2022-09-13T14:56:17Z DEBUG sequencer Updated config #008:
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:56Z: State update defer 968ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:56Z: Config handler
+2022-09-09T03:16:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:56Z: 2022-09-09T03:15:56Z received config 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:15:56Z: success
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:56Z: State update defer 968ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:56Z: State update defer 966ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:56Z: State update defer 966ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 0ms
+2022-09-09T03:16:01Z DEBUG sequencer received config_update
+2022-09-09T03:16:01Z INFO sequencer Updated config with timestamp 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer Updated config #005:
 {
-  "timestamp" : "2022-09-13T14:56:15Z",
-  "version" : "1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:15:56Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "writeback_states"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:16:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:15:56Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:16:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:57Z: update state 2022-09-09T03:15:57Z last_config 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer received state_update
+2022-09-09T03:16:01Z DEBUG sequencer Updated state #003:
+{
+  "timestamp" : "2022-09-09T03:15:57Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:15:56Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:15:56Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "enumeration" : {
+      "generation" : "2022-09-09T03:15:35Z"
+    },
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:16:01Z NOTICE sequencer Received serial no sequencer-5321
+2022-09-09T03:16:01Z INFO sequencer Updated state has last_config 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:16:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:16:01Z DEBUG sequencer received state_system
+2022-09-09T03:16:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:15:57Z: success
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1999ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1998ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1997ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:57Z: Config handler
+2022-09-09T03:16:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:57Z: 2022-09-09T03:15:57Z received config 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1997ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 2000ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1996ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:57Z: State update defer 1996ms
+2022-09-09T03:16:01Z DEBUG sequencer received event_pointset
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:58Z: State update defer 777ms
+2022-09-09T03:16:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:16:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:16:01Z DEBUG sequencer received state_system
+2022-09-09T03:16:01Z DEBUG sequencer received state_update
+2022-09-09T03:16:01Z DEBUG sequencer Updated state #004:
+{
+  "timestamp" : "2022-09-09T03:15:57Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:15:56Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:15:56Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "enumeration" : {
+      "generation" : "2022-09-09T03:15:35Z"
+    },
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "configAcked" : "true"
+}
+2022-09-09T03:16:01Z INFO sequencer Updated state has last_config 2022-09-09T03:15:56Z
+2022-09-09T03:16:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:59Z: State update defer 0ms
+2022-09-09T03:16:01Z DEBUG sequencer received config_system
+2022-09-09T03:16:01Z DEBUG sequencer received config_update
+2022-09-09T03:16:01Z DEBUG sequencer Update with config reset
+2022-09-09T03:16:01Z INFO sequencer Updated config with timestamp 2022-09-09T03:16:00Z
+2022-09-09T03:16:01Z DEBUG sequencer Updated config #006:
+{
+  "timestamp" : "2022-09-09T03:16:00Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
@@ -32,10 +191,10 @@
     }
   }
 }
-2022-09-13T14:56:17Z DEBUG sequencer local local_config:
+2022-09-09T03:16:01Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:15Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:00Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
@@ -45,22 +204,23 @@
     }
   }
 }
-2022-09-13T14:56:17Z INFO sequencer finished waiting for device config sync after 2s
-2022-09-13T14:56:17Z INFO sequencer clearing system logs...
-2022-09-13T14:56:18Z DEBUG sequencer Reading generated config file /Users/nournew/udmifork/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
-2022-09-13T14:56:18Z INFO sequencer start waiting for device config sync after 3s
-2022-09-13T14:56:18Z DEBUG sequencer system config extra field null
-2022-09-13T14:56:18Z DEBUG sequencer update config_system
-2022-09-13T14:56:18Z DEBUG sequencer local local_system
-2022-09-13T14:56:20Z DEBUG sequencer update config_pointset
-2022-09-13T14:56:20Z DEBUG sequencer local local_pointset
-2022-09-13T14:56:22Z DEBUG sequencer local local_config:
+2022-09-09T03:16:01Z INFO sequencer finished waiting for device config sync after 2s
+2022-09-09T03:16:01Z INFO sequencer clearing system logs...
+2022-09-09T03:16:02Z DEBUG sequencer Reading generated config file /home/tester/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2022-09-09T03:16:02Z INFO sequencer start waiting for device config sync after 3s
+2022-09-09T03:16:02Z DEBUG sequencer system config extra field null
+2022-09-09T03:16:02Z DEBUG sequencer update config_system
+2022-09-09T03:16:02Z DEBUG sequencer local local_system
+2022-09-09T03:16:04Z DEBUG sequencer update config_pointset
+2022-09-09T03:16:04Z DEBUG sequencer local local_pointset
+2022-09-09T03:16:06Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-04-21T00:33:43Z",
-  "version" : "@@@cloud udmi version###1.3.14",
+  "timestamp" : "2020-05-01T13:39:07Z",
+  "version" : "@@@cloud udmi version###1",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -79,27 +239,21 @@
     }
   }
 }
-2022-09-13T14:56:22Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-13T14:56:15Z: success
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:15Z: State update defer 604ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:15Z: Config handler
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:15Z: State update defer 610ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:15Z: State update defer 611ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:15Z: 2022-09-13T14:56:15Z received config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:15Z: State update defer 605ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:16Z: State update defer 0ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:16Z: update state 2022-09-13T14:56:16Z last_config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received state_discovery
-2022-09-13T14:56:22Z DEBUG sequencer received state_update
-2022-09-13T14:56:22Z DEBUG sequencer Updated state #008:
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:59Z: update state 2022-09-09T03:15:59Z last_config 2022-09-09T03:15:56Z
+2022-09-09T03:16:06Z DEBUG sequencer received state_discovery
+2022-09-09T03:16:06Z DEBUG sequencer received state_system
+2022-09-09T03:16:06Z DEBUG sequencer received state_pointset
+2022-09-09T03:16:06Z DEBUG sequencer received state_update
+2022-09-09T03:16:06Z DEBUG sequencer Updated state #005:
 {
-  "timestamp" : "2022-09-13T14:56:16Z",
+  "timestamp" : "2022-09-09T03:15:59Z",
   "version" : "1.3.14",
   "system" : {
-    "last_config" : "2022-09-13T14:56:15Z",
+    "last_config" : "2022-09-09T03:15:56Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-13T14:50:27Z",
-    "serial_no" : "123",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -110,13 +264,112 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-13T14:56:15Z",
+      "timestamp" : "2022-09-09T03:15:57Z",
       "level" : 300
     }
   },
   "discovery" : {
     "enumeration" : {
-      "generation" : "2022-09-13T14:55:45Z"
+      "generation" : "2022-09-09T03:15:35Z"
+    },
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:16:06Z INFO sequencer Updated state has last_config 2022-09-09T03:15:56Z
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:59Z: Config handler
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:59Z: State update defer 1995ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:15:59Z: success
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:59Z: 2022-09-09T03:15:59Z received config 2022-09-09T03:16:00Z
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:59Z: State update defer 1996ms
+2022-09-09T03:16:06Z DEBUG sequencer received config_update
+2022-09-09T03:16:06Z DEBUG sequencer Update with config reset
+2022-09-09T03:16:06Z INFO sequencer Updated config with timestamp 2022-09-09T03:16:00Z
+2022-09-09T03:16:06Z DEBUG sequencer Updated config #007:
+{
+  "timestamp" : "2022-09-09T03:16:00Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:16:06Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:16:00Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "valid_serial_no"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:00Z: State update defer 698ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:00Z: 2022-09-09T03:16:00Z received config 2022-09-09T03:16:00Z
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:00Z: State update defer 693ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:00Z: State update defer 697ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:16:00Z: success
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:00Z: State update defer 693ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:00Z: Config handler
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:01Z: State update defer 0ms
+2022-09-09T03:16:06Z DEBUG sequencer received state_update
+2022-09-09T03:16:06Z DEBUG sequencer Updated state #006:
+{
+  "timestamp" : "2022-09-09T03:16:01Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:16:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:16:00Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "enumeration" : {
+      "generation" : "2022-09-09T03:15:35Z"
     },
     "families" : {
       "virtual" : { }
@@ -130,34 +383,35 @@
     }
   }
 }
-2022-09-13T14:56:22Z NOTICE sequencer Received serial no 123
-2022-09-13T14:56:22Z INFO sequencer Updated state has last_config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received state_pointset
-2022-09-13T14:56:22Z DEBUG sequencer received state_system
-2022-09-13T14:56:22Z DEBUG sequencer received config_update
-2022-09-13T14:56:22Z DEBUG sequencer Update with config reset
-2022-09-13T14:56:22Z INFO sequencer Updated config with timestamp 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer Updated config #009:
+2022-09-09T03:16:06Z INFO sequencer Updated state has last_config 2022-09-09T03:16:00Z
+2022-09-09T03:16:06Z DEBUG sequencer received state_pointset
+2022-09-09T03:16:06Z DEBUG sequencer received state_discovery
+2022-09-09T03:16:06Z DEBUG sequencer received state_system
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:01Z: update state 2022-09-09T03:16:01Z last_config 2022-09-09T03:16:00Z
+2022-09-09T03:16:06Z DEBUG sequencer received config_system
+2022-09-09T03:16:06Z DEBUG sequencer received config_update
+2022-09-09T03:16:06Z INFO sequencer Updated config with timestamp 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer Updated config #008:
 {
-  "timestamp" : "2022-09-13T14:56:15Z",
-  "version" : "1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:03Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "2022-09-13T14:50:27Z",
+    "last_start" : "1970-01-01T00:00:00Z",
     "testing" : {
-      "sequence_name" : "reset_config"
+      "sequence_name" : "valid_serial_no"
     }
   }
 }
-2022-09-13T14:56:22Z DEBUG sequencer local local_config:
+2022-09-09T03:16:06Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:15Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:03Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "2022-09-13T14:50:27Z",
+    "last_start" : "1970-01-01T00:00:00Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -176,27 +430,29 @@
     }
   }
 }
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:16Z: Config handler
-2022-09-13T14:56:22Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-13T14:56:16Z: success
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:16Z: State update defer 1314ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:16Z: State update defer 1309ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:16Z: 2022-09-13T14:56:16Z received config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:16Z: State update defer 1310ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:16Z: State update defer 1315ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:18Z: State update defer -1ms
-2022-09-13T14:56:22Z DEBUG sequencer received state_system
-2022-09-13T14:56:22Z DEBUG sequencer received state_pointset
-2022-09-13T14:56:22Z DEBUG sequencer received state_update
-2022-09-13T14:56:22Z DEBUG sequencer Updated state #009:
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:02Z: State update defer 925ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:02Z: State update defer 900ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:16:02Z: success
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:02Z: State update defer 919ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:02Z: Config handler
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:02Z: 2022-09-09T03:16:02Z received config 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:02Z: State update defer 899ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:03Z: State update defer -1ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:03Z: update state 2022-09-09T03:16:03Z last_config 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer received state_system
+2022-09-09T03:16:06Z DEBUG sequencer received state_discovery
+2022-09-09T03:16:06Z DEBUG sequencer received state_pointset
+2022-09-09T03:16:06Z DEBUG sequencer received state_update
+2022-09-09T03:16:06Z DEBUG sequencer Updated state #007:
 {
-  "timestamp" : "2022-09-13T14:56:18Z",
+  "timestamp" : "2022-09-09T03:16:03Z",
   "version" : "1.3.14",
   "system" : {
-    "last_config" : "2022-09-13T14:56:15Z",
+    "last_config" : "2022-09-09T03:16:03Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-13T14:50:27Z",
-    "serial_no" : "123",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -207,13 +463,13 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-13T14:56:16Z",
+      "timestamp" : "2022-09-09T03:16:02Z",
       "level" : 300
     }
   },
   "discovery" : {
     "enumeration" : {
-      "generation" : "2022-09-13T14:55:45Z"
+      "generation" : "2022-09-09T03:15:35Z"
     },
     "families" : {
       "virtual" : { }
@@ -227,116 +483,30 @@
     }
   }
 }
-2022-09-13T14:56:22Z INFO sequencer Updated state has last_config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received state_discovery
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:18Z: update state 2022-09-13T14:56:18Z last_config 2022-09-13T14:56:15Z
-2022-09-13T14:56:22Z DEBUG sequencer received config_system
-2022-09-13T14:56:22Z DEBUG sequencer received config_update
-2022-09-13T14:56:22Z INFO sequencer Updated config with timestamp 2022-09-13T14:56:18Z
-2022-09-13T14:56:22Z DEBUG sequencer Updated config #010:
+2022-09-09T03:16:06Z INFO sequencer Updated state has last_config 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer received config_update
+2022-09-09T03:16:06Z INFO sequencer Updated config with timestamp 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer Updated config #009:
 {
-  "timestamp" : "2022-09-13T14:56:18Z",
-  "version" : "1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:03Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
   }
 }
-2022-09-13T14:56:22Z DEBUG sequencer local local_config:
+2022-09-09T03:16:06Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:18Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:03Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "1970-01-01T00:00:00Z",
-    "testing" : {
-      "sequence_name" : "valid_serial_no"
-    }
-  },
-  "pointset" : {
-    "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98
-      },
-      "filter_differential_pressure_sensor" : {
-        "ref" : "AV12.present_value"
-      }
-    }
-  }
-}
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:18Z: State update defer 1739ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:18Z: State update defer 1746ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:18Z: State update defer 1747ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-13T14:56:18Z: success
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:18Z: Config handler
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:18Z: State update defer 1738ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:18Z: 2022-09-13T14:56:18Z received config 2022-09-13T14:56:18Z
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:19Z: State update defer 421ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_pointset
-2022-09-13T14:56:22Z DEBUG sequencer received config_pointset
-2022-09-13T14:56:22Z DEBUG sequencer received event_system WARNING pubber 2022-09-13T14:56:20Z: State update defer -1ms
-2022-09-13T14:56:22Z DEBUG sequencer received event_system INFO pubber 2022-09-13T14:56:20Z: update state 2022-09-13T14:56:20Z last_config 2022-09-13T14:56:18Z
-2022-09-13T14:56:22Z DEBUG sequencer received state_update
-2022-09-13T14:56:22Z DEBUG sequencer Updated state #010:
-{
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "1.3.14",
-  "system" : {
-    "last_config" : "2022-09-13T14:56:18Z",
-    "operational" : true,
-    "mode" : "initial",
-    "last_start" : "2022-09-13T14:50:27Z",
-    "serial_no" : "123",
-    "hardware" : {
-      "make" : "BOS",
-      "model" : "pubber"
-    },
-    "software" : {
-      "firmware" : "v1"
-    },
-    "status" : {
-      "message" : "success",
-      "category" : "system.config.apply",
-      "timestamp" : "2022-09-13T14:56:18Z",
-      "level" : 300
-    }
-  },
-  "discovery" : {
-    "enumeration" : {
-      "generation" : "2022-09-13T14:55:45Z"
-    },
-    "families" : {
-      "virtual" : { }
-    }
-  },
-  "pointset" : {
-    "points" : {
-      "filter_alarm_pressure_status" : { },
-      "filter_differential_pressure_setpoint" : { },
-      "filter_differential_pressure_sensor" : { }
-    }
-  }
-}
-2022-09-13T14:56:22Z INFO sequencer Updated state has last_config 2022-09-13T14:56:18Z
-2022-09-13T14:56:22Z DEBUG sequencer received state_system
-2022-09-13T14:56:22Z DEBUG sequencer received state_pointset
-2022-09-13T14:56:22Z DEBUG sequencer received state_discovery
-2022-09-13T14:56:22Z DEBUG sequencer received config_update
-2022-09-13T14:56:22Z INFO sequencer Updated config with timestamp 2022-09-13T14:56:20Z
-2022-09-13T14:56:22Z DEBUG sequencer Updated config #011:
-{
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "1.3.13-129-g48eea9cf",
-  "system" : {
-    "min_loglevel" : 200,
-    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -355,14 +525,24 @@
     }
   }
 }
-2022-09-13T14:56:22Z DEBUG sequencer local local_config:
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:04Z: State update defer 1897ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:04Z: Config handler
+2022-09-09T03:16:06Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:16:04Z: success
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:04Z: State update defer 1894ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:16:04Z: 2022-09-09T03:16:04Z received config 2022-09-09T03:16:03Z
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:04Z: State update defer 1899ms
+2022-09-09T03:16:06Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:16:04Z: State update defer 1893ms
+2022-09-09T03:16:06Z DEBUG sequencer received config_pointset
+2022-09-09T03:16:06Z DEBUG sequencer received config_update
+2022-09-09T03:16:06Z INFO sequencer Updated config with timestamp 2022-09-09T03:16:05Z
+2022-09-09T03:16:06Z DEBUG sequencer Updated config #010:
 {
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:05Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "1970-01-01T00:00:00Z",
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -381,20 +561,14 @@
     }
   }
 }
-2022-09-13T14:56:22Z INFO sequencer finished waiting for device config sync after 7s
-2022-09-13T14:56:22Z DEBUG sequencer Done with reset_config
-2022-09-13T14:56:22Z INFO sequencer clearing system logs...
-2022-09-13T14:56:23Z DEBUG sequencer system config extra field null
-2022-09-13T14:56:23Z DEBUG sequencer update config_system
-2022-09-13T14:56:23Z DEBUG sequencer local local_system
-2022-09-13T14:56:25Z DEBUG sequencer local local_config:
+2022-09-09T03:16:06Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:05Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "1970-01-01T00:00:00Z",
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -413,16 +587,20 @@
     }
   }
 }
-2022-09-13T14:56:25Z INFO sequencer start waiting for device config sync after 10s
-2022-09-13T14:56:25Z DEBUG sequencer system config extra field null
-2022-09-13T14:56:25Z DEBUG sequencer local local_config:
+2022-09-09T03:16:06Z INFO sequencer finished waiting for device config sync after 7s
+2022-09-09T03:16:06Z DEBUG sequencer Done with reset_config
+2022-09-09T03:16:06Z INFO sequencer clearing system logs...
+2022-09-09T03:16:07Z DEBUG sequencer system config extra field null
+2022-09-09T03:16:07Z DEBUG sequencer update config_system
+2022-09-09T03:16:07Z DEBUG sequencer local local_system
+2022-09-09T03:16:09Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:05Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "1970-01-01T00:00:00Z",
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -441,18 +619,16 @@
     }
   }
 }
-2022-09-13T14:56:25Z INFO sequencer finished waiting for device config sync after 10s
-2022-09-13T14:56:25Z DEBUG sequencer config synced to 2022-09-13T14:56:20Z
-2022-09-13T14:56:25Z INFO sequencer start waiting for device state update after 10s
-2022-09-13T14:56:25Z DEBUG sequencer system config extra field null
-2022-09-13T14:56:25Z DEBUG sequencer local local_config:
+2022-09-09T03:16:09Z INFO sequencer start waiting for device config sync after 10s
+2022-09-09T03:16:09Z DEBUG sequencer system config extra field null
+2022-09-09T03:16:09Z DEBUG sequencer local local_config:
 {
-  "timestamp" : "2022-09-13T14:56:20Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:16:05Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "1970-01-01T00:00:00Z",
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
@@ -471,8 +647,39 @@
     }
   }
 }
-2022-09-13T14:56:25Z INFO sequencer finished waiting for device state update after 10s
-2022-09-13T14:56:25Z WARNING sequencer Not resetting config to enable post-execution debugging
-2022-09-13T14:56:25Z NOTICE sequencer RESULT pass valid_serial_no Sequence complete
-2022-09-13T14:56:25Z INFO sequencer Sequence complete
-2022-09-13T14:56:25Z NOTICE sequencer ending test valid_serial_no after 10s
+2022-09-09T03:16:09Z INFO sequencer finished waiting for device config sync after 10s
+2022-09-09T03:16:09Z DEBUG sequencer config synced to 2022-09-09T03:16:05Z
+2022-09-09T03:16:09Z INFO sequencer start waiting for device state update after 10s
+2022-09-09T03:16:09Z DEBUG sequencer system config extra field null
+2022-09-09T03:16:09Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:16:05Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "valid_serial_no"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:16:09Z INFO sequencer finished waiting for device state update after 10s
+2022-09-09T03:16:09Z INFO sequencer Not setting config points: Missing 'invalid' target specification
+2022-09-09T03:16:09Z WARNING sequencer Not resetting config to enable post-execution debugging
+2022-09-09T03:16:09Z NOTICE sequencer RESULT pass valid_serial_no Sequence complete
+2022-09-09T03:16:09Z INFO sequencer Sequence complete
+2022-09-09T03:16:09Z NOTICE sequencer ending test valid_serial_no after 10s

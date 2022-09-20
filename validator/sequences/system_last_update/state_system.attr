@@ -6,5 +6,5 @@
   "subType" : "state",
   "category" : "commands",
   "deviceId" : "AHU-1",
-  "projectId" : "daq1-273309"
+  "projectId" : "bos-tester-dev"
 }

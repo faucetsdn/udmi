@@ -1,7 +1,7 @@
 {
   "discovery" : {
     "enumeration" : {
-      "generation" : "2022-09-13T14:55:45Z"
+      "generation" : "2022-09-09T03:15:35Z"
     },
     "families" : {
       "virtual" : { }
@@ -15,11 +15,11 @@
     }
   },
   "system" : {
-    "last_config" : "2022-09-13T14:56:18Z",
+    "last_config" : "2022-09-09T03:16:03Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-09-13T14:50:27Z",
-    "serial_no" : "123",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -30,10 +30,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-09-13T14:56:18Z",
+      "timestamp" : "2022-09-09T03:16:02Z",
       "level" : 300
     }
   },
-  "timestamp" : "2022-09-13T14:56:20Z",
+  "timestamp" : "2022-09-09T03:16:03Z",
   "version" : "1.3.14"
 }

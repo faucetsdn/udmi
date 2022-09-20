@@ -15,11 +15,11 @@
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "device_config_acked"
-    },
-    "last_start" : "2022-09-13T14:50:27Z"
+    }
   },
-  "timestamp" : "2022-09-13T14:53:38.158Z",
-  "version" : "1.3.13-129-g48eea9cf"
+  "timestamp" : "2022-09-09T03:13:32.061Z",
+  "version" : "1.3.14-44-gecf30496-dirty"
 }

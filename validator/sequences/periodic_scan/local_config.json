@@ -1,10 +1,10 @@
 {
-  "timestamp" : "2022-09-13T14:55:09Z",
-  "version" : "@@@cloud udmi version###1.3.13-129-g48eea9cf",
+  "timestamp" : "2022-09-09T03:15:00Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "2022-09-13T14:50:27Z",
+    "last_start" : "2022-09-09T03:12:37Z",
     "testing" : {
       "sequence_name" : "periodic_scan"
     }
@@ -12,7 +12,7 @@
   "discovery" : {
     "families" : {
       "virtual" : {
-        "generation" : "2022-09-13T14:55:09Z",
+        "generation" : "2022-09-09T03:14:59Z",
         "scan_interval_sec" : 10,
         "enumerate" : true
       }
