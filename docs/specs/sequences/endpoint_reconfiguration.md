@@ -15,7 +15,7 @@ The [endpoint configuration blob](https://github.com/faucetsdn/udmi/blob/master/
 
 **Notes**
 - `<NEW_ENDPOINT>` is a **base64** encoded endpoint object
-- `blobset.blobs_iot_endpoint_config` is present in a device's state message if, and only if,   the last received config message has a `blobset.blobs_iot_endpoint_config` block.
+- `blobset.blobs._iot_endpoint_config` is present in a device's state message if, and only if,   the last received config message has a `blobset.blobs._iot_endpoint_config` block.
 
 ```mermaid
 %%{wrap}%%
@@ -29,8 +29,9 @@ sequenceDiagram
     loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
     end
-    E'->>D:CONFIG MESSAGE<br>timestamp = T<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E':STATE MESSAGE<br/>system.last_update = T<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note over E': system.last_update in state matches timestamp of config from new endpoint
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
     E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
 ```
