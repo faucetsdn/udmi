@@ -14,11 +14,11 @@ export class SiteService {
 
   constructor(private apollo: Apollo) {}
 
-  getSite(id: string): Observable<ApolloQueryResult<SiteQueryResponse>> {
+  getSite(name: string): Observable<ApolloQueryResult<SiteQueryResponse>> {
     this.siteQuery = this.apollo.watchQuery<SiteQueryResponse, SiteQueryVariables>({
       query: GET_SITE,
       variables: {
-        id,
+        name,
       },
     });
 

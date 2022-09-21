@@ -15,7 +15,6 @@ describe('SiteComponent', () => {
   let mockNavigationService: jasmine.SpyObj<NavigationService>;
   let mockSiteService: jasmine.SpyObj<SiteService>;
   let site: Site = {
-    id: 'site-id-123',
     name: 'site one',
     totalDevicesCount: 0,
     correctDevicesCount: 0,

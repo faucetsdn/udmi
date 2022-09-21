@@ -29,7 +29,6 @@ describe('SitesService', () => {
       sites: {
         sites: [
           {
-            id: '123',
             name: 'site one',
             totalDevicesCount: 0,
             correctDevicesCount: 0,
