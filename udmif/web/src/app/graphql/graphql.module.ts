@@ -29,7 +29,7 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
     }
   });
 
-  const errorLink = onError(({ forward, graphQLErrors, networkError, operation }) => {
+  const errorLink = onError(({ forward, networkError, operation }) => {
     if (networkError) {
       if (JSON.stringify(networkError).includes('UNAUTHENTICATED')) {
         // Try refreshing the token.
@@ -54,7 +54,13 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
 
   return {
     link: ApolloLink.from([errorLink, authLink, httpLink.create({ uri: env.apiUri })]),
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Site: {
+          keyFields: ['name'],
+        },
+      },
+    }),
   };
 }
 
@@ -68,4 +74,4 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
     },
   ],
 })
-export class GraphQLModule { }
+export class GraphQLModule {}
