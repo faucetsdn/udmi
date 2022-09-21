@@ -837,6 +837,13 @@ public class Pubber {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = iotConfig == null ? null
           : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
+      if (extractedEndpoint != null) {
+        extractedEndpoint.origin = EndpointConfiguration.Origin.BLOB;
+        // TODO: Move this assignment into a more consistent place.
+        if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce != null) {
+          extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce;
+        }
+      }
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
@@ -869,8 +876,9 @@ public class Pubber {
 
     if (extractedSignature.equals(currentSignature) 
         || extractedSignature.equals(attemptedEndpoint)) {
-      return; // No need to redirect anything!
-    }
+      // jrand - testing
+      if (false) { info("false placeholder"); }
+    }; // No need to redirect anything!
 
     info("New config blob endpoint detected");
 

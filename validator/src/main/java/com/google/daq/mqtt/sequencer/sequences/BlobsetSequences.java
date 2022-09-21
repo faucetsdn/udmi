@@ -4,6 +4,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import org.junit.Test;
@@ -32,9 +33,20 @@ public class BlobsetSequences extends SequenceBase {
       "projects/bos-johnrandolph-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1";
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
 
-  private String endpointConfigPayloadBase64(String hostname) {
+  private String endpointConfigBase64PayloadHostname(String hostname) {
     String payload = String.format(ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
     return Base64.getEncoder().encodeToString(payload.getBytes());
+  }
+
+  private String endpointConfigBase64PayloadClientId(String client_id) {
+    String payload = String.format(ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, client_id, ENDPOINT_CONFIG_HOSTNAME);
+    return Base64.getEncoder().encodeToString(payload.getBytes());
+  }
+
+  private String generateNonce() {
+    byte[] nonce = new byte[32];
+    new SecureRandom().nextBytes(nonce);
+    return Base64.getEncoder().encodeToString(nonce);  
   }
 
   @Test
@@ -42,7 +54,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = endpointConfigPayloadBase64("localhost");
+    config.base64 = endpointConfigBase64PayloadHostname("localhost");
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
@@ -61,8 +73,9 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_success() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = endpointConfigPayloadBase64(ENDPOINT_CONFIG_HOSTNAME);
+    config.base64 = endpointConfigBase64PayloadClientId(ENDPOINT_CONFIG_CLIENT_ID);
     config.content_type = "application/json";
+    config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);

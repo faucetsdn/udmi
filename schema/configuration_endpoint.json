@@ -20,6 +20,16 @@
     },
     "client_id": {
       "type": "string"
+    },
+    "nonce": {
+      "type": "string"
+    },
+    "origin": {
+      "enum": [
+        "config_file",
+        "blob"
+      ],
+      "default": "config_file"
     }
   },
   "required": [
