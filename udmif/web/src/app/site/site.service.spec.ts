@@ -27,7 +27,6 @@ describe('SiteService', () => {
   it('should return the site', () => {
     const mockSiteResponse: SiteQueryResponse = {
       site: {
-        id: '123',
         name: 'site one',
         totalDevicesCount: 0,
         correctDevicesCount: 0,
@@ -53,7 +52,7 @@ describe('SiteService', () => {
 
     // Assert the correct search options were sent.
     expect(op.operation.variables).toEqual({
-      id: '123',
+      name: '123',
     });
 
     // Respond with mock data, causing Observable to resolve.

@@ -33,7 +33,7 @@ export class SiteDataSource extends GraphQLDataSource {
     return { sites, totalCount, totalFilteredCount };
   }
 
-  async getSite(id: string): Promise<Site> {
-    return this.siteDAO.getOne({ name: id }); //TODO:: for now, lookup by name
+  async getSite(name: string): Promise<Site> {
+    return this.siteDAO.getOne({ name });
   }
 }

@@ -32,19 +32,19 @@ export const resolvers = {
     },
     level: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
       //TODO should these be taken from the device message instead?
-      return (await siteDS.getSite(device.site)).validation?.devices[device.name]?.status?.level;
+      return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.status?.level;
     },
     message: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
-      return (await siteDS.getSite(device.site)).validation?.devices[device.name]?.status?.message;
+      return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.status?.message;
     },
     details: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
-      return (await siteDS.getSite(device.site)).validation?.devices[device.name]?.status?.details;
+      return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.status?.details;
     },
     lastSeen: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
-      return (await siteDS.getSite(device.site)).validation?.devices[device.name]?.last_seen;
+      return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.last_seen;
     },
     state: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
-      const siteValidationSummary = (await siteDS.getSite(device.site)).validation?.summary;
+      const siteValidationSummary = (await siteDS.getSite(device.site))?.validation?.summary;
 
       for (const category in siteValidationSummary) {
         if (Object.prototype.hasOwnProperty.call(siteValidationSummary, category)) {

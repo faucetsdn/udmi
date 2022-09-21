@@ -1,5 +1,4 @@
 interface SiteModel {
-  id: string;
   name: string;
   totalDevicesCount: number;
   correctDevicesCount: number;
@@ -19,5 +18,5 @@ export type SiteQueryResponse = {
 };
 
 export type SiteQueryVariables = {
-  id: string;
+  name: string;
 };
