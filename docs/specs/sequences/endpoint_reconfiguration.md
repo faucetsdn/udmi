@@ -30,8 +30,8 @@ sequenceDiagram
     D-->>E':CONNECTION ATTEMPT
     end
     E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    note over E': system.last_update in state matches timestamp of config from new endpoint
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note over E': system.last_update in state matches timestamp of config from new endpoint
     E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config = null
 ```
