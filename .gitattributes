@@ -1,1 +1,4 @@
 /gencode/** linguist-generated=true
+validator/sequences/**/*.json linguist-generated=true
+validator/sequences/**/*.attr linguist-generated=true
+validator/sequences/**/*.log linguist-generated=true
