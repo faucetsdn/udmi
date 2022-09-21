@@ -57,6 +57,29 @@ sequenceDiagram
 
 ```
 
+### Commit Reconfiguration (Successful reconfiguration, persists Reboot)
+- Documentation on [device reboot mechanism through UDMI](../system_mode.md)
+
+```mermaid
+%%{wrap}%%
+sequenceDiagram
+    autonumber
+    participant D as Device
+    participant E as Original Endpoint
+    participant E' as New Endpoint
+    E->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E:STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    loop Total duration < 30 seconds
+    D-->>E':CONNECTION ATTEMPT
+    end
+    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note over D: REBOOT DEVICE
+    D-->>E':CONNECTION ATTEMPT
+    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+```
+
 ## Message Examples
 
 Config message to initiate Reconfiguration (sequence #1 in diagrams above)
