@@ -9,6 +9,7 @@ export function createEventFromTypes(subFolder: string, subType: string, deviceI
   const defaultAttributes = {
     deviceId,
     deviceRegistryId: 'reg-1',
+    deviceNumId: 'num1',
     subFolder,
     subType,
   };
@@ -63,7 +64,13 @@ export const SITE_VALIDATION_EVENT: UdmiEvent = createEvent(
 export const POINTSET_STATE_EVENT = createEventFromTypes(POINTSET_SUB_FOLDER, STATE, 'AHU-1');
 
 export const DEVICE_VALIDATION_EVENT: UdmiEvent = {
-  attributes: { deviceId: 'name', deviceRegistryId: 'site-1', subFolder: VALIDATION_SUB_FOLDER, subType: EVENT },
+  attributes: {
+    deviceId: 'name',
+    deviceRegistryId: 'site-1',
+    deviceNumId: 'num1',
+    subFolder: VALIDATION_SUB_FOLDER,
+    subType: EVENT,
+  },
   data: {
     timestamp: '2022-08-03T17:28:49Z',
     version: '1.3.14',

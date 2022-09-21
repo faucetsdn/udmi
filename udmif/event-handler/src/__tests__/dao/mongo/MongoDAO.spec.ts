@@ -64,6 +64,7 @@ describe('DAO<Device>', () => {
   let deviceCollection: Collection<Device>;
 
   const siteName: string = 'site-2';
+  const id: string = 'num-1';
   const name: string = 'name';
   const deviceKey: DeviceKey = { name, site: siteName };
 
@@ -75,7 +76,7 @@ describe('DAO<Device>', () => {
 
   test('upsert calls the updateOne method on the provided collection', () => {
     // arrange
-    const device: Device = { name, site: siteName };
+    const device: Device = { name, id, site: siteName };
     const updateOneSpy = jest.spyOn(deviceCollection, 'updateOne').mockImplementation(jest.fn());
 
     // act
@@ -88,7 +89,7 @@ describe('DAO<Device>', () => {
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(deviceCollection, 'findOne');
-    const insertedDeviceDocument: Device = { name, site: siteName, points: [], serialNumber: 'randomSerialId' };
+    const insertedDeviceDocument: Device = { name, site: siteName, id, points: [], serialNumber: 'randomSerialId' };
     deviceCollection.insertOne(insertedDeviceDocument);
 
     // act
@@ -115,7 +116,7 @@ describe('DAO<Site>', () => {
 
   test('upsert calls the updateOne method on the provided collection', () => {
     // arrange
-    const site: Site = { name: 'site', lastMessage: { name: '' } };
+    const site: Site = { name: 'site', validation: { name: '' } };
     const updateOneSpy = jest.spyOn(siteCollection, 'updateOne').mockImplementation(jest.fn());
 
     // act
@@ -128,7 +129,7 @@ describe('DAO<Site>', () => {
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(siteCollection, 'findOne');
-    const insertedDocument: Site = { name: siteName, lastMessage: { name: '' } };
+    const insertedDocument: Site = { name: siteName, validation: { name: '' } };
     siteCollection.insertOne(insertedDocument);
 
     // act

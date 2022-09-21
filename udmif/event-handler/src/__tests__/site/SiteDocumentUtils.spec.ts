@@ -8,7 +8,7 @@ describe('SiteDocumentUtils.getSiteDocument', () => {
   test('returns a site document', () => {
     // arrange
     const event: UdmiEvent = SITE_VALIDATION_EVENT;
-    const expectedSiteDocumet: Site = { name: SITE_ID, lastMessage: event.data };
+    const expectedSiteDocumet: Site = { name: SITE_ID, validation: event.data };
 
     // act
     const siteDocument: Site = getSiteDocument(event);
