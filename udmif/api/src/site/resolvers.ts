@@ -11,8 +11,8 @@ export const resolvers = {
     sites: (_query, { searchOptions }: SitesArgs, { dataSources: { siteDS } }: ApolloContext) => {
       return siteDS.getSites(searchOptions);
     },
-    site: (_query, { id }: SiteArgs, { dataSources: { siteDS } }: ApolloContext) => {
-      return siteDS.getSite(id);
+    site: (_query, { name }: SiteArgs, { dataSources: { siteDS } }: ApolloContext) => {
+      return siteDS.getSite(name);
     },
   },
   Site: {

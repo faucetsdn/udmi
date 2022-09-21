@@ -8,8 +8,6 @@ type SitesResponse {
 }
 
 type Site {
-  # ID of the site
-  id: ID!
   # Name of the site
   name: String!
   # Total number of devices associated to the site
@@ -36,7 +34,7 @@ type Query {
   # Get a list of sites
   sites(searchOptions: SearchOptions) : SitesResponse
   # Get a site by ID
-  site(id: ID!): Site
+  site(name: String!): Site
   # Get a list of sites
   siteNames(searchOptions: DistinctSearchOptions) : [String!]!
 }

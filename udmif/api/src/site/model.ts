@@ -11,11 +11,10 @@ export interface SitesArgs {
 }
 
 export interface SiteArgs {
-  id: string;
+  name: string;
 }
 
 export interface Site {
-  id: string;
   name: string;
   validation?: any;
 }

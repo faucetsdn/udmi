@@ -17,7 +17,6 @@ const QUERY_SITES = gql`
       totalCount
       totalFilteredCount
       sites {
-        id
         name
       }
     }
@@ -32,8 +31,7 @@ const QUERY_SITE_NAMES = gql`
 
 const QUERY_SITE = gql`
   query {
-    site(id: "00000000-0000-0000-0000-0000000001") {
-      id
+    site(name: "00000000-0000-0000-0000-0000000001") {
       name
       totalDevicesCount
       correctDevicesCount
