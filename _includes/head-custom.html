@@ -2,7 +2,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", function() {
       document.querySelectorAll("pre>code.language-mermaid").forEach($element => {
-        $element.parentElement.outerHTML = `<div class="mermaid">${$element.textContent}</div>`
+        $element.parentElement.outerHTML = `<div class="mermaid">${$element.innerHTML}</div>`
       });
      mermaid.initialize();
 });
