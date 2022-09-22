@@ -839,8 +839,9 @@ public class Pubber {
           : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
         // TODO: Move this assignment into a more consistent place.
-        if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce != null) {
-          extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce;
+        if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()) != null) {
+          String nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
+          extractedEndpoint.nonce = nonce;
         }
       }
     } catch (Exception e) {
