@@ -8,6 +8,11 @@ if [[ $1 == check ]]; then
     shift
 fi
 
+if [[ -n $check ]]; then
+    # This check must be run before gencode_docs is run
+    bin/gencode_docs_examples check
+fi
+
 bin/gencode_java
 bin/gencode_python gencode/python schema/*.json
 bin/gencode_docs
@@ -15,7 +20,7 @@ bin/gencode_seq
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...
-    bin/gencode_docs check_links
+    bin/gencode_docs_checklinks
 
     echo "Checking gencode hash (dynamic/static)..."
     files=`find gencode/ -type f | sort`
