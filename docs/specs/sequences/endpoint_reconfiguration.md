@@ -75,10 +75,10 @@ sequenceDiagram
     E'->>D:CONFIG MESSAGE
     D->>E':STATE MESSAGE
     loop UDMI restart sequence
-    E'->>D:CONFIG MESSAGE<br/>system.mode = restart
+    E'->>D:CONFIG MESSAGE<br/>(to trigger UDMI restart)
     note over D: Device restarts
     D-->>E':CONNECTION ATTEMPT
-    note over D,E': Completes UDMI restart sequence ...
+    note over D,E': Device connects to new endpoint and completes UDMI restart sequence ...
     end
 ```
 
