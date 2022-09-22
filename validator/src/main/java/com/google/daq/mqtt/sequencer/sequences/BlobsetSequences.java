@@ -38,11 +38,6 @@ public class BlobsetSequences extends SequenceBase {
     return Base64.getEncoder().encodeToString(payload.getBytes());
   }
 
-  private String endpointConfigBase64PayloadClientId(String client_id) {
-    String payload = String.format(ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, client_id, ENDPOINT_CONFIG_HOSTNAME);
-    return Base64.getEncoder().encodeToString(payload.getBytes());
-  }
-
   private String generateNonce() {
     byte[] nonce = new byte[32];
     new SecureRandom().nextBytes(nonce);
@@ -73,7 +68,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_success() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = endpointConfigBase64PayloadClientId(ENDPOINT_CONFIG_CLIENT_ID);
+    config.base64 = endpointConfigBase64PayloadHostname(ENDPOINT_CONFIG_HOSTNAME);
     config.content_type = "application/json";
     config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
