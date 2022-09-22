@@ -838,7 +838,6 @@ public class Pubber {
       extractedEndpoint = iotConfig == null ? null
           : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
-        extractedEndpoint.origin = EndpointConfiguration.Origin.BLOB;
         // TODO: Move this assignment into a more consistent place.
         if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce != null) {
           extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG).nonce;

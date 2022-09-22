@@ -10,7 +10,6 @@ class EndpointConfiguration:
     self.port = None
     self.client_id = None
     self.nonce = None
-    self.origin = None
 
   @staticmethod
   def from_dict(source):
@@ -22,7 +21,6 @@ class EndpointConfiguration:
     result.port = source.get('port')
     result.client_id = source.get('client_id')
     result.nonce = source.get('nonce')
-    result.origin = source.get('origin')
     return result
 
   @staticmethod
@@ -53,6 +51,4 @@ class EndpointConfiguration:
       result['client_id'] = self.client_id # 5
     if self.nonce:
       result['nonce'] = self.nonce # 5
-    if self.origin:
-      result['origin'] = self.origin # 5
     return result

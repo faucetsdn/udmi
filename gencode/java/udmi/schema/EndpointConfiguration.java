@@ -23,8 +23,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "hostname",
     "port",
     "client_id",
-    "nonce",
-    "origin"
+    "nonce"
 })
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
@@ -54,8 +53,6 @@ public class EndpointConfiguration {
     public String client_id;
     @JsonProperty("nonce")
     public String nonce;
-    @JsonProperty("origin")
-    public EndpointConfiguration.Origin origin = EndpointConfiguration.Origin.fromValue("config_file");
 
     @Override
     public int hashCode() {
@@ -63,7 +60,6 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
-        result = ((result* 31)+((this.origin == null)? 0 :this.origin.hashCode()));
         result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         return result;
@@ -78,47 +74,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.origin == rhs.origin)||((this.origin!= null)&&this.origin.equals(rhs.origin))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
-    }
-
-    @Generated("jsonschema2pojo")
-    public enum Origin {
-
-        CONFIG_FILE("config_file"),
-        BLOB("blob");
-        private final String value;
-        private final static Map<String, EndpointConfiguration.Origin> CONSTANTS = new HashMap<String, EndpointConfiguration.Origin>();
-
-        static {
-            for (EndpointConfiguration.Origin c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Origin(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static EndpointConfiguration.Origin fromValue(String value) {
-            EndpointConfiguration.Origin constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
+        return ((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
     }
 
     @Generated("jsonschema2pojo")
