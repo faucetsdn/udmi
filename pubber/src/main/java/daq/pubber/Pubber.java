@@ -837,7 +837,7 @@ public class Pubber {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = iotConfig == null ? null
           : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
-      if (iotConfig != null) {
+      if (extractedEndpoint != null) {
         // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()) != null) {
           extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
