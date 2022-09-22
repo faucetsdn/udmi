@@ -33,7 +33,7 @@ public class BlobsetSequences extends SequenceBase {
       "projects/bos-johnrandolph-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1";
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
 
-  private String endpointConfigBase64PayloadHostname(String hostname) {
+  private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
         ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
     return Base64.getEncoder().encodeToString(payload.getBytes());
@@ -50,7 +50,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = endpointConfigBase64PayloadHostname("localhost");
+    config.base64 = generateEndpointConfigBase64Payload("localhost");
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
@@ -69,7 +69,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_success() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = endpointConfigBase64PayloadHostname(ENDPOINT_CONFIG_HOSTNAME);
+    config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
     config.content_type = "application/json";
     config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
