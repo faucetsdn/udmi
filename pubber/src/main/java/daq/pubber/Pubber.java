@@ -875,8 +875,8 @@ public class Pubber {
 
     if (extractedSignature.equals(currentSignature) 
         || extractedSignature.equals(attemptedEndpoint)) {
-      return;
-    }; // No need to redirect anything!
+      return; // No need to redirect anything!
+    }
 
     info("New config blob endpoint detected");
 
