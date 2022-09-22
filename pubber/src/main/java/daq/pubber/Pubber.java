@@ -837,11 +837,10 @@ public class Pubber {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = iotConfig == null ? null
           : OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
-      if (extractedEndpoint != null) {
-        // TODO: Move this assignment into a more consistent place.
+      if (iotConfig != null) {
+        // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()) != null) {
-          String nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
-          extractedEndpoint.nonce = nonce;
+          extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
         }
       }
     } catch (Exception e) {
@@ -876,8 +875,7 @@ public class Pubber {
 
     if (extractedSignature.equals(currentSignature) 
         || extractedSignature.equals(attemptedEndpoint)) {
-      // jrand - testing
-      if (false) { info("false placeholder"); }
+      return;
     }; // No need to redirect anything!
 
     info("New config blob endpoint detected");
