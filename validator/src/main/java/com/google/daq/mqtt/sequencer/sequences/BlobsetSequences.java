@@ -84,8 +84,6 @@ public class BlobsetSequences extends SequenceBase {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
       Entry stateStatus = deviceState.system.status;
-      if (phase==null) info("A");
-      if (stateStatus==null) info("B");
       return phase != null
           && phase.equals(BlobPhase.FINAL)
           && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
