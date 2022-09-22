@@ -30,6 +30,7 @@ Some caveats:
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
 * [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
+* [endpoint_config_connection_success](#endpoint_config_connection_success): Push endpoint config message to device that results in success.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -59,12 +60,12 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE`
 1. Wait for log category `system.config.parse` level `DEBUG`
+1. Test failed: timeout waiting for log category `system.config.parse` level `DEBUG`
 
 ## device_config_acked
 
 Check that the device MQTT-acknowledges a sent config.
 
-1. Wait for config acked
 
 ## endpoint_config_connection_error
 
@@ -73,6 +74,14 @@ Push endpoint config message to device that results in a connection error.
 1. Update config:
     * Add `blobset` = { "blobs": {  } }
 1. Wait for blobset entry config status is error
+
+## endpoint_config_connection_success
+
+Push endpoint config message to device that results in success.
+
+1. Update config:
+    * Add `blobset` = { "blobs": {  } }
+1. Wait for blobset entry config status is success
 
 ## extra_config
 
