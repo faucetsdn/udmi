@@ -840,7 +840,8 @@ public class Pubber {
       if (extractedEndpoint != null) {
         // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()) != null) {
-          extractedEndpoint.nonce = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
+          extractedEndpoint.nonce =
+              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
         }
       }
     } catch (Exception e) {

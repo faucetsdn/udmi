@@ -34,7 +34,8 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
 
   private String endpointConfigBase64PayloadHostname(String hostname) {
-    String payload = String.format(ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
+    String payload = String.format(
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
     return Base64.getEncoder().encodeToString(payload.getBytes());
   }
 
