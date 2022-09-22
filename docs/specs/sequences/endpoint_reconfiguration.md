@@ -68,16 +68,18 @@ sequenceDiagram
     participant E as Original Endpoint
     participant E' as New Endpoint
     E->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E:STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "apply"
+    D->>E:STATE MESSAGE
     loop Total duration < 30 seconds
     D-->>E':CONNECTION ATTEMPT
     end
-    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    note over D: REBOOT DEVICE
+    E'->>D:CONFIG MESSAGE
+    D->>E':STATE MESSAGE
+    loop UDMI restart sequence
+    E'->>D:CONFIG MESSAGE<br/>system.mode = restart
+    note over D: Device restarts
     D-->>E':CONNECTION ATTEMPT
-    E'->>D:CONFIG MESSAGE<br/>blobset.blobs._iot_endpoint_config.base64 = <NEW_ENDPOINT><br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note over D,E': Completes UDMI restart sequence ...
+    end
 ```
 
 ## Message Examples
