@@ -30,27 +30,27 @@ to configure when the *Spotter* should activate) to complete the overall flow.
 
 ```mermaid
 sequenceDiagram
+  %%{wrap}%%
   participant Devices
-  participant Spotter
   participant Agent
   participant Engine
   participant Pipeline
   Note over Agent: Generation Start
   activate Agent
-  Agent->>Spotter: Discovery Config
+  Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
-    Spotter-->Devices: (Fieldbus Discovery)
-    Spotter->>Engine: Discovery Events
+    Devices->>Engine: DISCOVERY EVENT<br/>(fieldbus_id)<br/><properties>
   end
-  Agent->>Engine: Mapping Config
-  Engine->>Agent: Mapping State
+  Agent->>Engine: MAPPING CONFIG
+  Engine->>Agent: MAPPING STATE
   loop Devices
-    Engine->>Agent: Mapping Events
-    Agent-->>Pipeline: (Onboard Info)
+    Engine->>Agent: MAPPING EVENT<br/>(guid, fieldbus_id, device_id)<br/><translations>
+    Agent->>Engine: MAPPING COMMAND<br/>(device_id, device_num_id)
+    Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
   end
   deactivate Agent
   Note over Agent: Generation End
-  Devices->>Pipeline: Telemetry Events
+  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)
 ```
 
 1. **[Discovery Config](../../tests/config.tests/discovery.json)** indicates that the _spotter_ should do the needful and scan the local network.
