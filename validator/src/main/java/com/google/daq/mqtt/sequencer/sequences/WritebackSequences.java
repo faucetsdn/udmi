@@ -56,13 +56,14 @@ public class WritebackSequences extends PointSequencer {
     deviceConfig.pointset.points.get(failurePoint).set_value = failureTarget.target_value;
     deviceConfig.pointset.points.get(appliedPoint).set_value = appliedTarget.target_value;
     updateConfig();
+
     untilTrue(expectedValueState(invalidPoint, INVALID_STATE),
         () -> valueStateIs(invalidPoint, INVALID_STATE)
     );
-    untilTrue(expectedValueState(invalidPoint, FAILURE_STATE),
+    untilTrue(expectedValueState(failurePoint, FAILURE_STATE),
         () -> valueStateIs(failurePoint, FAILURE_STATE)
     );
-    untilTrue(expectedValueState(invalidPoint, APPLIED_STATE),
+    untilTrue(expectedValueState(appliedPoint, APPLIED_STATE),
         () -> valueStateIs(appliedPoint, APPLIED_STATE)
     );
   }
