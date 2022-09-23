@@ -221,6 +221,10 @@ public class SiteModel {
     return sitePath + "/validator/rsa_private.pkcs8";
   }
 
+  public File getDeviceWorkingDir(String deviceId) {
+    return new File(sitePath + "/out/devices/" + deviceId);
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;

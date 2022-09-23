@@ -1,0 +1,13 @@
+{
+  "title": "Device Persistent",
+  "description": "Device persistent data",
+  "additionalProperties": true,
+  "properties": {
+    "endpoint": {
+      "$ref": "file:configuration_endpoint.json"
+    },
+    "restarts": {
+      "type": "integer"
+    }
+  }
+}
