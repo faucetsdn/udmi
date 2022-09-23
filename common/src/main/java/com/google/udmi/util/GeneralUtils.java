@@ -48,6 +48,9 @@ public class GeneralUtils {
 
   public static <T> T fromJsonString(String body, Class<T> valueType) {
     try {
+      if (body == null) {
+        return null;
+      }
       return OBJECT_MAPPER.readValue(body, valueType);
     } catch (Exception e) {
       throw new RuntimeException("While loading json string", e);
