@@ -5,7 +5,7 @@
 ## Device Compliance
 - [UDMI Compliance](compliance.md)
 
-## Device 
+## Device Capabilities
 - [Messages](../messages/)
 - [Connection Models](connecting.md)
 - [Discovery](discovery.md)
@@ -15,11 +15,13 @@
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
 - [Log/Status Entries](entries.md)
+- [System Mode](system_mode.md)
 
-## Device Onboarding, Site Model, Metadata
+## System Modeling
 - [Metadata](metadata.md)
 - [Site Model](site_model.md)
 - [Onboarding](onboarding.md)
+- [Mapping](mapping.md)
 
 ## Cloud Environment
 - [Message Walk](message_walk.md)

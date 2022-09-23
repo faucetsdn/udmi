@@ -52,10 +52,11 @@ They key steps to setup the dedicated project are as follows:
     A `validator_config.json` configuration file is not needed (this is
     generated automatically during the CI test)
     -   The registry name is **ZZ-TRI-FECTA**. 
-4.  A Github Secret needs to be added to the project. This is accessed from the
-    Project's _Settings_ page. The secret is as follows:
-        -   **Name**: GCP_TARGET_PROJECT
-        -   **Value**: _GCP Project ID_
+4.  A Github Secret needs to be added to the project, accessed from the
+    project's _Settings_ page. Note that in the test log output, the GCP Project ID will be
+    presented as rot13 text since GitHub otherwise redacts the secret from the logs.
+    -   **Name**: GCP_TARGET_PROJECT
+    -   **Value**: _GCP Project ID_
 5.  Enable Github Actions
 
 The workflow can be tested with an empty commit 
