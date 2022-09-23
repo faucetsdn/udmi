@@ -162,13 +162,11 @@ public class Pubber {
   private PubSubClient pubSubClient;
   private Function<String, Boolean> connectionDone;
   private boolean publishingLog;
-  private String appliedEndpoint;
   private String workingEndpoint;
   private String attemptedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
-  private Entry endpointStatus;
   private DevicePersistent persistentData;
 
   /**
@@ -717,7 +715,6 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    appliedEndpoint = toJsonString(configuration.endpoint);
     mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -905,7 +902,6 @@ public class Pubber {
       publishSynchronousState();
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
-      appliedEndpoint = null;
     } catch (Exception e) {
       try {
         error("Reconfigure failed, attempting connection to last working endpoint", e);
