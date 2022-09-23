@@ -14,7 +14,7 @@ current=$(git branch --show-current)
 git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
   while read local remote; do
     if [[ -n $remote ]]; then
-	git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || continue
+        git rev-list --left-right ${local}...${remote} -- 2>/dev/null >/tmp/git_upstream_status_delta || continue
 	LEFT_AHEAD=$(grep -c '^<' /tmp/git_upstream_status_delta)
 	RIGHT_AHEAD=$(grep -c '^>' /tmp/git_upstream_status_delta)
 	if [ "$LEFT_AHEAD" != 0 -a "$RIGHT_AHEAD" != 0 ]; then
@@ -56,6 +56,8 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
         description="(git config branch.$local.description 'TEST DESCRIPTION')"
     fi
 
+    difflines=$(git diff --stat master $local -- | egrep "files? changed" | sed -E 's/[a-z ]*//g')
+
     # Add a space after description if it exists
     if [[ -n $description ]]; then
         description="$description "
@@ -66,5 +68,5 @@ git for-each-ref --format="%(refname:short) %(upstream:short)" refs/heads | \
         local="${local}*"
     fi
 
-    printf "%-15s%-35s%s(%s)\n" $local "$OFFSET$POFF" "$description" "$merged"
+    printf "%-15s%-30s%-20s%s(%s)\n" $local "$OFFSET$POFF" "$difflines" "$description" "$merged"
 done
