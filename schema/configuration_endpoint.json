@@ -20,6 +20,10 @@
     },
     "client_id": {
       "type": "string"
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
     }
   },
   "required": [

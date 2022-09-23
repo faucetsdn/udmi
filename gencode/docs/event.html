@@ -89,7 +89,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#system_timestamp" onclick="anchorLink('system_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#system_timestamp" onclick="anchorLink('system_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 timestamp the event payload was generated</p>
 </span>
             
@@ -99,7 +99,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+<br/><div id="system_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -270,7 +270,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_logentries_items_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span>
+<br/><div id="system_logentries_items_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2026,7 +2026,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#system_logentries_items_timestamp" onclick="anchorLink('system_logentries_items_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#system_logentries_items_timestamp" onclick="anchorLink('system_logentries_items_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
@@ -2036,7 +2036,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_logentries_items_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span>
+<br/><div id="system_logentries_items_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2095,7 +2095,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="system_logentries_items_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span>
+<br/><div id="system_logentries_items_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2541,7 +2541,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#pointset_timestamp" onclick="anchorLink('pointset_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#pointset_timestamp" onclick="anchorLink('pointset_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 timestamp the telemetry event was generated</p>
 </span>
             
@@ -2551,7 +2551,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="pointset_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+<br/><div id="pointset_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2692,7 +2692,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
                     <br/>
 
@@ -2780,11 +2780,11 @@
 
             <br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="pointset_points_pattern1_present_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">24.1</span>
+<br/><div id="pointset_points_pattern1_present_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">24.1</span><span class="w"></span>
 </pre></div>
-</div><div id="pointset_points_pattern1_present_value_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;running&quot;</span>
+</div><div id="pointset_points_pattern1_present_value_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;running&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="pointset_points_pattern1_present_value_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">4</span>
+</div><div id="pointset_points_pattern1_present_value_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">4</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2863,7 +2863,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#discovery_timestamp" onclick="anchorLink('discovery_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#discovery_timestamp" onclick="anchorLink('discovery_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 timestamp the discover telemetry event was generated</p>
 </span>
             
@@ -2873,7 +2873,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+<br/><div id="discovery_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -2949,7 +2949,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#discovery_generation" onclick="anchorLink('discovery_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#discovery_generation" onclick="anchorLink('discovery_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>The event's discovery scan trigger's generation timestamp</p>
 </span>
             
@@ -2959,7 +2959,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_generation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+<br/><div id="discovery_generation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -3049,7 +3049,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_status_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span>
+<br/><div id="discovery_status_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -4595,7 +4595,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#discovery_status_timestamp" onclick="anchorLink('discovery_status_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#discovery_status_timestamp" onclick="anchorLink('discovery_status_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
@@ -4605,7 +4605,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_status_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span>
+<br/><div id="discovery_status_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -4657,7 +4657,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_status_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span>
+<br/><div id="discovery_status_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -4802,7 +4802,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^iot|bacnet|ipv4|ipv6|ethmac$</code></span>
                     <br/>
 
@@ -4953,7 +4953,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[-_.:/a-zA-Z0-9]+$</code></span>
                     <br/>
 
@@ -5534,7 +5534,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_uniqs_pattern1_status_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span>
+<br/><div id="discovery_uniqs_pattern1_status_message_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Point is not writable&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -7500,7 +7500,7 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#discovery_uniqs_pattern1_status_timestamp" onclick="anchorLink('discovery_uniqs_pattern1_status_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#discovery_uniqs_pattern1_status_timestamp" onclick="anchorLink('discovery_uniqs_pattern1_status_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>Timestamp the condition was triggered, or most recently updated</p>
 </span>
             
@@ -7510,7 +7510,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_uniqs_pattern1_status_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span>
+<br/><div id="discovery_uniqs_pattern1_status_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2018-08-26T21:39:28.364Z&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -7576,7 +7576,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_uniqs_pattern1_status_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span>
+<br/><div id="discovery_uniqs_pattern1_status_level_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">600</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -7884,7 +7884,7 @@
 
             <br/>
 <div class="badge badge-secondary">Example:</div>
-<br/><div id="discovery_system_hardware_make_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Google&quot;</span>
+<br/><div id="discovery_system_hardware_make_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Google&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -7943,11 +7943,11 @@
 
             <br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="discovery_system_hardware_model_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 5&quot;</span>
+<br/><div id="discovery_system_hardware_model_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 5&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="discovery_system_hardware_model_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 6&quot;</span>
+</div><div id="discovery_system_hardware_model_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 6&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="discovery_system_hardware_model_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 6 Pro&quot;</span>
+</div><div id="discovery_system_hardware_model_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 6 Pro&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -8006,9 +8006,9 @@
 
             <br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="discovery_system_hardware_sku_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;GF5KQ&quot;</span>
+<br/><div id="discovery_system_hardware_sku_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;GF5KQ&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="discovery_system_hardware_sku_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;4215612&quot;</span>
+</div><div id="discovery_system_hardware_sku_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;4215612&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
@@ -8067,11 +8067,11 @@
 
             <br/>
 <div class="badge badge-secondary">Examples:</div>
-<br/><div id="discovery_system_hardware_rev_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;A&quot;</span>
+<br/><div id="discovery_system_hardware_rev_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;A&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="discovery_system_hardware_rev_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;B&quot;</span>
+</div><div id="discovery_system_hardware_rev_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;B&quot;</span><span class="w"></span>
 </pre></div>
-</div><div id="discovery_system_hardware_rev_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;1&quot;</span>
+</div><div id="discovery_system_hardware_rev_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;1&quot;</span><span class="w"></span>
 </pre></div>
 </div>
             </div>
