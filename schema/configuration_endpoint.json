@@ -23,7 +23,7 @@
     },
     "nonce": {
       "type": "string",
-      "pattern": "^[0-9A-Za-z=-/:]{1,}$"
+      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
     }
   },
   "required": [
