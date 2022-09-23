@@ -1,10 +1,8 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import org.junit.Test;
@@ -21,36 +19,20 @@ import udmi.schema.Level;
 
 public class BlobsetSequences extends SequenceBase {
 
-  private static final String ENDPOINT_CONFIG_HOSTNAME_PAYLOAD =
+  private static final String ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD =
       "{ "
           + "  \"protocol\": \"mqtt\",\n"
-          + "  \"client_id\": \"%s\",\n"
-          + "  \"hostname\": \"%s\"\n"
+          + "  \"client_id\": \"test_project/device\",\n"
+          + "  \"hostname\": \"localhost\"\n"
           + "}";
-
-  // TODO: Build this from the site model config.
-  private static final String ENDPOINT_CONFIG_CLIENT_ID =
-      "projects/bos-johnrandolph-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1";
-  private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
-
-  private String generateEndpointConfigBase64Payload(String hostname) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
-    return Base64.getEncoder().encodeToString(payload.getBytes());
-  }
-
-  private String generateNonce() {
-    byte[] nonce = new byte[32];
-    new SecureRandom().nextBytes(nonce);
-    return Base64.getEncoder().encodeToString(nonce);  
-  }
 
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload("localhost");
+    config.base64 = Base64.getEncoder()
+        .encodeToString(ENDPOINT_CONFIG_CONNECTION_ERROR_PAYLOAD.getBytes());
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
@@ -64,26 +46,4 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  @Test
-  @Description("Push endpoint config message to device that results in success.")
-  public void endpoint_config_connection_success() {
-    BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
-    config.content_type = "application/json";
-    config.nonce = generateNonce();
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
-
-    untilTrue("blobset entry config status is success", () -> {
-      BlobPhase phase = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-      Entry stateStatus = deviceState.system.status;
-      return phase != null
-          && phase.equals(BlobPhase.FINAL)
-          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value();
-    });
-  }
 }

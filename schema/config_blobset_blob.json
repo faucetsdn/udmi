@@ -20,12 +20,8 @@
     },
     "sha256": {
       "type": "string",
-      "description": "Expected hash of the retrieved resource",
+      "description": "Expected hash of the oded content",
       "pattern": "^[0-9a-f]{64}$"
-    },
-    "nonce": {
-      "type": "string",
-      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
     }
   },
   "oneOf": [

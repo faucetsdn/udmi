@@ -10,7 +10,6 @@ class BlobBlobsetConfig:
     self.base64 = None
     self.url = None
     self.sha256 = None
-    self.nonce = None
 
   @staticmethod
   def from_dict(source):
@@ -22,7 +21,6 @@ class BlobBlobsetConfig:
     result.base64 = source.get('base64')
     result.url = source.get('url')
     result.sha256 = source.get('sha256')
-    result.nonce = source.get('nonce')
     return result
 
   @staticmethod
@@ -53,6 +51,4 @@ class BlobBlobsetConfig:
       result['url'] = self.url # 5
     if self.sha256:
       result['sha256'] = self.sha256 # 5
-    if self.nonce:
-      result['nonce'] = self.nonce # 5
     return result

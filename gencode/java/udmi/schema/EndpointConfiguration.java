@@ -22,8 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "protocol",
     "hostname",
     "port",
-    "client_id",
-    "nonce"
+    "client_id"
 })
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
@@ -51,8 +50,6 @@ public class EndpointConfiguration {
      */
     @JsonProperty("client_id")
     public String client_id;
-    @JsonProperty("nonce")
-    public String nonce;
 
     @Override
     public int hashCode() {
@@ -60,7 +57,6 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
-        result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         return result;
     }
@@ -74,7 +70,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return ((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
+        return (((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
     }
 
     @Generated("jsonschema2pojo")
