@@ -142,6 +142,7 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  public static final String PUBBER_LOG_CATEGORY = "device.log";
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -1280,7 +1281,7 @@ public class Pubber {
   private void pubberLogMessage(String logMessage, Level level, String timestamp,
       String detail) {
     Entry logEntry = new Entry();
-    logEntry.category = "pubber";
+    logEntry.category = PUBBER_LOG_CATEGORY;
     logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
