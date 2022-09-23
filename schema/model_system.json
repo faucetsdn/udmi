@@ -43,6 +43,21 @@
         "site"
       ]
     },
+    "hardware": {
+      "$ref": "file:model_system_hardware.json"
+    },
+    "software": {
+      "additionalProperties": false,
+      "description": "A collection of items which can be used to describe version of software running on a device",
+      "examples": ["firmware", "os", "driver"],
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },    
     "physical_tag": {
       "description": "Information used to print a physical QR code label.",
       "type": "object",

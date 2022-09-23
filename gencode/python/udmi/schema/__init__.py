@@ -42,6 +42,7 @@ from .model_localnet_family import FamilyLocalnetModel
 from .model_pointset import PointsetModel
 from .model_pointset_point import PointPointsetModel
 from .model_system import SystemModel
+from .model_system_hardware import SystemHardware
 from .model_testing import TestingModel
 from .model_testing_target import TargetTestingModel
 from .options_pubber import PubberOptions

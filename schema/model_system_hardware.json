@@ -1,0 +1,33 @@
+{
+    "title": "SystemHardware",
+    "description": "A collection of fields which describe the physical hardware of the device.",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "properties": {
+      "make": {
+        "description": "The manufacturer of the device",
+        "type": "string",
+        "examples": ["Google"]
+      },
+      "model": {
+        "description": "The model of the device",
+        "examples" : ["Pixel 5", "Pixel 6", "Pixel 6 Pro"],
+        "type": "string"
+      },
+      "sku": {
+        "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
+        "type": "string",
+        "examples": ["GF5KQ", "4215612"]
+      },
+      "rev": {
+        "description": "Hardware revision of the device",
+        "type": "string",
+        "examples": ["A", "B", "1"]
+      }
+    },
+    "required": [
+      "make",
+      "model"
+    ]
+  }
