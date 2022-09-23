@@ -17,16 +17,9 @@ scopes of device data:
 
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Spotter**: A on-prem node responsible for handling discovery scans of devices.
 * **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
 * **Engine**: Mapping engine that uses hueristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
 * **Pipeline**: Ultimate recepient of pointset information, The thing that cares about 'temperature' in a room.
-
-Notes & Caveats:
-1. Only "interesting" messages are shown in the diagram, there's other control flow things that go on (e.g.
-to configure when the *Spotter* should activate) to complete the overall flow.
-2. This shows the flow for a direct-connect (no IoT Gateway involved) device. The overall flow for a proxied device
-(with IoT Gateway) would more or less be the same with some additional intermediaries.
 
 ```mermaid
 sequenceDiagram
@@ -39,7 +32,7 @@ sequenceDiagram
   activate Agent
   Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
-    Devices->>Engine: DISCOVERY EVENT<br/>(fieldbus_id)<br/><properties>
+    Devices->>Engine: DISCOVERY EVENT<br/>(scan_id)<br/><properties>
   end
   deactivate Agent
   Note over Agent, Engine: Mapping Start
@@ -47,7 +40,7 @@ sequenceDiagram
   Agent->>Engine: MAPPING CONFIG
   Engine->>Agent: MAPPING STATE
   loop Devices
-    Engine->>Agent: MAPPING EVENT<br/>(guid, fieldbus_id, device_id)<br/><translations>
+    Engine->>Agent: MAPPING EVENT<br/>(guid, scan_id, device_id)<br/><translations>
     Agent->>Engine: MAPPING COMMAND<br/>(device_id, device_num_id)
     Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
   end
@@ -55,10 +48,10 @@ sequenceDiagram
   Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)
 ```
 
-1. **[Discovery Config](../../tests/config.tests/discovery.json)** indicates that the _spotter_ should do the needful and scan the local network.
 1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
   * "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
-2. **[Discovery Events](../../tests/event_discovery.tests/enumeration.json)** wraps the device info from the _spotter_ into a UDMI-normalized format, e.g.:
+2. **[Discovery Events](../../tests/event_discovery.tests/enumeration.json)** wraps the device info from the discovery
+   into a UDMI-normalized format, e.g.:
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
 3. **[Mapping Config](../../tests/config_mapping.tests/mapping.json)** from the _agent_ indicates that the _engine_ should export responses.
 3. **[Mapping Events](../../tests/event_mapping.tests/mapping.json)** from the _engine_ contain actual calculated point mappings:
