@@ -80,7 +80,7 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Waiting for system to run for a bit...
-timeout 60s tail -f $VALIDATOR_OUT || true
+timeout 80s tail -f $VALIDATOR_OUT || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
