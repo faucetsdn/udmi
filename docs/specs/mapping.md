@@ -35,12 +35,15 @@ sequenceDiagram
   participant Agent
   participant Engine
   participant Pipeline
-  Note over Agent: Generation Start
+  Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
     Devices->>Engine: DISCOVERY EVENT<br/>(fieldbus_id)<br/><properties>
   end
+  deactivate Agent
+  Note over Agent, Engine: Mapping Start
+  activate Engine
   Agent->>Engine: MAPPING CONFIG
   Engine->>Agent: MAPPING STATE
   loop Devices
@@ -48,8 +51,7 @@ sequenceDiagram
     Agent->>Engine: MAPPING COMMAND<br/>(device_id, device_num_id)
     Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
   end
-  deactivate Agent
-  Note over Agent: Generation End
+  deactivate Engine
   Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)
 ```
 
