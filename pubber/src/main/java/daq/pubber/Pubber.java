@@ -395,7 +395,7 @@ public class Pubber {
     persistentData =
         persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
             : new DevicePersistent();
-    persistentData.restarts = Objects.requireNonNullElse(persistentData.restarts, 0) + 1;
+    persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     writePersistentStore();
   }
 
@@ -535,7 +535,7 @@ public class Pubber {
   private void sendSystemMetrics() {
     SystemEvent systemEvent = new SystemEvent();
     systemEvent.metrics = new Metrics();
-    systemEvent.metrics.restart_count = persistentData.restarts;
+    systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;

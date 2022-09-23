@@ -6,7 +6,7 @@
     "endpoint": {
       "$ref": "file:configuration_endpoint.json"
     },
-    "restarts": {
+    "restart_count": {
       "type": "integer"
     }
   }

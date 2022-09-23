@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "endpoint",
-    "restarts"
+    "restart_count"
 })
 @Generated("jsonschema2pojo")
 public class DevicePersistent {
@@ -31,14 +31,14 @@ public class DevicePersistent {
     @JsonProperty("endpoint")
     @JsonPropertyDescription("Parameters to define an MQTT endpoint")
     public EndpointConfiguration endpoint;
-    @JsonProperty("restarts")
-    public Integer restarts;
+    @JsonProperty("restart_count")
+    public Integer restart_count;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.restarts == null)? 0 :this.restarts.hashCode()));
         result = ((result* 31)+((this.endpoint == null)? 0 :this.endpoint.hashCode()));
+        result = ((result* 31)+((this.restart_count == null)? 0 :this.restart_count.hashCode()));
         return result;
     }
 
@@ -51,7 +51,7 @@ public class DevicePersistent {
             return false;
         }
         DevicePersistent rhs = ((DevicePersistent) other);
-        return (((this.restarts == rhs.restarts)||((this.restarts!= null)&&this.restarts.equals(rhs.restarts)))&&((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint))));
+        return (((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint)))&&((this.restart_count == rhs.restart_count)||((this.restart_count!= null)&&this.restart_count.equals(rhs.restart_count))));
     }
 
 }

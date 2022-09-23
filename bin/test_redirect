@@ -103,4 +103,11 @@ bin/reset_config $site_path $project_id $device_id shutdown_config.json
 echo And let it settle for last start...
 sleep 20
 
+# Quick sanity check that the restart_count persistent store is handled correctly.
+restarts=$(jq .restart_count $out_base/persistent_data.json)
+if [[ $restarts != 2 ]]; then
+    echo Restart count incorrect.
+    false
+fi
+
 echo Done with redirect test.
