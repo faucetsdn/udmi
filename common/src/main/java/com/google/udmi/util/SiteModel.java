@@ -222,7 +222,15 @@ public class SiteModel {
   }
 
   public File getDeviceWorkingDir(String deviceId) {
-    return new File(sitePath + "/out/devices/" + deviceId);
+    File file = new File(sitePath + "/out/devices/" + deviceId);
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+    if (!file.isDirectory()) {
+      throw new RuntimeException(
+          "Device working dir is not a valid directory: " + file.getAbsolutePath());
+    }
+    return file;
   }
 
   public static class ClientInfo {
