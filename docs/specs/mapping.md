@@ -32,7 +32,7 @@ sequenceDiagram
   activate Agent
   Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
-    Devices->>Engine: DISCOVERY EVENT<br/>(scan_id)<br/><properties>
+    Devices->>Engine: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
   end
   deactivate Agent
   Note over Agent, Engine: Mapping Start
@@ -40,12 +40,12 @@ sequenceDiagram
   Agent->>Engine: MAPPING CONFIG
   Engine->>Agent: MAPPING STATE
   loop Devices
-    Engine->>Agent: MAPPING EVENT<br/>(guid, scan_id, device_id)<br/><translations>
-    Agent->>Engine: MAPPING COMMAND<br/>(device_id, device_num_id)
+    Engine->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations>
+    Agent->>Engine: MAPPING COMMAND<br/>(device_id, *device_num_id)
     Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
   end
   deactivate Engine
-  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)
+  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)<br/><pointset>
 ```
 
 1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):

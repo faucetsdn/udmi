@@ -8,7 +8,6 @@
 ## Device Capabilities
 - [Messages](../messages/)
 - [Connection Models](connecting.md)
-- [Discovery](discovery.md)
 - [IoT Gateway](gateway.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
@@ -21,7 +20,9 @@
 - [Metadata](metadata.md)
 - [Site Model](site_model.md)
 - [Onboarding](onboarding.md)
-- [Mapping](mapping.md)
+  - [Discovery](discovery.md)
+  - [Mapping](mapping.md)
+  - [Provisioning](provisioning.md)
 
 ## Cloud Environment
 - [Message Walk](message_walk.md)
