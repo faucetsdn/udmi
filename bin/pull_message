@@ -21,13 +21,14 @@ subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
 subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
 timestamp=$(jq -r '.[0].message.data' $out_file 2>/dev/null | base64 --decode | jq -r .timestamp 2> /dev/null) || true
+data=$(jq -r .[0].message.data /tmp/captured.json  | base64 --decode)
 
 if [[ $subType == null ]]; then
     subType=event
 fi
 
 if [[ $subFolder != null ]]; then
-    echo $subFolder $subType for $deviceId at $timestamp
+    echo $subFolder $subType $deviceId $timestamp $data
 else
     echo No matching messages found.
 fi
