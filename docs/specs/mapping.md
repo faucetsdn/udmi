@@ -18,7 +18,7 @@ scopes of device data:
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Engine**: Mapping engine that uses hueristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
+* **Mapper**: Mapping engine that uses hueristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
 * **Pipeline**: Ultimate recepient of pointset information, The thing that cares about 'temperature' in a room.
 
 ```mermaid
@@ -26,25 +26,25 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices
   participant Agent
-  participant Engine
+  participant Mapper
   participant Pipeline
   Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
-    Devices->>Engine: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
+    Devices->>Mapper: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
   end
   deactivate Agent
-  Note over Agent, Engine: Mapping Start
-  activate Engine
-  Agent->>Engine: MAPPING CONFIG
-  Engine->>Agent: MAPPING STATE
+  Note over Agent, Mapper: Mapping Start
+  activate Mapper
+  Agent->>Mapper: MAPPING CONFIG
+  Mapper->>Agent: MAPPING STATE
   loop Devices
-    Engine->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations>
-    Agent->>Engine: MAPPING COMMAND<br/>(device_id, *device_num_id)
+    Mapper->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations>
+    Agent->>Mapper: MAPPING COMMAND<br/>(device_id, *device_num_id)
     Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
   end
-  deactivate Engine
+  deactivate Mapper
   Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)<br/><pointset>
 ```
 
@@ -53,8 +53,8 @@ sequenceDiagram
 2. **[Discovery Events](../../tests/event_discovery.tests/enumeration.json)** wraps the device info from the discovery
    into a UDMI-normalized format, e.g.:
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
-3. **[Mapping Config](../../tests/config_mapping.tests/mapping.json)** from the _agent_ indicates that the _engine_ should export responses.
-3. **[Mapping Events](../../tests/event_mapping.tests/mapping.json)** from the _engine_ contain actual calculated point mappings:
+3. **[Mapping Config](../../tests/config_mapping.tests/mapping.json)** from the _agent_ indicates that the _mapper_ should export responses.
+3. **[Mapping Events](../../tests/event_mapping.tests/mapping.json)** from the _mapper_ contain actual calculated point mappings:
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
 4. *(Onboard Info)* are sent to the _pipeline_ to onboard a device (contents are defined by _pipeline_ and out of scope for UDMI).
 8. **[Telemetry Events](../../tests/event_pointset.tests/example.json)** are data events from _device_ to _pipeline_... business as usual:
