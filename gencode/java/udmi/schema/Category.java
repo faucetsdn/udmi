@@ -135,7 +135,7 @@ public class Category {
     public static final Level VALIDATION_DEVICE_RECEIVE_LEVEL = DEBUG;
     static { LEVEL.put(VALIDATION_DEVICE_RECEIVE, DEBUG); }
 
-    // Regarging the actual validation results.
+    // Regarding the actual validation results.
     public static final String VALIDATION_DEVICE_RESULT = "validation.device.result";
     public static final Level VALIDATION_DEVICE_RESULT_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_DEVICE_RESULT, INFO); }

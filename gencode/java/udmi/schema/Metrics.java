@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Metrics {
 
     @JsonProperty("restart_count")
-    public Double restart_count;
+    public Integer restart_count;
     @JsonProperty("mem_total_mb")
     public Double mem_total_mb;
     @JsonProperty("mem_free_mb")
