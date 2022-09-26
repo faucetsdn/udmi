@@ -52,7 +52,7 @@ while read local remote; do
     fi
     
     if [[ -z $pmsg && -z $remote ]]; then
-        pmsg=" (remote not configured, use 'git push --set-upstream-to $origin $local' to configure)"
+        pmsg=" (remote not configured, use 'git push --set-upstream $origin $local' to configure)"
     fi
     
     echo Updating branch $local$pmsg...
@@ -69,6 +69,10 @@ while read local remote; do
         masterdiff=$(git diff $parent | wc -l) || true
         if [[ $local != $parent && $masterdiff -eq 0 ]]; then
             echo "  git branch -D $local  # Branch is identical to $parent, use to delete"
+            masteroff=$(git rev-list $parent...$local -- | wc -l) || true
+            if [[ $masteroff -ne 0 ]]; then
+                echo "  git switch $local && git reset --hard $parent && git push --force  # To squash redundant commits"
+            fi
         fi
     fi
 
