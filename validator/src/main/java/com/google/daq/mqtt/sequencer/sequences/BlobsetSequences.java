@@ -28,10 +28,18 @@ public class BlobsetSequences extends SequenceBase {
           + "  \"hostname\": \"%s\"\n"
           + "}";
 
-  // TODO: Build this from the site model config.
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
-      "projects/bos-johnrandolph-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1";
+      "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
+
+  private String generateEndpointConfigClientId() {
+    return String.format(
+        ENDPOINT_CONFIG_CLIENT_ID,
+        projectId,
+        cloudRegion,
+        registryId,
+        deviceId);
+  }
 
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
@@ -65,8 +73,10 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Push endpoint config message to device that results in success.")
-  public void endpoint_config_connection_success() {
+  @Description(
+      "Push endpoint config message to device that results in successful reconnect to "
+          + "the same endpoint.")
+  public void endpoint_config_connection_success_reconnect() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
     config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
