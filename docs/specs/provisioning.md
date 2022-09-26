@@ -18,8 +18,11 @@ sequenceDiagram
   participant Agent as Agent<br/>(w/ Mapping)
   participant Pipeline
   Devices->>Agent: DISCOVERY EVENT
-  Agent->>Registry: (create device)
-  Registry->>Agent: (device_num_id)
-  Agent->>Pipeline: (config device)
+  Note over Agent: Mapping
+  loop Devices
+    Agent->>Registry: (*device_id)
+    Registry->>Agent: (*device_num_id)
+    Agent->>Pipeline: (*guid, device_id, device_num_id)
+  end
   Devices->>Pipeline: TELEMETRY EVENT
 ```

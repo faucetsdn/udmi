@@ -31,7 +31,7 @@ sequenceDiagram
   Note over Devices, Agent: Discovery Start
   activate Agent
   loop Devices
-    Devices->>Mapper: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
+    Devices->>Mapper: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
   end
   deactivate Agent
   Note over Agent, Mapper: Mapping Start

@@ -39,20 +39,11 @@ sequenceDiagram
   Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Spotter: DISCOVERY CONFIG<br/>()
-  loop Devices
-    Devices->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
-  end
+  Devices->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
+  Note over Agent: Provisioning
+  Note over Agent: Mapping
+  Agent ->> Pipeline: (config device)
   deactivate Agent
-  Note over Agent, Mapper: Mapping Start
-  activate Mapper
-  Agent->>Mapper: MAPPING CONFIG
-  Mapper->>Agent: MAPPING STATE
-  loop Devices
-    Mapper->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations: *points>
-    Agent->>Mapper: MAPPING COMMAND<br/>(device_id, *device_num_id)
-    Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations: points>
-  end
-  deactivate Mapper
   Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id, points)<br/><pointset>
 ```
 
