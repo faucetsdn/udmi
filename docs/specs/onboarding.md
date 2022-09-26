@@ -25,12 +25,12 @@ specific failure modes:
 ```mermaid
 flowchart LR
   D[Devices]
-  M[Management]
+  A[Agent]
   P[Pipeline]
   D -- Telemetry --> P
-  D -- Discovery --> M
-  M -- Provisioning --> P
-  M -- Mapping --> M
+  D -- Discovery --> A
+  A -- Provisioning --> P
+  A -- Mapping --> M
 ```
 
 * Without _discovery_, the backend system might not actually reflect reality. The on-prem
