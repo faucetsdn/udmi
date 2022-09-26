@@ -8,7 +8,7 @@ import { DevicesService } from './devices.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { compact, union } from 'lodash';
+import { compact, union } from 'lodash-es';
 
 @Component({
   templateUrl: './devices.component.html',
