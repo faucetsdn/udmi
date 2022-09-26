@@ -22,6 +22,17 @@ all of them together constitutes _automation_, which is a key step towards enabl
 highligy maintainable systems. The absense of each is also indicative of certain
 specific failure modes:
 
+```mermaid
+flowchart LR
+  Devices[DEVICE STATE]
+  Management[DEVICE STATE]
+  Pipeline[DEVICE STATE]
+  Device -- Telemetry --> Pipeline
+  Devices -- Discover --> Management
+  Management -- Provision --> Pipeline
+  Management -- Mapping --> Management
+```
+
 * Without _discovery_, the backend system might not actually reflect reality. The on-prem
 devices and capabilities might be different than what is expected to be there!
 * Without _mapping_, the whole system is formulaic and is only exactly what it's told

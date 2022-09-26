@@ -30,7 +30,6 @@ sequenceDiagram
   participant Pipeline
   Note over Devices, Agent: Discovery Start
   activate Agent
-  Agent->>Devices: DISCOVERY CONFIG<br/>()
   loop Devices
     Devices->>Mapper: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
   end
