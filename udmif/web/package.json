@@ -17,7 +17,7 @@
     "*.{js,html,ts,json,scss}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   },
   "dependencies": {
-    "@abacritt/angularx-social-login": "~1.0.2",
+    "@abacritt/angularx-social-login": "~1.2.5",
     "@angular/animations": "^14.2.3",
     "@angular/cdk": "^14.2.2",
     "@angular/common": "^14.2.3",
