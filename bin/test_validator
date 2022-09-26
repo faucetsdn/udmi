@@ -42,6 +42,8 @@ echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
+
+# Just give it a head-start, actal waiting chack is the loop below
 sleep 10
 
 for i in `seq 1 $WAITING`; do

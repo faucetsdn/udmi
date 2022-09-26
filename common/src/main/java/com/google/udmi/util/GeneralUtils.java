@@ -57,12 +57,12 @@ public class GeneralUtils {
     }
   }
 
-  public static String toJsonString(Object target) {
+  public static String toJsonString(Object object) {
     try {
-      if (target == null) {
+      if (object == null) {
         return null;
       }
-      return OBJECT_MAPPER.writeValueAsString(target);
+      return OBJECT_MAPPER.writeValueAsString(object);
     } catch (Exception e) {
       throw new RuntimeException("While converting object to json", e);
     }
