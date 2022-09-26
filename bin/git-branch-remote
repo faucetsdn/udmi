@@ -43,7 +43,7 @@ git branch -a | while read branch; do
     if git branch | fgrep $branch > /dev/null; then
         lremote=$(git config branch.$branch.remote) || true
         if [[ -z $lremote ]]; then
-            echo "  git branch --set-upstream-to=$leader $branch  # Reconnect orphaned remote branch"
+            echo "  git branch --set-upstream=$leader $branch  # Reconnect orphaned remote branch"
         fi
         continue  # Branch locally, ignore remote...
     fi
