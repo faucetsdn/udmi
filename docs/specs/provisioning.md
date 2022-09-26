@@ -14,8 +14,8 @@ Part of the overall [onboarding](onboarding.md) process.
 sequenceDiagram
   %%{wrap}%%
   participant Devices
-  participant Regsitry
-  participant Agent as Agent<br/>(Mapping)
+  participant Registry
+  participant Agent as Agent<br/>(w/ Mapping)
   participant Pipeline
   Devices->>Agent: DISCOVERY EVENT
   Agent->>Registry: (create device)

@@ -27,18 +27,20 @@ The overall discovery sequence involves multiple components that work together t
 * **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
 * **Pipeline**: Ultimate recepient of pointset information, The thing that cares about 'temperature' in a room.
 
+(The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
+
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
   participant Devices
   participant Spotter
-  participant Agent & Mapper as Agent
+  participant Agent
   participant Pipeline
   Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Spotter: DISCOVERY CONFIG<br/>()
   loop Devices
-    Devices->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties>
+    Devices->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
   end
   deactivate Agent
   Note over Agent, Mapper: Mapping Start
@@ -46,12 +48,12 @@ sequenceDiagram
   Agent->>Mapper: MAPPING CONFIG
   Mapper->>Agent: MAPPING STATE
   loop Devices
-    Mapper->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations>
+    Mapper->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations: *points>
     Agent->>Mapper: MAPPING COMMAND<br/>(device_id, *device_num_id)
-    Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
+    Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations: points>
   end
   deactivate Mapper
-  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)<br/><pointset>
+  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id, points)<br/><pointset>
 ```
 
 ## Scanning
