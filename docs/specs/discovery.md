@@ -39,7 +39,7 @@ sequenceDiagram
   Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Spotter: DISCOVERY CONFIG<br/>()
-  Devices--Spotter: fieldbus
+  Devices-->Spotter: fieldbus
   Spotter->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
   Note over Agent: Provisioning
   Note over Agent: Mapping
