@@ -24,7 +24,7 @@ The overall mapping sequence involves multiple components that work together to 
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
-  participant Devices
+  participant Devices as Devices<br/>(w/ Spotter)
   participant Agent
   participant Mapper
   participant Pipeline

@@ -13,7 +13,7 @@ Part of the overall [onboarding](onboarding.md) process.
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
-  participant Devices
+  participant Devices as Devices<br/>(w/ Spotter)
   participant Registry
   participant Agent as Agent<br/>(w/ Mapping)
   participant Pipeline

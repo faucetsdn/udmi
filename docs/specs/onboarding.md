@@ -30,7 +30,7 @@ flowchart LR
   D -- Telemetry --> P
   D -- Discovery --> A
   A -- Provisioning --> P
-  A -- Mapping --> M
+  A -- Mapping --> A
 ```
 
 * Without _discovery_, the backend system might not actually reflect reality. The on-prem

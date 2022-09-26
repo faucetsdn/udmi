@@ -34,12 +34,13 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices
   participant Spotter
-  participant Agent
+  participant Agent as Agent<br/>(w/ Mapping)
   participant Pipeline
   Note over Devices, Agent: Discovery Start
   activate Agent
   Agent->>Spotter: DISCOVERY CONFIG<br/>()
-  Devices->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
+  Devices--Spotter: fieldbus
+  Spotter->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
   Note over Agent: Provisioning
   Note over Agent: Mapping
   Agent ->> Pipeline: (config device)
