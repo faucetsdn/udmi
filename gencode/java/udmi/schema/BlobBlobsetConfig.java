@@ -25,7 +25,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "content_type",
     "base64",
     "url",
-    "sha256"
+    "sha256",
+    "nonce"
 })
 @Generated("jsonschema2pojo")
 public class BlobBlobsetConfig {
@@ -46,20 +47,23 @@ public class BlobBlobsetConfig {
     @JsonProperty("url")
     public URI url;
     /**
-     * Expected hash of the oded content
+     * Expected hash of the retrieved resource
      * 
      */
     @JsonProperty("sha256")
-    @JsonPropertyDescription("Expected hash of the oded content")
+    @JsonPropertyDescription("Expected hash of the retrieved resource")
     public String sha256;
+    @JsonProperty("nonce")
+    public String nonce;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
-        result = ((result* 31)+((this.base64 == null)? 0 :this.base64 .hashCode()));
         result = ((result* 31)+((this.content_type == null)? 0 :this.content_type.hashCode()));
         result = ((result* 31)+((this.sha256 == null)? 0 :this.sha256 .hashCode()));
+        result = ((result* 31)+((this.base64 == null)? 0 :this.base64 .hashCode()));
+        result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.url == null)? 0 :this.url.hashCode()));
         return result;
     }
@@ -73,7 +77,7 @@ public class BlobBlobsetConfig {
             return false;
         }
         BlobBlobsetConfig rhs = ((BlobBlobsetConfig) other);
-        return ((((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.base64 == rhs.base64)||((this.base64 != null)&&this.base64 .equals(rhs.base64))))&&((this.content_type == rhs.content_type)||((this.content_type!= null)&&this.content_type.equals(rhs.content_type))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
+        return (((((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.content_type == rhs.content_type)||((this.content_type!= null)&&this.content_type.equals(rhs.content_type))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.base64 == rhs.base64)||((this.base64 != null)&&this.base64 .equals(rhs.base64))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
     }
 
 
