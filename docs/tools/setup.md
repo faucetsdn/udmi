@@ -14,22 +14,18 @@ As a minimum, to run or deploy the included tools, the following software will n
 to be installed on your development system if it's not already there.
 
 *   _JDK v11_
-*   _NPM_ & _Node JS_
 *   _coreutils_
 *   _jq_
 
 ## Cloud Prerequisites
 
-To use the included functions, you will be required to install the Google Cloud SDK
-and Firebase CLI. The [cloud setup guidance](../cloud/gcp/cloud_setup.md) and 
-[dashboard setup guidance](../cloud/gcp/dashboard.md) provide additional 
-guidance their installation.
+To use the included functions, you will be required to install the Google Cloud SDK.
+The [cloud setup guidance](../cloud/gcp/cloud_setup.md) provides additional guidance.
 
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required
     for GCP command-line utilities ('gcloud') 
-*   _Firebase CLI_ is required to deploy the Firebase Dashboards and GCP Cloud Functions
 
-All the tools working with Google Cloud Platform (GCP) projects use GCP's 
+Some of the tools working with Google Cloud Platform (GCP) projects use GCP's 
 [application default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default) 
 model for authenticating interaction with the cloud. Depending on your setup, 
 this can be used with end-user credentials (`gcloud auth login`) or with a 

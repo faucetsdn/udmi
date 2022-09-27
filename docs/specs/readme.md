@@ -13,6 +13,7 @@
 - [Point Mapping](point_mapping.md)
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
+- [Categories](categories.md)
 - [Log/Status Entries](entries.md)
 - [System Mode](system_mode.md)
 
