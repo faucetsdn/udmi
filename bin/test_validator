@@ -58,6 +58,9 @@ fi
 echo Started validator pid $vpid
 
 function pubber_bg {
+    echo
+    echo
+    echo
     did=$1
     shift
     outfile=$PUBBER_OUT.$did
@@ -83,6 +86,9 @@ function pubber_bg {
         cat $outfile
         return 1
     fi
+    echo
+    echo
+    echo
 }
 
 pubber_bg AHU-1 extraField=prlagle
@@ -90,6 +96,10 @@ pubber_bg AHU-22
 
 echo Waiting for system to run for a bit...
 timeout 60s tail -f $VALIDATOR_OUT || true
+
+echo
+echo
+echo
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
