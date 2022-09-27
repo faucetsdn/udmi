@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostBinding, Injector, OnInit, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { startCase, findIndex, some } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
@@ -28,7 +28,7 @@ export class SearchFilterComponent implements OnInit {
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
-  itemCtrl = new FormControl();
+  itemCtrl = new UntypedFormControl();
   filteredItems: Observable<ChipItem[]>; // the autocomplete list of options, filtered based on users input
   items: ChipItem[] = []; // list of chips
   allItems: ChipItem[] = []; // list of options, options will switch based on filterIndex
