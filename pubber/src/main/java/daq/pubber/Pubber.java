@@ -857,7 +857,6 @@ public class Pubber {
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
-<<<<<<< HEAD
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
         // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
