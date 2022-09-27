@@ -38,13 +38,14 @@ pubber/bin/build
 
 bin/reset_config $site_path $project_id $device_id
 
-bin/validator $site_path $project_id &
-vpid=$!
-sleep 10
-echo Started validator pid $vpid
-
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
+vpid=$!
+echo Started validator pid $vpid
+
+# Just give it a head-start, actual waiting check is the loop below
+sleep 10
+
 for i in `seq 1 $WAITING`; do
     if fgrep "Entering message loop" $VALIDATOR_OUT; then
         break
@@ -58,7 +59,6 @@ if [[ $i -eq $WAITING ]]; then
     cat $VALIDATOR_OUT
     false
 fi
-echo Started validator pid $vpid
 
 echo Writing pubber output to $PUBBER_OUT
 cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
@@ -80,7 +80,7 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 echo Waiting for system to run for a bit...
-timeout 60s tail -f $VALIDATOR_OUT || true
+timeout 30s tail -f $VALIDATOR_OUT || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true

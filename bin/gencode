@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+tmpfile=`mktemp`
+
 # Fix sort order difference on different platforms.
 export LC_ALL=C
 
@@ -11,6 +13,13 @@ fi
 if [[ -n $check ]]; then
     # This check must be run before gencode_docs is run
     bin/gencode_docs_examples check
+fi
+
+venv/bin/pip3 freeze > $tmpfile
+if ! diff etc/requirements.txt $tmpfile; then
+    echo etc/requirements.txt differences found
+    echo please run bin/setup_base
+    false
 fi
 
 bin/gencode_java

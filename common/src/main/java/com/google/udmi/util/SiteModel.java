@@ -221,6 +221,18 @@ public class SiteModel {
     return sitePath + "/validator/rsa_private.pkcs8";
   }
 
+  public File getDeviceWorkingDir(String deviceId) {
+    File file = new File(sitePath + "/out/devices/" + deviceId);
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+    if (!file.isDirectory()) {
+      throw new RuntimeException(
+          "Device working dir is not a valid directory: " + file.getAbsolutePath());
+    }
+    return file;
+  }
+
   public static class ClientInfo {
 
     public String cloudRegion;
