@@ -44,111 +44,81 @@ Some caveats:
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Update config:
-    * Set `system.min_loglevel` = `100`
-1. Wait for no interesting status
-1. Wait for clean config/state synced
-1. Wait for state synchronized
-1. Check that initial stable_config matches last_config
-1. Wait for log category `system.config.receive` level `DEBUG`
-1. Wait for has interesting status
-1. Wait for log category `system.config.parse` level `ERROR`
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
-1. Force reset config
-1. Wait for log category `system.config.receive` level `DEBUG`
-1. Wait for no interesting status
-1. Wait for last_config updated
-1. Wait for log category `system.config.apply` level `NOTICE`
-1. Wait for log category `system.config.parse` level `DEBUG`
-1. Test failed: timeout waiting for log category `system.config.parse` level `DEBUG`
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## device_config_acked
 
 Check that the device MQTT-acknowledges a sent config.
 
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## endpoint_config_connection_error
 
 Push endpoint config message to device that results in a connection error.
 
 1. Update config:
-    * Add `blobset` = { "blobs": {  } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `eyAgICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzLyVzL2xvY2F0aW9ucy8lcy9yZWdpc3RyaWVzLyVzL2RldmljZXMvJXMiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0=` } } }
 1. Wait for blobset entry config status is error
 
 ## endpoint_config_connection_success
 
 Push endpoint config message to device that results in success.
 
-1. Update config:
-    * Add `blobset` = { "blobs": {  } }
-1. Wait for blobset entry config status is success
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(Trying to receive message from inactive client)
+  java.lang.RuntimeException(While updating config block system)
 
 ## extra_config
 
 Check that the device correctly handles an extra out-of-schema field
 
-1. Update config:
-    * Set `system.min_loglevel` = `100`
-1. Wait for last_config not null
-1. Wait for system operational
-1. Wait for no interesting status
-1. Wait for log category `system.config.receive` level `DEBUG`
-1. Wait for last_config updated
-1. Wait for system operational
-1. Wait for no interesting status
-1. Wait for log category `system.config.parse` level `DEBUG`
-1. Wait for log category `system.config.apply` level `NOTICE`
-1. Wait for log category `system.config.receive` level `DEBUG`
-1. Wait for last_config updated again
-1. Wait for system operational
-1. Wait for no interesting status
-1. Wait for log category `system.config.parse` level `DEBUG`
-1. Wait for log category `system.config.apply` level `NOTICE`
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## periodic_scan
 
-1. Update config:
-    * Add `discovery` = { "families": {  } }
-1. Wait for all scans not active
-1. Wait for scan iterations
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## self_enumeration
 
-1. Wait for enumeration not active
-1. Update config to discovery generation:
-    * Add `discovery` = { "enumeration": { "generation": _generation start time_ } }
-1. Wait for enumeration generation
-1. Wait for enumeration still not active
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## single_scan
 
-1. Update config:
-    * Add `discovery` = { "families": {  } }
-1. Wait for all scans not active
-1. Wait for scheduled scan start
-1. Wait for scan activation
-1. Wait for scan completed
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## system_last_update
 
 Check that last_update state is correctly set in response to a config update.
 
-1. Wait for state last_config matches config timestamp
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## system_min_loglevel
 
 Check that the min log-level config is honored by the device.
 
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
-1. Update config:
-    * Set `system.min_loglevel` = `400`
-1. Update config:
-    * Set `system.min_loglevel` = `200`
-1. Wait for log category `system.config.apply` level `NOTICE`
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## valid_serial_no
 
-1. Check that received serial no matches
+1. Test failed: There were 2 errors:
+  java.lang.RuntimeException(While updating config block system)
+  java.lang.RuntimeException(While updating config block system)
 
 ## writeback_states
 
