@@ -1,0 +1,34 @@
+{
+  "families" : {
+    "virtual" : {
+      "id" : "0x65"
+    },
+    "iot" : {
+      "id" : "AHU-22"
+    }
+  },
+  "generation" : "2022-09-09T03:14:39Z",
+  "scan_family" : "virtual",
+  "scan_id" : "AHU-22",
+  "timestamp" : "2022-09-09T03:14:44.001Z",
+  "uniqs" : {
+    "9b291597" : {
+      "name" : "filter_differential_pressure_sensor",
+      "possible_values" : [ ],
+      "units" : "Degrees-Celsius",
+      "ref" : "AV12.present_value"
+    },
+    "eb9bf502" : {
+      "name" : "filter_differential_pressure",
+      "possible_values" : [ ],
+      "units" : "Bars"
+    },
+    "f1c0bfb7" : {
+      "name" : "filter_alarm_pressure_status",
+      "possible_values" : [ ],
+      "units" : "No-units",
+      "ref" : "BV11.present_value"
+    }
+  },
+  "version" : "1.3.14"
+}

@@ -29,6 +29,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
@@ -42,6 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,7 +62,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Entry;
@@ -130,7 +131,8 @@ public class Validator {
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File traceDir;
-  private boolean reportAfterEveryMessage;
+  private boolean simulatedMessages;
+  private Instant mockNow = null;
 
   /**
    * Create validator with the given args.
@@ -218,7 +220,12 @@ public class Validator {
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
     dataSinks.add(client);
-    reportAfterEveryMessage = true;
+    prepForMock();
+  }
+
+  Validator prepForMock() {
+    simulatedMessages = true;
+    return this;
   }
 
   /**
@@ -314,11 +321,6 @@ public class Validator {
     return schemaMap;
   }
 
-  private BiConsumer<Map<String, Object>, Map<String, String>> messageValidator() {
-    processValidationReport();
-    return (message, attributes) -> validateMessage(message, attributes);
-  }
-
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
@@ -345,14 +347,13 @@ public class Validator {
     }
     sendInitializationQuery();
     System.err.println("Entering message loop on " + client.getSubscriptionId());
-    BiConsumer<Map<String, Object>, Map<String, String>> validator = messageValidator();
     ScheduledFuture<?> reportSender =
-        reportAfterEveryMessage ? null : executor.scheduleAtFixedRate(this::processValidationReport,
+        simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
         try {
-          client.processMessage(validator);
+          client.processMessage(this::validateMessage);
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -395,11 +396,18 @@ public class Validator {
       writeMessageCapture(message, attributes);
     }
 
+    if (simulatedMessages) {
+      mockNow = Instant.parse((String) message.get("timestamp"));
+      ReportingDevice.setMockNow(mockNow);
+    }
+    Date validationStart = simulatedMessages ? Date.from(mockNow) : new Date();
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      sendValidationResult(attributes, reportingDevice);
+      sendValidationResult(attributes, reportingDevice, validationStart);
     }
-    processValidationReport();
+    if (simulatedMessages) {
+      processValidationReport();
+    }
   }
 
   private void validateMessage(JsonSchema schema, Object message) {
@@ -421,11 +429,10 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    final ReportingDevice reportingDevice = getReportingDevice(deviceId);
-    reportingDevice.clearErrors();
+    ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     try {
       String schemaName = messageSchema(attributes);
-      if (!reportingDevice.markMessageType(schemaName)) {
+      if (!device.markMessageType(schemaName, getNow())) {
         return null;
       }
 
@@ -448,14 +455,14 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println(e.getMessage());
-        reportingDevice.addError(e);
+        device.addError(e);
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e);
-        reportingDevice.addError(e);
+        device.addError(e);
       }
 
       if (schemaMap.containsKey(schemaName)) {
@@ -463,7 +470,7 @@ public class Validator {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
           System.err.println("Error validating schema: " + e.getMessage());
-          reportingDevice.addError(e);
+          device.addError(e);
         }
       }
 
@@ -474,41 +481,42 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            reportingDevice.validateMessage(messageObject);
+            Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
+            device.validateMessageType(messageObject, timestamp);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          reportingDevice.addError(e);
+          device.addError(e);
         }
       } else {
         extraDevices.add(deviceId);
       }
 
-      if (!reportingDevice.hasErrors()) {
+      if (!device.hasErrors()) {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
-      reportingDevice.addError(e);
+      device.addError(e);
     }
-    return reportingDevice;
+    return device;
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,
-      ReportingDevice reportingDevice) {
+      ReportingDevice reportingDevice, Date validationStart) {
     try {
       ValidationEvent event = new ValidationEvent();
       event.version = UDMI_VERSION;
       event.timestamp = new Date();
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
-      event.sub_type = origAttributes.get("subType");
-      event.status = reportingDevice.getErrorStatus();
-      List<Entry> errors = reportingDevice.getErrors();
+      event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
+      List<Entry> errors = reportingDevice.getErrors(validationStart);
+      event.status = ReportingDevice.getSummaryEntry(errors);
       event.errors = errors != null && errors.size() > 1 ? errors : null;
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
-        pointsSummary.missing = arrayIfNotEmpty(reportingDevice.getMetadataDiff().missingPoints);
-        pointsSummary.extra = arrayIfNotEmpty(reportingDevice.getMetadataDiff().extraPoints);
+        pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
+        pointsSummary.extra = arrayIfNotNull(reportingDevice.getExtraPoints());
         event.pointset = pointsSummary;
       }
       sendValidationMessage(reportingDevice.getDeviceId(), event, VALIDATION_EVENT_TOPIC);
@@ -623,14 +631,6 @@ public class Validator {
     return String.format("%s_%s", subType, subFolder);
   }
 
-  private ReportingDevice getReportingDevice(String deviceId) {
-    if (expectedDevices.containsKey(deviceId)) {
-      return expectedDevices.get(deviceId);
-    } else {
-      return new ReportingDevice(deviceId);
-    }
-  }
-
   private void processValidationReport() {
     ValidationSummary summary = new ValidationSummary();
     summary.extra_devices = new ArrayList<>(extraDevices);
@@ -646,20 +646,26 @@ public class Validator {
       ReportingDevice deviceInfo = expectedDevices.get(deviceId);
       if (deviceInfo == null) {
         summary.missing_devices.add(deviceId);
-      } else if (deviceInfo.hasErrors()) {
+        continue;
+      }
+      deviceInfo.expireEntries(getNow());
+      if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
             key -> new DeviceValidationEvent());
-        deviceValidationEvent.status = deviceInfo.getErrorStatus();
-      } else if (deviceInfo.hasBeenValidated()) {
+        deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+      } else if (deviceInfo.seenRecently(getNow())) {
         summary.correct_devices.add(deviceId);
       } else {
         summary.missing_devices.add(deviceId);
       }
     }
 
-    ValidationState report = makeValidationReport(summary, devices);
-    sendValidationReport(report);
+    sendValidationReport(makeValidationReport(summary, devices));
+  }
+
+  private Instant getNow() {
+    return mockNow == null ? Instant.now() : mockNow;
   }
 
   private ValidationState makeValidationReport(ValidationSummary summary,
@@ -672,11 +678,8 @@ public class Validator {
     return report;
   }
 
-  private <T> ArrayList<T> arrayIfNotEmpty(Set<T> items) {
-    if (items == null || items.isEmpty()) {
-      return null;
-    }
-    return new ArrayList<>(items);
+  private <T> ArrayList<T> arrayIfNotNull(Set<T> items) {
+    return items == null ? null : new ArrayList<>(items);
   }
 
   private void validateFiles(String schemaSpec, String prefix, String targetSpec) {
@@ -827,7 +830,10 @@ public class Validator {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
   }
 
-  static class MessageBundle {
+  /**
+   * Simple bundle of things associated with a validation message.
+   */
+  public static class MessageBundle {
 
     public Map<String, Object> message;
     public Map<String, String> attributes;

@@ -5,11 +5,31 @@
 These are the exact sequences being checked by the sequence tool. They are programaticaly generated
 so maybe a bit cryptic, but they accurately represent the specific steps required for each test.
 
-<!-- To regenerate the contents of this file below, use bin/test_sequencer and bin/gencode_seq -->
+<!--
+
+To regenerate the contents of this file below, first generate a message trace sequence and then run bin/gencode_seq
+
+* Running "bin/test_sequencer target-gcp-project" will run through the complete battery of test sequences
+  against the AHU-1 device to create the requisite trace files. This takes about 4 min for a complete test run.
+
+* Then run "bin/gencode_seq" which consumes the generated trace files and creates "generated.md" (this file)
+  with the output. The diff (using git, usually) should then reflect the changes against the committed version.
+
+Some caveats:
+
+* Flaky tests are annoying. Sometimes something goes wrong and one entire test will be borked. Easist thing
+  is to just re-run the sequence tests until it's clean, but that's not always the fastest.
+
+* The gencode part requires a complete test run to work properly, but you can run individual test runs
+  as needed, e.g. "bin/sequencer sites/udmi_site/model target-gcp-project AHU-1 21632 system_last_update"
+  (you will need to run an instance of pubber separately).
+
+-->
 
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -46,6 +66,14 @@ Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
 
+## endpoint_config_connection_error
+
+Push endpoint config message to device that results in a connection error.
+
+1. Update config:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `eyAgICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZpY2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0=` } } }
+1. Wait for blobset entry config status is error
+
 ## extra_config
 
 Check that the device correctly handles an extra out-of-schema field
@@ -73,6 +101,8 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
+1. Update config:
+    * Add `discovery.families.virtual` = { "generation": _family generation_, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
 ## self_enumeration
@@ -88,6 +118,8 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
+1. Update config:
+    * Add `discovery.families.virtual` = { "generation": _family generation_, "enumerate": `true` }
 1. Wait for scheduled scan start
 1. Wait for scan activation
 1. Wait for scan completed
@@ -115,4 +147,13 @@ Check that the min log-level config is honored by the device.
 
 ## writeback_states
 
-1. Test failed: Missing 'invalid' target specification
+1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
+1. Wait for point filter_alarm_pressure_status to have value_state default (null)
+1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
+1. Update config:
+    * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
+    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
+    * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
+1. Wait for point filter_differential_pressure_sensor to have value_state invalid
+1. Wait for point filter_alarm_pressure_status to have value_state failure
+1. Wait for point filter_differential_pressure_setpoint to have value_state applied

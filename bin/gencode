@@ -1,11 +1,25 @@
 #!/bin/bash -e
 
+tmpfile=`mktemp`
+
 # Fix sort order difference on different platforms.
 export LC_ALL=C
 
 if [[ $1 == check ]]; then
     check=check
     shift
+fi
+
+if [[ -n $check ]]; then
+    # This check must be run before gencode_docs is run
+    bin/gencode_docs_examples check
+fi
+
+venv/bin/pip3 freeze > $tmpfile
+if ! diff etc/requirements.txt $tmpfile; then
+    echo etc/requirements.txt differences found
+    echo please run bin/setup_base
+    false
 fi
 
 bin/gencode_java
@@ -15,9 +29,9 @@ bin/gencode_seq
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...
-    bin/gencode_docs check_links
+    bin/gencode_docs_checklinks
 
-    echo Checking gencode hash...
+    echo "Checking gencode hash (dynamic/static)..."
     files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
     diff /tmp/gencode.hash .gencode_hash.txt

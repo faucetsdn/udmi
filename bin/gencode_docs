@@ -28,12 +28,9 @@ fi
 OUTPUT_DIR=gencode/docs
 TMP_DIR=tmp/schema
 
-schema_files=`ls schema/*.json`
-
 if [ "$OP" == gen_bucket ]; then
-    rm -rf $OUTPUT_DIR $TMP_DIR
 
-    input_file=$OP
+    input_file=$1
     output_file=$2
     tmp_file=$output_file.tmp
     
@@ -47,7 +44,7 @@ if [ "$OP" == gen_bucket ]; then
     # Subheadings
     sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+$;\t\1*\t**\2**;g' $tmp_file
     # List Items
-    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t`\2` - \3;g' $tmp_file
+    sed -E -i 's;^\t(\t*)([a-zA-Z0-9 .\-_\/]+)\t+([^\t\n].*)$;\t\1*\t_`\2`_ - \3;g' $tmp_file
     # Convert tabs to spaces (comply with style guide)
     expand -t 4 $tmp_file > $output_file
     
@@ -69,12 +66,12 @@ if [ "$OP" == check_links ]; then
 
     missing=
     echo Checking references to externally linked files...
-    fgrep -v \# etc/external_refs.txt | while read file comment; do
+    while read file comment; do
         if [[ -n $file && ! -f $file ]]; then
             echo "Reference to missing file '$file': $comment"
             missing=y
         fi
-    done
+    done < <( fgrep -v \# etc/external_refs.txt )
 
     if [[ -n $missing ]]; then
         exit 1
@@ -89,11 +86,10 @@ if [ -d venv ]; then
     source venv/bin/activate
 fi
 
-mkdir -p $OUTPUT_DIR
+rm -rf $OUTPUT_DIR $TMP_DIR
+mkdir -p $OUTPUT_DIR $TMP_DIR
 
 # Make a copy of the schema files into a tmp folder for any pre generator fixes
-rm -rf $TMP_DIR
-mkdir -p $TMP_DIR
 cp -r schema/. $TMP_DIR
 
 # Remove file: prefix from references so document generator works

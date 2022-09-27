@@ -89,6 +89,7 @@ class Object9CBC741A:
     if self.position:
       result['position'] = self.position.to_dict() # 4
     return result
+from .model_system_hardware import SystemHardware
 
 
 class Object0EA01FC6:
@@ -215,6 +216,8 @@ class SystemModel:
 
   def __init__(self):
     self.location = None
+    self.hardware = None
+    self.software = None
     self.physical_tag = None
     self.aux = None
     self.min_loglevel = None
@@ -225,6 +228,8 @@ class SystemModel:
       return None
     result = SystemModel()
     result.location = Object327C415D.from_dict(source.get('location'))
+    result.hardware = SystemHardware.from_dict(source.get('hardware'))
+    result.software = source.get('software')
     result.physical_tag = Object8FD736D9.from_dict(source.get('physical_tag'))
     result.aux = Object734A44BA.from_dict(source.get('aux'))
     result.min_loglevel = source.get('min_loglevel')
@@ -250,6 +255,10 @@ class SystemModel:
     result = {}
     if self.location:
       result['location'] = self.location.to_dict() # 4
+    if self.hardware:
+      result['hardware'] = self.hardware.to_dict() # 4
+    if self.software:
+      result['software'] = self.software # 1
     if self.physical_tag:
       result['physical_tag'] = self.physical_tag.to_dict() # 4
     if self.aux:

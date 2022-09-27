@@ -2,21 +2,22 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
+import static com.google.udmi.util.GeneralUtils.fromJsonFile;
+import static com.google.udmi.util.GeneralUtils.fromJsonString;
+import static com.google.udmi.util.GeneralUtils.optionsString;
+import static com.google.udmi.util.GeneralUtils.toJsonFile;
+import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
 import daq.pubber.MqttPublisher.PublisherException;
@@ -35,6 +36,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,6 +60,7 @@ import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
+import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
@@ -71,6 +74,7 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.Metrics;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -93,12 +97,10 @@ public class Pubber {
 
   public static final int SCAN_DURATION_SEC = 10;
   public static final String PUBBER_OUT = "pubber/out";
+  public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
+  public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   private static final String UDMI_VERSION = "1.3.14";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .enable(SerializationFeature.INDENT_OUTPUT)
-      .setDateFormat(new ISO8601DateFormat())
-      .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final String CONFIG_TOPIC = "config";
   private static final String ERROR_TOPIC = "errors";
@@ -139,6 +141,8 @@ public class Pubber {
   private static final int CONNECT_RETRIES = 10;
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
+  private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  public static final String PUBBER_LOG_CATEGORY = "device.log";
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -152,19 +156,19 @@ public class Pubber {
   private final String projectId;
   private final String deviceId;
   private Config deviceConfig = new Config();
-  private int deviceMessageCount = -1;
+  private int deviceUpdateCount = -1;
   private MqttPublisher mqttPublisher;
   private ScheduledFuture<?> periodicSender;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
   private Function<String, Boolean> connectionDone;
   private boolean publishingLog;
-  private String appliedEndpoint;
   private String workingEndpoint;
   private String attemptedEndpoint;
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
+  private DevicePersistent persistentData;
 
   /**
    * Start an instance from a configuration file.
@@ -174,8 +178,7 @@ public class Pubber {
   public Pubber(String configPath) {
     File configFile = new File(configPath);
     try {
-      configuration = sanitizeConfiguration(
-          OBJECT_MAPPER.readValue(configFile, PubberConfiguration.class));
+      configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
       checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
       ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
       projectId = clientInfo.projectId;
@@ -354,9 +357,11 @@ public class Pubber {
       pullDeviceMessage();
     }
 
+    initializePersistentStore();
+
     info(String.format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
-        configuration.gatewayId, GeneralUtils.optionsString(configuration.options)));
+        configuration.gatewayId, optionsString(configuration.options)));
 
     deviceState.system.operational = true;
     deviceState.system.mode = SystemMode.INITIAL;
@@ -384,6 +389,27 @@ public class Pubber {
     markStateDirty(0);
   }
 
+  private void initializePersistentStore() {
+    Preconditions.checkState(persistentData == null, "persistent data already loaded");
+    File persistentStore = getPersistentStore();
+    info("Initializing from persistent store " + persistentStore.getAbsolutePath());
+    persistentData =
+        persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
+            : new DevicePersistent();
+    persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
+    writePersistentStore();
+  }
+
+  private void writePersistentStore() {
+    Preconditions.checkState(persistentData != null, "persistent data not defined");
+    toJsonFile(getPersistentStore(), persistentData);
+  }
+
+  private File getPersistentStore() {
+    return siteModel == null ? new File(String.format(PERSISTENT_TMP_FORMAT, deviceId)) :
+        new File(siteModel.getDeviceWorkingDir(deviceId), PERSISTENT_STORE_FILE);
+  }
+
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
@@ -409,7 +435,7 @@ public class Pubber {
         attributes.deviceId = pull.attributes.get("deviceId");
         attributes.deviceRegistryId = pull.attributes.get("deviceRegistryId");
         attributes.deviceRegistryLocation = pull.attributes.get("deviceRegistryLocation");
-        SwarmMessage swarm = OBJECT_MAPPER.readValue(pull.body, SwarmMessage.class);
+        SwarmMessage swarm = fromJsonString(pull.body, SwarmMessage.class);
         processSwarmConfig(swarm, attributes);
         return;
       } catch (Exception e) {
@@ -478,7 +504,7 @@ public class Pubber {
     Preconditions.checkState(periodicSender == null);
     int delay = messageDelayMs.get();
     info("Starting executor with send message delay " + delay);
-    periodicSender = executor.scheduleAtFixedRate(this::sendMessages, delay, delay,
+    periodicSender = executor.scheduleAtFixedRate(this::periodicUpdate, delay, delay,
         TimeUnit.MILLISECONDS);
   }
 
@@ -494,15 +520,27 @@ public class Pubber {
     }
   }
 
-  private void sendMessages() {
+  private void periodicUpdate() {
     try {
+      deviceUpdateCount++;
       updatePoints();
       deferredConfigActions();
-      sendDeviceMessage();
+      sendDevicePoints();
+      sendSystemMetrics();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }
+  }
+
+  private void sendSystemMetrics() {
+    SystemEvent systemEvent = new SystemEvent();
+    systemEvent.metrics = new Metrics();
+    systemEvent.metrics.restart_count = persistentData.restart_count;
+    Runtime runtime = Runtime.getRuntime();
+    systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
+    systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+    publishDeviceMessage(systemEvent);
   }
 
   private void deferredConfigActions() {
@@ -678,7 +716,6 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    appliedEndpoint = toJson(configuration.endpoint);
     mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
@@ -688,17 +725,6 @@ public class Pubber {
     }
     mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
         this::configHandler, Config.class);
-  }
-
-  private String toJson(Object target) {
-    try {
-      if (target == null) {
-        return null;
-      }
-      return OBJECT_MAPPER.writeValueAsString(target);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting object to string", e);
-    }
   }
 
   private void ensureKeyBytes() {
@@ -715,7 +741,7 @@ public class Pubber {
     try {
       mqttPublisher.connect(configuration.deviceId);
       info("Connection complete.");
-      workingEndpoint = toJson(configuration.endpoint);
+      workingEndpoint = toJsonString(configuration.endpoint);
     } catch (Exception e) {
       throw new RuntimeException("Connection error", e);
     }
@@ -795,12 +821,9 @@ public class Pubber {
     try {
       info("Config handler");
       File configOut = new File(outDir, traceTimestamp("config") + ".json");
-      try {
-        OBJECT_MAPPER.writeValue(configOut, config);
-        debug(String.format("Config update%s", getTestingTag(config)), toJson(config));
-      } catch (Exception e) {
-        throw new RuntimeException("While writing config " + configOut.getPath(), e);
-      }
+      toJsonFile(configOut, config);
+      debug(String.format("Config update%s", getTestingTag(config)),
+          toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -829,16 +852,12 @@ public class Pubber {
 
   private void extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
-      deviceState.blobset = null;
+      extractedEndpoint = null;
       return;
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
-      if (iotConfig == null) {
-        removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
-        return;
-      }
-      extractedEndpoint = OBJECT_MAPPER.readValue(iotConfig, EndpointConfiguration.class);
+      extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
@@ -849,33 +868,45 @@ public class Pubber {
       return;
     }
     deviceState.blobset.blobs.remove(blobId.value());
+    if (deviceState.blobset.blobs.isEmpty()) {
+      deviceState.blobset = null;
+    }
+    markStateDirty(0);
   }
 
   private void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
-    String currentSignature = toJson(configuration.endpoint);
+    String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =
-        redirectRegistry == null ? toJson(extractedEndpoint) : redirectedEndpoint(redirectRegistry);
+        redirectRegistry == null ? toJsonString(extractedEndpoint)
+            : redirectedEndpoint(redirectRegistry);
 
-    if (extractedSignature == null || extractedSignature.equals(
-        currentSignature) || extractedSignature.equals(attemptedEndpoint)) {
+    if (extractedSignature == null) {
+      attemptedEndpoint = null;
+      removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
+      return;
+    }
+
+    BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
+
+    if (extractedSignature.equals(currentSignature)
+        || extractedSignature.equals(attemptedEndpoint)) {
       return; // No need to redirect anything!
     }
 
     info("New config blob endpoint detected");
-    BlobBlobsetState endpointState = ensureBlobsetState(IOT_ENDPOINT_CONFIG);
 
     try {
+      attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
       endpointState.status = null;
       publishSynchronousState();
-      attemptedEndpoint = extractedSignature;
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
-      appliedEndpoint = null;
     } catch (Exception e) {
       try {
         error("Reconfigure failed, attempting connection to last working endpoint", e);
+        endpointState.phase = BlobPhase.FINAL;
         endpointState.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
         resetConnection(workingEndpoint);
         publishAsynchronousState();
@@ -889,10 +920,10 @@ public class Pubber {
 
   private String redirectedEndpoint(String redirectRegistry) {
     try {
-      EndpointConfiguration endpoint = OBJECT_MAPPER.readValue(toJson(configuration.endpoint),
+      EndpointConfiguration endpoint = deepCopy(configuration.endpoint,
           EndpointConfiguration.class);
       endpoint.client_id = getClientId(redirectRegistry);
-      return toJson(endpoint);
+      return toJsonString(endpoint);
     } catch (Exception e) {
       throw new RuntimeException("While getting redirected endpoint");
     }
@@ -900,7 +931,7 @@ public class Pubber {
 
   private void resetConnection(String targetEndpoint) {
     try {
-      configuration.endpoint = OBJECT_MAPPER.readValue(targetEndpoint,
+      configuration.endpoint = fromJsonString(targetEndpoint,
           EndpointConfiguration.class);
       disconnectMqtt();
       initializeMqtt();
@@ -1186,7 +1217,7 @@ public class Pubber {
   private Date isoConvert(String timestamp) {
     try {
       String wrappedString = "\"" + timestamp + "\"";
-      return OBJECT_MAPPER.readValue(wrappedString, Date.class);
+      return fromJsonString(wrappedString, Date.class);
     } catch (Exception e) {
       throw new RuntimeException("Creating date", e);
     }
@@ -1197,7 +1228,7 @@ public class Pubber {
       if (timestamp == null) {
         return "null";
       }
-      String dateString = toJson(timestamp);
+      String dateString = toJsonString(timestamp);
       // Strip off the leading and trailing quotes from the JSON string-as-string representation.
       return dateString.substring(1, dateString.length() - 1);
     } catch (Exception e) {
@@ -1240,9 +1271,9 @@ public class Pubber {
     }
   }
 
-  private void sendDeviceMessage() {
-    if ((++deviceMessageCount) % MESSAGE_REPORT_INTERVAL == 0) {
-      info(String.format("%s sending test message #%d", getTimestamp(), deviceMessageCount));
+  private void sendDevicePoints() {
+    if (deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0) {
+      info(String.format("%s sending test message #%d", getTimestamp(), deviceUpdateCount));
     }
     publishDeviceMessage(devicePoints);
   }
@@ -1250,7 +1281,7 @@ public class Pubber {
   private void pubberLogMessage(String logMessage, Level level, String timestamp,
       String detail) {
     Entry logEntry = new Entry();
-    logEntry.category = "pubber";
+    logEntry.category = PUBBER_LOG_CATEGORY;
     logEntry.level = level.value();
     logEntry.timestamp = isoConvert(timestamp);
     logEntry.message = logMessage;
@@ -1306,7 +1337,8 @@ public class Pubber {
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
-      debug(String.format("State update%s", getTestingTag(deviceConfig)), toJson(deviceState));
+      debug(String.format("State update%s", getTestingTag(deviceConfig)),
+          toJsonString(deviceState));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
@@ -1343,7 +1375,7 @@ public class Pubber {
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
     try {
-      OBJECT_MAPPER.writeValue(messageOut, message);
+      toJsonFile(messageOut, message);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }

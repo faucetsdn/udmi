@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.daq.mqtt.sequencer.SequenceRunner;
+import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.util.JsonUtil;
@@ -28,7 +28,7 @@ import udmi.schema.FamilyDiscoveryState;
 /**
  * Validation tests for discovery scan and enumeration capabilities.
  */
-public class DiscoverySequences extends SequenceRunner {
+public class DiscoverySequences extends SequenceBase {
 
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
@@ -44,7 +44,8 @@ public class DiscoverySequences extends SequenceRunner {
     Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
-    deviceConfig.discovery.enumeration.generation = startTime;
+    deviceConfig.discovery.enumeration.generation =
+        SemanticDate.describe("generation start time", startTime);
     info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
     updateConfig("discovery generation");
     untilTrue("enumeration generation",
@@ -137,7 +138,7 @@ public class DiscoverySequences extends SequenceRunner {
   private void scheduleScan(Date startTime, Integer scanIntervalSec, boolean enumerate) {
     info("Scan start scheduled for " + startTime);
     families.forEach(family -> {
-      getConfigFamily(family).generation = startTime;
+      getConfigFamily(family).generation = SemanticDate.describe("family generation", startTime);
       getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });

@@ -1,0 +1,1097 @@
+2022-09-09T03:14:49Z NOTICE sequencer starting test periodic_scan
+2022-09-09T03:14:49Z DEBUG sequencer Starting reset_config
+2022-09-09T03:14:49Z INFO sequencer start waiting for device config sync after 0s
+2022-09-09T03:14:49Z DEBUG sequencer system config extra field reset_config
+2022-09-09T03:14:49Z DEBUG sequencer update config_system
+2022-09-09T03:14:49Z DEBUG sequencer local local_system
+2022-09-09T03:14:51Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "1970-01-01T00:00:00Z",
+  "version" : "@@@cloud udmi version###null",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:14:51Z DEBUG sequencer received state_discovery
+2022-09-09T03:14:51Z DEBUG sequencer received config_system
+2022-09-09T03:14:51Z DEBUG sequencer received config_update
+2022-09-09T03:14:51Z DEBUG sequencer Update with config reset
+2022-09-09T03:14:51Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:49Z
+2022-09-09T03:14:51Z DEBUG sequencer Updated config #009:
+{
+  "timestamp" : "2022-09-09T03:14:49Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:14:51Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:49Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:14:51Z INFO sequencer finished waiting for device config sync after 2s
+2022-09-09T03:14:51Z INFO sequencer clearing system logs...
+2022-09-09T03:14:52Z DEBUG sequencer Reading generated config file /home/tester/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2022-09-09T03:14:52Z INFO sequencer start waiting for device config sync after 3s
+2022-09-09T03:14:52Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:52Z DEBUG sequencer update config_system
+2022-09-09T03:14:52Z DEBUG sequencer local local_system
+2022-09-09T03:14:54Z DEBUG sequencer update config_pointset
+2022-09-09T03:14:54Z DEBUG sequencer local local_pointset
+2022-09-09T03:14:56Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2020-05-01T13:39:07Z",
+  "version" : "@@@cloud udmi version###1",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:49Z: State update defer 1642ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:49Z: State update defer 1642ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:49Z: Clearing scheduled discovery family virtual
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:49Z: 2022-09-09T03:14:49Z received config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:49Z: success
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:49Z: State update defer 1633ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:49Z: Config handler
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:49Z: State update defer 1632ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:51Z: State update defer 0ms
+2022-09-09T03:14:56Z DEBUG sequencer received state_discovery
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:51Z: update state 2022-09-09T03:14:51Z last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received state_system
+2022-09-09T03:14:56Z DEBUG sequencer received state_pointset
+2022-09-09T03:14:56Z DEBUG sequencer received state_update
+2022-09-09T03:14:56Z DEBUG sequencer Updated state #012:
+{
+  "timestamp" : "2022-09-09T03:14:51Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:14:49Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:49Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:14:56Z NOTICE sequencer Received serial no sequencer-5321
+2022-09-09T03:14:56Z INFO sequencer Updated state has last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received config_update
+2022-09-09T03:14:56Z DEBUG sequencer Update with config reset
+2022-09-09T03:14:56Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer Updated config #010:
+{
+  "timestamp" : "2022-09-09T03:14:49Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:49Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:51Z: success
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:51Z: State update defer 1806ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:51Z: State update defer 1800ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:51Z: Config handler
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:51Z: 2022-09-09T03:14:51Z received config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:51Z: State update defer 1807ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:51Z: State update defer 1800ms
+2022-09-09T03:14:56Z DEBUG sequencer received config_system
+2022-09-09T03:14:56Z DEBUG sequencer received config_update
+2022-09-09T03:14:56Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:52Z
+2022-09-09T03:14:56Z DEBUG sequencer Updated config #011:
+{
+  "timestamp" : "2022-09-09T03:14:52Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:52Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer received state_system
+2022-09-09T03:14:56Z DEBUG sequencer received state_pointset
+2022-09-09T03:14:56Z DEBUG sequencer received state_update
+2022-09-09T03:14:56Z DEBUG sequencer Updated state #013:
+{
+  "timestamp" : "2022-09-09T03:14:53Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:14:49Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:51Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:14:56Z INFO sequencer Updated state has last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received state_discovery
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:53Z: update state 2022-09-09T03:14:53Z last_config 2022-09-09T03:14:49Z
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:53Z: Config handler
+2022-09-09T03:14:56Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:53Z: success
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:53Z: State update defer 1999ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:53Z: State update defer 1998ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:53Z: State update defer 1999ms
+2022-09-09T03:14:56Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:53Z: 2022-09-09T03:14:53Z received config 2022-09-09T03:14:52Z
+2022-09-09T03:14:56Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:53Z: State update defer 0ms
+2022-09-09T03:14:56Z DEBUG sequencer received config_pointset
+2022-09-09T03:14:56Z DEBUG sequencer received config_update
+2022-09-09T03:14:56Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:54Z
+2022-09-09T03:14:56Z DEBUG sequencer Updated config #012:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:56Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:56Z INFO sequencer finished waiting for device config sync after 7s
+2022-09-09T03:14:56Z DEBUG sequencer Done with reset_config
+2022-09-09T03:14:56Z INFO sequencer clearing system logs...
+2022-09-09T03:14:57Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:57Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:57Z INFO sequencer start waiting for device config sync after 8s
+2022-09-09T03:14:57Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:57Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:57Z INFO sequencer finished waiting for device config sync after 8s
+2022-09-09T03:14:57Z DEBUG sequencer config synced to 2022-09-09T03:14:54Z
+2022-09-09T03:14:57Z INFO sequencer start waiting for device state update after 8s
+2022-09-09T03:14:57Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:57Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:57Z INFO sequencer finished waiting for device state update after 8s
+2022-09-09T03:14:57Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:57Z DEBUG sequencer update config_discovery
+2022-09-09T03:14:57Z DEBUG sequencer local local_discovery
+2022-09-09T03:14:59Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:59Z INFO sequencer start waiting for all scans not active after 10s
+2022-09-09T03:14:59Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:59Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:14:59Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException
+2022-09-09T03:14:59Z TRACE sequencer Suppressed from line sequences.DiscoverySequences.lambda$familyScanActivated$20(DiscoverySequences.java:171)
+2022-09-09T03:14:59Z INFO sequencer finished waiting for all scans not active after 10s
+2022-09-09T03:14:59Z INFO sequencer Scan start scheduled for Thu Sep 08 20:14:59 PDT 2022
+2022-09-09T03:14:59Z DEBUG sequencer system config extra field null
+2022-09-09T03:14:59Z DEBUG sequencer update config_discovery
+2022-09-09T03:14:59Z DEBUG sequencer local local_discovery
+2022-09-09T03:15:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z INFO sequencer start waiting for scan iterations after 12s
+2022-09-09T03:15:01Z DEBUG sequencer system config extra field null
+2022-09-09T03:15:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "1970-01-01T00:00:00Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:54Z: State update defer 893ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:54Z: State update defer 893ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:54Z: Config handler
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:54Z: State update defer 890ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:55Z: State update defer 0ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:55Z: update state 2022-09-09T03:14:55Z last_config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_system
+2022-09-09T03:15:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received state_update
+2022-09-09T03:15:01Z DEBUG sequencer Updated state #014:
+{
+  "timestamp" : "2022-09-09T03:14:55Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:14:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:54Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:15:01Z INFO sequencer Updated state has last_config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:01Z DEBUG sequencer received config_update
+2022-09-09T03:15:01Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer Updated config #013:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:54Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:55Z: 2022-09-09T03:14:55Z received config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:55Z: Config handler
+2022-09-09T03:15:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:55Z: success
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:55Z: State update defer 1654ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:55Z: State update defer 1645ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:54Z: State update defer 891ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:54Z: 2022-09-09T03:14:54Z received config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_system
+2022-09-09T03:15:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received state_update
+2022-09-09T03:15:01Z DEBUG sequencer Updated state #015:
+{
+  "timestamp" : "2022-09-09T03:14:55Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:14:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:54Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "configAcked" : "true"
+}
+2022-09-09T03:15:01Z INFO sequencer Updated state has last_config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:54Z: success
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:55Z: State update defer 1653ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:57Z: State update defer 0ms
+2022-09-09T03:15:01Z DEBUG sequencer received config_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:55Z: State update defer 1646ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:57Z: update state 2022-09-09T03:14:57Z last_config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received config_update
+2022-09-09T03:15:01Z INFO sequencer Updated config with timestamp 2022-09-09T03:14:58Z
+2022-09-09T03:15:01Z DEBUG sequencer Updated config #014:
+{
+  "timestamp" : "2022-09-09T03:14:58Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:14:58Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:57Z: Config handler
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:57Z: State update defer 1935ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:57Z: success
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:57Z: State update defer 1933ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:57Z: 2022-09-09T03:14:57Z received config 2022-09-09T03:14:58Z
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:57Z: State update defer 1934ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:57Z: State update defer 1933ms
+2022-09-09T03:15:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received state_update
+2022-09-09T03:15:01Z DEBUG sequencer Updated state #016:
+{
+  "timestamp" : "2022-09-09T03:14:57Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:14:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:55Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:15:01Z INFO sequencer Updated state has last_config 2022-09-09T03:14:54Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_system
+2022-09-09T03:15:01Z DEBUG sequencer received event_pointset
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:58Z: State update defer 1082ms
+2022-09-09T03:15:01Z DEBUG sequencer received config_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received config_update
+2022-09-09T03:15:01Z INFO sequencer Updated config with timestamp 2022-09-09T03:15:00Z
+2022-09-09T03:15:01Z DEBUG sequencer Updated config #015:
+{
+  "timestamp" : "2022-09-09T03:15:00Z",
+  "version" : "1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer local local_config:
+{
+  "timestamp" : "2022-09-09T03:15:00Z",
+  "version" : "@@@cloud udmi version###1.3.14-44-gecf30496-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-09-09T03:12:37Z",
+    "testing" : {
+      "sequence_name" : "periodic_scan"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "scan_interval_sec" : 10,
+        "enumerate" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:59Z: 2022-09-09T03:14:59Z received config 2022-09-09T03:15:00Z
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:59Z: Discovery scan starting virtual as 2022-09-09T03:14:59Z
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:59Z: Discovery scan generation virtual is 2022-09-09T03:14:59Z
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:59Z: Config handler
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 16ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-09-09T03:14:59Z: success
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 15ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 15ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 0ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 22ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:14:59Z: State update defer 23ms
+2022-09-09T03:15:01Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:14:59Z: update state 2022-09-09T03:14:59Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_update
+2022-09-09T03:15:01Z DEBUG sequencer Updated state #017:
+{
+  "timestamp" : "2022-09-09T03:14:59Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:15:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:59Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:14:59Z",
+        "active" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:15:01Z INFO sequencer Updated state has last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:01Z DEBUG sequencer received state_system
+2022-09-09T03:15:01Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:01Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:04Z DEBUG sequencer received event_discovery
+2022-09-09T03:15:04Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:04Z: Sent 1 discovery events from virtual for Thu Sep 08 20:14:59 PDT 2022
+2022-09-09T03:15:08Z DEBUG sequencer received event_pointset
+2022-09-09T03:15:09Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:09Z: Discovery scan starting virtual as 2022-09-09T03:15:09Z
+2022-09-09T03:15:09Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:09Z: update state 2022-09-09T03:15:09Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:09Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:09Z: State update defer -7791ms
+2022-09-09T03:15:10Z DEBUG sequencer received state_update
+2022-09-09T03:15:10Z DEBUG sequencer Updated state #018:
+{
+  "timestamp" : "2022-09-09T03:15:09Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:15:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:59Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:15:09Z",
+        "active" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:15:10Z INFO sequencer Updated state has last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:10Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:10Z DEBUG sequencer received state_system
+2022-09-09T03:15:10Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:15Z DEBUG sequencer received event_discovery
+2022-09-09T03:15:15Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:14Z: Sent 1 discovery events from virtual for Thu Sep 08 20:15:09 PDT 2022
+2022-09-09T03:15:18Z DEBUG sequencer received event_pointset
+2022-09-09T03:15:19Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:19Z: Discovery scan starting virtual as 2022-09-09T03:15:19Z
+2022-09-09T03:15:19Z DEBUG sequencer received event_system INFO pubber 2022-09-09T03:15:19Z: update state 2022-09-09T03:15:19Z last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:19Z DEBUG sequencer received event_system WARNING pubber 2022-09-09T03:15:19Z: State update defer -7840ms
+2022-09-09T03:15:20Z DEBUG sequencer received state_update
+2022-09-09T03:15:20Z DEBUG sequencer Updated state #019:
+{
+  "timestamp" : "2022-09-09T03:15:19Z",
+  "version" : "1.3.14",
+  "system" : {
+    "last_config" : "2022-09-09T03:15:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-09-09T03:12:37Z",
+    "serial_no" : "sequencer-5321",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-09-09T03:14:59Z",
+      "level" : 300
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "virtual" : {
+        "generation" : "2022-09-09T03:15:19Z",
+        "active" : true
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-09-09T03:15:20Z INFO sequencer Updated state has last_config 2022-09-09T03:15:00Z
+2022-09-09T03:15:20Z DEBUG sequencer received state_discovery
+2022-09-09T03:15:20Z DEBUG sequencer received state_pointset
+2022-09-09T03:15:20Z DEBUG sequencer received state_system
+2022-09-09T03:15:25Z DEBUG sequencer received event_discovery
+2022-09-09T03:15:25Z INFO sequencer finished waiting for scan iterations after 35s
+2022-09-09T03:15:25Z WARNING sequencer Not resetting config to enable post-execution debugging
+2022-09-09T03:15:25Z NOTICE sequencer RESULT pass periodic_scan Sequence complete
+2022-09-09T03:15:25Z INFO sequencer Sequence complete
+2022-09-09T03:15:25Z NOTICE sequencer ending test periodic_scan after 35s

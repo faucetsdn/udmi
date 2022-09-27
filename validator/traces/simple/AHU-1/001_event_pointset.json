@@ -7,6 +7,6 @@
       "present_value" : 11
     }
   },
-  "timestamp" : "2022-07-19T05:04:26Z",
+  "timestamp" : "2022-07-17T05:04:26Z", // One day old, to be ignored!
   "version" : "1.3.14"
 }

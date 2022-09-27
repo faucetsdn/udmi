@@ -50,6 +50,8 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.
     * _receive_: (**DEBUG**) Receiving/processing a message for validation.
-    * _result_: (**INFO**) Regarging the actual validation results.
+    * _result_: (**INFO**) Regarding the actual validation results.
   * _summary_: Conditions specific to an overall site summary.
     * _report_: (**INFO**) The validation summary report.
+* _device_: Device specific messages (ignored by UDMI system)
+  * _???_: (**INFO**) Special wildcard category, anything prefixed by 'device.' lands here!

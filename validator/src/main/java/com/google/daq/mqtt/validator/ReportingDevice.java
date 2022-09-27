@@ -1,20 +1,19 @@
 package com.google.daq.mqtt.validator;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.util.Common;
+import com.google.daq.mqtt.util.ValidationException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetEvent;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 
@@ -23,11 +22,22 @@ import udmi.schema.PointsetState;
  */
 public class ReportingDevice {
 
+  public static final String DETAIL_SEPARATOR = "; ";
+  private static final long THRESHOLD_SEC = 3600;
+  private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  private static final String CATEGORY_MISSING_MESSAGE
+      = "instance failed to match exactly one schema (matched 0 out of ";
+  private static final String CATEGORY_MISSING_REPLACEMENT
+      = "instance entry category not recognized";
+  private static Date mockNow;
   private final String deviceId;
-  private final MetadataDiff metadataDiff = new MetadataDiff();
-  private final List<Exception> errors = new ArrayList<>();
-  private final Set<String> validatedTypes = new HashSet<>();
+  private final List<Entry> entries = new ArrayList<>();
+  private final Map<String, Date> messageMarks = new HashMap<>();
+  private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
+  private ReportingPointset reportingPointset;
   private Metadata metadata;
+  private Set<String> missingPoints;
+  private Set<String> extraPoints;
 
   /**
    * Create device with the given id.
@@ -39,12 +49,91 @@ public class ReportingDevice {
   }
 
   /**
-   * Set the metadata record for this device.
+   * Make a status Entry corresponding to a single exception.
    *
-   * @param metadata metadata to set
+   * @param error exception to summarize
+   * @return Entry summarizing the exception
    */
-  public void setMetadata(Metadata metadata) {
-    this.metadata = metadata;
+  private static Entry makeEntry(Exception error) {
+    Entry entry = new Entry();
+    entry.message = Common.getExceptionMessage(error);
+    String detail = getExceptionDetail(error);
+    entry.detail = entry.message.equals(detail) ? null : detail;
+    entry.category = "validation.error.simple";
+    entry.level = Level.ERROR.value();
+    entry.timestamp = getTimestamp();
+    return entry;
+  }
+
+  private static Date getTimestamp() {
+    return mockNow != null ? mockNow : new Date();
+  }
+
+  private static String getExceptionDetail(Throwable exception) {
+    List<String> messages = new ArrayList<>();
+    String previousMessage = null;
+    while (exception != null) {
+      final String useMessage;
+      if (exception instanceof ValidationException) {
+        useMessage = validationMessage((ValidationException) exception);
+      } else {
+        String message = Common.getExceptionMessage(exception);
+        String line = Common.getExceptionLine(exception, Validator.class);
+        useMessage = message + (line == null ? "" : " @" + line);
+      }
+      if (previousMessage == null || !previousMessage.equals(useMessage)) {
+        messages.add(useMessage);
+        previousMessage = useMessage;
+      }
+      exception = exception.getCause();
+    }
+    return DETAIL_JOINER.join(messages);
+  }
+
+  private static String validationMessage(ValidationException exception) {
+    return exception.getAllMessages().stream()
+        .map(ReportingDevice::replaceCategoryMissing)
+        .collect(Collectors.joining(DETAIL_SEPARATOR));
+  }
+
+  private static String replaceCategoryMissing(String message) {
+    return message.startsWith(CATEGORY_MISSING_MESSAGE) ? CATEGORY_MISSING_REPLACEMENT : message;
+  }
+
+  /**
+   * Create a single status Entry for this device (which may have multiple internal Entries).
+   *
+   * @param entries list of Entry to summarize
+   * @return status entry
+   */
+  public static Entry getSummaryEntry(List<Entry> entries) {
+    if (entries.isEmpty()) {
+      return null;
+    }
+
+    if (entries.size() == 1) {
+      return entries.get(0);
+    }
+
+    Entry entry = new Entry();
+    entry.category = "validation.error.multiple";
+    entry.message = "Multiple validation errors";
+    entry.detail = DETAIL_JOINER
+        .join(entries.stream()
+            .map(ReportingDevice::makeEntrySummary)
+            .collect(Collectors.toList()));
+    entry.level = entries.stream().map(item -> item.level).max(Integer::compareTo)
+        .orElse(Level.ERROR.value());
+    entry.timestamp = getTimestamp();
+    return entry;
+  }
+
+  private static String makeEntrySummary(Entry entry) {
+    return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
+  }
+
+  static void setMockNow(Instant now) {
+    mockNow = Date.from(now);
   }
 
   /**
@@ -57,12 +146,13 @@ public class ReportingDevice {
   }
 
   /**
-   * Check if this device has been run through a validation pass or not.
+   * Check if this device has been seen recently (any kind of message).
    *
-   * @return {@code true} if this has been validated
+   * @param now current instant
+   * @return {@code true} if this has been seen since threshold
    */
-  public boolean hasBeenValidated() {
-    return metadataDiff.extraPoints != null;
+  public boolean seenRecently(Instant now) {
+    return lastSeen.after(getThreshold(now));
   }
 
   /**
@@ -71,99 +161,51 @@ public class ReportingDevice {
    * @return {@code true} if this device has errors
    */
   public boolean hasErrors() {
-    return metadataDiff.errors != null && !metadataDiff.errors.isEmpty();
+    return !entries.isEmpty();
   }
 
   /**
-   * Check if there has been any difference detected by this pass.
+   * Validate a message against specific message-type expectations (outside of base schema).
    *
-   * @return {@code true} if this device has detected errors
+   * @param message   Message to validate
+   * @param timestamp message timestamp string (rather than pull from typed object)
    */
-  public boolean hasMetadataDiff() {
-    return (metadataDiff.extraPoints != null && !metadataDiff.extraPoints.isEmpty())
-        || (metadataDiff.missingPoints != null && !metadataDiff.missingPoints.isEmpty());
-  }
-
-  /**
-   * Get a (string) message for the metadata of this device.
-   *
-   * @return Device metadata encoded as a string.
-   */
-  public String metadataMessage() {
-    if (metadataDiff.extraPoints != null && !metadataDiff.extraPoints.isEmpty()) {
-      return "Extra points: " + Joiner.on(",").join(metadataDiff.extraPoints);
+  public void validateMessageType(Object message, Date timestamp) {
+    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
+    if (reportingPointset == null) {
+      return;
     }
-    if (metadataDiff.missingPoints != null && !metadataDiff.missingPoints.isEmpty()) {
-      return "Missing points: " + Joiner.on(",").join(metadataDiff.missingPoints);
-    }
-    return null;
-  }
-
-  /**
-   * Get the metadata difference for this device.
-   *
-   * @return Metadata difference
-   */
-  public MetadataDiff getMetadataDiff() {
-    return metadataDiff;
-  }
-
-  /**
-   * Validate a message against expectations (outside of base schema).
-   *
-   * @param message Message to validate
-   */
-  public void validateMessage(Object message) {
+    final MetadataDiff metadataDiff;
     if (message instanceof PointsetEvent) {
-      validateMessage((PointsetEvent) message);
+      metadataDiff = reportingPointset.validateMessage((PointsetEvent) message);
     } else if (message instanceof PointsetState) {
-      validateMessage((PointsetState) message);
+      metadataDiff = reportingPointset.validateMessage((PointsetState) message);
     } else {
       throw new RuntimeException("Unknown message type " + message.getClass().getName());
     }
-  }
 
-  private void validateMessage(PointsetEvent message) {
-    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
-    Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
-    metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
-    metadataDiff.extraPoints.removeAll(expectedPoints);
-    if (message.partial_update != null && message.partial_update) {
-      metadataDiff.missingPoints = null;
-    } else {
-      metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
-      metadataDiff.missingPoints.removeAll(deliveredPoints);
+    missingPoints = metadataDiff.missingPoints;
+    if (!missingPoints.isEmpty()) {
+      addError(pointValidationError("missing points", missingPoints));
     }
-    if (hasMetadataDiff()) {
-      throw new RuntimeException("Metadata validation failed: " + metadataMessage());
+
+    extraPoints = metadataDiff.extraPoints;
+    if (!extraPoints.isEmpty()) {
+      addError(pointValidationError("extra points", extraPoints));
+    }
+
+    if (metadataDiff.errors != null) {
+      metadataDiff.errors.forEach(this::addEntry);
     }
   }
 
-  private void validateMessage(PointsetState message) {
-    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
-    Set<String> deliveredPoints = new TreeSet<>(getPoints(message).keySet());
-    metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
-    metadataDiff.extraPoints.removeAll(expectedPoints);
-    metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
-    metadataDiff.missingPoints.removeAll(deliveredPoints);
-    if (hasMetadataDiff()) {
-      throw new RuntimeException("Metadata validation failed: " + metadataMessage());
-    }
+  private Exception pointValidationError(String description, Set<String> points) {
+    return new ValidationException(
+        String.format("Device has %s: %s", description, Joiner.on(", ").join(points)));
   }
 
-  private Map<String, PointPointsetEvent> getPoints(PointsetEvent message) {
-    return message.points == null ? ImmutableMap.of() : message.points;
-  }
-
-  private Map<String, PointPointsetState> getPoints(PointsetState message) {
-    return message.points == null ? ImmutableMap.of() : message.points;
-  }
-
-  private Map<String, PointPointsetModel> getPoints(Metadata metadata) {
-    if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
-      return ImmutableMap.of();
-    }
-    return metadata.pointset.points;
+  private void addEntry(Entry entry) {
+    entries.add(entry);
   }
 
   /**
@@ -172,106 +214,64 @@ public class ReportingDevice {
    * @param error Exception to add
    */
   public void addError(Exception error) {
-    errors.add(error);
-    if (metadataDiff.errors == null) {
-      metadataDiff.errors = new ArrayList<>();
+    addEntry(makeEntry(error));
+  }
+
+  /**
+   * Get the error Entries associated with this device.
+   *
+   * @param threshold date threshold beyond which to ignore (null for all)
+   * @return Entry list or errors.
+   */
+  public List<Entry> getErrors(Date threshold) {
+    if (threshold == null) {
+      return entries;
     }
-    metadataDiff.errors.add(makeEntry(error));
-  }
-
-  /**
-   * Make a status Entry corresponding to a single exception.
-   *
-   * @param error exception to summarize
-   * @return Entry summarizing the exception
-   */
-  private Entry makeEntry(Exception error) {
-    Entry entry = new Entry();
-    entry.message = getExceptionMessage(error);
-    String detail = getExceptionCauses(error);
-    entry.detail = entry.message.equals(detail) ? null : detail;
-    entry.category = "validation.error.simple";
-    entry.level = Level.ERROR.value();
-    return entry;
-  }
-
-  /**
-   * Mark the type of message that has been received.
-   *
-   * @param subFolder Message type
-   * @return {@code true} if it has been previously recorded
-   */
-  public boolean markMessageType(String subFolder) {
-    return validatedTypes.add(subFolder);
-  }
-
-  /**
-   * Create a status entry for this device.
-   *
-   * @return status entry
-   */
-  public Entry getErrorStatus() {
-    if (errors.isEmpty()) {
-      return null;
-    }
-    return errors.size() == 1 ? makeEntry(errors.get(0)) : makeCompoundEntry(errors);
-  }
-
-  /**
-   * Make a single status Entry that comprises multiple exceptions. This is intended to be a summary
-   * note only, indicating that additional detail for all the exceptions should be sought
-   * elsewhere.
-   *
-   * @param exceptions list of exceptions to summarize
-   * @return summarized entry covering all the inputs
-   */
-  private Entry makeCompoundEntry(List<Exception> exceptions) {
-    Entry entry = new Entry();
-    entry.category = "validation.error.multiple";
-    entry.message = "Multiple validation errors";
-    entry.detail = Joiner.on("; ")
-        .join(exceptions.stream().map(this::getExceptionMessage).collect(Collectors.toList()));
-    return entry;
-  }
-
-  /**
-   * Get a string representing all the causes for a given exception. This is meant to be a summary
-   * of what went wrong, but will lose some information along the way.
-   *
-   * @param exception exception to summarize
-   * @return string summary of all the causes
-   */
-  private String getExceptionCauses(Throwable exception) {
-    List<String> messages = new ArrayList<>();
-    String previousMessage = null;
-    while (exception != null) {
-      String newMessage = getExceptionMessage(exception);
-      if (previousMessage == null || !previousMessage.endsWith(newMessage)) {
-        messages.add(newMessage);
-        previousMessage = newMessage;
-      }
-      exception = exception.getCause();
-    }
-    return Joiner.on("; ").join(messages);
-  }
-
-  private String getExceptionMessage(Throwable exception) {
-    String message = exception.getMessage();
-    return message != null ? message : exception.toString();
-  }
-
-  public List<Entry> getErrors() {
-    return metadataDiff.errors == null ? null : metadataDiff.errors;
+    return entries.stream()
+        .filter(entry -> !entry.timestamp.before(threshold))
+        .collect(Collectors.toList());
   }
 
   /**
    * Clear all errors for this device.
    */
   public void clearErrors() {
-    errors.clear();
-    if (metadataDiff.errors != null) {
-      metadataDiff.errors.clear();
-    }
+    entries.clear();
+  }
+
+  public Metadata getMetadata() {
+    return metadata;
+  }
+
+  /**
+   * Set the metadata record for this device.
+   *
+   * @param metadata metadata to set
+   */
+  public void setMetadata(Metadata metadata) {
+    this.metadata = metadata;
+    this.reportingPointset = new ReportingPointset(metadata);
+  }
+
+  public Set<String> getMissingPoints() {
+    return missingPoints;
+  }
+
+  public Set<String> getExtraPoints() {
+    return extraPoints;
+  }
+
+  public void expireEntries(Instant now) {
+    entries.removeIf(entry -> entry.timestamp.before(getThreshold(now)));
+  }
+
+  private Date getThreshold(Instant now) {
+    return Date.from(now.minusSeconds(THRESHOLD_SEC));
+  }
+
+  public boolean markMessageType(String schemaName, Instant now) {
+    Date previous = messageMarks.put(schemaName, getTimestamp());
+    return previous == null || previous.before(getThreshold(now));
   }
 
   /**
