@@ -15,13 +15,14 @@ shift
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
+proxy_id=AHU-22
 mkdir -p out
 
 serial_no=validator-$RANDOM
 echo Using pubber with serial $serial_no
 
-PUBBER_OUT=pubber.out
-VALIDATOR_OUT=validator.out
+PUBBER_OUT=out/pubber.out
+VALIDATOR_OUT=out/validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
@@ -33,10 +34,6 @@ rm -rf $site_path/out/devices
 # Prepare auth key used by reflector
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
-
-pubber/bin/build
-
-bin/reset_config $site_path $project_id $device_id
 
 bin/validator $site_path $project_id &
 vpid=$!
@@ -60,24 +57,36 @@ if [[ $i -eq $WAITING ]]; then
 fi
 echo Started validator pid $vpid
 
-echo Writing pubber output to $PUBBER_OUT
-cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
-echo $cmd
-$cmd > $PUBBER_OUT 2>&1 &
+function pubber_bg {
+    did=$1
+    shift
+    outfile=$PUBBER_OUT.$did
+    bin/reset_config $site_path $project_id $did
+    echo Writing pubber output to $outfile
+    cmd="bin/pubber $site_path $project_id $did $serial_no $@"
+    echo $cmd
+    $cmd > $outfile 2>&1 &
 
-for i in `seq 1 $WAITING`; do
-    if fgrep "Connection complete" $PUBBER_OUT; then
-        break
+    # Give a little bit of time to settle before deterministic check
+    sleep 10
+
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $outfile; then
+            break
+        fi
+        echo Waiting for pubber startup $((WAITING - i))...
+        sleep 2
+    done
+
+    if [[ $i -eq $WAITING ]]; then
+        echo pubber startup failed:
+        cat $outfile
+        return 1
     fi
-    echo Waiting for pubber startup $((WAITING - i))...
-    sleep 2
-done
+}
 
-if [[ $i -eq $WAITING ]]; then
-    echo pubber startup failed:
-    cat $PUBBER_OUT
-    false
-fi
+pubber_bg AHU-1 extraField=prlagle
+pubber_bg AHU-22
 
 echo Waiting for system to run for a bit...
 timeout 60s tail -f $VALIDATOR_OUT || true
