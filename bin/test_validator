@@ -39,11 +39,6 @@ cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.p
 validator/bin/build
 pubber/bin/build
 
-bin/validator $site_path $project_id &
-vpid=$!
-sleep 10
-echo Started validator pid $vpid
-
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
 vpid=$!
