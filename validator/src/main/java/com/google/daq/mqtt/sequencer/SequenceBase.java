@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
@@ -608,7 +609,7 @@ public abstract class SequenceBase {
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
         final Object tracedObject = augmentTrace(data);
-        String augmentedMessage = SemanticValue.actualize(stringify(tracedObject));
+        String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
         debug(String.format("update %s_%s", "config", subBlock));

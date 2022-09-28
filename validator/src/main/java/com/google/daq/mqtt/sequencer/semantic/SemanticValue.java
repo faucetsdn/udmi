@@ -60,9 +60,6 @@ public interface SemanticValue {
    * @return actual string
    */
   static String actualize(String string) {
-    System.err.println("Before: " + string);
-    String s = string.replaceAll(SEMANTIC_REGEX, STRING_PREFIX);
-    System.err.println("After: " + s);
-    return s;
+    return string.replaceAll(SEMANTIC_REGEX, STRING_PREFIX);
   }
 }
