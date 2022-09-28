@@ -7,6 +7,8 @@ public interface SemanticValue {
 
   String BEFORE_MARKER = "@@@";
   String AFTER_MARKER = "###";
+  String STRING_PREFIX = "\"";
+  String SEMANTIC_REGEX = STRING_PREFIX + BEFORE_MARKER + "[0-9a-zA-Z ]+" + AFTER_MARKER;
 
   static boolean isSemanticValue(Object other) {
     boolean semanticString = other instanceof String && ((String) other).startsWith(BEFORE_MARKER);
@@ -41,6 +43,20 @@ public interface SemanticValue {
     }
     String value = target.toString();
     return value.substring(BEFORE_MARKER.length(), value.indexOf(AFTER_MARKER));
+  }
+
+  /**
+   * Remove the description tag from any embedded strings, returning the actual
+   * string to be used (w/o semantic descriptions).
+   *
+   * @param string input string to actualize
+   * @return actual string
+   */
+  static String actualize(String string) {
+    System.err.println("Before: " + string);
+    String s = string.replaceAll(SEMANTIC_REGEX, STRING_PREFIX);
+    System.err.println("After: " + s);
+    return s;
   }
 
   /**
