@@ -32,6 +32,8 @@ if [[ -n $pids ]]; then
     kill $pids
 fi
 
+bin/clone_model # Clone, and check that version is correct.
+
 bin/reset_config $site_path $project_id $device_id
 
 pubber/bin/build
