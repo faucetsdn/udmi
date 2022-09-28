@@ -4,6 +4,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
@@ -44,13 +45,15 @@ public class BlobsetSequences extends SequenceBase {
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
         ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
-    return Base64.getEncoder().encodeToString(payload.getBytes());
+    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
+    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
 
   private String generateNonce() {
     byte[] nonce = new byte[32];
     new SecureRandom().nextBytes(nonce);
-    return Base64.getEncoder().encodeToString(nonce);  
+    String base64Nonce = Base64.getEncoder().encodeToString(nonce);
+    return SemanticValue.describe("endpoint_nonce", base64Nonce);
   }
 
   @Test
