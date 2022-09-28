@@ -36,6 +36,10 @@ cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.p
 validator/bin/build
 pubber/bin/build
 
+# Have to reset pubber configs before running validator to avoid reflector registry conflict
+bin/reset_config $site_path $project_id $device_id
+bin/reset_config $site_path $project_id $proxy_id
+
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
 vpid=$!
@@ -59,13 +63,9 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 function pubber_bg {
-    echo
-    echo
-    echo
     did=$1
     shift
     outfile=$PUBBER_OUT.$did
-    bin/reset_config $site_path $project_id $did
     serial_no=validator-$RANDOM
     echo Writing pubber output to $outfile, serial no $serial_no
     cmd="bin/pubber $site_path $project_id $did $serial_no $@"
@@ -88,9 +88,6 @@ function pubber_bg {
         cat $outfile
         return 1
     fi
-    echo
-    echo
-    echo
 }
 
 pubber_bg AHU-1 extraField=prlagle
@@ -99,13 +96,14 @@ pubber_bg AHU-22
 echo Waiting for system to run for a bit...
 timeout 30s tail -f $VALIDATOR_OUT || true
 
-echo
-echo
-echo
-
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+
+TMP_VALIDATOR=/tmp/validator.out
+
+find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
+echo Found `wc -l $TMP_VALIDATOR` json output files.
 
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
@@ -113,9 +111,9 @@ if [[ -z $outfiles ]]; then
     false
 fi
 
-echo Found out files $outfiles, copying to /tmp/validator.out
+echo Found out files $outfiles, copying to $TMP_VALIDATOR
 
 # Include /dev/null so that more has >1 to chomp on and outputs headers.
-more /dev/null $outfiles | sed -E > /tmp/validator.out \
+more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \
