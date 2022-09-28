@@ -30,6 +30,7 @@ Some caveats:
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
 * [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
+* [endpoint_config_connection_success_reconnect](#endpoint_config_connection_success_reconnect): Push endpoint config message to device that results in successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -71,8 +72,16 @@ Check that the device MQTT-acknowledges a sent config.
 Push endpoint config message to device that results in a connection error.
 
 1. Update config:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `eyAgICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInRlc3RfcHJvamVjdC9kZXZpY2UiLAogICJob3N0bmFtZSI6ICJsb2NhbGhvc3QiCn0=` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint base64 payload_ } } }
 1. Wait for blobset entry config status is error
+
+## endpoint_config_connection_success_reconnect
+
+Push endpoint config message to device that results in successful reconnect to the same endpoint.
+
+1. Update config:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint base64 payload_, "nonce": _endpoint nonce_ } } }
+1. Wait for blobset entry config status is success
 
 ## extra_config
 
@@ -147,13 +156,4 @@ Check that the min log-level config is honored by the device.
 
 ## writeback_states
 
-1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
-1. Wait for point filter_alarm_pressure_status to have value_state default (null)
-1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
-1. Update config:
-    * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
-    * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
-1. Wait for point filter_differential_pressure_sensor to have value_state invalid
-1. Wait for point filter_alarm_pressure_status to have value_state failure
-1. Wait for point filter_differential_pressure_setpoint to have value_state applied
+1. Test failed: Missing 'invalid' target specification
