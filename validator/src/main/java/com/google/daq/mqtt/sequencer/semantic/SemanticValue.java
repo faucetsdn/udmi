@@ -46,8 +46,15 @@ public interface SemanticValue {
   }
 
   /**
-   * Remove the description tag from any embedded strings, returning the actual
-   * string to be used (w/o semantic descriptions).
+   * Get the description of this object.
+   *
+   * @return object description
+   */
+  String getDescription();
+
+  /**
+   * Remove the description tag from any embedded strings, returning the actual string to be used
+   * (w/o semantic descriptions).
    *
    * @param string input string to actualize
    * @return actual string
@@ -58,11 +65,4 @@ public interface SemanticValue {
     System.err.println("After: " + s);
     return s;
   }
-
-  /**
-   * Get the description of this object.
-   *
-   * @return object description
-   */
-  String getDescription();
 }
