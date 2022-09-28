@@ -57,8 +57,7 @@ sequenceDiagram
 
 ```
 
-### Commit Reconfiguration (Successful reconfiguration, persists Reboot)
-- Documentation on [device reboot mechanism through UDMI](../system_mode.md)
+### Commit Reconfiguration (Successful reconfiguration, persists restart)
 
 ```mermaid
 %%{wrap}%%
@@ -68,8 +67,9 @@ sequenceDiagram
     participant E as Original Endpoint
     participant E' as New Endpoint
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    note over D,E': Reboot sequence from new endpoint
+    note over D,E': Restart sequence from New Endpoint
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note left of E': New endpoint connection is remembered by the device after a system restart
 ```
 
 ## Message Examples
