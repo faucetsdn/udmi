@@ -72,7 +72,7 @@ Check that the device MQTT-acknowledges a sent config.
 Push endpoint config message to device that results in a connection error.
 
 1. Update config:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint base64 payload_ } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_ } } }
 1. Wait for blobset entry config status is error
 
 ## endpoint_config_connection_success_reconnect
@@ -80,7 +80,7 @@ Push endpoint config message to device that results in a connection error.
 Push endpoint config message to device that results in successful reconnect to the same endpoint.
 
 1. Update config:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint base64 payload_, "nonce": _endpoint nonce_ } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_, "nonce": _endpoint_nonce_ } } }
 1. Wait for blobset entry config status is success
 
 ## extra_config
