@@ -28,6 +28,7 @@
 * [**event**](event.html) - Container object for all event schemas, not directly used.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**event_validation**](event_validation.html) - Validation device result
+* [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)
 * [**reflect_config**](reflect_config.html) - Config for a reflector client
 * [**reflect_state**](reflect_state.html) - State of a reflector client

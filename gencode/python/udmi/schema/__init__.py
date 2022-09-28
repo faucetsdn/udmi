@@ -46,6 +46,7 @@ from .model_system_hardware import SystemHardware
 from .model_testing import TestingModel
 from .model_testing_target import TargetTestingModel
 from .options_pubber import PubberOptions
+from .persistent_device import DevicePersistent
 from .properties import Properties
 from .reflect_config import ReflectorConfig
 from .reflect_state import ReflectorState

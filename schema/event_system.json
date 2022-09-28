@@ -27,7 +27,7 @@
       "additionalProperties": false,
       "properties": {
         "restart_count": {
-          "type": "number"
+          "type": "integer"
         },
         "mem_total_mb": {
           "type": "number"

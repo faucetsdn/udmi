@@ -46,6 +46,12 @@ echo Started validator pid $vpid
 
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
+vpid=$!
+echo Started validator pid $vpid
+
+# Just give it a head-start, actual waiting check is the loop below
+sleep 10
+
 for i in `seq 1 $WAITING`; do
     if fgrep "Entering message loop" $VALIDATOR_OUT; then
         break
@@ -59,7 +65,6 @@ if [[ $i -eq $WAITING ]]; then
     cat $VALIDATOR_OUT
     false
 fi
-echo Started validator pid $vpid
 
 function pubber_bg {
     echo
@@ -99,7 +104,7 @@ pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22
 
 echo Waiting for system to run for a bit...
-timeout 60s tail -f $VALIDATOR_OUT || true
+timeout 30s tail -f $VALIDATOR_OUT || true
 
 echo
 echo

@@ -105,8 +105,10 @@ public abstract class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   protected static Metadata deviceMetadata;
   static ValidatorConfig validatorConfig;
-  private static String projectId;
-  private static String deviceId;
+  protected static String projectId;
+  protected static String deviceId;
+  protected static String cloudRegion;
+  protected static String registryId;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -276,6 +278,9 @@ public abstract class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
+
+    cloudRegion = cloudIotConfig.cloud_region;
+    registryId = cloudIotConfig.registry_id;
 
     deviceMetadata = readDeviceMetadata();
 

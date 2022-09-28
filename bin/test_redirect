@@ -22,6 +22,10 @@ site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 mkdir -p out
 
+out_base=$site_path/devices/$device_id/out # For officially generated files (in repo)
+work_base=$site_path/out/devices/$device_id # For runtime out files (transitory)
+rm -rf $work_base
+
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
@@ -72,7 +76,6 @@ cat <<EOF > out/blobs.json
 }
 EOF
 
-out_base=$site_path/devices/$device_id/out
 # Merge JSON files together into new redirect config
 jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $out_base/redirect_config.json
 jq '.system.mode = "restart"' $out_base/redirect_config.json > $out_base/restart_config.json
@@ -102,5 +105,12 @@ bin/reset_config $site_path $project_id $device_id shutdown_config.json
 
 echo And let it settle for last start...
 sleep 20
+
+# Quick sanity check that the restart_count persistent store is handled correctly.
+restarts=$(jq .restart_count $work_base/persistent_data.json)
+if [[ $restarts -ne 3 ]]; then
+    echo Restart count incorrect, was $restarts
+    false
+fi
 
 echo Done with redirect test.
