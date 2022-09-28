@@ -52,7 +52,8 @@ public class BlobsetSequences extends SequenceBase {
   private String generateNonce() {
     byte[] nonce = new byte[32];
     new SecureRandom().nextBytes(nonce);
-    return Base64.getEncoder().encodeToString(nonce);  
+    String base64Nonce = Base64.getEncoder().encodeToString(nonce);
+    return SemanticValue.describe("endpoint nonce", base64Nonce);
   }
 
   @Test
