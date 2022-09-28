@@ -46,14 +46,14 @@ public class BlobsetSequences extends SequenceBase {
     String payload = String.format(
         ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
     String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint base64 payload", base64Payload);
+    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
 
   private String generateNonce() {
     byte[] nonce = new byte[32];
     new SecureRandom().nextBytes(nonce);
     String base64Nonce = Base64.getEncoder().encodeToString(nonce);
-    return SemanticValue.describe("endpoint nonce", base64Nonce);
+    return SemanticValue.describe("endpoint_nonce", base64Nonce);
   }
 
   @Test
