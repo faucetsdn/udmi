@@ -69,7 +69,7 @@ sequenceDiagram
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
     note over D,E': Restart sequence from New Endpoint
     D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
-    note left of E': New endpoint connection is remembered by the device after a system restart
+    note right of E': New endpoint connection is remembered by the device after a system restart
 ```
 
 ## Message Examples
