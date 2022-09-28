@@ -35,6 +35,10 @@ rm -rf $site_path/out/devices
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
+# Run explicitly so that it's not done in the background when the program is launched.
+validator/bin/build
+pubber/bin/build
+
 bin/validator $site_path $project_id &
 vpid=$!
 sleep 10
