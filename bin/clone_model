@@ -16,7 +16,7 @@ fi
 cd $MODEL_DIR
 
 git fetch $MODEL_REPO $MODEL_VER
-git checkout $MODEL_VER 2> /dev/null
+git checkout $MODEL_VER
 git log -n 1
 
 mkdir -p validator

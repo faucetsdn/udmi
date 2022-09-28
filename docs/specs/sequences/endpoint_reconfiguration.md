@@ -57,6 +57,21 @@ sequenceDiagram
 
 ```
 
+### Commit Reconfiguration (Successful reconfiguration, persists restart)
+
+```mermaid
+%%{wrap}%%
+sequenceDiagram
+    autonumber
+    participant D as Device
+    participant E as Original Endpoint
+    participant E' as New Endpoint
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note over D,E': Restart sequence from New Endpoint
+    D->>E':STATE MESSAGE<br/>blobset.blobs._iot_endpoint_config.phase = "final"
+    note right of E': New endpoint connection is remembered by the device after a system restart
+```
+
 ## Message Examples
 
 Config message to initiate Reconfiguration (sequence #1 in diagrams above)

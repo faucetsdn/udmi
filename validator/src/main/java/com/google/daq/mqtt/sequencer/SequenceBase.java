@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
@@ -105,8 +106,10 @@ public abstract class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   protected static Metadata deviceMetadata;
   static ValidatorConfig validatorConfig;
-  private static String projectId;
-  private static String deviceId;
+  protected static String projectId;
+  protected static String deviceId;
+  protected static String cloudRegion;
+  protected static String registryId;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -276,6 +279,9 @@ public abstract class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
+
+    cloudRegion = cloudIotConfig.cloud_region;
+    registryId = cloudIotConfig.registry_id;
 
     deviceMetadata = readDeviceMetadata();
 
@@ -603,7 +609,7 @@ public abstract class SequenceBase {
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
         final Object tracedObject = augmentTrace(data);
-        String augmentedMessage = stringify(tracedObject);
+        String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
         debug(String.format("update %s_%s", "config", subBlock));
