@@ -8,7 +8,7 @@ public interface SemanticValue {
   String BEFORE_MARKER = "@@@";
   String AFTER_MARKER = "###";
   String STRING_PREFIX = "\"";
-  String SEMANTIC_REGEX = STRING_PREFIX + BEFORE_MARKER + "[0-9a-zA-Z ]+" + AFTER_MARKER;
+  String SEMANTIC_REGEX = STRING_PREFIX + BEFORE_MARKER + "[-_.0-9a-zA-Z ]+" + AFTER_MARKER;
 
   static boolean isSemanticValue(Object other) {
     boolean semanticString = other instanceof String && ((String) other).startsWith(BEFORE_MARKER);
