@@ -7,6 +7,7 @@ import {
   POINTSET_SUB_FOLDER,
   STATE,
   SYSTEM_SUB_FOLDER,
+  UPDATE_SUB_FOLDER,
   VALIDATION_SUB_FOLDER,
 } from '../EventUtils';
 import { Handler } from '../Handler';
@@ -49,13 +50,17 @@ describe('UdmiEventHandler', () => {
     expect(console.warn).toHaveBeenCalledWith('Skipping UDMI message: ' + JSON.stringify(event));
   });
 
-  test('Handle site messages', () => {
+  test.each([
+    [VALIDATION_SUB_FOLDER, STATE],
+    [UPDATE_SUB_FOLDER, STATE],
+  ])('Handle site messages', (subFolder: string, subType: string) => {
     // arrange
     const event: UdmiEvent = createEvent(
       {
         deviceId: VALIDATOR_ID,
         deviceRegistryId: SITE_ID,
-        subFolder: VALIDATION_SUB_FOLDER,
+        subFolder: subFolder,
+        subType,
       },
       {}
     );
@@ -67,7 +72,6 @@ describe('UdmiEventHandler', () => {
     expect(mockSiteHandle).toHaveBeenCalled();
   });
 
-  //    [VALIDATION_SUB_FOLDER, EVENT, '_validator'],
   test.each([
     [SYSTEM_SUB_FOLDER, STATE],
     [SYSTEM_SUB_FOLDER, MODEL],
