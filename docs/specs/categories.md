@@ -5,8 +5,11 @@
 Categories are assembled in a hierarical fashion to represent the intended level
 of detail (more specific is better). E.g. a complete system config parsing message
 would be categorized as `system.config.parse`, while a system config entry of
-unspecified category would be just `system.config`. Some categories come with
-implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy below.
+unspecified category would be just `system.config`. Defined categories come with
+implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy below,
+this is _not_ to say it's the only level allowed for that category, but rather
+that is the expected normal value for that category. E.g., `pointset.point.nominal`
+could be used with a `**WARNING**` level for a warning case during normal operation.
 
 * _system_: Basic system operation
   * _base_: Baseline system operational messages
@@ -27,6 +30,7 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _fail_: (**WARNING**) Failed authentication attempt. The entry message should include the application
 * _pointset_: Handling managing data point conditions
   * _point_: Conditions relating to a specific point, the entry `message` should start with "Point _pointname_"
+    * _nominal_: (**INFO**) Category for normal operating state (also default).
     * _applied_: (**INFO**) The `set_value` for a point has been applied
     * _updating_: (**NOTICE**) The point is in the process of updating
     * _overridden_: (**WARNING**) The reported value has been overridden locally
