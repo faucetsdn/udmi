@@ -15,13 +15,11 @@ shift
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
+proxy_id=AHU-22
 mkdir -p out
 
-serial_no=validator-$RANDOM
-echo Using pubber with serial $serial_no
-
-PUBBER_OUT=pubber.out
-VALIDATOR_OUT=validator.out
+PUBBER_OUT=out/pubber.out
+VALIDATOR_OUT=out/validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
@@ -34,9 +32,13 @@ rm -rf $site_path/out/devices
 mkdir -p $site_path/validator
 cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.pkcs8
 
+# Run explicitly so that it's not done in the background when the program is launched.
+validator/bin/build
 pubber/bin/build
 
+# Have to reset pubber configs before running validator to avoid reflector registry conflict
 bin/reset_config $site_path $project_id $device_id
+bin/reset_config $site_path $project_id $proxy_id
 
 echo Starting validator, output in $VALIDATOR_OUT
 bin/validator $site_path $project_id > $VALIDATOR_OUT 2>&1 &
@@ -60,24 +62,36 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-echo Writing pubber output to $PUBBER_OUT
-cmd="bin/pubber $site_path $project_id $device_id $serial_no extraField=prlagle"
-echo $cmd
-$cmd > $PUBBER_OUT 2>&1 &
+function pubber_bg {
+    did=$1
+    shift
+    outfile=$PUBBER_OUT.$did
+    serial_no=validator-$RANDOM
+    echo Writing pubber output to $outfile, serial no $serial_no
+    cmd="bin/pubber $site_path $project_id $did $serial_no $@"
+    echo $cmd
+    $cmd > $outfile 2>&1 &
 
-for i in `seq 1 $WAITING`; do
-    if fgrep "Connection complete" $PUBBER_OUT; then
-        break
+    # Give a little bit of time to settle before deterministic check
+    sleep 10
+
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $outfile; then
+            break
+        fi
+        echo Waiting for pubber startup $((WAITING - i))...
+        sleep 2
+    done
+
+    if [[ $i -eq $WAITING ]]; then
+        echo pubber startup failed:
+        cat $outfile
+        return 1
     fi
-    echo Waiting for pubber startup $((WAITING - i))...
-    sleep 2
-done
+}
 
-if [[ $i -eq $WAITING ]]; then
-    echo pubber startup failed:
-    cat $PUBBER_OUT
-    false
-fi
+pubber_bg AHU-1 extraField=prlagle
+pubber_bg AHU-22
 
 echo Waiting for system to run for a bit...
 timeout 30s tail -f $VALIDATOR_OUT || true
@@ -86,15 +100,20 @@ echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
+TMP_VALIDATOR=/tmp/validator.out
+
+find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
+echo Found `wc -l $TMP_VALIDATOR` json output files.
+
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
     echo No .out files found in $site_path/out/devices
     false
 fi
 
-echo Found out files $outfiles, copying to /tmp/validator.out
+echo Found out files $outfiles, copying to $TMP_VALIDATOR
 
 # Include /dev/null so that more has >1 to chomp on and outputs headers.
-more /dev/null $outfiles | sed -E > /tmp/validator.out \
+more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \
