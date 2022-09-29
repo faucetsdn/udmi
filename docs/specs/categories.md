@@ -9,7 +9,7 @@ unspecified category would be just `system.config`. Defined categories come with
 implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy below,
 this is _not_ to say it's the only level allowed for that category, but rather
 that is the expected normal value for that category. E.g., `pointset.point.nominal`
-could be used with a `**WARNING**` level for a warning case during normal operation.
+could be used with a **WARNING** level for a warning case during normal operation.
 
 * _system_: Basic system operation
   * _base_: Baseline system operational messages

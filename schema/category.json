@@ -12,6 +12,7 @@
     { "pattern": "^system\\.auth\\.login$" },
     { "pattern": "^system\\.auth\\.logout$" },
     { "pattern": "^system\\.auth\\.fail$" },
+    { "pattern": "^pointset\\.point\\.nominal$" },
     { "pattern": "^pointset\\.point\\.applied$" },
     { "pattern": "^pointset\\.point\\.updating$" },
     { "pattern": "^pointset\\.point\\.overridden$" },
