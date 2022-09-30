@@ -7,6 +7,7 @@ import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -105,11 +106,11 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   protected static Metadata deviceMetadata;
-  static ValidatorConfig validatorConfig;
   protected static String projectId;
   protected static String deviceId;
   protected static String cloudRegion;
   protected static String registryId;
+  static ValidatorConfig validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -959,8 +960,15 @@ public abstract class SequenceBase {
 
   protected boolean configUpdateComplete() {
     Object receivedConfig = receivedUpdates.get("config");
-    return receivedConfig instanceof Config
-        && configDiffEngine.equals(deviceConfig, sanitizeConfig((Config) receivedConfig));
+    if (!(receivedConfig instanceof Config)) {
+      return false;
+    }
+    List<String> differences = configDiffEngine.diff(deviceConfig,
+        sanitizeConfig((Config) receivedConfig));
+    if (traceLogLevel()) {
+      System.err.println("+- " + Joiner.on("\n+- ").join(differences));
+    }
+    return differences.isEmpty();
   }
 
   protected void trace(String message) {
