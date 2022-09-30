@@ -965,7 +965,7 @@ public abstract class SequenceBase {
     }
     List<String> differences = configDiffEngine.diff(deviceConfig,
         sanitizeConfig((Config) receivedConfig));
-    if (traceLogLevel()) {
+    if (traceLogLevel() && !differences.isEmpty()) {
       System.err.println("+- " + Joiner.on("\n+- ").join(differences));
     }
     return differences.isEmpty();
