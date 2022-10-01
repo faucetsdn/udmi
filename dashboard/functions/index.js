@@ -173,7 +173,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   attributes.deviceId = parts[1];
   attributes.subFolder = parts[2];
   attributes.subType = parts[3];
-  console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType, attributes.subFolder);
+  console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType, attributes.subFolder, msgObject.nonce);
 
   return registry_promise.then(() => {
     attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
@@ -306,12 +306,12 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
 
-  console.log('Config message', registryId, deviceId, subFolder, msgString);
+  const msgObject = JSON.parse(msgString);
+  console.log('Config message', registryId, deviceId, subFolder, msgObject.nonce, msgString);
   if (!msgString) {
     console.warn('Config abort', registryId, deviceId, subFolder, msgString);
     return null;
   }
-  const msgObject = JSON.parse(msgString);
 
   attributes.subType = CONFIG_TYPE;
 
@@ -359,7 +359,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
       return;
     }
   } else if (subFolder == 'update') {
-    console.log('Config replace version', version, startTime);
+    console.log('Config replace version', version, startTime, subContents.nonce);
     newConfig = subContents;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
@@ -371,7 +371,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig.version = UDMI_VERSION;
     newConfig.timestamp = currentTimestamp();
 
-    console.log('Config modify version', subFolder, version, startTime);
+    console.log('Config modify version', subFolder, version, startTime, subContents.nonce);
     if (subContents) {
       delete subContents.version;
       delete subContents.timestamp;
@@ -394,9 +394,9 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   };
   return update_device_config(newConfig, attributes, version)
     .then(() => {
-      console.log('Config accepted version', subFolder, version, startTime);
+      console.log('Config accepted version', subFolder, version, startTime, subContents.nonce);
     }).catch(e => {
-      console.log('Config update rejected', subFolder, version, startTime);
+      console.log('Config update rejected', subFolder, version, startTime, subContents.nonce);
       return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
     })
 }
