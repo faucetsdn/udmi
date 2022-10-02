@@ -47,7 +47,6 @@ public class DiscoverySequences extends SequenceBase {
     deviceConfig.discovery.enumeration.generation =
         SemanticDate.describe("generation start time", startTime);
     info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
-    updateConfig("discovery generation");
     untilTrue("enumeration generation",
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );
@@ -129,7 +128,6 @@ public class DiscoverySequences extends SequenceBase {
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
-    updateConfig();
     untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
     previousGenerations = new HashMap<>();
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
@@ -142,7 +140,6 @@ public class DiscoverySequences extends SequenceBase {
       getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });
-    updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
   }
 

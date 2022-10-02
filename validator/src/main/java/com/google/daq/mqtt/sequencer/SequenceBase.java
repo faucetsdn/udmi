@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
@@ -600,7 +601,7 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    recordDeviceConfig(reason);
+    localConfigChange(reason);
   }
 
   private void updateConfig(SubFolder subBlock, Object data) {
@@ -642,15 +643,17 @@ public abstract class SequenceBase {
     }
   }
 
-  private void recordDeviceConfig(String reason) {
+  private void localConfigChange(String reason) {
     try {
       recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
         return;
       }
-      String suffix = reason == null ? "" : (" to " + reason);
-      recordSequence(String.format("Update config%s:", suffix));
+      String suffix = reason == null ? "" : (" " + reason);
+      String header = String.format("Update config%s:", suffix);
+      debug(header + " " + getTimestamp(deviceConfig.timestamp));
+      recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
     } catch (Exception e) {
@@ -780,7 +783,7 @@ public abstract class SequenceBase {
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
     waitingCondition = "waiting for " + description;
     info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
-    updateConfig();
+    updateConfig("before " + description);
     recordSequence("Wait for " + description);
     while (evaluator.get()) {
       receiveMessage();
@@ -903,7 +906,6 @@ public abstract class SequenceBase {
         info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
-        recordDeviceConfig("received config message");
       } else if (converted instanceof AugmentedState) {
         debug(String.format("Updated state #%03d:\n%s", updateCount,
             stringify(converted)));
