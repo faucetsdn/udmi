@@ -645,14 +645,14 @@ public abstract class SequenceBase {
 
   private void localConfigChange(String reason) {
     try {
+      String suffix = reason == null ? "" : (" " + reason);
+      String header = String.format("Update config%s:", suffix);
+      debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
         return;
       }
-      String suffix = reason == null ? "" : (" " + reason);
-      String header = String.format("Update config%s:", suffix);
-      debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
