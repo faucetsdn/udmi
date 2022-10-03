@@ -36,19 +36,17 @@
       <ng-container *ngSwitchCase="'lastPayload' || 'lastSeen'">
         <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
       </ng-container>
+      <ng-container *ngSwitchCase="'operational'">
+        <mat-cell *matCellDef="let element">
+          <ng-container *ngIf="element.operational; then yesBlock; else noBlock"></ng-container>
+          <ng-template #yesBlock>Yes</ng-template>
+          <ng-template #noBlock>No</ng-template>
+        </mat-cell>
+      </ng-container>
       <ng-container *ngSwitchCase="'errorsCount'">
-        <mat-cell *matCellDef="let element" class="expand-trigger-cell">
+        <mat-cell *matCellDef="let element" class="cell-with-expand-trigger">
           {{ element.errorsCount }}
-          <button
-            [disabled]="!element.errorsCount"
-            mat-icon-button
-            aria-label="expand row"
-            (click)="
-              expandedElement = expandedElement === element ? null : element;
-              $event.stopPropagation();
-              $event.preventDefault()
-            "
-          >
+          <button mat-icon-button aria-label="expand row" (click)="handleExpand(element, $event)">
             <mat-icon *ngIf="expandedElement !== element">keyboard_arrow_down</mat-icon>
             <mat-icon *ngIf="expandedElement === element">keyboard_arrow_up</mat-icon>
           </button>
@@ -62,7 +60,7 @@
 
   <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
   <ng-container matColumnDef="expandedDetails">
-    <mat-cell *matCellDef="let element" class="expanded-cell">
+    <mat-cell *matCellDef="let element" class="cell-details-content-wrapper">
       <app-device-errors [deviceId]="element.id"></app-device-errors>
     </mat-cell>
   </ng-container>
@@ -71,7 +69,8 @@
   <mat-row
     *matRowDef="let row; columns: displayedColumns"
     class="row-main"
-    [class.row-expanded]="expandedElement === row"
+    [class.row-is-expanded]="expandedElement === row"
+    (click)="handleExpand(row, $event)"
   ></mat-row>
   <mat-row
     *matRowDef="let row; columns: ['expandedDetails']"

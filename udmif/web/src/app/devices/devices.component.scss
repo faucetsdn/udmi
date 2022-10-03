@@ -9,22 +9,21 @@
   }
 }
 
-.expand-trigger-cell {
+.cell-with-expand-trigger {
   justify-content: space-between;
-}
-
-.row-details {
-  overflow: hidden;
 }
 .row-main {
   border-bottom-width: 0;
 }
-.row-main:hover,
-.row-expanded,
 .row-details {
-  background: mat.get-color-from-palette(mat.$gray-palette, 100);
+  overflow: hidden;
 }
-.expanded-cell {
+.cell-details-content-wrapper {
   display: block;
   width: 100%;
+}
+.row-main:hover,
+.row-is-expanded,
+.row-details {
+  background: mat.get-color-from-palette(mat.$gray-palette, 100);
 }

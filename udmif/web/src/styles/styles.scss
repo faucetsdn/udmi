@@ -9,6 +9,9 @@ body {
 body {
   margin: 0;
 }
+a {
+  color: $primary;
+}
 
 // Table overrides.
 .mat-table {

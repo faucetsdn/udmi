@@ -10,7 +10,6 @@ import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { compact, union } from 'lodash-es';
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { DeviceError } from '../device-errors/device-errors';
 
 @Component({
   templateUrl: './devices.component.html',
@@ -40,7 +39,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   stringifiedDefaultFilters?: string = this.defaultFilters.length ? JSON.stringify(this.defaultFilters) : undefined;
   filter?: string = this.stringifiedDefaultFilters;
   searchFields: Record<string, string> = this.route.snapshot.data['searchFields'];
-  expandedElement: DeviceError | null = null;
+  expandedElement: Device | null = null;
 
   constructor(private devicesService: DevicesService, private route: ActivatedRoute) {}
 
@@ -84,6 +83,12 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
     this._refetch();
   };
+
+  handleExpand(device: Device, e: Event): void {
+    console.log('clicked');
+    this.expandedElement = this.expandedElement === device ? null : device;
+    e.stopPropagation();
+  }
 
   private _refetch(offset: number = 0): void {
     this.devicesQuery.refetch({
