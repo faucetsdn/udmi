@@ -3,7 +3,7 @@
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Update config:
+1. Update config before no interesting status:
     * Set `system.min_loglevel` = `100`
 1. Wait for no interesting status
 1. Wait for clean config/state synced
