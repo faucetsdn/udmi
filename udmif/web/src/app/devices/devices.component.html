@@ -46,7 +46,11 @@
       <ng-container *ngSwitchCase="'errorsCount'">
         <mat-cell *matCellDef="let element" class="cell-with-expand-trigger">
           {{ element.errorsCount }}
-          <button mat-icon-button aria-label="expand row" (click)="handleExpand(element, $event)">
+          <button
+            mat-icon-button
+            aria-label="expand row"
+            (click)="expandedElement = expandedElement === element ? null : element"
+          >
             <mat-icon *ngIf="expandedElement !== element">keyboard_arrow_down</mat-icon>
             <mat-icon *ngIf="expandedElement === element">keyboard_arrow_up</mat-icon>
           </button>
@@ -70,7 +74,6 @@
     *matRowDef="let row; columns: displayedColumns"
     class="row-main"
     [class.row-is-expanded]="expandedElement === row"
-    (click)="handleExpand(row, $event)"
   ></mat-row>
   <mat-row
     *matRowDef="let row; columns: ['expandedDetails']"

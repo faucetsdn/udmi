@@ -84,12 +84,6 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this._refetch();
   };
 
-  handleExpand(device: Device, e: Event): void {
-    console.log('clicked');
-    this.expandedElement = this.expandedElement === device ? null : device;
-    e.stopPropagation();
-  }
-
   private _refetch(offset: number = 0): void {
     this.devicesQuery.refetch({
       searchOptions: {
