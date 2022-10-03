@@ -5,6 +5,7 @@ on:
   pull_request:
   schedule:
     - cron: '37 * * * *'
+    - cron: '17 * * * *'
 
 jobs:
   unit:
