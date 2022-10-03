@@ -23,6 +23,7 @@ const routes: Routes = [
         'section',
         'lastPayload',
         'operational',
+        'errorsCount',
       ],
     },
   },

@@ -16,21 +16,66 @@
   >
   </mat-paginator>
 </div>
-<mat-table [dataSource]="devices" matSort (matSortChange)="sortData($event)" aria-label="List of devices">
+<mat-table
+  multiTemplateDataRows
+  [dataSource]="devices"
+  matSort
+  (matSortChange)="sortData($event)"
+  aria-label="List of devices"
+>
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
     <mat-header-cell *matHeaderCellDef mat-sort-header>{{
       columnName.replace('Count', '') | capitalize
     }}</mat-header-cell>
-    <div *ngIf="columnName === 'lastPayload' || columnName === 'lastSeen'; else elseBlock">
-      <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
-    </div>
-    <ng-template #elseBlock
-      ><mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell></ng-template
-    >
+    <ng-container [ngSwitch]="columnName">
+      <ng-container *ngSwitchCase="'name'">
+        <mat-cell *matCellDef="let element"
+          ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
+        >
+      </ng-container>
+      <ng-container *ngSwitchCase="'lastPayload' || 'lastSeen'">
+        <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      </ng-container>
+      <ng-container *ngSwitchCase="'errorsCount'">
+        <mat-cell *matCellDef="let element" class="expand-trigger-cell">
+          {{ element.errorsCount }}
+          <button
+            [disabled]="!element.errorsCount"
+            mat-icon-button
+            aria-label="expand row"
+            (click)="
+              expandedElement = expandedElement === element ? null : element;
+              $event.stopPropagation();
+              $event.preventDefault()
+            "
+          >
+            <mat-icon *ngIf="expandedElement !== element">keyboard_arrow_down</mat-icon>
+            <mat-icon *ngIf="expandedElement === element">keyboard_arrow_up</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+      <ng-container *ngSwitchDefault>
+        <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+
+  <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
+  <ng-container matColumnDef="expandedDetails">
+    <mat-cell *matCellDef="let element" class="expanded-cell">
+      <app-device-errors [deviceId]="element.id"></app-device-errors>
+    </mat-cell>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="'/devices/' + row.id">
-    <mat-row></mat-row>
-  </a>
+  <mat-row
+    *matRowDef="let row; columns: displayedColumns"
+    class="row-main"
+    [class.row-expanded]="expandedElement === row"
+  ></mat-row>
+  <mat-row
+    *matRowDef="let row; columns: ['expandedDetails']"
+    class="row-details"
+    [@detailExpand]="row === expandedElement ? 'expanded' : 'collapsed'"
+  ></mat-row>
 </mat-table>
