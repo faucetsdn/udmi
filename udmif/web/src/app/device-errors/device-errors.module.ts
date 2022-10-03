@@ -9,6 +9,5 @@ import { MatSortModule } from '@angular/material/sort';
 @NgModule({
   declarations: [DeviceErrorsComponent],
   imports: [DeviceErrorsRoutingModule, CommonModule, MatTableModule, MatSortModule, PipesModule],
-  exports: [DeviceErrorsComponent],
 })
 export class DeviceErrorsModule {}

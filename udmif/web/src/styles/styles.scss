@@ -12,6 +12,9 @@ body {
 a {
   color: $primary;
 }
+ol {
+  padding-left: $gutter-width;
+}
 
 // Table overrides.
 .mat-table {

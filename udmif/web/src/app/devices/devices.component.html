@@ -47,6 +47,7 @@
         <mat-cell *matCellDef="let element" class="cell-with-expand-trigger">
           {{ element.errorsCount }}
           <button
+            *ngIf="element.errorsCount"
             mat-icon-button
             aria-label="expand row"
             (click)="expandedElement = expandedElement === element ? null : element"
@@ -65,7 +66,9 @@
   <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
   <ng-container matColumnDef="expandedDetails">
     <mat-cell *matCellDef="let element" class="cell-details-content-wrapper">
-      <app-device-errors [deviceId]="element.id"></app-device-errors>
+      <ol>
+        <li *ngFor="let error of (element.validation | parse)?.errors">{{ error.message }}</li>
+      </ol>
     </mat-cell>
   </ng-container>
 

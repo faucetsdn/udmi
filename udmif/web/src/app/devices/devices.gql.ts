@@ -20,6 +20,7 @@ export const GET_DEVICES = gql`
         lastSeen
         state
         errorsCount
+        validation
       }
       totalCount
       totalFilteredCount

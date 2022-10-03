@@ -8,8 +8,6 @@ import { DeviceService } from '../device/device.service';
 import { DeviceError } from './device-errors';
 
 @Component({
-  selector: 'app-device-errors',
-  inputs: ['deviceId'],
   templateUrl: './device-errors.component.html',
   styleUrls: ['./device-errors.component.scss'],
 })
@@ -19,14 +17,13 @@ export class DeviceErrorsComponent implements OnInit {
   displayedColumns: (keyof DeviceError)[] = ['timestamp', 'message', 'detail', 'level'];
   loading: boolean = true;
   dataSource = new MatTableDataSource<DeviceError>();
-  deviceId?: string;
 
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(private route: ActivatedRoute, private deviceService: DeviceService, private parsePipe: ParsePipe) {}
 
   ngOnInit(): void {
-    const deviceId: string = this.deviceId ?? this.route.snapshot.params['deviceId'];
+    const deviceId: string = this.route.snapshot.params['deviceId'];
 
     this.deviceSubscription = this.deviceService.getDevice(deviceId).subscribe(({ data, loading }) => {
       this.loading = loading;
