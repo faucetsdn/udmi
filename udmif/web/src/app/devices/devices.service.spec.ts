@@ -45,6 +45,7 @@ describe('DevicesService', () => {
             lastSeen: '2022-06-203T04:55:21Z',
             state: 'COMPLETE',
             errorsCount: 0,
+            validation: '{}',
           },
         ],
         totalCount: 1,

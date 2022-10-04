@@ -9,10 +9,18 @@ import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { compact, union } from 'lodash-es';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 
 @Component({
   templateUrl: './devices.component.html',
   styleUrls: ['./devices.component.scss'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({ height: '0', minHeight: '0' })),
+      state('expanded', style({ height: '*', minHeight: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class DevicesComponent implements OnInit, OnDestroy {
   devicesSubscription!: Subscription;
@@ -31,6 +39,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   stringifiedDefaultFilters?: string = this.defaultFilters.length ? JSON.stringify(this.defaultFilters) : undefined;
   filter?: string = this.stringifiedDefaultFilters;
   searchFields: Record<string, string> = this.route.snapshot.data['searchFields'];
+  expandedElement: Device | null = null;
 
   constructor(private devicesService: DevicesService, private route: ActivatedRoute) {}
 
