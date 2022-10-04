@@ -67,7 +67,9 @@
   <ng-container matColumnDef="expandedDetails">
     <mat-cell *matCellDef="let element" class="cell-details-content-wrapper">
       <ol>
-        <li *ngFor="let error of (element.validation | parse)?.errors">{{ error.message }}</li>
+        <li *ngFor="let error of (element.validation | parse)?.errors | orderBy: 'timestamp':'desc'">
+          {{ error.message }}
+        </li>
       </ol>
     </mat-cell>
   </ng-container>

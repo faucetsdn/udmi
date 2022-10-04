@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { compact, union } from 'lodash-es';
 import { animate, state, style, transition, trigger } from '@angular/animations';
+import { DeviceError } from '../device-errors/device-errors';
 
 @Component({
   templateUrl: './devices.component.html',
