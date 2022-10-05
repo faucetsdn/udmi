@@ -7,10 +7,18 @@ import { SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
 import { SitesService } from './sites.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 
 @Component({
   templateUrl: './sites.component.html',
   styleUrls: ['./sites.component.scss'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({ height: '0', minHeight: '0' })),
+      state('expanded', style({ height: '*', minHeight: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class SitesComponent implements OnInit, OnDestroy {
   sitesSubscription!: Subscription;
@@ -37,6 +45,7 @@ export class SitesComponent implements OnInit, OnDestroy {
   searchFields: Record<string, string> = {
     name: 'getSiteNames',
   };
+  expandedElement: Site | null = null;
 
   constructor(private sitesService: SitesService) {}
 
