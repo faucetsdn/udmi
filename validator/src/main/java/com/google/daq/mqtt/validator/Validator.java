@@ -90,7 +90,7 @@ public class Validator {
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
-  private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
+  public static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String STATE_POINTSET = "state_pointset";

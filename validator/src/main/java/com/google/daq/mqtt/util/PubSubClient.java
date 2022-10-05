@@ -15,6 +15,7 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
@@ -132,7 +133,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   private void registerHandlerType(SubType type, SubFolder folder) {
-    String mapKey = getMapKey(type, folder);
+    String mapKey = typeFolderKey(type, folder);
     Class<?> messageClass = getMessageClass(type, folder);
     if (messageClass != null) {
       typeClasses.put(mapKey, messageClass);
@@ -191,6 +192,9 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         return;
       }
       Map<String, String> attributes = message.getAttributesMap();
+      if (!attributes.containsKey(Validator.DEVICE_REGISTRY_ID_KEY)) {
+        return;
+      }
       byte[] rawData = message.getData().toByteArray();
       final String data;
       boolean base64 = rawData[0] != '{';
@@ -227,8 +231,14 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   @Override
   public void publishMessage(String deviceId, Object message) {
     SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
-    String mqttTopic = getMapKey(typePair.getKey(), typePair.getValue());
+    String mqttTopic = typeFolderKey(typePair.getKey(), typePair.getValue());
     publish(deviceId, mqttTopic, JsonUtil.stringify(message));
+  }
+
+  public void publishDirect(String deviceId, Object message) {
+    SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
+    publishDirect(deviceId, typePair.getKey().value(), typePair.getValue().value(),
+        JsonUtil.stringify(message));
   }
 
   @Override
@@ -248,7 +258,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   private void handlerHandler(Map<String, Object> message, Map<String, String> attributes) {
     Envelope envelope = JsonUtil.convertTo(Envelope.class, attributes);
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    String mapKey = typeFolderKey(envelope.subType, envelope.subFolder);
     try {
       Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
         System.err.println("Ignoring messages of type " + mapKey);
@@ -263,7 +273,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     }
   }
 
-  private String getMapKey(SubType subType, SubFolder subFolder) {
+  private String typeFolderKey(SubType subType, SubFolder subFolder) {
     return subFolder + "/" + (subType != null ? subType : SubType.EVENT);
   }
 
@@ -288,6 +298,32 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
       System.err.printf("Published to %s/%s%n", registryId, subFolder);
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing message", e);
+    }
+  }
+
+  public void publishDirect(String deviceId, String subType, String subFolder, String data) {
+    try {
+      if (deviceId == null) {
+        System.err.printf("Refusing to publish to %s/%s due to unspecified device%n", subType, subFolder);
+        return;
+      }
+      Preconditions.checkNotNull(registryId, "registry id not defined");
+      Map<String, String> attributesMap = Map.of(
+          "projectId", projectId,
+          "subFolder", subFolder,
+          "subType", subType,
+          "registryId", registryId,
+          "deviceId", deviceId
+      );
+      PubsubMessage message = PubsubMessage.newBuilder()
+          .setData(ByteString.copyFromUtf8(data))
+          .putAllAttributes(attributesMap)
+          .build();
+      ApiFuture<String> publish = publisher.publish(message);
+      publish.get(); // Wait for publish to complete.
+      System.err.printf("Published to %s/%s as %s/%s%n", registryId, deviceId, subType, subFolder);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }

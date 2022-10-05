@@ -29,7 +29,7 @@ public class IotReflectorClient implements MessagePublisher {
       .setSerializationInclusion(Include.NON_NULL);
 
   private static final String IOT_KEY_ALGORITHM = "RS256";
-  private static final String UDMS_REFLECT = "UDMS-REFLECT";
+  public static final String UDMS_REFLECT = "UDMS-REFLECT";
   private static final String WAS_BASE_64 = "wasBase64";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
