@@ -39,7 +39,7 @@
         <mat-cell *matCellDef="let element">{{ element.percentValidated | percent: '1.0-2' }}</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'totalDeviceErrorsCount'">
-        <mat-cell *matCellDef="let element" class="cell-with-expand-trigger">
+        <mat-cell *matCellDef="let element" class="expand-trigger-cell">
           {{ element.totalDeviceErrorsCount }}
           <button
             *ngIf="element.totalDeviceErrorsCount"
@@ -60,7 +60,7 @@
 
   <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
   <ng-container matColumnDef="expandedDetails">
-    <mat-cell *matCellDef="let element" class="cell-details-content-wrapper">
+    <mat-cell *matCellDef="let element" class="expanded-row-content-wrapper">
       <!-- <ol>
         <li *ngFor="let error of (element.validation | parse)?.errors | orderBy: 'timestamp':'desc'">
           {{ error.message }}
@@ -72,12 +72,12 @@
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
   <mat-row
     *matRowDef="let row; columns: displayedColumns"
-    class="row-main"
+    class="expandable-row"
     [class.row-is-expanded]="expandedElement === row"
   ></mat-row>
   <mat-row
     *matRowDef="let row; columns: ['expandedDetails']"
-    class="row-details"
+    class="expanded-row-content"
     [@detailExpand]="row === expandedElement ? 'expanded' : 'collapsed'"
   ></mat-row>
 </mat-table>
