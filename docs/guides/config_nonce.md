@@ -15,80 +15,117 @@ For GitHub Actions CI testing, setting the `SEQUENCER_OPTS` secret to `-vv` will
 
 ## Sequencer Output
 
-If properly enabled, the _nonce_ will show up in the sequencer output:
+If properly enabled, the _nonce_ will show up in the sequencer output, in this case for the specific _system_
+config sub-folder:
 ```
-2022-10-05T13:53:32Z TRACE sequencer received config_update_2022-10-05T13:53:29.980Z:
-{
-   "nonce" : 1664978008701,
+ 2022-10-05T21:30:58Z TRACE sequencer received config_system_2022-10-05T21:30:58.072Z:
+ {
+   "extra_field" : "reset_config",
+   "metrics_rate_sec" : 600,
+   "min_loglevel" : 200,
+   "nonce" : 1665005451790,
+   "testing" : {
+     "sequence_name" : "reset_config"
+   },
+   "timestamp" : "2022-10-05T21:30:58.072Z",
+   "version" : "1.3.14-85-g61f475b7"
+ }
+ ```
+ 
+And then should immediately be followed by a "promoted" update, where the _system_ update is incorporated
+into the complete _config_ update:
+```
+ 2022-10-05T21:30:58Z TRACE sequencer received config_update_2022-10-05T21:30:58.133Z:
+ {
+   "nonce" : 1665005451790,
+   "system" : {
+     "min_loglevel" : 200,
+     "metrics_rate_sec" : 600,
+     "testing" : {
+       "sequence_name" : "reset_config"
+     },
+     "extra_field" : "reset_config",
+     "nonce" : 1665005451790
+   },
+   "timestamp" : "2022-10-05T21:30:58.133Z",
+   "version" : "1.3.14-85-g61f475b7"
+ }
+```
+
+## Cloud Functions
+
+The _config_ updates themselves are processed by some cloud functions. The _udmi__reflect_ function receives the sequencer
+messags, and the _udmi__config_ function handles the config update itself. The logs of these can be searched for the specific
+_nonce_ to show a more detailed accounting of what is going on:
+```
+~/udmi$ gcloud --project=$project_id functions logs read udmi_reflect --sort-by=time_utc --limit=1000 | fgrep 1665005451790
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.755  Reflect ZZ-TRI-FECTA AHU-1 config system 1665005451790
+```
+
+From that, you can look up the complete function execution context run:
+```
+~/udmi$ gcloud --project=$project_id functions logs read udmi_reflect --sort-by=time_utc --limit=1000 | fgrep igx30b2gw5gg
+D        udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:54.043  Function execution started
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:54.650  Setting GCLOUD_PROJECT to bos-testing-ci
+WARNING  udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:54.748  Warning, estimating Firebase Config based on GCLOUD_PROJECT. Initializing firebase-admin may fail
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.518  No FIREBASE_CONFIG defined
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.518  Using UDMI version 1.3.14-85-g61f475b7
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.634  Fetching registries for us-central1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.636  Fetching registries for europe-west1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.637  Fetching registries for asia-east1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.755  Reflect ZZ-TRI-FECTA AHU-1 config system 1665005451790
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:55.887  Processing results for us-central1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:56.399  Processing results for europe-west1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:56.668  Message publish udmi_config {"deviceId":"AHU-1","deviceNumId":"2612218335398339","deviceRegistryId":"ZZ-TRI-FECTA","deviceRegistryLocation":"us-central1","projectId":"bos-testing-ci","subFolder":"system","subType":"config","cloudRegion":"us-central1"}
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:56.668  Fetched 2 registry regions
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:56.668  Processing results for asia-east1
+         udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:56.999  Message 5834149510944859 published to udmi_config.
+D        udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:57.004  Function execution took 2960 ms. Finished with status: ok
+```
+
+The same logic can be applied to the _udmi__config_ function, but there's a lot more entries in those logs, so you may need to add a specific _end-time_ filter:
+```
+~/udmi$ gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000 --end-time=2022-10-05T21:31:57.004 | fgrep 1665005451790
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.072  Config message ZZ-TRI-FECTA AHU-1 system 1665005451790 {"min_loglevel":200,"metrics_rate_sec":600,"testing":{"sequence_name":"reset_config"},"extra_field":"reset_config","nonce":1665005451790}
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.073  command devices/AHU-1/config/system 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.133  Config modify system 86490 2022-10-05T21:30:58.073Z 1665005451790
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.189  command devices/AHU-1/config/update 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.218  Config accepted system 86490 2022-10-05T21:30:58.073Z 1665005451790
+```
+
+## subFolder Updates
+
+For config blocks that have multiple sub-folders, there will be a _nonce_ for each and also at the top
+level. The top-level one indicates which subfolder was added most recently. Although nominally a timestamp,
+the numerical ordering of the _nonce_ is not reliable as a source of information.
+```
+ 2022-10-05T21:31:03Z TRACE sequencer received config_update_2022-10-05T21:31:02.950Z:
+ {
+   "nonce" : 1665005461272,
+   "pointset" : {
+     "points" : {
+       "filter_alarm_pressure_status" : {
+         "ref" : "BV11.present_value"
+       },
+       "filter_differential_pressure_setpoint" : {
+         "set_value" : 98
+       },
+       "filter_differential_pressure_sensor" : {
+         "ref" : "AV12.present_value"
+       }
+     },
+     "nonce" : 1665005461272
+   },
    "system" : {
      "min_loglevel" : 200,
      "metrics_rate_sec" : 600,
      "testing" : {
        "sequence_name" : "writeback_states"
      },
-     "nonce" : 1664978008701,
-     "last_start" : "2022-10-05T13:53:17Z"
+     "nonce" : 1665005459267,
+     "last_start" : "2022-10-05T21:30:45Z"
    },
-   "timestamp" : "2022-10-05T13:53:29.980Z",
+   "timestamp" : "2022-10-05T21:31:02.950Z",
    "version" : "1.3.14-85-g61f475b7"
  }
 ```
-
-The `nonce` field will show up at various levels of the config hierarchy. The one under _system_ indicates
-the value generated when the update was created. The one at the top level indicates the one used when the
-folder update was combined into the complete structure (see below for more details on this).
-
-## Cloud Functions
-
-peringknife@peringknife-glaptop4:~/udmi$ gcloud --project=$project_id functions logs read udmi_reflect --sort-by=time_utc --limit=1000 | fgrep 1664978010705
-         udmi_reflect  nv4qq2uyyqff  2022-10-05 13:53:30.820  Reflect ZZ-TRI-FECTA AHU-1 config pointset 1664978010705
-
-## subFolder Updates
-
-2022-10-05T13:53:34.2067262Z 2022-10-05T13:53:34Z TRACE sequencer received config_pointset_2022-10-05T13:53:33.096Z:
-2022-10-05T13:53:34.2067578Z {
-2022-10-05T13:53:34.2067777Z   "nonce" : 1664978010705,
-2022-10-05T13:53:34.2068296Z   "points" : {
-2022-10-05T13:53:34.2068547Z     "filter_alarm_pressure_status" : {
-2022-10-05T13:53:34.2068811Z       "ref" : "BV11.present_value"
-2022-10-05T13:53:34.2069027Z     },
-2022-10-05T13:53:34.2069271Z     "filter_differential_pressure_setpoint" : {
-2022-10-05T13:53:34.2069532Z       "set_value" : 98
-2022-10-05T13:53:34.2069727Z     },
-2022-10-05T13:53:34.2069957Z     "filter_differential_pressure_sensor" : {
-2022-10-05T13:53:34.2070225Z       "ref" : "AV12.present_value"
-2022-10-05T13:53:34.2070428Z     }
-2022-10-05T13:53:34.2070598Z   },
-2022-10-05T13:53:34.2070896Z   "timestamp" : "2022-10-05T13:53:33.096Z",
-2022-10-05T13:53:34.2071197Z   "version" : "1.3.14-85-g61f475b7"
-2022-10-05T13:53:34.2071395Z }
-2022-10-05T13:53:34.2076341Z +- Remove `pointset`
-2022-10-05T13:53:34.3162410Z 2022-10-05T13:53:34Z TRACE sequencer received config_update_2022-10-05T13:53:34.213Z:
-2022-10-05T13:53:34.3163098Z {
-2022-10-05T13:53:34.3163414Z   "nonce" : 1664978010705,
-2022-10-05T13:53:34.3164076Z   "pointset" : {
-2022-10-05T13:53:34.3164339Z     "points" : {
-2022-10-05T13:53:34.3164589Z       "filter_alarm_pressure_status" : {
-2022-10-05T13:53:34.3164862Z         "ref" : "BV11.present_value"
-2022-10-05T13:53:34.3165073Z       },
-2022-10-05T13:53:34.3165323Z       "filter_differential_pressure_setpoint" : {
-2022-10-05T13:53:34.3165581Z         "set_value" : 98
-2022-10-05T13:53:34.3165784Z       },
-2022-10-05T13:53:34.3166026Z       "filter_differential_pressure_sensor" : {
-2022-10-05T13:53:34.3166295Z         "ref" : "AV12.present_value"
-2022-10-05T13:53:34.3166506Z       }
-2022-10-05T13:53:34.3166685Z     },
-2022-10-05T13:53:34.3166876Z     "nonce" : 1664978010705
-2022-10-05T13:53:34.3167074Z   },
-2022-10-05T13:53:34.3167247Z   "system" : {
-2022-10-05T13:53:34.3167453Z     "min_loglevel" : 200,
-2022-10-05T13:53:34.3167676Z     "metrics_rate_sec" : 600,
-2022-10-05T13:53:34.3167889Z     "testing" : {
-2022-10-05T13:53:34.3168126Z       "sequence_name" : "writeback_states"
-2022-10-05T13:53:34.3168339Z     },
-2022-10-05T13:53:34.3168529Z     "nonce" : 1664978008701,
-2022-10-05T13:53:34.3168955Z     "last_start" : "2022-10-05T13:53:17Z"
-2022-10-05T13:53:34.3169187Z   },
-2022-10-05T13:53:34.3169469Z   "timestamp" : "2022-10-05T13:53:34.213Z",
-2022-10-05T13:53:34.3169793Z   "version" : "1.3.14-85-g61f475b7"
-2022-10-05T13:53:34.3169992Z }
