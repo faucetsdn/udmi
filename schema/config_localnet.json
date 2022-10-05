@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Localnet Config",
   "description": "Used to describe device local network parameters",
   "type": "object",

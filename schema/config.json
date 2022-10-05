@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Config",
   "description": "The config block controls a device's intended behavior. [Config Documentation](../docs/messages/config.md)",
   "$section": "Messages",

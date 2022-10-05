@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Event",
   "description": "Container object for all event schemas, not directly used.",
   "type": "object",

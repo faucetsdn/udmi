@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "System Config",
   "description": "[System Config Documentation](../docs/messages/system.md#config)",
   "type": "object",

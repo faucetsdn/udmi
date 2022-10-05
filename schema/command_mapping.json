@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Mapping Command",
   "description": "[Mapping command](../docs/specs/mapping.md) for provisioning",
   "type": "object",

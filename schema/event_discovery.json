@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Discovery Event",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "$section": "Messages",

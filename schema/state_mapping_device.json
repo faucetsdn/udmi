@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Device Mapping State",
   "description": "State for [mapping](../docs/specs/mapping.md)",
   "type": "object",

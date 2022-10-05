@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Family Localnet Model",
   "type": "object",
   "description": "The type of network",

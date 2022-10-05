@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Pubber Configuration",
   "description": "Parameters to define a pubber runtime instance",
   "additionalProperties": true,

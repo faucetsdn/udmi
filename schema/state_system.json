@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "System State",
   "description": "[System State Documentation](../docs/messages/system.md#state)",
   "type": "object",

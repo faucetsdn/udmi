@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Point Pointset State",
   "description": "Object representation for for a single point",
   "type": "object",

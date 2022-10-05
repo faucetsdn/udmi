@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Building Config",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "type": "object",

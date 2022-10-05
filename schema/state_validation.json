@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Validation State",
   "description": "Validation state summary",
   "type": "object",

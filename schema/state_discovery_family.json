@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Family Discovery State",
   "description": "State for [discovery](../docs/specs/discovery.md)",
   "type": "object",

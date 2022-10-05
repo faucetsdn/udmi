@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Pointset Event",
   "description": "A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)",
   "$section": "Messages",

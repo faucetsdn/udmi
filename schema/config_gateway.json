@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Gateway Config",
   "description": "Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)",
   "type": "object",

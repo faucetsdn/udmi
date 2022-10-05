@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Reflector State",
   "description": "State of a reflector client",
   "type": "object",

@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Validation Event",
   "description": "Validation device result",
   "type": "object",

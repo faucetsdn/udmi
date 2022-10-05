@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Cloud Iot Config",
   "description": "Parameters for configuring a connection to cloud systems",
   "$section": "Site Model",

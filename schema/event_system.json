@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "System Event",
   "description": "Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)",
   "$section": "Messages",

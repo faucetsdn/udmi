@@ -1,0 +1,93 @@
+#!/bin/bash 
+
+BASE_URI=https://raw.githubusercontent.com/faucetsdn/udmi/%s/%s
+NEW_VERSION=1.4.0
+
+YAY=etc/upversion_yay.txt
+NAY=etc/upversion_nay.txt
+
+TESTS_REGEX="^\s{0,4}(\"version\"\s*:\s*)([0-9.\"]*)(,?)"
+
+if [ "$#" != 1 ]; then
+    echo $0 [new version]
+    exit 1
+fi
+NEW_VERSION=$1
+shift 1
+
+if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo ERROR invalid version: $NEW_VERSION
+    exit 1
+fi
+
+bin/check_version
+if [[ -n $(git tag -l $NEW_VERSION) ]]; then
+    echo ERROR new version $NEW_VERSION already exists in upstream Git repo.
+    exit 1
+fi
+
+if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
+    echo ERROR git not clean .. commit/stash all changes first
+    exit 1
+fi
+
+# Check all schema files have an $id, otherwise jq appended to end
+# and we don't want that
+while read -r file ; do
+    jq -e -r '.["$id"]' $file > /dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+        echo $file
+        err_json_id=1
+    fi 
+done < <( find schema -type f -name "*.json"  )
+if [[ -n $err_json_id ]]; then
+    echo ERROR missing ID tag from above files
+    exit 1
+fi
+
+# Check all files are included in EITHER the yay list or nay list
+while read -r file ; do
+    yay=$(grep -c $file $YAY)
+    nay=$(grep -c $file $NAY)
+    if [[ $(($yay^$nay)) -ne 1 ]]; then
+        echo $file
+        err_yay_nay=1
+    fi 
+done < <( find tests/*.tests -type f -name "*.json" )
+if [[ -n $err_yay_nay ]]; then
+    echo ERROR .. above files not found in yay or nay list or exist in both or more than once
+    exit 1
+fi
+
+# Check files have exactly 1 version fields to avoid unexpected updates
+while read file comment; do
+    if [[ -f $file ]]; then
+        if (( $(grep -E -c $TESTS_REGEX $file) != 1 )); then
+            echo $file
+            err_one_version=1
+        fi
+    fi
+done <$YAY
+if [[ -n $err_one_version ]]; then
+    echo ERROR above files do not have exactly one version field
+    exit 1
+fi
+
+echo -n Updating files ..
+while read file ; do
+    new_uri=$(printf $BASE_URI $NEW_VERSION $file)
+    jq ".[\"\$id\"] |= \"$new_uri\"" $file | sponge $file
+done < <( find schema -type f -name "*.json" )
+cat $YAY | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+bin/gencode_docs_examples 
+echo Done!
+
+echo Commit changes with:
+echo "git add tests/*.tests/*.json"
+echo "git add schema/*.json"
+echo "git add docs/**/*.md"
+echo "git commit -m \"Update schema and messages to v$NEW_VERSION\""
+echo 
+echo Tag with:
+echo "git tag -a $NEW_VERSION -m \"version $NEW_VERSION\""
+echo "git push --tags"

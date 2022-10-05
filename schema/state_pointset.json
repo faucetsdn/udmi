@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Pointset State",
   "description": "A set of points reporting telemetry data.",
   "type": "object",

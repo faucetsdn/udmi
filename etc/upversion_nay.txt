@@ -1,0 +1,24 @@
+tests/event_discovery.tests/empty.json
+tests/event_system.tests/empty.json
+tests/event_pointset.tests/empty.json
+tests/event_discovery.json/empty.json
+tests/state.tests/empty.json
+tests/config.tests/empty.json
+tests/config.tests/delta_x1_gateway.json
+tests/config.tests/delta_x1_target.json
+tests/metadata.tests/empty.json
+tests/state.tests/delta_x1_gateway.json
+tests/state.tests/delta_x1_target.json
+tests/cloud_iot_config.tests/cloud_iot_config.json
+tests/configuration_endpoint.tests/simple.json
+tests/configuration_endpoint.tests/delta.json
+tests/model_pointset.tests/example.json
+tests/envelope.tests/lgtw.json
+tests/envelope.tests/empty.json
+tests/envelope.tests/errors2.json
+tests/envelope.tests/example.json
+tests/envelope.tests/gateway.json
+tests/envelope.tests/example2.json
+tests/envelope.tests/errors1.json
+tests/state.tests/makemodel_upgrade.json tests message upgrade from v1
+tests/config.tests/errors.json

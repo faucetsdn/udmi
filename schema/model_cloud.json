@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Cloud Model",
   "description": "Information specific to how the device communicates with the cloud.",
   "type": "object",

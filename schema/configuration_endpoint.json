@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Endpoint Configuration",
   "description": "Parameters to define an MQTT endpoint",
   "$section": "Blobs",

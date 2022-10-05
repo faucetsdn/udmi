@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Gateway Model",
   "description": "[Gateway Documentation](../docs/specs/gateway.md)",
   "type": "object",

@@ -1,4 +1,5 @@
 {
+  "$id": "id",
     "title": "SystemHardware",
     "description": "A collection of fields which describe the physical hardware of the device.",
     "type": "object",

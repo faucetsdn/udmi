@@ -1,4 +1,5 @@
 {
+  "$id": "id",
   "title": "Pointset Config",
   "description": "[Pointset Config Documentation](../docs/messages/pointset.md#config)",
   "type": "object",

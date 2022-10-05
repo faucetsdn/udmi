@@ -26,6 +26,17 @@ template `etc/schema_readme_template.md`, and must match (case sensitive) the
 value of `$section`, otherwise the schema entry is inserted under the `Other`
 section
 
+## Releases
+
+The `bin/upversion` tool updates the `$id` field in schema files, and the 
+`version` of tests/examples, and any documentation inline message examples.
+
+All schema files must have the `$id` field. Any file in the `tests` directory
+must be listed in either `etc/upversion_yay.txt` or `etc/upversion_nay.txt`.
+Only files in the `upversion_yay.txt` will have their version upgraded. 
+Comments are supported after the file path, e.g. 
+`tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
+
 ## Configuring Cloud CI Tests
 
 To enable the CI tests, there first needs to be a dedicated GCP Project with an IoT Core
