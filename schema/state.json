@@ -1,4 +1,5 @@
 {
+  "$id": "tetete",
   "title": "State",
   "$section": "Messages",
   "type": "object",
