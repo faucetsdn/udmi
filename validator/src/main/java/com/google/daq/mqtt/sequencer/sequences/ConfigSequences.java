@@ -57,9 +57,7 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("clean config/state synced", this::configUpdateComplete);
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
-    untilTrue("state synchronized", () -> {
-      dateEquals(stableConfig, deviceState.system.last_config);
-    });
+    untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
