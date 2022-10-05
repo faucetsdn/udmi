@@ -22,7 +22,7 @@ type Point{
   # the value of the point
   value: String!
   # the units of the point
-  units: String!
+  units: String
   # the name of the point
   state: String!
 }
