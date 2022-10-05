@@ -235,12 +235,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     publish(deviceId, mqttTopic, JsonUtil.stringify(message));
   }
 
-  public void publishDirect(String deviceId, Object message) {
-    SimpleEntry<SubType, SubFolder> typePair = classTypes.get(message.getClass());
-    publishDirect(deviceId, typePair.getKey().value(), typePair.getValue().value(),
-        JsonUtil.stringify(message));
-  }
-
   @Override
   public void messageLoop() {
     while (isActive()) {
@@ -298,32 +292,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
       System.err.printf("Published to %s/%s%n", registryId, subFolder);
-    } catch (Exception e) {
-      throw new RuntimeException("While publishing message", e);
-    }
-  }
-
-  public void publishDirect(String deviceId, String subType, String subFolder, String data) {
-    try {
-      if (deviceId == null) {
-        System.err.printf("Refusing to publish to %s/%s due to unspecified device%n", subType, subFolder);
-        return;
-      }
-      Preconditions.checkNotNull(registryId, "registry id not defined");
-      Map<String, String> attributesMap = Map.of(
-          "projectId", projectId,
-          "subFolder", subFolder,
-          "subType", subType,
-          "registryId", registryId,
-          "deviceId", deviceId
-      );
-      PubsubMessage message = PubsubMessage.newBuilder()
-          .setData(ByteString.copyFromUtf8(data))
-          .putAllAttributes(attributesMap)
-          .build();
-      ApiFuture<String> publish = publisher.publish(message);
-      publish.get(); // Wait for publish to complete.
-      System.err.printf("Published to %s/%s as %s/%s%n", registryId, deviceId, subType, subFolder);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
