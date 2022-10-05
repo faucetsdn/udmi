@@ -1,3 +1,5 @@
+@use '../../styles/variables' as *;
+
 .table-controls {
   display: flex;
   align-items: center;
@@ -5,4 +7,12 @@
   .grow {
     flex: 1;
   }
+}
+
+.device-errors-count {
+  background-color: $primary;
+  color: $primaryContrast;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-right: 4px;
 }

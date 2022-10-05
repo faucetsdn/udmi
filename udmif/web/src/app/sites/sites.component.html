@@ -61,11 +61,12 @@
   <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
   <ng-container matColumnDef="expandedDetails">
     <mat-cell *matCellDef="let element" class="expanded-row-content-wrapper">
-      <!-- <ol>
-        <li *ngFor="let error of (element.validation | parse)?.errors | orderBy: 'timestamp':'desc'">
-          {{ error.message }}
+      <ul>
+        <li *ngFor="let item of getSiteErrorSummaryItems(element.deviceErrors) | orderBy: 'count':'desc'">
+          <span class="device-errors-count">{{ item.count }}</span
+          >{{ item.message }}
         </li>
-      </ol> -->
+      </ul>
     </mat-cell>
   </ng-container>
 

@@ -12,9 +12,10 @@ body {
 a {
   color: $primary;
 }
-ol {
+ul {
+  list-style: none;
   margin: 0;
-  padding-left: $gutter-width;
+  padding-left: 0;
 }
 
 // Table overrides.

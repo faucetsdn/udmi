@@ -45,3 +45,8 @@ export interface SiteNamesQueryVariables extends CommonSearchQueryVariables {}
 export type SiteDistinctQueryResult = {
   values: string[];
 };
+
+export type SiteErrorSummaryItem = {
+  count: number;
+  message: string;
+};

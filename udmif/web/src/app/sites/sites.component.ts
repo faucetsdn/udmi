@@ -3,11 +3,13 @@ import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { SearchFilterItem } from '../search-filter/search-filter';
 import { Site, SiteModel } from '../site/site';
-import { SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
+import { SiteErrorSummaryItem, SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
 import { SitesService } from './sites.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
+import { DeviceError } from '../device-errors/device-errors';
+import { groupBy, orderBy, map } from 'lodash-es';
 
 @Component({
   templateUrl: './sites.component.html',
@@ -79,6 +81,15 @@ export class SitesComponent implements OnInit, OnDestroy {
       : undefined; // don't send sortOptions field if no direction
 
     this._refetch();
+  }
+
+  getSiteErrorSummaryItems(deviceErrors: DeviceError[]): SiteErrorSummaryItem[] {
+    const groupedErrors = groupBy(orderBy(deviceErrors, 'timestamp', 'desc'), 'message');
+
+    return map(groupedErrors, (errors: DeviceError[], message: string) => ({
+      message,
+      count: errors.length,
+    }));
   }
 
   filterData = (filters: SearchFilterItem[]): void => {
