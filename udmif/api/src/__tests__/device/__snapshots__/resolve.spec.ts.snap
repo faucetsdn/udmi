@@ -28,7 +28,7 @@ Object {
           "id": "id-1",
           "name": "point-1",
           "state": "Updating",
-          "units": "units-1",
+          "units": null,
           "value": "value-1",
         },
         Object {
@@ -42,7 +42,7 @@ Object {
           "id": "id-3",
           "name": "point-3",
           "state": "Invalid",
-          "units": "units-3",
+          "units": null,
           "value": "value-3",
         },
         Object {
@@ -540,7 +540,7 @@ Object {
         "id": "id-1",
         "name": "point-1",
         "state": "Updating",
-        "units": "units-1",
+        "units": null,
         "value": "value-1",
       },
       Object {
@@ -554,7 +554,7 @@ Object {
         "id": "id-3",
         "name": "point-3",
         "state": "Invalid",
-        "units": "units-3",
+        "units": null,
         "value": "value-3",
       },
       Object {
