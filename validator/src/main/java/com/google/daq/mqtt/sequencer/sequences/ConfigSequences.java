@@ -58,9 +58,7 @@ public class ConfigSequences extends SequenceBase {
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> {
-      debug("TAP waiting for " + getTimestamp(deviceState.system.last_config) + " to be "
-          + getTimestamp(stableConfig));
-      return dateEquals(stableConfig, deviceState.system.last_config);
+      dateEquals(stableConfig, deviceState.system.last_config);
     });
     info("initial last_config " + getTimestamp(deviceState.system.last_config));
     checkThat("initial stable_config matches last_config",
