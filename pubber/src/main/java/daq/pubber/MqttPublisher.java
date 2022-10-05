@@ -106,8 +106,11 @@ public class MqttPublisher {
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    if (configuration.endpoint.client_id != null) {
-      return configuration.endpoint.client_id;
+    String configuredClientId = configuration.endpoint.client_id;
+    if (configuredClientId != null) {
+      ClientInfo clientInfo = SiteModel.parseClientId(configuredClientId);
+      return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
+          clientInfo.registryId, deviceId);
     }
     return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
   }
