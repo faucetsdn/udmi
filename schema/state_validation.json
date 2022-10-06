@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_validation.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_validation.json",
   "title": "Validation State",
   "description": "Validation state summary",
   "type": "object",

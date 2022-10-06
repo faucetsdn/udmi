@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_mapping_device.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/config_mapping_device.json",
   "title": "Device Mapping Config",
   "description": "Configuration for [mapping](../docs/specs/mapping.md)",
   "type": "object",

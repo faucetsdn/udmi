@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_discovery.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_discovery.json",
   "title": "Discovery Model",
   "description": "Discovery target parameters",
   "type": "object",

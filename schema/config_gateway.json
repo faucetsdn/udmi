@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_gateway.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/config_gateway.json",
   "title": "Gateway Config",
   "description": "Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)",
   "type": "object",

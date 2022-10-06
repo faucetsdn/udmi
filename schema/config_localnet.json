@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_localnet.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/config_localnet.json",
   "title": "Localnet Config",
   "description": "Used to describe device local network parameters",
   "type": "object",

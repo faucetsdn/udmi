@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_system.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_system.json",
   "title": "System Model",
   "description": "High-level system information about the device. [System Model Documentation](../docs/messages/system.md)",
   "type": "object",

@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/configuration_endpoint.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/configuration_endpoint.json",
   "title": "Endpoint Configuration",
   "description": "Parameters to define an MQTT endpoint",
   "$section": "Blobs",

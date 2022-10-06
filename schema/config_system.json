@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_system.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/config_system.json",
   "title": "System Config",
   "description": "[System Config Documentation](../docs/messages/system.md#config)",
   "type": "object",

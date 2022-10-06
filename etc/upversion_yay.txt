@@ -24,7 +24,6 @@ tests/event_pointset.tests/partial.json
 tests/config_pointset.tests/example.json
 tests/state.tests/scan_stop.json
 tests/state.tests/scan_error.json
-tests/state.tests/errors.json
 tests/state.tests/enumeration.json
 tests/state.tests/writeback.json
 tests/state.tests/continuous.json

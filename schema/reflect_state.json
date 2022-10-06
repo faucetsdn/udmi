@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/reflect_state.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/reflect_state.json",
   "title": "Reflector State",
   "description": "State of a reflector client",
   "type": "object",

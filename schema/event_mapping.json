@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_mapping.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/event_mapping.json",
   "title": "Mapping Event",
   "description": "[Mapping result](../docs/specs/mapping.md) with implicit enumeration",
   "type": "object",

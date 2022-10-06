@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/persistent_device.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/persistent_device.json",
   "title": "Device Persistent",
   "description": "Device persistent data",
   "additionalProperties": true,

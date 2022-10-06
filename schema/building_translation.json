@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/building_translation.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/building_translation.json",
   "title": "Building Translation",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "type": "object",

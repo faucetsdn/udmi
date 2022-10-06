@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_system_hardware.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_system_hardware.json",
   "title": "SystemHardware",
   "description": "A collection of fields which describe the physical hardware of the device.",
   "type": "object",

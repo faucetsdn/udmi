@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/command_discovery.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/command_discovery.json",
   "title": "Discovery Command",
   "description": "[Discovery command](../docs/specs/discovery.md) for provisioning",
   "type": "object",

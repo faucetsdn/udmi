@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_discovery_family.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_discovery_family.json",
   "title": "Family Discovery State",
   "description": "State for [discovery](../docs/specs/discovery.md)",
   "type": "object",

@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_discovery_family.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_discovery_family.json",
   "title": "Family Discovery Testing Model",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",

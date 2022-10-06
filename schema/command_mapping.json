@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/command_mapping.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/command_mapping.json",
   "title": "Mapping Command",
   "description": "[Mapping command](../docs/specs/mapping.md) for provisioning",
   "type": "object",

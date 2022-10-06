@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_pointset.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/event_pointset.json",
   "title": "Pointset Event",
   "description": "A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)",
   "$section": "Messages",

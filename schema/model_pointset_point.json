@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_pointset_point.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_pointset_point.json",
   "title": "Point Pointset Model",
   "description": "Information about a specific point name of the device.",
   "type": "object",

@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_system.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/event_system.json",
   "title": "System Event",
   "description": "Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)",
   "$section": "Messages",

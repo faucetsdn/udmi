@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_pointset_point.json",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_pointset_point.json",
   "title": "Point Pointset State",
   "description": "Object representation for for a single point",
   "type": "object",
