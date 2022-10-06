@@ -3,7 +3,7 @@
 // where {device_id} is that of the enumerated node.
 //
 {
-"version": "1.4.1",
+  "version": "1.3.14",
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
   "uniqs": {
