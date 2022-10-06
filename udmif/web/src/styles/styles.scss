@@ -12,9 +12,10 @@ body {
 a {
   color: $primary;
 }
-ol {
+ul {
+  list-style: none;
   margin: 0;
-  padding-left: $gutter-width;
+  padding-left: 0;
 }
 
 // Table overrides.
@@ -26,6 +27,8 @@ ol {
 }
 .mat-cell {
   padding: $spacing;
+  color: $text-secondary;
+  min-height: auto;
 }
 .mat-header-cell {
   padding: 0 $spacing;
@@ -33,9 +36,25 @@ ol {
   color: inherit;
   font-weight: inherit;
 }
-.mat-cell {
-  color: $text-secondary;
-  min-height: auto;
+.expand-trigger-cell {
+  justify-content: space-between;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.expandable-row {
+  border-bottom-width: 0;
+}
+.expanded-row-content {
+  overflow: hidden;
+}
+.expanded-row-content-wrapper {
+  display: block;
+  width: 100%;
+}
+.mat-row:hover,
+.row-is-expanded,
+.expanded-row-content {
+  background: mat.get-color-from-palette(mat.$gray-palette, 100);
 }
 
 // Pagination overrides.

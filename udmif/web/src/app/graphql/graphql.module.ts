@@ -59,6 +59,9 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
         Site: {
           keyFields: ['name'],
         },
+        DeviceError: {
+          keyFields: ['message', 'timestamp'],
+        },
       },
     }),
   };
