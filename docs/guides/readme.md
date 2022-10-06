@@ -8,3 +8,5 @@
 - [UDMI Workflow](workflow.md) - Suggested workflow for cloud side registration of UDMI devices
 - [GCP Cloud Setup](../cloud/gcp)
 - [Tools Usage and Setup](../tools)
+- [Debugging Config Nonce](config_nonce.md)
+

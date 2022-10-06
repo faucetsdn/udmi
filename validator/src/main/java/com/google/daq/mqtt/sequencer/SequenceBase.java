@@ -2,11 +2,13 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
+import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,12 +106,13 @@ public abstract class SequenceBase {
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
+  private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   protected static Metadata deviceMetadata;
-  static ValidatorConfig validatorConfig;
   protected static String projectId;
   protected static String deviceId;
   protected static String cloudRegion;
   protected static String registryId;
+  static ValidatorConfig validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -599,7 +602,7 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    recordDeviceConfig(reason);
+    localConfigChange(reason);
   }
 
   private void updateConfig(SubFolder subBlock, Object data) {
@@ -608,7 +611,7 @@ public abstract class SequenceBase {
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
-        final Object tracedObject = augmentTrace(data);
+        final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
@@ -623,7 +626,8 @@ public abstract class SequenceBase {
     }
   }
 
-  private Object augmentTrace(Object data) {
+  @SuppressWarnings("unchecked")
+  private Object augmentConfigTrace(Object data) {
     try {
       if (data == null) {
         return null;
@@ -631,7 +635,7 @@ public abstract class SequenceBase {
       if (traceLogLevel()) {
         String messageData = stringify(data);
         Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
-        map.put("nonce", System.currentTimeMillis());
+        map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
         return map;
       } else {
         return data;
@@ -641,15 +645,17 @@ public abstract class SequenceBase {
     }
   }
 
-  private void recordDeviceConfig(String reason) {
+  private void localConfigChange(String reason) {
     try {
+      String suffix = reason == null ? "" : (" " + reason);
+      String header = String.format("Update config%s:", suffix);
+      debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
         return;
       }
-      String suffix = reason == null ? "" : (" to " + reason);
-      recordSequence(String.format("Update config%s:", suffix));
+      recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
     } catch (Exception e) {
@@ -779,7 +785,7 @@ public abstract class SequenceBase {
   private void untilLoop(Supplier<Boolean> evaluator, String description) {
     waitingCondition = "waiting for " + description;
     info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
-    updateConfig();
+    updateConfig("before " + description);
     recordSequence("Wait for " + description);
     while (evaluator.get()) {
       receiveMessage();
@@ -902,7 +908,6 @@ public abstract class SequenceBase {
         info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
-        recordDeviceConfig("received config message");
       } else if (converted instanceof AugmentedState) {
         debug(String.format("Updated state #%03d:\n%s", updateCount,
             stringify(converted)));
@@ -959,8 +964,15 @@ public abstract class SequenceBase {
 
   protected boolean configUpdateComplete() {
     Object receivedConfig = receivedUpdates.get("config");
-    return receivedConfig instanceof Config
-        && configDiffEngine.equals(deviceConfig, sanitizeConfig((Config) receivedConfig));
+    if (!(receivedConfig instanceof Config)) {
+      return false;
+    }
+    List<String> differences = configDiffEngine.diff(deviceConfig,
+        sanitizeConfig((Config) receivedConfig));
+    if (traceLogLevel() && !differences.isEmpty()) {
+      trace("+- " + Joiner.on("\n+- ").join(differences));
+    }
+    return differences.isEmpty();
   }
 
   protected void trace(String message) {
