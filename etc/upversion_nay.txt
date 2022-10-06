@@ -22,3 +22,4 @@ tests/envelope.tests/example2.json
 tests/envelope.tests/errors1.json
 tests/state.tests/makemodel_upgrade.json tests message upgrade from v1
 tests/config.tests/errors.json
+tests/state.tests/errors.json test complete message upgrade pathway
