@@ -62,7 +62,12 @@
   <ng-container matColumnDef="expandedDetails">
     <mat-cell *matCellDef="let element" class="expanded-row-content-wrapper">
       <ul>
-        <li *ngFor="let item of getSiteErrorSummaryItems(element.deviceErrors) | orderBy: 'count':'desc'">
+        <li
+          *ngFor="
+            let item of getSiteErrorSummaryItems(element.deviceErrors) | orderBy: 'count':'desc';
+            trackBy: trackBy
+          "
+        >
           <span class="device-errors-count">{{ item.count }}</span
           >{{ item.message }}
         </li>

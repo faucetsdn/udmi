@@ -99,6 +99,10 @@ export class SitesComponent implements OnInit, OnDestroy {
     this._refetch();
   };
 
+  trackBy = (_index: number, item: SiteErrorSummaryItem): string => {
+    return item.message;
+  };
+
   private _refetch(offset: number = 0): void {
     this.sitesQuery.refetch({
       searchOptions: {
