@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_blobset_blob.json",
   "title": "Blob Blobset State",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -16,4 +16,3 @@
     "phase"
   ]
 }
-

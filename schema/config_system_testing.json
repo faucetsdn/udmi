@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_system_testing.json",
   "title": "Testing System Config",
   "description": "Configuration parameters for device-under-test",
   "type": "object",

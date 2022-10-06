@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/reflect_state.json",
   "title": "Reflector State",
   "description": "State of a reflector client",
   "type": "object",
@@ -10,7 +10,9 @@
       "description": "RFC 3339 Timestamp the state payload was generated",
       "type": "string",
       "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
     },
     "version": {
       "description": "Version of the UDMI schema",

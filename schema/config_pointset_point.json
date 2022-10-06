@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_pointset_point.json",
   "title": "Point Pointset Config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -8,7 +8,9 @@
     "ref": {
       "type": "string",
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
-      "examples": ["AI1106"]
+      "examples": [
+        "AI1106"
+      ]
     },
     "units": {
       "description": "If specified, indicates the units the device should report the data in.",
@@ -16,7 +18,9 @@
     },
     "set_value": {
       "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
-      "examples": [22.4]
+      "examples": [
+        22.4
+      ]
     }
   }
 }

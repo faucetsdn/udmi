@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/state_mapping_device.json",
   "title": "Device Mapping State",
   "description": "State for [mapping](../docs/specs/mapping.md)",
   "type": "object",

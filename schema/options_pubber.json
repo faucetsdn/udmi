@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/options_pubber.json",
   "title": "Pubber Options",
   "description": "Pubber runtime options",
   "additionalProperties": true,
@@ -27,4 +27,3 @@
     }
   }
 }
-

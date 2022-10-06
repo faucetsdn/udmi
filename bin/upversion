@@ -1,12 +1,11 @@
 #!/bin/bash 
 
 BASE_URI=https://raw.githubusercontent.com/faucetsdn/udmi/%s/%s
-NEW_VERSION=1.4.0
 
 YAY=etc/upversion_yay.txt
 NAY=etc/upversion_nay.txt
 
-TESTS_REGEX="^\s{0,4}(\"version\"\s*:\s*)([0-9.\"]*)(,?)"
+TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
 
 if [ "$#" != 1 ]; then
     echo $0 [new version]
@@ -73,14 +72,14 @@ if [[ -n $err_one_version ]]; then
     exit 1
 fi
 
-echo -n Updating files ..
+echo -n Updating files .. 
 while read file ; do
     new_uri=$(printf $BASE_URI $NEW_VERSION $file)
     jq ".[\"\$id\"] |= \"$new_uri\"" $file | sponge $file
 done < <( find schema -type f -name "*.json" )
 cat $YAY | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 bin/gencode_docs_examples 
-echo Done!
+echo Done!\n
 
 echo Commit changes with:
 echo "git add tests/*.tests/*.json"

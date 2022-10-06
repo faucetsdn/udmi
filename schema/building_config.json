@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/building_config.json",
   "title": "Building Config",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "type": "object",

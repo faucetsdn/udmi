@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_testing_target.json",
   "title": "Target Testing Model",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",

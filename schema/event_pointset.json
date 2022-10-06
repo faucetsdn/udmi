@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_pointset.json",
   "title": "Pointset Event",
   "description": "A set of points reporting telemetry data. [Pointset Event Documentation](../docs/messages/pointset.md#telemetry)",
   "$section": "Messages",
@@ -11,7 +11,9 @@
       "description": "RFC 3339 timestamp the telemetry event was generated",
       "type": "string",
       "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
     },
     "version": {
       "description": "Version of the UDMI schema",

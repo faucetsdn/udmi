@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_validation.json",
   "title": "Validation Event",
   "description": "Validation device result",
   "type": "object",
@@ -10,7 +10,9 @@
       "description": "RFC 3339 timestamp the discover telemetry event was generated",
       "type": "string",
       "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
     },
     "version": {
       "description": "Version of the UDMI schema",
@@ -31,7 +33,7 @@
       "title": "Pointset Summary",
       "description": "Errors specific to pointset handling",
       "type": "object",
-      "additionalProperties":  false,
+      "additionalProperties": false,
       "properties": {
         "missing": {
           "description": "Missing points discovered while validating a device",

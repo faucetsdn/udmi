@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/model_cloud.json",
   "title": "Cloud Model",
   "description": "Information specific to how the device communicates with the cloud.",
   "type": "object",

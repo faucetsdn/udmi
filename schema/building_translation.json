@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/building_translation.json",
   "title": "Building Translation",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "type": "object",
@@ -10,9 +10,7 @@
       "description": "dotted path to present_value field",
       "type": "string"
     },
-    "units": {
-    },
-    "states": {
-    }
+    "units": {},
+    "states": {}
   }
 }

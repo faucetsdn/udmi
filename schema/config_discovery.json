@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_discovery.json",
   "title": "Discovery Config",
   "description": "Configuration for [discovery](../docs/specs/discovery.md)",
   "type": "object",

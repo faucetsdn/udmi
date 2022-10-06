@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_pointset_point.json",
   "title": "Point Pointset Event",
   "description": "Object representation for for a single point",
   "type": "object",
@@ -8,7 +8,11 @@
   "properties": {
     "present_value": {
       "description": "The specific point data reading",
-      "examples": [24.1, "running", 4]
+      "examples": [
+        24.1,
+        "running",
+        4
+      ]
     }
   },
   "required": [

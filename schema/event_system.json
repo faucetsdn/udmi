@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/event_system.json",
   "title": "System Event",
   "description": "Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)",
   "$section": "Messages",
@@ -11,7 +11,9 @@
       "description": "RFC 3339 timestamp the event payload was generated",
       "type": "string",
       "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
     },
     "version": {
       "description": "Version of the UDMI schema",

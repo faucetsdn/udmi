@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/common.json",
   "title": "Common",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
@@ -36,7 +36,9 @@
         "message": {
           "description": "A human-readable one-line description of the entry",
           "type": "string",
-          "examples": ["Point is not writable"]
+          "examples": [
+            "Point is not writable"
+          ]
         },
         "detail": {
           "description": "An optional extensive entry which can include more detail, e.g. a complete program stack-trace",
@@ -49,8 +51,9 @@
           "description": "Timestamp the condition was triggered, or most recently updated",
           "type": "string",
           "format": "date-time",
-          "examples": ["2018-08-26T21:39:28.364Z"]
-
+          "examples": [
+            "2018-08-26T21:39:28.364Z"
+          ]
         },
         "level": {
           "$comment": "https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity",
@@ -59,7 +62,9 @@
           "multipleOf": 1,
           "minimum": 100,
           "maximum": 800,
-          "examples": [600]
+          "examples": [
+            600
+          ]
         }
       },
       "required": [

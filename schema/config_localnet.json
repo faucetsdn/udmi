@@ -1,5 +1,5 @@
 {
-  "$id": "id",
+  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.1/schema/config_localnet.json",
   "title": "Localnet Config",
   "description": "Used to describe device local network parameters",
   "type": "object",
@@ -13,11 +13,16 @@
           "additionalProperties": false,
           "type": "object",
           "description": "The network family",
-          "examples": ["bacnet", "ipv4"],
+          "examples": [
+            "bacnet",
+            "ipv4"
+          ],
           "properties": {
             "id": {
               "description": "The address of a device on the local network",
-              "examples": ["4148893"],
+              "examples": [
+                "4148893"
+              ],
               "type": "string"
             }
           },
