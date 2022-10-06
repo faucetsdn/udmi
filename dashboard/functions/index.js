@@ -363,11 +363,9 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
 
   if (subFolder == 'last_start') {
     newConfig = parse_old_config(oldConfig, false);
-    console.log("TAP1", subContents, newConfig);
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
-    console.log("TAP2", subContents, newConfig);
   } else if (subFolder == 'update') {
     console.log('Config replace version', version, startTime, subContents.debug_config_nonce);
     newConfig = subContents;
