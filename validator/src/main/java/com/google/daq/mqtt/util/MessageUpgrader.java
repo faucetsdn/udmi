@@ -55,7 +55,7 @@ public class MessageUpgrader {
     if (minor < 3) {
       upgrade_1_3();
     }
-    if (minor < 3 && patch < 14) {
+    if (minor == 3 && patch < 14) {
       upgrade_1_3_14();
     }
     if (message.has("version")) {
