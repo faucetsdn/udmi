@@ -106,6 +106,7 @@ public abstract class SequenceBase {
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
+  private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -610,7 +611,7 @@ public abstract class SequenceBase {
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
-        final Object tracedObject = augmentTrace(data);
+        final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
         client.publish(deviceId, topic, augmentedMessage);
@@ -625,7 +626,8 @@ public abstract class SequenceBase {
     }
   }
 
-  private Object augmentTrace(Object data) {
+  @SuppressWarnings("unchecked")
+  private Object augmentConfigTrace(Object data) {
     try {
       if (data == null) {
         return null;
@@ -633,7 +635,7 @@ public abstract class SequenceBase {
       if (traceLogLevel()) {
         String messageData = stringify(data);
         Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
-        map.put("nonce", System.currentTimeMillis());
+        map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
         return map;
       } else {
         return data;

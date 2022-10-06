@@ -23,7 +23,7 @@ config sub-folder:
    "extra_field" : "reset_config",
    "metrics_rate_sec" : 600,
    "min_loglevel" : 200,
-   "nonce" : 1665005451790,
+   "debug_config_nonce" : 1665005451790,
    "testing" : {
      "sequence_name" : "reset_config"
    },
@@ -37,7 +37,7 @@ into the complete _config_ update:
 ```
  2022-10-05T21:30:58Z TRACE sequencer received config_update_2022-10-05T21:30:58.133Z:
  {
-   "nonce" : 1665005451790,
+   "debug_config_nonce" : 1665005451790,
    "system" : {
      "min_loglevel" : 200,
      "metrics_rate_sec" : 600,
@@ -45,7 +45,7 @@ into the complete _config_ update:
        "sequence_name" : "reset_config"
      },
      "extra_field" : "reset_config",
-     "nonce" : 1665005451790
+     "debug_config_nonce" : 1665005451790
    },
    "timestamp" : "2022-10-05T21:30:58.133Z",
    "version" : "1.3.14-85-g61f475b7"
@@ -86,7 +86,7 @@ D        udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:57.004  Function execution
 The same logic can be applied to the _udmi__config_ function, but there's a lot more entries in those logs, so you may need to add a specific _end-time_ filter:
 ```
 ~/udmi$ gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000 --end-time=2022-10-05T21:31:57.004 | fgrep 1665005451790
-         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.072  Config message ZZ-TRI-FECTA AHU-1 system 1665005451790 {"min_loglevel":200,"metrics_rate_sec":600,"testing":{"sequence_name":"reset_config"},"extra_field":"reset_config","nonce":1665005451790}
+         udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.072  Config message ZZ-TRI-FECTA AHU-1 system 1665005451790 {"min_loglevel":200,"metrics_rate_sec":600,"testing":{"sequence_name":"reset_config"},"extra_field":"reset_config","debug_config_nonce":1665005451790}
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.073  command devices/AHU-1/config/system 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.133  Config modify system 86490 2022-10-05T21:30:58.073Z 1665005451790
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.189  command devices/AHU-1/config/update 1665005451790 projects/bos-testing-ci/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA
@@ -101,7 +101,7 @@ the numerical ordering of the _nonce_ is not reliable as a source of information
 ```
  2022-10-05T21:31:03Z TRACE sequencer received config_update_2022-10-05T21:31:02.950Z:
  {
-   "nonce" : 1665005461272,
+   "debug_config_nonce" : 1665005461272,
    "pointset" : {
      "points" : {
        "filter_alarm_pressure_status" : {
@@ -114,7 +114,7 @@ the numerical ordering of the _nonce_ is not reliable as a source of information
          "ref" : "AV12.present_value"
        }
      },
-     "nonce" : 1665005461272
+     "debug_config_nonce" : 1665005461272
    },
    "system" : {
      "min_loglevel" : 200,
@@ -122,7 +122,7 @@ the numerical ordering of the _nonce_ is not reliable as a source of information
      "testing" : {
        "sequence_name" : "writeback_states"
      },
-     "nonce" : 1665005459267,
+     "debug_config_nonce" : 1665005459267,
      "last_start" : "2022-10-05T21:30:45Z"
    },
    "timestamp" : "2022-10-05T21:31:02.950Z",
