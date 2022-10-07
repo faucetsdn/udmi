@@ -81,7 +81,6 @@ public abstract class SequenceBase {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
-  public static final String LOCAL_CONFIG = "local_config";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -103,6 +102,7 @@ public abstract class SequenceBase {
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final long LOG_CLEAR_TIME_MS = 1000;
   private static final String LOCAL_PREFIX = "local_";
+  private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + "update";
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
@@ -502,7 +502,7 @@ public abstract class SequenceBase {
     try {
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
       boolean traceMessage =
-          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG));
+          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
       String postfix =
           traceMessage ? (message == null ? ": (null)" : ":\n" + stringify(message)) : "";
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
@@ -650,7 +650,7 @@ public abstract class SequenceBase {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
       debug(header + " " + getTimestamp(deviceConfig.timestamp));
-      recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
+      recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
         return;
@@ -970,7 +970,7 @@ public abstract class SequenceBase {
     List<String> differences = configDiffEngine.diff(deviceConfig,
         sanitizeConfig((Config) receivedConfig));
     if (traceLogLevel() && !differences.isEmpty()) {
-      trace("+- " + Joiner.on("\n+- ").join(differences));
+      trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
     return differences.isEmpty();
   }
