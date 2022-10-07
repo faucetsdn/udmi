@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
+import static com.google.daq.mqtt.util.JsonUtil.safeSleep;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
@@ -107,6 +108,7 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
+  private static final long DEBUG_START_DELAY_MS = 10 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -392,6 +394,7 @@ public abstract class SequenceBase {
    */
   @Before
   public void setUp() {
+    safeSleep(DEBUG_START_DELAY_MS);
     deviceState = new State();
     configAcked = false;
     receivedState.clear();
@@ -745,7 +748,7 @@ public abstract class SequenceBase {
 
   protected List<Map<String, Object>> clearLogs() {
     info("clearing system logs...");
-    JsonUtil.safeSleep(LOG_CLEAR_TIME_MS);
+    safeSleep(LOG_CLEAR_TIME_MS);
     lastLog = null;
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
