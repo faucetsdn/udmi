@@ -11,6 +11,7 @@ class MappingCommand:
     self.version = None
     self.guid = None
     self.status = None
+    self.device_num_id = None
     self.translation = None
 
   @staticmethod
@@ -22,6 +23,7 @@ class MappingCommand:
     result.version = source.get('version')
     result.guid = source.get('guid')
     result.status = Entry.from_dict(source.get('status'))
+    result.device_num_id = source.get('device_num_id')
     result.translation = BuildingTranslation.map_from(source.get('translation'))
     return result
 
@@ -51,6 +53,8 @@ class MappingCommand:
       result['guid'] = self.guid # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
+    if self.device_num_id:
+      result['device_num_id'] = self.device_num_id # 5
     if self.translation:
       result['translation'] = BuildingTranslation.expand_dict(self.translation) # 2
     return result

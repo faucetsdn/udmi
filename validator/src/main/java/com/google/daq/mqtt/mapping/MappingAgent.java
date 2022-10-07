@@ -100,6 +100,7 @@ public class MappingAgent extends MappingBase {
     mappingCommand.guid = mappingEvent.guid;
     mappingCommand.timestamp = mappingEvent.timestamp;
     mappingCommand.translation = mappingEvent.translation;
+    mappingCommand.device_num_id = Objects.hashCode(deviceId);
     mappingSink.updateCommand(envelope, mappingCommand);
   }
 
