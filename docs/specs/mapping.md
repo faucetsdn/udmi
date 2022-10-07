@@ -55,6 +55,8 @@ sequenceDiagram
 3. **[Mapping Config](../../tests/config_mapping.tests/mapping.json)** from the _agent_ indicates that the _mapper_ should export responses.
 3. **[Mapping Events](../../tests/event_mapping.tests/mapping.json)** from the _mapper_ contain actual calculated point mappings:
   * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
+3. **[Mapping Command](../../tests/command_mapping.tests/mapping.json)** to the _mapper_ contain results of initial provisioning:
+  * "Device `78F936` is cloud id `2198372198752`
 4. *(Onboard Info)* are sent to the _pipeline_ to onboard a device (contents are defined by _pipeline_ and out of scope for UDMI).
 8. **[Telemetry Events](../../tests/event_pointset.tests/example.json)** are data events from _device_ to _pipeline_... business as usual:
   * "I am `AHU-183`, and my `room_temp` is `73`"
