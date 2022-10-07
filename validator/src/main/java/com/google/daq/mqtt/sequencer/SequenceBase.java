@@ -908,7 +908,7 @@ public abstract class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
+        debug("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
       } else if (converted instanceof AugmentedState) {
@@ -917,7 +917,7 @@ public abstract class SequenceBase {
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        info("Updated state has last_config " + JsonUtil.getTimestamp(
+        debug("Updated state has last_config " + JsonUtil.getTimestamp(
             deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());

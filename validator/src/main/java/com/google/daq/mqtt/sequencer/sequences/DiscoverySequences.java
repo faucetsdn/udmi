@@ -52,7 +52,7 @@ public class DiscoverySequences extends SequenceBase {
     );
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
     List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("a few events received", events.size() >= 1 && events.size() <= 2);
+    assertEquals("a single event received", events.size(), 1);
     DiscoveryEvent discoveryEvent = events.get(0);
     info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
     assertEquals("matching event generation", startTime, discoveryEvent.generation);
