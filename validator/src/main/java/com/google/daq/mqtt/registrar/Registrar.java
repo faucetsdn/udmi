@@ -31,7 +31,6 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -255,7 +254,7 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
-    blockUnknown = cloudIotManager.cloudIotConfig.block_unknown;
+    blockUnknown = cloudIotManager.executionConfiguration.block_unknown;
   }
 
   private String getGenerationString() {
@@ -377,8 +376,8 @@ public class Registrar {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("subFolder", SWARM_SUBFOLDER);
       attributes.put("deviceId", localDevice.getDeviceId());
-      attributes.put("deviceRegistryId", cloudIotManager.cloudIotConfig.registry_id);
-      attributes.put("deviceRegistryLocation", cloudIotManager.cloudIotConfig.cloud_region);
+      attributes.put("deviceRegistryId", cloudIotManager.executionConfiguration.registry_id);
+      attributes.put("deviceRegistryLocation", cloudIotManager.executionConfiguration.cloud_region);
       SwarmMessage swarmMessage = new SwarmMessage();
       swarmMessage.key_base64 = Base64.getEncoder().encodeToString(localDevice.getKeyBytes());
       swarmMessage.device_metadata = localDevice.getMetadata();

@@ -23,7 +23,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -67,6 +66,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -125,7 +125,7 @@ public class Validator {
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
-  private CloudIotConfig cloudIotConfig;
+  private ExecutionConfiguration executionConfiguration;
   private CloudIotManager cloudIotManager;
   private String siteDir;
   private MessagePublisher client;
@@ -218,7 +218,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
+    client = new MessageReadingClient(executionConfiguration.registry_id, messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -242,7 +242,8 @@ public class Validator {
       this.siteDir = siteDir;
       baseDir = new File(siteDir);
       File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+      executionConfiguration = CloudIotManager.validate(
+          ConfigUtil.readExecutionConfiguration(cloudConfig),
           projectId);
       initializeExpectedDevices(siteDir);
     }
@@ -331,14 +332,14 @@ public class Validator {
   }
 
   private String getRegistryId() {
-    String registryId = cloudIotConfig.registry_id;
+    String registryId = executionConfiguration.registry_id;
     return registryId;
   }
 
   private void validateReflector() {
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, cloudIotConfig, keyFile);
+    client = new IotReflectorClient(projectId, executionConfiguration, keyFile);
   }
 
   void messageLoop() {
@@ -565,7 +566,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
+    if (executionConfiguration != null && !executionConfiguration.registry_id.equals(registryId)) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }

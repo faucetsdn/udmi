@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -55,6 +54,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -278,15 +278,15 @@ public abstract class SequenceBase {
     }
 
     File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
-    final CloudIotConfig cloudIotConfig;
+    final ExecutionConfiguration executionConfiguration;
     try {
-      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
+      executionConfiguration = ConfigUtil.readExecutionConfiguration(cloudIotConfigFile);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
 
-    cloudRegion = cloudIotConfig.cloud_region;
-    registryId = cloudIotConfig.registry_id;
+    cloudRegion = executionConfiguration.cloud_region;
+    registryId = executionConfiguration.registry_id;
 
     deviceMetadata = readDeviceMetadata();
 
@@ -299,7 +299,7 @@ public abstract class SequenceBase {
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
+    client = new IotReflectorClient(projectId, executionConfiguration, key_file);
     setReflectorState();
   }
 

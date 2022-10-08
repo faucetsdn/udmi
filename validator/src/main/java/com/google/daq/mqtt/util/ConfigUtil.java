@@ -8,10 +8,10 @@ import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * Collection of utilities for managing configuration.
@@ -31,9 +31,9 @@ public abstract class ConfigUtil {
    * @param configFile file ot parse
    * @return cloud configuration information
    */
-  public static CloudIotConfig readCloudIotConfig(File configFile) {
+  public static ExecutionConfiguration readExecutionConfiguration(File configFile) {
     try {
-      return OBJECT_MAPPER.readValue(configFile, CloudIotConfig.class);
+      return OBJECT_MAPPER.readValue(configFile, ExecutionConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + configFile.getAbsolutePath(), e);
     }
