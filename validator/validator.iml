@@ -4,8 +4,11 @@
     <output url="file://$MODULE_DIR$/out/production/classes" />
     <output-test url="file://$MODULE_DIR$/out/test/classes" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../common">
+    <content url="file://$MODULE_DIR$/../common/src/main">
       <sourceFolder url="file://$MODULE_DIR$/../common/src/main/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../common/src/test">
+      <sourceFolder url="file://$MODULE_DIR$/../common/src/test/java" isTestSource="true" />
     </content>
     <content url="file://$MODULE_DIR$/../gencode">
       <sourceFolder url="file://$MODULE_DIR$/../gencode/java" isTestSource="false" />

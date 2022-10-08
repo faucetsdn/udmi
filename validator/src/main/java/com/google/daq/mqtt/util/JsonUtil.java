@@ -144,13 +144,24 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert the json string to a map object.
+   * Convert the json string to a generic map object.
    *
    * @param input input string
    * @return input as map object
    */
   @SuppressWarnings("unchecked")
   public static Map<String, Object> asMap(String input) {
+    return convertTo(TreeMap.class, input);
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
+   * @param input input object
+   * @return input as map object
+   */
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> asMap(Object input) {
     return convertTo(TreeMap.class, input);
   }
 }

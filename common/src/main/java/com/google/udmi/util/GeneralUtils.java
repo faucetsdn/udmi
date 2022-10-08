@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.daq.mqtt.util.JsonUtil;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -84,6 +85,12 @@ public class GeneralUtils {
     } catch (Exception e) {
       throw new RuntimeException("While making deep copy of " + valueType.getName(), e);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T deepMergeDefaults(Object destination, Object source) {
+    deepMergeDefaults(JsonUtil.asMap(destination), JsonUtil.asMap(source));
+    return (T) JsonUtil.convertTo(destination.getClass(), destination);
   }
 
   @SuppressWarnings("unchecked")

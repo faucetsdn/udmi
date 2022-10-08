@@ -36,6 +36,7 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -266,7 +267,7 @@ public class Validator {
     }
     checkArgument(siteDir.equals(config.site_model), "siteDir mismatch");
     ExecutionConfiguration siteConfig = readExecutionConfiguration(cloudConfig);
-    return config;
+    return GeneralUtils.deepMergeDefaults(siteConfig, config);
   }
 
   private void setMessageTraceDir(String writeDirArg) {
