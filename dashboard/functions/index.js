@@ -268,7 +268,7 @@ function process_state_update(attributes, msgObject) {
 
   const commandFolder = `devices/${deviceId}/${STATE_TYPE}/${UPDATE_FOLDER}`;
   promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
-  
+
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
@@ -330,18 +330,28 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   return Promise.all(promises);
 });
 
-function parse_old_config(oldConfig, resetConfig) {
-  if (!oldConfig || resetConfig) {
-    console.warn('Resetting config bock, explicit=' + resetConfig);
-    return {};
+function parse_old_config(configStr, resetConfig) {
+  let config = {};
+  try {
+    config = JSON.parse(configStr || "{}");
+  } catch(e) {
+    if (!resetConfig) {
+      console.warn('Previous config parse error without reset, ignoring update');
+      return null;
+    }
+    config = {};
   }
 
-  try {
-    return JSON.parse(oldConfig);
-  } catch(e) {
-    console.warn('Previous config parse error, ignoring update');
-    return null;
+  if (resetConfig) {
+    const configLastStart = config.system && config.system.last_start;
+    console.warn('Resetting config bock', configLastStart);
+    config = {
+      system: {
+        last_start: configLastStart
+      }
+    }
   }
+  return config;
 }
 
 function update_last_start(config, stateStart) {
