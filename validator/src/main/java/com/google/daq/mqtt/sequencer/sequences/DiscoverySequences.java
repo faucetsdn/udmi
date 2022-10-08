@@ -53,14 +53,14 @@ public class DiscoverySequences extends SequenceBase {
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
     List<DiscoveryEvent> allEvents = getReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvent> discoveryEvents = allEvents.stream().filter(event -> event.scan_id == null)
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
         .collect(Collectors.toList());
-    System.err.println("TAP\n" + JsonUtil.stringify(discoveryEvents));
-    assertEquals("a single discovery event received", discoveryEvents.size(), 1);
-    DiscoveryEvent discoveryEvent = discoveryEvents.get(0);
-    info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
-    assertEquals("matching event generation", startTime, discoveryEvent.generation);
-    int discoveredPoints = discoveryEvent.uniqs == null ? 0 : discoveryEvent.uniqs.size();
+    System.err.println("TAP\n" + JsonUtil.stringify(enumEvents));
+    assertEquals("a single discovery event received", enumEvents.size(), 1);
+    DiscoveryEvent event = enumEvents.get(0);
+    info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
+    assertEquals("matching event generation", startTime, event.generation);
+    int discoveredPoints = event.uniqs == null ? 0 : event.uniqs.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
         discoveredPoints);
   }
