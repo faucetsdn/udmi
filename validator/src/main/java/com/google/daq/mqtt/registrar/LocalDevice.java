@@ -319,7 +319,7 @@ class LocalDevice {
         return JsonUtil.convertTo(Metadata.class, intermediary);
       } else {
         final Map<String, Object> metadataBase = asMap(intermediary);
-        GeneralUtils.deepMergeDefaults(metadataBase, siteMetadata);
+        GeneralUtils.mergeObject(metadataBase, siteMetadata);
         return JsonUtil.convertTo(Metadata.class, metadataBase);
       }
     } catch (Exception e) {

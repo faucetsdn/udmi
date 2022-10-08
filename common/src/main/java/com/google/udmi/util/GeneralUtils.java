@@ -88,24 +88,21 @@ public class GeneralUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> T deepMergeDefaults(Object destination, Object source) {
-    deepMergeDefaults(JsonUtil.asMap(destination), JsonUtil.asMap(source));
-    return (T) JsonUtil.convertTo(destination.getClass(), destination);
+  public static <T> T mergeObject(Object destination, Object source) {
+    Map<String, Object> target = JsonUtil.asMap(destination);
+    mergeObject(target, JsonUtil.asMap(source));
+    return (T) JsonUtil.convertTo(destination.getClass(), target);
   }
 
   @SuppressWarnings("unchecked")
-  public static void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
+  public static void mergeObject(Map<String, Object> target, Map<String, Object> source) {
     for (String key : source.keySet()) {
-      Object value2 = source.get(key);
-      if (destination.containsKey(key)) {
-        Object value1 = destination.get(key);
-        // When destination and source both contain key, deep copy maps but not other key/values,
-        // which would produce config override rather than defaults.
-        if (value1 instanceof Map && value2 instanceof Map) {
-          deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
-        }
+      Object targetValue = target.get(key);
+      Object sourceValue = source.get(key);
+      if (targetValue instanceof Map && sourceValue instanceof Map) {
+        mergeObject((Map<String, Object>) targetValue, (Map<String, Object>) sourceValue);
       } else {
-        destination.put(key, value2);
+        target.put(key, sourceValue);
       }
     }
   }

@@ -267,7 +267,7 @@ public class Validator {
     }
     checkArgument(siteDir.equals(config.site_model), "siteDir mismatch");
     ExecutionConfiguration siteConfig = readExecutionConfiguration(cloudConfig);
-    return GeneralUtils.deepMergeDefaults(siteConfig, config);
+    return GeneralUtils.mergeObject(siteConfig, config);
   }
 
   private void setMessageTraceDir(String writeDirArg) {
