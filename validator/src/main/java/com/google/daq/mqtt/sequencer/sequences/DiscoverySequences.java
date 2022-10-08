@@ -55,6 +55,7 @@ public class DiscoverySequences extends SequenceBase {
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> discoveryEvents = allEvents.stream().filter(event -> event.uniqs != null)
         .collect(Collectors.toList());
+    System.err.println("TAP\n" + JsonUtil.stringify(discoveryEvents));
     assertEquals("a single discovery event received", discoveryEvents.size(), 1);
     DiscoveryEvent discoveryEvent = discoveryEvents.get(0);
     info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
