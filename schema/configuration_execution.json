@@ -21,7 +21,7 @@
     "reflect_region": {
       "type": "string"
     },
-    "include": {
+    "site_model": {
       "type": "string"
     },
     "device_id": {

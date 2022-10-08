@@ -72,9 +72,9 @@ public abstract class ConfigUtil {
    * @param configFile file to read
    * @return parsed validator config
    */
-  public static ValidatorConfig readValidatorConfig(File configFile) {
+  public static ExecutionConfiguration readValidatorConfig(File configFile) {
     try {
-      return OBJECT_MAPPER.readValue(configFile, ValidatorConfig.class);
+      return OBJECT_MAPPER.readValue(configFile, ExecutionConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + configFile.getAbsolutePath(), e);
     }

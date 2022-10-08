@@ -10,7 +10,7 @@ class ExecutionConfiguration:
     self.site_name = None
     self.update_topic = None
     self.reflect_region = None
-    self.include = None
+    self.site_model = None
     self.device_id = None
     self.project_id = None
     self.key_file = None
@@ -31,7 +31,7 @@ class ExecutionConfiguration:
     result.site_name = source.get('site_name')
     result.update_topic = source.get('update_topic')
     result.reflect_region = source.get('reflect_region')
-    result.include = source.get('include')
+    result.site_model = source.get('site_model')
     result.device_id = source.get('device_id')
     result.project_id = source.get('project_id')
     result.key_file = source.get('key_file')
@@ -71,8 +71,8 @@ class ExecutionConfiguration:
       result['update_topic'] = self.update_topic # 5
     if self.reflect_region:
       result['reflect_region'] = self.reflect_region # 5
-    if self.include:
-      result['include'] = self.include # 5
+    if self.site_model:
+      result['site_model'] = self.site_model # 5
     if self.device_id:
       result['device_id'] = self.device_id # 5
     if self.project_id:

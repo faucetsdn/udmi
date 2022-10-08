@@ -19,7 +19,6 @@ import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.JsonUtil;
-import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.CleanDateFormat;
@@ -114,7 +113,7 @@ public abstract class SequenceBase {
   protected static String deviceId;
   protected static String cloudRegion;
   protected static String registryId;
-  static ValidatorConfig validatorConfig;
+  static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -244,8 +243,8 @@ public abstract class SequenceBase {
   };
 
   private static void ensureValidatorConfig() {
-    if (SequenceRunner.validationConfig != null) {
-      validatorConfig = SequenceRunner.validationConfig;
+    if (SequenceRunner.executionConfiguration != null) {
+      validatorConfig = SequenceRunner.executionConfiguration;
     } else {
       if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
         throw new RuntimeException(CONFIG_ENV + " env not defined.");
