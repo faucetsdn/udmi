@@ -1,0 +1,55 @@
+{
+  "title": "Execution Configuration",
+  "description": "Parameters for configuring the execution run of a UDMI tool",
+  "$section": "Tool Configuration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "registry_id": {
+      "type": "string"
+    },
+    "cloud_region": {
+      "type": "string"
+    },
+    "site_name": {
+      "type": "string"
+    },
+    "update_topic": {
+      "type": "string"
+    },
+    "reflect_region": {
+      "type": "string"
+    },
+    "include": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "key_file": {
+      "type": "string"
+    },
+    "serial_no": {
+      "type": "string"
+    },
+    "log_level": {
+      "type": "string"
+    },
+    "udmi_version": {
+      "type": "string"
+    },
+    "alt_project": {
+      "type": "string"
+    },
+    "alt_registry": {
+      "type": "string"
+    },
+    "block_unknown": {
+      "type": "boolean"
+    }
+  }
+}
