@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.util.Common.NO_SITE;
-import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;

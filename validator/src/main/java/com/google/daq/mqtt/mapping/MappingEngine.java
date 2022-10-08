@@ -1,9 +1,9 @@
 package com.google.daq.mqtt.mapping;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
+import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Date;
 import java.util.HashMap;

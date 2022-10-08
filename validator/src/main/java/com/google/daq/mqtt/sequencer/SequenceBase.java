@@ -2,9 +2,9 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
-import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
-import static com.google.daq.mqtt.util.JsonUtil.safeSleep;
-import static com.google.daq.mqtt.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,10 +18,10 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
-import com.google.daq.mqtt.validator.CleanDateFormat;
+import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;

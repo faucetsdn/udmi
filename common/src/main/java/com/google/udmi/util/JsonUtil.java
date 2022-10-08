@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.File;
 import java.time.Instant;
 import java.util.Date;

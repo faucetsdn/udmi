@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.daq.mqtt.util.JsonUtil;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -78,12 +77,13 @@ public class GeneralUtils {
     }
   }
 
-  public static <T> T deepCopy(T endpoint1, Class<T> valueType) {
+  @SuppressWarnings("unchecked")
+  public static <T> T deepCopy(T object) {
+    Class<?> targetClass = object.getClass();
     try {
-      return OBJECT_MAPPER.readValue(toJsonString(endpoint1),
-          valueType);
+      return (T) OBJECT_MAPPER.readValue(toJsonString(object), targetClass);
     } catch (Exception e) {
-      throw new RuntimeException("While making deep copy of " + valueType.getName(), e);
+      throw new RuntimeException("While making deep copy of " + targetClass.getName(), e);
     }
   }
 
