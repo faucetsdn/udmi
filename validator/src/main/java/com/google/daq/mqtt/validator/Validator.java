@@ -6,8 +6,10 @@ import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_ATTRIBUTE;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.daq.mqtt.util.JsonUtil.JSON_SUFFIX;
 import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,7 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -125,9 +126,8 @@ public class Validator {
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
-  private ExecutionConfiguration executionConfiguration;
+  private ExecutionConfiguration config;
   private CloudIotManager cloudIotManager;
-  private String siteDir;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File traceDir;
@@ -171,7 +171,10 @@ public class Validator {
     System.exit(0);
   }
 
-  private void parseArgs(List<String> argList) {
+  private List<String> parseArgs(List<String> argList) {
+    if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
+      processProfile(new File(argList.remove(0)));
+    }
     while (!argList.isEmpty()) {
       String option = removeNextArg(argList);
       try {
@@ -186,7 +189,7 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            cloudIotManager = new CloudIotManager(projectId, new File(siteDir));
+            cloudIotManager = new CloudIotManager(projectId, new File(config.site_model));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -203,7 +206,7 @@ public class Validator {
             break;
           case "--":
             // All remaining arguments remain in the return list.
-            return;
+            return argList;
           default:
             throw new RuntimeException("Unknown cmdline option " + option);
         }
@@ -211,6 +214,13 @@ public class Validator {
         throw new RuntimeException("For command line option " + option, e);
       }
     }
+    return argList;
+  }
+
+  private void processProfile(File profilePath) {
+    config = ConfigUtil.readExecutionConfiguration(profilePath);
+    projectId = config.project_id;
+    setSiteDir(config.site_model);
   }
 
   MessageReadingClient getMessageReadingClient() {
@@ -218,7 +228,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(executionConfiguration.registry_id, messageDir);
+    client = new MessageReadingClient(config.registry_id, messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -236,21 +246,24 @@ public class Validator {
   public void setSiteDir(String siteDir) {
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
-      this.siteDir = null;
       baseDir = new File(".");
     } else {
-      this.siteDir = siteDir;
       baseDir = new File(siteDir);
-      File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-      executionConfiguration = CloudIotManager.validate(
-          ConfigUtil.readExecutionConfiguration(cloudConfig),
-          projectId);
+      config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), projectId);
       initializeExpectedDevices(siteDir);
     }
 
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
     dataSinks.add(new FileDataSink(outBaseDir));
+  }
+
+  private ExecutionConfiguration resolveSiteConfig(ExecutionConfiguration config, String siteDir) {
+    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+    if (config == null) {
+      return readExecutionConfiguration(cloudConfig);
+    }
+    return config;
   }
 
   private void setMessageTraceDir(String writeDirArg) {
@@ -269,7 +282,7 @@ public class Validator {
       return;
     }
     try {
-      for (String device : Objects.requireNonNull(devicesDir.list())) {
+      for (String device : requireNonNull(devicesDir.list())) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
@@ -332,14 +345,13 @@ public class Validator {
   }
 
   private String getRegistryId() {
-    String registryId = executionConfiguration.registry_id;
-    return registryId;
+    return config.registry_id;
   }
 
   private void validateReflector() {
-    String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
+    String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, executionConfiguration, keyFile);
+    client = new IotReflectorClient(projectId, config, keyFile);
   }
 
   void messageLoop() {
@@ -566,7 +578,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (executionConfiguration != null && !executionConfiguration.registry_id.equals(registryId)) {
+    if (config != null && !config.registry_id.equals(registryId)) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }
