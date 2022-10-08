@@ -73,6 +73,7 @@ public class Registrar {
   private static final int RUNNER_THREADS = 25;
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
+  private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -254,7 +255,8 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
-    blockUnknown = cloudIotManager.executionConfiguration.block_unknown;
+    blockUnknown = Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
+        DEFAULT_BLOCK_UNKNOWN);
   }
 
   private String getGenerationString() {
