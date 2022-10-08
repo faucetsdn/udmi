@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
@@ -263,6 +264,8 @@ public class Validator {
     if (config == null) {
       return readExecutionConfiguration(cloudConfig);
     }
+    checkArgument(siteDir.equals(config.site_model), "siteDir mismatch");
+    ExecutionConfiguration siteConfig = readExecutionConfiguration(cloudConfig);
     return config;
   }
 

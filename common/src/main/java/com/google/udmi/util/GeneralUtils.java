@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class GeneralUtils {
 
@@ -82,6 +83,23 @@ public class GeneralUtils {
           valueType);
     } catch (Exception e) {
       throw new RuntimeException("While making deep copy of " + valueType.getName(), e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
+    for (String key : source.keySet()) {
+      Object value2 = source.get(key);
+      if (destination.containsKey(key)) {
+        Object value1 = destination.get(key);
+        // When destination and source both contain key, deep copy maps but not other key/values,
+        // which would produce config override rather than defaults.
+        if (value1 instanceof Map && value2 instanceof Map) {
+          deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
+        }
+      } else {
+        destination.put(key, value2);
+      }
     }
   }
 }

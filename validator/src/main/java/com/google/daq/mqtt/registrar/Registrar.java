@@ -208,7 +208,7 @@ public class Registrar {
             device -> {
               Set<Entry<String, ErrorTree>> entries =
                   device.getTreeChildren(dem.forDevice(device.getDeviceId()));
-              entries.stream()
+              entries
                   .forEach(
                       error ->
                           errorSummary
@@ -245,12 +245,11 @@ public class Registrar {
 
   private void initializeCloudProject() {
     cloudIotManager = new CloudIotManager(projectId, siteDir);
-    System.err.println(
-        String.format(
-            "Working with project %s registry %s/%s",
-            cloudIotManager.getProjectId(),
-            cloudIotManager.getCloudRegion(),
-            cloudIotManager.getRegistryId()));
+    System.err.printf(
+        "Working with project %s registry %s/%s%n",
+        cloudIotManager.getProjectId(),
+        cloudIotManager.getCloudRegion(),
+        cloudIotManager.getRegistryId());
 
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());

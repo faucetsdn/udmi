@@ -1,10 +1,13 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
+import static com.google.daq.mqtt.util.JsonUtil.asMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -23,7 +26,6 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -32,8 +34,10 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.GeneralUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -264,7 +268,7 @@ class LocalDevice {
     ExceptionMap exceptionMap = new ExceptionMap(relativized.toString());
 
     String[] files = deviceDir.list();
-    Preconditions.checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
+    checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
     Set<String> actualFiles = ImmutableSet.copyOf(files);
     Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
     SortedSet<String> missing = new TreeSet<>(Sets.difference(expectedFiles, actualFiles));
@@ -286,22 +290,6 @@ class LocalDevice {
     }
 
     exceptionMap.throwIfNotEmpty();
-  }
-
-  private void deepMergeDefaults(Map<String, Object> destination, Map<String, Object> source) {
-    for (String key : source.keySet()) {
-      Object value2 = source.get(key);
-      if (destination.containsKey(key)) {
-        Object value1 = destination.get(key);
-        // When destination and source both contain key, deep copy maps but not other key/values,
-        // which would produce config override rather than defaults.
-        if (value1 instanceof Map && value2 instanceof Map) {
-          deepMergeDefaults((Map<String, Object>) value1, (Map<String, Object>) value2);
-        }
-      } else {
-        destination.put(key, value2);
-      }
-    }
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
@@ -326,14 +314,13 @@ class LocalDevice {
     }
 
     try {
-      String intermediary = OBJECT_MAPPER.writeValueAsString(instance);
+      String intermediary = JsonUtil.stringify(instance);
       if (siteMetadata == null) {
-        return OBJECT_MAPPER.readValue(intermediary, Metadata.class);
+        return JsonUtil.convertTo(Metadata.class, intermediary);
       } else {
-        final Map<String, Object> metadataBase = OBJECT_MAPPER.readValue(intermediary,
-            TreeMap.class);
-        deepMergeDefaults(metadataBase, siteMetadata);
-        return OBJECT_MAPPER.convertValue(metadataBase, Metadata.class);
+        final Map<String, Object> metadataBase = asMap(intermediary);
+        GeneralUtils.deepMergeDefaults(metadataBase, siteMetadata);
+        return JsonUtil.convertTo(Metadata.class, metadataBase);
       }
     } catch (Exception e) {
       exceptionMap.put(EXCEPTION_READING, e);
@@ -492,7 +479,7 @@ class LocalDevice {
   }
 
   CloudDeviceSettings getSettings() {
-    return Preconditions.checkNotNull(settings, "Device settings not initialized");
+    return checkNotNull(settings, "Device settings not initialized");
   }
 
   void initializeSettings() {
@@ -677,14 +664,12 @@ class LocalDevice {
     }
     if (metadata.system.physical_tag != null) {
       String assetName = metadata.system.physical_tag.asset.name;
-      Preconditions.checkState(
-          deviceId.equals(assetName),
-          String.format(
-              "system.physical_tag.asset.name %s does not match expected %s", assetName, deviceId));
+      checkState(deviceId.equals(assetName),
+          String.format("system.physical_tag.asset.name %s does not match expected %s", assetName,
+              deviceId));
 
       String assetSite = metadata.system.physical_tag.asset.site;
-      Preconditions.checkState(
-          expectedSite.equals(assetSite),
+      checkState(expectedSite.equals(assetSite),
           String.format(
               "system.physical_tag.asset.site %s does not match expected %s",
               assetSite, expectedSite));
@@ -692,8 +677,7 @@ class LocalDevice {
 
     if (metadata.system.location != null) {
       String siteName = metadata.system.location.site;
-      Preconditions.checkState(
-          expectedSite.equals(siteName),
+      checkState(expectedSite.equals(siteName),
           String.format(
               "system.location.site %s does not match expected %s", siteName, expectedSite));
     }
@@ -779,7 +763,7 @@ class LocalDevice {
   }
 
   public String getDeviceNumId() {
-    return Preconditions.checkNotNull(deviceNumId, "deviceNumId not set");
+    return checkNotNull(deviceNumId, "deviceNumId not set");
   }
 
   public void setDeviceNumId(String numId) {
