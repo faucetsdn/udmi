@@ -318,7 +318,7 @@ class LocalDevice {
       if (siteMetadata == null) {
         return JsonUtil.convertTo(Metadata.class, intermediary);
       } else {
-        TreeMap<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
+        Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
         GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));
         return JsonUtil.convertTo(Metadata.class, mergedMetadata);
       }
