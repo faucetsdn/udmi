@@ -22,6 +22,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -484,11 +485,13 @@ public class Validator {
         device.addError(e);
       }
 
+      System.err.println(
+          "Validating against " + schemaName + " " + schemaMap.containsKey(schemaName));
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
-          System.err.println("Error validating schema: " + e.getMessage());
+          System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
           device.addError(e);
         }
       }
