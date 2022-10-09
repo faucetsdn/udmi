@@ -458,7 +458,6 @@ public class Validator {
       System.err.printf(
           "Processing device #%d/%d: %s/%s%n",
           processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
-      System.err.println(JsonUtil.stringify(message));
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
@@ -468,13 +467,15 @@ public class Validator {
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
+      System.err.println(JsonUtil.stringify(message));
+
       try {
         if (!schemaMap.containsKey(schemaName)) {
           throw new IllegalArgumentException(
               String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
         }
       } catch (Exception e) {
-        System.err.println(e.getMessage());
+        System.err.println("Missing schema entry " + schemaName);
         device.addError(e);
       }
 
@@ -518,6 +519,7 @@ public class Validator {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
+      System.err.println("Generic device error " + deviceId);
       device.addError(e);
     }
     return device;
@@ -805,7 +807,7 @@ public class Validator {
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
-      throw new RuntimeException("Against input " + targetFile, e);
+      throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
     }
   }
 
@@ -842,6 +844,8 @@ public class Validator {
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
+    System.err.printf("Schema is 0x%x as a %s%n", schema.hashCode(), schema.getClass());
+    System.err.println("Object is:\n" + JsonUtil.stringify(jsonNode));
     ProcessingReport report = schema.validate(jsonNode, true);
     if (!report.isSuccess()) {
       throw ValidationException.fromProcessingReport(report);
