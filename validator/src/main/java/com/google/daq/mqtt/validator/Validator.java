@@ -124,7 +124,6 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final List<String> deviceIds;
-  private String projectId;
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
@@ -176,13 +175,15 @@ public class Validator {
   private List<String> parseArgs(List<String> argList) {
     if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
       processProfile(new File(argList.remove(0)));
+    } else {
+      config = new ExecutionConfiguration();
     }
     while (!argList.isEmpty()) {
       String option = removeNextArg(argList);
       try {
         switch (option) {
           case "-p":
-            projectId = removeNextArg(argList);
+            config.project_id = removeNextArg(argList);
             break;
           case "-s":
             setSiteDir(removeNextArg(argList));
@@ -191,7 +192,7 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            cloudIotManager = new CloudIotManager(projectId, new File(config.site_model));
+            cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -221,7 +222,6 @@ public class Validator {
 
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExecutionConfiguration(profilePath);
-    projectId = config.project_id;
     setSiteDir(config.site_model);
   }
 
@@ -246,12 +246,13 @@ public class Validator {
    * @param siteDir site model directory
    */
   public void setSiteDir(String siteDir) {
+    config.site_model = siteDir;
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
       baseDir = new File(".");
     } else {
       baseDir = new File(siteDir);
-      config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), projectId);
+      config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), config.project_id);
       initializeExpectedDevices(siteDir);
     }
 
@@ -342,7 +343,7 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubClient(projectId, registryId, instName, updateTopic);
+    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
     if (updateTopic != null) {
       dataSinks.add(client);
     }
@@ -355,7 +356,7 @@ public class Validator {
   private void validateReflector() {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, config, keyFile);
+    client = new IotReflectorClient(config.project_id, config, keyFile);
   }
 
   void messageLoop() {
