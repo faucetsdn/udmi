@@ -23,10 +23,8 @@ fi
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
-if [ ! -f $jarfile ]; then
-    echo Building validator...
-    validator/bin/build
-fi
+echo Building validator...
+validator/bin/build
 
 auth_type=`jq -r .type ~/.config/gcloud/application_default_credentials.json || true`
 echo Application default credentials auth type ${auth_type:-unknown}

@@ -457,6 +457,7 @@ public class Validator {
       System.err.printf(
           "Processing device #%d/%d: %s/%s%n",
           processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
+      System.err.println(JsonUtil.stringify(message));
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
