@@ -194,7 +194,7 @@ class LocalDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
-  private final TreeMap<String, Object> siteMetadata;
+  private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
 
   private String deviceNumId;
@@ -212,7 +212,7 @@ class LocalDevice {
       this.siteDir = siteDir;
       this.validateMetadata = validateMetadata;
       if (siteMetadata != null) {
-        this.siteMetadata = OBJECT_MAPPER.convertValue(siteMetadata, TreeMap.class);
+        this.siteMetadata = JsonUtil.asMap(siteMetadata);
       } else {
         this.siteMetadata = null;
       }
@@ -318,9 +318,9 @@ class LocalDevice {
       if (siteMetadata == null) {
         return JsonUtil.convertTo(Metadata.class, intermediary);
       } else {
-        final Map<String, Object> metadataBase = asMap(intermediary);
-        GeneralUtils.mergeObject(metadataBase, siteMetadata);
-        return JsonUtil.convertTo(Metadata.class, metadataBase);
+        TreeMap<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
+        GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));
+        return JsonUtil.convertTo(Metadata.class, mergedMetadata);
       }
     } catch (Exception e) {
       exceptionMap.put(EXCEPTION_READING, e);
