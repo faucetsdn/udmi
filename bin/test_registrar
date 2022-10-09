@@ -27,6 +27,7 @@ for name in ${TEST_SITE}/devices/* ; do
     if [[ -f ${name}/out/metadata_norm.json ]]; then
         supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
         # If no site value is supplied in per-device metadata, expect default.
+        echo ${name} $supplied_site $(jq .system.location.site ${name}/out/metadata_norm.json)
         if [[ "${supplied_site}" == "null" ]]; then
             jq -e ".system.location.site == \"${site}\"" \
                ${name}/out/metadata_norm.json > /dev/null \
