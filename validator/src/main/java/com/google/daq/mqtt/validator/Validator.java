@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
-import static com.google.daq.mqtt.util.Common.TIMESTAMP_ATTRIBUTE;
+import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
@@ -439,7 +439,7 @@ public class Validator {
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(TIMESTAMP_ATTRIBUTE);
+      message.remove(TIMESTAMP_PROPERTY_KEY);
     }
   }
 

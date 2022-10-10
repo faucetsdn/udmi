@@ -89,6 +89,17 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the pojo to a mapped representaiton.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> toMap(Object message) {
+    return convertTo(TreeMap.class, message);
+  }
+
+  /**
    * Convert an object to a json string.
    *
    * @param target object to convert
