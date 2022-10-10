@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -108,7 +107,7 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
-  private static final long DEBUG_START_DELAY_MS = 10 * 1000;
+  private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -394,7 +393,9 @@ public abstract class SequenceBase {
    */
   @Before
   public void setUp() {
-    safeSleep(DEBUG_START_DELAY_MS);
+    // Old messages can sometimes take a while to clear out, so need some delay for stability.
+    safeSleep(CLEAN_START_DELAY_MS);
+
     deviceState = new State();
     configAcked = false;
     receivedState.clear();
@@ -632,17 +633,12 @@ public abstract class SequenceBase {
   @SuppressWarnings("unchecked")
   private Object augmentConfigTrace(Object data) {
     try {
-      if (data == null) {
-        return null;
-      }
-      if (traceLogLevel()) {
-        String messageData = stringify(data);
-        Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
-        map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
-        return map;
-      } else {
+      if (data == null || !traceLogLevel()) {
         return data;
       }
+      Map<String, Object> map = JsonUtil.convertTo(Map.class, data);
+      map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
+      return map;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting data message", e);
     }
@@ -676,27 +672,6 @@ public abstract class SequenceBase {
       return augmentedConfig;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting system config", e);
-    }
-  }
-
-  private <T> boolean updateState(SubFolder subFolder, SubFolder expected, Class<T> target,
-      Map<String, Object> message, Consumer<T> handler) {
-    try {
-      if (!expected.equals(subFolder)) {
-        return false;
-      }
-      message.remove("timestamp");
-      message.remove("version");
-      String messageString = stringify(message);
-      boolean updated = !messageString.equals(receivedState.get(subFolder));
-      if (updated) {
-        debug(String.format("updating %s state", subFolder));
-        T state = JsonUtil.OBJECT_MAPPER.readValue(messageString, target);
-        handler.accept(state);
-      }
-      return updated;
-    } catch (Exception e) {
-      throw new RuntimeException("While converting state type " + subFolder, e);
     }
   }
 
