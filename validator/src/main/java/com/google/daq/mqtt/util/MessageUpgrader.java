@@ -33,7 +33,7 @@ public class MessageUpgrader {
     String verStr =
         version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
             : "1";
-
+    System.err.println("MessageUpgrader for " + schemaName + " from version " + verStr);
     String[] components = verStr.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
@@ -89,6 +89,7 @@ public class MessageUpgrader {
 
   private void upgrade_1_3_14_metadata() {
     ObjectNode localnet = (ObjectNode) message.get("localnet");
+    System.err.println("Upgrade 1.3.14 localnet " + (localnet != null));
     if (localnet == null) {
       return;
     }
