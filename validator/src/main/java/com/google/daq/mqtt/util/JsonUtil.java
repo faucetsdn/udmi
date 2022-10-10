@@ -11,6 +11,8 @@ import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.File;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Collection of utilities for working with json things.
@@ -88,6 +90,17 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the pojo to a mapped representaiton.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  @SuppressWarnings("unchecked")
+  public static Map<String, Object> toMap(Object message) {
+    return convertTo(TreeMap.class, message);
+  }
+
+  /**
    * Convert an object to a json string.
    *
    * @param target object to convert
@@ -107,7 +120,6 @@ public abstract class JsonUtil {
    * @param clazz class of result
    * @param file  file to load
    * @param <T>   type of result
-   *
    * @return loaded object
    */
   public static <T> T loadFile(Class<T> clazz, File file) {

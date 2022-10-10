@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
+import static com.google.daq.mqtt.util.JsonUtil.safeSleep;
 import static com.google.daq.mqtt.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
@@ -38,7 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -81,7 +81,6 @@ public abstract class SequenceBase {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 2000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
-  public static final String LOCAL_CONFIG = "local_config";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -103,10 +102,12 @@ public abstract class SequenceBase {
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final long LOG_CLEAR_TIME_MS = 1000;
   private static final String LOCAL_PREFIX = "local_";
+  private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + "update";
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
+  private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -392,6 +393,9 @@ public abstract class SequenceBase {
    */
   @Before
   public void setUp() {
+    // Old messages can sometimes take a while to clear out, so need some delay for stability.
+    safeSleep(CLEAN_START_DELAY_MS);
+
     deviceState = new State();
     configAcked = false;
     receivedState.clear();
@@ -502,7 +506,7 @@ public abstract class SequenceBase {
     try {
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
       boolean traceMessage =
-          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG));
+          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
       String postfix =
           traceMessage ? (message == null ? ": (null)" : ":\n" + stringify(message)) : "";
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
@@ -629,17 +633,12 @@ public abstract class SequenceBase {
   @SuppressWarnings("unchecked")
   private Object augmentConfigTrace(Object data) {
     try {
-      if (data == null) {
-        return null;
-      }
-      if (traceLogLevel()) {
-        String messageData = stringify(data);
-        Map<String, Long> map = JsonUtil.OBJECT_MAPPER.readValue(messageData, Map.class);
-        map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
-        return map;
-      } else {
+      if (data == null || !traceLogLevel()) {
         return data;
       }
+      Map<String, Object> map = JsonUtil.convertTo(Map.class, data);
+      map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
+      return map;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting data message", e);
     }
@@ -650,7 +649,7 @@ public abstract class SequenceBase {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
       debug(header + " " + getTimestamp(deviceConfig.timestamp));
-      recordRawMessage(deviceConfig, LOCAL_PREFIX + "config");
+      recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
         return;
@@ -673,27 +672,6 @@ public abstract class SequenceBase {
       return augmentedConfig;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting system config", e);
-    }
-  }
-
-  private <T> boolean updateState(SubFolder subFolder, SubFolder expected, Class<T> target,
-      Map<String, Object> message, Consumer<T> handler) {
-    try {
-      if (!expected.equals(subFolder)) {
-        return false;
-      }
-      message.remove("timestamp");
-      message.remove("version");
-      String messageString = stringify(message);
-      boolean updated = !messageString.equals(receivedState.get(subFolder));
-      if (updated) {
-        debug(String.format("updating %s state", subFolder));
-        T state = JsonUtil.OBJECT_MAPPER.readValue(messageString, target);
-        handler.accept(state);
-      }
-      return updated;
-    } catch (Exception e) {
-      throw new RuntimeException("While converting state type " + subFolder, e);
     }
   }
 
@@ -745,7 +723,7 @@ public abstract class SequenceBase {
 
   protected List<Map<String, Object>> clearLogs() {
     info("clearing system logs...");
-    JsonUtil.safeSleep(LOG_CLEAR_TIME_MS);
+    safeSleep(LOG_CLEAR_TIME_MS);
     lastLog = null;
     return receivedEvents.remove(SubFolder.SYSTEM);
   }
@@ -905,7 +883,7 @@ public abstract class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        info("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
+        debug("Updated config with timestamp " + JsonUtil.getTimestamp(config.timestamp));
         debug(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
       } else if (converted instanceof AugmentedState) {
@@ -914,7 +892,7 @@ public abstract class SequenceBase {
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        info("Updated state has last_config " + JsonUtil.getTimestamp(
+        debug("Updated state has last_config " + JsonUtil.getTimestamp(
             deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
@@ -970,7 +948,7 @@ public abstract class SequenceBase {
     List<String> differences = configDiffEngine.diff(deviceConfig,
         sanitizeConfig((Config) receivedConfig));
     if (traceLogLevel() && !differences.isEmpty()) {
-      trace("+- " + Joiner.on("\n+- ").join(differences));
+      trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
     return differences.isEmpty();
   }
