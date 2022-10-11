@@ -393,6 +393,7 @@ public abstract class SequenceBase {
   @Before
   public void setUp() {
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
+    // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CLEAN_START_DELAY_MS);
 
     deviceState = new State();
