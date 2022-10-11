@@ -64,7 +64,7 @@ java.lang.RuntimeException: Metadata validation failed: Extra points: faulty_fin
 	at com.google.daq.mqtt.validator.Validator.validateUpdate(Validator.java:304)
 	at com.google.daq.mqtt.validator.Validator.validateMessage(Validator.java:202)
 	at com.google.daq.mqtt.validator.Validator.lambda$validatePubSub$0(Validator.java:185)
-	at com.google.daq.mqtt.util.PubSubClient.processMessage(PubSubClient.java:105)
+	at com.google.daq.mqtt.util.PubSubUdmiClient.processMessage(PubSubClient.java:105)
 	at com.google.daq.mqtt.validator.Validator.validatePubSub(Validator.java:184)
 	at com.google.daq.mqtt.validator.Validator.main(Validator.java:93)
 Validation complete PS-20/pointset

@@ -32,7 +32,7 @@ import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
-import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.PubSubUdmiClient;
 import com.google.daq.mqtt.util.ValidationException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -324,7 +324,7 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubClient(projectId, registryId, instName, updateTopic);
+    client = new PubSubUdmiClient(projectId, registryId, instName, updateTopic);
     if (updateTopic != null) {
       dataSinks.add(client);
     }

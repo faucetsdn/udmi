@@ -37,9 +37,9 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.SystemState;
 
 /**
- * Message publisher that uses PubSub.
+ * Message publisher that taps into the backed UDMI PubSub topics.
  */
-public class PubSubClient implements MessagePublisher, MessageHandler {
+public class PubSubUdmiClient implements MessagePublisher, MessageHandler {
 
   private static final String CONNECT_ERROR_FORMAT = "While connecting to project %s";
 
@@ -48,7 +48,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       .setSerializationInclusion(Include.NON_NULL);
   private static final String SUBSCRIPTION_ERROR_FORMAT = "While accessing subscription %s";
 
-  private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
+  private static final long SUBSCRIPTION_RACE_DELAY_MS = 10 * 1000;
   private static final String WAS_BASE_64 = "wasBase64";
 
   private final AtomicBoolean active = new AtomicBoolean();
@@ -71,7 +71,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param projectId    target project id
    * @param subscription target subscription name
    */
-  public PubSubClient(String projectId, String subscription) {
+  public PubSubUdmiClient(String projectId, String subscription) {
     this(projectId, null, subscription, null);
   }
 
@@ -83,7 +83,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param subscription target subscription name
    * @param updateTopic  output PubSub topic for updates (else null)
    */
-  public PubSubClient(String projectId, String registryId, String subscription,
+  public PubSubUdmiClient(String projectId, String registryId, String subscription,
       String updateTopic) {
     this(projectId, registryId, subscription, updateTopic, true);
   }
@@ -97,7 +97,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
    * @param updateTopic  output PubSub topic for updates (else null)
    * @param reset        if the connection should be reset before use
    */
-  public PubSubClient(String projectId, String registryId, String subscription, String updateTopic,
+  public PubSubUdmiClient(String projectId, String registryId, String subscription, String updateTopic,
       boolean reset) {
     try {
       this.projectId = Preconditions.checkNotNull(projectId, "project id not defined");

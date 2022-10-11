@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.cloud.ServiceOptions;
-import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.PubSubUdmiClient;
 import com.google.daq.mqtt.util.PubSubPusher;
 import java.io.File;
 import java.util.Date;
@@ -45,8 +45,8 @@ public class IotCoreProxy {
   private final Map<String, ProxyTarget> proxyTargets = new ConcurrentHashMap<>();
   private final ProjectMetadata configMap;
 
-  private PubSubClient proxySubscription;
-  private PubSubClient stateSubscription;
+  private PubSubUdmiClient proxySubscription;
+  private PubSubUdmiClient stateSubscription;
   private PubSubPusher configPublisher;
   private PubSubPusher validationPublisher;
   private MessageValidator messageValidator;
@@ -203,8 +203,8 @@ public class IotCoreProxy {
         "proxy_sub_base not defined");
     String proxySubscriptionName = String.format(PROXY_SUBSCRIPTION_FMT, proxySubBase);
     String stateSubscriptionName = String.format(STATE_SUBSCRIPTION_FMT, proxySubBase);
-    proxySubscription = new PubSubClient(PROJECT_ID, proxySubscriptionName);
-    stateSubscription = new PubSubClient(PROJECT_ID, stateSubscriptionName);
+    proxySubscription = new PubSubUdmiClient(PROJECT_ID, proxySubscriptionName);
+    stateSubscription = new PubSubUdmiClient(PROJECT_ID, stateSubscriptionName);
 
     String proxyTopicBase = checkNotNull(configMap.get("proxy_topic_base"),
         "proxy_topic_base not defined");

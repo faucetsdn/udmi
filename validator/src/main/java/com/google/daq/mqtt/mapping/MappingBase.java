@@ -1,17 +1,13 @@
 package com.google.daq.mqtt.mapping;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 
-import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Joiner;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.MessageHandler.HandlerConsumer;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
-import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.PubSubUdmiClient;
 import com.google.udmi.util.SiteModel;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +16,7 @@ abstract class MappingBase {
   public static final String UDMI_REFLECT = "udmi_reflect";
   private String projectId;
   SiteModel siteModel;
-  private PubSubClient client;
+  private PubSubUdmiClient client;
   private String pubsubSubscription;
   private String discoveryNodeId;
   String mappingEngineId;
@@ -69,7 +65,7 @@ abstract class MappingBase {
     String updateTopic = checkNotNull(siteModel.getUpdateTopic(), "site model update_topic null");
     String projectId = checkNotNull(this.projectId, "project id not defined");
     String subscription = checkNotNull(this.pubsubSubscription, "subscription not defined");
-    client = new PubSubClient(projectId, registryId, subscription, UDMI_REFLECT, false);
+    client = new PubSubUdmiClient(projectId, registryId, subscription, UDMI_REFLECT, false);
     handlers.forEach(this::registerHandler);
   }
 
