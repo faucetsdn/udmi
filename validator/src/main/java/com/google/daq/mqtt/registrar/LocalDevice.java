@@ -6,6 +6,7 @@ import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -311,7 +312,7 @@ class LocalDevice {
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       instance = OBJECT_MAPPER.readTree(targetStream);
       baseVersion = instance.get(VERSION_PROPERTY_KEY);
-      new MessageUpgrader("metadata", instance).upgrade();
+      new MessageUpgrader(METADATA_SCHEMA, instance).upgrade();
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
       return null;
