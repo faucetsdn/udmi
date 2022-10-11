@@ -51,12 +51,15 @@ public class DiscoverySequences extends SequenceBase {
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
-    List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("a few events received", events.size() >= 1 && events.size() <= 2);
-    DiscoveryEvent discoveryEvent = events.get(0);
-    info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
-    assertEquals("matching event generation", startTime, discoveryEvent.generation);
-    int discoveredPoints = discoveryEvent.uniqs == null ? 0 : discoveryEvent.uniqs.size();
+    List<DiscoveryEvent> allEvents = getReceivedEvents(DiscoveryEvent.class);
+    // Filter for enumeration events, since there will sometimes be lingering scan events.
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
+        .collect(Collectors.toList());
+    assertEquals("a single discovery event received", enumEvents.size(), 1);
+    DiscoveryEvent event = enumEvents.get(0);
+    info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
+    assertEquals("matching event generation", startTime, event.generation);
+    int discoveredPoints = event.uniqs == null ? 0 : event.uniqs.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
         discoveredPoints);
   }

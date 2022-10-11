@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -49,7 +51,7 @@ public class MessageDowngrader {
 
     downgradeLocalnet();
 
-    message.set("version", versionNode);
+    message.set(VERSION_PROPERTY_KEY, versionNode);
   }
 
   private String convertVersion(JsonNode versionNode) {
