@@ -467,8 +467,6 @@ public class Validator {
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
-      System.err.println(JsonUtil.stringify(message));
-
       try {
         if (!schemaMap.containsKey(schemaName)) {
           throw new IllegalArgumentException(
@@ -844,8 +842,6 @@ public class Validator {
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
-    System.err.printf("Schema is 0x%x as a %s%n", schema.hashCode(), schema.getClass());
-    System.err.println("Object is:\n" + JsonUtil.stringify(jsonNode));
     ProcessingReport report = schema.validate(jsonNode, true);
     if (!report.isSuccess()) {
       throw ValidationException.fromProcessingReport(report);
