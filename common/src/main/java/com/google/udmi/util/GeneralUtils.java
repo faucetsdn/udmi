@@ -77,21 +77,23 @@ public class GeneralUtils {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> T deepCopy(T object) {
     Class<?> targetClass = object.getClass();
     try {
-      return (T) OBJECT_MAPPER.readValue(toJsonString(object), targetClass);
+      @SuppressWarnings("unchecked")
+      T t = (T) OBJECT_MAPPER.readValue(toJsonString(object), targetClass);
+      return t;
     } catch (Exception e) {
       throw new RuntimeException("While making deep copy of " + targetClass.getName(), e);
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> T mergeObject(Object destination, Object source) {
     Map<String, Object> target = JsonUtil.asMap(destination);
     mergeObject(target, JsonUtil.asMap(source));
-    return (T) JsonUtil.convertTo(destination.getClass(), target);
+    @SuppressWarnings("unchecked")
+    T t = (T) JsonUtil.convertTo(destination.getClass(), target);
+    return t;
   }
 
   public static void mergeObject(Map<String, Object> target, Map<String, Object> source) {

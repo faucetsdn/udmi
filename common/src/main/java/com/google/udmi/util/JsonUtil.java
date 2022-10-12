@@ -94,9 +94,10 @@ public abstract class JsonUtil {
    * @param message input object to convert
    * @return object-as-map
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, Object> toMap(Object message) {
-    return convertTo(TreeMap.class, message);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, message);
+    return map;
   }
 
   /**
@@ -159,9 +160,10 @@ public abstract class JsonUtil {
    * @param input input string
    * @return input as map object
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, Object> asMap(String input) {
-    return convertTo(TreeMap.class, input);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, input);
+    return map;
   }
 
   /**
@@ -170,8 +172,9 @@ public abstract class JsonUtil {
    * @param input input object
    * @return input as map object
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, Object> asMap(Object input) {
-    return convertTo(TreeMap.class, input);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, input);
+    return map;
   }
 }
