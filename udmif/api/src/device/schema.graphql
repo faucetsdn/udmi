@@ -7,6 +7,13 @@ type DevicesResponse {
   totalFilteredCount: Int!
 }
 
+enum DEVICE_STATE {
+  CORRECT
+  MISSING
+  ERROR
+  EXTRA
+}
+
 type Point{
   # the ID of the point
   id: ID!
@@ -15,7 +22,7 @@ type Point{
   # the value of the point
   value: String!
   # the units of the point
-  units: String!
+  units: String
   # the name of the point
   state: String!
 }
@@ -45,11 +52,25 @@ type Device {
   tags: [String!]!
   # the points on a device
   points: [Point!]!
+  # JSON validation message
+  validation: String
+  # validation level from site validation message
+  level: Int
+  # message from site validation message 
+  message: String
+  # message details from site validation message
+  details: String
+  # date last seen from site validation message
+  lastSeen: String
+  # the bin the device fell into during the site validation, i.e. correct, error, missing, or extra
+  state: DEVICE_STATE
+  # number of errors from device validation message
+  errorsCount: Int!
 }
 
 type Query {
   # Get the devices matching the search options
-  devices( searchOptions: SearchOptions! ): DevicesResponse
+  devices( searchOptions: SearchOptions ): DevicesResponse
   # Get a device by ID
   device( id: ID! ): Device
   # Get points by a Device ID

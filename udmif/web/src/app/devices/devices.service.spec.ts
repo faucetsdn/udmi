@@ -39,7 +39,12 @@ describe('DevicesService', () => {
             operational: false,
             serialNumber: 's123',
             firmware: 'V3',
-            tags: [],
+            level: 400,
+            message: '',
+            details: '',
+            lastSeen: '2022-06-203T04:55:21Z',
+            state: 'COMPLETE',
+            errorsCount: 0,
           },
         ],
         totalCount: 1,
@@ -61,7 +66,7 @@ describe('DevicesService', () => {
     expect(op.operation.variables).toEqual({
       searchOptions: {
         offset: undefined,
-        batchSize: 10,
+        batchSize: undefined,
         sortOptions: undefined,
         filter: undefined,
       },

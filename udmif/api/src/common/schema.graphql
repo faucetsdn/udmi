@@ -3,11 +3,13 @@ input DistinctSearchOptions {
   search: String
   # the number of values to return, defaults to 10
   limit: Int
+  # the JSON search filter
+  filter: String
 }
 
 input SearchOptions {
   # the number of records to retrieve
-  batchSize: Int!
+  batchSize: Int
   # the records to start at
   offset: Int
   # the search options

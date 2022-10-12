@@ -30,5 +30,5 @@ function convertMapOfFiltersToFilter(mapOfFilters: Map<string, Filter[]>): any {
     })
     .filter((expression) => expression);
 
-  return { $or: filterExpressions };
+  return { $and: filterExpressions };
 }

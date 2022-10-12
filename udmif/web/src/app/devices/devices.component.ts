@@ -7,24 +7,18 @@ import { DevicesQueryResponse, DevicesQueryVariables, SortOptions } from './devi
 import { DevicesService } from './devices.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { compact, union } from 'lodash-es';
 
 @Component({
   templateUrl: './devices.component.html',
   styleUrls: ['./devices.component.scss'],
 })
 export class DevicesComponent implements OnInit, OnDestroy {
-  private devicesSubscription!: Subscription;
-  private devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
-  displayedColumns: (keyof DeviceModel)[] = [
-    'name',
-    'make',
-    'model',
-    'site',
-    'section',
-    'lastPayload',
-    'operational',
-    'tags',
-  ];
+  devicesSubscription!: Subscription;
+  devicesQuery!: QueryRef<DevicesQueryResponse, DevicesQueryVariables>;
+  displayedColumns: (keyof DeviceModel)[] = this.route.snapshot.data['displayedColumns'];
+  siteId?: string = this.route.snapshot.params['siteId'];
   devices: Device[] = [];
   totalCount: number = 0;
   totalFilteredCount: number = 0;
@@ -32,19 +26,16 @@ export class DevicesComponent implements OnInit, OnDestroy {
   pageSize: number = 10;
   pageSizeOptions: number[] = [10, 25, 50, 100];
   sortOptions?: SortOptions;
-  filter?: string;
-  searchFields: Record<string, string> = {
-    name: 'getDeviceNames',
-    make: 'getDeviceMakes',
-    model: 'getDeviceModels',
-    site: 'getDeviceSites',
-    section: 'getDeviceSections',
-  };
+  siteFilter?: SearchFilterItem = this.siteId ? { field: 'site', operator: '=', value: this.siteId } : undefined;
+  defaultFilters: SearchFilterItem[] = compact([this.siteFilter]);
+  stringifiedDefaultFilters?: string = this.defaultFilters.length ? JSON.stringify(this.defaultFilters) : undefined;
+  filter?: string = this.stringifiedDefaultFilters;
+  searchFields: Record<string, string> = this.route.snapshot.data['searchFields'];
 
-  constructor(private devicesService: DevicesService) {}
+  constructor(private devicesService: DevicesService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.devicesQuery = this.devicesService.getDevices(0, this.pageSize); // start off on first page, i.e. offset 0
+    this.devicesQuery = this.devicesService.getDevices(0, this.pageSize, this.sortOptions, this.filter); // start off on first page, i.e. offset 0
 
     this.devicesSubscription = this.devicesQuery.valueChanges.subscribe(({ data }) => {
       this.devices = data.devices?.devices ?? [];
@@ -77,7 +68,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
   filterData = (filters: SearchFilterItem[]): void => {
     // arrow to hold onto this
-    this.filter = filters.length ? JSON.stringify(filters) : undefined; // don't send filter field if no filter
+    const allFilters = union(this.defaultFilters, filters);
+
+    this.filter = allFilters.length ? JSON.stringify(allFilters) : undefined; // don't send filter field if no filter
 
     this._refetch();
   };

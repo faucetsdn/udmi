@@ -3,6 +3,7 @@ import { UdmiEvent } from './model/UdmiEvent';
 export const POINTSET_SUB_FOLDER = 'pointset';
 export const SYSTEM_SUB_FOLDER = 'system';
 export const VALIDATION_SUB_FOLDER = 'validation';
+export const UPDATE_SUB_FOLDER = 'update';
 export const MODEL = 'model';
 export const STATE = 'state';
 export const CONFIG = 'config';

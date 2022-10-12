@@ -1,10 +1,38 @@
-<div class="table-controls"></div>
+<div class="table-controls">
+  <app-search-filter
+    serviceName="SitesService"
+    [fields]="searchFields"
+    [limit]="15"
+    [handleFilterChange]="filterData"
+  ></app-search-filter>
+  <mat-paginator
+    [length]="totalFilteredCount"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="pageChanged($event)"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
 <mat-table [dataSource]="sites" matSort (matSortChange)="sortData($event)" aria-label="List of sites">
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
-    <mat-header-cell *matHeaderCellDef>{{ columnName | capitalize }}</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+    <mat-header-cell *matHeaderCellDef mat-sort-header>{{
+      columnName.replace('Count', '') | capitalize
+    }}</mat-header-cell>
+    <div *ngIf="columnName === 'lastValidated'">
+      <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+    </div>
+    <div *ngIf="columnName === 'percentValidated'">
+      <mat-cell *matCellDef="let element">{{ element.percentValidated | percent: '1.0-2' }}</mat-cell>
+    </div>
+    <div *ngIf="columnName !== 'lastValidated' && columnName !== 'percentValidated'">
+      <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+    </div>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+  <a class="link" mat-button *matRowDef="let row; columns: displayedColumns" [routerLink]="row.name">
+    <mat-row></mat-row>
+  </a>
 </mat-table>

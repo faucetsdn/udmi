@@ -3,7 +3,7 @@ import { UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
 import { Site, SiteKey, SiteValidation } from './model/Site';
 
 export function getSiteDocument(udmiEvent: ValidationEvent): Site {
-  return { name: udmiEvent.attributes.deviceRegistryId, lastMessage: udmiEvent.data };
+  return { name: udmiEvent.attributes.deviceRegistryId, validation: udmiEvent.data };
 }
 
 export function getSiteKey(udmiEvent: UdmiEvent): SiteKey {

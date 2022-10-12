@@ -1,8 +1,18 @@
 import { CapitalizePipe } from './capitalize.pipe';
 
 describe('CapitalizePipe', () => {
-  it('should create an instance', () => {
-    const pipe = new CapitalizePipe();
-    expect(pipe).toBeTruthy();
+  const pipe = new CapitalizePipe();
+
+  const testCases = [
+    { value: null, expected: '' },
+    { value: undefined, expected: '' },
+    { value: '', expected: '' },
+    { value: 'errorCount', expected: 'Error Count' },
+  ];
+
+  testCases.forEach((test) => {
+    it(`should transform ${test.value} to ${test.expected}`, () => {
+      expect(pipe.transform(test.value)).toEqual(test.expected);
+    });
   });
 });

@@ -28,7 +28,7 @@ describe('LoginGuard', () => {
 
   it('should redirect to the devices screen when logged in', () => {
     mockAuthService.isLoggedIn$.next(true);
-    guard.canActivate(route, state).subscribe((res) => expect(res.toString()).toEqual('/devices'));
+    guard.canActivate(route, state).subscribe((res) => expect(res).toEqual(false));
   });
 
   it('should proceed when not logged in', () => {
