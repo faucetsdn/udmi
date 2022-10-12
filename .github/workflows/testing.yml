@@ -135,6 +135,10 @@ jobs:
           cd sites/udmi_site_model/out
           echo Output from `pwd`
           more `find out -type f`
+      - name: validator logs
+        if: ${{ always() }}
+        run: |
+          cat out/validator.out || true
       - name: pubber logs
         if: ${{ always() }}
         run: |

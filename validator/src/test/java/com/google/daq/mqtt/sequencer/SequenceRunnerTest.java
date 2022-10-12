@@ -1,12 +1,11 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.daq.mqtt.sequencer.SequenceBase.SERIAL_NO_MISSING;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.daq.mqtt.TestCommon;
-import com.google.daq.mqtt.util.ValidatorConfig;
 import org.junit.Test;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * Unit tests for sequence runner (not to be confused with sequence tests themselves).
@@ -15,8 +14,8 @@ public class SequenceRunnerTest {
 
   private static final String TEST_DEVICE = "AHU-1";
 
-  private ValidatorConfig getValidatorConfig() {
-    ValidatorConfig validatorConfig = new ValidatorConfig();
+  private ExecutionConfiguration getExecutionConfiguration() {
+    ExecutionConfiguration validatorConfig = new ExecutionConfiguration();
     validatorConfig.project_id = TestCommon.PROJECT_ID;
     validatorConfig.site_model = TestCommon.SITE_DIR;
     validatorConfig.log_level = TestCommon.LOG_LEVEL;
@@ -27,7 +26,7 @@ public class SequenceRunnerTest {
 
   @Test
   public void processSite() {
-    ValidatorConfig config = getValidatorConfig();
+    ExecutionConfiguration config = getExecutionConfiguration();
     SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertTrue("many failures", sequenceRunner.getFailures().size() > 10);
@@ -35,7 +34,7 @@ public class SequenceRunnerTest {
 
   @Test
   public void processDevice() {
-    ValidatorConfig config = getValidatorConfig();
+    ExecutionConfiguration config = getExecutionConfiguration();
     config.device_id = TEST_DEVICE;
     SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
     // TODO: SequenceRunner is not properly mocked, so everything fails.

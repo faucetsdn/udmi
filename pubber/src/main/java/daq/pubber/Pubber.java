@@ -937,8 +937,7 @@ public class Pubber {
 
   private String redirectedEndpoint(String redirectRegistry) {
     try {
-      EndpointConfiguration endpoint = deepCopy(configuration.endpoint,
-          EndpointConfiguration.class);
+      EndpointConfiguration endpoint = deepCopy(configuration.endpoint);
       endpoint.client_id = getClientId(redirectRegistry);
       return toJsonString(endpoint);
     } catch (Exception e) {

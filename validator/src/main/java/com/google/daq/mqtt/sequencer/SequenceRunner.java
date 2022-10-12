@@ -4,7 +4,6 @@ import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.Common;
-import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +16,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 
 /**
@@ -27,7 +27,7 @@ public class SequenceRunner {
   private static final String INITIALIZATION_ERROR_PREFIX = "initializationError(org.junit.";
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  static ValidatorConfig validationConfig;
+  static ExecutionConfiguration executionConfiguration;
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
   private int successes = -1;
   private List<Failure> failures;
@@ -58,8 +58,8 @@ public class SequenceRunner {
         || !result.getFailures().get(0).toString().startsWith(INITIALIZATION_ERROR_PREFIX));
   }
 
-  static SequenceRunner processConfig(ValidatorConfig config) {
-    validationConfig = config;
+  static SequenceRunner processConfig(ExecutionConfiguration config) {
+    executionConfiguration = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     sequenceRunner.process(List.of());
     return sequenceRunner;
@@ -77,7 +77,7 @@ public class SequenceRunner {
     siteModel.initialize();
     String deviceId = params.remove(WebServerRunner.DEVICE_PARAM);
 
-    ValidatorConfig config = new ValidatorConfig();
+    ExecutionConfiguration config = new ExecutionConfiguration();
     config.project_id = projectId;
     config.site_model = sitePath;
     config.device_id = deviceId;
