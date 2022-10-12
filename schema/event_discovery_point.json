@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/event_discovery_point.json",
+  "$udmi_version": "1.4.0",
   "title": "Point Enumeration Event",
   "description": "Object representation for for a single point enumeration",
   "type": "object",

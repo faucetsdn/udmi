@@ -1,12 +1,12 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state.json",
+  "$udmi_version": "1.4.0",
   "title": "State",
   "$section": "Messages",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "[State](../docs/messages/state.md) message, defined by [`state.json`]",
   "additionalProperties": false,
-  "required": [
+  "required": [ 
     "timestamp",
     "version",
     "system"
@@ -16,9 +16,7 @@
       "description": "RFC 3339 Timestamp the state payload was generated",
       "type": "string",
       "format": "date-time",
-      "examples": [
-        "2019-01-17T14:02:29.364Z"
-      ]
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
       "description": "Version of the UDMI schema",

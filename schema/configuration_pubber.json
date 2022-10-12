@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/configuration_pubber.json",
+  "$udmi_version": "1.4.0",
   "title": "Pubber Configuration",
   "description": "Parameters to define a pubber runtime instance",
   "additionalProperties": true,

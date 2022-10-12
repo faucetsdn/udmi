@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_discovery.json",
+  "$udmi_version": "1.4.0",
   "title": "Discovery Model",
   "description": "Discovery target parameters",
   "type": "object",
@@ -16,3 +16,4 @@
     }
   }
 }
+

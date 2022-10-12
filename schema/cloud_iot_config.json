@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/cloud_iot_config.json",
+  "$udmi_version": "1.4.0",
   "title": "Cloud Iot Config",
   "description": "Parameters for configuring a connection to cloud systems",
   "$section": "Site Model",
@@ -22,5 +22,5 @@
     "reflect_region": {
       "type": "string"
     }
-  }
+  }  
 }

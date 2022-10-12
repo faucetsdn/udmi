@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_system.json",
+  "$udmi_version": "1.4.0",
   "title": "System State",
   "description": "[System State Documentation](../docs/messages/system.md#state)",
   "type": "object",
@@ -10,9 +10,7 @@
       "description": "RFC 3339 timestamp the configuration was generated",
       "type": "string",
       "format": "date-time",
-      "examples": [
-        "2019-01-17T14:02:29.364Z"
-      ]
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "version": {
       "description": "Version of the UDMI schema",
@@ -22,9 +20,7 @@
       "description": "Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)",
       "type": "string",
       "format": "date-time",
-      "examples": [
-        "2019-01-17T14:02:29.364Z"
-      ]
+      "examples": ["2019-01-17T14:02:29.364Z"]
     },
     "operational": {
       "description": "Operational status of the device.",
@@ -41,10 +37,7 @@
     "serial_no": {
       "description": "The serial number of the physical device",
       "type": "string",
-      "examples": [
-        "A1B2C3D4",
-        "00001"
-      ]
+      "examples": ["A1B2C3D4", "00001"]
     },
     "hardware": {
       "$ref": "file:state_system_hardware.json"
@@ -52,11 +45,7 @@
     "software": {
       "additionalProperties": false,
       "description": "A collection of items which can be used to describe version of software running on a device",
-      "examples": [
-        "firmware",
-        "os",
-        "driver"
-      ],
+      "examples": ["firmware", "os", "driver"],
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
       "patternProperties": {

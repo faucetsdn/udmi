@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_pointset_point.json",
+  "$udmi_version": "1.4.0",
   "title": "Point Pointset Model",
   "description": "Information about a specific point name of the device.",
   "type": "object",
@@ -16,16 +16,12 @@
     },
     "baseline_value": {
       "description": "Represents the expected baseline value of the point",
-      "examples": [
-        22
-      ]
+      "examples": [22]
     },
     "baseline_tolerance": {
       "type": "number",
       "description": "Maximum deviation from `baseline_value`",
-      "examples": [
-        2
-      ]
+      "examples": [2]
     },
     "baseline_state": {
       "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
@@ -39,18 +35,13 @@
     },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
-      "examples": [
-        1
-      ],
+      "examples": [1],  
       "type": "number"
     },
     "ref": {
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "type": "string",
-      "examples": [
-        "AI3",
-        "400070"
-      ]
+      "examples": ["AI3", "400070"]
     }
   }
 }

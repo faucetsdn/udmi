@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/config_blobset_blob.json",
+  "$udmi_version": "1.4.0",
   "title": "Blob Blobset Config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -30,19 +30,7 @@
     }
   },
   "oneOf": [
-    {
-      "required": [
-        "content_type",
-        "base64",
-        "phase"
-      ]
-    },
-    {
-      "required": [
-        "url",
-        "sha256",
-        "phase"
-      ]
-    }
+    { "required": ["content_type", "base64", "phase"] },
+    { "required": ["url", "sha256", "phase"] }
   ]
 }

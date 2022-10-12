@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/state_gateway.json",
+  "$udmi_version": "1.4.0",
   "title": "Gateway State",
   "description": "[Gateway Documentation](../docs/specs/gateway.md)",
   "type": "object",

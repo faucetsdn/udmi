@@ -13,6 +13,23 @@
 
 UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
+SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
+
+function update_existing_schema_version(){
+    file=$1
+    version=$2
+    gsed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
+}
+
+function update_schema_version(){
+    file=$1
+    version=$2
+    if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
+        gsed -i "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+    else
+        update_existing_schema_version $file $version
+    fi 
+}
 
 if [[ "$#" != 1 ]]; then
     echo Usage: $0 NEW_VERSION
@@ -50,7 +67,7 @@ if [[ -n $err_upversion_list ]]; then
 fi
 
 for schema_file in schema/*.json; do
-    if [[ $(grep -c "\"\$udmi_version\"" $schema_file) != 1 ]]; then
+    if (( $(grep -c "\"\$udmi_version\"" $schema_file) > 1 )); then
         echo $schema_file
         err_schema_version=1
     fi 
@@ -60,8 +77,8 @@ if [[ -n $err_schema_version ]]; then
     exit 1
 fi
 
-# Check files have exactly 1 indented version fields to avoid unexpected 
-# updates, e.g. when the version is in a "software" block
+# Check files have exactly 1 matched version fields to avoid unexpected 
+# updates. Uses indents to try and match the top level field
 while read action file comment; do
     if ! [[ -f $file && $action == "y" ]]; then
         continue
@@ -79,29 +96,17 @@ fi
 
 echo -n Updating files ..
 
-find schema -type f -name "*.json" -exec gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
-
-# Update Schema
+# NOTE using sed because jq reformats  text 
 for schema_file in schema/*.json; do
-    if [[ $(jq -r '.["$udmi_version"]' $schema_file) == "null" ]]; then
-        # Add a $udmi_version entry
-        gsed -i -P "s/^{/{\n  \"\$udmi_version\": \"$NEW_VERSION\",\n" $schema_file
-    else
-        gsed -i -P "\$udmi_version\": \"$NEW_VERSION\",\n "
-    fi 
-
-    # Update
-    if [[ $(ggrep -P -c "" ]]
-
-
-for schema_file in schema/*.json; do
-    jq ".[\"\$UDMI\"] |= \"$NEW_VERSION\"" $schema_file | sponge $schema_file
+    update_schema_version $schema_file $NEW_VERSION
 done
 
 # Update tests
 cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
     | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 
-bin/gencode_docs_examples
-echo Done!
+update_existing_schema_version etc/category.json $NEW_VERSION
 
+bin/gencode_docs_examples
+
+echo Done!

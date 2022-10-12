@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/faucetsdn/udmi/1.4.0/schema/model_gateway.json",
+  "$udmi_version": "1.4.0",
   "title": "Gateway Model",
   "description": "[Gateway Documentation](../docs/specs/gateway.md)",
   "type": "object",
@@ -10,9 +10,7 @@
       "description": "The device ID of the gateway the device is bound to",
       "type": "string",
       "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$",
-      "examples": [
-        "GAT-100"
-      ]
+      "examples": ["GAT-100"]
     },
     "family": {
       "description": "Protocol family used for connecting to the proxy device",
@@ -25,23 +23,11 @@
         "type": "string",
         "pattern": "^[A-Z]{2,6}-[0-9]{1,6}$"
       },
-      "examples": [
-        [
-          "AHU-22"
-        ]
-      ]
+      "examples": [["AHU-22"]]
     }
   },
   "oneOf": [
-    {
-      "required": [
-        "gateway_id"
-      ]
-    },
-    {
-      "required": [
-        "proxy_ids"
-      ]
-    }
+    { "required": ["gateway_id"] },
+    { "required": ["proxy_ids"] }
   ]
 }
