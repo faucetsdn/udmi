@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.google.daq.mqtt.TestCommon;
-import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
+import com.google.udmi.util.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;

@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostBinding, Injector, OnInit, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { startCase, findIndex, some } from 'lodash-es';
 import { iif, Observable, of } from 'rxjs';
@@ -16,18 +16,19 @@ const services: any = {
 
 @Component({
   selector: 'app-search-filter',
-  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange'],
+  inputs: ['serviceName', 'fields', 'limit', 'handleFilterChange', 'filter'],
   templateUrl: './search-filter.component.html',
   styleUrls: ['./search-filter.component.scss'],
 })
 export class SearchFilterComponent implements OnInit {
+  filter?: string;
   serviceName!: string;
   fields!: Record<string, string>;
   limit: number = 5;
   handleFilterChange = (_filters: SearchFilterItem[]): void => {};
   filterEntry: SearchFilterItem = {}; // chip cache
   filters: SearchFilterItem[] = [];
-  itemCtrl = new FormControl();
+  itemCtrl = new UntypedFormControl();
   filteredItems: Observable<ChipItem[]>; // the autocomplete list of options, filtered based on users input
   items: ChipItem[] = []; // list of chips
   allItems: ChipItem[] = []; // list of options, options will switch based on filterIndex
@@ -48,7 +49,7 @@ export class SearchFilterComponent implements OnInit {
           // Auto-complete on suggested values when we've chosen the equals operator on a field.
           <Observable<ChipItem[]>>this.injector
             .get<any>(services[this.serviceName])
-            [this.fields[this.filterEntry.field]]?.(term, this.limit)
+            [this.fields[this.filterEntry.field]]?.(term, this.limit, this.filter)
             .pipe(
               map(({ values }) => {
                 this.allItems = values.map((value: string): ChipItem => ({ label: value, value }));

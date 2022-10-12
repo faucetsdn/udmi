@@ -5,6 +5,8 @@
     "outDir": "dist",
     "sourceMap": true,
     "baseUrl": ".",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "paths": {
       "*": [
         "node_modules/*",

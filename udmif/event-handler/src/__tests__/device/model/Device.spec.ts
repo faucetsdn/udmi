@@ -55,8 +55,8 @@ describe('Device.DeviceBuilder', () => {
   });
 
   test('Builder creates Device Document with id and name', () => {
-    builder.site(site).name(name);
-    expect(builder.build()).toEqual({ site, name, tags });
+    builder.site(site).name(name).id(id);
+    expect(builder.build()).toEqual({ site, name, tags, id });
   });
 
   test('Builder allows optional attributes', () => {

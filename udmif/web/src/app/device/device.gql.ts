@@ -13,7 +13,7 @@ export const GET_DEVICE = gql`
       operational
       firmware
       serialNumber
-      tags
+      validation
     }
   }
 `;

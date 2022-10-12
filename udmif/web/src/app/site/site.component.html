@@ -1,0 +1,21 @@
+<app-validation-status [validation]="site?.validation"></app-validation-status>
+
+<mat-card class="summary">
+  <div class="item" *ngFor="let field of fields">
+    <span class="mat-body-2">{{ field.replace('Count', '') | capitalize }}</span>
+    <p *ngIf="field === 'lastValidated'">{{ site?.lastValidated | date: 'MM/dd/yy h:mm a' }}</p>
+    <p *ngIf="field === 'percentValidated'">{{ site?.percentValidated | percent: '1.0-2' }}</p>
+    <p *ngIf="field !== 'lastValidated' && field !== 'percentValidated'">{{ site?.[field] }}</p>
+  </div>
+</mat-card>
+
+<nav mat-tab-nav-bar [tabPanel]="tabPanel">
+  <a mat-tab-link routerLink="devices" routerLinkActive="active" #rla="routerLinkActive" [active]="rla.isActive"
+    >Devices</a
+  >
+</nav>
+<mat-tab-nav-panel #tabPanel>
+  <div class="container">
+    <router-outlet name="siteTabs"></router-outlet>
+  </div>
+</mat-tab-nav-panel>

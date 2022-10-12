@@ -1,4 +1,4 @@
-import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Apollo } from 'apollo-angular';
@@ -12,7 +12,7 @@ describe('AuthService', () => {
   let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
-    mockSocialAuthService = jasmine.createSpyObj(SocialAuthService, ['signIn', 'signOut', 'refreshAuthToken']);
+    mockSocialAuthService = jasmine.createSpyObj(SocialAuthService, ['signOut', 'refreshAuthToken']);
     mockApollo = jasmine.createSpyObj(Apollo, ['client']);
     mockRouter = jasmine.createSpyObj(Router, ['navigateByUrl']);
 
@@ -28,24 +28,6 @@ describe('AuthService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  });
-
-  it('should route the user back into the app after login', async () => {
-    const user: SocialUser = {} as SocialUser;
-
-    mockSocialAuthService.signIn.and.resolveTo(user);
-
-    await service.loginWithGoogle();
-
-    expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/devices');
-  });
-
-  it('should not do anything when logging in fails', async () => {
-    mockSocialAuthService.signIn.and.rejectWith();
-
-    await service.loginWithGoogle();
-
-    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
   });
 
   it('should route the user to the login page and should clear the cache after logout', async () => {

@@ -1,0 +1,15 @@
+<p>{{ errors.length }} Errors</p>
+<mat-table [dataSource]="dataSource" matSort aria-label="List of errors">
+  <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
+    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ columnName | capitalize }}</mat-header-cell>
+    <div *ngIf="columnName === 'timestamp'; else elseBlock">
+      <mat-cell *matCellDef="let element">{{ element.timestamp | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+    </div>
+    <ng-template #elseBlock
+      ><mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell></ng-template
+    >
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+</mat-table>

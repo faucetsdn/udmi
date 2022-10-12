@@ -28,7 +28,7 @@ describe('AuthGuard', () => {
 
   it('should redirect to the login screen when not logged in', () => {
     mockAuthService.isLoggedIn$.next(false);
-    guard.canActivate(route, state).subscribe((res) => expect(res.toString()).toEqual('/login'));
+    guard.canActivate(route, state).subscribe((res) => expect(res).toEqual(false));
   });
 
   it('should proceed when logged in', () => {

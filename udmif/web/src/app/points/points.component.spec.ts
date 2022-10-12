@@ -36,13 +36,9 @@ describe('PointsComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            parent: {
-              snapshot: {
-                parent: {
-                  params: {
-                    id: 'device-id-123',
-                  },
-                },
+            snapshot: {
+              params: {
+                deviceId: 'device-id-123',
               },
             },
           },

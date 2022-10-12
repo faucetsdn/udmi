@@ -2,9 +2,9 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
-import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
-import static com.google.daq.mqtt.util.JsonUtil.safeSleep;
-import static com.google.daq.mqtt.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.safeSleep;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,15 +15,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.daq.mqtt.util.JsonUtil;
-import com.google.daq.mqtt.util.ValidatorConfig;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
-import com.google.daq.mqtt.validator.CleanDateFormat;
+import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -54,6 +52,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
@@ -113,7 +112,7 @@ public abstract class SequenceBase {
   protected static String deviceId;
   protected static String cloudRegion;
   protected static String registryId;
-  static ValidatorConfig validatorConfig;
+  static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
   private static String serialNo;
@@ -243,8 +242,8 @@ public abstract class SequenceBase {
   };
 
   private static void ensureValidatorConfig() {
-    if (SequenceRunner.validationConfig != null) {
-      validatorConfig = SequenceRunner.validationConfig;
+    if (SequenceRunner.executionConfiguration != null) {
+      validatorConfig = SequenceRunner.executionConfiguration;
     } else {
       if (CONFIG_PATH == null || CONFIG_PATH.equals("")) {
         throw new RuntimeException(CONFIG_ENV + " env not defined.");
@@ -277,15 +276,15 @@ public abstract class SequenceBase {
     }
 
     File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
-    final CloudIotConfig cloudIotConfig;
+    final ExecutionConfiguration executionConfiguration;
     try {
-      cloudIotConfig = ConfigUtil.readCloudIotConfig(cloudIotConfigFile);
+      executionConfiguration = ConfigUtil.readExecutionConfiguration(cloudIotConfigFile);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
     }
 
-    cloudRegion = cloudIotConfig.cloud_region;
-    registryId = cloudIotConfig.registry_id;
+    cloudRegion = executionConfiguration.cloud_region;
+    registryId = executionConfiguration.registry_id;
 
     deviceMetadata = readDeviceMetadata();
 
@@ -298,7 +297,7 @@ public abstract class SequenceBase {
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = new IotReflectorClient(projectId, cloudIotConfig, key_file);
+    client = new IotReflectorClient(projectId, executionConfiguration, key_file);
     setReflectorState();
   }
 

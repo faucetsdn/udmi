@@ -1,13 +1,16 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
-import static com.google.daq.mqtt.util.JsonUtil.JSON_SUFFIX;
-import static com.google.daq.mqtt.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
+import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,21 +22,22 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
-import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubUdmiClient;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -53,7 +57,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -67,6 +70,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -121,13 +125,11 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final List<String> deviceIds;
-  private String projectId;
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
-  private CloudIotConfig cloudIotConfig;
+  private ExecutionConfiguration config;
   private CloudIotManager cloudIotManager;
-  private String siteDir;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File traceDir;
@@ -171,13 +173,18 @@ public class Validator {
     System.exit(0);
   }
 
-  private void parseArgs(List<String> argList) {
+  private List<String> parseArgs(List<String> argList) {
+    if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
+      processProfile(new File(argList.remove(0)));
+    } else {
+      config = new ExecutionConfiguration();
+    }
     while (!argList.isEmpty()) {
       String option = removeNextArg(argList);
       try {
         switch (option) {
           case "-p":
-            projectId = removeNextArg(argList);
+            config.project_id = removeNextArg(argList);
             break;
           case "-s":
             setSiteDir(removeNextArg(argList));
@@ -186,7 +193,7 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            cloudIotManager = new CloudIotManager(projectId, new File(siteDir));
+            cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -203,7 +210,7 @@ public class Validator {
             break;
           case "--":
             // All remaining arguments remain in the return list.
-            return;
+            return argList;
           default:
             throw new RuntimeException("Unknown cmdline option " + option);
         }
@@ -211,6 +218,12 @@ public class Validator {
         throw new RuntimeException("For command line option " + option, e);
       }
     }
+    return argList;
+  }
+
+  private void processProfile(File profilePath) {
+    config = ConfigUtil.readExecutionConfiguration(profilePath);
+    setSiteDir(config.site_model);
   }
 
   MessageReadingClient getMessageReadingClient() {
@@ -218,7 +231,7 @@ public class Validator {
   }
 
   private void validateMessageTrace(String messageDir) {
-    client = new MessageReadingClient(cloudIotConfig.registry_id, messageDir);
+    client = new MessageReadingClient(config.registry_id, messageDir);
     dataSinks.add(client);
     prepForMock();
   }
@@ -234,22 +247,29 @@ public class Validator {
    * @param siteDir site model directory
    */
   public void setSiteDir(String siteDir) {
+    config.site_model = siteDir;
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
-      this.siteDir = null;
       baseDir = new File(".");
     } else {
-      this.siteDir = siteDir;
       baseDir = new File(siteDir);
-      File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
-          projectId);
+      config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), config.project_id);
       initializeExpectedDevices(siteDir);
     }
 
     outBaseDir = new File(baseDir, "out");
     outBaseDir.mkdirs();
     dataSinks.add(new FileDataSink(outBaseDir));
+  }
+
+  private ExecutionConfiguration resolveSiteConfig(ExecutionConfiguration config, String siteDir) {
+    File cloudConfig = new File(siteDir, "cloud_iot_config.json");
+    if (config == null) {
+      return readExecutionConfiguration(cloudConfig);
+    }
+    checkArgument(siteDir.equals(config.site_model), "siteDir mismatch");
+    ExecutionConfiguration siteConfig = readExecutionConfiguration(cloudConfig);
+    return GeneralUtils.mergeObject(siteConfig, config);
   }
 
   private void setMessageTraceDir(String writeDirArg) {
@@ -268,7 +288,7 @@ public class Validator {
       return;
     }
     try {
-      for (String device : Objects.requireNonNull(devicesDir.list())) {
+      for (String device : requireNonNull(devicesDir.list())) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
@@ -324,21 +344,20 @@ public class Validator {
   private void validatePubSub(String instName) {
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubUdmiClient(projectId, registryId, instName, updateTopic);
+    client = new PubSubUdmiClient(config.project_id, registryId, instName, updateTopic);
     if (updateTopic != null) {
       dataSinks.add(client);
     }
   }
 
   private String getRegistryId() {
-    String registryId = cloudIotConfig.registry_id;
-    return registryId;
+    return config.registry_id;
   }
 
   private void validateReflector() {
-    String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
+    String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, cloudIotConfig, keyFile);
+    client = new IotReflectorClient(config.project_id, config, keyFile);
   }
 
   void messageLoop() {
@@ -454,7 +473,7 @@ public class Validator {
               String.format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
         }
       } catch (Exception e) {
-        System.err.println(e.getMessage());
+        System.err.println("Missing schema entry " + schemaName);
         device.addError(e);
       }
 
@@ -465,11 +484,13 @@ public class Validator {
         device.addError(e);
       }
 
+      System.err.println(
+          "Validating against " + schemaName + " " + schemaMap.containsKey(schemaName));
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
-          System.err.println("Error validating schema: " + e.getMessage());
+          System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
           device.addError(e);
         }
       }
@@ -496,6 +517,7 @@ public class Validator {
         System.err.printf("Validation complete %s/%s%n", deviceId, schemaName);
       }
     } catch (Exception e) {
+      System.err.println("Generic device error " + deviceId);
       device.addError(e);
     }
     return device;
@@ -565,7 +587,7 @@ public class Validator {
   private boolean shouldConsiderMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
-    if (cloudIotConfig != null && !cloudIotConfig.registry_id.equals(registryId)) {
+    if (config != null && !config.registry_id.equals(registryId)) {
       if (ignoredRegistries.add(registryId)) {
         System.err.println("Ignoring data for not-configured registry " + registryId);
       }
@@ -783,7 +805,7 @@ public class Validator {
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
-      throw new RuntimeException("Against input " + targetFile, e);
+      throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
     }
   }
 

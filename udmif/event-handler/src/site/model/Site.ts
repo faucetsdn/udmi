@@ -4,7 +4,7 @@ export interface SiteKey {
 
 export interface Site {
   name: string;
-  lastMessage: any;
+  validation?: any;
 }
 
 export interface SiteValidation {

@@ -5,6 +5,7 @@ import MockDeviceDataSource from './MockDeviceDataSource';
 import { typeDefs } from '../../server/schema';
 import { resolvers } from '../../server/resolvers';
 import { getDefaultContextProcessor } from '../../server/context';
+import MockSiteDataSource from '../site/MockSiteDataSource';
 
 let testServer: ApolloServer;
 const clientIds: string[] = ['', ''];
@@ -25,19 +26,6 @@ const QUERY_DEVICES = gql`
         lastPayload
         operational
         tags
-      }
-    }
-  }
-`;
-
-const QUERY_SITES = gql`
-  query {
-    sites(searchOptions: { batchSize: 10, offset: 10, sortOptions: { direction: DESC, field: "name" }, filter: "" }) {
-      totalCount
-      totalFilteredCount
-      sites {
-        id
-        name
       }
     }
   }
@@ -64,6 +52,13 @@ const QUERY_DEVICE = gql`
         units
         state
       }
+      validation
+      level
+      message
+      details
+      lastSeen
+      state
+      errorsCount
     }
   }
 `;
@@ -98,12 +93,6 @@ const QUERY_DEVICE_MODELS = gql`
   }
 `;
 
-const QUERY_SITE_NAMES = gql`
-  query {
-    siteNames
-  }
-`;
-
 const QUERY_SECTIONS = gql`
   query {
     sections
@@ -114,6 +103,7 @@ beforeAll(async () => {
   const dataSources = () => {
     return {
       deviceDS: new MockDeviceDataSource(),
+      siteDS: new MockSiteDataSource(),
     };
   };
 
@@ -127,17 +117,17 @@ beforeAll(async () => {
 
 describe('Devices', () => {
   test('devices', async () => {
-    const result = await runQuery(QUERY_DEVICES, {});
+    const result = await runQuery(QUERY_DEVICES);
     expect(result).toMatchSnapshot();
   });
 
   test('device', async () => {
-    const result = await runQuery(QUERY_DEVICE, {});
+    const result = await runQuery(QUERY_DEVICE);
     expect(result).toMatchSnapshot();
   });
 
   test('points', async () => {
-    const result = await runQuery(QUERY_POINTS, {});
+    const result = await runQuery(QUERY_POINTS);
     expect(result).toMatchSnapshot();
   });
 

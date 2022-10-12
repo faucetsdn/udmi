@@ -1,11 +1,18 @@
 import { gql } from 'apollo-angular';
 
 export const GET_SITES = gql`
-  query GetSites($searchOptions: SearchOptions!) {
+  query GetSites($searchOptions: SearchOptions) {
     sites(searchOptions: $searchOptions) {
       sites {
-        id
         name
+        totalDevicesCount
+        correctDevicesCount
+        missingDevicesCount
+        errorDevicesCount
+        extraDevicesCount
+        lastValidated
+        percentValidated
+        totalDeviceErrorsCount
       }
       totalCount
       totalFilteredCount

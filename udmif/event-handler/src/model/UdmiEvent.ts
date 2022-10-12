@@ -2,7 +2,7 @@ export interface UdmiEvent {
   attributes: {
     deviceId: string;
     deviceRegistryId: string;
-    deviceNumId?: string;
+    deviceNumId: string;
     subFolder?: string;
     subType?: string;
     projectId?: string;

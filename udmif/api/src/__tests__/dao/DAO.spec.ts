@@ -1,4 +1,5 @@
 import { Collection, MongoClient, Db } from 'mongodb';
+import { Filter } from '../..//common/model';
 import { DAO } from '../../dao/DAO';
 import { DefaultDAO } from '../../dao/DAO';
 import { Device } from '../../device/model';
@@ -37,60 +38,85 @@ describe('DAO', () => {
     await connection.close();
   });
 
-  test('getAll', async () => {
-    const insertedDeviceDocument: Device = { name: 'device-1', site: 'LOC' };
+  describe('getAll', () => {
+    test('return all the documents', async () => {
+      const insertedDeviceDocument: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
 
-    deviceCollection.insertOne(insertedDeviceDocument);
+      deviceCollection.insertOne(insertedDeviceDocument);
 
-    const devides: Device[] = await deviceDao.getAll({ batchSize: 10, offset: 0 });
+      const devides: Device[] = await deviceDao.getAll({ batchSize: 10, offset: 0 });
 
-    expect(devides).toEqual([insertedDeviceDocument]);
+      expect(devides).toEqual([insertedDeviceDocument]);
+    });
   });
 
-  test('getOne', async () => {
-    const insertedDeviceDocument: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
+  describe('getOne', () => {
+    test('return a single document', async () => {
+      const insertedDeviceDocument: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
 
-    deviceCollection.insertOne(insertedDeviceDocument);
+      deviceCollection.insertOne(insertedDeviceDocument);
 
-    const device: Device = await deviceDao.getOne({ id: 'd-id-1' });
+      const device: Device = await deviceDao.getOne({ id: 'd-id-1' });
 
-    expect(device).toEqual(insertedDeviceDocument);
+      expect(device).toEqual(insertedDeviceDocument);
+    });
   });
 
-  test('getFilteredCount', async () => {
-    const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
-    const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
+  describe('getFilteredCount', () => {
+    test('return the count of the filtered documents', async () => {
+      const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
+      const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
 
-    deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
+      deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
 
-    const filteredCount: number = await deviceDao.getFilteredCount({
-      batchSize: 10,
-      offset: 0,
-      filter: '[{"field":"name","operator":"~","value":"2"}]',
+      const filteredCount: number = await deviceDao.getFilteredCount({
+        batchSize: 10,
+        offset: 0,
+        filter: JSON.stringify(<Filter[]>[{ field: 'name', operator: '~', value: '2' }]),
+      });
+
+      expect(filteredCount).toEqual(1);
+    });
+  });
+
+  describe('getCount', () => {
+    test('return the count of the documents', async () => {
+      const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
+      const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
+
+      deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
+
+      const count: number = await deviceDao.getCount();
+
+      expect(count).toEqual(2);
+    });
+  });
+
+  describe('getDistinct', () => {
+    test('return unique values of a field in a document', async () => {
+      const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
+      const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
+
+      deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
+
+      const deviceNames: string[] = await deviceDao.getDistinct('name', { limit: 10 });
+
+      expect(deviceNames).toEqual(['device-1', 'device-2']);
     });
 
-    expect(filteredCount).toEqual(1);
-  });
+    test('return unique values of a field in a document with a filter', async () => {
+      const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC-A' };
+      const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC-B' };
+      const insertedDeviceDocument3: Device = { id: 'd-id-3', name: 'device-3', site: 'LOC-B' };
 
-  test('getCount', async () => {
-    const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
-    const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
+      deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2, insertedDeviceDocument3]);
 
-    deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
+      const deviceNames: string[] = await deviceDao.getDistinct('name', {
+        limit: 10,
+        filter: JSON.stringify(<Filter[]>[{ field: 'site', operator: '=', value: 'LOC-B' }]),
+      });
 
-    const count: number = await deviceDao.getCount();
-
-    expect(count).toEqual(2);
-  });
-
-  test('getDistinct', async () => {
-    const insertedDeviceDocument1: Device = { id: 'd-id-1', name: 'device-1', site: 'LOC' };
-    const insertedDeviceDocument2: Device = { id: 'd-id-2', name: 'device-2', site: 'LOC' };
-
-    deviceCollection.insertMany([insertedDeviceDocument1, insertedDeviceDocument2]);
-
-    const deviceNames: string[] = await deviceDao.getDistinct('name', { limit: 10 });
-
-    expect(deviceNames).toEqual(['device-1', 'device-2']);
+      expect(deviceNames).toEqual(['device-2', 'device-3']);
+    });
   });
 });

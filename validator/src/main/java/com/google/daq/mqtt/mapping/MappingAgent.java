@@ -1,9 +1,9 @@
 package com.google.daq.mqtt.mapping;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.JsonUtil;
 import com.google.daq.mqtt.util.MessageHandler;
 import com.google.daq.mqtt.util.MessageHandler.HandlerSpecification;
+import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +18,6 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.MappingCommand;
 import udmi.schema.MappingEvent;
-import udmi.schema.ValidationState;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -28,11 +27,11 @@ public class MappingAgent extends MappingBase {
   private static final int SCAN_INTERVAL_SEC = 60;
   private static final String DISCOVERY_FAMILY = "virtual";
   private final Map<String, FamilyDiscoveryState> familyStates = new HashMap<>();
+  private MappingSink mappingSink;
   private final List<HandlerSpecification> handlers = ImmutableList.of(
       MessageHandler.handlerSpecification(DiscoveryState.class, this::discoveryStateHandler),
       MessageHandler.handlerSpecification(MappingEvent.class, this::mappingEventHandler)
   );
-  private MappingSink mappingSink;
 
   /**
    * Main entry point for the mapping agent.

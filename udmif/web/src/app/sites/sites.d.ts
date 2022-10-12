@@ -1,7 +1,7 @@
 import { Site } from '../site/site';
 
 export interface SearchOptions {
-  batchSize: number;
+  batchSize?: number;
   offset?: number;
   sortOptions?: SortOptions;
   filter?: string;
@@ -29,6 +29,7 @@ export type SitesQueryVariables = {
 export interface CommonSearchOptions {
   search?: string;
   limit?: number;
+  filter?: string;
 }
 
 export interface CommonSearchQueryVariables {

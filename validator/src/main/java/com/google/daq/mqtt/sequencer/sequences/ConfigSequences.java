@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.JsonUtil.getTimestamp;
-import static com.google.daq.mqtt.validator.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;

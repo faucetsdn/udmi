@@ -34,7 +34,7 @@ export interface DeviceValidation {
 export interface Device {
   name: string;
   site: string;
-  id?: string;
+  id: string;
   make?: string;
   model?: string;
   section?: string;
@@ -55,6 +55,7 @@ export class DeviceBuilder {
       name: '',
       site: '',
       tags: [],
+      id: '',
     };
   }
 
