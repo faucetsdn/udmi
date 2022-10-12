@@ -1,14 +1,17 @@
 #!/bin/bash -e
-# Changes the version where it is hardcoded in UDMI files, performing checks
-# that the new version is available, and that the files can be safely updated.
-# Modifications:
-#   schema/*.json (all files)
-#   etc/categories.json
-#   tests/*.tests/*.json - all files must be added to etc/upversion.txt
-#       only files preceeded with a 'y' are updated
 #
 # Usage:
 #   bin/upversion NEW_VERSION
+# 
+# Changes the version where it is hardcoded in UDMI files, performing checks
+# that the new version is available, and that the files can be safely updated.
+# Modifications:
+#   - schema/*.json (all files)
+#   - etc/categories.json
+#   - tests/*.tests/*.json - all files must be added to etc/upversion.txt
+#     only files preceeded with a 'y' are updated. Only works with 
+#     "pretty"/non-minified JSON
+#   - documentation in-line exammples
 #
 
 UPVERSION_LIST=etc/upversion.txt
@@ -18,14 +21,14 @@ SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
 function update_existing_schema_version(){
     file=$1
     version=$2
-    gsed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
+    sed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
 }
 
 function update_schema_version(){
     file=$1
     version=$2
     if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
-        gsed -i "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+        sed -i "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
     else
         update_existing_schema_version $file $version
     fi 
@@ -46,17 +49,17 @@ fi
 bin/check_version
 if [[ -n $(git tag -l $NEW_VERSION) ]]; then
     echo ERROR New version $NEW_VERSION already exists in upstream repo.
-    #exit 1
+    exit 1
 fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    #exit 1
+    exit 1
 fi
 
 # Check test files exist in the upversion list  
 for test_file in tests/*.tests/*.json; do
-    if [[ $(ggrep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
+    if [[ $(grep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
         echo $test_file
         err_upversion_list=1
     fi 
@@ -103,7 +106,7 @@ done
 
 # Update tests
 cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
-    | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+    | xargs sed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 
 update_existing_schema_version etc/category.json $NEW_VERSION
 

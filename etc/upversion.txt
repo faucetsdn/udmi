@@ -1,3 +1,12 @@
+# Manually maintained list of all files in tests/*.tests/*.json
+# consumed by bin/upversion when upgrading versions
+#
+# Syntax: ACTION FILE [COMMENT]
+#
+# ACTIONS:
+#   y - update the top level "version" in the files
+#   n - do not update the file
+#
 n tests/event_discovery.tests/empty.json
 n tests/event_system.tests/empty.json
 n tests/event_pointset.tests/empty.json
