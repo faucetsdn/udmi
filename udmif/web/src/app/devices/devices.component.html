@@ -23,18 +23,21 @@
   (matSortChange)="sortData($event)"
   aria-label="List of devices"
 >
-  <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
-    <mat-header-cell *matHeaderCellDef mat-sort-header>{{
-      columnName.replace('Count', '') | capitalize
-    }}</mat-header-cell>
-    <ng-container [ngSwitch]="columnName">
+  <ng-container *ngFor="let column of columns" matColumnDef="{{ column.value }}">
+    <ng-container *ngIf="column.isSortable">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.label }}</mat-header-cell>
+    </ng-container>
+    <ng-container *ngIf="!column.isSortable">
+      <mat-header-cell *matHeaderCellDef>{{ column.label }}</mat-header-cell>
+    </ng-container>
+    <ng-container [ngSwitch]="column.value">
       <ng-container *ngSwitchCase="'name'">
         <mat-cell *matCellDef="let element"
           ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
         >
       </ng-container>
       <ng-container *ngSwitchCase="'lastPayload' || 'lastSeen'">
-        <mat-cell *matCellDef="let element">{{ element[columnName] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+        <mat-cell *matCellDef="let element">{{ element[column.value] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'operational'">
         <mat-cell *matCellDef="let element">
@@ -58,7 +61,7 @@
         </mat-cell>
       </ng-container>
       <ng-container *ngSwitchDefault>
-        <mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell>
+        <mat-cell *matCellDef="let element">{{ element[column.value] }}</mat-cell>
       </ng-container>
     </ng-container>
   </ng-container>

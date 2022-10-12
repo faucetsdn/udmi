@@ -3,13 +3,14 @@ import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { SearchFilterItem } from '../search-filter/search-filter';
 import { Site, SiteModel } from '../site/site';
-import { SiteErrorSummaryItem, SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
+import { SiteColumn, SiteErrorSummaryItem, SitesQueryResponse, SitesQueryVariables, SortOptions } from './sites';
 import { SitesService } from './sites.service';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { DeviceError } from '../device-errors/device-errors';
 import { groupBy, orderBy, map } from 'lodash-es';
+import { SitesConstants } from './sites.constants';
 
 @Component({
   templateUrl: './sites.component.html',
@@ -25,17 +26,8 @@ import { groupBy, orderBy, map } from 'lodash-es';
 export class SitesComponent implements OnInit, OnDestroy {
   sitesSubscription!: Subscription;
   sitesQuery!: QueryRef<SitesQueryResponse, SitesQueryVariables>;
-  displayedColumns: (keyof SiteModel)[] = [
-    'name',
-    'totalDevicesCount',
-    'correctDevicesCount',
-    'missingDevicesCount',
-    'errorDevicesCount',
-    'extraDevicesCount',
-    'lastValidated',
-    'percentValidated',
-    'totalDeviceErrorsCount',
-  ];
+  columns: SiteColumn[] = this.sitesConstants.siteColumns;
+  displayedColumns: (keyof SiteModel)[] = this.columns.map(({ value }) => value);
   sites: Site[] = [];
   totalCount: number = 0;
   totalFilteredCount: number = 0;
@@ -49,7 +41,7 @@ export class SitesComponent implements OnInit, OnDestroy {
   };
   expandedElement: Site | null = null;
 
-  constructor(private sitesService: SitesService) {}
+  constructor(private sitesService: SitesService, private sitesConstants: SitesConstants) {}
 
   ngOnInit(): void {
     this.sitesQuery = this.sitesService.getSites(0, this.pageSize); // start off on first page, i.e. offset 0

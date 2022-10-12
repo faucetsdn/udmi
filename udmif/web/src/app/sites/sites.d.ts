@@ -1,4 +1,4 @@
-import { Site } from '../site/site';
+import { Site, SiteModel } from '../site/site';
 
 export interface SearchOptions {
   batchSize?: number;
@@ -49,4 +49,10 @@ export type SiteDistinctQueryResult = {
 export type SiteErrorSummaryItem = {
   count: number;
   message: string;
+};
+
+export type SiteColumn = {
+  value: keyof SiteModel;
+  label: string;
+  isSortable: boolean;
 };
