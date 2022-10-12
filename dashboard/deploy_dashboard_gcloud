@@ -34,5 +34,4 @@ done
 echo Waiting for all deployments to complete...
 wait
 
-echo Skipped deploy of udmi_update b/c it requires firebase.
 echo Done with deploying functions $PUBSUB_FUNCTIONS
