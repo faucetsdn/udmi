@@ -94,13 +94,16 @@ public class GeneralUtils {
     return (T) JsonUtil.convertTo(destination.getClass(), target);
   }
 
-  @SuppressWarnings("unchecked")
   public static void mergeObject(Map<String, Object> target, Map<String, Object> source) {
     for (String key : source.keySet()) {
       Object targetValue = target.get(key);
       Object sourceValue = source.get(key);
       if (targetValue instanceof Map && sourceValue instanceof Map) {
-        mergeObject((Map<String, Object>) targetValue, (Map<String, Object>) sourceValue);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> castTarget = (Map<String, Object>) targetValue;
+        @SuppressWarnings("unchecked")
+        Map<String, Object> castSource = (Map<String, Object>) sourceValue;
+        mergeObject(castTarget, castSource);
       } else {
         target.put(key, sourceValue);
       }
