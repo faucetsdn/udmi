@@ -1,10 +1,17 @@
-#!/bin/bash 
+#!/bin/bash -e
+# Changes the version where it is hardcoded in UDMI files, performing checks
+# that the new version is available, and that the files can be safely updated.
+# Modifications:
+#   schema/*.json (all files)
+#   etc/categories.json
+#   tests/*.tests/*.json - all files must be added to etc/upversion.txt
+#       only files preceeded with a 'y' are updated
+#
+# Usage:
+#   bin/upversion NEW_VERSION
+#
 
-BASE_URI=https://raw.githubusercontent.com/faucetsdn/udmi/%s/%s
-
-YAY=etc/upversion_yay.txt
-NAY=etc/upversion_nay.txt
-
+UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
 
 if [[ "$#" != 1 ]]; then
@@ -16,77 +23,85 @@ shift 1
 
 if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo ERROR Invalid version: $NEW_VERSION
-    exit 1
+    # exit 1
 fi
 
 bin/check_version
 if [[ -n $(git tag -l $NEW_VERSION) ]]; then
     echo ERROR New version $NEW_VERSION already exists in upstream repo.
-    exit 1
+    #exit 1
 fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    exit 1
+    #exit 1
 fi
 
-# Check all schema files have an $id, otherwise jq appended to end
-# and we don't want that
-while read -r file ; do
-    jq -e -r '.["$id"]' $file > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        echo $file
-        err_json_id=1
+# Check test files exist in the upversion list  
+for test_file in tests/*.tests/*.json; do
+    if [[ $(ggrep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
+        echo $test_file
+        err_upversion_list=1
     fi 
-done < <( find schema -type f -name "*.json"  )
-if [[ -n $err_json_id ]]; then
-    echo ERROR Missing ID tag from above schema files
+done
+if [[ -n $err_upversion_list ]]; then
+    echo ERROR .. above files not found in upversion list or listed more than once
     exit 1
 fi
 
-# Check all files are included in EITHER the yay list or nay list
-while read -r file ; do
-    yay=$(grep -c $file $YAY)
-    nay=$(grep -c $file $NAY)
-    if [[ $(($yay^$nay)) -ne 1 ]]; then
-        echo $file
-        err_yay_nay=1
+for schema_file in schema/*.json; do
+    if [[ $(grep -c "\"\$udmi_version\"" $schema_file) != 1 ]]; then
+        echo $schema_file
+        err_schema_version=1
     fi 
-done < <( find tests/*.tests -type f -name "*.json" )
-if [[ -n $err_yay_nay ]]; then
-    echo ERROR .. above files not found in yay or nay list or exist in both or more than once
+done
+if [[ -n $err_schema_version ]]; then
+    echo ERROR .. above files have more than one \$udmi_version
     exit 1
 fi
 
-# Check files have exactly 1 version fields to avoid unexpected updates
-while read file comment; do
-    if [[ -f $file ]]; then
-        if (( $(grep -E -c $TESTS_REGEX $file) != 1 )); then
-            echo $file
-            err_one_version=1
-        fi
+# Check files have exactly 1 indented version fields to avoid unexpected 
+# updates, e.g. when the version is in a "software" block
+while read action file comment; do
+    if ! [[ -f $file && $action == "y" ]]; then
+        continue
     fi
-done <$YAY
+    
+    if [[ $(grep -E -c $TESTS_REGEX $file) != 1 ]]; then
+        echo $file
+        err_one_version=1
+    fi 
+done <$UPVERSION_LIST
 if [[ -n $err_one_version ]]; then
     echo ERROR above files do not have exactly one version field
     exit 1
 fi
 
-echo -n Updating files .. 
-while read file ; do
-    new_uri=$(printf $BASE_URI $NEW_VERSION $file)
-    jq ".[\"\$id\"] |= \"$new_uri\"" $file | sponge $file
-done < <( find schema -type f -name "*.json" )
-cat $YAY | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
-bin/gencode_docs_examples 
-echo Done!\n
+echo -n Updating files ..
 
-echo Commit changes with:
-echo "git add tests/*.tests/*.json"
-echo "git add schema/*.json"
-echo "git add docs/**/*.md"
-echo "git commit -m \"Update schema and messages to v$NEW_VERSION\""
-echo 
-echo Tag with:
-echo "git tag -a $NEW_VERSION -m \"version $NEW_VERSION\""
-echo "git push --tags"
+find schema -type f -name "*.json" -exec gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+
+# Update Schema
+for schema_file in schema/*.json; do
+    if [[ $(jq -r '.["$udmi_version"]' $schema_file) == "null" ]]; then
+        # Add a $udmi_version entry
+        gsed -i -P "s/^{/{\n  \"\$udmi_version\": \"$NEW_VERSION\",\n" $schema_file
+    else
+        gsed -i -P "\$udmi_version\": \"$NEW_VERSION\",\n "
+    fi 
+
+    # Update
+    if [[ $(ggrep -P -c "" ]]
+
+
+for schema_file in schema/*.json; do
+    jq ".[\"\$UDMI\"] |= \"$NEW_VERSION\"" $schema_file | sponge $schema_file
+done
+
+# Update tests
+cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
+    | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+
+bin/gencode_docs_examples
+echo Done!
+
