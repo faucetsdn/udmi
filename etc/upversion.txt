@@ -10,7 +10,6 @@
 n tests/event_discovery.tests/empty.json
 n tests/event_system.tests/empty.json
 n tests/event_pointset.tests/empty.json
-n tests/event_discovery.json/empty.json
 n tests/state.tests/empty.json
 n tests/config.tests/empty.json
 n tests/config.tests/delta_x1_gateway.json
@@ -18,7 +17,6 @@ n tests/config.tests/delta_x1_target.json
 n tests/metadata.tests/empty.json
 n tests/state.tests/delta_x1_gateway.json
 n tests/state.tests/delta_x1_target.json
-n tests/cloud_iot_config.tests/cloud_iot_config.json
 n tests/configuration_endpoint.tests/simple.json
 n tests/configuration_endpoint.tests/delta.json
 n tests/model_pointset.tests/example.json
@@ -100,3 +98,4 @@ y tests/metadata.tests/gateway.json
 y tests/command_mapping.tests/mapping.json
 y tests/metadata.tests/errors.json
 y tests/config.tests/blobset_final.json
+n tests/configuration_execution.tests/cloud_iot_config.json

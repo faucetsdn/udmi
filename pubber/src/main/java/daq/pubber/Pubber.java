@@ -99,7 +99,7 @@ public class Pubber {
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
-  private static final String UDMI_VERSION = "1.4.0";
+  private static final String UDMI_VERSION = "1.6.6";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final String CONFIG_TOPIC = "config";

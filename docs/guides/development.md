@@ -28,14 +28,24 @@ section
 
 ## Releases
 
-The `bin/upversion` tool updates the `$id` field in schema files, and the 
-`version` of tests/examples, and any documentation inline message examples.
+The `bin/upversion` tool updates :
+* the `$udmi_version` field in schema files, 
+* the version in `version` of of manually curated payloads in `tests/*.tests` 
+* documentation inline message examples.
+* the `UDMI_VERSION` constant in specific JAVA files.
 
-All schema files must have the `$id` field. Any file in the `tests` directory
-must be listed in either `etc/upversion_yay.txt` or `etc/upversion_nay.txt`.
-Only files in the `upversion_yay.txt` will have their version upgraded. 
-Comments are supported after the file path, e.g. 
-`tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
+File in the `tests` directory must be listed in `etc/upversion.txt`. Only files
+which are preceded by a `y` in `upversion_yay.txt` will have their version upgraded. Comments are supported after the file path, e.g. 
+`y tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
+
+`bin/upversions` carries out several checks on files which must be cleared before an update.
+
+`bin/upversion` does not update any generated files (e.g. for CI testing). 
+The following files need to be update:
+* After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out/devices`
+  into `validator/traces/simple.out/devices`
+* After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory 
+
 
 ## Configuring Cloud CI Tests
 

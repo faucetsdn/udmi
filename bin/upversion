@@ -32,8 +32,9 @@ function update_existing_schema_version(){
 function update_schema_version(){
     file=$1
     version=$2
+    echo $file
     if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
-        gsed -i -E "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+        gsed -i  "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
     else
         update_existing_schema_version $file $version
     fi 
@@ -72,14 +73,12 @@ if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
 fi
 
 # Check test files exist in the upversion list  
-while read test_file; do
+for test_file in tests/*.tests/*.json; do
     if [[ $(ggrep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
         echo $test_file
         err_upversion_list=1
     fi 
-done < <( find tests  -type f -name "*.json"; \
-          find validator/traces -type f -name "*.out";
-          find validator/traces -type f -name "validation_report.json" )
+done
 
 if [[ -n $err_upversion_list ]]; then
     echo ERROR .. above files not found in upversion list or listed more than once
@@ -100,7 +99,6 @@ fi
 # Check files in upversion list still exist
 while read action file comment; do
     if [[ $action != "#" ]] && ! [[ -f $file ]]; then
-        echo $action
         err_stale_file=1
         echo $file
     fi
@@ -129,15 +127,18 @@ fi
 
 echo -n Updating files ..
 
+echo "here"
 # NOTE using gsed because jq reformats  text 
 for schema_file in schema/*.json; do
     update_schema_version $schema_file $NEW_VERSION
 done
 
 # Update tests
+echo "this"
 cat $UPVERSION_LIST | ggrep "^y" | awk '{print $2}' \
     | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 
+echo "no this"
 update_existing_schema_version etc/category.json $NEW_VERSION
 
 bin/gencode_docs_examples

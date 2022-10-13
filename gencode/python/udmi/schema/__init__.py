@@ -2,6 +2,7 @@ from .ancillary_properties import AncillaryProperties
 from .building_config import BuildingConfig
 from .building_translation import BuildingTranslation
 from .category import Category
+from .cloud_iot_config import CloudIotConfig
 from .command_discovery import DiscoveryCommand
 from .command_mapping import MappingCommand
 from .common import Common
