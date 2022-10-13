@@ -1,5 +1,6 @@
 {
   "$udmi_version": "1.4.0",
+  "title": "Category",
   "$comment": "Auto-generated category mappings from bin/gencode_categories.",
   "oneOf": [
     { "pattern": "^system\\.base\\.start$" },
