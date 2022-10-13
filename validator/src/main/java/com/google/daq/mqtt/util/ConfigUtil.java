@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
-  public static final String UDMI_VERSION = "1.3.14";
+  public static final String UDMI_VERSION = "1.4.0";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

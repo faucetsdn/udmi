@@ -18,20 +18,34 @@ UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
 SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
 
+# Updates existing $udmi_version in a JSON file. Called by 
+# update_schema_version
+# Usage: update_existing_schema_version FILE_TO_UPDATE NEW_VERSION
 function update_existing_schema_version(){
     file=$1
     version=$2
     sed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
 }
 
+# Updates an existing $udmi_version, or adds if missing
+# Usage: update_schema_version FILE_TO_UPDATE NEW_VERSIO
 function update_schema_version(){
     file=$1
     version=$2
     if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
-        sed -i "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+        sed -i -E "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
     else
         update_existing_schema_version $file $version
     fi 
+}
+
+# Updates UDMI_VERSION variable in a java file 
+# Usage: update_java_file FILE_TO_UPDATE NEW_VERSION
+function update_java_file(){
+    file=$1
+    version=$2
+    [[ $(grep -c "UDMI_VERSION\s*=\s*\"" $file) != 1 ]] && return 1
+    sed -i -e "s/UDMI_VERSION\s*=\s*\"[0-9.]*\"/UDMI_VERSION = \"$version\"/" $file
 }
 
 if [[ "$#" != 1 ]]; then
@@ -111,5 +125,17 @@ cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
 update_existing_schema_version etc/category.json $NEW_VERSION
 
 bin/gencode_docs_examples
+
+# TODO a proper way of updating/managing these files
+
+# Version in Pubber payloads
+update_java_file pubber/src/main/java/daq/pubber/Pubber.java $NEW_VERSION
+# Version in validator messages messages
+update_java_file validator/src/main/java/com/google/daq/mqtt/util/ConfigUtil.java $NEW_VERSION
+# Version in for generated_configs which are NOT upgraded 
+update_java_file validator/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java $NEW_VERSION
+
+# NOTE messages & metadata are upgraded when there are schema changes,
+# So they do not necesarily end up at the latest version when upgraded
 
 echo Done!
