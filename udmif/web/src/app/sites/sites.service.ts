@@ -20,7 +20,7 @@ export class SitesService {
 
   getSites(
     offset?: number,
-    batchSize: number = 10,
+    batchSize?: number,
     sortOptions?: SortOptions,
     filter?: string
   ): QueryRef<SitesQueryResponse, SitesQueryVariables> {
@@ -38,7 +38,7 @@ export class SitesService {
     });
   }
 
-  getSiteNames(search?: string, limit?: number): Observable<SiteDistinctQueryResult> {
+  getSiteNames(search?: string, limit?: number, filter?: string): Observable<SiteDistinctQueryResult> {
     return this.apollo
       .watchQuery<SiteNamesQueryResponse, SiteNamesQueryVariables>({
         query: GET_SITE_NAMES,
@@ -47,6 +47,7 @@ export class SitesService {
           searchOptions: {
             search,
             limit,
+            filter,
           },
         },
       })

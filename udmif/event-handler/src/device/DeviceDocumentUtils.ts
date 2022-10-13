@@ -19,7 +19,10 @@ export function getDeviceKey(message: UdmiEvent): DeviceKey {
 
 export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Device {
   const builder: DeviceBuilder = new DeviceBuilder();
-  builder.site(udmiEvent.attributes.deviceRegistryId).name(udmiEvent.attributes.deviceId);
+  builder
+    .site(udmiEvent.attributes.deviceRegistryId)
+    .name(udmiEvent.attributes.deviceId)
+    .id(udmiEvent.attributes.deviceNumId);
 
   if (isSystemSubType(udmiEvent)) {
     return buildDeviceDocumentFromSystem(udmiEvent, builder);

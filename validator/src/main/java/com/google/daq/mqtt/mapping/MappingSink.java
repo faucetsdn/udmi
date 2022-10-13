@@ -1,8 +1,8 @@
 package com.google.daq.mqtt.mapping;
 
-import static com.google.daq.mqtt.util.JsonUtil.loadFile;
+import static com.google.udmi.util.JsonUtil.loadFile;
 
-import com.google.daq.mqtt.util.JsonUtil;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;

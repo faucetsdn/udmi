@@ -17,11 +17,11 @@ describe('ContextProcessor.processRequest', () => {
 
   test('calling with req that has idtoken in header returns a not null context', async () => {
     const req = { headers: { idtoken: 'some-id-token' } };
-    await expect(contextProcessor.processRequest({ req, res: {} })).resolves.not.toBeNull();
+    await expect(contextProcessor.processRequest(<any>{ req, res: {} })).resolves.not.toBeNull();
   });
 
   test('calling with req that has no headers throws exception', async () => {
     const req = {};
-    await expect(contextProcessor.processRequest({ req, res: {} })).rejects.toThrowError('Invalid Headers');
+    await expect(contextProcessor.processRequest(<any>{ req, res: {} })).rejects.toThrowError('Invalid Headers');
   });
 });

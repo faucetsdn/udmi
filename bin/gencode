@@ -11,7 +11,8 @@ if [[ $1 == check ]]; then
 fi
 
 if [[ -n $check ]]; then
-    # This check must be run before gencode_docs is run
+    # This check must be run before gencode_docs is run, because that will update
+    # the file in-place, and the checks are against the current file on disk
     bin/gencode_docs_examples check
 fi
 

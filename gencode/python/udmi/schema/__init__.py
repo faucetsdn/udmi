@@ -1,8 +1,12 @@
 from .ancillary_properties import AncillaryProperties
 from .building_config import BuildingConfig
 from .building_translation import BuildingTranslation
+<<<<<<< HEAD
 from .category import Category
 from .cloud_iot_config import CloudIotConfig
+=======
+from .category import ObjectC50A4669
+>>>>>>> faucetsdn/master
 from .command_discovery import DiscoveryCommand
 from .command_mapping import MappingCommand
 from .common import Common
@@ -20,6 +24,7 @@ from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig
 from .config_system_testing import TestingSystemConfig
 from .configuration_endpoint import EndpointConfiguration
+from .configuration_execution import ExecutionConfiguration
 from .configuration_pubber import PubberConfiguration
 from .envelope import Envelope
 from .event import Event

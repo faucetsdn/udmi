@@ -116,4 +116,5 @@ echo Found out files $outfiles, copying to $TMP_VALIDATOR
 # Include /dev/null so that more has >1 to chomp on and outputs headers.
 more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
+        -e "s/Validator.java:[0-9]+/redacted/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g' \

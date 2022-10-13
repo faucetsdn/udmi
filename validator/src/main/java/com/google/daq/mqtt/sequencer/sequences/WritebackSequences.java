@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import com.google.daq.mqtt.sequencer.PointSequencer;
-import com.google.daq.mqtt.util.JsonUtil;
+import com.google.udmi.util.JsonUtil;
 import java.util.Objects;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
@@ -43,6 +43,7 @@ public class WritebackSequences extends PointSequencer {
     String invalidPoint = invalidTarget.target_point;
     String failurePoint = failureTarget.target_point;
     String appliedPoint = appliedTarget.target_point;
+
     untilTrue(expectedValueState(invalidPoint, DEFAULT_STATE),
         () -> valueStateIs(invalidPoint, DEFAULT_STATE)
     );
@@ -52,10 +53,10 @@ public class WritebackSequences extends PointSequencer {
     untilTrue(expectedValueState(appliedPoint, DEFAULT_STATE),
         () -> valueStateIs(appliedPoint, DEFAULT_STATE)
     );
+
     deviceConfig.pointset.points.get(invalidPoint).set_value = invalidTarget.target_value;
     deviceConfig.pointset.points.get(failurePoint).set_value = failureTarget.target_value;
     deviceConfig.pointset.points.get(appliedPoint).set_value = appliedTarget.target_value;
-    updateConfig();
 
     untilTrue(expectedValueState(invalidPoint, INVALID_STATE),
         () -> valueStateIs(invalidPoint, INVALID_STATE)

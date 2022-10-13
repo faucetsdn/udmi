@@ -8,8 +8,8 @@ import static org.junit.Assert.fail;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
-import com.google.daq.mqtt.util.JsonUtil;
-import com.google.daq.mqtt.validator.CleanDateFormat;
+import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,17 +47,19 @@ public class DiscoverySequences extends SequenceBase {
     deviceConfig.discovery.enumeration.generation =
         SemanticDate.describe("generation start time", startTime);
     info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
-    updateConfig("discovery generation");
     untilTrue("enumeration generation",
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
-    List<DiscoveryEvent> events = getReceivedEvents(DiscoveryEvent.class);
-    assertTrue("a few events received", events.size() >= 1 && events.size() <= 2);
-    DiscoveryEvent discoveryEvent = events.get(0);
-    info("Received discovery generation " + JsonUtil.getTimestamp(discoveryEvent.generation));
-    assertEquals("matching event generation", startTime, discoveryEvent.generation);
-    int discoveredPoints = discoveryEvent.uniqs == null ? 0 : discoveryEvent.uniqs.size();
+    List<DiscoveryEvent> allEvents = getReceivedEvents(DiscoveryEvent.class);
+    // Filter for enumeration events, since there will sometimes be lingering scan events.
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
+        .collect(Collectors.toList());
+    assertEquals("a single discovery event received", enumEvents.size(), 1);
+    DiscoveryEvent event = enumEvents.get(0);
+    info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
+    assertEquals("matching event generation", startTime, event.generation);
+    int discoveredPoints = event.uniqs == null ? 0 : event.uniqs.size();
     assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
         discoveredPoints);
   }
@@ -129,7 +131,6 @@ public class DiscoverySequences extends SequenceBase {
     }
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
-    updateConfig();
     untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
     previousGenerations = new HashMap<>();
     families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
@@ -142,7 +143,6 @@ public class DiscoverySequences extends SequenceBase {
       getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });
-    updateConfig();
     getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
   }
 

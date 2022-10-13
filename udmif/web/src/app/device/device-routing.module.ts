@@ -9,6 +9,10 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'points', pathMatch: 'full' },
       { path: 'points', loadChildren: () => import('../points/points.module').then((m) => m.PointsModule) },
+      {
+        path: 'errors',
+        loadChildren: () => import('../device-errors/device-errors.module').then((m) => m.DeviceErrorsModule),
+      },
     ],
   },
 ];

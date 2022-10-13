@@ -15,7 +15,7 @@ export default class UdmiEventHandler {
       if (this.isDeviceEvent(udmiEvent)) {
         console.log('Processing Device UDMI message: ' + JSON.stringify(udmiEvent));
         this.deviceHandler.handle(udmiEvent);
-      } else if (this.isSiteEvent(udmiEvent)) {
+      } else if (this.isSiteValidationEvent(udmiEvent)) {
         console.log('Processing Site UDMI message: ' + JSON.stringify(udmiEvent));
         this.siteHandler.handle(udmiEvent);
       }
@@ -25,14 +25,19 @@ export default class UdmiEventHandler {
   }
 
   private messageCanBeHandled(event: UdmiEvent): boolean {
-    return isPointsetSubType(event) || isSystemSubType(event) || isValidationSubType(event);
+    return (
+      isPointsetSubType(event) ||
+      isSystemSubType(event) ||
+      isValidationSubType(event) ||
+      this.isSiteValidationEvent(event)
+    );
   }
 
   private isDeviceEvent(udmiEvent: UdmiEvent): boolean {
-    return !this.isSiteEvent(udmiEvent);
+    return !this.isSiteValidationEvent(udmiEvent);
   }
 
-  private isSiteEvent(udmiEvent: UdmiEvent): boolean {
+  private isSiteValidationEvent(udmiEvent: UdmiEvent): boolean {
     return udmiEvent.attributes.deviceId === VALIDATOR_ID;
   }
 }

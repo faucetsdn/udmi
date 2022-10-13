@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -7,10 +7,11 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.daq.mqtt.validator.CleanDateFormat;
 import java.io.File;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Collection of utilities for working with json things.
@@ -88,6 +89,18 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Convert the pojo to a mapped representaiton.
+   *
+   * @param message input object to convert
+   * @return object-as-map
+   */
+  public static Map<String, Object> toMap(Object message) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, message);
+    return map;
+  }
+
+  /**
    * Convert an object to a json string.
    *
    * @param target object to convert
@@ -107,7 +120,6 @@ public abstract class JsonUtil {
    * @param clazz class of result
    * @param file  file to load
    * @param <T>   type of result
-   *
    * @return loaded object
    */
   public static <T> T loadFile(Class<T> clazz, File file) {
@@ -132,7 +144,37 @@ public abstract class JsonUtil {
     }
   }
 
+  /**
+   * Get a date object parsed from a string representation.
+   *
+   * @param timestamp string representation
+   * @return Date object
+   */
   public static Date getDate(String timestamp) {
     return timestamp == null ? null : Date.from(Instant.parse(timestamp));
+  }
+
+  /**
+   * Convert the json string to a generic map object.
+   *
+   * @param input input string
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(String input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a generic map object.
+   *
+   * @param input input object
+   * @return input as map object
+   */
+  public static Map<String, Object> asMap(Object input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, input);
+    return map;
   }
 }

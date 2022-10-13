@@ -5,7 +5,6 @@ import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 
 import com.google.bos.iot.core.proxy.IotReflectorClient;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import java.io.File;
@@ -13,6 +12,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * General utility for working with UDMI Reflector messages.
@@ -22,7 +22,7 @@ public class Reflector {
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;
-  private CloudIotConfig cloudIotConfig;
+  private ExecutionConfiguration executionConfiguration;
   private File baseDir;
   private IotReflectorClient client;
   private String deviceId;
@@ -91,7 +91,7 @@ public class Reflector {
   private void initialize() {
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, cloudIotConfig, keyFile);
+    client = new IotReflectorClient(projectId, executionConfiguration, keyFile);
   }
 
   private List<String> parseArgs(List<String> argsList) {
@@ -133,7 +133,8 @@ public class Reflector {
       this.siteDir = siteDir;
       baseDir = new File(siteDir);
       File cloudConfig = new File(siteDir, "cloud_iot_config.json");
-      cloudIotConfig = CloudIotManager.validate(ConfigUtil.readCloudIotConfig(cloudConfig),
+      executionConfiguration = CloudIotManager.validate(
+          ConfigUtil.readExecutionConfiguration(cloudConfig),
           projectId);
     }
   }

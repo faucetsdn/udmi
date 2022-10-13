@@ -68,6 +68,7 @@ class SystemEvent:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.last_config = None
     self.logentries = None
     self.metrics = None
 
@@ -78,6 +79,7 @@ class SystemEvent:
     result = SystemEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
     result.metrics = ObjectD1FC597A.from_dict(source.get('metrics'))
     return result
@@ -104,6 +106,8 @@ class SystemEvent:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.last_config:
+      result['last_config'] = self.last_config # 5
     if self.logentries:
       result['logentries'] = self.logentries.to_dict() # 3
     if self.metrics:

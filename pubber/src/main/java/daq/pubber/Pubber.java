@@ -213,7 +213,7 @@ public class Pubber {
   }
 
   private static Date getRoundedStartTime() {
-    long timestamp = new Date().getTime();
+    long timestamp = getCurrentTimestamp().getTime();
     // Remove ms so that rounded conversions preserve equality.
     return new Date(timestamp - (timestamp % 1000));
   }
@@ -534,13 +534,19 @@ public class Pubber {
   }
 
   private void sendSystemMetrics() {
-    SystemEvent systemEvent = new SystemEvent();
+    SystemEvent systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
     systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
     publishDeviceMessage(systemEvent);
+  }
+
+  private SystemEvent getSystemEvent() {
+    SystemEvent systemEvent = new SystemEvent();
+    systemEvent.last_config = deviceState.system.last_config;
+    return systemEvent;
   }
 
   private void deferredConfigActions() {
@@ -795,13 +801,17 @@ public class Pubber {
     boolean success = e == null;
     Entry entry = new Entry();
     entry.category = category;
-    entry.timestamp = new Date();
+    entry.timestamp = getCurrentTimestamp();
     entry.message = success ? "success"
         : e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     entry.detail = success ? null : exceptionDetail(e);
     Level successLevel = Category.LEVEL.computeIfAbsent(category, key -> Level.INFO);
     entry.level = (success ? successLevel : Level.ERROR).value();
     return entry;
+  }
+
+  private static Date getCurrentTimestamp() {
+    return new Date();
   }
 
   private String exceptionDetail(Throwable e) {
@@ -927,8 +937,7 @@ public class Pubber {
 
   private String redirectedEndpoint(String redirectRegistry) {
     try {
-      EndpointConfiguration endpoint = deepCopy(configuration.endpoint,
-          EndpointConfiguration.class);
+      EndpointConfiguration endpoint = deepCopy(configuration.endpoint);
       endpoint.client_id = getClientId(redirectRegistry);
       return toJsonString(endpoint);
     } catch (Exception e) {
@@ -1102,7 +1111,7 @@ public class Pubber {
     if (executor.isShutdown() || executor.isTerminated()) {
       throw new RuntimeException("Executor shutdown/terminated, not scheduling");
     }
-    long delay = futureTime.getTime() - new Date().getTime();
+    long delay = futureTime.getTime() - getCurrentTimestamp().getTime();
     debug(String.format("Scheduling future in %dms", delay));
     executor.schedule(futureTask, delay, TimeUnit.MILLISECONDS);
     return delay;
@@ -1218,7 +1227,7 @@ public class Pubber {
   }
 
   private String getTimestamp() {
-    return isoConvert(new Date());
+    return isoConvert(getCurrentTimestamp());
   }
 
   private Date isoConvert(String timestamp) {
@@ -1298,7 +1307,7 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
-      SystemEvent systemEvent = new SystemEvent();
+      SystemEvent systemEvent = getSystemEvent();
       systemEvent.logentries.add(report);
       publishDeviceMessage(systemEvent);
     }
@@ -1340,7 +1349,7 @@ public class Pubber {
       safeSleep(delay);
     }
 
-    deviceState.timestamp = new Date();
+    deviceState.timestamp = getCurrentTimestamp();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
     try {
@@ -1402,7 +1411,7 @@ public class Pubber {
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
       assert timestamp.get(message) == null;
-      timestamp.set(message, new Date());
+      timestamp.set(message, getCurrentTimestamp());
     } catch (Exception e) {
       throw new RuntimeException("While augmenting device message", e);
     }

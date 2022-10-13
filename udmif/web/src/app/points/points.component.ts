@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { Point, PointModel } from './points';
@@ -20,7 +20,7 @@ export class PointsComponent implements OnInit {
   constructor(private route: ActivatedRoute, private pointsService: PointsService) {}
 
   ngOnInit(): void {
-    const deviceId: string = this.route.parent?.snapshot.parent?.params['id'];
+    const deviceId: string = this.route.snapshot.params['deviceId'];
 
     this.pointsService.getPoints(deviceId).subscribe(({ data, loading }) => {
       this.loading = loading;
@@ -28,6 +28,7 @@ export class PointsComponent implements OnInit {
 
       // Init the table data source so sorting will work natively.
       this.dataSource = new MatTableDataSource(this.points);
+      this.sort.sort({ id: 'name', start: 'asc' } as MatSortable);
       this.dataSource.sort = this.sort;
     });
   }

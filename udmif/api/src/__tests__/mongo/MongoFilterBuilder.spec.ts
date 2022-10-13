@@ -11,7 +11,7 @@ describe('MongoFilterBuilder.getFilter', () => {
       getEqualsFilter('make', 'val4'),
     ];
     expect(getFilter(filters)).toEqual({
-      $or: [
+      $and: [
         {
           make: { $in: [/val1/i, /val2/i, 'val4'] },
         },

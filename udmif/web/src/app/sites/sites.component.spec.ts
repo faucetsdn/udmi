@@ -19,8 +19,16 @@ describe('SitesComponent', () => {
   let refetch: jasmine.Spy;
   let sites: Site[] = [
     {
-      id: 'site-id-123',
       name: 'site one',
+      totalDevicesCount: 0,
+      correctDevicesCount: 0,
+      missingDevicesCount: 0,
+      errorDevicesCount: 0,
+      extraDevicesCount: 0,
+      lastValidated: '2022-04-24T02:54:51Z',
+      percentValidated: 0,
+      totalDeviceErrorsCount: 0,
+      validation: '',
     },
   ];
 

@@ -1,5 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Sites getSite 1`] = `
+Object {
+  "data": Object {
+    "site": Object {
+      "correctDevicesCount": 1,
+      "errorDevicesCount": 1,
+      "extraDevicesCount": 0,
+      "lastValidated": "2022-07-16T18:27:19Z",
+      "missingDevicesCount": 2,
+      "name": "LOC-1",
+      "percentValidated": 0.4,
+      "totalDeviceErrorsCount": 0,
+      "totalDevicesCount": 10,
+      "validation": "{\\"version\\":\\"1.3.14\\",\\"last_updated\\":\\"2022-07-16T18:27:19Z\\",\\"timestamp\\":\\"2018-08-26T21:39:29.364Z\\",\\"summary\\":{\\"correct_devices\\":[\\"AHU-22\\"],\\"extra_devices\\":[],\\"missing_devices\\":[\\"GAT-123\\",\\"SNS-4\\"],\\"error_devices\\":[\\"AHU-1\\"]},\\"status\\":{\\"message\\":\\"Site is completed validation\\",\\"category\\":\\"validation.summary.report\\",\\"timestamp\\":\\"2018-08-26T21:39:30.364Z\\",\\"level\\":200},\\"devices\\":{\\"AHU-1\\":{\\"last_seen\\":\\"2022-07-16T18:27:19Z\\",\\"oldest_mark\\":\\"2022-07-16T18:27:19Z\\",\\"status\\":{\\"message\\":\\"Tickity Boo\\",\\"category\\":\\"validation.device.result\\",\\"timestamp\\":\\"2018-08-26T21:39:30.364Z\\",\\"level\\":400}}}}",
+    },
+  },
+  "errors": undefined,
+  "extensions": undefined,
+  "http": Object {
+    "headers": Headers {
+      Symbol(map): Object {},
+    },
+  },
+}
+`;
+
 exports[`Sites getSiteNames 1`] = `
 Object {
   "data": Object {
@@ -32,123 +58,93 @@ Object {
     "sites": Object {
       "sites": Array [
         Object {
-          "id": "00000000-0000-0000-0000-0000000001",
           "name": "LOC-1",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000002",
           "name": "SITE-2",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000003",
           "name": "LOC-3",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000004",
           "name": "SITE-4",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000005",
           "name": "LOC-5",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000006",
           "name": "SITE-6",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000007",
           "name": "LOC-7",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000008",
           "name": "SITE-8",
         },
         Object {
-          "id": "00000000-0000-0000-0000-0000000009",
           "name": "LOC-9",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000010",
           "name": "SITE-10",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000011",
           "name": "LOC-11",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000012",
           "name": "SITE-12",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000013",
           "name": "LOC-13",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000014",
           "name": "SITE-14",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000015",
           "name": "LOC-15",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000016",
           "name": "SITE-16",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000017",
           "name": "LOC-17",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000018",
           "name": "SITE-18",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000019",
           "name": "LOC-19",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000020",
           "name": "SITE-20",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000021",
           "name": "LOC-21",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000022",
           "name": "SITE-22",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000023",
           "name": "LOC-23",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000024",
           "name": "SITE-24",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000025",
           "name": "LOC-25",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000026",
           "name": "SITE-26",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000027",
           "name": "LOC-27",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000028",
           "name": "SITE-28",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000029",
           "name": "LOC-29",
         },
         Object {
-          "id": "00000000-0000-0000-0000-00000000030",
           "name": "SITE-30",
         },
       ],

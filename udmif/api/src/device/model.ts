@@ -1,7 +1,21 @@
+import { SearchOptions } from '../common/model';
+
 export interface DevicesResponse {
   devices: Device[];
   totalCount: number;
   totalFilteredCount: number;
+}
+
+export interface DevicesArgs {
+  searchOptions: SearchOptions;
+}
+
+export interface DeviceArgs {
+  id: string;
+}
+
+export interface PointsArgs {
+  deviceId: string;
 }
 
 export interface Point {
@@ -13,7 +27,7 @@ export interface Point {
 }
 
 export interface Device {
-  id?: string;
+  id: string;
   name: string;
   make?: string;
   model?: string;
@@ -25,4 +39,5 @@ export interface Device {
   serialNumber?: string;
   tags?: string[];
   points?: Point[];
+  validation?: any;
 }

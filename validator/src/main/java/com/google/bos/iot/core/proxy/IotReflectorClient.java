@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.MessagePublisher;
 import java.io.File;
 import java.nio.file.Files;
@@ -18,6 +17,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * Publish messages using the iot core reflector.
@@ -47,9 +47,9 @@ public class IotReflectorClient implements MessagePublisher {
    *
    * @param projectId target project
    * @param iotConfig configuration file
-   * @param keyFile auth key file
+   * @param keyFile   auth key file
    */
-  public IotReflectorClient(String projectId, CloudIotConfig iotConfig, String keyFile) {
+  public IotReflectorClient(String projectId, ExecutionConfiguration iotConfig, String keyFile) {
     final byte[] keyBytes;
     try {
       keyBytes = getFileBytes(keyFile);

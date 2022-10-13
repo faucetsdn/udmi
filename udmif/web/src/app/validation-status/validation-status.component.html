@@ -1,0 +1,9 @@
+<mat-card class="validation" *ngIf="validation | parse as v">
+  <mat-card-header>
+    <mat-icon mat-card-avatar class="success" *ngIf="v.status?.level <= 200">check_circle</mat-icon>
+    <mat-icon mat-card-avatar class="warning" *ngIf="v.status?.level > 200 && v.status?.level < 500">warning</mat-icon>
+    <mat-icon mat-card-avatar class="error" *ngIf="v.status?.level >= 500">error</mat-icon>
+    <mat-card-title>{{ v.status?.message }}</mat-card-title>
+    <mat-card-subtitle>{{ v.status?.details }}</mat-card-subtitle>
+  </mat-card-header>
+</mat-card>

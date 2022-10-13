@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { GoogleLoginProvider, SocialAuthServiceConfig, SocialLoginModule } from '@abacritt/angularx-social-login';
+import { GoogleLoginProvider, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
 import { EnvService } from '../env/env.service';
 
 export function SocialAuthFactory(env: EnvService): SocialAuthServiceConfig {
@@ -17,7 +17,6 @@ export function SocialAuthFactory(env: EnvService): SocialAuthServiceConfig {
 }
 
 @NgModule({
-  imports: [SocialLoginModule],
   providers: [
     {
       provide: 'SocialAuthServiceConfig',
@@ -26,4 +25,4 @@ export function SocialAuthFactory(env: EnvService): SocialAuthServiceConfig {
     },
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

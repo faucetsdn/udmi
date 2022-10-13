@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,9 +12,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
-  private static final String TARGET_FORMAT = "%d.%d.%d";
   public static final String STATE_SCHEMA = "state";
   public static final String METADATA_SCHEMA = "metadata";
+  private static final String TARGET_FORMAT = "%d.%d.%d";
   private final JsonNode message;
   private final String schemaName;
   private final int major;
@@ -29,11 +31,10 @@ public class MessageUpgrader {
     this.message = message;
     this.schemaName = schemaName;
 
-    JsonNode version = message.get("version");
+    JsonNode version = message.get(VERSION_PROPERTY_KEY);
     String verStr =
         version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
             : "1";
-
     String[] components = verStr.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
@@ -58,8 +59,9 @@ public class MessageUpgrader {
     if (minor == 3 && patch < 14) {
       upgrade_1_3_14();
     }
-    if (message.has("version")) {
-      ((ObjectNode) message).put("version", String.format(TARGET_FORMAT, major, minor, patch));
+    if (message.has(VERSION_PROPERTY_KEY)) {
+      ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
+          String.format(TARGET_FORMAT, major, minor, patch));
     }
   }
 
@@ -120,7 +122,7 @@ public class MessageUpgrader {
       if (system.has("software")) {
         throw new IllegalStateException("Node already has software field");
       }
-      JsonNode version = ((ObjectNode) firmware).remove("version");
+      JsonNode version = ((ObjectNode) firmware).remove(VERSION_PROPERTY_KEY);
       if (version != null) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
         softwareNode.put("firmware", version.asText());

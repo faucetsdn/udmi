@@ -8,8 +8,19 @@ import { createEvent, DEVICE_VALIDATION_EVENT } from '../dataUtils';
 
 const name: string = 'name';
 const site: string = 'site-1';
-const BASIC_SYSTEM_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: SYSTEM_SUB_FOLDER };
-const BASIC_POINTSET_ATTRIBUTES = { deviceId: name, deviceRegistryId: site, subFolder: POINTSET_SUB_FOLDER };
+const id: string = 'num1';
+const BASIC_SYSTEM_ATTRIBUTES = {
+  deviceId: name,
+  deviceRegistryId: site,
+  deviceNumId: id,
+  subFolder: SYSTEM_SUB_FOLDER,
+};
+const BASIC_POINTSET_ATTRIBUTES = {
+  deviceId: name,
+  deviceRegistryId: site,
+  deviceNumId: id,
+  subFolder: POINTSET_SUB_FOLDER,
+};
 const AHU_ID: string = 'AHU-1';
 const AHU_REGISTRY_ID: string = 'reg-1';
 
@@ -18,14 +29,14 @@ describe('DeviceDocumentUtils.createDevice.default', () => {
 
   test('creates a default device document', () => {
     const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDevice: Device = { name, site, tags };
+    const expectedDevice: Device = { name, site, id, tags };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
     const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
-    const expectedDevice: Device = { name, site, lastPayload: timestamp, tags };
+    const expectedDevice: Device = { name, site, id, lastPayload: timestamp, tags };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
@@ -49,7 +60,7 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
         serial_no: serialNumber,
       },
     };
-    const expectedDevice: Device = { name, site, make, model, operational, serialNumber, firmware, tags };
+    const expectedDevice: Device = { name, site, id, make, model, operational, serialNumber, firmware, tags };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
@@ -62,7 +73,7 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
         location: { section, site },
       },
     };
-    const expectedDevice: Device = { name, section, site, tags };
+    const expectedDevice: Device = { name, section, site, id, tags };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
@@ -100,7 +111,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, undefined)).toEqual(expectedDevice);
@@ -126,7 +137,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -158,7 +169,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' }, state },
     ];
 
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -183,7 +194,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -207,7 +218,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -236,7 +247,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -319,7 +330,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
       ],
     };
 
-    const expectedDevice: Device = { name, site, tags: [], validation: expectedValidations };
+    const expectedDevice: Device = { name, site, id, tags: [], validation: expectedValidations };
 
     // act and assert
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
@@ -335,13 +346,13 @@ describe('getDeviceValidationDocument', () => {
       name: 'name',
       site: 'string',
     });
-    const expectedValidationn = {
+    const expectedValidation = {
       timestamp: new Date(inputEvent.data.timestamp),
       deviceKey: { name: 'name', site: 'string' },
       data: inputEvent.data,
     };
     // assert
-    expect(validation).toEqual(expectedValidationn);
+    expect(validation).toEqual(expectedValidation);
   });
 
   test('throws an exception if a mandatory field deviceId is null', () => {

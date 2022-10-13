@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.daq.mqtt.util.ConfigUtil.readCloudIotConfig;
+import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
@@ -10,13 +10,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * Encapsulation of all Cloud IoT interaction functions.
@@ -32,7 +32,7 @@ public class CloudIotManager {
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
   private static final String MOCK_PROJECT = "unit-testing";
 
-  public final CloudIotConfig cloudIotConfig;
+  public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
   private final String projectId;
@@ -52,9 +52,9 @@ public class CloudIotManager {
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
-      cloudIotConfig = validate(readCloudIotConfig(cloudConfig), projectId);
-      registryId = cloudIotConfig.registry_id;
-      cloudRegion = cloudIotConfig.cloud_region;
+      executionConfiguration = validate(readExecutionConfiguration(cloudConfig), projectId);
+      registryId = executionConfiguration.registry_id;
+      cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {
       throw new RuntimeException(
@@ -66,22 +66,24 @@ public class CloudIotManager {
   /**
    * Validate the given configuration.
    *
-   * @param cloudIotConfig configuration to validate
-   * @param projectId      expected project id
+   * @param executionConfiguration configuration to validate
+   * @param projectId              expected project id
    * @return validated config (for chaining)
    */
-  public static CloudIotConfig validate(CloudIotConfig cloudIotConfig, String projectId) {
-    if (projectId.equals(cloudIotConfig.alt_project)) {
-      System.err.printf("Using alt_registry %s for alt_project %s\n", cloudIotConfig.alt_registry,
-          cloudIotConfig.alt_project);
-      cloudIotConfig.alt_project = null;
-      cloudIotConfig.registry_id = cloudIotConfig.alt_registry;
-      cloudIotConfig.alt_registry = null;
+  public static ExecutionConfiguration validate(ExecutionConfiguration executionConfiguration,
+      String projectId) {
+    if (projectId.equals(executionConfiguration.alt_project)) {
+      System.err.printf("Using alt_registry %s for alt_project %s\n",
+          executionConfiguration.alt_registry,
+          executionConfiguration.alt_project);
+      executionConfiguration.alt_project = null;
+      executionConfiguration.registry_id = executionConfiguration.alt_registry;
+      executionConfiguration.alt_registry = null;
     }
-    Preconditions.checkNotNull(cloudIotConfig.registry_id, "registry_id not defined");
-    Preconditions.checkNotNull(cloudIotConfig.cloud_region, "cloud_region not defined");
-    Preconditions.checkNotNull(cloudIotConfig.site_name, "site_name not defined");
-    return cloudIotConfig;
+    Preconditions.checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
+    Preconditions.checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
+    Preconditions.checkNotNull(executionConfiguration.site_name, "site_name not defined");
+    return executionConfiguration;
   }
 
   /**
@@ -233,7 +235,7 @@ public class CloudIotManager {
    * @return Name for the site (building name)
    */
   public String getSiteName() {
-    return cloudIotConfig.site_name;
+    return executionConfiguration.site_name;
   }
 
   /**
@@ -242,7 +244,7 @@ public class CloudIotManager {
    * @return Topic name to use for sending update messages
    */
   public String getUpdateTopic() {
-    return cloudIotConfig.update_topic;
+    return executionConfiguration.update_topic;
   }
 
   /**
