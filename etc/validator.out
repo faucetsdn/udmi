@@ -20,7 +20,7 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
 ::::::::::::::
 {
   "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.3.14",
+  "version" : "1.6.6",
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
@@ -33,5 +33,21 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
+  }
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/config.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.6.6",
+  "sub_folder" : "update",
+  "sub_type" : "config",
+  "status" : {
+    "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"subsystem\"]; object has missing required properties ([\"families\"])",
+    "category" : "validation.error.simple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
   }
 }
