@@ -42,6 +42,16 @@ export class DevicesConstants {
       isSortable: true,
     },
     {
+      value: 'serialNumber',
+      label: 'Serial Number',
+      isSortable: true,
+    },
+    {
+      value: 'firmware',
+      label: 'Firmware',
+      isSortable: true,
+    },
+    {
       value: 'message',
       label: 'Message',
       isSortable: false,

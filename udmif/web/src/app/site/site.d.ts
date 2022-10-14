@@ -23,3 +23,8 @@ export type SiteQueryResponse = {
 export type SiteQueryVariables = {
   name: string;
 };
+
+export type SiteDetail = {
+  value: keyof SiteModel;
+  label: string;
+};

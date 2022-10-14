@@ -2,8 +2,8 @@
 
 <mat-card class="summary">
   <div class="item" *ngFor="let field of fields">
+    <span class="mat-body-2">{{ field.label }}</span>
     <ng-container [ngSwitch]="field.value">
-      <span class="mat-body-2">{{ field.label }}</span>
       <ng-container *ngSwitchCase="'lastPayload'">
         <p>{{ device?.lastPayload | date: 'MM/dd/yy h:mm a' }}</p>
       </ng-container>
