@@ -111,6 +111,9 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
+          more sites/udmi_site_model/devices/AHU-22/*
+          more sites/udmi_site_model/devices/AHU-22/out/*
+          more sites/udmi_site_model/out/devices/AHU-22/*
           more /tmp/validator.out
           echo Comparing test run results with golden file:
           diff -u /tmp/validator.out etc/validator.out
