@@ -12,8 +12,6 @@ export const GET_DEVICES = gql`
         section
         lastPayload
         operational
-        firmware
-        serialNumber
         level
         message
         details

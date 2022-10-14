@@ -37,8 +37,6 @@ describe('DevicesService', () => {
             section: 'ABC 3',
             lastPayload: '2022-01-03',
             operational: false,
-            serialNumber: 's123',
-            firmware: 'V3',
             level: 400,
             message: '',
             details: '',

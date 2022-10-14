@@ -2,11 +2,24 @@
 
 <mat-card class="summary">
   <div class="item" *ngFor="let field of fields">
-    <span class="mat-body-2">{{ field | capitalize }}</span>
-    <p *ngIf="field === 'lastPayload'; else elseBlock">{{ device?.lastPayload | date: 'MM/dd/yy h:mm a' }}</p>
-    <ng-template #elseBlock
-      ><p>{{ device?.[field] }}</p></ng-template
-    >
+    <ng-container [ngSwitch]="field.value">
+      <span class="mat-body-2">{{ field.label }}</span>
+      <ng-container *ngSwitchCase="'lastPayload'">
+        <p>{{ device?.lastPayload | date: 'MM/dd/yy h:mm a' }}</p>
+      </ng-container>
+      <ng-container *ngSwitchCase="'lastSeen'">
+        <p>{{ device?.lastSeen | date: 'MM/dd/yy h:mm a' }}</p>
+      </ng-container>
+      <ng-container *ngSwitchCase="'operational'">
+        <p>
+          <ng-container *ngIf="device?.operational === true">Yes</ng-container>
+          <ng-container *ngIf="device?.operational === false">No</ng-container>
+        </p>
+      </ng-container>
+      <ng-container *ngSwitchDefault>
+        <p>{{ device?.[field.value] }}</p>
+      </ng-container>
+    </ng-container>
   </div>
 </mat-card>
 
