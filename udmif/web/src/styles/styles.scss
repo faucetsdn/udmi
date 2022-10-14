@@ -29,6 +29,7 @@ ul {
   padding: $spacing;
   color: $text-secondary;
   min-height: auto;
+  word-break: break-word;
 }
 .mat-header-cell {
   padding: 0 $spacing;

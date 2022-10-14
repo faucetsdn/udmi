@@ -36,8 +36,11 @@
           ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
         >
       </ng-container>
-      <ng-container *ngSwitchCase="'lastPayload' || 'lastSeen'">
-        <mat-cell *matCellDef="let element">{{ element[column.value] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      <ng-container *ngSwitchCase="'lastPayload'">
+        <mat-cell *matCellDef="let element">{{ element.lastPayload | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      </ng-container>
+      <ng-container *ngSwitchCase="'lastSeen'">
+        <mat-cell *matCellDef="let element">{{ element.lastSeen | date: 'MM/dd/yy h:mm a' }}</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'operational'">
         <mat-cell *matCellDef="let element">
