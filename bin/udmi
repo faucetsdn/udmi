@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(realpath $(dirname $(dirname $(readlink -f $0))))
+
+function show_help {
+  echo udmi sub-command [options]
+  echo "  sub-command is (usually) one of: validate register sequence deploy"
+}
+if [[ -z $1 ]]; then
+  show_help
+  false
+fi
+
+subcmd=udmi-$1
+shift
+
+pathcmd=$(which $subcmd || true)
+if [[ -z $pathcmd ]]; then
+  pathcmd=$UDMI_ROOT/bin/$subcmd
+fi
+
+$pathcmd "$@"
