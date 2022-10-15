@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(realpath $(dirname $(dirname $(readlink -f $0))))
+UDMI_ROOT=$(realpath $(dirname $(readlink -f $0))/..)
 
 function show_help {
   echo udmi sub-command [options]
