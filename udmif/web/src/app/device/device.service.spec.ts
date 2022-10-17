@@ -37,6 +37,10 @@ describe('DeviceService', () => {
         operational: false,
         serialNumber: 's123',
         firmware: 'V3',
+        level: 400,
+        lastSeen: '2022-01-03',
+        state: 'CORRECT',
+        errorsCount: 2,
         validation: '',
       },
     };

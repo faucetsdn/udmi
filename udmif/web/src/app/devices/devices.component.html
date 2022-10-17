@@ -36,14 +36,16 @@
           ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
         >
       </ng-container>
-      <ng-container *ngSwitchCase="'lastPayload' || 'lastSeen'">
-        <mat-cell *matCellDef="let element">{{ element[column.value] | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      <ng-container *ngSwitchCase="'lastPayload'">
+        <mat-cell *matCellDef="let element">{{ element.lastPayload | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      </ng-container>
+      <ng-container *ngSwitchCase="'lastSeen'">
+        <mat-cell *matCellDef="let element">{{ element.lastSeen | date: 'MM/dd/yy h:mm a' }}</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'operational'">
         <mat-cell *matCellDef="let element">
-          <ng-container *ngIf="element.operational; then yesBlock; else noBlock"></ng-container>
-          <ng-template #yesBlock>Yes</ng-template>
-          <ng-template #noBlock>No</ng-template>
+          <ng-container *ngIf="element.operational === true">Yes</ng-container>
+          <ng-container *ngIf="element.operational === false">No</ng-container>
         </mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'errorsCount'">
