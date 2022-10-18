@@ -8,7 +8,7 @@
 # Walk up the directory tree looking for the .udmi configuration directory.
 # If not found, just return empty.
 #
-function find_project_root {
+function find_site_model_root {
     while [ $PWD != "/" ]; do
         test -e .udmi && { pwd; break; }
         cd ..
