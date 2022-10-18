@@ -142,5 +142,5 @@ jobs:
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          cat pubber.out || true
+          more pubber.out* || true
           more pubber/out/*/*.json
