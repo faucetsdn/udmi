@@ -17,10 +17,10 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import udmi.schema.CloudIotConfig;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 
@@ -39,17 +39,17 @@ public class SiteModel {
   final String sitePath;
   private Map<String, Metadata> allMetadata;
   private Map<String, Device> allDevices;
-  private CloudIotConfig cloudIotConfig;
+  private ExecutionConfiguration executionConfiguration;
 
   public SiteModel(String sitePath) {
     this.sitePath = sitePath;
   }
 
   public static EndpointConfiguration makeEndpointConfig(String projectId,
-      CloudIotConfig cloudIotConfig, String deviceId) {
+      ExecutionConfiguration executionConfig, String deviceId) {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(projectId,
-        cloudIotConfig.cloud_region, cloudIotConfig.registry_id, deviceId);
+        executionConfig.cloud_region, executionConfig.registry_id, deviceId);
     endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
     return endpoint;
   }
@@ -59,18 +59,18 @@ public class SiteModel {
     return String.format(ID_FORMAT, projectId, cloudRegion, registryId, deviceId);
   }
 
-  private static CloudIotConfig makeCloudIotConfig(Envelope attributes) {
-    CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+  private static ExecutionConfiguration makeExecutionConfiguration(Envelope attributes) {
+    ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
+    executionConfiguration.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
-    cloudIotConfig.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+    executionConfiguration.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
         "deviceRegistryLocation");
-    return cloudIotConfig;
+    return executionConfiguration;
   }
 
   public static EndpointConfiguration makeEndpointConfig(Envelope attributes) {
-    CloudIotConfig cloudIotConfig = makeCloudIotConfig(attributes);
-    return makeEndpointConfig(attributes.projectId, cloudIotConfig, attributes.deviceId);
+    ExecutionConfiguration executionConfiguration = makeExecutionConfiguration(attributes);
+    return makeEndpointConfig(attributes.projectId, executionConfiguration, attributes.deviceId);
   }
 
   /**
@@ -97,7 +97,7 @@ public class SiteModel {
   }
 
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
-    return makeEndpointConfig(projectId, cloudIotConfig, deviceId);
+    return makeEndpointConfig(projectId, executionConfiguration, deviceId);
   }
 
   private Set<String> getDeviceIds() {
@@ -159,7 +159,7 @@ public class SiteModel {
         "sitePath not defined in configuration");
     File cloudConfig = new File(new File(sitePath), "cloud_iot_config.json");
     try {
-      cloudIotConfig = OBJECT_MAPPER.readValue(cloudConfig, CloudIotConfig.class);
+      executionConfiguration = OBJECT_MAPPER.readValue(cloudConfig, ExecutionConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + cloudConfig.getAbsolutePath(), e);
     }
@@ -197,7 +197,7 @@ public class SiteModel {
    * @return site registry
    */
   public String getRegistryId() {
-    return cloudIotConfig.registry_id;
+    return executionConfiguration.registry_id;
   }
 
   /**
@@ -206,7 +206,7 @@ public class SiteModel {
    * @return update topic
    */
   public String getUpdateTopic() {
-    return cloudIotConfig.update_topic;
+    return executionConfiguration.update_topic;
   }
 
   public Device getDevice(String deviceId) {

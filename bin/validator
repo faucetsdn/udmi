@@ -20,9 +20,6 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
     false
 fi
 
-echo Building validator...
-$ROOT_DIR/validator/bin/build > /dev/null
-
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
 if [[ -n $subscription ]]; then

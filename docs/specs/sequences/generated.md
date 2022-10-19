@@ -44,7 +44,7 @@ Some caveats:
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Update config:
+1. Update config before no interesting status:
     * Set `system.min_loglevel` = `100`
 1. Wait for no interesting status
 1. Wait for clean config/state synced
@@ -55,6 +55,8 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for log category `system.config.parse` level `ERROR`
 1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
+1. Update config before log category `system.config.receive` level `DEBUG`:
+    * Add `system.last_start` = _device reported_
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for no interesting status
 1. Wait for last_config updated
@@ -71,7 +73,7 @@ Check that the device MQTT-acknowledges a sent config.
 
 Push endpoint config message to device that results in a connection error.
 
-1. Update config:
+1. Update config before blobset entry config status is error:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_ } } }
 1. Wait for blobset entry config status is error
 
@@ -79,7 +81,7 @@ Push endpoint config message to device that results in a connection error.
 
 Push endpoint config message to device that results in successful reconnect to the same endpoint.
 
-1. Update config:
+1. Update config before blobset entry config status is success:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_, "nonce": _endpoint_nonce_ } } }
 1. Wait for blobset entry config status is success
 
@@ -87,7 +89,7 @@ Push endpoint config message to device that results in successful reconnect to t
 
 Check that the device correctly handles an extra out-of-schema field
 
-1. Update config:
+1. Update config before last_config not null:
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
@@ -107,27 +109,27 @@ Check that the device correctly handles an extra out-of-schema field
 
 ## periodic_scan
 
-1. Update config:
+1. Update config before all scans not active:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
-1. Update config:
+1. Update config before scan iterations:
     * Add `discovery.families.virtual` = { "generation": _family generation_, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
 ## self_enumeration
 
 1. Wait for enumeration not active
-1. Update config to discovery generation:
+1. Update config before enumeration generation:
     * Add `discovery` = { "enumeration": { "generation": _generation start time_ } }
 1. Wait for enumeration generation
 1. Wait for enumeration still not active
 
 ## single_scan
 
-1. Update config:
+1. Update config before all scans not active:
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
-1. Update config:
+1. Update config before scheduled scan start:
     * Add `discovery.families.virtual` = { "generation": _family generation_, "enumerate": `true` }
 1. Wait for scheduled scan start
 1. Wait for scan activation
@@ -146,7 +148,7 @@ Check that the min log-level config is honored by the device.
 1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Update config:
     * Set `system.min_loglevel` = `400`
-1. Update config:
+1. Update config before log category `system.config.apply` level `NOTICE`:
     * Set `system.min_loglevel` = `200`
 1. Wait for log category `system.config.apply` level `NOTICE`
 
@@ -159,7 +161,7 @@ Check that the min log-level config is honored by the device.
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
-1. Update config:
+1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
     * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`

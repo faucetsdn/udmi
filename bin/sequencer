@@ -64,7 +64,7 @@ JARFILE=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 echo $JAVA_CMD $test_names
 result=0
-timeout 5m $JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
+$JAVA_CMD $test_names 2>&1 | tee $TEST_LOG
 
 echo
 # Sort by test name (6th field)

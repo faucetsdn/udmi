@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import com.google.daq.mqtt.util.MessagePublisher;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -19,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
 class ProxyTarget {
@@ -43,11 +43,11 @@ class ProxyTarget {
   private final String srcRegistryId;
   private final ProxyConfig proxyConfig;
   private final Consumer<MessageBundle> bundleOut;
-  private CloudIotConfig cloudConfig;
-  private CloudIotManager cloudIotManager;
   private final Map<String, LocalDateTime> initializedTimes = new ConcurrentHashMap<>();
   private final Map<String, LocalDateTime> configTimes = new ConcurrentHashMap<>();
   private final Map<String, Metadata> udmiMetadata = new ConcurrentHashMap<>();
+  private ExecutionConfiguration cloudConfig;
+  private CloudIotManager cloudIotManager;
 
   ProxyTarget(Map<String, String> configMap, String registryId,
       Consumer<MessageBundle> bundleOut) {
@@ -102,11 +102,11 @@ class ProxyTarget {
     return String.format("proxy_%s_", srcRegistryId);
   }
 
-  private CloudIotConfig loadCloudConfig(String srcRegistryId) {
-    CloudIotConfig cloudIotConfig = new CloudIotConfig();
-    cloudIotConfig.registry_id = srcRegistryId;
-    cloudIotConfig.cloud_region = proxyConfig.dstCloudRegion;
-    return cloudIotConfig;
+  private ExecutionConfiguration loadCloudConfig(String srcRegistryId) {
+    ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
+    executionConfiguration.registry_id = srcRegistryId;
+    executionConfiguration.cloud_region = proxyConfig.dstCloudRegion;
+    return executionConfiguration;
   }
 
   MessagePublisher getMqttPublisher(String deviceId) {

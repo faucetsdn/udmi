@@ -16,6 +16,12 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "last_config": {
+      "description": "Last config received",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
     "logentries": {
       "type": "array",
       "items": {

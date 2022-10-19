@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class GeneralUtils {
 
@@ -76,12 +77,38 @@ public class GeneralUtils {
     }
   }
 
-  public static <T> T deepCopy(T endpoint1, Class<T> valueType) {
+  public static <T> T deepCopy(T object) {
+    Class<?> targetClass = object.getClass();
     try {
-      return OBJECT_MAPPER.readValue(toJsonString(endpoint1),
-          valueType);
+      @SuppressWarnings("unchecked")
+      T t = (T) OBJECT_MAPPER.readValue(toJsonString(object), targetClass);
+      return t;
     } catch (Exception e) {
-      throw new RuntimeException("While making deep copy of " + valueType.getName(), e);
+      throw new RuntimeException("While making deep copy of " + targetClass.getName(), e);
+    }
+  }
+
+  public static <T> T mergeObject(Object destination, Object source) {
+    Map<String, Object> target = JsonUtil.asMap(destination);
+    mergeObject(target, JsonUtil.asMap(source));
+    @SuppressWarnings("unchecked")
+    T t = (T) JsonUtil.convertTo(destination.getClass(), target);
+    return t;
+  }
+
+  public static void mergeObject(Map<String, Object> target, Map<String, Object> source) {
+    for (String key : source.keySet()) {
+      Object targetValue = target.get(key);
+      Object sourceValue = source.get(key);
+      if (targetValue instanceof Map && sourceValue instanceof Map) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> castTarget = (Map<String, Object>) targetValue;
+        @SuppressWarnings("unchecked")
+        Map<String, Object> castSource = (Map<String, Object>) sourceValue;
+        mergeObject(castTarget, castSource);
+      } else {
+        target.put(key, sourceValue);
+      }
     }
   }
 }

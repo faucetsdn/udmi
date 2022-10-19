@@ -150,10 +150,22 @@ public class ConfigDiffEngine {
    * @return equality comparison with semantic considerations
    */
   public boolean equals(Config deviceConfig, Object receivedConfig) {
+    return diff(deviceConfig, receivedConfig).isEmpty();
+  }
+
+  /**
+   * Return the accumulated differences between two config objects.
+   *
+   * @param deviceConfig   device config
+   * @param receivedConfig device received
+   * @return list of differences
+   */
+  public List<String> diff(Config deviceConfig, Object receivedConfig) {
     Map<String, Object> left = convertSemantics(deviceConfig);
     Map<String, Object> right = convertSemantics(receivedConfig);
     List<String> configUpdates = new ArrayList<>();
     accumulateDifference("", left, right, configUpdates);
-    return configUpdates.isEmpty();
+    return configUpdates;
   }
+
 }

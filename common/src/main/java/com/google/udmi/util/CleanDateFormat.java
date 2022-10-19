@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator;
+package com.google.udmi.util;
 
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.text.ParseException;

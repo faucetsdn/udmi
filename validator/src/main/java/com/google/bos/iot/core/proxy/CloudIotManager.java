@@ -13,7 +13,6 @@ import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.daq.mqtt.util.CloudIotConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * General functions for managing the connection with IoT Core.
@@ -31,13 +31,13 @@ public class CloudIotManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(CloudIotManager.class);
   private static final String APPLICATION_NAME = "iot_core_proxy";
-  private final CloudIotConfig iotConfig;
+  private final ExecutionConfiguration iotConfig;
   private final CloudIot cloudIot;
   private final String projectId;
   private final String projectPath;
   private final String registryId;
-  private Map<String, Device> deviceMap = new HashMap<>();
-  private CloudIot.Projects.Locations.Registries cloudIotRegistries;
+  private final Map<String, Device> deviceMap = new HashMap<>();
+  private final CloudIot.Projects.Locations.Registries cloudIotRegistries;
 
   /**
    * Create a manager with the given configuration.
@@ -45,7 +45,7 @@ public class CloudIotManager {
    * @param projectId Cloud project ID.
    * @param iotConfig Configuration parameters.
    */
-  CloudIotManager(String projectId, CloudIotConfig iotConfig) {
+  CloudIotManager(String projectId, ExecutionConfiguration iotConfig) {
     this.projectId = projectId;
     this.iotConfig = iotConfig;
     projectPath = "projects/" + projectId + "/locations/" + iotConfig.cloud_region;

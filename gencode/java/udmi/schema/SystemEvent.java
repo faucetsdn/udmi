@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "last_config",
     "logentries",
     "metrics"
 })
@@ -43,6 +44,13 @@ public class SystemEvent {
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
+    /**
+     * Last config received
+     * 
+     */
+    @JsonProperty("last_config")
+    @JsonPropertyDescription("Last config received")
+    public Date last_config;
     @JsonProperty("logentries")
     public List<Entry> logentries = new ArrayList<Entry>();
     @JsonProperty("metrics")
@@ -54,6 +62,7 @@ public class SystemEvent {
         result = ((result* 31)+((this.metrics == null)? 0 :this.metrics.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
+        result = ((result* 31)+((this.last_config == null)? 0 :this.last_config.hashCode()));
         result = ((result* 31)+((this.logentries == null)? 0 :this.logentries.hashCode()));
         return result;
     }
@@ -67,7 +76,7 @@ public class SystemEvent {
             return false;
         }
         SystemEvent rhs = ((SystemEvent) other);
-        return (((((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
+        return ((((((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
     }
 
 }

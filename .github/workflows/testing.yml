@@ -117,6 +117,7 @@ jobs:
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+          SEQUENCER_OPTS: ${{ secrets.SEQUENCER_OPTS }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
@@ -134,8 +135,12 @@ jobs:
           cd sites/udmi_site_model/out
           echo Output from `pwd`
           more `find out -type f`
+      - name: validator logs
+        if: ${{ always() }}
+        run: |
+          cat out/validator.out || true
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          cat pubber.out || true
+          more pubber.out* out/pubber.out* || true
           more pubber/out/*/*.json
