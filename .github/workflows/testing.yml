@@ -133,8 +133,8 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           cd sites/udmi_site_model/out
-          echo Output from `pwd`
-          more `find out -type f`
+          echo Output from `pwd`:
+          more `find . -type f`
       - name: validator logs
         if: ${{ always() }}
         run: |
