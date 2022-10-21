@@ -3,6 +3,7 @@
 ROOT_DIR=$(dirname $0)/..
 cd ${ROOT_DIR}
 
+
 bin/clone_model
 
 TEST_SITE=sites/udmi_site_model
@@ -19,7 +20,7 @@ exit_status=0
 echo Found ${clean_devices} clean devices.
 [ "${clean_devices}" == 4 ] || exit_status=1
 
-device_files=${TEST_SITE}/devices/*
+device_files=$(ls -d ${TEST_SITE}/devices/*)
 
 # Test site_metadata settings for system.location.site.
 site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
@@ -32,11 +33,11 @@ function check_norm {
             if [[ "${supplied_site}" == "null" ]]; then
                 jq -e ".system.location.site == \"${site}\"" \
                    ${name}/out/metadata_norm.json > /dev/null \
-                    && echo a$name
+                    && echo $name
             else
                 jq -e ".system.location.site == \"${supplied_site}\"" \
                    ${name}/out/metadata_norm.json > /dev/null \
-                    && echo b$name
+                    && echo $name
             fi
         fi
     done
@@ -44,13 +45,19 @@ function check_norm {
 }
 
 sm_devices=$(check_norm)
-echo Found ${sm_devices} with correct site_metadata values.
-[ "${sm_devices}" == "${device_files}" ] || exit_status=1
+echo Devices with correct site_metadata: ${sm_devices}
+[ "${sm_devices}" == "${device_files}" ] || exit_status=2
 
-#mv ${TEST_SITE}/site_metadata.json ${TEST_SITE}/_site_metadata.json
+mv ${TEST_SITE}/site_metadata.json ${TEST_SITE}/_site_metadata.json
 
-#bin/registrar ${TEST_SITE}
+bin/registrar ${TEST_SITE}
 
-echo Done with registrar test, exit code $exit_status
+base_devices=sites/udmi_site_model/devices/AHU-1
+sm_devices=$(check_norm)
+echo Devices with correct no-defaults site_metadata: ${sm_devices}
+[ "${sm_devices}" == "${base_devices}" ] || exit_status=3
+
+mv ${TEST_SITE}/_site_metadata.json ${TEST_SITE}/site_metadata.json
+
+echo Done with registrar tests, exit code $exit_status
 exit $exit_status
-
