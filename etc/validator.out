@@ -33,5 +33,12 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
   "pointset" : {
     "missing" : [ ],
     "extra" : [ ]
-  }
+  },
+  "errors" : [ {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "category" : "validation.error.simple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
 }
