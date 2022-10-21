@@ -130,9 +130,7 @@ jobs:
       - name: output logs
         if: ${{ always() }}
         run: |
-          cd sites/udmi_site_model/out
-          echo Output from `pwd`:
-          more `find . -type f`
+          cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: validator logs
         if: ${{ always() }}
         run: |
