@@ -12,35 +12,44 @@ bin/registrar ${TEST_SITE}
 cat "${TEST_SITE}/registration_summary.json"
 echo
 
-devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
+clean_devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
 
 exit_status=0
 
-echo Found ${devices} clean devices.
-[ "${devices}" == 4 ] || exit_status=1
+echo Found ${clean_devices} clean devices.
+[ "${clean_devices}" == 4 ] || exit_status=1
+
+device_files=${TEST_SITE}/devices/*
 
 # Test site_metadata settings for system.location.site.
 site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
 
-sm_devices=0
-for name in ${TEST_SITE}/devices/* ; do
-    if [[ -f ${name}/out/metadata_norm.json ]]; then
-        supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
-        # If no site value is supplied in per-device metadata, expect default.
-        if [[ "${supplied_site}" == "null" ]]; then
-            jq -e ".system.location.site == \"${site}\"" \
-               ${name}/out/metadata_norm.json > /dev/null \
-                && sm_devices=$[sm_devices+1]
-        else
-            jq -e ".system.location.site == \"${supplied_site}\"" \
-               ${name}/out/metadata_norm.json > /dev/null \
-                && sm_devices=$[sm_devices+1]
+function check_norm {
+    for name in ${device_files}; do
+        if [[ -f ${name}/out/metadata_norm.json ]]; then
+            supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
+            # If no site value is supplied in per-device metadata, expect default.
+            if [[ "${supplied_site}" == "null" ]]; then
+                jq -e ".system.location.site == \"${site}\"" \
+                   ${name}/out/metadata_norm.json > /dev/null \
+                    && echo a$name
+            else
+                jq -e ".system.location.site == \"${supplied_site}\"" \
+                   ${name}/out/metadata_norm.json > /dev/null \
+                    && echo b$name
+            fi
         fi
-    fi
-done
+    done
+    return 0
+}
 
-echo Found ${sm_devices} devices with correct site_metadata values.
-[ "${sm_devices}" == "${devices}" ] || exit_status=1
+sm_devices=$(check_norm)
+echo Found ${sm_devices} with correct site_metadata values.
+[ "${sm_devices}" == "${device_files}" ] || exit_status=1
+
+#mv ${TEST_SITE}/site_metadata.json ${TEST_SITE}/_site_metadata.json
+
+#bin/registrar ${TEST_SITE}
 
 echo Done with registrar test, exit code $exit_status
 exit $exit_status
