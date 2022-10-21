@@ -40,6 +40,10 @@ const QUERY_SITE = gql`
       extraDevicesCount
       lastValidated
       percentValidated
+      deviceErrors {
+        timestamp
+        message
+      }
       totalDeviceErrorsCount
       validation
     }

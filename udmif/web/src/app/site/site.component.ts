@@ -2,7 +2,8 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NavigationService } from '../navigation/navigation.service';
-import { Site, SiteModel } from './site';
+import { Site, SiteDetail } from './site';
+import { SiteConstants } from './site.constants';
 import { SiteService } from './site.service';
 
 @Component({
@@ -11,23 +12,15 @@ import { SiteService } from './site.service';
 })
 export class SiteComponent implements OnInit, OnDestroy {
   siteSubscription!: Subscription;
-  fields: (keyof SiteModel)[] = [
-    'totalDevicesCount',
-    'correctDevicesCount',
-    'missingDevicesCount',
-    'errorDevicesCount',
-    'extraDevicesCount',
-    'lastValidated',
-    'percentValidated',
-    'totalDeviceErrorsCount',
-  ];
+  fields: SiteDetail[] = this.siteConstants.siteDetails;
   site?: Site;
   loading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
     private siteService: SiteService,
-    private navigationService: NavigationService
+    private navigationService: NavigationService,
+    private siteConstants: SiteConstants
   ) {}
 
   ngOnInit(): void {

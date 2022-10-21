@@ -2,10 +2,18 @@
 
 <mat-card class="summary">
   <div class="item" *ngFor="let field of fields">
-    <span class="mat-body-2">{{ field.replace('Count', '') | capitalize }}</span>
-    <p *ngIf="field === 'lastValidated'">{{ site?.lastValidated | date: 'MM/dd/yy h:mm a' }}</p>
-    <p *ngIf="field === 'percentValidated'">{{ site?.percentValidated | percent: '1.0-2' }}</p>
-    <p *ngIf="field !== 'lastValidated' && field !== 'percentValidated'">{{ site?.[field] }}</p>
+    <span class="mat-body-2">{{ field.label }}</span>
+    <ng-container [ngSwitch]="field.value">
+      <ng-container *ngSwitchCase="'lastValidated'">
+        <p>{{ site?.lastValidated | date: 'MM/dd/yy h:mm a' }}</p>
+      </ng-container>
+      <ng-container *ngSwitchCase="'percentValidated'">
+        <p>{{ site?.percentValidated | percent: '1.0-2' }}</p>
+      </ng-container>
+      <ng-container *ngSwitchDefault>
+        <p>{{ site?.[field.value] }}</p>
+      </ng-container>
+    </ng-container>
   </div>
 </mat-card>
 

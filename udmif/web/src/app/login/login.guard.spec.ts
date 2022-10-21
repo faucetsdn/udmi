@@ -4,6 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
 import { LoginGuard } from './login.guard';
 import { AuthService } from '../auth/auth.service';
+import { DevicesComponent } from '../devices/devices.component';
 
 describe('LoginGuard', () => {
   let guard: LoginGuard;
@@ -16,7 +17,7 @@ describe('LoginGuard', () => {
     mockAuthService.isLoggedIn$ = new BehaviorSubject<boolean | null>(null);
 
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule],
+      imports: [RouterTestingModule.withRoutes([{ path: 'devices', component: DevicesComponent }])],
       providers: [{ provide: AuthService, useValue: mockAuthService }],
     });
     guard = TestBed.inject(LoginGuard);

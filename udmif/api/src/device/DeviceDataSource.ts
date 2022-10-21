@@ -7,8 +7,8 @@ import {
   DistinctSearchOptions,
   ValidatedSearchOptions,
   SearchOptions,
+  DeviceError,
 } from '../common/model';
-import { sum } from 'lodash';
 
 export class DeviceDataSource extends GraphQLDataSource {
   constructor(private deviceDAO: DAO<Device>) {
@@ -70,11 +70,11 @@ export class DeviceDataSource extends GraphQLDataSource {
     });
   }
 
-  async getDeviceErrorsCountBySite(siteName: string): Promise<number> {
+  async getDeviceErrorsBySite(siteName: string): Promise<DeviceError[]> {
     const { devices } = await this.getDevicesBySite(siteName);
 
-    return devices.reduce((n: number, device: Device) => {
-      return sum([n, device.validation?.errors.length]);
-    }, 0);
+    return devices.reduce((errors: DeviceError[], device: Device) => {
+      return errors.concat(device.validation?.errors ?? []);
+    }, []);
   }
 }

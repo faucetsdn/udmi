@@ -12,6 +12,10 @@ export const GET_SITES = gql`
         extraDevicesCount
         lastValidated
         percentValidated
+        deviceErrors {
+          message
+          timestamp
+        }
         totalDeviceErrorsCount
       }
       totalCount
