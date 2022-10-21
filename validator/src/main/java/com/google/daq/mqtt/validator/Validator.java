@@ -532,9 +532,8 @@ public class Validator {
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
-      List<Entry> errors = reportingDevice.getErrors(validationStart);
-      event.status = ReportingDevice.getSummaryEntry(errors);
-      event.errors = errors != null && errors.size() > 1 ? errors : null;
+      event.errors = reportingDevice.getErrors(validationStart);
+      event.status = ReportingDevice.getSummaryEntry(event.errors);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
