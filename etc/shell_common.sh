@@ -5,12 +5,12 @@
 
 
 #
-# Walk up the directory tree looking for the .udmi configuration directory.
+# Walk up the directory tree looking for the cloud_iot_core.json site model marker.
 # If not found, just return empty.
 #
 function find_site_model_root {
     while [ $PWD != "/" ]; do
-        test -e .udmi && { pwd; break; }
+        test -f cloud_iot_core.json && { pwd; break; }
         cd ..
     done
 }

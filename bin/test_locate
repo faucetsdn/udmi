@@ -1,21 +1,43 @@
 #!/bin/bash -e
 
 failures=$(mktemp)
+working=$(mktemp)
 
 function test_locate {
-    expected=$(echo profile: $3 site_model: $4)
-    located=$(echo $(udmi locate $2))
-    if [[ $located == $expected ]]; then
+    udmi locate $2 > $working
+    profile=$(echo $(fgrep profile: $working | cut -d: -f2))
+    site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
+    if [[ $profile == $3 && $site_model == $4 ]]; then
         result=PASS
     else
         result=FAIL
-        echo $1: param $2, expected $expected, result $located >> $failures
+        echo $1 param: $2, profile: $profile, expected: $3, site_model: $site_model, expected: $4 >> $failures
     fi
-    echo $1 $result
+    echo $result $1
 }
 
-test_locate default "" "" ""
-test_locate user_foo foo .udmi/profile_foo.json sites/udmi_site_model
+cd $HOME
+test_locate user_profile foo .udmi/profile_foo.json sites/udmi_site_model
+test_locate user_missing bar "" ""
+
+rm -f .udmi/default_profile.json
+test_locate default_missing "" "" ""
+
+echo {} > .udmi/default_profile.json
+test_locate default_empty "" .udmi/default_profile.json ""
+
+cat <<EOF > .udmi/default_profile.json
+{
+  "site_model": "sites/udmi_site_model"
+}  
+EOF
+
+test_locate default_site "" .udmi/default_profile.json sites/udmi_site_model
+
+cd sites/udmi_site_model
+test_locate site_default "" sites/udmi_site_model/.udmi/default_profile.json sites/udmi_site_model
+test_locate site_profile foo sites/udmi_site_model/.udmi/profile_foo.json sites/udmi_site_model
+test_locate site_missing bar "" ""
 
 echo
 

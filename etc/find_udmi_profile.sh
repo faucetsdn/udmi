@@ -31,10 +31,14 @@ if [[ -z $1 || $1 =~ ^- ]]; then
     # No argument specified
     site_model=$(find_site_model_root)
     if [[ -d ${site_model}/.udmi ]]; then
+        echo Using working site model $site_model
         udmi_profile=${site_model}/.udmi/default_profile.json
+        echo Using site model default udmi profile $udmi_profile
     else
         udmi_profile=~/.udmi/default_profile.json
+        echo Using user default udmi profile $udmi_profile
         site_model=$(find_or_extract $udmi_profile)
+        echo Extracted site model $site_model
     fi
 elif [[ $1 =~ .json$ ]]; then
     # Explicit .json file
@@ -60,12 +64,16 @@ else
     fi
 fi
 
-if [[ ! -f ${udmi_profile} || ! -f ${site_model}/cloud_iot_config.json ]]; then
+if [[ ! -f ${udmi_profile} ]]; then
+    echo Invalid/empty udmi_profile ${udmi_profile}
     udmi_profile=
-    site_model=
 else
     udmi_profile=$(realpath --relative-base $HOME ${udmi_profile})
-    site_model=$(realpath --relative-base $HOME ${site_model})
 fi
 
-    
+if [[ ! -f ${site_model}/cloud_iot_config.json ]]; then
+    echo Invalid/empty site_model ${site_model}
+    site_model=
+else
+    site_model=$(realpath --relative-base $HOME ${site_model})
+fi
