@@ -23,6 +23,8 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
+      - name: udmi locate
+        run: bin/test_locate
       - name: code checks
         if: ${{ always() }}
         run: |

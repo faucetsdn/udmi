@@ -1,2 +1,29 @@
 #!/bin/bash -e
 
+failures=$(mktemp)
+
+function test_locate {
+    expected=$(echo profile: $3 site_model: $4)
+    located=$(echo $(udmi locate $2))
+    if [[ $located == $expected ]]; then
+        result=PASS
+    else
+        result=FAIL
+        echo $1: param $2, expected $expected, result $located >> $failures
+    fi
+    echo $1 $result
+}
+
+test_locate default "" "" ""
+test_locate user_foo foo .udmi/profile_foo.json sites/udmi_site_model
+
+echo
+
+if [[ -n $(cat $failures) ]]; then
+    echo Test failures:
+    cat $failures
+    false
+fi
+
+echo Done with locate tests.
+rm -f ${failures}

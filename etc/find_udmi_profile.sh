@@ -26,21 +26,21 @@ function find_or_extract {
     fi
 }
 
-profile=
+udmi_profile=
 if [[ -z $1 || $1 =~ ^- ]]; then
     # No argument specified
     site_model=$(find_site_model_root)
     if [[ -d ${site_model}/.udmi ]]; then
-        profile=${site_model}/.udmi/default_profile.json
+        udmi_profile=${site_model}/.udmi/default_profile.json
     else
-        profile=~/.udmi/default_profile.json
-        site_model=$(find_or_extract $profile)
+        udmi_profile=~/.udmi/default_profile.json
+        site_model=$(find_or_extract $udmi_profile)
     fi
 elif [[ $1 =~ .json$ ]]; then
     # Explicit .json file
-    profile=$1
+    udmi_profile=$1
     shift
-    site_model=$(find_or_extract $profile)
+    site_model=$(find_or_extract $udmi_profile)
 else
     # Semantic profile (no .json suffix)
     profile_name=$1
@@ -50,18 +50,22 @@ else
         site_model=
     fi
     if [[ -n ${site_model} ]]; then
-        profile=${site_model}/.udmi/profile_${profile_name}.json
+        udmi_profile=${site_model}/.udmi/profile_${profile_name}.json
     else
-        profile=~/.udmi/profile_${profile_name}.json
-        site_model=$(find_or_extract $profile)
+        udmi_profile=~/.udmi/profile_${profile_name}.json
+        site_model=$(find_or_extract $udmi_profile)
     fi
     if [[ -z ${site_model} ]]; then
-        profile=
+        udmi_profile=
     fi
 fi
 
-if [[ ! -f ${profile} || ! -f ${site_model}/cloud_iot_config.json ]]; then
-    profile=
+if [[ ! -f ${udmi_profile} || ! -f ${site_model}/cloud_iot_config.json ]]; then
+    udmi_profile=
     site_model=
+else
+    udmi_profile=$(realpath --relative-base $HOME ${udmi_profile})
+    site_model=$(realpath --relative-base $HOME ${site_model})
 fi
 
+    

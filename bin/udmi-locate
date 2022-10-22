@@ -4,7 +4,8 @@ UDMI_ROOT=$(realpath $(dirname $(readlink -f $0))/..)
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-source $UDMI_ROOT/etc/find_site_model_profile.sh
+source $UDMI_ROOT/etc/find_udmi_profile.sh
 
-echo profile: ${profile}
+echo profile: ${udmi_profile}
 echo site_model: ${site_model}
+
