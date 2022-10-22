@@ -1,4 +1,4 @@
-import { Device } from '../device/device';
+import { Device, DeviceModel } from '../device/device';
 
 export interface SearchOptions {
   batchSize?: number;
@@ -68,4 +68,10 @@ export interface DeviceSectionsQueryVariables extends CommonSearchQueryVariables
 
 export type DeviceDistinctQueryResult = {
   values: string[];
+};
+
+export type DeviceColumn = {
+  value: keyof DeviceModel;
+  label: string;
+  isSortable: boolean;
 };

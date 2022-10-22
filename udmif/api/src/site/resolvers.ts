@@ -47,8 +47,11 @@ export const resolvers = {
         ]) / ((await deviceDS.getDevicesBySite(site.name)).totalFilteredCount || 1)
       );
     },
-    totalDeviceErrorsCount: (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
-      return deviceDS.getDeviceErrorsCountBySite(site.name);
+    deviceErrors: (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      return deviceDS.getDeviceErrorsBySite(site.name);
+    },
+    totalDeviceErrorsCount: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+      return (await deviceDS.getDeviceErrorsBySite(site.name)).length;
     },
     validation: (site: Site) => {
       return JSON.stringify(site.validation);
