@@ -28,3 +28,8 @@ export type DeviceQueryResponse = {
 export type DeviceQueryVariables = {
   id: string;
 };
+
+export type DeviceDetail = {
+  value: keyof DeviceModel;
+  label: string;
+};

@@ -5,6 +5,7 @@ Object {
   "data": Object {
     "site": Object {
       "correctDevicesCount": 1,
+      "deviceErrors": Array [],
       "errorDevicesCount": 1,
       "extraDevicesCount": 0,
       "lastValidated": "2022-07-16T18:27:19Z",
