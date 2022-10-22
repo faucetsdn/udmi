@@ -1,3 +1,5 @@
+import { DeviceError } from '../device-errors/device-errors';
+
 interface SiteModel {
   name: string;
   totalDevicesCount: number;
@@ -7,6 +9,7 @@ interface SiteModel {
   extraDevicesCount: number;
   lastValidated: string;
   percentValidated: number;
+  deviceErrors: DeviceError[];
   totalDeviceErrorsCount: number;
   validation: string;
 }
@@ -19,4 +22,9 @@ export type SiteQueryResponse = {
 
 export type SiteQueryVariables = {
   name: string;
+};
+
+export type SiteDetail = {
+  value: keyof SiteModel;
+  label: string;
 };

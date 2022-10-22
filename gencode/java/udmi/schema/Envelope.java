@@ -37,11 +37,6 @@ public class Envelope {
      */
     @JsonProperty("deviceId")
     public String deviceId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("deviceNumId")
     public String deviceNumId;
     /**
@@ -106,6 +101,7 @@ public class Envelope {
         SWARM("swarm"),
         LOCALNET("localnet"),
         POINTSET("pointset"),
+        VALIDATION("validation"),
         BLOBSET("blobset");
         private final String value;
         private final static Map<String, Envelope.SubFolder> CONSTANTS = new HashMap<String, Envelope.SubFolder>();

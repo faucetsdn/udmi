@@ -212,11 +212,7 @@ class LocalDevice {
       this.generation = generation;
       this.siteDir = siteDir;
       this.validateMetadata = validateMetadata;
-      if (siteMetadata != null) {
-        this.siteMetadata = JsonUtil.asMap(siteMetadata);
-      } else {
-        this.siteMetadata = null;
-      }
+      this.siteMetadata = siteMetadata == null ? null : JsonUtil.asMap(siteMetadata);
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
       deviceDir = new File(devicesDir, deviceId);
       outDir = new File(deviceDir, OUT_DIR);
@@ -317,7 +313,7 @@ class LocalDevice {
     try {
       String intermediary = JsonUtil.stringify(instance);
       if (siteMetadata == null) {
-        return JsonUtil.convertTo(Metadata.class, intermediary);
+        return JsonUtil.fromString(Metadata.class, intermediary);
       } else {
         Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
         GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));

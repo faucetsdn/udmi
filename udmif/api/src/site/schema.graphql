@@ -7,6 +7,18 @@ type SitesResponse {
   totalFilteredCount: Int!
 }
 
+type DeviceError {
+  # A human-readable one-line description of the entry
+  message: String!
+  # An optional extensive entry which can include more detail, e.g. a complete program stack-trace
+  detail: String
+  category: String!
+  # Timestamp the condition was triggered, or most recently updated
+  timestamp: String!
+  # The status level should conform to the numerical Stackdriver LogEntry levels. The DEFAULT value of 0 is not allowed (lowest value is 100, maximum 800).
+  level: Int!
+}
+
 type Site {
   # Name of the site
   name: String!
@@ -24,6 +36,8 @@ type Site {
   lastValidated: String
   # Percent of devices validated i.e. 0.97
   percentValidated: Float!
+  # Total number of errors across all devices
+  deviceErrors: [DeviceError!]!
   # Total number of errors across all devices
   totalDeviceErrorsCount: Int!
   # JSON validation message

@@ -2,8 +2,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NavigationService } from '../navigation/navigation.service';
-import { Device, DeviceModel } from './device';
+import { Device, DeviceDetail } from './device';
 import { DeviceService } from './device.service';
+import { DeviceConstants } from './device.constants';
 
 @Component({
   templateUrl: './device.component.html',
@@ -11,23 +12,15 @@ import { DeviceService } from './device.service';
 })
 export class DeviceComponent implements OnInit, OnDestroy {
   deviceSubscription!: Subscription;
-  fields: (keyof DeviceModel)[] = [
-    'make',
-    'model',
-    'site',
-    'section',
-    'operational',
-    'serialNumber',
-    'firmware',
-    'lastPayload',
-  ];
+  fields: DeviceDetail[] = this.deviceConstants.deviceDetails;
   device?: Device;
   loading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
     private deviceService: DeviceService,
-    private navigationService: NavigationService
+    private navigationService: NavigationService,
+    private deviceConstants: DeviceConstants
   ) {}
 
   ngOnInit(): void {
