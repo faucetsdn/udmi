@@ -1,5 +1,5 @@
 {
-  "version": "1.3.14",
+  "version": "1.4.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
     "hardware": {
@@ -11,7 +11,12 @@
     },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
-    "operational": true,
+    "operation": {
+      "operational": true,
+      "last_start": "2018-08-25T21:49:29.364Z",
+      "mode": "active",
+      "restart_count": 121
+    }
     "status": {
       "message": "Tickity Boo",
       "category": "system.config.apply",
