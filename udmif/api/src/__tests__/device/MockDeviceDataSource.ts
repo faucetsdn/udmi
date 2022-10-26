@@ -1,5 +1,5 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { sum } from 'lodash';
+import { DeviceError } from '../../common/model';
 import { Device, DevicesResponse, Point } from '../../device/model';
 import { createDevices } from './data';
 
@@ -58,11 +58,11 @@ export default class MockDeviceDataSource extends GraphQLDataSource<object> {
     };
   }
 
-  async getDeviceErrorsCountBySite(siteName: string): Promise<number> {
+  async getDeviceErrorsBySite(siteName: string): Promise<DeviceError[]> {
     const { devices } = await this.getDevicesBySite(siteName);
 
-    return devices.reduce((n: number, device: Device) => {
-      return sum([n, device.validation?.errors.length]);
-    }, 0);
+    return devices.reduce((errors: DeviceError[], device: Device) => {
+      return errors.concat(device.validation?.errors ?? []);
+    }, []);
   }
 }

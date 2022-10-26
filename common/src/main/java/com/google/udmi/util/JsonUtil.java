@@ -68,7 +68,7 @@ public abstract class JsonUtil {
     }
   }
 
-  static <T> T convertTo(Class<T> targetClass, String messageString) {
+  public static <T> T fromString(Class<T> targetClass, String messageString) {
     try {
       return OBJECT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
     } catch (Exception e) {
@@ -85,7 +85,7 @@ public abstract class JsonUtil {
    * @return converted object
    */
   public static <T> T convertTo(Class<T> targetClass, Object message) {
-    return message == null ? null : convertTo(targetClass, stringify(message));
+    return message == null ? null : fromString(targetClass, stringify(message));
   }
 
   /**
@@ -162,7 +162,7 @@ public abstract class JsonUtil {
    */
   public static Map<String, Object> asMap(String input) {
     @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, input);
+    Map<String, Object> map = fromString(TreeMap.class, input);
     return map;
   }
 

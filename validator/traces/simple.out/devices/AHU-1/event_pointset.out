@@ -12,5 +12,11 @@
   "pointset" : {
     "missing" : [ "filter_differential_pressure_setpoint" ],
     "extra" : [ ]
-  }
+  },
+  "errors" : [ {
+    "message" : "Device has missing points: filter_differential_pressure_setpoint",
+    "category" : "validation.error.simple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
 }

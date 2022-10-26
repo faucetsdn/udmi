@@ -131,13 +131,9 @@ jobs:
               sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
               validator/sequences/%/sequence.md
       - name: output logs
-        env:
-          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        if: ${{ always() }}
         run: |
-          cd sites/udmi_site_model/out
-          echo Output from `pwd`
-          more `find out -type f`
+          cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: validator logs
         if: ${{ always() }}
         run: |
@@ -145,5 +141,5 @@ jobs:
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          cat pubber.out || true
+          more pubber.out* out/pubber.out* || true
           more pubber/out/*/*.json

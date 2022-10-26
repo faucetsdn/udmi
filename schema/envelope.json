@@ -35,6 +35,7 @@
         "swarm",
         "localnet",
         "pointset",
+        "validation",
         "blobset"
       ]
     },
@@ -51,7 +52,6 @@
   "required": [
     "projectId",
     "deviceRegistryId",
-    "deviceNumId",
     "deviceId",
     "subFolder"
   ]

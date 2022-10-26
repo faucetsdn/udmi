@@ -6,7 +6,7 @@ cache:
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
     ref: main
-    file: node.yml
+    file: node16.yml
 
 stages:
   - build

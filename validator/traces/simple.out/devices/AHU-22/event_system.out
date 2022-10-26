@@ -9,5 +9,12 @@
     "category" : "validation.error.simple",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
-  }
+  },
+  "errors" : [ {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; instance entry category not recognized",
+    "category" : "validation.error.simple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
 }
