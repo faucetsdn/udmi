@@ -17,23 +17,23 @@
 UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
 SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
+ERROR_MARKER=.upversion_error
 
-# Updates existing $udmi_version in a JSON file. Called by 
-# update_schema_version
+# Updates existing $udmi_version in a JSON file. 
 # Usage: update_existing_schema_version FILE_TO_UPDATE NEW_VERSION
 function update_existing_schema_version(){
     file=$1
     version=$2
-    gsed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
+    sed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
 }
 
 # Updates an existing $udmi_version, or adds if missing
-# Usage: update_schema_version FILE_TO_UPDATE NEW_VERSIO
+# Usage: update_schema_version FILE_TO_UPDATE NEW_VERSION
 function update_schema_version(){
     file=$1
     version=$2
     if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
-        gsed -i  "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+        sed -i  "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
     else
         update_existing_schema_version $file $version
     fi 
@@ -44,8 +44,8 @@ function update_schema_version(){
 function update_java_file(){
     file=$1
     version=$2
-    [[ $(ggrep -c "UDMI_VERSION\s*=\s*\"" $file) != 1 ]] && return 1
-    gsed -i -e "s/UDMI_VERSION\s*=\s*\"[0-9.]*\"/UDMI_VERSION = \"$version\"/" $file
+    [[ $(grep -c "UDMI_VERSION\s*=\s*\"" $file) != 1 ]] && return 1
+    sed -i -e "s/UDMI_VERSION\s*=\s*\"[0-9.]*\"/UDMI_VERSION = \"$version\"/" $file
 }
 
 if [[ "$#" != 1 ]]; then
@@ -55,45 +55,48 @@ fi
 NEW_VERSION=$1
 shift 1
 
+rm .upversion_error
+
 if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo ERROR Invalid version: $NEW_VERSION
-    # exit 1
+    exit 1
 fi
 
 bin/check_version
 if [[ -n $(git tag -l $NEW_VERSION) ]]; then
     echo ERROR New version $NEW_VERSION already exists in upstream repo.
-    # exit 1
+    touch $ERROR_MARKER
 fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    # exit 1
+    touch $ERROR_MARKER
 fi
 
 # Check test files exist in the upversion list  
 for test_file in tests/*.tests/*.json; do
-    if [[ $(ggrep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
+    if [[ $(grep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
         echo $test_file
         err_upversion_list=1
     fi 
 done
-
 if [[ -n $err_upversion_list ]]; then
     echo ERROR .. above files not found in upversion list or listed more than once
-    # exit 1
+    touch $ERROR_MARKER
 fi
 
 for schema_file in schema/*.json; do
-    if (( $(ggrep -c "\"\$udmi_version\"" $schema_file) > 1 )); then
+    if (( $(grep -c "\"\$udmi_version\"" $schema_file) > 1 )); then
         echo $schema_file
         err_schema_version=1
     fi 
 done
 if [[ -n $err_schema_version ]]; then
     echo ERROR .. above files have more than one \$udmi_version
-    exit 1
+    touch $ERROR_MARKER
 fi
+
+[[ -f $ERROR_MARKER ]] && exit 1
 
 # Check files in upversion list still exist
 while read action file comment; do
@@ -104,7 +107,6 @@ while read action file comment; do
 done <$UPVERSION_LIST
 if [[ -n $err_stale_file ]]; then
     echo ERROR .. above files etc/upversion.txt no longer exist
-    exit 1
 fi
 
 # Check files have exactly 1 matched version fields to avoid unexpected 
@@ -114,27 +116,25 @@ while read action file comment; do
         continue
     fi
     
-    if [[ $(ggrep -E -c $TESTS_REGEX $file) != 1 ]]; then
+    if [[ $(grep -E -c $TESTS_REGEX $file) != 1 ]]; then
         echo $file
         err_one_version=1
     fi 
 done <$UPVERSION_LIST
 if [[ -n $err_one_version ]]; then
     echo ERROR above files do not have exactly one version field
-    exit 1
 fi
 
 echo -n Updating files ..
 
-echo "here"
-# NOTE using gsed because jq reformats  text 
+# NOTE using sed because jq reformats text 
 for schema_file in schema/*.json; do
     update_schema_version $schema_file $NEW_VERSION
 done
 
-# Update tests
-cat $UPVERSION_LIST | ggrep "^y" | awk '{print $2}' \
-    | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+# Update tests using sed because jq does not handle files with comments
+cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
+    | xargs sed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 
 update_existing_schema_version etc/category.json $NEW_VERSION
 

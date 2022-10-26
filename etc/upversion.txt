@@ -27,9 +27,9 @@ n tests/envelope.tests/example.json
 n tests/envelope.tests/gateway.json
 n tests/envelope.tests/example2.json
 n tests/envelope.tests/errors1.json
-n tests/state.tests/makemodel_upgrade.json #tests message upgrade from v 1
+n tests/state.tests/makemodel_upgrade.json # tests message upgrade from v 1
 n tests/config.tests/errors.json
-n tests/state.tests/errors.json #test complete message upgrade pathway
+n tests/state.tests/errors.json # test complete message upgrade pathway
 y tests/state_validation.tests/report.json
 y tests/event_discovery.tests/from_bacnet.json
 y tests/event_discovery.tests/scan_error.json
@@ -64,7 +64,7 @@ y tests/state.tests/discovery.json
 y tests/state.tests/example.json
 y tests/state.tests/endpoint_reconfiguration_failed.json
 y tests/state.tests/endpoint_reconfiguration.json
-y tests/state.tests/makemodel_error.json #current version but with makemodel, validation error
+y tests/state.tests/makemodel_error.json # current version but with makemodel, validation error
 y tests/state.tests/blobset_updating.json
 y tests/state.tests/blobset_received.json
 y tests/state.tests/fcu.json
