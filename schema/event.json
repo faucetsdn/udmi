@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Event",
   "description": "Container object for all event schemas, not directly used.",
   "type": "object",

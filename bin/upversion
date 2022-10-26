@@ -134,11 +134,9 @@ for schema_file in schema/*.json; do
 done
 
 # Update tests
-echo "this"
 cat $UPVERSION_LIST | ggrep "^y" | awk '{print $2}' \
     | xargs gsed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
 
-echo "no this"
 update_existing_schema_version etc/category.json $NEW_VERSION
 
 bin/gencode_docs_examples
