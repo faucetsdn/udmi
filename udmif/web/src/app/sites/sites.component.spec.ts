@@ -27,8 +27,8 @@ describe('SitesComponent', () => {
       extraDevicesCount: 0,
       lastValidated: '2022-04-24T02:54:51Z',
       percentValidated: 0,
+      deviceErrors: [],
       totalDeviceErrorsCount: 0,
-      validation: '',
     },
   ];
 
@@ -140,5 +140,47 @@ describe('SitesComponent', () => {
         filter,
       },
     });
+  });
+
+  it('should group together common device error messages under a site', () => {
+    const filters: SearchFilterItem[] = [
+      {
+        field: 'name',
+        operator: '=',
+        value: 'AHU1',
+      },
+    ];
+
+    expect(
+      component.getSiteErrorSummaryItems([
+        {
+          timestamp: '2022-08-03T17:28:49Z',
+          message: 'While converting to json node: 2 schema violations found',
+          category: 'validation.error.simple',
+          level: 500,
+        },
+        {
+          timestamp: '2022-08-04T10:09:49Z',
+          message: 'Schema violations found',
+          category: 'validation.error.example',
+          level: 200,
+        },
+        {
+          timestamp: '2022-08-25T07:23:49Z',
+          message: 'While converting to json node: 2 schema violations found',
+          category: 'validation.error.simple',
+          level: 500,
+        },
+      ])
+    ).toEqual([
+      {
+        count: 2,
+        message: 'While converting to json node: 2 schema violations found',
+      },
+      {
+        count: 1,
+        message: 'Schema violations found',
+      },
+    ]);
   });
 });

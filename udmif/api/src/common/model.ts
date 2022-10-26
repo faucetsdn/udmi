@@ -43,3 +43,11 @@ export interface Filter {
   operator: string;
   value: string;
 }
+
+export interface DeviceError {
+  message: string;
+  detail?: string;
+  category: string;
+  timestamp: string;
+  level: number;
+}
