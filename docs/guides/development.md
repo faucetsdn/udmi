@@ -34,7 +34,7 @@ A Github secret must also configured to point to the GCP project
 
 They key steps to setup the dedicated project are as follows:
 1.  Setup up a GCP Project and IoT Core Registry. The 
-    [cloud setup](../cloud/gcp/cloud_setup.md) and [dashboard setup](../cloud/gcp/dashboard.md) documents 
+    [cloud setup](../cloud/gcp/cloud_setup.md) and [dashboard setup](../cloud/gcp/udms.md) documents 
     give guidance on this. If GCP Cloud SDK and Firebase CLI are already
     installed, re-authentication may be required. The registry name and cloud
     region are as follows:

@@ -1,27 +1,17 @@
 {
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "functions": {
-      "port": 5001
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "hosting": {
-      "port": 5000
-    },
     "pubsub": {
       "port": 8085
-    },
-    "ui": {
-      "enabled": true,
-      "port": 3000
     }
   },
   "hosting": {
-    "public": "dist/udms",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -33,15 +23,5 @@
         "destination": "/index.html"
       }
     ]
-  },
-  "functions": {
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run lint",
-      "npm --prefix \"$RESOURCE_DIR\" run build"
-    ],
-    "source": "functions"
-  },
-  "firestore": {
-    "rules": "firestore.rules"
   }
 }

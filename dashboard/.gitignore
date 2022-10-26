@@ -1,5 +1,0 @@
-venv/
-
-/*.log
-.attributes.json
-functions/version.js
