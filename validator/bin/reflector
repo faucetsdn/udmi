@@ -16,7 +16,7 @@ cd $ROOT
 
 echo Building validator...
 validator/bin/build
-c
+
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.validator.Reflector
 
