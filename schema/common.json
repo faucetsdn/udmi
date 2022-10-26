@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.1",
+  "$udmi_version": "1.4.0",
   "title": "Common",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {

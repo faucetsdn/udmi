@@ -185,7 +185,7 @@ class LocalDevice {
           ES_CERT_TYPE, ES_CERT_FILE);
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
-  private static final String UDMI_VERSION = "1.4.1";
+  private static final String UDMI_VERSION = "1.4.0";
   private final String deviceId;
   private final Map<String, JsonSchema> schemas;
   private final File siteDir;

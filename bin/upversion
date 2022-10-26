@@ -32,7 +32,6 @@ function update_existing_schema_version(){
 function update_schema_version(){
     file=$1
     version=$2
-    echo $file
     if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
         gsed -i  "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
     else

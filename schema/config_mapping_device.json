@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.1",
+  "$udmi_version": "1.4.0",
   "title": "Device Mapping Config",
   "description": "Configuration for [mapping](../docs/specs/mapping.md)",
   "type": "object",
