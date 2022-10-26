@@ -1,6 +1,6 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.6.6",
+  "version" : "1.4.0",
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {

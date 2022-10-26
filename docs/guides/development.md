@@ -41,10 +41,12 @@ which are preceded by a `y` in `upversion_yay.txt` will have their version upgra
 `bin/upversions` carries out several checks on files which must be cleared before an update.
 
 `bin/upversion` does not update any generated files (e.g. for CI testing). 
+
 The following files need to be update:
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out/devices`
   into `validator/traces/simple.out/devices`
-* After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory 
+* After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model before running)
+* After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory (note these files are ignored by git, but must still be comitted)
 
 
 ## Configuring Cloud CI Tests
