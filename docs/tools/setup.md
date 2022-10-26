@@ -20,7 +20,7 @@ to be installed on your development system if it's not already there.
 
 ## Cloud Prerequisites
 
-The tooling requires the he UDMS infrasutrcture to be deployed onto the target GCP project. 
+The tooling requires the he [UDMIS infrasutrcture](../cloud/gcp/udmis.md) to be deployed onto the target GCP project. 
 [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) must be installed locally and authenticated with
 [application default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default) 
 

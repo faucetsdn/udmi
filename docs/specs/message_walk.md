@@ -48,7 +48,7 @@ attention to.
 
 The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) handle the ingest traffic
 from a device. The [source code](../../dashboard/functions/) for these functions can be published
-to the cloud project by the `udms/deploy_udms_gcloud` command (see below).
+to the cloud project by the `udmis/deploy_udmis_gcloud` command (see below).
 
 * __udmi\_target__: Processes incoming device _event_ messages and writes them to the designated
 location in the Firestore database. 
