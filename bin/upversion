@@ -65,12 +65,12 @@ fi
 bin/check_version
 if [[ -n $(git tag -l $NEW_VERSION) ]]; then
     echo ERROR New version $NEW_VERSION already exists in upstream repo.
-    touch $ERROR_MARKER
+    exit 1
 fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    touch $ERROR_MARKER
+    exit 1
 fi
 
 # Check test files exist in the upversion list  
