@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Envelope",
   "description": "The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. [Message Envelope Documentation](../docs/messages/envelope.md)",
   "$section": "Messages",
