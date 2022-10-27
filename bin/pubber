@@ -26,7 +26,6 @@ $ROOT_DIR/pubber/bin/build
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-declare -A options
 for option in $*; do
     if [[ $option == *"="* ]]; then
         k=$(echo $option | cut -d'=' -f1)
