@@ -1,0 +1,9 @@
+{
+    "name": "config_to_gcs",
+    "version": "0.0.1",
+    "dependencies": {
+      "@google-cloud/pubsub": "^0.18.0",
+      "@google-cloud/iot": "2.3.4",
+      "@google-cloud/storage": "6.5.2"
+    } 
+  }

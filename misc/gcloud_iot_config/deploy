@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if (( $# < 1 )); then
+    echo $0 PROJECT_ID 
+    exit
+fi
+
+PROJECT_ID=$1
+shift 1
+
+FUNCTION_NAME=gcloud_iot_config
+ENTRY_POINT=storeConfig
+TOPIC=config_updates
+BUCKET=$PROJECT_ID-iot-configs
+
+## storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
+gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
+
+# Create pub/sub topic
+gcloud pubsub topics create $TOPIC --project=$PROJECT_ID
+
+# create logs router
+gcloud logging sinks create config_updates_logsink \
+    pubsub.googleapis.com/projects/$PROJECT_ID/topics/$TOPIC \
+    --log-filter='protoPayload.methodName="google.cloud.iot.v1.DeviceManager.ModifyCloudToDeviceConfig" AND severity=NOTICE' \
+    --project=$PROJECT_ID
+
+LOGSINK_SERVICE_ACCOUNT=$(gcloud logging sinks describe config_updates_logsink --project=$PROJECT_ID | grep writerIdentity | sed "s/writerIdentity: //")
+gcloud pubsub topics add-iam-policy-binding $TOPIC --project=$PROJECT_ID --member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'
+
+# Deploy Cloud Function
+gcloud functions deploy $FUNCTION_NAME \
+    --trigger-topic=$TOPIC\
+    --entry-point=$ENTRY_POINT \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,BUCKET=$BUCKET
