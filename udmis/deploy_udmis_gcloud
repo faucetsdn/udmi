@@ -6,7 +6,7 @@ if (( $# < 1 )); then
 fi
 
 ROOT=$(realpath $(dirname $0)/..)
-cd $ROOT/dashboard
+cd $ROOT/udms
 
 PROJECT=$1
 shift

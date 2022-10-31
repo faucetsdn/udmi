@@ -48,28 +48,12 @@ attention to.
 
 The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) handle the ingest traffic
 from a device. The [source code](../../dashboard/functions/) for these functions can be published
-to the cloud project by the `dashboard/deploy_dashboard` command (see below).
+to the cloud project by the `udmis/deploy_udmis_gcloud` command (see below).
 
 * __udmi\_target__: Processes incoming device _event_ messages and writes them to the designated
 location in the Firestore database. 
 * __udmi\_state__: Processes incoming device _state_ messages and re-writes them to the _udmi\_target_
 topic, and also shards them out by subsystem to various sub-parts of Firestore.
-
-## Firestore
-
-[Firestore](https://cloud.google.com/firestore/docs/) is used as a simple no-SQL backend database for
-tracking device data sorted by a simple _registry/device/type_ hierarchy. This is used as a backing
-data store for the dashboard, but also as a mechanism to process and handle piecemeal writes to, e.g.,
-the monolithic device-level _config_ block.
-
-## Dashboard
-
-The [UDMI front-end dashboard](..//cloud/gcp/dashboard.md) is a very simple dashboard that can be used to view and
-browse device-specific data.
-It is meant only as an example reference design and not a production-worthy system. It is hosted as a
-[Firebase](https://firebase.google.com/docs) project, that provides for authentication and hosting
-management. The [front-end code](../../dashboard/public/) can be deployed (along with the functions)
-using `dashboard/deploy_dashboard`.
 
 ## Validator
 
