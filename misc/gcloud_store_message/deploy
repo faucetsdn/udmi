@@ -1,21 +1,20 @@
 #!/bin/bash
 
-if (( $# < 4 )); then
-    echo $0 PROJECT_ID DATASET_ID LOCATION TRIGGER_TOPIC [--drop]
+if (( $# < 3 )); then
+    echo $0 PROJECT_ID LOCATION TRIGGER_TOPIC
     exit
 fi
 
 PROJECT_ID=$1
-DATASET_ID=$2
-LOCATION=$3
-TRIGGER_TOPIC=$4
-shift 4
+LOCATION=$2
+TRIGGER_TOPIC=$3
+shift 3
 
 FUNCTION_NAME=dump_raw_messages
 MESSAGES_TABLE=messages
 TELEMETRY_TABLE=points
 
-BUCKET=$PROJECT_ID-iot-messages
+BUCKET=$(PROJECT_ID)-iot-messages
 
 gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
 

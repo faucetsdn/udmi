@@ -8,6 +8,16 @@ var fs = require('fs');
 
 exports.storeMessage = async (event, context) => {
   const pubsubMessage = event.data;
+
+  if (event.attributes.subType == 'state' && event.attributes.subFolder == 'update') {
+    messageType = "state";
+  } else if (!event.attributes.hasOwnProperty('subType')) {
+    subFolder = event.attributes.subFolder || 'unknown';
+    messageType = `event_${subFolder}`;
+  } else {
+    return;
+  }
+
   const payloadStr = Buffer.from(pubsubMessage, 'base64').toString('utf8');
 
   const messageId = context.eventId; 
@@ -23,7 +33,7 @@ exports.storeMessage = async (event, context) => {
   });
 
   const options = {
-    destination: `${registryId}/${deviceId}/${publishTimestamp}_${messageId}.json`
+    destination: `${registryId}/${deviceId}/${publishTimestamp}_${messageType}_${messageId}.json`
   };
 
   bucket.upload(localFileName, options, function(err, file) {

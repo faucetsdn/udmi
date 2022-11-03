@@ -41,11 +41,12 @@ print("Listening to pubsub, please wait ...")
 while True:
     try:
         future.result(timeout=5)
-    except futures.TimeoutError:
-        continue
     except (futures.CancelledError, KeyboardInterrupt):
         future.cancel()
+        future.result()
+        break
     except Exception as ex: 
         print(f"PubSub subscription failed with error: {ex}")
         future.cancel()
+        future.result()
         break

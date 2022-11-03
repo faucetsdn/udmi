@@ -4,7 +4,7 @@ Stores all device connections and disconnection from IoT Core into BigQuery
 
 **NOTE**
 - Requires **Cloud Logging** on devices or registry be set to `INFO` or more.
-- IoT Core has a default log entries limit of 2000 per second. If a regsitry has `DEBUG` level logging, this may very quickly be exceeding, and will result in missing connection or disconnection log events
+- IoT Core has a default log entries limit of 2000 per second. If a registry has `DEBUG` level logging, this may very quickly be exceeding, and will result in missing connection or disconnection log events
 
 ## Installation
 
