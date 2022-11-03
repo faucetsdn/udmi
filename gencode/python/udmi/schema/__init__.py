@@ -27,6 +27,8 @@ from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
+from .event_mapping_entities import MappingEventEntities
+from .event_mapping_entity import MappingEventEntity
 from .event_pointset import PointsetEvent
 from .event_pointset_point import PointPointsetEvent
 from .event_system import SystemEvent

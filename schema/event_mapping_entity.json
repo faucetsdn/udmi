@@ -1,0 +1,30 @@
+{
+  "$udmi_version": "1.4.0",
+  "title": "Mapping Event Entity",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "description": "",
+      "type": "string"
+    },
+    "type": {
+      "description": "",
+      "type": "string"
+    },
+    "cloud_device_id": {
+      "description": "",
+      "type": "string"
+    },
+    "connections": {
+    },
+    "links": {
+    },
+    "translation": {
+      "$ref": "file:building_config.json"
+    },
+    "missing_telemetry_fields": {
+    }
+  }
+}
