@@ -151,11 +151,18 @@ public class BlobsetSequences extends SequenceBase {
       info("============== last_start > 0");
     }
 
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+    updateConfig();
+
+    untilTrue("deviceState.system.mode == ACTIVE", () -> {
+      return deviceState.system.mode.equals(SystemMode.ACTIVE); } );
+
     final Date last_config = deviceState.system.last_config;
     final Date last_start = deviceConfig.system.last_start;
 
     deviceConfig.system.mode = SystemMode.RESTART;
     updateConfig();
+
 
     info("================1 previous last_config = " + last_config);
     info("================1 current last_config = " + deviceState.system.last_config);
@@ -184,11 +191,15 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+    updateConfig();
 
     untilTrue("blobset entry config status is success", () -> {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
       Entry stateStatus = deviceState.system.status;
+      if (phase != null) {
+        info("phase = " + phase);
+      }
       return phase != null
           && phase.equals(BlobPhase.FINAL)
           && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
