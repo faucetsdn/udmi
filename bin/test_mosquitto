@@ -20,6 +20,7 @@ fi
 
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+serial_no=$RANDOM
 
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
@@ -28,7 +29,7 @@ registry_id=$(jq -r .registry_id $site_config)
 mkdir -p out
 PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
 USERNAME=scrumptus
-PASSWORD=$RANDOM
+PASSWORD=aardvark
 
 echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
 sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
@@ -40,9 +41,10 @@ sudo chmod 666 ${PASSWORD_FILE}
 
 sudo systemctl restart mosquitto
 systemctl status mosquitto
+killall mosquitto_sub || true
 
 echo Subscribing to mqtt/test in the background...
-mosquitto_sub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} &
+mosquitto_sub -t \# -u ${USERNAME} -P ${PASSWORD} | tee out/mosquitto.sub &
 
 sleep 1
 
@@ -57,7 +59,7 @@ cat <<EOF > /tmp/pubber_config.json
       "protocol": "mqtt",
       "transport": "tcp",
       "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
-      "hostname": "localhost",
+      "hostname": "127.0.0.1",
       "port": 1883,
       "auth_provider": {
         "basic": {
@@ -72,6 +74,17 @@ cat <<EOF > /tmp/pubber_config.json
 }
 EOF
 
+ps ax | fgrep java | fgrep /tmp/pubber_config.json | fgrep -v grep | awk '{print $1}' | xargs -r kill
+
 $ROOT_DIR/pubber/bin/build
 
-$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json
+timeout 10s $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json || true
+
+received_no=$(fgrep operational out/mosquitto.sub | jq -r .system.serial_no)
+
+if [[ $received_no != $serial_no ]]; then
+    echo Mismatched/missing serial no: $received_no != $serial_no
+    false
+fi
+
+echo Done with mosquitto pubber check.
