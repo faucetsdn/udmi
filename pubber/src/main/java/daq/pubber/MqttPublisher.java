@@ -272,14 +272,20 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    return createJwt(projectId, (byte[]) configuration.keyBytes,
+    if (configuration.endpoint.auth_provider != null &&
+        configuration.endpoint.auth_provider.jwt == null) {
+      throw new RuntimeException("Missing JWT auth provider");
+    }
+    String audience = configuration.endpoint.auth_provider == null ? projectId
+        : configuration.endpoint.auth_provider.jwt.audience;
+    return createJwt(audience, (byte[]) configuration.keyBytes,
         configuration.algorithm).toCharArray();
   }
 
   /**
    * Create a Cloud IoT JWT for the given project id, signed with the given private key.
    */
-  private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
+  private String createJwt(String audience, byte[] privateKeyBytes, String algorithm)
       throws Exception {
     DateTime now = new DateTime();
     // Create a JWT to authenticate this device. The device will be disconnected after the token
@@ -289,7 +295,7 @@ public class MqttPublisher {
         Jwts.builder()
             .setIssuedAt(now.toDate())
             .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
-            .setAudience(projectId);
+            .setAudience(audience);
 
     if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");

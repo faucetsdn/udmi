@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "hostname",
     "port",
     "client_id",
+    "auth_provider",
     "nonce"
 })
 @Generated("jsonschema2pojo")
@@ -43,7 +44,7 @@ public class EndpointConfiguration {
     @JsonProperty("hostname")
     public String hostname;
     @JsonProperty("port")
-    public String port = "8883";
+    public Integer port = 8883;
     /**
      * 
      * (Required)
@@ -51,6 +52,8 @@ public class EndpointConfiguration {
      */
     @JsonProperty("client_id")
     public String client_id;
+    @JsonProperty("auth_provider")
+    public Auth_provider auth_provider;
     @JsonProperty("nonce")
     public String nonce;
 
@@ -62,6 +65,7 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
         result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
+        result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
         return result;
     }
 
@@ -74,7 +78,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return ((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))));
+        return (((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")

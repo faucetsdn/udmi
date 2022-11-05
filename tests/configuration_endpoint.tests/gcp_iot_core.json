@@ -5,8 +5,7 @@
   "client_id": "projects/bos-snork-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1",
   "auth_provider": {
     "jwt": {
-      "username": "username",
-      "password": "password"
+      "audience": "bos-snork-dev"
     }
   }
 }
