@@ -4,3 +4,18 @@ systemctl status mosquitto
 
 journalctl -u mosquitto
 
+mkdir -p out
+
+cat <<EOF > out/endpoint.json
+{
+  "protocol": "mqtt",
+  "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
+  "hostname": "mqtt.googleapis.com",
+  "auth_provider": {
+    "basic": {
+      "username": "hello",
+      "password": "world"
+    }
+  }
+}
+EOF
