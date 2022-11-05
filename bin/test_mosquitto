@@ -1,21 +1,25 @@
 #!/bin/bash -e
 
+PASSWORD_FILE=/etc/mosquitto/udmi_test.pass
+USERNAME=scrumptus
+PASSWORD=$RANDOM
+
+echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
+sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
+
+sudo mosquitto_passwd -b -c ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+sudo chmod 666 ${PASSWORD_FILE}
+
+sudo systemctl restart mosquitto
 systemctl status mosquitto
 
-journalctl -u mosquitto
+echo Subscribing to mqtt/test in the background...
+mosquitto_sub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} &
 
-mkdir -p out
+sleep 1
 
-cat <<EOF > out/endpoint.json
-{
-  "protocol": "mqtt",
-  "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
-  "hostname": "mqtt.googleapis.com",
-  "auth_provider": {
-    "basic": {
-      "username": "hello",
-      "password": "world"
-    }
-  }
-}
-EOF
+echo Publishing test message
+mosquitto_pub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} -m "Hello MQTT"
+
+sleep 1
