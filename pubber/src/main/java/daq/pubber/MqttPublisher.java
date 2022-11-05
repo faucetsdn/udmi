@@ -252,12 +252,17 @@ public class MqttPublisher {
 
       MqttConnectOptions options = new MqttConnectOptions();
       options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      options.setUserName(UNUSED_ACCOUNT_NAME);
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
       info("Password hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
-      options.setPassword(createJwt());
+      if (configuration.endpoint.auth_provider == null) {
+        configureOptionsJwt(options, projectId);
+      } else if (configuration.endpoint.auth_provider.jwt != null) {
+        configureOptionsJwt(options, configuration.endpoint.auth_provider.jwt.audience);
+      } else {
+        throw new IllegalArgumentException("Unknown auth provider");
+      }
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
       mqttClient.connect(options);
@@ -271,14 +276,10 @@ public class MqttPublisher {
     }
   }
 
-  private char[] createJwt() throws Exception {
-    boolean hasProvider = configuration.endpoint.auth_provider != null;
-    if (hasProvider && configuration.endpoint.auth_provider.jwt == null) {
-      throw new RuntimeException("Missing JWT auth provider");
-    }
-    String audience = hasProvider ? configuration.endpoint.auth_provider.jwt.audience : projectId;
-    return createJwt(audience, (byte[]) configuration.keyBytes,
-        configuration.algorithm).toCharArray();
+  private void configureOptionsJwt(MqttConnectOptions options, String audience) throws Exception {
+    options.setUserName(UNUSED_ACCOUNT_NAME);
+    options.setPassword(createJwt(audience, (byte[]) configuration.keyBytes,
+        configuration.algorithm).toCharArray());
   }
 
   /**
