@@ -26,7 +26,7 @@ cloud_region=$(jq -r .cloud_region $site_config)
 registry_id=$(jq -r .registry_id $site_config)
 
 mkdir -p out
-PASSWORD_FILE=out/udmi_test.passwd
+PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
 USERNAME=scrumptus
 PASSWORD=$RANDOM
 
@@ -51,16 +51,27 @@ mosquitto_pub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} -m "Hello MQTT"
 
 sleep 1
 
-cat <<EOF > out/mosquitto_endpoint.json
+cat <<EOF > /tmp/pubber_config.json
 {
-  "protocol": "mqtt",
-  "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
-  "hostname": "mqtt.googleapis.com",
-  "auth_provider": {
-    "username": "$USERNAME",
-    "password": "$PASSWORD"   
-  }
+    "endpoint": {
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
+      "hostname": "localhost",
+      "port": 1883,
+      "auth_provider": {
+        "basic": {
+          "username": "$USERNAME",
+          "password": "$PASSWORD"
+        }
+      }
+    },
+    "sitePath": "$site_path",
+    "deviceId": "$device_id",
+    "serialNo": "$serial_no"
 }
 EOF
 
-base64=$(base64 -w 0 out/mosquitto_endpoint.json)
+$ROOT_DIR/pubber/bin/build
+
+$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json

@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -44,6 +45,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Basic;
+import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
 
@@ -65,7 +67,7 @@ public class MqttPublisher {
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
-  private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
+  private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
@@ -231,9 +233,9 @@ public class MqttPublisher {
     try {
       Preconditions.checkNotNull(deviceId, "deviceId is null");
       String clientId = getClientId(deviceId);
-      info("Creating new mqtt client for " + clientId);
-      MqttClient mqttClient = new MqttClient(getBrokerUrl(), clientId,
-          new MemoryPersistence());
+      String brokerUrl = getBrokerUrl();
+      MqttClient mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      info("Creating new client to " + brokerUrl + " as " + clientId);
       return mqttClient;
     } catch (Exception e) {
       errorCounter.incrementAndGet();
@@ -273,6 +275,7 @@ public class MqttPublisher {
 
   private void configureAuth(MqttConnectOptions options) throws Exception {
     if (configuration.endpoint.auth_provider == null) {
+      info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
     } else if (configuration.endpoint.auth_provider.jwt != null) {
       configureAuth(options, configuration.endpoint.auth_provider.jwt);
@@ -285,6 +288,7 @@ public class MqttPublisher {
 
   private void configureAuth(MqttConnectOptions options, Jwt jwt) throws Exception {
     String audience = jwt == null ? projectId : jwt.audience;
+    info("Auth using audience " + audience);
     options.setUserName(UNUSED_ACCOUNT_NAME);
     info("Key hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
     options.setPassword(createJwt(audience, (byte[]) configuration.keyBytes,
@@ -292,6 +296,7 @@ public class MqttPublisher {
   }
 
   private void configureAuth(MqttConnectOptions options, Basic basic) {
+    info("Auth using username " + basic.username);
     options.setUserName(basic.username);
     options.setPassword(basic.password.toCharArray());
   }
@@ -326,7 +331,8 @@ public class MqttPublisher {
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    return String.format(BROKER_URL_FORMAT, configuration.endpoint.hostname,
+    Transport trans = Optional.ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
+    return String.format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
         configuration.endpoint.port);
   }
 

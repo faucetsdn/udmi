@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Auth_provider;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -351,7 +352,9 @@ public class Pubber {
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
-      configuration.endpoint = siteModel.makeEndpointConfig(projectId, deviceId);
+      if (configuration.endpoint == null) {
+        configuration.endpoint = siteModel.makeEndpointConfig(projectId, deviceId);
+      }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
@@ -1500,6 +1503,7 @@ public class Pubber {
   private void error(String message, Throwable e) {
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+    localLog(message, Level.TRACE, getTimestamp(), stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {

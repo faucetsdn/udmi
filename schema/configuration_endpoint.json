@@ -12,6 +12,12 @@
         "mqtt"
       ]
     },
+    "transport": {
+      "enum": [
+        "ssl",
+        "tcp"
+      ]
+    },
     "hostname": {
       "type": "string"
     },

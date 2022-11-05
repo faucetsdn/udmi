@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "protocol",
+    "transport",
     "hostname",
     "port",
     "client_id",
@@ -36,6 +37,8 @@ public class EndpointConfiguration {
      */
     @JsonProperty("protocol")
     public EndpointConfiguration.Protocol protocol;
+    @JsonProperty("transport")
+    public EndpointConfiguration.Transport transport;
     /**
      * 
      * (Required)
@@ -63,6 +66,7 @@ public class EndpointConfiguration {
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
+        result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
@@ -78,7 +82,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return (((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return ((((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")
@@ -111,6 +115,46 @@ public class EndpointConfiguration {
         @JsonCreator
         public static EndpointConfiguration.Protocol fromValue(String value) {
             EndpointConfiguration.Protocol constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
+    }
+
+    @Generated("jsonschema2pojo")
+    public enum Transport {
+
+        SSL("ssl"),
+        TCP("tcp");
+        private final String value;
+        private final static Map<String, EndpointConfiguration.Transport> CONSTANTS = new HashMap<String, EndpointConfiguration.Transport>();
+
+        static {
+            for (EndpointConfiguration.Transport c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        Transport(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static EndpointConfiguration.Transport fromValue(String value) {
+            EndpointConfiguration.Transport constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

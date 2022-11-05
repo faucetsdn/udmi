@@ -47,6 +47,7 @@ class EndpointConfiguration:
 
   def __init__(self):
     self.protocol = None
+    self.transport = None
     self.hostname = None
     self.port = None
     self.client_id = None
@@ -59,6 +60,7 @@ class EndpointConfiguration:
       return None
     result = EndpointConfiguration()
     result.protocol = source.get('protocol')
+    result.transport = source.get('transport')
     result.hostname = source.get('hostname')
     result.port = source.get('port')
     result.client_id = source.get('client_id')
@@ -86,6 +88,8 @@ class EndpointConfiguration:
     result = {}
     if self.protocol:
       result['protocol'] = self.protocol # 5
+    if self.transport:
+      result['transport'] = self.transport # 5
     if self.hostname:
       result['hostname'] = self.hostname # 5
     if self.port:
