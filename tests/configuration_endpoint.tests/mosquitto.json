@@ -1,0 +1,12 @@
+{
+ "protocol": "mqtt",
+ "endpoint": "127.0.0.1",
+ "port": 8883,
+ "client_id": "any_client_id",
+ "auth_provider": {
+   "basic": {
+     "username": "username",
+     "password": "password"
+   }
+ }
+}
