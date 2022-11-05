@@ -272,12 +272,11 @@ public class MqttPublisher {
   }
 
   private char[] createJwt() throws Exception {
-    if (configuration.endpoint.auth_provider != null &&
-        configuration.endpoint.auth_provider.jwt == null) {
+    boolean hasProvider = configuration.endpoint.auth_provider != null;
+    if (hasProvider && configuration.endpoint.auth_provider.jwt == null) {
       throw new RuntimeException("Missing JWT auth provider");
     }
-    String audience = configuration.endpoint.auth_provider == null ? projectId
-        : configuration.endpoint.auth_provider.jwt.audience;
+    String audience = hasProvider ? configuration.endpoint.auth_provider.jwt.audience : projectId;
     return createJwt(audience, (byte[]) configuration.keyBytes,
         configuration.algorithm).toCharArray();
   }
