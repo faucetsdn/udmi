@@ -1,21 +1,11 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-if [[ $# != 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+if [[ $# != 0 ]]; then
+    echo Usage: $0
     false
-fi
-
-project_id=$1
-shift
-
-if [[ -n `which rot13` ]]; then
-   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
-   echo 'Using target project (rot13):' $(echo $project_id | rot13)
-else
-   echo 'Using target project:' $project_id
 fi
 
 site_path=sites/udmi_site_model
@@ -58,7 +48,7 @@ cat <<EOF > /tmp/pubber_config.json
     "endpoint": {
       "protocol": "mqtt",
       "transport": "tcp",
-      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
+      "client_id": "$registry_id/$device_id",
       "hostname": "127.0.0.1",
       "port": 1883,
       "auth_provider": {

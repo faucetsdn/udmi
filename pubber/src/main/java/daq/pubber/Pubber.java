@@ -154,7 +154,6 @@ public class Pubber {
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
-  private final String projectId;
   private final String deviceId;
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
@@ -181,9 +180,7 @@ public class Pubber {
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
       checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
-      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
-      projectId = clientInfo.projectId;
-      deviceId = clientInfo.deviceId;
+      deviceId = configuration.deviceId;
       outDir = new File(PUBBER_OUT);
     } catch (Exception e) {
       throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(),
@@ -200,11 +197,11 @@ public class Pubber {
    * @param serialNo  Serial number of the device
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
-    this.projectId = projectId;
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
+    configuration.projectId = projectId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(projectId, deviceId);
@@ -353,7 +350,7 @@ public class Pubber {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
       if (configuration.endpoint == null) {
-        configuration.endpoint = siteModel.makeEndpointConfig(projectId, deviceId);
+        configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
       }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
@@ -980,7 +977,7 @@ public class Pubber {
 
   private String getClientId(String forRegistry) {
     String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return SiteModel.getClientId(projectId, cloudRegion, forRegistry, deviceId);
+    return SiteModel.getClientId(configuration.projectId, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {

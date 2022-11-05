@@ -99,22 +99,34 @@ public class MqttPublisher {
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
-    this.projectId = clientIdParts.projectId;
-    this.cloudRegion = clientIdParts.cloudRegion;
-    this.registryId = clientIdParts.registryId;
+    if (isGcpIotCore(configuration)) {
+      ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
+      this.projectId = clientIdParts.projectId;
+      this.cloudRegion = clientIdParts.cloudRegion;
+      this.registryId = clientIdParts.registryId;
+    } else {
+      this.projectId = null;
+      this.cloudRegion = null;
+      this.registryId = null;
+    }
     this.onError = onError;
     validateCloudIotOptions();
+  }
+
+  private boolean isGcpIotCore(PubberConfiguration configuration) {
+    return configuration.endpoint.auth_provider == null
+        || configuration.endpoint.auth_provider.jwt != null;
   }
 
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    String configuredClientId = configuration.endpoint.client_id;
-    if (configuredClientId != null) {
-      ClientInfo clientInfo = SiteModel.parseClientId(configuredClientId);
+    if (isGcpIotCore(configuration)) {
+      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
       return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
           clientInfo.registryId, deviceId);
+    } else if (configuration.endpoint.client_id != null) {
+      return configuration.endpoint.client_id;
     }
     return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
   }
