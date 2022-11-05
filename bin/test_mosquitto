@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+systemctl status mosquitto
+
+journalctl -u mosquitto
+

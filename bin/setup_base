@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt-get install -y hxtools moreutils expect
+sudo apt-get install -y hxtools moreutils expect mosquitto
 
 python3 --version
 python3 -m venv venv

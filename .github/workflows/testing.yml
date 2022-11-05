@@ -56,7 +56,10 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: pubber runs
+      - name: mosquitto connect
+        run: |
+          bin/test_mosquitto
+      - name: pubber redirect
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"

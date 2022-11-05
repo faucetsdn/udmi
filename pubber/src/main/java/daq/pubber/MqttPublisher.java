@@ -43,6 +43,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Basic;
+import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -255,14 +257,7 @@ public class MqttPublisher {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      info("Password hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
-      if (configuration.endpoint.auth_provider == null) {
-        configureOptionsJwt(options, projectId);
-      } else if (configuration.endpoint.auth_provider.jwt != null) {
-        configureOptionsJwt(options, configuration.endpoint.auth_provider.jwt.audience);
-      } else {
-        throw new IllegalArgumentException("Unknown auth provider");
-      }
+      configureAuth(options);
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
       mqttClient.connect(options);
@@ -276,10 +271,29 @@ public class MqttPublisher {
     }
   }
 
-  private void configureOptionsJwt(MqttConnectOptions options, String audience) throws Exception {
+  private void configureAuth(MqttConnectOptions options) throws Exception {
+    if (configuration.endpoint.auth_provider == null) {
+      configureAuth(options, (Jwt) null);
+    } else if (configuration.endpoint.auth_provider.jwt != null) {
+      configureAuth(options, configuration.endpoint.auth_provider.jwt);
+    } else if (configuration.endpoint.auth_provider.basic != null) {
+      configureAuth(options, configuration.endpoint.auth_provider.basic);
+    } else {
+      throw new IllegalArgumentException("Unknown auth provider");
+    }
+  }
+
+  private void configureAuth(MqttConnectOptions options, Jwt jwt) throws Exception {
+    String audience = jwt == null ? projectId : jwt.audience;
     options.setUserName(UNUSED_ACCOUNT_NAME);
+    info("Key hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
     options.setPassword(createJwt(audience, (byte[]) configuration.keyBytes,
         configuration.algorithm).toCharArray());
+  }
+
+  private void configureAuth(MqttConnectOptions options, Basic basic) {
+    options.setUserName(basic.username);
+    options.setPassword(basic.password.toCharArray());
   }
 
   /**
