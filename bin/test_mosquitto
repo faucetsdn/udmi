@@ -8,10 +8,8 @@ echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.c
 sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
 sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
 
-mosquitto -h || true
-mosquitto_passwd --help
-
-sudo mosquitto_passwd -b -c ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+sudo touch ${PASSWORD_FILE}
+sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
 sudo chmod 666 ${PASSWORD_FILE}
 
 sudo systemctl restart mosquitto
