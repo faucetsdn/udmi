@@ -1,6 +1,32 @@
 #!/bin/bash -e
 
-PASSWORD_FILE=/etc/mosquitto/udmi_test.pass
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# != 1 ]]; then
+    echo Usage: $0 PROJECT_ID
+    false
+fi
+
+project_id=$1
+shift
+
+if [[ -n `which rot13` ]]; then
+   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
+   echo 'Using target project (rot13):' $(echo $project_id | rot13)
+else
+   echo 'Using target project:' $project_id
+fi
+
+site_path=sites/udmi_site_model
+device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+
+site_config=$site_path/cloud_iot_config.json
+cloud_region=$(jq -r .cloud_region $site_config)
+registry_id=$(jq -r .registry_id $site_config)
+
+mkdir -p out
+PASSWORD_FILE=out/udmi_test.passwd
 USERNAME=scrumptus
 PASSWORD=$RANDOM
 
@@ -24,3 +50,17 @@ echo Publishing test message
 mosquitto_pub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} -m "Hello MQTT"
 
 sleep 1
+
+cat <<EOF > out/mosquitto_endpoint.json
+{
+  "protocol": "mqtt",
+  "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
+  "hostname": "mqtt.googleapis.com",
+  "auth_provider": {
+    "username": "$USERNAME",
+    "password": "$PASSWORD"   
+  }
+}
+EOF
+
+base64=$(base64 -w 0 out/mosquitto_endpoint.json)
