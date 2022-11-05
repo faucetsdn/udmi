@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 PASSWORD_FILE=/etc/mosquitto/udmi_test.pass
 USERNAME=scrumptus
