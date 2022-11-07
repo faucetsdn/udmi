@@ -1,7 +1,0 @@
-#!/bin/bash -e
-
-ROOT=$(dirname $0)/..
-cd $ROOT
-
-firebase emulators:start --import=testing/database
-

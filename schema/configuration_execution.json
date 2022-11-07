@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Execution Configuration",
   "description": "Parameters for configuring the execution run of a UDMI tool",
   "$section": "Tool Configuration",
