@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Mapping Event",
   "description": "[Mapping result](../docs/specs/mapping.md) with implicit enumeration",
   "type": "object",
