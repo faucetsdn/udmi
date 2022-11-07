@@ -42,6 +42,8 @@ public class Entry {
     @JsonPropertyDescription("An optional extensive entry which can include more detail, e.g. a complete program stack-trace")
     public String detail;
     /**
+     * Category
+     * <p>
      * Auto-generated category mappings from bin/gencode_categories.
      * (Required)
      * 

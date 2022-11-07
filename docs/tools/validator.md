@@ -117,7 +117,7 @@ identify the problem.
   been sent or config messages received
 - Enable debug logging for the device on IoT Core and check the Stackdriver log
   for any errors
-- Ensure the [cloud functions have been deployed](../cloud/gcp/functions.md), the cloud functions
+- Ensure the [cloud functions have been deployed](../cloud/gcp/udmis.md), the cloud functions
   are running with a service account with [sufficient permissions](../cloud/gcp/cloud_setup.md)  
   and the [Pub/Sub subscriptions are configured](../cloud/gcp/cloud_setup.md). For use with the 
   validator, the subscription should be to the udmi_target topic. 

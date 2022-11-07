@@ -19,18 +19,9 @@ to be installed on your development system if it's not already there.
 
 ## Cloud Prerequisites
 
-To use the included functions, you will be required to install the Google Cloud SDK.
-The [cloud setup guidance](../cloud/gcp/cloud_setup.md) provides additional guidance.
+The tooling requires the he [UDMIS infrasutrcture](../cloud/gcp/udmis.md) to be deployed onto the target GCP project. 
 
-*   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required
-    for GCP command-line utilities ('gcloud') 
-
-Some of the tools working with Google Cloud Platform (GCP) projects use GCP's 
-[application default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default) 
-model for authenticating interaction with the cloud. Depending on your setup, 
-this can be used with end-user credentials (`gcloud auth login`) or with a 
-service account (`gcloud auth activate-service-account`).
-
+[Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required for GCP command-line utilities ('gcloud') 
 ## UDMI Site Model Workflow
 The [recommended workflow](../guides/workflow.md) for UDMI covers using the _registrar_ and
 _validator_ tools to configure and test a cloud project. Additionally, the _pubber_ tool

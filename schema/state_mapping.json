@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Mapping State",
   "description": "State for [mapping](../docs/specs/mapping.md)",
   "type": "object",

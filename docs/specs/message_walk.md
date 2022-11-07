@@ -47,8 +47,8 @@ attention to.
 ## Cloud Functions
 
 The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) handle the ingest traffic
-from a device. The [source code](../../dashboard/functions/) for these functions can be published
-to the cloud project by the `dashboard/deploy_dashboard_gcloud`.
+from a device. The [source code](../../udmis/functions/) for these functions can be published
+to the cloud project by the `udmis/deploy_udmis_gcloud` command (see below).
 
 * __udmi\_target__: Central handling of all messages.
 * __udmi\_state__: Processes incoming device _state_ messages and re-writes them to the _udmi\_target_

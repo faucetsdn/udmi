@@ -9,8 +9,8 @@ tmp/
 check_links.out
 .gradle/
 .firebase/
-dashboard/functions/node_modules/
-dashboard/public/deploy_version.js
+udmis/functions/node_modules/
+udmis/public/deploy_version.js
 firebase-debug.log
 credentials.json
 /out/

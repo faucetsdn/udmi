@@ -1,0 +1,101 @@
+# Manually maintained list of all files in tests/*.tests/*.json
+# consumed by bin/upversion when upgrading versions
+#
+# Syntax: ACTION FILE [COMMENT]
+#
+# ACTIONS:
+#   y - update the top level "version" in the files
+#   n - do not update the file
+#
+n tests/event_discovery.tests/empty.json
+n tests/event_system.tests/empty.json
+n tests/event_pointset.tests/empty.json
+n tests/state.tests/empty.json
+n tests/config.tests/empty.json
+n tests/config.tests/delta_x1_gateway.json
+n tests/config.tests/delta_x1_target.json
+n tests/metadata.tests/empty.json
+n tests/state.tests/delta_x1_gateway.json
+n tests/state.tests/delta_x1_target.json
+n tests/configuration_endpoint.tests/simple.json
+n tests/configuration_endpoint.tests/delta.json
+n tests/model_pointset.tests/example.json
+n tests/envelope.tests/lgtw.json
+n tests/envelope.tests/empty.json
+n tests/envelope.tests/errors2.json
+n tests/envelope.tests/example.json
+n tests/envelope.tests/gateway.json
+n tests/envelope.tests/example2.json
+n tests/envelope.tests/errors1.json
+n tests/state.tests/makemodel_upgrade.json # tests message upgrade from v 1
+n tests/config.tests/errors.json
+n tests/state.tests/errors.json # test complete message upgrade pathway
+y tests/state_validation.tests/report.json
+y tests/event_discovery.tests/from_bacnet.json
+y tests/event_discovery.tests/scan_error.json
+y tests/event_discovery.tests/point_error.json
+y tests/event_discovery.tests/errors.json
+y tests/event_discovery.tests/enumeration.json
+y tests/event_discovery.tests/continuous.json
+y tests/event_discovery.tests/discovery.json
+y tests/event_discovery.tests/implicit.json
+y tests/event_system.tests/metrics.json
+y tests/event_system.tests/errors.json
+y tests/event_system.tests/example.json
+y tests/event_system.tests/fcu.json
+y tests/event_validation.tests/simple_ok.json
+y tests/event_validation.tests/simple_error.json
+y tests/config_mapping.tests/mapping.json
+y tests/event_pointset.tests/errors.json
+y tests/event_pointset.tests/writeback.json
+y tests/event_pointset.tests/example.json
+y tests/event_pointset.tests/fcu.json
+y tests/event_pointset.tests/smartprimus.json
+y tests/event_pointset.tests/partial.json
+y tests/config_pointset.tests/example.json
+y tests/state.tests/scan_stop.json
+y tests/state.tests/scan_error.json
+y tests/state.tests/enumeration.json
+y tests/state.tests/writeback.json
+y tests/state.tests/continuous.json
+y tests/state.tests/periodic.json
+y tests/state.tests/scan_bad.json
+y tests/state.tests/discovery.json
+y tests/state.tests/example.json
+y tests/state.tests/endpoint_reconfiguration_failed.json
+y tests/state.tests/endpoint_reconfiguration.json
+y tests/state.tests/makemodel_error.json # current version but with makemodel, validation error
+y tests/state.tests/blobset_updating.json
+y tests/state.tests/blobset_received.json
+y tests/state.tests/fcu.json
+y tests/state.tests/gateway.json
+y tests/state.tests/restart.json
+y tests/state_pointset.tests/example.json
+y tests/config.tests/blobset_final_incomplete_url.json
+y tests/config.tests/enumeration.json
+y tests/config.tests/writeback.json
+y tests/config.tests/proxy.json
+y tests/config.tests/continuous.json
+y tests/config.tests/delta_endpoint.json
+y tests/config.tests/periodic.json
+y tests/config.tests/discovery.json
+y tests/config.tests/example.json
+y tests/config.tests/endpoint_reconfiguration.json
+y tests/config.tests/fcu.json
+y tests/config.tests/gateway.json
+y tests/config.tests/smartprimus.json
+y tests/config.tests/restart.json
+y tests/config.tests/blobset_final_incomplete_payload.json
+y tests/config.tests/implicit.json
+y tests/state_mapping.tests/mapping.json
+y tests/command_discovery.tests/provision.json
+y tests/event_mapping.tests/mapping.json
+y tests/event_mapping.tests/prediction.json
+y tests/metadata.tests/toomany.json
+y tests/metadata.tests/proxy.json
+y tests/metadata.tests/example.json
+y tests/metadata.tests/gateway.json
+y tests/command_mapping.tests/mapping.json
+y tests/metadata.tests/errors.json
+y tests/config.tests/blobset_final.json
+n tests/configuration_execution.tests/cloud_iot_config.json

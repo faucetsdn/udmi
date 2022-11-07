@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "System Config",
   "description": "[System Config Documentation](../docs/messages/system.md#config)",
   "type": "object",

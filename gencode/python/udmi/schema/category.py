@@ -1,7 +1,7 @@
 """Generated class for category.json"""
 
 
-class Object840EF2CD:
+class Category:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class Object840EF2CD:
   def from_dict(source):
     if not source:
       return None
-    result = Object840EF2CD()
+    result = Category()
     return result
 
   @staticmethod
@@ -20,7 +20,7 @@ class Object840EF2CD:
       return None
     result = {}
     for key in source:
-      result[key] = Object840EF2CD.from_dict(source[key])
+      result[key] = Category.from_dict(source[key])
     return result
 
   @staticmethod
