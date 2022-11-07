@@ -6,15 +6,15 @@
   "additionalProperties": false,
   "properties": {
     "code": {
-      "description": "",
+      "description": "Human readable code for the entity, should be unique in the document scope",
       "type": "string"
     },
     "type": {
-      "description": "",
+      "description": "DBO namespace and entity type",
       "type": "string"
     },
     "cloud_device_id": {
-      "description": "",
+      "description": "Opaque identifier for the entity",
       "type": "string"
     },
     "connections": {
