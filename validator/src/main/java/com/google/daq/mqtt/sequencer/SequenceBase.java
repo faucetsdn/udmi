@@ -434,10 +434,11 @@ public abstract class SequenceBase {
   }
 
   private void waitForConfigSync() {
-    untilTrue("device config sync", this::configUpdateComplete);
+    debug("waiting for config sync");
+    messageEvaluateLoop(this::configNotReady);
   }
 
-  private Date syncConfig() {
+  protected Date syncConfig() {
     updateConfig();
     waitForConfigSync();
     debug("config synced to " + JsonUtil.getTimestamp(deviceConfig.timestamp));
@@ -607,6 +608,7 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     localConfigChange(reason);
+    waitForConfigSync();
   }
 
   private void updateConfig(SubFolder subBlock, Object data) {
@@ -765,11 +767,15 @@ public abstract class SequenceBase {
     info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
     updateConfig("before " + description);
     recordSequence("Wait for " + description);
+    messageEvaluateLoop(evaluator);
+    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
+    waitingCondition = "nothing";
+  }
+
+  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
       receiveMessage();
     }
-    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
-    waitingCondition = "nothing";
   }
 
   private void recordSequence(String step) {
@@ -940,17 +946,20 @@ public abstract class SequenceBase {
     }
   }
 
-  protected boolean configUpdateComplete() {
+  private boolean configNotReady() {
     Object receivedConfig = receivedUpdates.get("config");
     if (!(receivedConfig instanceof Config)) {
+      trace("no valid received config");
       return false;
     }
     List<String> differences = configDiffEngine.diff(deviceConfig,
         sanitizeConfig((Config) receivedConfig));
-    if (traceLogLevel() && !differences.isEmpty()) {
+    boolean configNotReady = !differences.isEmpty();
+    trace("testing valid received config " + configNotReady);
+    if (traceLogLevel() && configNotReady) {
       trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
-    return differences.isEmpty();
+    return configNotReady;
   }
 
   protected void trace(String message) {

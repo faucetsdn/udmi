@@ -57,7 +57,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no
+bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no endpoint_config_connection_success_reset
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
@@ -72,8 +72,8 @@ else
     false
 fi
 
-generated=docs/specs/sequences/generated.md
-cp $generated /tmp/  # Save for test/comparison later
-bin/gencode_seq
+#generated=docs/specs/sequences/generated.md
+#cp $generated /tmp/  # Save for test/comparison later
+#bin/gencode_seq
 
 echo Done with base test_sequencer run.

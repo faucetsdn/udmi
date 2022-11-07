@@ -163,19 +163,32 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.system.mode = SystemMode.RESTART;
     updateConfig();
 
+    untilTrue("deviceState.system.mode == INITIAL", () -> {
+      return deviceState.system.mode.equals(SystemMode.INITIAL); } );
 
-    info("================1 previous last_config = " + last_config);
-    info("================1 current last_config = " + deviceState.system.last_config);
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+    updateConfig();
 
-    untilTrue("last_config is newer than previous last_config", () -> deviceState.system.last_config.after(last_config));
+    untilTrue("deviceState.system.mode == ACTIVE", () -> {
+      return deviceState.system.mode.equals(SystemMode.ACTIVE); } );
 
-    info("================2 previous last_config = " + last_config);
-    info("================2 current last_config = " + deviceState.system.last_config);
+    info("================1 previous last_config = " + getTimestamp(last_config));
+    info("================1 current last_config = " + getTimestamp(deviceState.system.last_config));
 
-    untilTrue("last_start is newer than previous last_start (" + last_start + ")", () -> {
+    untilTrue("last_config is newer than previous last_config", () -> {
       info("============ waiting for " +
-          "current last_start (" + deviceConfig.system.last_start + ") to be after " +
-          "previous last_start (" + last_start + ")") ;
+          "current last_config " + getTimestamp(deviceState.system.last_config) + " to be after " +
+          "previous last_config " + getTimestamp(last_config));
+      return deviceState.system.last_config.after(last_config);
+    });
+
+    info("================2 previous last_config = " + getTimestamp(last_config));
+    info("================2 current last_config = " + getTimestamp(deviceState.system.last_config));
+
+    untilTrue("last_start is newer than previous last_start " + getTimestamp(last_start), () -> {
+      info("============ waiting for " +
+          "current last_start " + getTimestamp(deviceState.system.last_start) + " to be after " +
+          "previous last_start " + getTimestamp(last_start));
       return deviceConfig.system.last_start.after(last_start);
     });
   }
