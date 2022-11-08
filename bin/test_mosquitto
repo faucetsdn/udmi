@@ -65,7 +65,7 @@ cat <<EOF > /tmp/pubber_config.json
 }
 EOF
 
-ps ax | fgrep java | fgrep /tmp/pubber_config.json | fgrep -v grep | awk '{print $1}' | xargs -r kill
+kill $(pgrep -f 'java.*pubber-.*jar') || true
 
 $ROOT_DIR/pubber/bin/build
 
