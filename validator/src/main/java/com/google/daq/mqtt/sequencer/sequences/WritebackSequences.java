@@ -84,7 +84,7 @@ public class WritebackSequences extends PointSequencer {
     return JsonUtil.convertTo(PointsetEvent.class, events.get(events.size() - 1));
   }
 
-  @Test(timeout = 60000)
+  @Test(timeout = 90000)
   public void writeback_success_apply() {
     TargetTestingModel appliedTarget = getTarget(APPLIED_STATE);
     String appliedPoint = appliedTarget.target_point;
@@ -97,7 +97,7 @@ public class WritebackSequences extends PointSequencer {
 
   }
 
-  @Test(timeout = 60000)
+  @Test(timeout = 90000)
   public void writeback_success_state() {
     TargetTestingModel appliedTarget = getTarget(APPLIED_STATE);
     String appliedPoint = appliedTarget.target_point;
