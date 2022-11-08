@@ -1,0 +1,117 @@
+build/libs/validator-1.0-SNAPSHOT-all.jar up-to-date, skipping build.
+Writing config to /tmp/validator_config.json:
+{
+  "project_id": "daq1-273309",
+  "site_model": "/workspaces/udmi/sites/udmi_site_model",
+  "device_id": "AHU-1",
+  "serial_no": "writeback_success",
+  "log_level": "INFO",
+  "udmi_version": "1.3.14-87-gda3b782-dirty",
+  "key_file": "/workspaces/udmi/sites/udmi_site_model/validator/rsa_private.pkcs8"
+}
+java -cp validator/build/libs/validator-1.0-SNAPSHOT-all.jar com.google.daq.mqtt.sequencer.SequenceRunner
+Target sequence classes:
+  com.google.daq.mqtt.sequencer.sequences.WritebackSequences
+  com.google.daq.mqtt.sequencer.sequences.BlobsetSequences
+  com.google.daq.mqtt.sequencer.sequences.ConfigSequences
+  com.google.daq.mqtt.sequencer.sequences.DiscoverySequences
+Running class com.google.daq.mqtt.sequencer.sequences.WritebackSequences (all tests)
+Reading config file /tmp/validator_config.json
+Reading device metadata file /workspaces/udmi/sites/udmi_site_model/devices/AHU-1/metadata.json
+Writing results to /workspaces/udmi/sites/udmi_site_model/out/devices/AHU-1/RESULT.log
+Loading reflector key file from /workspaces/udmi/sites/udmi_site_model/validator/rsa_private.pkcs8
+Validating against device AHU-1 serial writeback_success
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA token expiration sec 3600
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA creating client projects/daq1-273309/locations/us-central1/registries/UDMS-REFLECT/devices/ZZ-TRI-FECTA on ssl://mqtt.googleapis.com:8883
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA creating new jwt
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA connecting to mqtt server
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA adding subscriptions
+[main] INFO com.google.bos.iot.core.proxy.MqttPublisher - ZZ-TRI-FECTA done with setup connection
+Setting state version 1.3.14-87-gda3b782-dirty timestamp 2022-11-06T18:32:19Z
+[pool-1-thread-1] WARN com.google.bos.iot.core.proxy.MqttPublisher - Delaying state message by 2000
+2022-11-06T18:32:19Z NOTICE sequencer starting test writeback_success
+2022-11-06T18:32:39Z INFO sequencer start waiting for device config sync after 20s
+2022-11-06T18:32:41Z NOTICE sequencer Received serial no sequencer-17482
+2022-11-06T18:32:41Z INFO sequencer finished waiting for device config sync after 22s
+2022-11-06T18:32:41Z INFO sequencer clearing system logs...
+2022-11-06T18:32:42Z INFO sequencer start waiting for device config sync after 23s
+2022-11-06T18:32:46Z INFO sequencer finished waiting for device config sync after 27s
+2022-11-06T18:32:46Z INFO sequencer clearing system logs...
+2022-11-06T18:32:49Z INFO sequencer start waiting for device config sync after 30s
+2022-11-06T18:32:49Z INFO sequencer finished waiting for device config sync after 30s
+2022-11-06T18:32:49Z INFO sequencer start waiting for device state update after 30s
+2022-11-06T18:32:49Z INFO sequencer finished waiting for device state update after 30s
+2022-11-06T18:32:49Z INFO sequencer start waiting for point filter_differential_pressure_setpoint to have value_state applied after 30s
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:51Z Value state applied equals null = false
+2022-11-06T18:32:52Z Value state applied equals null = false
+2022-11-06T18:32:58Z Value state applied equals null = false
+2022-11-06T18:32:58Z Value state applied equals null = false
+2022-11-06T18:33:08Z Value state applied equals null = false
+2022-11-06T18:33:08Z Value state applied equals null = false
+2022-11-06T18:33:18Z Value state applied equals null = false
+2022-11-06T18:33:18Z Value state applied equals null = false
+2022-11-06T18:33:28Z Value state applied equals null = false
+2022-11-06T18:33:28Z Value state applied equals null = false
+2022-11-06T18:33:38Z Value state applied equals null = false
+2022-11-06T18:33:38Z Value state applied equals null = false
+2022-11-06T18:33:48Z Value state applied equals null = false
+2022-11-06T18:33:48Z Value state applied equals null = false
+2022-11-06T18:33:58Z Value state applied equals null = false
+2022-11-06T18:33:58Z Value state applied equals null = false
+2022-11-06T18:34:08Z Value state applied equals null = false
+2022-11-06T18:34:08Z Value state applied equals null = false
+2022-11-06T18:34:08Z Value state applied equals null = false
+2022-11-06T18:34:18Z Value state applied equals null = false
+2022-11-06T18:34:18Z Value state applied equals null = false
+2022-11-06T18:34:19Z NOTICE sequencer RESULT fail writeback_success timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+2022-11-06T18:34:19Z ERROR sequencer timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+2022-11-06T18:34:19Z INFO sequencer start waiting for device config sync after 120s
+2022-11-06T18:34:19Z NOTICE sequencer ending test writeback_success after 120s
+2022-11-06T18:34:19Z NOTICE sequencer starting test valid_serial_no
+
+2022-11-06T18:34:19Z NOTICE sequencer RESULT fail writeback_success timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+SUMMARY fail

@@ -1,0 +1,54 @@
+#!/bin/bash -e
+
+PROJECT_ID=$1
+shift 1
+
+SITE_PATH=sites/udmi_site_model
+DEVICE_ID=AHU-1
+
+RESULTS_OUT=/tmp/sequencer_solo.out
+PUBBER_OUT=/tmp/pubber.log
+SEQUENCER_OUT=/tmp/sequencer.log
+TEST_LIST=/tmp/solo_sequencer_tests.txt
+
+cat > $TEST_LIST <<EOF
+writeback_success_state noWriteback
+writeback_success_apply noPointState
+EOF
+
+rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
+touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
+
+while read test_name pubber_opts; do
+    pubber_opts_for_printing="${pubber_opts:-<none>}"
+    echo "TESTING $test_name with pubber opts: $pubber_opts_for_printing" | tee -a $RESULTS_OUT
+
+    serial_no=sequencer-$RANDOM
+    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+    WAITING=30
+    for i in `seq 1 $WAITING`; do
+        if fgrep "Connection complete" $PUBBER_OUT; then
+            break
+        fi
+        echo Waiting for pubber startup $((WAITING - i))...
+        sleep 2
+    done
+
+    if [[ $i -eq $WAITING ]]; then
+        echo pubber startup failed:
+        cat $PUBBER_OUT
+        false
+    fi
+
+    bin/sequencer $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT
+
+    kill $(ps ax | fgrep sequencer | fgrep java | awk '{print $1}')
+
+    grep -E -m 1 "RESULT [a-z]+ $test_name " $SEQUENCER_OUT \
+        | sed -e "s/.*sequencer RESULT/RESULT/" \
+        >> $RESULTS_OUT
+    sleep 2
+
+done < $TEST_LIST
+
+cat $RESULTS_OUT

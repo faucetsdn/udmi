@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+PROJECT_ID=daq1-273309
+SITE_MODEL=sites/udmi_site_model
+DEVICE_ID=AHU-1
+
+RESULT_OUT=seq.log
+PUBBER_OUT=pubber.log
+SEQUENCER_OUT=sequencer.log
+
+function single_sequencer_test() {
+    test_name=$1
+    shift 1
+    pubber_opts="$@"
+
+    echo ":: testing $test_name with pubber opts $pubber_opts"
+
+    bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT 2>&1 &
+    tail -f sequencer.log | tee /dev/tty | grep -m 1 "Connection complete"
+
+    bin/sequencer sites/udmi_site_model $PROJECT_ID AHU-1 $test_name > sequencer.log 2>&1 & 
+    tail -f sequencer.log | tee /dev/tty | grep -E -m 1 "RESULT [a-z]+ writeback_success" 
+
+    kill $(ps ax | fgrep sequencer | fgrep java | awk '{print $1}')
+    kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}')
+
+    fgrep -E "RESULT [a-z]+ writeback_success" $SEQUENCER_OUT > $RESULT_OUT
+
+    sleep 2
+}
+
+single_sequencer_test writeback_success
+
+echo "okay"

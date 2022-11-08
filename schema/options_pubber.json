@@ -24,6 +24,17 @@
     },
     "redirectRegistry": {
       "type": "string"
+    },
+    "noPointState": {
+      "type": "boolean"
+    },
+    "disableWriteback": {
+      "type": "boolean",
+      "description": "Disable writeback, equivelant to marking all points as unwriteable"
+    },
+    "noWriteback": {
+      "type": "boolean",
+      "description": "Removes writeback functionality, mimicking a device without Writeback support" 
     }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "last_config" : "2022-11-07T17:41:00Z",
+  "logentries" : [ {
+    "message" : "update state 2022-11-07T17:41:02Z last_config 2022-11-07T17:41:00Z",
+    "category" : "device.log",
+    "timestamp" : "2022-11-07T17:41:02Z",
+    "level" : 200
+  } ],
+  "timestamp" : "2022-11-07T17:41:02.078Z",
+  "version" : "1.4.0"
+}

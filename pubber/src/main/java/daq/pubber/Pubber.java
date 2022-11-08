@@ -78,6 +78,7 @@ import udmi.schema.Metrics;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -599,6 +600,11 @@ public class Pubber {
   }
 
   private void updateState(AbstractPoint point) {
+    if (configuration.options.noPointState != null && configuration.options.noPointState) {
+      deviceState.pointset.points.put(point.getName(), new PointPointsetState());
+      return;
+    }
+
     if (point.isDirty()) {
       deviceState.pointset.points.put(point.getName(), point.getState());
       markStateDirty(-1);
@@ -1262,6 +1268,9 @@ public class Pubber {
   }
 
   private void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
+    if (configuration.options.noWriteback != null && configuration.options.noWriteback) {
+      return;
+    }
     point.setConfig(pointConfig);
     updateState(point);
   }

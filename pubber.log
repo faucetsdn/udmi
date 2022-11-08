@@ -1,0 +1,490 @@
+Cleaning output directory /workspaces/udmi/pubber/out/sequencer-17482
+Building pubber...
+build/libs/pubber-1.0-SNAPSHOT-all.jar up to date, skipping build.
+Running tools version 1.3.14-87-gda3b782
+Waiting for pubber pid 21990 to complete...
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z Configuring with key type RS256
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z Initializing from persistent store /workspaces/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z Starting pubber AHU-1, serial sequencer-17482, mac null, gateway null, options noWriteback
+WARN daq.pubber.Pubber - 2022-11-06T18:32:16Z State update defer -1667759534276ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z Loading device key bytes from sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z update state 2022-11-06T18:32:16Z last_config 1970-01-01T00:00:00Z
+INFO daq.pubber.MqttPublisher - Creating new mqtt client for projects/daq1-273309/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.Pubber - 2022-11-06T18:32:16Z State update:
+{
+  "timestamp" : "2022-11-06T18:32:16Z",
+  "system" : {
+    "last_config" : "1970-01-01T00:00:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.MqttPublisher - Attempting connection to projects/daq1-273309/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1
+INFO daq.pubber.MqttPublisher - Password hash 38269d117e7d818bd1cb47274e6eaf1a788cf36f96a83430e595d2e560e570f9
+INFO daq.pubber.MqttPublisher - Updates subscribed
+INFO daq.pubber.Pubber - 2022-11-06T18:32:17Z Connection complete.
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Entry DEBUG system.config.receive success 2022-11-06T18:32:18Z
+WARN daq.pubber.Pubber - 2022-11-06T18:32:18Z State update defer 1817ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Entry DEBUG system.config.parse success 2022-11-06T18:32:18Z
+WARN daq.pubber.Pubber - 2022-11-06T18:32:18Z State update defer 1798ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Config update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:14Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z 2022-11-06T18:32:18Z received config 2022-11-06T18:32:14Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Starting executor with send message delay 10000
+INFO daq.pubber.Pubber - Done with main
+INFO daq.pubber.Pubber - 2022-11-06T18:32:18Z Entry NOTICE system.config.apply success 2022-11-06T18:32:18Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:18Z State update defer 1763ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:18Z State update defer 1760ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:19Z State update defer -3ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:19Z update state 2022-11-06T18:32:19Z last_config 2022-11-06T18:32:14Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:19Z State update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:19Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:14Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:18Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:28Z 2022-11-06T18:32:28Z sending test message #0
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z Entry DEBUG system.config.receive success 2022-11-06T18:32:40Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:40Z State update defer -18154ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z update state 2022-11-06T18:32:40Z last_config 2022-11-06T18:32:14Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z State update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:40Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:14Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z Entry DEBUG system.config.parse success 2022-11-06T18:32:40Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:40Z State update defer 1999ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z Config update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:40Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z 2022-11-06T18:32:40Z received config 2022-11-06T18:32:40Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:40Z Entry NOTICE system.config.apply success 2022-11-06T18:32:40Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:40Z State update defer 1991ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:40Z State update defer 1991ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z Entry DEBUG system.config.receive success 2022-11-06T18:32:41Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:41Z State update defer 662ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z Entry DEBUG system.config.parse success 2022-11-06T18:32:41Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:41Z State update defer 660ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z Config update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:40Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z 2022-11-06T18:32:41Z received config 2022-11-06T18:32:40Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:41Z Entry NOTICE system.config.apply success 2022-11-06T18:32:41Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:41Z State update defer 655ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:41Z State update defer 655ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:42Z State update defer -1ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:42Z update state 2022-11-06T18:32:42Z last_config 2022-11-06T18:32:40Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:42Z State update (reset_config):
+{
+  "timestamp" : "2022-11-06T18:32:42Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:40Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:41Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z Entry DEBUG system.config.receive success 2022-11-06T18:32:43Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:43Z State update defer 1196ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z Entry DEBUG system.config.parse success 2022-11-06T18:32:43Z (reset_config)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:43Z State update defer 1193ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z Config update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:43Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "writeback_success"
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z 2022-11-06T18:32:43Z received config 2022-11-06T18:32:43Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:43Z Entry NOTICE system.config.apply success 2022-11-06T18:32:43Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:43Z State update defer 1187ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:43Z State update defer 1187ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:44Z State update defer -1ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z update state 2022-11-06T18:32:44Z last_config 2022-11-06T18:32:43Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z State update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:44Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:43Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:43Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z Entry DEBUG system.config.receive success 2022-11-06T18:32:44Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:44Z State update defer 1767ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z Entry DEBUG system.config.parse success 2022-11-06T18:32:44Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:44Z State update defer 1765ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z Config update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:43Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "writeback_success"
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z 2022-11-06T18:32:44Z received config 2022-11-06T18:32:43Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:44Z Entry NOTICE system.config.apply success 2022-11-06T18:32:44Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:44Z State update defer 1761ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:44Z State update defer 1760ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z Entry DEBUG system.config.receive success 2022-11-06T18:32:45Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:45Z State update defer 668ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z Entry DEBUG system.config.parse success 2022-11-06T18:32:45Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:45Z State update defer 666ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z Config update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:45Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "writeback_success"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z 2022-11-06T18:32:45Z received config 2022-11-06T18:32:45Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:45Z Entry NOTICE system.config.apply success 2022-11-06T18:32:45Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:45Z State update defer 660ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:45Z State update defer 659ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:46Z State update defer -1ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:46Z update state 2022-11-06T18:32:46Z last_config 2022-11-06T18:32:45Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:46Z State update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:46Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:45Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:45Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z Entry DEBUG system.config.receive success 2022-11-06T18:32:48Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:48Z State update defer 266ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z Entry DEBUG system.config.parse success 2022-11-06T18:32:48Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:48Z State update defer 264ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z Config update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:48Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "writeback_success"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z 2022-11-06T18:32:48Z received config 2022-11-06T18:32:48Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z Entry NOTICE system.config.apply success 2022-11-06T18:32:48Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:48Z State update defer 259ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:48Z State update defer 259ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:48Z State update defer -1ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z update state 2022-11-06T18:32:48Z last_config 2022-11-06T18:32:48Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:48Z State update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:48Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:48Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:48Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z Entry DEBUG system.config.receive success 2022-11-06T18:32:50Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:50Z State update defer 520ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z Entry DEBUG system.config.parse success 2022-11-06T18:32:50Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:50Z State update defer 518ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z Config handler
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z Config update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:50Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-06T18:32:15Z",
+    "testing" : {
+      "sequence_name" : "writeback_success"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 60
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z 2022-11-06T18:32:50Z received config 2022-11-06T18:32:50Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z Entry NOTICE system.config.apply success 2022-11-06T18:32:50Z (writeback_success)
+WARN daq.pubber.Pubber - 2022-11-06T18:32:50Z State update defer 513ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:50Z State update defer 512ms
+WARN daq.pubber.Pubber - 2022-11-06T18:32:50Z State update defer -1ms
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z update state 2022-11-06T18:32:50Z last_config 2022-11-06T18:32:50Z
+INFO daq.pubber.Pubber - 2022-11-06T18:32:50Z State update (writeback_success):
+{
+  "timestamp" : "2022-11-06T18:32:50Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-06T18:32:50Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-06T18:32:15Z",
+    "serial_no" : "sequencer-17482",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-06T18:32:50Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+INFO daq.pubber.Pubber - 2022-11-06T18:34:08Z 2022-11-06T18:34:08Z sending test message #10
+Done with pubber run, exit code 143
