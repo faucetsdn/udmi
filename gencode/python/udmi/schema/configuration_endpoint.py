@@ -50,6 +50,7 @@ class EndpointConfiguration:
     self.transport = None
     self.hostname = None
     self.port = None
+    self.config_sync_sec = None
     self.client_id = None
     self.auth_provider = None
     self.nonce = None
@@ -63,6 +64,7 @@ class EndpointConfiguration:
     result.transport = source.get('transport')
     result.hostname = source.get('hostname')
     result.port = source.get('port')
+    result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.nonce = source.get('nonce')
@@ -94,6 +96,8 @@ class EndpointConfiguration:
       result['hostname'] = self.hostname # 5
     if self.port:
       result['port'] = self.port # 5
+    if self.config_sync_sec:
+      result['config_sync_sec'] = self.config_sync_sec # 5
     if self.client_id:
       result['client_id'] = self.client_id # 5
     if self.auth_provider:

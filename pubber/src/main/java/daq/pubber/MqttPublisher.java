@@ -73,7 +73,7 @@ public class MqttPublisher {
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
-  private static final long CONFIG_WAIT_TIME_MS = 10000;
+  private static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
 
@@ -226,9 +226,7 @@ public class MqttPublisher {
       debug("Connecting through gateway " + gatewayId);
       gatewayLatch = new CountDownLatch(1);
       MqttClient mqttClient = getConnectedClient(gatewayId);
-      if (!gatewayLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS)) {
-        throw new RuntimeException("Timeout waiting for gateway startup exchange");
-      }
+      startupLatchWait(gatewayLatch, "gateway startup exchange");
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
@@ -238,6 +236,19 @@ public class MqttPublisher {
       return mqttClient;
     } catch (Exception e) {
       throw new RuntimeException("While binding client " + deviceId, e);
+    }
+  }
+
+  void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
+    try {
+      int waitTimeSec = Optional.ofNullable(configuration.endpoint.config_sync_sec)
+          .orElse(DEFAULT_CONFIG_WAIT_SEC);
+      int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
+      if (useWaitTime > 0 && !gatewayLatch.await(useWaitTime, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Latch timeout " + designator);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While waiting for " + designator, e);
     }
   }
 
@@ -446,7 +457,7 @@ public class MqttPublisher {
         return connectedClient;
       }
       info("Client not active, deferring message...");
-      safeSleep(CONFIG_WAIT_TIME_MS);
+      safeSleep(DEFAULT_CONFIG_WAIT_SEC);
     }
   }
 

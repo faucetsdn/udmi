@@ -50,6 +50,7 @@ cat <<EOF > /tmp/pubber_config.json
       "transport": "tcp",
       "client_id": "$registry_id/$device_id",
       "hostname": "127.0.0.1",
+      "config_sync_sec": -1,
       "port": 1883,
       "auth_provider": {
         "basic": {

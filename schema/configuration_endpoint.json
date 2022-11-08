@@ -25,6 +25,10 @@
       "type": "integer",
       "default": 8883
     },
+    "config_sync_sec": {
+      "description": "Delay waiting for config message on start, <0 to disable",
+      "type": "integer"
+    },
     "client_id": {
       "type": "string"
     },

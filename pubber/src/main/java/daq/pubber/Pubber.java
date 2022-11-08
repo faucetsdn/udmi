@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.SiteModel;
-import com.google.udmi.util.SiteModel.ClientInfo;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -52,7 +51,6 @@ import java.util.stream.Collectors;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.schema.Auth_provider;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -107,7 +105,7 @@ public class Pubber {
   private static final String ERROR_TOPIC = "errors";
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
-  private static final int CONFIG_WAIT_TIME_SEC = 10;
+  private static final int WAIT_TIME_SEC = 10;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
@@ -440,7 +438,7 @@ public class Pubber {
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
-        safeSleep(CONFIG_WAIT_TIME_SEC);
+        safeSleep(WAIT_TIME_SEC);
       }
     }
   }
@@ -625,7 +623,7 @@ public class Pubber {
     try {
       cancelPeriodicSend();
       executor.shutdown();
-      if (!executor.awaitTermination(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!executor.awaitTermination(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Failed to shutdown scheduled tasks");
       }
     } catch (Exception e) {
@@ -654,10 +652,8 @@ public class Pubber {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
-      if (configLatch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
-        return true;
-      }
-      error("Configuration sync failed after " + CONFIG_WAIT_TIME_SEC);
+      mqttPublisher.startupLatchWait(configLatch, "initial config sync");
+      return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
     }
@@ -1366,7 +1362,7 @@ public class Pubber {
       latch.countDown();
     });
     try {
-      if (!latch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
