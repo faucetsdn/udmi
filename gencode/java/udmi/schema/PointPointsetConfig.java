@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "ref",
     "units",
-    "set_value"
+    "set_value",
+    "cov_increment"
 })
 @Generated("jsonschema2pojo")
 public class PointPointsetConfig {
@@ -44,6 +45,13 @@ public class PointPointsetConfig {
     @JsonProperty("set_value")
     @JsonPropertyDescription("Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.")
     public Object set_value;
+    /**
+     * The CoV (change of value) increment, which when set, enables CoV on the point and defines the minimum change in present value of the respective point before an update is published
+     * 
+     */
+    @JsonProperty("cov_increment")
+    @JsonPropertyDescription("The CoV (change of value) increment, which when set, enables CoV on the point and defines the minimum change in present value of the respective point before an update is published")
+    public Double cov_increment;
 
     @Override
     public int hashCode() {
@@ -51,6 +59,7 @@ public class PointPointsetConfig {
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.set_value == null)? 0 :this.set_value.hashCode()));
+        result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         return result;
     }
 
@@ -63,7 +72,7 @@ public class PointPointsetConfig {
             return false;
         }
         PointPointsetConfig rhs = ((PointPointsetConfig) other);
-        return ((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.set_value == rhs.set_value)||((this.set_value!= null)&&this.set_value.equals(rhs.set_value))));
+        return (((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.set_value == rhs.set_value)||((this.set_value!= null)&&this.set_value.equals(rhs.set_value))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
     }
 
 }
