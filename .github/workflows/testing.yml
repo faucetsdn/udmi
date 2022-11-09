@@ -45,7 +45,6 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: udmi  # Access to UDMI-REFLECTOR is mutually exclusive
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
@@ -56,7 +55,10 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: pubber runs
+      - name: mosquitto connect
+        run: |
+          bin/test_mosquitto
+      - name: pubber redirect
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
@@ -95,6 +97,7 @@ jobs:
   udmi:
     name: Integration Tests
     runs-on: ubuntu-latest
+    needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
