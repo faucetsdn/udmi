@@ -3,8 +3,6 @@
 PROJECT_ID=$1
 shift 1
 
-REGEX="^TEST ([a-z_]+)([A-Za-z ]+)?(RESULT .*)?$"
-
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
 
