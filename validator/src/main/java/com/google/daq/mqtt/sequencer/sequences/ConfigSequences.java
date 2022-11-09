@@ -54,7 +54,7 @@ public class ConfigSequences extends SequenceBase {
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilFalse("no interesting status", this::hasInterestingStatus);
-    syncConfig();
+    updateConfig();
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));

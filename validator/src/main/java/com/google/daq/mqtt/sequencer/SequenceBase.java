@@ -410,7 +410,7 @@ public abstract class SequenceBase {
     clearLogs();
     queryState();
 
-    syncConfig();
+    updateConfig();
 
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
@@ -419,16 +419,15 @@ public abstract class SequenceBase {
   protected void resetConfig() {
     recordSequence("Force reset config");
     withRecordSequence(false, () -> {
-      recordSequence = false;
       debug("Starting reset_config");
       resetDeviceConfig(true);
       extraField = "reset_config";
       deviceConfig.system.testing.sequence_name = extraField;
-      waitForConfigSync();
+      updateConfig();
       clearLogs();
       extraField = null;
       resetDeviceConfig();
-      waitForConfigSync();
+      updateConfig();
       debug("Done with reset_config");
     });
   }
@@ -436,13 +435,6 @@ public abstract class SequenceBase {
   private void waitForConfigSync() {
     debug("waiting for config sync");
     messageEvaluateLoop(this::configNotReady);
-  }
-
-  protected Date syncConfig() {
-    updateConfig();
-    waitForConfigSync();
-    debug("config synced to " + JsonUtil.getTimestamp(deviceConfig.timestamp));
-    return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
 
   @Test
