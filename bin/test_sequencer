@@ -72,8 +72,8 @@ else
     false
 fi
 
-#generated=docs/specs/sequences/generated.md
-#cp $generated /tmp/  # Save for test/comparison later
-#bin/gencode_seq
+generated=docs/specs/sequences/generated.md
+cp $generated /tmp/  # Save for test/comparison later
+bin/gencode_seq
 
 echo Done with base test_sequencer run.
