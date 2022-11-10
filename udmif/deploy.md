@@ -1,15 +1,13 @@
-[**UDMI**](../../../) / [**Docs**](../../) / [**Cloud**](../) / [**GCP**](./) / [Helm](#)
-
-
+[**UDMI**](../) / [**UDMIF**](./) / [Deploy](#)
 
 # UDMIF API & Web deployment to Kubernete
 
-[Helm](https://helm.sh/) is a popular package manager for Kubernete that is leveraged to deploy the UDMIF application to the Kubernete cluster that is created as part of the terraform process. The UDMIF [API](../../udmif/api) and [Web](../../udmif/web) source code needs to be built locally and then deployed using the appropriate [helm charts](../../udmif/helm) and scripts.
+[Helm](https://helm.sh/) is a popular package manager for Kubernete that is leveraged to deploy the UDMIF application to the Kubernete cluster that is created as part of the terraform process. The UDMIF [API](./api) and [Web](./web) source code needs to be built locally and then deployed using the appropriate [helm charts](./helm) and scripts.
 
 ## Pre-requisites
 There are some pre-requisites that need to be satisfied in order to build the docker images for those projects and deploy them to Kubernete.
 
-1. An [existing terraformed project in GCP](terraform.md)
+1. An [existing terraformed project in GCP](../docs/cloud/gcp/terraform.md)
 2. Docker locally installed
 3. [Kubectl locally installed](https://kubernetes.io/docs/tasks/tools/)
 4. [Helm locally installed](https://helm.sh/docs/intro/install/)
@@ -18,7 +16,7 @@ There are some pre-requisites that need to be satisfied in order to build the do
 
 ### 1. Build & Publish the Docker images
 
- The [API](../../udmif/api) and [Web](../../udmif/web) folders each contain a docker build script that generates the docker image for the application and publish it to GCR. 
+ The [API](./api) and [Web](./web) folders each contain a docker build script that generates the docker image for the application and publish it to GCR. 
  
  > NOTE: Make sure your gcloud CLI is authenticated against the project you will be using in GCP and properly configured.
  ```
@@ -49,9 +47,9 @@ You need to configure your project ID, compute zone and GKE cluster credentials 
    ```
 
  #### Deploy charts
- Deploy the helm charts using helm upgrade commands for the appropriate image tag you built and deployed above. You need to update the GCP_PROJECT_ID in the **repository:** section and provide values for all variables in the **env:** section for [`API`](../../udmif/helm/udmi-api) and [`Web`](../../udmif/helm/udmi-web) helm charts before running the commands. Once the values.yaml file has been updated, you can install or update the chart with the following commands.
+ Deploy the helm charts using helm upgrade commands for the appropriate image tag you built and deployed above. You need to update the GCP_PROJECT_ID in the **repository:** section and provide values for all variables in the **env:** section for [`API`](./helm/udmi-api) and [`Web`](./helm/udmi-web) helm charts before running the commands. Once the values.yaml file has been updated, you can install or update the chart with the following commands.
 
-   You need to be in the  [helm](../../udmif/helm) directory before issuing the commands. Image Tag should be a tag that was pushed to GCR in the docker build phase. 
+   You need to be in the  [helm](./helm) directory before issuing the commands. Image Tag should be a tag that was pushed to GCR in the docker build phase. 
 
    udmi-web:
    ```
@@ -64,7 +62,7 @@ You need to configure your project ID, compute zone and GKE cluster credentials 
    ```
 
  #### Deploy ingress
- Deploy the ingress using the following command. Please note that you must update the HOST_NAME in [`ingress.yaml`](../../udmif/ingress.yaml) before running the command. that hostname should be using the full domain name that you created in terraform. For example: dashboard.udmi.mydomain.com. You should ensure that you have proper DNS records in place so that this domain is resolvable over the internet.
+ Deploy the ingress using the following command. Please note that you must update the HOST_NAME in [`ingress.yaml`](./ingress.yaml) before running the command. that hostname should be using the full domain name that you created in terraform. For example: dashboard.udmi.mydomain.com. You should ensure that you have proper DNS records in place so that this domain is resolvable over the internet.
 
    ```
    kubectl apply -f ingress.yaml --namespace udmi
