@@ -99,12 +99,20 @@ def check_links(file_path):
     return failing_links
 
 
-if __name__ == "__main__":
+def main():
     check_paths = ['*.md', 'docs/**/*.md', 'schema/*.json']
+    error = False
     for check_path in check_paths:
         file_paths = glob.glob(check_path, recursive=True)
         for file_path in file_paths:
             invalid_tuples = check_links(file_path)
             if invalid_tuples:
+                error = True
                 for invalid_tuple in invalid_tuples:
                     print(f'** {invalid_tuple[0]} {invalid_tuple[1]} {invalid_tuple[2]}')
+    return error
+
+if __name__ == "__main__":
+    result = main()
+    if result:
+        sys.exit(1)
