@@ -442,7 +442,7 @@ public abstract class SequenceBase {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    checkThat("received serial no matches", () -> serialNo.equals(lastSerialNo));
+    untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -942,7 +942,7 @@ public abstract class SequenceBase {
     Object receivedConfig = receivedUpdates.get("config");
     if (!(receivedConfig instanceof Config)) {
       trace("no valid received config");
-      return false;
+      return true;
     }
     List<String> differences = configDiffEngine.diff(deviceConfig,
         sanitizeConfig((Config) receivedConfig));
