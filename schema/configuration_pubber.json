@@ -7,6 +7,9 @@
     "endpoint": {
       "$ref": "file:configuration_endpoint.json#"
     },
+    "projectId": {
+      "type": "string"
+    },
     "deviceId": {
       "type": "string"
     },

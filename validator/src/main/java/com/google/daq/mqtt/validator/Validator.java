@@ -361,7 +361,7 @@ public class Validator {
   }
 
   void messageLoop() {
-    if (client == null) {
+    if (client == null || client.getSubscriptionId() == null) {
       return;
     }
     sendInitializationQuery();

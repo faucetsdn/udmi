@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.SiteModel;
-import com.google.udmi.util.SiteModel.ClientInfo;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -107,7 +106,7 @@ public class Pubber {
   private static final String ERROR_TOPIC = "errors";
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
-  private static final int CONFIG_WAIT_TIME_SEC = 10;
+  private static final int WAIT_TIME_SEC = 10;
   private static final int STATE_THROTTLE_MS = 2000;
   private static final String PUBSUB_SITE = "PubSub";
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
@@ -154,7 +153,6 @@ public class Pubber {
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
-  private final String projectId;
   private final String deviceId;
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
@@ -181,9 +179,7 @@ public class Pubber {
     try {
       configuration = sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
       checkArgument(MQTT.equals(configuration.endpoint.protocol), "protocol mismatch");
-      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
-      projectId = clientInfo.projectId;
-      deviceId = clientInfo.deviceId;
+      deviceId = configuration.deviceId;
       outDir = new File(PUBBER_OUT);
     } catch (Exception e) {
       throw new RuntimeException("While configuring instance from " + configFile.getAbsolutePath(),
@@ -200,11 +196,11 @@ public class Pubber {
    * @param serialNo  Serial number of the device
    */
   public Pubber(String projectId, String sitePath, String deviceId, String serialNo) {
-    this.projectId = projectId;
     this.deviceId = deviceId;
     outDir = new File(PUBBER_OUT + "/" + serialNo);
     configuration = sanitizeConfiguration(new PubberConfiguration());
     configuration.deviceId = deviceId;
+    configuration.projectId = projectId;
     configuration.serialNo = serialNo;
     if (PUBSUB_SITE.equals(sitePath)) {
       pubSubClient = new PubSubClient(projectId, deviceId);
@@ -352,7 +348,9 @@ public class Pubber {
     if (configuration.sitePath != null) {
       siteModel = new SiteModel(configuration.sitePath);
       siteModel.initialize();
-      configuration.endpoint = siteModel.makeEndpointConfig(projectId, deviceId);
+      if (configuration.endpoint == null) {
+        configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
+      }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
@@ -441,7 +439,7 @@ public class Pubber {
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
-        safeSleep(CONFIG_WAIT_TIME_SEC);
+        safeSleep(WAIT_TIME_SEC);
       }
     }
   }
@@ -631,7 +629,7 @@ public class Pubber {
     try {
       cancelPeriodicSend();
       executor.shutdown();
-      if (!executor.awaitTermination(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!executor.awaitTermination(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Failed to shutdown scheduled tasks");
       }
     } catch (Exception e) {
@@ -660,10 +658,8 @@ public class Pubber {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
-      if (configLatch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
-        return true;
-      }
-      error("Configuration sync failed after " + CONFIG_WAIT_TIME_SEC);
+      mqttPublisher.startupLatchWait(configLatch, "initial config sync");
+      return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
     }
@@ -983,7 +979,7 @@ public class Pubber {
 
   private String getClientId(String forRegistry) {
     String cloudRegion = SiteModel.parseClientId(configuration.endpoint.client_id).cloudRegion;
-    return SiteModel.getClientId(projectId, cloudRegion, forRegistry, deviceId);
+    return SiteModel.getClientId(configuration.projectId, cloudRegion, forRegistry, deviceId);
   }
 
   private String extractConfigBlob(String blobName) {
@@ -1375,7 +1371,7 @@ public class Pubber {
       latch.countDown();
     });
     try {
-      if (!latch.await(CONFIG_WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {
@@ -1509,6 +1505,7 @@ public class Pubber {
   private void error(String message, Throwable e) {
     String longMessage = message + ": " + e.getMessage();
     cloudLog(longMessage, Level.ERROR);
+    localLog(message, Level.TRACE, getTimestamp(), stackTraceString(e));
   }
 
   static class ExtraPointsetEvent extends PointsetEvent {

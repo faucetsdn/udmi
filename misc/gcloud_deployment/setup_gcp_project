@@ -28,7 +28,7 @@ gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME --display-name="UDMI Cl
 gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SERVICE_ACCOUNT" --role="roles/pubsub.publisher" 
 gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SERVICE_ACCOUNT" --role="roles/cloudiot.provisioner" 
 
-$ROOT_DIR/dashboard/deploy_dashboard_gcloud $PROJECT_ID --service-account=$SERVICE_ACCOUNT
+$ROOT_DIR/udmis/deploy_udmis_gcloud $PROJECT_ID --service-account=$SERVICE_ACCOUNT
 
 $ROOT_DIR/bin/clone_model
 registry_id=$(jq -r .registry_id $ROOT_DIR/sites/udmi_site_model/cloud_iot_config.json)
