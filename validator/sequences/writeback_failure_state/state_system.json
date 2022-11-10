@@ -1,0 +1,16 @@
+{
+  "hardware" : {
+    "make" : "BOS",
+    "model" : "pubber"
+  },
+  "last_config" : "2022-11-07T17:40:54Z",
+  "last_start" : "2022-11-07T17:40:18Z",
+  "mode" : "initial",
+  "operational" : true,
+  "serial_no" : "sequencer-14994",
+  "software" : {
+    "firmware" : "v1"
+  },
+  "timestamp" : "2022-11-07T17:41:00Z",
+  "version" : "1.4.0"
+}

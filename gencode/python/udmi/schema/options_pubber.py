@@ -12,6 +12,9 @@ class PubberOptions:
     self.missingPoint = None
     self.extraField = None
     self.redirectRegistry = None
+    self.noPointState = None
+    self.disableWriteback = None
+    self.noWriteback = None
 
   @staticmethod
   def from_dict(source):
@@ -25,6 +28,9 @@ class PubberOptions:
     result.missingPoint = source.get('missingPoint')
     result.extraField = source.get('extraField')
     result.redirectRegistry = source.get('redirectRegistry')
+    result.noPointState = source.get('noPointState')
+    result.disableWriteback = source.get('disableWriteback')
+    result.noWriteback = source.get('noWriteback')
     return result
 
   @staticmethod
@@ -59,4 +65,10 @@ class PubberOptions:
       result['extraField'] = self.extraField # 5
     if self.redirectRegistry:
       result['redirectRegistry'] = self.redirectRegistry # 5
+    if self.noPointState:
+      result['noPointState'] = self.noPointState # 5
+    if self.disableWriteback:
+      result['disableWriteback'] = self.disableWriteback # 5
+    if self.noWriteback:
+      result['noWriteback'] = self.noWriteback # 5
     return result
