@@ -38,7 +38,10 @@ Some caveats:
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
 * [valid_serial_no](#valid_serial_no)
-* [writeback_states](#writeback_states)
+* [writeback_failure_state](#writeback_failure_state)
+* [writeback_invalid_state](#writeback_invalid_state)
+* [writeback_success_apply](#writeback_success_apply)
+* [writeback_success_state](#writeback_success_state)
 
 ## broken_config
 
@@ -156,15 +159,30 @@ Check that the min log-level config is honored by the device.
 
 1. Check that received serial no matches
 
-## writeback_states
+## writeback_failure_state
+
+1. Wait for point filter_alarm_pressure_status to have value_state default (null)
+1. Update config before point filter_alarm_pressure_status to have value_state failure:
+    * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
+1. Wait for point filter_alarm_pressure_status to have value_state failure
+
+## writeback_invalid_state
 
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
-1. Wait for point filter_alarm_pressure_status to have value_state default (null)
-1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
 1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
-    * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
 1. Wait for point filter_differential_pressure_sensor to have value_state invalid
-1. Wait for point filter_alarm_pressure_status to have value_state failure
+
+## writeback_success_apply
+
+1. Update config before point `filter_differential_pressure_setpoint` to have present_value `60`:
+    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
+1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`
+
+## writeback_success_state
+
+1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
+1. Update config before point filter_differential_pressure_setpoint to have value_state applied:
+    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
 1. Wait for point filter_differential_pressure_setpoint to have value_state applied
+1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`

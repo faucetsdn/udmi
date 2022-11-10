@@ -1,0 +1,11 @@
+{
+  "last_config" : "2022-11-07T17:42:21Z",
+  "logentries" : [ ],
+  "metrics" : {
+    "restart_count" : 71,
+    "mem_total_mb" : 128,
+    "mem_free_mb" : 98.27529907226562
+  },
+  "timestamp" : "2022-11-07T17:42:30.288Z",
+  "version" : "1.4.0"
+}

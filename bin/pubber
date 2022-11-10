@@ -50,6 +50,7 @@ cat <<EOF > /tmp/pubber_config.json
     },
     "sitePath": "$site_path",
     "deviceId": "$device_id",
+    "projectId": "$project_id",
     "serialNo": "$serial_no",
     "options": $options_json
 }

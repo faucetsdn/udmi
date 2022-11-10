@@ -1,0 +1,1062 @@
+2022-11-07T17:40:24Z NOTICE sequencer starting test writeback_failure_state
+2022-11-07T17:40:44Z DEBUG sequencer Starting reset_config
+2022-11-07T17:40:44Z INFO sequencer start waiting for device config sync after 20s
+2022-11-07T17:40:44Z DEBUG sequencer system config extra field reset_config
+2022-11-07T17:40:44Z DEBUG sequencer update config_system
+2022-11-07T17:40:44Z DEBUG sequencer local local_system
+2022-11-07T17:40:46Z DEBUG sequencer Update config before device config sync: 1970-01-01T00:00:00Z
+2022-11-07T17:40:46Z DEBUG sequencer local local_update
+2022-11-07T17:40:46Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:20Z: Config handler
+2022-11-07T17:40:46Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:20Z: success
+2022-11-07T17:40:46Z DEBUG sequencer received state_update
+2022-11-07T17:40:46Z DEBUG sequencer Updated state #001:
+{
+  "timestamp" : "2022-11-07T17:40:19Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "1970-01-01T00:00:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:46Z NOTICE sequencer Received serial no sequencer-14994
+2022-11-07T17:40:46Z DEBUG sequencer Updated state has last_config 1970-01-01T00:00:00Z
+2022-11-07T17:40:46Z DEBUG sequencer received state_system
+2022-11-07T17:40:46Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:20Z: Connection complete.
+2022-11-07T17:40:46Z DEBUG sequencer received config_update
+2022-11-07T17:40:46Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:09Z
+2022-11-07T17:40:46Z DEBUG sequencer Updated config #001:
+{
+  "timestamp" : "2022-11-07T17:40:09Z",
+  "version" : "1.3.14",
+  "system" : {
+    "min_loglevel" : 300,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "generated_config"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:25Z: State update defer -507ms
+2022-11-07T17:40:46Z DEBUG sequencer received state_update
+2022-11-07T17:40:46Z DEBUG sequencer Updated state #002:
+{
+  "timestamp" : "2022-11-07T17:40:22Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:09Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:20Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:46Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:09Z
+2022-11-07T17:40:46Z DEBUG sequencer received state_system
+2022-11-07T17:40:46Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:20Z: State update defer 1994ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:25Z: State update defer 1999ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:25Z: State update defer 1992ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:25Z: success
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:22Z: State update defer -4ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:25Z: State update defer 1993ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:20Z: State update defer 1989ms
+2022-11-07T17:40:46Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:27Z: State update defer -2ms
+2022-11-07T17:40:46Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received state_system
+2022-11-07T17:40:46Z DEBUG sequencer received state_update
+2022-11-07T17:40:46Z DEBUG sequencer Updated state #003:
+{
+  "timestamp" : "2022-11-07T17:40:25Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:09Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:46Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:09Z
+2022-11-07T17:40:46Z DEBUG sequencer received event_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received event_system (no logs)
+2022-11-07T17:40:46Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received state_update
+2022-11-07T17:40:46Z DEBUG sequencer Updated state #004:
+{
+  "timestamp" : "2022-11-07T17:40:27Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:09Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:25Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:46Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:09Z
+2022-11-07T17:40:46Z DEBUG sequencer received state_system
+2022-11-07T17:40:46Z DEBUG sequencer received event_pointset
+2022-11-07T17:40:46Z DEBUG sequencer received event_system (no logs)
+2022-11-07T17:40:46Z DEBUG sequencer received config_system
+2022-11-07T17:40:46Z DEBUG sequencer received config_update
+2022-11-07T17:40:46Z DEBUG sequencer Update with config reset
+2022-11-07T17:40:46Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:45Z
+2022-11-07T17:40:46Z DEBUG sequencer Updated config #002:
+{
+  "timestamp" : "2022-11-07T17:40:45Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-11-07T17:40:46Z INFO sequencer finished waiting for device config sync after 22s
+2022-11-07T17:40:46Z INFO sequencer clearing system logs...
+2022-11-07T17:40:47Z DEBUG sequencer Reading generated config file /workspaces/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2022-11-07T17:40:47Z INFO sequencer start waiting for device config sync after 23s
+2022-11-07T17:40:47Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:47Z DEBUG sequencer update config_system
+2022-11-07T17:40:47Z DEBUG sequencer local local_system
+2022-11-07T17:40:49Z DEBUG sequencer update config_pointset
+2022-11-07T17:40:49Z DEBUG sequencer local local_pointset
+2022-11-07T17:40:51Z DEBUG sequencer Update config before device config sync: 2022-04-21T00:33:43Z
+2022-11-07T17:40:51Z DEBUG sequencer local local_update
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:45Z: State update defer -16356ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:46Z: State update defer 1999ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:46Z: State update defer 1990ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:46Z: State update defer 1992ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:46Z: 2022-11-07T17:40:46Z received config 2022-11-07T17:40:45Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:46Z: success
+2022-11-07T17:40:51Z DEBUG sequencer received state_update
+2022-11-07T17:40:51Z DEBUG sequencer Updated state #005:
+{
+  "timestamp" : "2022-11-07T17:40:45Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:09Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:09Z
+2022-11-07T17:40:51Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:51Z DEBUG sequencer received state_system
+2022-11-07T17:40:51Z DEBUG sequencer received config_update
+2022-11-07T17:40:51Z DEBUG sequencer Update with config reset
+2022-11-07T17:40:51Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:45Z
+2022-11-07T17:40:51Z DEBUG sequencer Updated config #003:
+{
+  "timestamp" : "2022-11-07T17:40:45Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:47Z: State update defer 181ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:47Z: Config handler
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:47Z: 2022-11-07T17:40:47Z received config 2022-11-07T17:40:45Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:47Z: State update defer 173ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:47Z: State update defer 179ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:47Z: success
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:48Z: update state 2022-11-07T17:40:48Z last_config 2022-11-07T17:40:45Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:48Z: State update defer -1ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:47Z: State update defer 174ms
+2022-11-07T17:40:51Z DEBUG sequencer received config_system
+2022-11-07T17:40:51Z DEBUG sequencer received config_update
+2022-11-07T17:40:51Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer Updated config #004:
+{
+  "timestamp" : "2022-11-07T17:40:48Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer received state_update
+2022-11-07T17:40:51Z DEBUG sequencer Updated state #006:
+{
+  "timestamp" : "2022-11-07T17:40:48Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:45Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:47Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:45Z
+2022-11-07T17:40:51Z DEBUG sequencer received state_system
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:49Z: Config handler
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:49Z: State update defer 752ms
+2022-11-07T17:40:51Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:49Z: 2022-11-07T17:40:49Z received config 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:49Z: success
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:49Z: State update defer 759ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:49Z: State update defer 753ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:50Z: update state 2022-11-07T17:40:50Z last_config 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:50Z: State update defer -1ms
+2022-11-07T17:40:51Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:51Z DEBUG sequencer received state_system
+2022-11-07T17:40:51Z DEBUG sequencer received state_update
+2022-11-07T17:40:51Z DEBUG sequencer Updated state #007:
+{
+  "timestamp" : "2022-11-07T17:40:50Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:48Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:49Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_pointset
+2022-11-07T17:40:51Z DEBUG sequencer received event_system (no logs)
+2022-11-07T17:40:51Z DEBUG sequencer received config_update
+2022-11-07T17:40:51Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer Updated config #005:
+{
+  "timestamp" : "2022-11-07T17:40:48Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  }
+}
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:50Z: State update defer 1455ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:50Z: 2022-11-07T17:40:50Z received config 2022-11-07T17:40:48Z
+2022-11-07T17:40:51Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:50Z: success
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:50Z: State update defer 1456ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:50Z: Config handler
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:49Z: State update defer 758ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:50Z: State update defer 1462ms
+2022-11-07T17:40:51Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:50Z: State update defer 1464ms
+2022-11-07T17:40:52Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:52Z: State update defer -1ms
+2022-11-07T17:40:52Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:52Z: update state 2022-11-07T17:40:52Z last_config 2022-11-07T17:40:48Z
+2022-11-07T17:40:52Z DEBUG sequencer received state_update
+2022-11-07T17:40:52Z DEBUG sequencer Updated state #008:
+{
+  "timestamp" : "2022-11-07T17:40:52Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:48Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:50Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:52Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:48Z
+2022-11-07T17:40:52Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:52Z DEBUG sequencer received state_system
+2022-11-07T17:40:52Z DEBUG sequencer received config_pointset
+2022-11-07T17:40:52Z DEBUG sequencer received config_update
+2022-11-07T17:40:52Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:52Z
+2022-11-07T17:40:52Z DEBUG sequencer Updated config #006:
+{
+  "timestamp" : "2022-11-07T17:40:52Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-11-07T17:40:52Z INFO sequencer finished waiting for device config sync after 28s
+2022-11-07T17:40:52Z DEBUG sequencer Done with reset_config
+2022-11-07T17:40:52Z INFO sequencer clearing system logs...
+2022-11-07T17:40:53Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:53Z DEBUG sequencer update config_system
+2022-11-07T17:40:53Z DEBUG sequencer local local_system
+2022-11-07T17:40:55Z DEBUG sequencer Update config: 2022-11-07T17:40:52Z
+2022-11-07T17:40:55Z DEBUG sequencer local local_update
+2022-11-07T17:40:55Z INFO sequencer start waiting for device config sync after 31s
+2022-11-07T17:40:55Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:55Z DEBUG sequencer Update config before device config sync: 2022-11-07T17:40:52Z
+2022-11-07T17:40:55Z DEBUG sequencer local local_update
+2022-11-07T17:40:55Z INFO sequencer finished waiting for device config sync after 31s
+2022-11-07T17:40:55Z DEBUG sequencer config synced to 2022-11-07T17:40:52Z
+2022-11-07T17:40:55Z INFO sequencer start waiting for device state update after 31s
+2022-11-07T17:40:55Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:55Z DEBUG sequencer Update config before device state update: 2022-11-07T17:40:52Z
+2022-11-07T17:40:55Z DEBUG sequencer local local_update
+2022-11-07T17:40:55Z INFO sequencer finished waiting for device state update after 31s
+2022-11-07T17:40:55Z INFO sequencer start waiting for point filter_alarm_pressure_status to have value_state default (null) after 31s
+2022-11-07T17:40:55Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:55Z DEBUG sequencer Update config before point filter_alarm_pressure_status to have value_state default (null): 2022-11-07T17:40:52Z
+2022-11-07T17:40:55Z DEBUG sequencer local local_update
+2022-11-07T17:40:55Z DEBUG sequencer 2022-11-07T17:40:55Z Value state null equals null = true
+
+2022-11-07T17:40:55Z INFO sequencer finished waiting for point filter_alarm_pressure_status to have value_state default (null) after 31s
+2022-11-07T17:40:55Z INFO sequencer start waiting for point filter_alarm_pressure_status to have value_state failure after 31s
+2022-11-07T17:40:55Z DEBUG sequencer system config extra field null
+2022-11-07T17:40:55Z DEBUG sequencer update config_pointset
+2022-11-07T17:40:55Z DEBUG sequencer local local_pointset
+2022-11-07T17:40:57Z DEBUG sequencer Update config before point filter_alarm_pressure_status to have value_state failure: 2022-11-07T17:40:52Z
+2022-11-07T17:40:57Z DEBUG sequencer local local_update
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:52Z: State update defer 1685ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:52Z: State update defer 1696ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:52Z: Config handler
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:52Z: State update defer 1698ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:52Z: 2022-11-07T17:40:52Z received config 2022-11-07T17:40:52Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:52Z: success
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:52Z: State update defer 1686ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received config_system
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received config_update
+2022-11-07T17:40:57Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:40:54Z
+2022-11-07T17:40:57Z DEBUG sequencer Updated config #007:
+{
+  "timestamp" : "2022-11-07T17:40:54Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:54Z: State update defer -1ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:54Z: update state 2022-11-07T17:40:54Z last_config 2022-11-07T17:40:52Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_system
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_update
+2022-11-07T17:40:57Z DEBUG sequencer Updated state #009:
+{
+  "timestamp" : "2022-11-07T17:40:54Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:52Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:52Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:57Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:52Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:55Z: State update defer 1107ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:55Z: State update defer 1106ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:55Z: State update defer 1114ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:55Z: Config handler
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:55Z: 2022-11-07T17:40:55Z received config 2022-11-07T17:40:54Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:40:55Z: success
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:55Z: State update defer 1112ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:40:56Z: State update defer -1ms
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:40:56Z: update state 2022-11-07T17:40:56Z last_config 2022-11-07T17:40:54Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_system
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_update
+2022-11-07T17:40:57Z DEBUG sequencer Updated state #010:
+{
+  "timestamp" : "2022-11-07T17:40:56Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:55Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:40:57Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:54Z
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:57Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:57Z DEBUG sequencer 2022-11-07T17:40:57Z Value state failure equals null = false
+
+2022-11-07T17:40:58Z DEBUG sequencer received state_system
+2022-11-07T17:40:58Z DEBUG sequencer 2022-11-07T17:40:58Z Value state failure equals null = false
+
+2022-11-07T17:40:58Z DEBUG sequencer received state_update
+2022-11-07T17:40:58Z DEBUG sequencer Updated state #011:
+{
+  "timestamp" : "2022-11-07T17:40:56Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:40:55Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "configAcked" : "true"
+}
+2022-11-07T17:40:58Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:54Z
+2022-11-07T17:40:58Z DEBUG sequencer 2022-11-07T17:40:58Z Value state failure equals null = false
+
+2022-11-07T17:40:58Z DEBUG sequencer received state_pointset
+2022-11-07T17:40:58Z DEBUG sequencer 2022-11-07T17:40:58Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received config_pointset
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received config_update
+2022-11-07T17:41:00Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:41:00Z
+2022-11-07T17:41:00Z DEBUG sequencer Updated config #008:
+{
+  "timestamp" : "2022-11-07T17:41:00Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "set_value" : false
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:00Z: State update defer -1680ms
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:00Z: State update defer 1999ms
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:41:00Z: Config handler
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:41:00Z: 2022-11-07T17:41:00Z received config 2022-11-07T17:41:00Z
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:00Z: State update defer 1994ms
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system NOTICE system.config.apply 2022-11-07T17:41:00Z: success
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_pointset
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:00Z: State update defer 1923ms
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:00Z: State update defer 1994ms
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:00Z DEBUG sequencer received event_system (no logs)
+2022-11-07T17:41:00Z DEBUG sequencer 2022-11-07T17:41:00Z Value state failure equals null = false
+
+2022-11-07T17:41:01Z DEBUG sequencer received state_update
+2022-11-07T17:41:01Z DEBUG sequencer Updated state #012:
+{
+  "timestamp" : "2022-11-07T17:41:00Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:40:54Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:41:01Z DEBUG sequencer Updated state has last_config 2022-11-07T17:40:54Z
+2022-11-07T17:41:01Z DEBUG sequencer 2022-11-07T17:41:01Z Value state failure equals null = false
+
+2022-11-07T17:41:01Z DEBUG sequencer received state_system
+2022-11-07T17:41:01Z DEBUG sequencer 2022-11-07T17:41:01Z Value state failure equals null = false
+
+2022-11-07T17:41:01Z DEBUG sequencer received state_pointset
+2022-11-07T17:41:01Z DEBUG sequencer 2022-11-07T17:41:01Z Value state failure equals null = false
+
+2022-11-07T17:41:01Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:41:00Z: update state 2022-11-07T17:41:00Z last_config 2022-11-07T17:40:54Z
+2022-11-07T17:41:01Z DEBUG sequencer 2022-11-07T17:41:01Z Value state failure equals null = false
+
+2022-11-07T17:41:02Z DEBUG sequencer received event_system WARNING device.log 2022-11-07T17:41:02Z: State update defer -1ms
+2022-11-07T17:41:02Z DEBUG sequencer 2022-11-07T17:41:02Z Value state failure equals null = false
+
+2022-11-07T17:41:02Z DEBUG sequencer received event_system INFO device.log 2022-11-07T17:41:02Z: update state 2022-11-07T17:41:02Z last_config 2022-11-07T17:41:00Z
+2022-11-07T17:41:02Z DEBUG sequencer 2022-11-07T17:41:02Z Value state failure equals null = false
+
+2022-11-07T17:41:02Z DEBUG sequencer received state_update
+2022-11-07T17:41:02Z DEBUG sequencer Updated state #013:
+{
+  "timestamp" : "2022-11-07T17:41:02Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:41:00Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:41:00Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "value_state" : "failure",
+        "status" : {
+          "message" : "Point is not writable"
+        }
+      },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:41:02Z DEBUG sequencer Updated state has last_config 2022-11-07T17:41:00Z
+2022-11-07T17:41:02Z DEBUG sequencer 2022-11-07T17:41:02Z Value state failure equals failure = true
+
+2022-11-07T17:41:02Z INFO sequencer finished waiting for point filter_alarm_pressure_status to have value_state failure after 38s
+2022-11-07T17:41:02Z DEBUG sequencer Starting reset_config
+2022-11-07T17:41:02Z INFO sequencer start waiting for device config sync after 38s
+2022-11-07T17:41:02Z DEBUG sequencer system config extra field reset_config
+2022-11-07T17:41:02Z DEBUG sequencer update config_system
+2022-11-07T17:41:04Z DEBUG sequencer Update config before device config sync: 1970-01-01T00:00:00Z
+2022-11-07T17:41:04Z DEBUG sequencer Update with config reset
+2022-11-07T17:41:04Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:41:03Z
+2022-11-07T17:41:04Z DEBUG sequencer Updated config #009:
+{
+  "timestamp" : "2022-11-07T17:41:03Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "reset_config"
+    }
+  }
+}
+2022-11-07T17:41:04Z INFO sequencer finished waiting for device config sync after 40s
+2022-11-07T17:41:04Z INFO sequencer clearing system logs...
+2022-11-07T17:41:05Z DEBUG sequencer Reading generated config file /workspaces/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2022-11-07T17:41:05Z INFO sequencer start waiting for device config sync after 41s
+2022-11-07T17:41:05Z DEBUG sequencer system config extra field null
+2022-11-07T17:41:05Z DEBUG sequencer update config_system
+2022-11-07T17:41:07Z DEBUG sequencer update config_pointset
+2022-11-07T17:41:09Z DEBUG sequencer Update config before device config sync: 2022-04-21T00:33:43Z
+2022-11-07T17:41:09Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:41:06Z
+2022-11-07T17:41:09Z DEBUG sequencer Updated config #010:
+{
+  "timestamp" : "2022-11-07T17:41:06Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  }
+}
+2022-11-07T17:41:09Z DEBUG sequencer Updated state #014:
+{
+  "timestamp" : "2022-11-07T17:41:06Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:41:06Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:41:06Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:41:09Z DEBUG sequencer Updated state has last_config 2022-11-07T17:41:06Z
+2022-11-07T17:41:09Z DEBUG sequencer Updated state #015:
+{
+  "timestamp" : "2022-11-07T17:41:04Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:41:03Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:41:03Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:41:09Z DEBUG sequencer Updated state has last_config 2022-11-07T17:41:03Z
+2022-11-07T17:41:09Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:41:06Z
+2022-11-07T17:41:09Z DEBUG sequencer Updated config #011:
+{
+  "timestamp" : "2022-11-07T17:41:06Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  }
+}
+2022-11-07T17:41:09Z DEBUG sequencer Updated state #016:
+{
+  "timestamp" : "2022-11-07T17:41:09Z",
+  "version" : "1.4.0",
+  "system" : {
+    "last_config" : "2022-11-07T17:41:06Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-07T17:40:18Z",
+    "serial_no" : "sequencer-14994",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-07T17:41:07Z",
+      "level" : 300
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : { },
+      "filter_differential_pressure_sensor" : { }
+    }
+  }
+}
+2022-11-07T17:41:09Z DEBUG sequencer Updated state has last_config 2022-11-07T17:41:06Z
+2022-11-07T17:41:12Z DEBUG sequencer Updated config with timestamp 2022-11-07T17:41:11Z
+2022-11-07T17:41:12Z DEBUG sequencer Updated config #012:
+{
+  "timestamp" : "2022-11-07T17:41:11Z",
+  "version" : "1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-07T17:40:18Z",
+    "testing" : {
+      "sequence_name" : "writeback_failure_state"
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
+2022-11-07T17:41:12Z INFO sequencer finished waiting for device config sync after 47s
+2022-11-07T17:41:12Z DEBUG sequencer Done with reset_config
+2022-11-07T17:41:12Z NOTICE sequencer RESULT pass writeback_failure_state Sequence complete
+2022-11-07T17:41:12Z INFO sequencer Sequence complete
+2022-11-07T17:41:12Z NOTICE sequencer ending test writeback_failure_state after 47s

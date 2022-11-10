@@ -35,7 +35,7 @@ Any backend system (in a GCP project) should adhere to the following guidelines:
   * If necessary, any _config_ or _command_ messages should go through a PubSub topic, and then converted to the requisite Cloud IoT
   config write using a simple cloud function.
 * To make data persistent, it can be written to a back-end database. See the `udmi_target` and
-  `udmi_state` [example cloud functions](../../dashboard/functions/index.js) for details.
+  `udmi_state` [example cloud functions](../../udmis/functions/index.js) for details.
 * A similar function called `device_config` shows how PubSub can be used to update the Cloud IoT configuration.
 
 A config push can be tested with something like:

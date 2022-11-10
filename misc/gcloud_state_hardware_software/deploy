@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if (( $# < 4 )); then
+    echo $0 PROJECT_ID DATASET_ID LOCATION TRIGGER_TOPIC [--drop]
+    exit
+fi
+
+PROJECT_ID=$1
+DATASET_ID=$2
+LOCATION=$3
+TRIGGER_TOPIC=$4
+shift 4
+
+if [[ $1 == "--drop" ]]; then
+    shift 1
+    #echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
+    #sleep 5 && echo "Deleting tables ..." && sleep 3
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.state
+fi
+
+FUNCTION_NAME=state
+
+# State table
+bq mk \
+    --table \
+    $PROJECT_ID:$DATASET_ID.state \
+    schema_state.json
+
+# Deploy Cloud Function
+gcloud functions deploy $FUNCTION_NAME \
+    --trigger-topic=$TRIGGER_TOPIC \
+    --entry-point=stateToBigQuery \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID

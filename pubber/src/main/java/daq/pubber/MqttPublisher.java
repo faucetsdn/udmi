@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -43,6 +44,9 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.Basic;
+import udmi.schema.EndpointConfiguration.Transport;
+import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -63,13 +67,13 @@ public class MqttPublisher {
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String MESSAGE_TOPIC_FORMAT = "/devices/%s/%s";
-  private static final String BROKER_URL_FORMAT = "ssl://%s:%s";
+  private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
-  private static final long CONFIG_WAIT_TIME_MS = 10000;
+  private static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
 
@@ -95,22 +99,34 @@ public class MqttPublisher {
 
   MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
     this.configuration = configuration;
-    ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
-    this.projectId = clientIdParts.projectId;
-    this.cloudRegion = clientIdParts.cloudRegion;
-    this.registryId = clientIdParts.registryId;
+    if (isGcpIotCore(configuration)) {
+      ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
+      this.projectId = clientIdParts.projectId;
+      this.cloudRegion = clientIdParts.cloudRegion;
+      this.registryId = clientIdParts.registryId;
+    } else {
+      this.projectId = null;
+      this.cloudRegion = null;
+      this.registryId = null;
+    }
     this.onError = onError;
     validateCloudIotOptions();
+  }
+
+  private boolean isGcpIotCore(PubberConfiguration configuration) {
+    return configuration.endpoint.auth_provider == null
+        || configuration.endpoint.auth_provider.jwt != null;
   }
 
   private String getClientId(String deviceId) {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
-    String configuredClientId = configuration.endpoint.client_id;
-    if (configuredClientId != null) {
-      ClientInfo clientInfo = SiteModel.parseClientId(configuredClientId);
+    if (isGcpIotCore(configuration)) {
+      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
       return SiteModel.getClientId(clientInfo.projectId, clientInfo.cloudRegion,
           clientInfo.registryId, deviceId);
+    } else if (configuration.endpoint.client_id != null) {
+      return configuration.endpoint.client_id;
     }
     return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
   }
@@ -210,9 +226,7 @@ public class MqttPublisher {
       debug("Connecting through gateway " + gatewayId);
       gatewayLatch = new CountDownLatch(1);
       MqttClient mqttClient = getConnectedClient(gatewayId);
-      if (!gatewayLatch.await(CONFIG_WAIT_TIME_MS, TimeUnit.MILLISECONDS)) {
-        throw new RuntimeException("Timeout waiting for gateway startup exchange");
-      }
+      startupLatchWait(gatewayLatch, "gateway startup exchange");
       String topic = String.format("/devices/%s/attach", deviceId);
       String payload = "";
       info("Publishing attach message " + topic);
@@ -225,13 +239,26 @@ public class MqttPublisher {
     }
   }
 
+  void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
+    try {
+      int waitTimeSec = Optional.ofNullable(configuration.endpoint.config_sync_sec)
+          .orElse(DEFAULT_CONFIG_WAIT_SEC);
+      int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
+      if (useWaitTime > 0 && !gatewayLatch.await(useWaitTime, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Latch timeout " + designator);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While waiting for " + designator, e);
+    }
+  }
+
   private MqttClient newMqttClient(String deviceId) {
     try {
       Preconditions.checkNotNull(deviceId, "deviceId is null");
       String clientId = getClientId(deviceId);
-      info("Creating new mqtt client for " + clientId);
-      MqttClient mqttClient = new MqttClient(getBrokerUrl(), clientId,
-          new MemoryPersistence());
+      String brokerUrl = getBrokerUrl();
+      MqttClient mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      info("Creating new client to " + brokerUrl + " as " + clientId);
       return mqttClient;
     } catch (Exception e) {
       errorCounter.incrementAndGet();
@@ -252,12 +279,10 @@ public class MqttPublisher {
 
       MqttConnectOptions options = new MqttConnectOptions();
       options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      options.setUserName(UNUSED_ACCOUNT_NAME);
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      info("Password hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
-      options.setPassword(createJwt());
+      configureAuth(options);
       reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
 
       mqttClient.connect(options);
@@ -271,15 +296,38 @@ public class MqttPublisher {
     }
   }
 
-  private char[] createJwt() throws Exception {
-    return createJwt(projectId, (byte[]) configuration.keyBytes,
-        configuration.algorithm).toCharArray();
+  private void configureAuth(MqttConnectOptions options) throws Exception {
+    if (configuration.endpoint.auth_provider == null) {
+      info("No endpoint auth_provider found, using gcp defaults");
+      configureAuth(options, (Jwt) null);
+    } else if (configuration.endpoint.auth_provider.jwt != null) {
+      configureAuth(options, configuration.endpoint.auth_provider.jwt);
+    } else if (configuration.endpoint.auth_provider.basic != null) {
+      configureAuth(options, configuration.endpoint.auth_provider.basic);
+    } else {
+      throw new IllegalArgumentException("Unknown auth provider");
+    }
+  }
+
+  private void configureAuth(MqttConnectOptions options, Jwt jwt) throws Exception {
+    String audience = jwt == null ? projectId : jwt.audience;
+    info("Auth using audience " + audience);
+    options.setUserName(UNUSED_ACCOUNT_NAME);
+    info("Key hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
+    options.setPassword(createJwt(audience, (byte[]) configuration.keyBytes,
+        configuration.algorithm).toCharArray());
+  }
+
+  private void configureAuth(MqttConnectOptions options, Basic basic) {
+    info("Auth using username " + basic.username);
+    options.setUserName(basic.username);
+    options.setPassword(basic.password.toCharArray());
   }
 
   /**
    * Create a Cloud IoT JWT for the given project id, signed with the given private key.
    */
-  private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
+  private String createJwt(String audience, byte[] privateKeyBytes, String algorithm)
       throws Exception {
     DateTime now = new DateTime();
     // Create a JWT to authenticate this device. The device will be disconnected after the token
@@ -289,7 +337,7 @@ public class MqttPublisher {
         Jwts.builder()
             .setIssuedAt(now.toDate())
             .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
-            .setAudience(projectId);
+            .setAudience(audience);
 
     if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
@@ -306,7 +354,8 @@ public class MqttPublisher {
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    return String.format(BROKER_URL_FORMAT, configuration.endpoint.hostname,
+    Transport trans = Optional.ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
+    return String.format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
         configuration.endpoint.port);
   }
 
@@ -408,7 +457,7 @@ public class MqttPublisher {
         return connectedClient;
       }
       info("Client not active, deferring message...");
-      safeSleep(CONFIG_WAIT_TIME_MS);
+      safeSleep(DEFAULT_CONFIG_WAIT_SEC);
     }
   }
 
