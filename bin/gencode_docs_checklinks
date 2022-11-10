@@ -7,6 +7,7 @@ Prints any invalid links, otherwise quiet if all links are valid
 import glob
 import re
 import os
+import sys
 
 HOSTED_GITHUB_PAGES = r'^https?:\/\/faucetsdn\.github\.io\/udmi\/'
 HOSTED_GITHUB = r'^https?:\/\/(?:www\.)?github\.com\/faucetsdn\/udmi\/(?:blob|tree)\/master\/'
@@ -100,7 +101,7 @@ def check_links(file_path):
 
 
 def main():
-    check_paths = ['*.md', 'docs/**/*.md', 'schema/*.json']
+    check_paths = ['*.md', 'docs/**/*.md', 'schema/*.json', 'udmif/**/*.md']
     error = False
     for check_path in check_paths:
         file_paths = glob.glob(check_path, recursive=True)
