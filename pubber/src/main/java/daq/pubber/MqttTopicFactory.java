@@ -1,5 +1,8 @@
 package daq.pubber;
 
+/**
+ * Factory class for managing MQTT topics.
+ */
 public class MqttTopicFactory {
 
   private static final String TOPIC_PREFIX_FMT = "/devices/%s";
