@@ -8,6 +8,9 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static daq.pubber.MqttTopicFactory.getConfigTopic;
+import static daq.pubber.MqttTopicFactory.getErrorsTopic;
+import static daq.pubber.MqttTopicFactory.getEventsSuffix;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -99,6 +102,7 @@ public class Pubber {
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
+  public static final String PUBBER_LOG_CATEGORY = "device.log";
   private static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -112,13 +116,14 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static final Map<Class<?>, String> MESSAGE_TOPIC_MAP = ImmutableMap.of(
-      State.class, "state",
-      SystemEvent.class, "events/system",
-      PointsetEvent.class, "events/pointset",
-      ExtraPointsetEvent.class, "events/pointset",
-      DiscoveryEvent.class, "events/discovery"
+  private static final Map<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP = ImmutableMap.of(
+      State.class, MqttTopicFactory.getStateSuffix(),
+      SystemEvent.class, getEventsSuffix("system"),
+      PointsetEvent.class, getEventsSuffix("pointset"),
+      ExtraPointsetEvent.class, getEventsSuffix("pointset"),
+      DiscoveryEvent.class, getEventsSuffix("discovery")
   );
+
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -142,7 +147,6 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
-  public static final String PUBBER_LOG_CATEGORY = "device.log";
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -309,6 +313,10 @@ public class Pubber {
       configuration.options = new PubberOptions();
     }
     return configuration;
+  }
+
+  private static Date getCurrentTimestamp() {
+    return new Date();
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -726,13 +734,12 @@ public class Pubber {
     ensureKeyBytes();
     mqttPublisher = new MqttPublisher(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
-      mqttPublisher.registerHandler(configuration.gatewayId, CONFIG_TOPIC,
+      mqttPublisher.registerHandler(getConfigTopic(configuration.gatewayId),
           this::gatewayHandler, Config.class);
-      mqttPublisher.registerHandler(configuration.gatewayId, ERROR_TOPIC,
+      mqttPublisher.registerHandler(getErrorsTopic(configuration.gatewayId),
           this::errorHandler, GatewayError.class);
     }
-    mqttPublisher.registerHandler(configuration.deviceId, CONFIG_TOPIC,
-        this::configHandler, Config.class);
+    mqttPublisher.registerHandler(getConfigTopic(deviceId), this::configHandler, Config.class);
   }
 
   private void ensureKeyBytes() {
@@ -810,10 +817,6 @@ public class Pubber {
     Level successLevel = Category.LEVEL.computeIfAbsent(category, key -> Level.INFO);
     entry.level = (success ? successLevel : Level.ERROR).value();
     return entry;
-  }
-
-  private static Date getCurrentTimestamp() {
-    return new Date();
   }
 
   private String exceptionDetail(Throwable e) {
@@ -1384,15 +1387,15 @@ public class Pubber {
   }
 
   private void publishDeviceMessage(Object message, Runnable callback) {
-    String topic = MESSAGE_TOPIC_MAP.get(message.getClass());
-    if (topic == null) {
+    String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
+    if (topicSuffix == null) {
       error("Unknown message class " + message.getClass());
       return;
     }
 
     augmentDeviceMessage(message);
-    mqttPublisher.publish(configuration.deviceId, topic, message, callback);
-    String messageBase = topic.replace("/", "_");
+    mqttPublisher.publish(configuration.deviceId, topicSuffix, message, callback);
+    String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
     try {
