@@ -54,10 +54,11 @@ public class ConfigDiffEngine {
 
   private Object convertSemantics(Object thing, Field field) {
     try {
-      if (isBaseType(field) || isBaseType(field.get(thing))) {
-        return field.get(thing);
+      Object result = field.get(thing);
+      if (isBaseType(field) || isBaseType(result)) {
+        return SemanticValue.getValue(result);
       } else {
-        return convertSemantics(field.get(thing));
+        return convertSemantics(result);
       }
     } catch (Exception e) {
       throw new RuntimeException("While converting field " + field.getName(), e);
