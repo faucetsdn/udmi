@@ -9,6 +9,7 @@ public class MqttDevice {
   MqttPublisher mqttPublisher;
 
   public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
+    throw new RuntimeException("Not yet implemented");
   }
 
   /**
