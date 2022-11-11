@@ -160,7 +160,7 @@ public class Pubber {
   private final String deviceId;
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
-  private MqttPublisher mqttPublisher;
+  private MqttDevice mqttPublisher;
   private ScheduledFuture<?> periodicSender;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
@@ -739,7 +739,7 @@ public class Pubber {
     }
     Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    mqttPublisher = new MqttPublisher(configuration, this::publisherException);
+    mqttPublisher = new MqttDevice(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       mqttPublisher.registerHandler(getConfigTopic(configuration.gatewayId),
           this::gatewayHandler, Config.class);
