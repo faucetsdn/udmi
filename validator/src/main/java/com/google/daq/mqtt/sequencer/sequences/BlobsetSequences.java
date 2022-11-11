@@ -175,7 +175,7 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  @Test
+  // @Test
   @Description("Redirect to a different endpoint")
   public void endpoint_config_connection_success_redirect() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
