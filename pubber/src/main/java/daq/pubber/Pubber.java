@@ -417,6 +417,13 @@ public class Pubber {
         new File(siteModel.getDeviceWorkingDir(deviceId), PERSISTENT_STORE_FILE);
   }
 
+  private void publishDirtyState() {
+    if (stateDirty.get()) {
+      System.err.println("Publishing dirty state block");
+      markStateDirty(0);
+    }
+  }
+
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
@@ -740,6 +747,7 @@ public class Pubber {
           this::errorHandler, GatewayError.class);
     }
     mqttPublisher.registerHandler(getConfigTopic(deviceId), this::configHandler, Config.class);
+    publishDirtyState();
   }
 
   private void ensureKeyBytes() {
@@ -1326,7 +1334,7 @@ public class Pubber {
       try {
         long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
         warn(String.format("State update defer %dms", delay));
-        if (delay > 0) {
+        if (delay > 0 || mqttPublisher == null) {
           markStateDirty(delay);
         } else {
           publishStateMessage();

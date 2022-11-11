@@ -389,13 +389,14 @@ public class MqttPublisher {
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(String mqttTopic,
       Consumer<T> handler, Class<T> messageType) {
+    String handlerKey = getHandlerKey(mqttTopic);
     if (handler == null) {
-      handlers.remove(mqttTopic);
-      handlersType.remove(mqttTopic);
-    } else if (handlers.put(mqttTopic, (Consumer<Object>) handler) == null) {
-      handlersType.put(mqttTopic, (Class<Object>) messageType);
+      handlers.remove(handlerKey);
+      handlersType.remove(handlerKey);
+    } else if (handlers.put(handlerKey, (Consumer<Object>) handler) == null) {
+      handlersType.put(handlerKey, (Class<Object>) messageType);
     } else {
-      throw new IllegalStateException("Overwriting existing handler for " + mqttTopic);
+      throw new IllegalStateException("Overwriting existing handler " + handlerKey);
     }
   }
 
