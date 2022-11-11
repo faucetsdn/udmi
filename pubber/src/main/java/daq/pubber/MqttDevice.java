@@ -20,8 +20,7 @@ public class MqttDevice {
    * @param messageType Type of the message for this handler
    */
   @SuppressWarnings("unchecked")
-  public <T> void registerHandler(String mqttTopic,
-      Consumer<T> handler, Class<T> messageType) {
+  public <T> void registerHandler(String mqttTopic, Consumer<T> handler, Class<T> messageType) {
   }
 
   public void connect(String deviceId) {
