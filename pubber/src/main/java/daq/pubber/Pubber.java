@@ -160,7 +160,7 @@ public class Pubber {
   private final String deviceId;
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
-  private MqttDevice mqttPublisher;
+  private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
   private long lastStateTimeMs;
   private PubSubClient pubSubClient;
@@ -172,6 +172,7 @@ public class Pubber {
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
   private DevicePersistent persistentData;
+  private MqttDevice gatewayTarget;
 
   /**
    * Start an instance from a configuration file.
@@ -669,11 +670,11 @@ public class Pubber {
 
   private boolean attemptConnection() {
     try {
-      if (mqttPublisher == null) {
+      if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
       connect();
-      mqttPublisher.startupLatchWait(configLatch, "initial config sync");
+      deviceTarget.startupLatchWait(configLatch, "initial config sync");
       return true;
     } catch (Exception e) {
       error("While waiting for connection start", e);
@@ -726,9 +727,9 @@ public class Pubber {
   }
 
   private void disconnectMqtt() {
-    if (mqttPublisher != null) {
-      captureExceptions("closing mqtt publisher", mqttPublisher::close);
-      mqttPublisher = null;
+    if (deviceTarget != null) {
+      captureExceptions("closing mqtt publisher", deviceTarget::close);
+      deviceTarget = null;
     }
   }
 
@@ -737,16 +738,17 @@ public class Pubber {
     if (siteModel != null && configuration.keyFile != null) {
       configuration.keyFile = siteModel.getDeviceKeyFile(configuration.deviceId);
     }
-    Preconditions.checkState(mqttPublisher == null, "mqttPublisher already defined");
+    Preconditions.checkState(deviceTarget == null, "mqttPublisher already defined");
     ensureKeyBytes();
-    mqttPublisher = new MqttDevice(configuration, this::publisherException);
+    deviceTarget = new MqttDevice(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
-      mqttPublisher.registerHandler(getConfigTopic(configuration.gatewayId),
+      gatewayTarget = new MqttDevice(configuration.gatewayId, deviceTarget);
+      gatewayTarget.registerHandler(getConfigTopic(configuration.gatewayId),
           this::gatewayHandler, Config.class);
-      mqttPublisher.registerHandler(getErrorsTopic(configuration.gatewayId),
+      gatewayTarget.registerHandler(getErrorsTopic(configuration.gatewayId),
           this::errorHandler, GatewayError.class);
     }
-    mqttPublisher.registerHandler(getConfigTopic(deviceId), this::configHandler, Config.class);
+    deviceTarget.registerHandler(getConfigTopic(deviceId), this::configHandler, Config.class);
     publishDirtyState();
   }
 
@@ -762,7 +764,7 @@ public class Pubber {
 
   private void connect() {
     try {
-      mqttPublisher.connect(configuration.deviceId);
+      deviceTarget.connect(configuration.deviceId);
       info("Connection complete.");
       workingEndpoint = toJsonString(configuration.endpoint);
     } catch (Exception e) {
@@ -1375,7 +1377,7 @@ public class Pubber {
       throw new RuntimeException("While converting new device state", e);
     }
 
-    if (mqttPublisher == null) {
+    if (deviceTarget == null) {
       markStateDirty(-1);
       return;
     }
@@ -1406,13 +1408,13 @@ public class Pubber {
       return;
     }
 
-    if (mqttPublisher == null) {
+    if (deviceTarget == null) {
       error("publisher not active");
       return;
     }
-    
+
     augmentDeviceMessage(message);
-    mqttPublisher.publish(configuration.deviceId, topicSuffix, message, callback);
+    deviceTarget.publish(configuration.deviceId, topicSuffix, message, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);
@@ -1444,7 +1446,7 @@ public class Pubber {
   }
 
   private boolean publisherActive() {
-    return mqttPublisher != null && mqttPublisher.isActive();
+    return deviceTarget != null && deviceTarget.isActive();
   }
 
   private void cloudLog(String message, Level level) {

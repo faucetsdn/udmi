@@ -9,10 +9,17 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttDevice {
 
-  MqttPublisher mqttPublisher;
+  private final String deviceId;
+  private MqttPublisher mqttPublisher;
 
   public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
-    throw new RuntimeException("Not yet implemented");
+    deviceId = configuration.deviceId;
+    mqttPublisher = new MqttPublisher(configuration, onError);
+  }
+
+  public MqttDevice(String deviceId, MqttDevice target) {
+    this.deviceId = deviceId;
+    mqttPublisher = target.mqttPublisher;
   }
 
   /**
