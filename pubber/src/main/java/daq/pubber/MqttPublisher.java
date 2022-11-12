@@ -231,7 +231,7 @@ public class MqttPublisher {
       gatewayLatch = new CountDownLatch(1);
       MqttClient mqttClient = getConnectedClient(gatewayId);
       startupLatchWait(gatewayLatch, "gateway startup exchange");
-      String topic = MqttDevice.ATTACH_TOPIC + "/" + deviceId;
+      String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
       String payload = "";
       info("Publishing attach message " + topic);
       mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), QOS_AT_LEAST_ONCE,
