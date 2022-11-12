@@ -4,6 +4,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import udmi.schema.PubberConfiguration;
 
+/**
+ * Encapsulation of a device connection.
+ */
 public class MqttDevice {
 
   MqttPublisher mqttPublisher;

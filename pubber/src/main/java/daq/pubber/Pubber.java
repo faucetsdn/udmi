@@ -1334,7 +1334,7 @@ public class Pubber {
       try {
         long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
         warn(String.format("State update defer %dms", delay));
-        if (delay > 0 || mqttPublisher == null) {
+        if (delay > 0) {
           markStateDirty(delay);
         } else {
           publishStateMessage();
@@ -1374,6 +1374,11 @@ public class Pubber {
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
+
+    if (mqttPublisher == null) {
+      markStateDirty(-1);
+      return;
+    }
     stateDirty.set(false);
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
@@ -1401,6 +1406,11 @@ public class Pubber {
       return;
     }
 
+    if (mqttPublisher == null) {
+      error("publisher not active");
+      return;
+    }
+    
     augmentDeviceMessage(message);
     mqttPublisher.publish(configuration.deviceId, topicSuffix, message, callback);
     String messageBase = topicSuffix.replace("/", "_");
