@@ -367,8 +367,8 @@ public class MqttPublisher {
     boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    subscribeTopic(client, MqttDevice.CONFIG_TOPIC, configQos);
-    subscribeTopic(client, MqttDevice.ERRORS_TOPIC, QOS_AT_MOST_ONCE);
+    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
+    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
     info("Updates subscribed");
   }
 
