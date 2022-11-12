@@ -55,7 +55,6 @@ import udmi.schema.PubberConfiguration;
 public class MqttPublisher {
 
   private static final String TOPIC_PREFIX_FMT = "/devices/%s";
-  private static final String MESSAGE_TOPIC_FMT = TOPIC_PREFIX_FMT + "/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -80,6 +79,7 @@ public class MqttPublisher {
 
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
   private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
+  private final Map<String, String> topicPrefixMap = new HashMap<>();
 
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -160,8 +160,14 @@ public class MqttPublisher {
     }
   }
 
+  void setDeviceTopicPrefix(String deviceId, String topicPrefix) {
+    topicPrefixMap.put(deviceId, topicPrefix);
+  }
+
   private String getMessageTopic(String deviceId, String topic) {
-    return String.format(MESSAGE_TOPIC_FMT, deviceId, topic);
+    return
+        topicPrefixMap.computeIfAbsent(deviceId, key -> String.format(TOPIC_PREFIX_FMT, deviceId))
+            + "/" + topic;
   }
 
   private void publishCore(String deviceId, String topicSuffix, Object data,

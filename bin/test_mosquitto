@@ -50,7 +50,7 @@ cat <<EOF > /tmp/pubber_config.json
       "transport": "tcp",
       "client_id": "$registry_id/$device_id",
       "hostname": "127.0.0.1",
-      "topic_prefix": "/mosquitto/local",
+      "topic_prefix": "/$serial_no/$device_id",
       "config_sync_sec": -1,
       "port": 1883,
       "auth_provider": {
@@ -75,8 +75,9 @@ timeout 10s $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json || true
 received_no=$(fgrep operational out/mosquitto.sub | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | awk '{ print $1 }')
 
-if [[ $received_topic != "/devices/AHU-1/state" ]]; then
-    echo Unexpected received topic $received_topic
+expected_topic=/$serial_no/$device_id/state
+if [[ $received_topic != $expected_topic ]]; then
+    echo Unexpected received topic $received_topic != $expected_topic
     false
 fi
 
