@@ -18,7 +18,7 @@ public class MqttDevice {
   private final String deviceId;
   private final MqttPublisher mqttPublisher;
 
-  public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
+  MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
     deviceId = configuration.deviceId;
     mqttPublisher = new MqttPublisher(configuration, onError);
     if (configuration.endpoint.topic_prefix != null) {
@@ -26,7 +26,7 @@ public class MqttDevice {
     }
   }
 
-  public MqttDevice(String deviceId, MqttDevice target) {
+  MqttDevice(String deviceId, MqttDevice target) {
     this.deviceId = deviceId;
     mqttPublisher = target.mqttPublisher;
   }
