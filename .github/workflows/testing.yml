@@ -65,9 +65,7 @@ jobs:
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
       - name: pubber cmd checks
-        env:
-          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        if: ${{ always() }}
         run: |
           echo ::::::: pubber.out.1
           cat pubber.out.1
@@ -78,9 +76,7 @@ jobs:
           fgrep 'While waiting for connection start: Connection error' pubber.out.1
           fgrep 'Endpoint connection restored to last working endpoint' pubber.out.1
       - name: pubber config checks
-        env:
-          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        if: ${{ always() }}
         run: |
           echo ::::::: pubber.out.2
           cat pubber.out.2
