@@ -1,10 +1,6 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static daq.pubber.MqttTopicFactory.getAttachTopic;
-import static daq.pubber.MqttTopicFactory.getConfigTopic;
-import static daq.pubber.MqttTopicFactory.getErrorsTopic;
-import static daq.pubber.MqttTopicFactory.getMessageTopic;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -58,6 +54,8 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttPublisher {
 
+  private static final String TOPIC_PREFIX_FMT = "/devices/%s";
+  private static final String MESSAGE_TOPIC_FMT = TOPIC_PREFIX_FMT + "/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -162,6 +160,10 @@ public class MqttPublisher {
     }
   }
 
+  private String getMessageTopic(String deviceId, String topic) {
+    return String.format(MESSAGE_TOPIC_FMT, deviceId, topic);
+  }
+
   private void publishCore(String deviceId, String topicSuffix, Object data,
       Runnable callback) {
     try {
@@ -229,7 +231,7 @@ public class MqttPublisher {
       gatewayLatch = new CountDownLatch(1);
       MqttClient mqttClient = getConnectedClient(gatewayId);
       startupLatchWait(gatewayLatch, "gateway startup exchange");
-      String topic = getAttachTopic(deviceId);
+      String topic = MqttDevice.ATTACH_TOPIC + "/" + deviceId;
       String payload = "";
       info("Publishing attach message " + topic);
       mqttClient.publish(topic, payload.getBytes(StandardCharsets.UTF_8.name()), QOS_AT_LEAST_ONCE,
@@ -365,8 +367,8 @@ public class MqttPublisher {
     boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    subscribeTopic(client, getConfigTopic(deviceId), configQos);
-    subscribeTopic(client, getErrorsTopic(deviceId), QOS_AT_MOST_ONCE);
+    subscribeTopic(client, MqttDevice.CONFIG_TOPIC, configQos);
+    subscribeTopic(client, MqttDevice.ERRORS_TOPIC, QOS_AT_MOST_ONCE);
     info("Updates subscribed");
   }
 
@@ -382,13 +384,15 @@ public class MqttPublisher {
    * Register a message handler.
    *
    * @param <T>         Param of the message type
-   * @param mqttTopic   Mqtt topic
+   * @param deviceId    Sending device id
+   * @param mqttSuffix  Mqtt topic suffix
    * @param handler     Message received handler
    * @param messageType Type of the message for this handler
    */
   @SuppressWarnings("unchecked")
-  public <T> void registerHandler(String mqttTopic,
+  public <T> void registerHandler(String deviceId, String mqttSuffix,
       Consumer<T> handler, Class<T> messageType) {
+    String mqttTopic = getMessageTopic(deviceId, mqttSuffix);
     String handlerKey = getHandlerKey(mqttTopic);
     if (handler == null) {
       handlers.remove(handlerKey);

@@ -8,9 +8,8 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
-import static daq.pubber.MqttTopicFactory.getConfigTopic;
-import static daq.pubber.MqttTopicFactory.getErrorsTopic;
-import static daq.pubber.MqttTopicFactory.getEventsSuffix;
+import static daq.pubber.MqttDevice.CONFIG_TOPIC;
+import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -106,8 +105,6 @@ public class Pubber {
   private static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
-  private static final String CONFIG_TOPIC = "config";
-  private static final String ERROR_TOPIC = "errors";
   private static final int MIN_REPORT_MS = 200;
   private static final int DEFAULT_REPORT_SEC = 10;
   private static final int WAIT_TIME_SEC = 10;
@@ -117,7 +114,7 @@ public class Pubber {
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
   private static final Map<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP = ImmutableMap.of(
-      State.class, MqttTopicFactory.getStateSuffix(),
+      State.class, MqttDevice.STATE_TOPIC,
       SystemEvent.class, getEventsSuffix("system"),
       PointsetEvent.class, getEventsSuffix("pointset"),
       ExtraPointsetEvent.class, getEventsSuffix("pointset"),
@@ -212,6 +209,10 @@ public class Pubber {
     } else {
       configuration.sitePath = sitePath;
     }
+  }
+
+  private static String getEventsSuffix(String suffixSuffix) {
+    return MqttDevice.EVENTS_TOPIC + "/" + suffixSuffix;
   }
 
   private static Date getRoundedStartTime() {
@@ -743,12 +744,10 @@ public class Pubber {
     deviceTarget = new MqttDevice(configuration, this::publisherException);
     if (configuration.gatewayId != null) {
       gatewayTarget = new MqttDevice(configuration.gatewayId, deviceTarget);
-      gatewayTarget.registerHandler(getConfigTopic(configuration.gatewayId),
-          this::gatewayHandler, Config.class);
-      gatewayTarget.registerHandler(getErrorsTopic(configuration.gatewayId),
-          this::errorHandler, GatewayError.class);
+      gatewayTarget.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
+      gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     }
-    deviceTarget.registerHandler(getConfigTopic(deviceId), this::configHandler, Config.class);
+    deviceTarget.registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     publishDirtyState();
   }
 
@@ -764,7 +763,7 @@ public class Pubber {
 
   private void connect() {
     try {
-      deviceTarget.connect(configuration.deviceId);
+      deviceTarget.connect();
       info("Connection complete.");
       workingEndpoint = toJsonString(configuration.endpoint);
     } catch (Exception e) {
@@ -1414,7 +1413,7 @@ public class Pubber {
     }
 
     augmentDeviceMessage(message);
-    deviceTarget.publish(configuration.deviceId, topicSuffix, message, callback);
+    deviceTarget.publish(topicSuffix, message, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String fileName = traceTimestamp(messageBase) + ".json";
     File messageOut = new File(outDir, fileName);

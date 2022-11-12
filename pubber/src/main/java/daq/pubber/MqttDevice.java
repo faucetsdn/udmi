@@ -9,8 +9,14 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttDevice {
 
+  static final String ATTACH_TOPIC = "attach";
+  static final String CONFIG_TOPIC = "config";
+  static final String ERRORS_TOPIC = "errors";
+  static final String EVENTS_TOPIC = "events";
+  static final String STATE_TOPIC = "state";
+
   private final String deviceId;
-  private MqttPublisher mqttPublisher;
+  private final MqttPublisher mqttPublisher;
 
   public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
     deviceId = configuration.deviceId;
@@ -22,31 +28,27 @@ public class MqttDevice {
     mqttPublisher = target.mqttPublisher;
   }
 
-  /**
-   * Register a message handler.
-   *
-   * @param <T>         Param of the message type
-   * @param mqttTopic   Mqtt topic
-   * @param handler     Message received handler
-   * @param messageType Type of the message for this handler
-   */
-  @SuppressWarnings("unchecked")
-  public <T> void registerHandler(String mqttTopic, Consumer<T> handler, Class<T> messageType) {
+  public <T> void registerHandler(String topicSuffix, Consumer<T> handler, Class<T> messageType) {
+    mqttPublisher.registerHandler(deviceId, topicSuffix, handler, messageType);
   }
 
-  public void connect(String deviceId) {
+  public void connect() {
+    mqttPublisher.connect(deviceId);
   }
 
-  public void publish(String deviceId, String topicSuffix, Object message, Runnable callback) {
+  public void publish(String topicSuffix, Object message, Runnable callback) {
+    mqttPublisher.publish(deviceId, topicSuffix, message, callback);
   }
 
   public boolean isActive() {
-    return false;
+    return mqttPublisher.isActive();
   }
 
   public void startupLatchWait(CountDownLatch configLatch, String message) {
+    mqttPublisher.startupLatchWait(configLatch, message);
   }
 
   public void close() {
+    mqttPublisher.close();
   }
 }
