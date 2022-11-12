@@ -41,11 +41,17 @@ ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 bin/reset_config $site_path $project_id $device_id
 
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
+
 echo Running pubber with redirectRegistry on timeout
 timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
+
 echo Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
+
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
 
 # Wait for initial connection, then reset config to redirect
 sleep 20
@@ -89,11 +95,15 @@ jq '.system.mode = "restart"' $out_base/redirect_config.json > $out_base/restart
 echo New redirection config:
 cat /tmp/${device_id}_config.json
 
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
+
 echo bin/reset_config $site_path $project_id $device_id redirect_config.json
 bin/reset_config $site_path $project_id $device_id redirect_config.json
 
 echo Let pubber react to the new configuration...
 sleep 20
+
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
 
 echo Restart the system...
 echo bin/reset_config $site_path $project_id $device_id restart_config.json
@@ -102,6 +112,8 @@ bin/reset_config $site_path $project_id $device_id restart_config.json
 echo And let it settle for restart...
 sleep 20
 
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
+
 # Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting last_start time to $now_date for pubber shutdown...
@@ -109,10 +121,13 @@ jq ".system.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_ba
 echo bin/reset_config $site_path $project_id $device_id shutdown_config.json
 bin/reset_config $site_path $project_id $device_id shutdown_config.json
 
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
+
 echo And let it settle for last start...
 sleep 20
 
 # Quick sanity check that the restart_count persistent store is handled correctly.
+echo Restart count is $(jq .restart_count $work_base/persistent_data.json)
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 if [[ $restarts -ne 3 ]]; then
     echo Restart count incorrect, was $restarts
