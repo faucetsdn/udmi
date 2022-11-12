@@ -34,7 +34,7 @@ public class MqttDevice {
     return false;
   }
 
-  public void startupLatchWait(CountDownLatch configLatch, String initial_config_sync) {
+  public void startupLatchWait(CountDownLatch configLatch, String message) {
   }
 
   public void close() {

@@ -33,6 +33,8 @@ sudo systemctl restart mosquitto
 systemctl status mosquitto
 killall mosquitto_sub || true
 
+mosquitto_sub --help || true
+
 echo Subscribing to mqtt/test in the background...
 mosquitto_sub -v -t \# -u ${USERNAME} -P ${PASSWORD} | tee out/mosquitto.sub &
 
