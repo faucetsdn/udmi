@@ -1,10 +1,10 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
 function cleanup {
     echo Killing pubber children...
-    kill 0
+    #kill 0
 }
 trap cleanup EXIT
 

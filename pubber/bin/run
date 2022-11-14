@@ -1,11 +1,11 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT_DIR=$(realpath $(dirname $0)/../..)
 
 function cleanup {
     if [[ -n $PUB_PID ]]; then
         echo Killing pubber pid $PUB_PID
-        kill $PUB_PID
+        #kill $PUB_PID
     fi
 }
 trap cleanup EXIT
