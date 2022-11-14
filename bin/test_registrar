@@ -18,7 +18,7 @@ clean_devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
 exit_status=0
 
 echo Found ${clean_devices} clean devices.
-[ "${clean_devices}" == 4 ] || exit_status=1
+[ "${clean_devices}" == 3 ] || exit_status=1
 
 device_files=$(ls -d ${TEST_SITE}/devices/*)
 

@@ -301,23 +301,31 @@ class LocalDevice {
       return null;
     }
 
+    JsonNode mergedMetadata = getMergedMetadata(instance);
+    if (mergedMetadata == null) {
+      return null;
+    }
+
     try {
-      ProcessingReport report = schemas.get(METADATA_JSON).validate(instance);
+      ProcessingReport report = schemas.get(METADATA_JSON).validate(mergedMetadata);
       if (validate) {
         parseMetadataValidateProcessingReport(report);
       }
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
+    return JsonUtil.convertTo(Metadata.class, mergedMetadata);
+  }
 
+  private JsonNode getMergedMetadata(JsonNode instance) {
     try {
       String intermediary = JsonUtil.stringify(instance);
       if (siteMetadata == null) {
-        return JsonUtil.fromString(Metadata.class, intermediary);
+        return instance;
       } else {
         Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteMetadata);
         GeneralUtils.mergeObject(mergedMetadata, asMap(intermediary));
-        return JsonUtil.convertTo(Metadata.class, mergedMetadata);
+        return JsonUtil.convertTo(JsonNode.class, mergedMetadata);
       }
     } catch (Exception e) {
       exceptionMap.put(EXCEPTION_READING, e);
