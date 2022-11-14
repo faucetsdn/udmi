@@ -78,7 +78,7 @@ public abstract class SequenceBase {
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
-  public static final int CONFIG_UPDATE_DELAY_MS = 4000;
+  public static final int CONFIG_UPDATE_DELAY_MS = 10000;
   public static final int NORM_TIMEOUT_MS = 120 * 1000;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
