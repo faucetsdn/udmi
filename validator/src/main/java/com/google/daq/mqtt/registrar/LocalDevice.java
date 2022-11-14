@@ -302,9 +302,6 @@ class LocalDevice {
     }
 
     JsonNode mergedMetadata = getMergedMetadata(instance);
-    if (mergedMetadata == null) {
-      return null;
-    }
 
     try {
       ProcessingReport report = schemas.get(METADATA_JSON).validate(mergedMetadata);
