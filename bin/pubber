@@ -3,8 +3,10 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
 function cleanup {
-    echo Killing pubber children...
-    #kill 0
+    if [[ -n $PUB_PID ]]; then
+        echo Killing pubber runner $PUB_PID
+        kill $PUB_PID
+    fi
 }
 trap cleanup EXIT
 
@@ -62,4 +64,7 @@ cat <<EOF > /tmp/pubber_config.json
 }
 EOF
 
-$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json
+# Run in the background to force new process group and get PID
+$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json &
+PUB_PID=$!
+wait
