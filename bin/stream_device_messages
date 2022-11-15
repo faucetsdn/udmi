@@ -11,12 +11,13 @@ Note:
   - Cannot be used with any concurrent invocations of this tool or other 
     use of the subscription (e.g. using bin/validator with a subscription)
 """
-import datetime
+
 import json
 import sys
 import argparse
 import os
 
+from datetime import datetime, timezone
 from google import auth
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.types import SeekRequest
@@ -87,7 +88,7 @@ except Exception as e:
 subscription = f'projects/{args.project}/subscriptions/{args.subscription}'
 subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
 
-time_now = datetime.datetime.now()
+time_now = datetime.now(timezone.utc)
 
 request = SeekRequest(
   subscription = subscription,
