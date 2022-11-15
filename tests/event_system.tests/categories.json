@@ -1,0 +1,41 @@
+{
+  "version": "1.4.0",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "logentries": [
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device.test",
+      "level": 600
+    },
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device.log_message",
+      "level": 600
+    },
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device._bad_category",
+      "level": 600
+    },
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device.logMessage",
+      "level": 600
+    },
+    {
+      "message": "something else happened",
+      "timestamp": "2018-08-26T21:39:39.364Z",
+      "detail": "someplace, sometime",
+      "category": "system.config.apply",
+      "level": 700
+    }
+  ]
+}

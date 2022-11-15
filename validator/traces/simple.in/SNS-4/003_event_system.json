@@ -1,7 +1,7 @@
 {
   "logentries" : [ {
     "message" : "2022-07-19T05:04:39Z sent message #70",
-    "category" : "device.log_message",
+    "category" : "device.logMessage",
     "timestamp" : "2022-07-19T05:04:39Z",
     "level" : 200
   } ],
