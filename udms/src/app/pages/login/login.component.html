@@ -1,7 +1,0 @@
-<div *ngIf="authenticated | async as auth else loading">
-    <button *ngIf="auth.authenticated" mat-raised-button color="accent" (click)="signOut()">Sign Out</button>
-    <button *ngIf="!auth.authenticated" mat-raised-button color="primary" (click)="signIn()">Sign In</button>
-</div>
-<ng-template #loading>
-    <mat-spinner></mat-spinner>
-</ng-template>

@@ -1,4 +1,5 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Device Persistent",
   "description": "Device persistent data",
   "additionalProperties": true,

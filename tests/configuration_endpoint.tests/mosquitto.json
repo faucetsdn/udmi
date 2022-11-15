@@ -1,0 +1,14 @@
+{
+  "hostname": "127.0.0.1",
+  "transport": "tcp",
+  "protocol": "mqtt",
+  "port": 8883,
+  "config_sync_sec": -1,
+  "client_id": "any_client_id",
+  "auth_provider": {
+    "basic": {
+      "username": "username",
+      "password": "password"
+    }
+  }
+}

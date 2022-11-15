@@ -117,8 +117,8 @@ Updating/pruning remmote quincy...
 Updating/pruning remmote origin...
 Checking local remote references...
   git push quincy -d auth_login_line  # Stale, last merged 1 year, 10 months ago
-  git push quincy -d dependabot/npm_and_yarn/udms/follow-redirects-1.14.8  # Stale, last merged 6 months ago
-  git push quincy -d dependabot/npm_and_yarn/udms/karma-6.3.14  # Stale, last merged 7 months ago
+  git push quincy -d dependabot/npm_and_yarn/udmis/follow-redirects-1.14.8  # Stale, last merged 6 months ago
+  git push quincy -d dependabot/npm_and_yarn/udmis/karma-6.3.14  # Stale, last merged 7 months ago
   git push quincy -d renovate/actions-setup-java-2.x  # Stale, last merged 1 year, 1 month ago
   git push quincy -d renovate/angular-monorepo  # Stale, last merged 1 year, 1 month ago
   git push origin -d feature  # Stale, last merged 6 months ago

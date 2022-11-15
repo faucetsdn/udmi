@@ -1,0 +1,155 @@
+#!/bin/bash -e
+#
+# Usage:
+#   bin/upversion NEW_VERSION
+# 
+# Changes the version where it is hardcoded in UDMI files, performing checks
+# that the new version is available, and that the files can be safely updated.
+# Modifications:
+#   - schema/*.json (all files)
+#   - etc/categories.json 
+#   - tests/**/*.json and validator/traces/**/*.out - 
+#     all files must be added to etc/upversion.txt only files preceeded
+#     with a 'y' are updated. Only works with "pretty"/non-minified JSON
+#   - documentation in-line exammples
+#   - specific java files (Pubber.java, ConfigUtil.java, LocalDevice.java)
+
+UPVERSION_LIST=etc/upversion.txt
+TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
+SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
+ERROR_MARKER=.upversion_error
+
+# Updates existing $udmi_version in a JSON file. 
+# Usage: update_existing_schema_version FILE_TO_UPDATE NEW_VERSION
+function update_existing_schema_version(){
+    file=$1
+    version=$2
+    sed -i -E "s/\"\\$SCHEMA_VERSION_IDENTIFIER\"\s*:\s*\"[0-9.]*\"/\"$SCHEMA_VERSION_IDENTIFIER\": \"$version\"/" $file
+}
+
+# Updates an existing $udmi_version, or adds if missing
+# Usage: update_schema_version FILE_TO_UPDATE NEW_VERSION
+function update_schema_version(){
+    file=$1
+    version=$2
+    if [[ $(jq -r ".[\"$SCHEMA_VERSION_IDENTIFIER\"]" $file) == "null" ]]; then
+        sed -i  "s/^{/{\n  \"$SCHEMA_VERSION_IDENTIFIER\": \"$version\",/" $file
+    else
+        update_existing_schema_version $file $version
+    fi 
+}
+
+# Updates UDMI_VERSION variable in a java file 
+# Usage: update_java_file FILE_TO_UPDATE NEW_VERSION
+function update_java_file(){
+    file=$1
+    version=$2
+    [[ $(grep -c "UDMI_VERSION\s*=\s*\"" $file) != 1 ]] && return 1
+    sed -i -e "s/UDMI_VERSION\s*=\s*\"[0-9.]*\"/UDMI_VERSION = \"$version\"/" $file
+}
+
+if [[ "$#" != 1 ]]; then
+    echo Usage: $0 NEW_VERSION
+    exit 1
+fi
+NEW_VERSION=$1
+shift 1
+
+rm .upversion_error
+
+if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo ERROR Invalid version: $NEW_VERSION
+    exit 1
+fi
+
+bin/check_version
+if [[ -n $(git tag -l $NEW_VERSION) ]]; then
+    echo ERROR New version $NEW_VERSION already exists in upstream repo.
+    exit 1
+fi
+
+if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
+    echo ERROR Git not clean .. commit/stash all changes first
+    exit 1
+fi
+
+# Check test files exist in the upversion list  
+for test_file in tests/*.tests/*.json; do
+    if [[ $(grep -P -c "^[^#] $test_file" $UPVERSION_LIST) != 1 ]]; then
+        echo $test_file
+        err_upversion_list=1
+    fi 
+done
+if [[ -n $err_upversion_list ]]; then
+    echo ERROR .. above files not found in upversion list or listed more than once
+    touch $ERROR_MARKER
+fi
+
+for schema_file in schema/*.json; do
+    if (( $(grep -c "\"\$udmi_version\"" $schema_file) > 1 )); then
+        echo $schema_file
+        err_schema_version=1
+    fi 
+done
+if [[ -n $err_schema_version ]]; then
+    echo ERROR .. above files have more than one \$udmi_version
+    touch $ERROR_MARKER
+fi
+
+[[ -f $ERROR_MARKER ]] && exit 1
+
+# Check files in upversion list still exist
+while read action file comment; do
+    if [[ $action != "#" ]] && ! [[ -f $file ]]; then
+        err_stale_file=1
+        echo $file
+    fi
+done <$UPVERSION_LIST
+if [[ -n $err_stale_file ]]; then
+    echo ERROR .. above files etc/upversion.txt no longer exist
+fi
+
+# Check files have exactly 1 matched version fields to avoid unexpected 
+# updates. Uses indents to try and match the top level field
+while read action file comment; do
+    if ! [[ -f $file && $action == "y" ]]; then
+        continue
+    fi
+    
+    if [[ $(grep -E -c $TESTS_REGEX $file) != 1 ]]; then
+        echo $file
+        err_one_version=1
+    fi 
+done <$UPVERSION_LIST
+if [[ -n $err_one_version ]]; then
+    echo ERROR above files do not have exactly one version field
+fi
+
+echo -n Updating files ..
+
+# NOTE using sed because jq reformats text 
+for schema_file in schema/*.json; do
+    update_schema_version $schema_file $NEW_VERSION
+done
+
+# Update tests using sed because jq does not handle files with comments
+cat $UPVERSION_LIST | grep "^y" | awk '{print $2}' \
+    | xargs sed -i -E "s/$TESTS_REGEX/\1\"$NEW_VERSION\"\3/g"
+
+update_existing_schema_version etc/category.json $NEW_VERSION
+
+bin/gencode_docs_examples
+
+# TODO a proper way of updating/managing these files
+
+# Version in Pubber payloads
+update_java_file pubber/src/main/java/daq/pubber/Pubber.java $NEW_VERSION
+# Version in validator messages messages
+update_java_file validator/src/main/java/com/google/daq/mqtt/util/ConfigUtil.java $NEW_VERSION
+# Version in for generated_configs which are NOT upgraded 
+update_java_file validator/src/main/java/com/google/daq/mqtt/registrar/LocalDevice.java $NEW_VERSION
+
+# NOTE messages & metadata are upgraded when there are schema changes,
+# So they do not necesarily end up at the latest version when upgraded
+
+echo Done!

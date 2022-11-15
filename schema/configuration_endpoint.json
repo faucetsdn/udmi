@@ -1,25 +1,61 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Endpoint Configuration",
   "description": "Parameters to define an MQTT endpoint",
   "$section": "Blobs",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "protocol": {
       "enum": [
         "mqtt"
       ]
     },
+    "transport": {
+      "enum": [
+        "ssl",
+        "tcp"
+      ]
+    },
     "hostname": {
       "type": "string"
     },
     "port": {
-      "type": "string",
-      "default": "8883"
+      "type": "integer",
+      "default": 8883
+    },
+    "config_sync_sec": {
+      "description": "Delay waiting for config message on start, <0 to disable",
+      "type": "integer"
     },
     "client_id": {
       "type": "string"
+    },
+    "auth_provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "basic": {
+          "additionalProperties": false,
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        },
+        "jwt": {
+          "additionalProperties": false,
+          "properties": {
+            "audience": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     "nonce": {
       "type": "string",

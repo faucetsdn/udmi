@@ -1,10 +1,14 @@
 {
+  "$udmi_version": "1.4.0",
   "title": "Pubber Configuration",
   "description": "Parameters to define a pubber runtime instance",
   "additionalProperties": true,
   "properties": {
     "endpoint": {
       "$ref": "file:configuration_endpoint.json#"
+    },
+    "projectId": {
+      "type": "string"
     },
     "deviceId": {
       "type": "string"

@@ -1,0 +1,15 @@
+{
+  "protocol": "mqtt",
+  "hostname": "mqtt.googleapis.com",
+  "port": 8883,
+  "client_id": "prasjdhsadas",
+  "auth_provider": {
+    "jwt": {
+      "audience": "username"
+    },
+    "basic": {
+      "username": "username",
+      "password": "password"
+    }
+  }
+}

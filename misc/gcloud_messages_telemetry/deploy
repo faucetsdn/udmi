@@ -1,0 +1,74 @@
+#!/bin/bash
+
+if (( $# < 4 )); then
+    echo $0 PROJECT_ID DATASET_ID LOCATION TRIGGER_TOPIC [--drop]
+    exit
+fi
+
+PROJECT_ID=$1
+DATASET_ID=$2
+LOCATION=$3
+TRIGGER_TOPIC=$4
+shift 4
+
+FUNCTION_NAME=function-11
+MESSAGES_TABLE=messages
+TELEMETRY_TABLE=points
+
+BUCKET=$PROJECT_ID-iot-messages
+
+if [[ $1 == "--drop" ]]; then
+    shift 1
+    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
+    echo $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+    echo $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+    sleep 8 && echo "Deleting tables " && sleep 4
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+fi
+
+gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
+
+# Create Dataset
+bq --location=$LOCATION mk \
+    --dataset \
+    $PROJECT_ID:$DATASET_ID
+
+# Create Messsages table
+bq mk \
+    --table \
+    --time_partitioning_field publish_timestamp \
+    --time_partitioning_type DAY \
+    --clustering_fields registry_id,device_id \
+    $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE \
+    schema_messages.json
+
+# Create Messsages table
+bq mk \
+    --table \
+    --time_partitioning_field publish_timestamp \
+    --time_partitioning_type DAY \
+    --clustering_fields registry_id,device_id \
+    $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE \
+    schema_telemetry.json
+
+# Deploy Cloud Function
+gcloud functions deploy messages_to_bq \
+    --trigger-topic=$TRIGGER_TOPIC \
+    --entry-point=processMessage \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,MESSAGES_TABLE=$MESSAGES_TABLE,TELEMETRY_TABLE=$TELEMETRY_TABLE,BUCKET=$BUCKET &
+
+# Deploy Cloud Function
+gcloud functions deploy dump_raw_messages \
+    --trigger-topic=$TRIGGER_TOPIC \
+    --entry-point=storeMessage \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,MESSAGES_TABLE=$MESSAGES_TABLE,TELEMETRY_TABLE=$TELEMETRY_TABLE,BUCKET=$BUCKET &
+
+wait
+echo Done

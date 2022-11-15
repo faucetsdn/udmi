@@ -1,6 +1,0 @@
-{
-  "projects": {
-    "default": "bos-daq-testing",
-    "test": "bos-daq-testing"
-  }
-}

@@ -1,0 +1,19 @@
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "client_id": "ZZ-TRI-FECTA/AHU-1",
+      "hostname": "127.0.0.1",
+      "config_sync_sec": -1,
+      "port": 1883,
+      "auth_provider": {
+        "basic": {
+          "username": "scrumptus",
+          "password": "aardvark"
+        }
+      }
+    },
+    "sitePath": "sites/udmi_site_model",
+    "deviceId": "AHU-1",
+    "serialNo": "13254"
+}

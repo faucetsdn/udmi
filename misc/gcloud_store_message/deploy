@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if (( $# < 3 )); then
+    echo $0 PROJECT_ID LOCATION TRIGGER_TOPIC
+    exit
+fi
+
+PROJECT_ID=$1
+LOCATION=$2
+TRIGGER_TOPIC=$3
+shift 3
+
+FUNCTION_NAME=dump_raw_messages
+MESSAGES_TABLE=messages
+TELEMETRY_TABLE=points
+
+BUCKET=$(PROJECT_ID)-iot-messages
+
+gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
+
+# Deploy Cloud Function
+gcloud functions deploy $FUNCTION_NAME \
+    --trigger-topic=$TRIGGER_TOPIC \
+    --entry-point=storeMessage \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,BUCKET=$BUCKET 
+
+echo Done

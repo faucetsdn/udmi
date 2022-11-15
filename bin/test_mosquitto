@@ -1,0 +1,81 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# != 0 ]]; then
+    echo Usage: $0
+    false
+fi
+
+site_path=sites/udmi_site_model
+device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+serial_no=$RANDOM
+
+site_config=$site_path/cloud_iot_config.json
+cloud_region=$(jq -r .cloud_region $site_config)
+registry_id=$(jq -r .registry_id $site_config)
+
+mkdir -p out
+PASSWORD_FILE=/etc/mosquitto/test_mosquitto.passwd
+USERNAME=scrumptus
+PASSWORD=aardvark
+
+echo password_file ${PASSWORD_FILE} | sudo tee /etc/mosquitto/conf.d/udmi_test.conf
+sudo sed -i 's/allow_anonymous true/allow_anonymous false/' /etc/mosquitto/mosquitto.conf
+sudo sed -i 's/#listener/listener/' /etc/mosquitto/mosquitto.conf
+
+sudo touch ${PASSWORD_FILE}
+sudo mosquitto_passwd -b ${PASSWORD_FILE} ${USERNAME} ${PASSWORD}
+sudo chmod 666 ${PASSWORD_FILE}
+
+sudo systemctl restart mosquitto
+systemctl status mosquitto
+killall mosquitto_sub || true
+
+echo Subscribing to mqtt/test in the background...
+mosquitto_sub -t \# -u ${USERNAME} -P ${PASSWORD} | tee out/mosquitto.sub &
+
+sleep 1
+
+echo Publishing test message
+mosquitto_pub -t mqtt/test -u ${USERNAME} -P ${PASSWORD} -m "Hello MQTT"
+
+sleep 1
+
+cat <<EOF > /tmp/pubber_config.json
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "transport": "tcp",
+      "client_id": "$registry_id/$device_id",
+      "hostname": "127.0.0.1",
+      "config_sync_sec": -1,
+      "port": 1883,
+      "auth_provider": {
+        "basic": {
+          "username": "$USERNAME",
+          "password": "$PASSWORD"
+        }
+      }
+    },
+    "sitePath": "$site_path",
+    "deviceId": "$device_id",
+    "serialNo": "$serial_no"
+}
+EOF
+
+kill $(pgrep -f 'java.*pubber-.*jar') || true
+
+$ROOT_DIR/pubber/bin/build
+
+timeout 10s $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json || true
+
+received_no=$(fgrep operational out/mosquitto.sub | jq -r .system.serial_no)
+
+if [[ $received_no != $serial_no ]]; then
+    echo Mismatched/missing serial no: $received_no != $serial_no
+    false
+fi
+
+echo Done with mosquitto pubber check.

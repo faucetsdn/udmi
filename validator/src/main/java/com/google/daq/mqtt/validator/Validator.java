@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
@@ -361,7 +362,7 @@ public class Validator {
   }
 
   void messageLoop() {
-    if (client == null) {
+    if (client == null || client.getSubscriptionId() == null) {
       return;
     }
     sendInitializationQuery();
@@ -439,6 +440,7 @@ public class Validator {
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
+      message.remove(VERSION_PROPERTY_KEY);
       message.remove(TIMESTAMP_PROPERTY_KEY);
     }
   }
@@ -484,8 +486,6 @@ public class Validator {
         device.addError(e);
       }
 
-      System.err.println(
-          "Validating against " + schemaName + " " + schemaMap.containsKey(schemaName));
       if (schemaMap.containsKey(schemaName)) {
         try {
           validateMessage(schemaMap.get(schemaName), message);

@@ -10,6 +10,7 @@ jobs:
   udmi:
     name: Integration Tests
     runs-on: ubuntu-latest
+    needs: redirect  # Access to UDMI-REFLECTOR is mutually exclusive
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
@@ -27,14 +28,31 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          echo TAP sequencer.out-start
           more /tmp/sequencer.out
-          echo TAP sequencer.out-end
           diff -u /tmp/sequencer.out etc/sequencer.out
+          diff -u /tmp/generated.md docs/specs/sequences/generated.md
+          ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ | xargs -I% diff -u \
+              sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
+              validator/sequences/%/sequence.md
+      - name: itemized sequencer tests
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+          SEQUENCER_OPTS: ${{ secrets.SEQUENCER_OPTS }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        run: |
+          bin/test_itemized $GCP_TARGET_PROJECT
+          more /tmp/test_itemized.out
+          diff -u /tmp/test_itemized.out etc/test_itemized.out
+      - name: output logs
+        if: ${{ always() }}
+        run: |
+          cd sites/udmi_site_model/out && more `find . -type f` || true
+      - name: validator logs
+        if: ${{ always() }}
+        run: |
+          cat out/validator.out || true
       - name: pubber logs
         if: ${{ always() }}
         run: |
-          echo TAP pubber.out-start
           more pubber.out* out/pubber.out* || true
           more pubber/out/*/*.json || true
-          echo TAP pubber.out-start-end
