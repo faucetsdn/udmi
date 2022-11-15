@@ -1699,7 +1699,7 @@
         <div class="card-header" id="headingentities_pattern1">
             <h2 class="mb-0">
                 <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#entities_pattern1"
-                        aria-expanded="" aria-controls="entities_pattern1" onclick="setAnchor('#entities_pattern1')"><span class="property-name"></span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+                        aria-expanded="" aria-controls="entities_pattern1" onclick="setAnchor('#entities_pattern1')"><span class="property-name">^[-0-9a-zA-Z$]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
@@ -1710,7 +1710,7 @@
                         <label>Pattern Property</label>
                     </h2>
                     <p>All property whose name matches the following regular expression must respect the following conditions</p>
-                    <span class="pattern-value">Property name regular expression: <code></code></span>
+                    <span class="pattern-value">Property name regular expression: <code>^[-0-9a-zA-Z$]+$</code></span>
                     <br/>
 
     <div class="breadcrumbs">root
@@ -1773,13 +1773,18 @@
             />
         </svg>
     <a href="#entities_pattern1_code" onclick="anchorLink('entities_pattern1_code')">code</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-
+<span class="description"><p>Human readable code for the entity, should be unique in the document scope</p>
+</span>
             
 
             
             
 
-            
+            <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_code_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;fcu-8_1&quot;</span>
+</pre></div>
+</div>
             </div>
         </div>
     </div>
@@ -1820,13 +1825,18 @@
             />
         </svg>
     <a href="#entities_pattern1_type" onclick="anchorLink('entities_pattern1_type')">type</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-
+<span class="description"><p>DBO namespace and entity type</p>
+</span>
             
 
             
             
 
-            
+            <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_type_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;HVAC/FCU_DFSS_DSP_CHWZC&quot;</span>
+</pre></div>
+</div>
             </div>
         </div>
     </div>
@@ -1867,13 +1877,18 @@
             />
         </svg>
     <a href="#entities_pattern1_cloud_device_id" onclick="anchorLink('entities_pattern1_cloud_device_id')">cloud_device_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-
+<span class="description"><p>Opaque identifier for the entity</p>
+</span>
             
 
             
             
 
-            
+            <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_cloud_device_id_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;3607425&quot;</span>
+</pre></div>
+</div>
             </div>
         </div>
     </div>
@@ -1914,13 +1929,20 @@
             />
         </svg>
     <a href="#entities_pattern1_connections" onclick="anchorLink('entities_pattern1_connections')">connections</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-
+<span class="description"><p>Entity connections, keyed by guid</p>
+</span>
             
 
             
             
 
-            
+            <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_connections_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;dea1fcd5-6942-47a2-ba75-448a7ed47fd7&quot;</span><span class="o">:</span> <span class="s2">&quot;CONTAINS&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
             </div>
         </div>
     </div>
@@ -1961,13 +1983,83 @@
             />
         </svg>
     <a href="#entities_pattern1_links" onclick="anchorLink('entities_pattern1_links')">links</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Virtual equipment mapping, keyed by guid</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+            
 
             
+            
+
+            
+<div class="accordion" id="accordionentities_pattern1_links_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingentities_pattern1_links_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#entities_pattern1_links_pattern1"
+                        aria-expanded="" aria-controls="entities_pattern1_links_pattern1" onclick="setAnchor('#entities_pattern1_links_pattern1')"><span class="property-name">^[-0-9a-zA-Z$]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="entities_pattern1_links_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingentities_pattern1_links_pattern1"
+             data-parent="#accordionentities_pattern1_links_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[-0-9a-zA-Z$]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities" onclick="anchorLink('entities')">entities</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1" onclick="anchorLink('entities_pattern1')">Mapping Event Entity</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_links" onclick="anchorLink('entities_pattern1_links')">links</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_links_pattern1" onclick="anchorLink('entities_pattern1_links_pattern1')">^[-0-9a-zA-Z$]+$</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>A map from target device field to source device field</p>
+</span>
+            
 
             
             
 
-            
+            <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_links_pattern1_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;compressor_run_status&quot;</span><span class="o">:</span> <span class="s2">&quot;compressor_run_status&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;discharge_air_cooling_temperature_setpoint&quot;</span><span class="o">:</span> <span class="s2">&quot;discharge_air_cooling_temperature_setpoint_1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>
@@ -2303,7 +2395,48 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#entities_pattern1_missing_telemetry_fields" onclick="anchorLink('entities_pattern1_missing_telemetry_fields')">missing_telemetry_fields</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#entities_pattern1_missing_telemetry_fields" onclick="anchorLink('entities_pattern1_missing_telemetry_fields')">missing_telemetry_fields</a></div><span class="badge badge-dark value-type">Type: array of string</span><br/>
+<span class="description"><p>DBO fields which are required by the type but absent from the translation</p>
+</span>
+            
+
+            
+            
+
+            <h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="entities_pattern1_missing_telemetry_fields_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities" onclick="anchorLink('entities')">entities</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1" onclick="anchorLink('entities_pattern1')">Mapping Event Entity</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_missing_telemetry_fields" onclick="anchorLink('entities_pattern1_missing_telemetry_fields')">missing_telemetry_fields</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_missing_telemetry_fields_items" onclick="anchorLink('entities_pattern1_missing_telemetry_fields_items')">missing_telemetry_fields items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
             
 
@@ -2311,6 +2444,15 @@
             
 
             
+        </div>
+    </div><br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="entities_pattern1_missing_telemetry_fields_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="s2">&quot;discharge_fan_run_command&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;discharge_fan_run_status&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
             </div>
         </div>
     </div>

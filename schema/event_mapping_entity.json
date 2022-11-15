@@ -7,24 +7,41 @@
   "properties": {
     "code": {
       "description": "Human readable code for the entity, should be unique in the document scope",
-      "type": "string"
+      "type": "string",
+      "examples": ["fcu-8_1"]
     },
     "type": {
       "description": "DBO namespace and entity type",
-      "type": "string"
+      "type": "string",
+      "examples": ["HVAC/FCU_DFSS_DSP_CHWZC"]
     },
     "cloud_device_id": {
       "description": "Opaque identifier for the entity",
-      "type": "string"
+      "type": "string",
+      "examples": ["3607425"]
     },
     "connections": {
+      "description": "Entity connections, keyed by guid",
+      "type": "object",
+      "examples": [{
+        "dea1fcd5-6942-47a2-ba75-448a7ed47fd7": "CONTAINS"
+      }]
     },
     "links": {
+      "$ref": "file:virtual_links.json"
     },
     "translation": {
-      "$ref": "file:building_config.json"
+      "$ref": "file:equipment_translation.json"
     },
     "missing_telemetry_fields": {
+      "description": "DBO fields which are required by the type but absent from the translation",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        ["discharge_fan_run_command", "discharge_fan_run_status"]
+      ]
     }
   }
 }

@@ -1,7 +1,9 @@
 
 package udmi.schema;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,27 +31,42 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class MappingEventEntity {
 
     /**
+     * Human readable code for the entity, should be unique in the document scope
      * 
      */
     @JsonProperty("code")
-    @JsonPropertyDescription("")
+    @JsonPropertyDescription("Human readable code for the entity, should be unique in the document scope")
     public java.lang.String code;
     /**
+     * DBO namespace and entity type
      * 
      */
     @JsonProperty("type")
-    @JsonPropertyDescription("")
+    @JsonPropertyDescription("DBO namespace and entity type")
     public java.lang.String type;
     /**
+     * Opaque identifier for the entity
      * 
      */
     @JsonProperty("cloud_device_id")
-    @JsonPropertyDescription("")
+    @JsonPropertyDescription("Opaque identifier for the entity")
     public java.lang.String cloud_device_id;
+    /**
+     * Entity connections, keyed by guid
+     * 
+     */
     @JsonProperty("connections")
-    public Object connections;
+    @JsonPropertyDescription("Entity connections, keyed by guid")
+    public Connections connections;
+    /**
+     * Virtual Equipment Links
+     * <p>
+     * Virtual equipment mapping, keyed by guid
+     * 
+     */
     @JsonProperty("links")
-    public Object links;
+    @JsonPropertyDescription("Virtual equipment mapping, keyed by guid")
+    public VirtualEquipmentLinks links;
     /**
      * Building Config
      * <p>
@@ -59,8 +76,13 @@ public class MappingEventEntity {
     @JsonProperty("translation")
     @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
     public HashMap<String, BuildingTranslation> translation;
+    /**
+     * DBO fields which are required by the type but absent from the translation
+     * 
+     */
     @JsonProperty("missing_telemetry_fields")
-    public Object missing_telemetry_fields;
+    @JsonPropertyDescription("DBO fields which are required by the type but absent from the translation")
+    public List<java.lang.String> missing_telemetry_fields = new ArrayList<java.lang.String>();
 
     @Override
     public int hashCode() {
