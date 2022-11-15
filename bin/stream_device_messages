@@ -1,10 +1,23 @@
+#!/usr/bin/env python3
+"""
+Live stream a GCP Pub/Sub Subscription, and filter messages to a given device and registry
+
+Usage:
+  bin/stream_device_messages PROJECT_ID SUBSCRIPTION_NAME REGISTRY_ID DEVICE_ID
+
+Note:
+  - Device ID and Registry ID are CASE SENSITIVE
+  - Cannot be used with any concurrent invocations of this tool or other 
+    use of the subscription (e.g. using bin/validator with a subscription)
+"""
+import datetime
+import json
 import sys
 import argparse
+
 from google import auth
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.types import SeekRequest
-import datetime
-import json
 
 
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
@@ -15,8 +28,8 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
 
   # Filter out messages which didn't originate from the device
   if message.attributes.get('subType') == 'state' and \
-  message.attributes.get('subFolder') == "update":
-    message_type = "state"
+  message.attributes.get('subFolder') == 'update':
+    message_type = 'state'
   elif 'subFolder' in message.attributes and \
     'subType' not in message.attributes:
     message_type = f'event_{message.attributes["subFolder"]}'
@@ -25,7 +38,7 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     return
 
   print(f'{message.publish_time}: Recieved message {message_type} \n---')
-  
+
   # Try to pretty-print messages
   try:
     message_json = json.loads(message.data)
@@ -36,13 +49,12 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
   print(f'{payload}\n')
   message.ack()
 
-
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('project', type=str)
   parser.add_argument('subscription', type=str)
-  parser.add_argument('device_id', type=str)
   parser.add_argument('registry_id', type=str)
+  parser.add_argument('device_id', type=str)
   return parser.parse_args()
 
 
@@ -54,7 +66,7 @@ try:
   credentials, project_id = auth.default()
 except Exception as e:
   print(e)
-  sys.exit()
+  sys.exit(1)
 
 subscription = f'projects/{args.project}/subscriptions/{args.subscription}'
 subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
@@ -80,5 +92,5 @@ while True:
     future.cancel()
     future.result()
     break
-  except Exception as ex:
+  except Exception:
     continue
