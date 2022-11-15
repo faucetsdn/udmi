@@ -37,11 +37,11 @@ public class MessageReadingClient implements MessagePublisher {
   private final String registryId;
   int messageCount;
 
-  boolean isActive = true;
-  Map<String, List<String>> deviceMessageLists = new HashMap<>();
-  Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
-  Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
-  Map<String, String> deviceNextTimestamp = new HashMap<>();
+  private boolean isActive = true;
+  private final Map<String, List<String>> deviceMessageLists = new HashMap<>();
+  private final Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
+  private final Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
+  private final Map<String, String> deviceNextTimestamp = new HashMap<>();
   private final List<OutputBundle> outputMessages = new ArrayList<>();
 
   /**
@@ -56,7 +56,6 @@ public class MessageReadingClient implements MessagePublisher {
     if (!messageDir.exists() || !messageDir.isDirectory()) {
       throw new RuntimeException("Message directory not found " + messageDir.getAbsolutePath());
     }
-    Arrays.stream(Objects.requireNonNull(messageDir.list())).forEach(this::prepDevice);
   }
 
   private void prepDevice(String deviceId) {
@@ -146,6 +145,9 @@ public class MessageReadingClient implements MessagePublisher {
 
   @Override
   public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+    if (isActive && deviceMessages.isEmpty()) {
+      Arrays.stream(Objects.requireNonNull(messageDir.list())).forEach(this::prepDevice);
+    }
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
