@@ -4,7 +4,7 @@ Live stream a GCP Pub/Sub Subscription, and filter messages to a given device
 in a site 
 
 Usage:
-  bin/stream_device_messages PROJECT_ID SUBSCRIPTION_NAME SITE_PATH DEVICE_ID [DEVICE_ID ...]
+  bin/stream_device_messages SITE_PATH PROJECT_ID SUBSCRIPTION_NAME DEVICE_ID [DEVICE_ID ...]
 
 Note:
   - DEVICE_ID and SITE_PATH are case sensitive
@@ -54,9 +54,9 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
+  parser.add_argument('site_path', type=str)
   parser.add_argument('project', type=str)
   parser.add_argument('subscription', type=str)
-  parser.add_argument('site_path', type=str)
   parser.add_argument('device_ids', type=str, nargs='+')
   return parser.parse_args()
 
