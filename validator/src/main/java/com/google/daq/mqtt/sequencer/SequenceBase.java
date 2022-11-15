@@ -944,8 +944,8 @@ public abstract class SequenceBase {
       trace("no valid received config");
       return true;
     }
-    List<String> differences = configDiffEngine.diff(deviceConfig,
-        sanitizeConfig((Config) receivedConfig));
+    List<String> differences = configDiffEngine.diff(
+        sanitizeConfig((Config) receivedConfig), deviceConfig);
     boolean configNotReady = !differences.isEmpty();
     trace("testing valid received config " + configNotReady);
     if (traceLogLevel() && configNotReady) {
