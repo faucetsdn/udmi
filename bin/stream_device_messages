@@ -82,8 +82,7 @@ print(f'Seeking subscription to {time_now}')
 response = subscriber.seek(request=request)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
-print(f'Subscribing to messages from {device_id} in registry {registry_id}')
-print('note device ID and registry ID are case-sensitive')
+print(f'Subscribing to messages from {device_id} (case sensitive) in registry {registry_id}')
 
 while True:
   try:
