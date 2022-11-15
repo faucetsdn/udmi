@@ -10,7 +10,7 @@ jobs:
   udmi:
     name: Integration Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
