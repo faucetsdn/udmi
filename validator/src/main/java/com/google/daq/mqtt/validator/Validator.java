@@ -23,7 +23,6 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,7 +67,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.DeviceValidationEvent;
-import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -672,17 +670,25 @@ public class Validator {
       deviceInfo.expireEntries(getNow());
       if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
-            key -> new DeviceValidationEvent());
+        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
         deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
       } else if (deviceInfo.seenRecently(getNow())) {
         summary.correct_devices.add(deviceId);
+        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
       } else {
         summary.missing_devices.add(deviceId);
       }
     }
 
     sendValidationReport(makeValidationReport(summary, devices));
+  }
+
+  private DeviceValidationEvent getValidationEvent(Map<String, DeviceValidationEvent> devices,
+      ReportingDevice deviceInfo) {
+    DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceInfo.getDeviceId(),
+        key -> new DeviceValidationEvent());
+    deviceValidationEvent.last_seen = deviceInfo.getLastSeen();
+    return deviceValidationEvent;
   }
 
   private Instant getNow() {

@@ -274,6 +274,10 @@ public class ReportingDevice {
     return previous == null || previous.before(getThreshold(now));
   }
 
+  public Date getLastSeen() {
+    return lastSeen;
+  }
+
   /**
    * Encapsulation of metadata differences.
    */

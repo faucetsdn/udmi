@@ -8,12 +8,13 @@ fi
 trace_name=$1
 shift
 
-trace_out=validator/traces/$trace_name.out
+trace_out=validator/traces/${trace_name}.out
+trace_in=${trace_name}.in
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
 rm -rf $site_out
-validator/bin/validate -- schema trace $trace_name $site_model
+validator/bin/validate -- schema trace $trace_in $site_model
 
 echo
 
