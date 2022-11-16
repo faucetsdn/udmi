@@ -58,6 +58,8 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for log category `system.config.parse` level `ERROR`
 1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
+1. Update config before log category `system.config.receive` level `DEBUG`:
+    * Add `system.last_start` = `device reported`
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for no interesting status
 1. Wait for last_config updated
@@ -101,7 +103,7 @@ Restart and connect to same endpoint and expect it returns.
     * Set `system.mode` = `active`
 1. Wait for deviceState.system.mode == ACTIVE
 1. Wait for last_config is newer than previous last_config
-1. Wait for last_start is newer than previous last_start 2022-11-16T02:21:44Z
+1. Wait for last_start is newer than previous last_start
 
 ## extra_config
 

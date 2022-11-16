@@ -166,7 +166,7 @@ public class BlobsetSequences extends SequenceBase {
       return deviceState.system.last_config.after(last_config);
     });
 
-    untilTrue("last_start is newer than previous last_start " + getTimestamp(last_start), () -> {
+    untilTrue("last_start is newer than previous last_start", () -> {
       return deviceConfig.system.last_start.after(last_start);
     });
   }
