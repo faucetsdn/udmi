@@ -56,6 +56,7 @@ public class MessageReadingClient implements MessagePublisher {
     if (!messageDir.exists() || !messageDir.isDirectory()) {
       throw new RuntimeException("Message directory not found " + messageDir.getAbsolutePath());
     }
+    Arrays.stream(Objects.requireNonNull(messageDir.list())).forEach(this::prepDevice);
   }
 
   private void prepDevice(String deviceId) {
@@ -66,22 +67,31 @@ public class MessageReadingClient implements MessagePublisher {
     prepNextMessage(deviceId);
   }
 
-  @SuppressWarnings("unchecked")
   private void prepNextMessage(String deviceId) {
     try {
-      File deviceDir = new File(messageDir, deviceId);
       if (deviceMessageLists.get(deviceId).isEmpty()) {
         return;
       }
       String msgName = deviceMessageLists.get(deviceId).remove(0);
-      File msgFile = new File(deviceDir, msgName);
-      Map<String, Object> msgObj = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
+      Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
       deviceMessages.put(deviceId, msgObj);
       deviceAttributes.put(deviceId, makeAttributes(deviceId, msgName));
       String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
       deviceNextTimestamp.put(deviceId, timestamp);
     } catch (Exception e) {
       throw new RuntimeException("While handling next message for " + deviceId, e);
+    }
+  }
+
+  private Map<String, Object> getMessageObject(String deviceId, String msgName) {
+    try {
+      File deviceDir = new File(messageDir, deviceId);
+      File msgFile = new File(deviceDir, msgName);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
+      return treeMap;
+    } catch (Exception e) {
+      throw new RuntimeException("While parsing message object", e);
     }
   }
 
@@ -145,9 +155,6 @@ public class MessageReadingClient implements MessagePublisher {
 
   @Override
   public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
-    if (isActive && deviceMessages.isEmpty()) {
-      Arrays.stream(Objects.requireNonNull(messageDir.list())).forEach(this::prepDevice);
-    }
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
