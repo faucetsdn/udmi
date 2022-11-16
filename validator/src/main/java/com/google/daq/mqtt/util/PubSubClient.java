@@ -34,7 +34,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -205,7 +204,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
         Map<String, Object> dataMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
         asMap = dataMap;
       } catch (JsonProcessingException e) {
-        asMap = new ErrorContainer(e, data, JsonUtil.getTimestamp());
+        asMap = new ErrorContainer(e, getSubscriptionId(), JsonUtil.getTimestamp());
       }
 
       attributes = new HashMap<>(attributes);

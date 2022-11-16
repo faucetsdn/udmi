@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Consumer;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -100,7 +100,7 @@ public class IotReflectorClient implements MessagePublisher {
         return;
       }
     } catch (Exception e) {
-      asMap = new ErrorContainer(e, topic, payload);
+      asMap = new ErrorContainer(e, payload, JsonUtil.getTimestamp());
     }
 
     Validator.MessageBundle messageBundle = new Validator.MessageBundle();

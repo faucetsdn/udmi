@@ -17,7 +17,7 @@
     "level" : 500
   }, {
     "message" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File); line: 1, column: 3]",
-    "detail" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File); line: 1, column: 3] @MessageReadingClient.getMessageObject(MessageReadingClient.java:94)",
+    "detail" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\tredacted\n",
     "category" : "validation.error.simple",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500

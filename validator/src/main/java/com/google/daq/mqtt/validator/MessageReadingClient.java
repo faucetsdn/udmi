@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,16 +34,17 @@ public class MessageReadingClient implements MessagePublisher {
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
+  private static final String TRACE_FILE_SUFFIX = ".json";
   private final File messageDir;
   private final String registryId;
-  int messageCount;
-
-  private boolean isActive;
   private final Map<String, List<String>> deviceMessageLists = new HashMap<>();
   private final Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   private final Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
   private final Map<String, String> deviceNextTimestamp = new HashMap<>();
   private final List<OutputBundle> outputMessages = new ArrayList<>();
+  int messageCount;
+  private boolean isActive;
+  private String lastValidTimestamp;
 
   /**
    * Create a new client.
@@ -65,7 +63,9 @@ public class MessageReadingClient implements MessagePublisher {
 
   private void prepDevice(String deviceId) {
     File deviceDir = new File(messageDir, deviceId);
-    List<String> messages = Arrays.stream(Objects.requireNonNull(deviceDir.list())).sorted()
+    List<String> messages = Arrays.stream(Objects.requireNonNull(deviceDir.list()))
+        .filter(filename -> filename.endsWith(TRACE_FILE_SUFFIX))
+        .sorted()
         .collect(Collectors.toList());
     deviceMessageLists.put(deviceId, messages);
     prepNextMessage(deviceId);
@@ -79,14 +79,10 @@ public class MessageReadingClient implements MessagePublisher {
       String msgName = deviceMessageLists.get(deviceId).remove(0);
       Map<String, String> attributes = makeAttributes(deviceId, msgName);
       deviceAttributes.put(deviceId, attributes);
-      try {
-        Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
-        deviceMessages.put(deviceId, msgObj);
-        String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
-        deviceNextTimestamp.put(deviceId, timestamp);
-      } catch (Exception e) {
-        throw new MessageParseException(msgName, attributes, (Exception) e.getCause());
-      }
+      Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
+      deviceMessages.put(deviceId, msgObj);
+      String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
+      deviceNextTimestamp.put(deviceId, timestamp);
     } finally {
       isActive = !deviceMessages.isEmpty();
     }
@@ -100,7 +96,7 @@ public class MessageReadingClient implements MessagePublisher {
       Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
       return treeMap;
     } catch (Exception e) {
-      throw new RuntimeException("While parsing message file " + msgName, e);
+      return new ErrorContainer(e, msgName, lastValidTimestamp);
     }
   }
 
@@ -166,15 +162,15 @@ public class MessageReadingClient implements MessagePublisher {
   public Validator.MessageBundle takeNextMessage() {
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
-    prepNextMessage(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
-    String timestamp = deviceNextTimestamp.remove(deviceId);
-    System.out.printf("Replay %s for %s%n", timestamp, deviceId);
+    lastValidTimestamp = deviceNextTimestamp.remove(deviceId);
+    prepNextMessage(deviceId);
+    System.out.printf("Replay %s for %s%n", lastValidTimestamp, deviceId);
     messageCount++;
     MessageBundle bundle = new MessageBundle();
     bundle.message = message;
     bundle.attributes = attributes;
-    bundle.timestamp = timestamp;
+    bundle.timestamp = lastValidTimestamp;
     return bundle;
   }
 
