@@ -198,7 +198,7 @@ public abstract class SequenceBase {
 
     @Override
     protected void succeeded(org.junit.runner.Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description, "sequence complete");
+      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
     }
 
     @Override
