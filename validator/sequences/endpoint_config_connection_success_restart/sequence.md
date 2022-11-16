@@ -14,4 +14,4 @@ Restart and connect to same endpoint and expect it returns.
     * Set `system.mode` = `active`
 1. Wait for deviceState.system.mode == ACTIVE
 1. Wait for last_config is newer than previous last_config
-1. Wait for last_start is newer than previous last_start 2022-11-15T18:50:10Z
+1. Wait for last_start is newer than previous last_start 2022-11-16T02:21:44Z
