@@ -4,26 +4,27 @@ Live stream a GCP Pub/Sub Subscription, and filter messages to a given device
 in a site 
 
 Usage:
-  bin/stream_device_messages PROJECT_ID SUBSCRIPTION_NAME SITE_PATH DEVICE_ID
+  bin/stream_device_messages SITE_PATH PROJECT_ID SUBSCRIPTION_NAME DEVICE_ID [DEVICE_ID ...]
 
 Note:
   - DEVICE_ID and SITE_PATH are case sensitive
   - Cannot be used with any concurrent invocations of this tool or other 
     use of the subscription (e.g. using bin/validator with a subscription)
 """
-import datetime
+
 import json
 import sys
 import argparse
 import os
 
+from datetime import datetime, timezone
 from google import auth
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.types import SeekRequest
 
 
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
-  if message.attributes.get('deviceId') != device_id or \
+  if message.attributes.get('deviceId') not in device_ids or \
   message.attributes.get('deviceRegistryId') != registry_id:
     message.ack()
     return
@@ -39,7 +40,7 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message.ack()
     return
 
-  print(f'{message.publish_time}: Recieved message {message_type} \n---')
+  print(f'{message.publish_time}: {message.attributes.get("deviceId")} {message_type} \n---')
 
   # Try to pretty-print messages
   try:
@@ -53,15 +54,15 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
+  parser.add_argument('site_path', type=str)
   parser.add_argument('project', type=str)
   parser.add_argument('subscription', type=str)
-  parser.add_argument('site_path', type=str)
-  parser.add_argument('device_id', type=str)
+  parser.add_argument('device_ids', type=str, nargs='+')
   return parser.parse_args()
 
 
 args = parse_command_line_args()
-device_id = args.device_id
+device_ids = args.device_ids
 site_path = args.site_path
 
 with open(os.path.join(site_path, 'cloud_iot_config.json'), encoding="utf-8") as f:
@@ -73,10 +74,11 @@ if not registry_id:
   print("Registry ID not set")
   sys.exit(1)
 
-if not os.path.exists(os.path.join(site_path,'devices', device_id)):
-  print(f'Device {device_id} not found in site model')
-  sys.exit(1)
-
+for device_id in device_ids:
+  if not os.path.exists(os.path.join(site_path,'devices', device_id)):
+    print(f'Device {device_id} not found in site model')
+    sys.exit(1)
+  
 try:
   credentials, project_id = auth.default()
 except Exception as e:
@@ -86,7 +88,7 @@ except Exception as e:
 subscription = f'projects/{args.project}/subscriptions/{args.subscription}'
 subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
 
-time_now = datetime.datetime.now()
+time_now = datetime.now(timezone.utc)
 
 request = SeekRequest(
   subscription = subscription,
@@ -97,7 +99,7 @@ print(f'Seeking subscription to {time_now}')
 response = subscriber.seek(request=request)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
-print(f'Subscribing to messages from {device_id} in registry {registry_id}')
+print(f'Subscribing to messages from {",".join(device_ids)} in registry {registry_id}')
 
 while True:
   try:
