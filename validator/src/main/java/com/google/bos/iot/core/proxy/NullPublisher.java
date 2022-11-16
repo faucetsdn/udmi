@@ -1,8 +1,8 @@
 package com.google.bos.iot.core.proxy;
 
 import com.google.daq.mqtt.util.MessagePublisher;
-import java.util.Map;
-import java.util.function.BiConsumer;
+import com.google.daq.mqtt.validator.Validator;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,12 @@ public class NullPublisher implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public Validator.MessageBundle takeNextMessage() {
+    throw new IllegalStateException("Can't receive messages");
+  }
+
+  @Override
+  public void processMessage(Consumer<Validator.MessageBundle> validator) {
     throw new IllegalStateException("Can't process message");
   }
 }

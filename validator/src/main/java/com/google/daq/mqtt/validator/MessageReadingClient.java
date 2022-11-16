@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -157,7 +159,12 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public Validator.MessageBundle takeNextMessage() {
+    throw new IllegalStateException("Can't process message");
+  }
+
+  @Override
+  public void processMessage(Consumer<Validator.MessageBundle> validator) {
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
@@ -165,11 +172,17 @@ public class MessageReadingClient implements MessagePublisher {
     System.out.printf("Replay %s for %s%n", timestamp, deviceId);
     messageCount++;
     try {
-      validator.accept(message, attributes);
+      MessageBundle bundle = new MessageBundle();
+      bundle.message = message;
+      bundle.attributes = attributes;
+      validator.accept(bundle);
       prepNextMessage(deviceId);
     } catch (MessageParseException e) {
       ErrorContainer error = new ErrorContainer(e.exception, e.source, timestamp);
-      validator.accept(error, e.attributes);
+      MessageBundle bundle = new MessageBundle();
+      bundle.message = error;
+      bundle.attributes = e.attributes;
+      validator.accept(bundle);
     } finally {
       if (deviceMessages.isEmpty()) {
         isActive = false;

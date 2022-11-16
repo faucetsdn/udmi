@@ -15,7 +15,9 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
@@ -32,6 +34,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -177,13 +180,18 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     throw new RuntimeException("This hasn't been implemented yet");
   }
 
+  @Override
+  public Validator.MessageBundle takeNextMessage() {
+    throw new IllegalStateException("Can't receive messages");
+  }
+
   /**
    * Process the given message.
    *
    * @param handler the handler to use for processing the message
    */
   @SuppressWarnings("unchecked")
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> handler) {
+  public void processMessage(Consumer<MessageBundle> handler) {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
@@ -211,7 +219,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       attributes = new HashMap<>(attributes);
       attributes.put(WAS_BASE_64, "" + base64);
 
-      handler.accept(asMap, attributes);
+      MessageBundle bundle = new MessageBundle();
+      bundle.message = asMap;
+      bundle.attributes = attributes;
+      handler.accept(bundle);
     } catch (Exception e) {
       throw new RuntimeException("Processing pubsub message for " + getSubscriptionId(), e);
     }
@@ -248,15 +259,15 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private void ignoreMessage(Envelope attributes, Object message) {
   }
 
-  private void handlerHandler(Map<String, Object> message, Map<String, String> attributes) {
-    Envelope envelope = JsonUtil.convertTo(Envelope.class, attributes);
+  private void handlerHandler(MessageBundle bundle) {
+    Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
       Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
         System.err.println("Ignoring messages of type " + mapKey);
         return Object.class;
       });
-      Object messageObject = JsonUtil.convertTo(handlerType, message);
+      Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
       HandlerConsumer<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
           key -> this::ignoreMessage);
       handlerConsumer.accept(envelope, messageObject);

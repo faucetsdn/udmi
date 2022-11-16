@@ -805,12 +805,12 @@ public abstract class SequenceBase {
     if (!client.isActive()) {
       throw new RuntimeException("Trying to receive message from inactive client");
     }
-    client.processMessage((message, attributes) -> {
-      String category = attributes.get("category");
+    client.processMessage((bundle) -> {
+      String category = bundle.attributes.get("category");
       if ("commands".equals(category)) {
-        processCommand(message, attributes);
+        processCommand(bundle.message, bundle.attributes);
       } else if ("config".equals(category)) {
-        processConfig(message, attributes);
+        processConfig(bundle.message, bundle.attributes);
       }
     });
   }

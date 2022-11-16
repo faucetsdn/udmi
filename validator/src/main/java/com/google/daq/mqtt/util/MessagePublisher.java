@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.util;
 
-import java.util.Map;
-import java.util.function.BiConsumer;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import java.util.function.Consumer;
 
 /**
  * Interface for publishing messages as raw maps.
@@ -16,5 +16,7 @@ public interface MessagePublisher {
 
   boolean isActive();
 
-  void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator);
+  void processMessage(Consumer<MessageBundle> validator);
+
+  MessageBundle takeNextMessage();
 }

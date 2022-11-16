@@ -5,6 +5,7 @@ import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -20,6 +21,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -184,7 +186,12 @@ class MqttPublisher implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public Validator.MessageBundle takeNextMessage() {
+    throw new IllegalStateException("Can't process message");
+  }
+
+  @Override
+  public void processMessage(Consumer<Validator.MessageBundle> validator) {
     throw new IllegalStateException("Can't process message");
   }
 
