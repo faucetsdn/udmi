@@ -29,6 +29,6 @@
     { "pattern": "^validation\\.device\\.receive$" },
     { "pattern": "^validation\\.device\\.result$" },
     { "pattern": "^validation\\.summary\\.report$" },
-    { "pattern": "^device[\\.[a-z[_[a-z]+]*]+]+$" }
+    { "pattern": "^device\\.[a-z]+(_[a-z]+)*$" }
     ]
 }

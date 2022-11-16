@@ -6,36 +6,43 @@
       "message": "things are happening",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "device.test",
+      "category": "blobset.blob.fetch",
       "level": 600
     },
     {
       "message": "things are happening",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "device.log_message",
+      "category": "device.foobar",
       "level": 600
     },
     {
       "message": "things are happening",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "device._bad_category",
+      "category": "device.foo_bar",
       "level": 600
     },
     {
       "message": "things are happening",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
-      "category": "device.logMessage",
+      "category": "device.fooBar",
       "level": 600
     },
     {
-      "message": "something else happened",
-      "timestamp": "2018-08-26T21:39:39.364Z",
+      "message": "things are happening",
       "detail": "someplace, sometime",
-      "category": "system.config.apply",
-      "level": 700
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device.foo__bar",
+      "level": 600
+    },
+    {
+      "message": "things are happening",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device._foo_bar",
+      "level": 600
     }
   ]
 }

@@ -10,11 +10,11 @@ import sys
 GENCODE_MARKER = '@@ '
 CATEGORY_MARKER = '* '
 WILDCARD_REGEX = ' *\\* _\?\?\?_: (.*)'
-WILDCARD_SUFFIX = '[.[a-z[_[a-z]+]*]+]+'
+WILDCARD_SUFFIX = '.[a-z]+(_[a-z]+)*'
 
 CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
-DEVICE_PREFIX = 'device['
+DEVICE_PREFIX = 'device'
 
 JAVA_DESCRIPTION = "\n%s// %s\n"
 JAVA_TARGET = '%spublic static final String %s = "%s";\n'
