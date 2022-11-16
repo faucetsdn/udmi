@@ -106,7 +106,6 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
-  private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -394,7 +393,7 @@ public abstract class SequenceBase {
   public void setUp() {
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
-    safeSleep(CLEAN_START_DELAY_MS);
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
 
     deviceState = new State();
     configAcked = false;
@@ -599,11 +598,14 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    localConfigChange(reason);
-    waitForConfigSync();
+    if (localConfigChange(reason)) {
+      // TODO: Cleanup delay, which is a workaround for cloud-based race-conditions.
+      safeSleep(CONFIG_UPDATE_DELAY_MS);
+      waitForConfigSync();
+    }
   }
 
-  private void updateConfig(SubFolder subBlock, Object data) {
+  private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
@@ -616,9 +618,8 @@ public abstract class SequenceBase {
         debug(String.format("update %s_%s", "config", subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        // Delay so the backend can process the update before others arrive.
-        Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
+      return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
@@ -638,7 +639,7 @@ public abstract class SequenceBase {
     }
   }
 
-  private void localConfigChange(String reason) {
+  private boolean localConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
@@ -646,11 +647,12 @@ public abstract class SequenceBase {
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
-        return;
+        return false;
       }
       recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
+      return true;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
