@@ -115,6 +115,7 @@ public class Validator {
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
+  private static final String EXCEPTION_KEY = "exception";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -461,6 +462,11 @@ public class Validator {
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
+      }
+
+      if (message.containsKey(EXCEPTION_KEY)) {
+        device.addError((Exception) message.get(EXCEPTION_KEY));
+        return device;
       }
 
       sanitizeMessage(schemaName, message);
@@ -864,6 +870,15 @@ public class Validator {
 
     public Map<String, Object> message;
     public Map<String, String> attributes;
+  }
+
+  public static class ErrorContainer extends TreeMap<String, Object> {
+
+    public ErrorContainer(Exception exception, String message, String timestamp) {
+      put(EXCEPTION_KEY, exception);
+      put("message", message);
+      put("timestamp", timestamp);
+    }
   }
 
   class RelativeDownloader implements URIDownloader {

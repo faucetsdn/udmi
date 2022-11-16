@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,18 +70,19 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   private void prepNextMessage(String deviceId) {
+    if (deviceMessageLists.get(deviceId).isEmpty()) {
+      return;
+    }
+    String msgName = deviceMessageLists.get(deviceId).remove(0);
+    Map<String, String> attributes = makeAttributes(deviceId, msgName);
+    deviceAttributes.put(deviceId, attributes);
     try {
-      if (deviceMessageLists.get(deviceId).isEmpty()) {
-        return;
-      }
-      String msgName = deviceMessageLists.get(deviceId).remove(0);
       Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
       deviceMessages.put(deviceId, msgObj);
-      deviceAttributes.put(deviceId, makeAttributes(deviceId, msgName));
       String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
       deviceNextTimestamp.put(deviceId, timestamp);
     } catch (Exception e) {
-      throw new RuntimeException("While handling next message for " + deviceId, e);
+      throw new MessageParseException(msgName, attributes, (Exception) e.getCause());
     }
   }
 
@@ -91,7 +94,7 @@ public class MessageReadingClient implements MessagePublisher {
       Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
       return treeMap;
     } catch (Exception e) {
-      throw new RuntimeException("While parsing message object", e);
+      throw new RuntimeException("While parsing message file " + msgName, e);
     }
   }
 
@@ -164,6 +167,9 @@ public class MessageReadingClient implements MessagePublisher {
     try {
       validator.accept(message, attributes);
       prepNextMessage(deviceId);
+    } catch (MessageParseException e) {
+      ErrorContainer error = new ErrorContainer(e.exception, e.source, timestamp);
+      validator.accept(error, e.attributes);
     } finally {
       if (deviceMessages.isEmpty()) {
         isActive = false;

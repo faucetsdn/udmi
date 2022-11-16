@@ -15,6 +15,7 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
@@ -204,7 +205,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       try {
         asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
       } catch (JsonProcessingException e) {
-        asMap = new ErrorContainer(e, data);
+        asMap = new ErrorContainer(e, data, JsonUtil.getTimestamp());
       }
 
       attributes = new HashMap<>(attributes);
@@ -316,14 +317,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     } catch (Exception e) {
       throw new RuntimeException(
           String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
-    }
-  }
-
-  static class ErrorContainer extends TreeMap<String, Object> {
-
-    ErrorContainer(Exception e, String message) {
-      put("exception", e.toString());
-      put("message", message);
     }
   }
 

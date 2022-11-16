@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -185,12 +186,4 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, String> attributes;
   }
 
-  static class ErrorContainer extends TreeMap<String, Object> {
-
-    ErrorContainer(Exception e, String topic, String message) {
-      put("exception", e.toString());
-      put("topic", topic);
-      put("message", message);
-    }
-  }
 }
