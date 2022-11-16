@@ -107,11 +107,6 @@ public class FileDataSink implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(Consumer<MessageBundle> validator) {
-    throw new RuntimeException("Not implemented for file data sink");
-  }
-
-  @Override
   public MessageBundle takeNextMessage() {
     throw new RuntimeException("Not implemented for file data sink");
   }

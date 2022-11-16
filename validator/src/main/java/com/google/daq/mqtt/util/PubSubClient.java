@@ -220,19 +220,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     }
   }
 
-  /**
-   * Process the given message.
-   *
-   * @param handler the handler to use for processing the message
-   */
-  public void processMessage(Consumer<MessageBundle> handler) {
-    try {
-     handler.accept(takeNextMessage());
-    } catch (Exception e) {
-      throw new RuntimeException("Processing pubsub message for " + getSubscriptionId(), e);
-    }
-  }
-
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, HandlerConsumer<T> handler) {
@@ -253,7 +240,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void messageLoop() {
     while (isActive()) {
       try {
-        processMessage(this::handlerHandler);
+        handlerHandler(takeNextMessage());
       } catch (Exception e) {
         System.err.println("Exception processing received message:");
         e.printStackTrace();

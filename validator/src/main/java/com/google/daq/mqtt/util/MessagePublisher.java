@@ -16,7 +16,5 @@ public interface MessagePublisher {
 
   boolean isActive();
 
-  void processMessage(Consumer<MessageBundle> validator);
-
   MessageBundle takeNextMessage();
 }

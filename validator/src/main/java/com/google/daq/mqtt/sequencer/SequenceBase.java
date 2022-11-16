@@ -20,6 +20,7 @@ import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -766,7 +767,7 @@ public abstract class SequenceBase {
     updateConfig("before " + description);
     recordSequence("Wait for " + description);
     while (evaluator.get()) {
-      receiveMessage();
+      processMessage();
     }
     info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
     waitingCondition = "nothing";
@@ -801,18 +802,17 @@ public abstract class SequenceBase {
     untilLoop(() -> catchToFalse(evaluator), description);
   }
 
-  private void receiveMessage() {
+  private void processMessage() {
     if (!client.isActive()) {
       throw new RuntimeException("Trying to receive message from inactive client");
     }
-    client.processMessage((bundle) -> {
-      String category = bundle.attributes.get("category");
-      if ("commands".equals(category)) {
-        processCommand(bundle.message, bundle.attributes);
-      } else if ("config".equals(category)) {
-        processConfig(bundle.message, bundle.attributes);
-      }
-    });
+    MessageBundle bundle = client.takeNextMessage();
+    String category = bundle.attributes.get("category");
+    if ("commands".equals(category)) {
+      processCommand(bundle.message, bundle.attributes);
+    } else if ("config".equals(category)) {
+      processConfig(bundle.message, bundle.attributes);
+    }
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {

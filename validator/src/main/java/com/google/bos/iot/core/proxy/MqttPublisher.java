@@ -190,11 +190,6 @@ class MqttPublisher implements MessagePublisher {
     throw new IllegalStateException("Can't process message");
   }
 
-  @Override
-  public void processMessage(Consumer<Validator.MessageBundle> validator) {
-    throw new IllegalStateException("Can't process message");
-  }
-
   private void attachClient(String deviceId) {
     try {
       LOG.info(this.deviceId + " attaching " + deviceId);

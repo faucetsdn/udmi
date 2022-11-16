@@ -41,7 +41,7 @@ public class MessageReadingClient implements MessagePublisher {
   private final String registryId;
   int messageCount;
 
-  private boolean isActive = true;
+  private boolean isActive;
   private final Map<String, List<String>> deviceMessageLists = new HashMap<>();
   private final Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   private final Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
@@ -72,19 +72,23 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   private void prepNextMessage(String deviceId) {
-    if (deviceMessageLists.get(deviceId).isEmpty()) {
-      return;
-    }
-    String msgName = deviceMessageLists.get(deviceId).remove(0);
-    Map<String, String> attributes = makeAttributes(deviceId, msgName);
-    deviceAttributes.put(deviceId, attributes);
     try {
-      Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
-      deviceMessages.put(deviceId, msgObj);
-      String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
-      deviceNextTimestamp.put(deviceId, timestamp);
-    } catch (Exception e) {
-      throw new MessageParseException(msgName, attributes, (Exception) e.getCause());
+      if (deviceMessageLists.get(deviceId).isEmpty()) {
+        return;
+      }
+      String msgName = deviceMessageLists.get(deviceId).remove(0);
+      Map<String, String> attributes = makeAttributes(deviceId, msgName);
+      deviceAttributes.put(deviceId, attributes);
+      try {
+        Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
+        deviceMessages.put(deviceId, msgObj);
+        String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
+        deviceNextTimestamp.put(deviceId, timestamp);
+      } catch (Exception e) {
+        throw new MessageParseException(msgName, attributes, (Exception) e.getCause());
+      }
+    } finally {
+      isActive = !deviceMessages.isEmpty();
     }
   }
 
@@ -162,6 +166,7 @@ public class MessageReadingClient implements MessagePublisher {
   public Validator.MessageBundle takeNextMessage() {
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
+    prepNextMessage(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
     String timestamp = deviceNextTimestamp.remove(deviceId);
     System.out.printf("Replay %s for %s%n", timestamp, deviceId);
@@ -171,27 +176,6 @@ public class MessageReadingClient implements MessagePublisher {
     bundle.attributes = attributes;
     bundle.timestamp = timestamp;
     return bundle;
-  }
-
-  @Override
-  public void processMessage(Consumer<Validator.MessageBundle> validator) {
-    MessageBundle bundle = takeNextMessage();
-    String deviceId = bundle.attributes.get("deviceId");
-    String timestamp = bundle.timestamp;
-    try {
-      validator.accept(bundle);
-      prepNextMessage(deviceId);
-    } catch (MessageParseException e) {
-      ErrorContainer error = new ErrorContainer(e.exception, e.source, timestamp);
-      MessageBundle bundle2 = new MessageBundle();
-      bundle2.message = error;
-      bundle2.attributes = e.attributes;
-      validator.accept(bundle2);
-    } finally {
-      if (deviceMessages.isEmpty()) {
-        isActive = false;
-      }
-    }
   }
 
   private String getNextDevice() {

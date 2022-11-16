@@ -165,16 +165,6 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(Consumer<Validator.MessageBundle> validator) {
-    try {
-      Validator.MessageBundle message = takeNextMessage();
-      validator.accept(message);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message on subscription " + subscriptionId, e);
-    }
-  }
-
-  @Override
   public void publish(String deviceId, String topic, String data) {
     String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
     mqttPublisher.publish(siteName, reflectorTopic, data);

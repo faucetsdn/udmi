@@ -38,9 +38,4 @@ public class NullPublisher implements MessagePublisher {
   public Validator.MessageBundle takeNextMessage() {
     throw new IllegalStateException("Can't receive messages");
   }
-
-  @Override
-  public void processMessage(Consumer<Validator.MessageBundle> validator) {
-    throw new IllegalStateException("Can't process message");
-  }
 }

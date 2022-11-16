@@ -372,7 +372,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          client.processMessage(this::validateMessage);
+          validateMessage(client.takeNextMessage());
         } catch (Exception e) {
           e.printStackTrace();
         }
