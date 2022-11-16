@@ -78,7 +78,7 @@ public abstract class SequenceBase {
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
-  public static final int CONFIG_UPDATE_DELAY_MS = 10000;
+  public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   public static final int NORM_TIMEOUT_MS = 180 * 1000;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
@@ -198,7 +198,7 @@ public abstract class SequenceBase {
 
     @Override
     protected void succeeded(org.junit.runner.Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
+      recordCompletion(RESULT_PASS, Level.INFO, description, "sequence complete");
     }
 
     @Override
@@ -432,7 +432,9 @@ public abstract class SequenceBase {
   }
 
   private void waitForConfigSync() {
-    debug("waiting for config sync");
+    // TODO: Cleanup delay, which is a workaround for cloud-based race-conditions.
+    info("waiting for config sync...");
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
     messageEvaluateLoop(this::configNotReady);
   }
 
@@ -599,8 +601,6 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     if (localConfigChange(reason)) {
-      // TODO: Cleanup delay, which is a workaround for cloud-based race-conditions.
-      safeSleep(CONFIG_UPDATE_DELAY_MS);
       waitForConfigSync();
     }
   }
