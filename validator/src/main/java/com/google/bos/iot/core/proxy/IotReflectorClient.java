@@ -157,13 +157,17 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public Validator.MessageBundle takeNextMessage() {
-    throw new RuntimeException("Not implemented for file data sink");
+    try {
+      return messages.take();
+    } catch (Exception e) {
+      throw new RuntimeException("While taking next message", e);
+    }
   }
 
   @Override
   public void processMessage(Consumer<Validator.MessageBundle> validator) {
     try {
-      Validator.MessageBundle message = messages.take();
+      Validator.MessageBundle message = takeNextMessage();
       validator.accept(message);
     } catch (Exception e) {
       throw new RuntimeException("While processing message on subscription " + subscriptionId, e);

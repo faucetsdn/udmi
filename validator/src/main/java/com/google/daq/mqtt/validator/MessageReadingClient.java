@@ -160,29 +160,33 @@ public class MessageReadingClient implements MessagePublisher {
 
   @Override
   public Validator.MessageBundle takeNextMessage() {
-    throw new IllegalStateException("Can't process message");
-  }
-
-  @Override
-  public void processMessage(Consumer<Validator.MessageBundle> validator) {
     String deviceId = getNextDevice();
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
     String timestamp = deviceNextTimestamp.remove(deviceId);
     System.out.printf("Replay %s for %s%n", timestamp, deviceId);
     messageCount++;
+    MessageBundle bundle = new MessageBundle();
+    bundle.message = message;
+    bundle.attributes = attributes;
+    bundle.timestamp = timestamp;
+    return bundle;
+  }
+
+  @Override
+  public void processMessage(Consumer<Validator.MessageBundle> validator) {
+    MessageBundle bundle = takeNextMessage();
+    String deviceId = bundle.attributes.get("deviceId");
+    String timestamp = bundle.timestamp;
     try {
-      MessageBundle bundle = new MessageBundle();
-      bundle.message = message;
-      bundle.attributes = attributes;
       validator.accept(bundle);
       prepNextMessage(deviceId);
     } catch (MessageParseException e) {
       ErrorContainer error = new ErrorContainer(e.exception, e.source, timestamp);
-      MessageBundle bundle = new MessageBundle();
-      bundle.message = error;
-      bundle.attributes = e.attributes;
-      validator.accept(bundle);
+      MessageBundle bundle2 = new MessageBundle();
+      bundle2.message = error;
+      bundle2.attributes = e.attributes;
+      validator.accept(bundle2);
     } finally {
       if (deviceMessages.isEmpty()) {
         isActive = false;

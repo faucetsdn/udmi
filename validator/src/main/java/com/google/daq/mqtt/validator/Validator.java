@@ -870,6 +870,7 @@ public class Validator {
 
     public Map<String, Object> message;
     public Map<String, String> attributes;
+    public String timestamp;
   }
 
   public static class ErrorContainer extends TreeMap<String, Object> {

@@ -182,23 +182,13 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   @Override
   public Validator.MessageBundle takeNextMessage() {
-    throw new IllegalStateException("Can't receive messages");
-  }
-
-  /**
-   * Process the given message.
-   *
-   * @param handler the handler to use for processing the message
-   */
-  @SuppressWarnings("unchecked")
-  public void processMessage(Consumer<MessageBundle> handler) {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
       if (flushSubscription && seconds < startTimeSec) {
         System.err.println(String.format("Flushing outdated message from %d seconds ago",
             startTimeSec - seconds));
-        return;
+        return null;
       }
       Map<String, String> attributes = message.getAttributesMap();
       byte[] rawData = message.getData().toByteArray();
@@ -211,7 +201,9 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       }
       Map<String, Object> asMap;
       try {
-        asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> dataMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+        asMap = dataMap;
       } catch (JsonProcessingException e) {
         asMap = new ErrorContainer(e, data, JsonUtil.getTimestamp());
       }
@@ -222,7 +214,20 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       MessageBundle bundle = new MessageBundle();
       bundle.message = asMap;
       bundle.attributes = attributes;
-      handler.accept(bundle);
+      return bundle;
+    } catch (Exception e) {
+      throw new RuntimeException("While taking next message", e);
+    }
+  }
+
+  /**
+   * Process the given message.
+   *
+   * @param handler the handler to use for processing the message
+   */
+  public void processMessage(Consumer<MessageBundle> handler) {
+    try {
+     handler.accept(takeNextMessage());
     } catch (Exception e) {
       throw new RuntimeException("Processing pubsub message for " + getSubscriptionId(), e);
     }
