@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """
-Replays messaged saved by validator back to a given project
+Replays messages validated by validator back to a given Pub/Sub topic
+
+Usage:
+misc/replay_validated/replay PATH_TO_VALIDATOR_OUT PROJECT_ID TOPIC
+
+WARNING - validator deletes it's out directory on invocation therefore a backup
+needs to be made for replaying messages with the validator running, e.g. by 
+renaming the `out` directory
+
 """
 import glob
+import re
 import os
 import sys
 import argparse
 import json
+import time
 
 from google import auth
 from google.cloud import pubsub_v1
@@ -22,7 +32,7 @@ def main():
   args = parse_command_line_args()
 
   try:
-    credentials, unused_project = auth.default()
+    credentials, project_id = auth.default()
   except Exception as e:
     print(e)
     sys.exit(1)
@@ -34,13 +44,14 @@ def main():
   validation_dir = os.path.realpath(os.path.join(args.validation_dir, 'devices'))
   messages_path = f'{validation_dir}/*/*.json'
   file_paths = glob.glob(messages_path, recursive=True)
+  total = len(file_paths)
 
-  print('Replaying messages in ALPHABETICAL ORDER')
-
+  i = 0
   for message_path in file_paths:
+    i += 1
     root, ext = os.path.splitext(message_path)
     attributes_path = f'{root}.attr'
-
+    
     try:
       with open(message_path, 'r', encoding='utf-8') as f:
         payload = f.read().encode('utf-8')
@@ -54,10 +65,11 @@ def main():
       continue
 
     attributes.pop('wasBase64', None)
-
+    
     message_descriptor = '/'.join(message_path.rsplit('/', 2)[1:])
     future = publisher.publish(topic_path, payload, **attributes)
-    print(f'published {message_descriptor} ({future.result()})')
+    print(f'published {i}/{total} {message_descriptor} ({future.result()})')
+    time.sleep(0.1) # avoid a message burst which can cause validator issues
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()
