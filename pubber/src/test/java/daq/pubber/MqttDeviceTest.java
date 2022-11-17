@@ -19,11 +19,11 @@ public class MqttDeviceTest {
   private static final Object TEST_MESSAGE = new DiscoveryCommand();
   private static final String TOPIC_PREFIX = "test_prefix";
   private static final String TEST_DEVICE = "test_device";
-  private static final String EXPECTED_TOPIC = String.format("%s/%s/%s", TOPIC_PREFIX, TEST_DEVICE,
-      TEST_TOPIC);
+  private static final String EXPECTED_TOPIC = String.format("%s/%s/%s",
+      TOPIC_PREFIX, TEST_DEVICE, TEST_TOPIC);
 
   @Test
-  public void publish() throws InterruptedException {
+  public void publishTopicPrefix() throws InterruptedException {
     final CountDownLatch sent = new CountDownLatch(1);
     MqttDevice mqttDevice = getTestInstance(sent);
 
