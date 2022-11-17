@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -52,14 +53,14 @@ public class ReportingDevice {
    * Make a status Entry corresponding to a single exception.
    *
    * @param error exception to summarize
+   * @param detail
    * @return Entry summarizing the exception
    */
-  private static Entry makeEntry(Exception error) {
+  private static Entry makeEntry(Exception error, String detail) {
     Entry entry = new Entry();
     entry.message = Common.getExceptionMessage(error);
-    String detail = getExceptionDetail(error);
-    entry.detail = entry.message.equals(detail) ? null : detail;
-    entry.category = "validation.error.simple";
+    entry.detail = detail == null ? getExceptionDetail(error) : detail;
+    entry.category = Category.VALIDATION_DEVICE_RESULT;
     entry.level = Level.ERROR.value();
     entry.timestamp = getTimestamp();
     return entry;
@@ -116,7 +117,7 @@ public class ReportingDevice {
     }
 
     Entry entry = new Entry();
-    entry.category = "validation.error.multiple";
+    entry.category = Category.VALIDATION_DEVICE_RESULT;
     entry.message = "Multiple validation errors";
     entry.detail = DETAIL_JOINER
         .join(entries.stream()
@@ -129,7 +130,7 @@ public class ReportingDevice {
   }
 
   private static String makeEntrySummary(Entry entry) {
-    return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
+    return String.format("%s:%s", entry.category, entry.message.replace(';', ','));
   }
 
   static void setMockNow(Instant now) {
@@ -167,10 +168,11 @@ public class ReportingDevice {
   /**
    * Validate a message against specific message-type expectations (outside of base schema).
    *
-   * @param message   Message to validate
-   * @param timestamp message timestamp string (rather than pull from typed object)
+   * @param message    Message to validate
+   * @param timestamp  message timestamp string (rather than pull from typed object)
+   * @param attributes message attributes
    */
-  public void validateMessageType(Object message, Date timestamp) {
+  public void validateMessageType(Object message, Date timestamp, Map<String, String> attributes) {
     lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
     if (reportingPointset == null) {
       return;
@@ -186,12 +188,12 @@ public class ReportingDevice {
 
     missingPoints = metadataDiff.missingPoints;
     if (!missingPoints.isEmpty()) {
-      addError(pointValidationError("missing points", missingPoints));
+      addError(pointValidationError("missing points", missingPoints), attributes);
     }
 
     extraPoints = metadataDiff.extraPoints;
     if (!extraPoints.isEmpty()) {
-      addError(pointValidationError("extra points", extraPoints));
+      addError(pointValidationError("extra points", extraPoints), attributes);
     }
 
     if (metadataDiff.errors != null) {
@@ -211,10 +213,17 @@ public class ReportingDevice {
   /**
    * Add a validation error to this device.
    *
-   * @param error Exception to add
+   * @param error      Exception to add
+   * @param attributes attributes of message causing error
    */
-  public void addError(Exception error) {
-    addEntry(makeEntry(error));
+  void addError(Exception error, Map<String, String> attributes) {
+    String subFolder = attributes.get("subFolder");
+    String subType = attributes.get("subType");
+    addError(error, String.format("from %s_%s", subType, subFolder));
+  }
+
+  void addError(Exception error, String detail) {
+    addEntry(makeEntry(error, detail));
   }
 
   /**

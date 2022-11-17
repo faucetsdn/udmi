@@ -14,9 +14,9 @@
     "AHU-22" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Multiple validation errors",
-        "detail" : "validation.error.simple:While converting to json node: 2 schema violations found (500); validation.error.simple:While converting to json node: 1 schema violations found (500)",
-        "category" : "validation.error.multiple",
+        "message" : "While converting to json node: 2 schema violations found",
+        "detail" : "from event_pointset",
+        "category" : "validation.device.result",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
       }
@@ -24,8 +24,9 @@
     "SNS-4" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Device has extra points: rocket_count",
-        "category" : "validation.error.simple",
+        "message" : "Multiple validation errors",
+        "detail" : "validation.device.result:Device has extra points: rocket_count; validation.device.result:Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; validation.device.result:While converting to json node: 1 schema violations found",
+        "category" : "validation.device.result",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
       }

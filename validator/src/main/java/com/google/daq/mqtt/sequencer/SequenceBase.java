@@ -471,7 +471,7 @@ public abstract class SequenceBase {
     String subFolder = attributes.get("subFolder");
     String timestamp =
         message == null ? JsonUtil.getTimestamp() : (String) message.get("timestamp");
-    String messageBase = String.format("%s_%s", subType, subFolder, JsonUtil.getTimestamp());
+    String messageBase = String.format("%s_%s", subType, subFolder);
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
     }

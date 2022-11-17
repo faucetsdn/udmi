@@ -296,7 +296,7 @@ public class Validator {
           reportingDevice.setMetadata(OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
-          reportingDevice.addError(e);
+          reportingDevice.addError(e, "loading device");
         }
         expectedDevices.put(device, reportingDevice);
       }
@@ -465,7 +465,7 @@ public class Validator {
       }
 
       if (message.containsKey(EXCEPTION_KEY)) {
-        device.addError((Exception) message.get(EXCEPTION_KEY));
+        device.addError((Exception) message.get(EXCEPTION_KEY), attributes);
         return device;
       }
 
@@ -480,14 +480,14 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println("Missing schema entry " + schemaName);
-        device.addError(e);
+        device.addError(e, attributes);
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e);
-        device.addError(e);
+        device.addError(e, attributes);
       }
 
       if (schemaMap.containsKey(schemaName)) {
@@ -495,7 +495,7 @@ public class Validator {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
           System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
-          device.addError(e);
+          device.addError(e, attributes);
         }
       }
 
@@ -507,11 +507,11 @@ public class Validator {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
             Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
-            device.validateMessageType(messageObject, timestamp);
+            device.validateMessageType(messageObject, timestamp, attributes);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          device.addError(e);
+          device.addError(e, attributes);
         }
       } else {
         extraDevices.add(deviceId);
@@ -522,7 +522,7 @@ public class Validator {
       }
     } catch (Exception e) {
       System.err.println("Generic device error " + deviceId);
-      device.addError(e);
+      device.addError(e, attributes);
     }
     return device;
   }
