@@ -52,7 +52,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
  */
-public class MqttPublisher {
+public class MqttPublisher implements Publisher {
 
   private static final String TOPIC_PREFIX_FMT = "/devices/%s";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
@@ -130,11 +130,13 @@ public class MqttPublisher {
     return SiteModel.getClientId(projectId, cloudRegion, registryId, deviceId);
   }
 
-  boolean isActive() {
+  @Override
+  public boolean isActive() {
     return !publisherExecutor.isShutdown();
   }
 
-  void publish(String deviceId, String topicSuffix, Object data, Runnable callback) {
+  @Override
+  public void publish(String deviceId, String topicSuffix, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     debug("Publishing in background " + topicSuffix);
     Object marked =
@@ -160,7 +162,8 @@ public class MqttPublisher {
     }
   }
 
-  void setDeviceTopicPrefix(String deviceId, String topicPrefix) {
+  @Override
+  public void setDeviceTopicPrefix(String deviceId, String topicPrefix) {
     topicPrefixMap.put(deviceId, topicPrefix);
   }
 
@@ -208,7 +211,8 @@ public class MqttPublisher {
     }
   }
 
-  void close() {
+  @Override
+  public void close() {
     try {
       warn("Closing publisher connection");
       publisherExecutor.shutdown();
@@ -249,7 +253,8 @@ public class MqttPublisher {
     }
   }
 
-  void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
+  @Override
+  public void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
       int waitTimeSec = Optional.ofNullable(configuration.endpoint.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);

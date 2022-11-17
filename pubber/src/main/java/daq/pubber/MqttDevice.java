@@ -9,6 +9,7 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttDevice {
 
+  public static final String TEST_PROJECT = "test-project";
   static final String ATTACH_TOPIC = "attach";
   static final String CONFIG_TOPIC = "config";
   static final String ERRORS_TOPIC = "errors";
@@ -16,42 +17,52 @@ public class MqttDevice {
   static final String STATE_TOPIC = "state";
 
   private final String deviceId;
-  private final MqttPublisher mqttPublisher;
+  private final Publisher publisher;
 
   MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError) {
     deviceId = configuration.deviceId;
-    mqttPublisher = new MqttPublisher(configuration, onError);
+    publisher = getPublisher(configuration, onError);
     if (configuration.endpoint.topic_prefix != null) {
-      mqttPublisher.setDeviceTopicPrefix(deviceId, configuration.endpoint.topic_prefix);
+      publisher.setDeviceTopicPrefix(deviceId, configuration.endpoint.topic_prefix);
     }
   }
 
   MqttDevice(String deviceId, MqttDevice target) {
     this.deviceId = deviceId;
-    mqttPublisher = target.mqttPublisher;
+    publisher = target.publisher;
+  }
+
+  Publisher getPublisher(PubberConfiguration configuration,
+      Consumer<Exception> onError) {
+    return TEST_PROJECT.equals(configuration.projectId) ? new ListPublisher(configuration, onError)
+        : new MqttPublisher(configuration, onError);
   }
 
   public <T> void registerHandler(String topicSuffix, Consumer<T> handler, Class<T> messageType) {
-    mqttPublisher.registerHandler(deviceId, topicSuffix, handler, messageType);
+    publisher.registerHandler(deviceId, topicSuffix, handler, messageType);
   }
 
   public void connect() {
-    mqttPublisher.connect(deviceId);
+    publisher.connect(deviceId);
   }
 
   public void publish(String topicSuffix, Object message, Runnable callback) {
-    mqttPublisher.publish(deviceId, topicSuffix, message, callback);
+    publisher.publish(deviceId, topicSuffix, message, callback);
   }
 
   public boolean isActive() {
-    return mqttPublisher.isActive();
+    return publisher.isActive();
   }
 
   public void startupLatchWait(CountDownLatch configLatch, String message) {
-    mqttPublisher.startupLatchWait(configLatch, message);
+    publisher.startupLatchWait(configLatch, message);
   }
 
   public void close() {
-    mqttPublisher.close();
+    publisher.close();
+  }
+
+  public ListPublisher getMockPublisher() {
+    return (ListPublisher) publisher;
   }
 }
