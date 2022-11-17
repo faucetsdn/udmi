@@ -171,30 +171,30 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  // @Test
-  @Description("Redirect to a different endpoint")
-  public void endpoint_config_connection_success_redirect() {
-    BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64DeviceIdPayload("AHU-99");
-    config.content_type = "application/json";
-    config.nonce = generateNonce();
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
-    updateConfig();
-
-    untilTrue("blobset entry config status is success", () -> {
-      BlobPhase phase = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-      Entry stateStatus = deviceState.system.status;
-      if (phase != null) {
-        info("phase = " + phase);
-      }
-      return phase != null
-          && phase.equals(BlobPhase.FINAL)
-          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value();
-    });
-  }
+  //  @Test
+  //  @Description("Redirect to a different endpoint")
+  //  public void endpoint_config_connection_success_redirect() {
+  //    BlobBlobsetConfig config = new BlobBlobsetConfig();
+  //    config.phase = BlobPhase.FINAL;
+  //    config.base64 = generateEndpointConfigBase64DeviceIdPayload("AHU-99");
+  //    config.content_type = "application/json";
+  //    config.nonce = generateNonce();
+  //    deviceConfig.blobset = new BlobsetConfig();
+  //    deviceConfig.blobset.blobs = new HashMap<>();
+  //    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+  //    updateConfig();
+  //
+  //    untilTrue("blobset entry config status is success", () -> {
+  //      BlobPhase phase = deviceState.blobset.blobs.get(
+  //          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
+  //      Entry stateStatus = deviceState.system.status;
+  //      if (phase != null) {
+  //        info("phase = " + phase);
+  //      }
+  //      return phase != null
+  //          && phase.equals(BlobPhase.FINAL)
+  //          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
+  //          && stateStatus.level == Level.NOTICE.value();
+  //    });
+  //  }
 }
