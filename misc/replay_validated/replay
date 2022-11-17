@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""
+Replays messaged saved by validator back to a given project
+"""
+import glob
+import os
+import sys
+import argparse
+import json
+
+from google import auth
+from google.cloud import pubsub_v1
+
+def parse_command_line_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('validation_dir', type=str)
+  parser.add_argument('project_id', type=str)
+  parser.add_argument('topic', type=str)
+  return parser.parse_args()
+
+def main():
+  args = parse_command_line_args()
+
+  try:
+    credentials, unused_project = auth.default()
+  except Exception as e:
+    print(e)
+    sys.exit(1)
+
+  # initaite publisher here
+  publisher = pubsub_v1.PublisherClient(credentials=credentials)
+  topic_path = publisher.topic_path(args.project_id, args.topic)
+
+  validation_dir = os.path.realpath(os.path.join(args.validation_dir, 'devices'))
+  messages_path = f'{validation_dir}/*/*.json'
+  file_paths = glob.glob(messages_path, recursive=True)
+
+  print('Replaying messages in ALPHABETICAL ORDER')
+
+  for message_path in file_paths:
+    root, ext = os.path.splitext(message_path)
+    attributes_path = f'{root}.attr'
+
+    try:
+      with open(message_path, 'r', encoding='utf-8') as f:
+        payload = f.read().encode('utf-8')
+      with open(attributes_path, 'r', encoding='utf-8') as f:
+        attributes = json.load(f)
+    except Exception:
+      continue
+
+    # Ignore validation messages
+    if attributes.get('subFolder') == 'validation':
+      continue
+
+    attributes.pop('wasBase64', None)
+
+    message_descriptor = '/'.join(message_path.rsplit('/', 2)[1:])
+    future = publisher.publish(topic_path, payload, **attributes)
+    print(f'published {message_descriptor} ({future.result()})')
+
+if __name__ == '__main__':
+  main()
