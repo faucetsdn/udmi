@@ -14,11 +14,11 @@ cat "${TEST_SITE}/registration_summary.json"
 echo
 
 clean_devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
-
+EXPECTED_CLEAN=3  # AHU-1 has a bad site location, so does not match as clean.
 exit_status=0
 
 echo Found ${clean_devices} clean devices.
-[ "${clean_devices}" == 3 ] || exit_status=1
+[ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=1
 
 device_files=$(ls -d ${TEST_SITE}/devices/*)
 

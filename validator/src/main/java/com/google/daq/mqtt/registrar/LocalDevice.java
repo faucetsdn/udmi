@@ -314,7 +314,7 @@ class LocalDevice {
     return JsonUtil.convertTo(Metadata.class, mergedMetadata);
   }
 
-  private JsonNode getMergedMetadata(JsonNode instance) {
+  JsonNode getMergedMetadata(JsonNode instance) {
     try {
       String intermediary = JsonUtil.stringify(instance);
       if (siteMetadata == null) {
