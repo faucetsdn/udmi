@@ -53,7 +53,7 @@ deploy-staging:
     - cd udmif/event-handler/dist
     - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
   rules:
-      - if: $CI_COMMIT_BRANCH == "develop_ci"
+      - if: $CI_COMMIT_BRANCH == "develop"
         
 deploy-lab:
   stage: deploy-lab
@@ -67,7 +67,7 @@ deploy-lab:
     - cd udmif/event-handler/dist
     - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
   rules:
-      - if: $CI_COMMIT_BRANCH == "develop_ci"
+      - if: $CI_COMMIT_BRANCH == "develop"
         when: manual 
   
 
