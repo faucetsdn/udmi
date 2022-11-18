@@ -13,6 +13,9 @@ import java.util.Map;
 import org.junit.Test;
 import udmi.schema.Metadata;
 
+/**
+ * Unit tests for LocalDevice.
+ */
 public class LocalDeviceTest {
 
   public static final String DEVICE_ID = "test_device";
