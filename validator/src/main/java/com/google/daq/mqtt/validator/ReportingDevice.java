@@ -23,7 +23,9 @@ import udmi.schema.PointsetState;
  */
 public class ReportingDevice {
 
-  public static final String DETAIL_SEPARATOR = "; ";
+  private static final char DETAIL_SEPARATOR_CHAR = ';';
+  private static final char DETAIL_REPLACE_CHAR = ',';
+  private static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   private static final long THRESHOLD_SEC = 3600;
   private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
   private static final String CATEGORY_MISSING_MESSAGE
@@ -130,7 +132,7 @@ public class ReportingDevice {
   }
 
   private static String makeEntrySummary(Entry entry) {
-    return String.format("%s:%s", entry.category, entry.message.replace(';', ','));
+    return entry.message.replace(DETAIL_SEPARATOR_CHAR, DETAIL_REPLACE_CHAR);
   }
 
   static void setMockNow(Instant now) {
@@ -219,7 +221,7 @@ public class ReportingDevice {
   void addError(Exception error, Map<String, String> attributes) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
-    addError(error, String.format("from %s_%s", subType, subFolder));
+    addError(error, String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
   }
 
   void addError(Exception error, String detail) {
