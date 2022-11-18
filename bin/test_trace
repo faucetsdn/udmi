@@ -9,7 +9,7 @@ trace_name=$1
 shift
 
 trace_out=validator/traces/${trace_name}.out
-trace_in=${trace_name}.in
+trace_in=validator/traces/${trace_name}.in
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 

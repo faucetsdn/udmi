@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +42,7 @@ public class MessageReadingClient implements MessagePublisher {
   private final Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
   private final Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
   private final Map<String, String> deviceNextTimestamp = new HashMap<>();
+  private final Map<String, String> deviceLastTimestamp = new HashMap<>();
   private final List<OutputBundle> outputMessages = new ArrayList<>();
   int messageCount;
   private boolean isActive;
@@ -81,6 +83,9 @@ public class MessageReadingClient implements MessagePublisher {
       deviceAttributes.put(deviceId, attributes);
       Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
       deviceMessages.put(deviceId, msgObj);
+      if (!msgObj.containsKey("timestamp")) {
+        msgObj.put("timestamp", deviceLastTimestamp.get(deviceId));
+      }
       String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
       deviceNextTimestamp.put(deviceId, timestamp);
     } finally {
@@ -164,6 +169,7 @@ public class MessageReadingClient implements MessagePublisher {
     Map<String, Object> message = deviceMessages.remove(deviceId);
     Map<String, String> attributes = deviceAttributes.remove(deviceId);
     lastValidTimestamp = deviceNextTimestamp.remove(deviceId);
+    deviceLastTimestamp.put(deviceId, lastValidTimestamp);
     prepNextMessage(deviceId);
     System.out.printf("Replay %s for %s%n", lastValidTimestamp, deviceId);
     messageCount++;
