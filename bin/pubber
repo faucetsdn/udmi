@@ -2,6 +2,14 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
+function cleanup {
+    if [[ -n $PUB_PID ]]; then
+        echo Killing pubber runner $PUB_PID
+        kill $PUB_PID
+    fi
+}
+trap cleanup EXIT
+
 if (( $# < 4 )); then
     echo $0 SITE_PATH PROJECT_ID DEVICE_ID SERIAL_NO [options] ...
     false
@@ -56,4 +64,7 @@ cat <<EOF > /tmp/pubber_config.json
 }
 EOF
 
-$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json
+# Run in the background to force new process group and get PID
+$ROOT_DIR/pubber/bin/run /tmp/pubber_config.json &
+PUB_PID=$!
+wait
