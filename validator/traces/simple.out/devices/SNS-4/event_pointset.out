@@ -5,8 +5,8 @@
   "sub_type" : "event",
   "status" : {
     "message" : "Device has extra points: rocket_count",
-    "detail" : "from event_pointset",
-    "category" : "validation.device.result",
+    "detail" : "event_pointset: Device has extra points: rocket_count",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
@@ -16,8 +16,8 @@
   },
   "errors" : [ {
     "message" : "Device has extra points: rocket_count",
-    "detail" : "from event_pointset",
-    "category" : "validation.device.result",
+    "detail" : "event_pointset: Device has extra points: rocket_count",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   } ]

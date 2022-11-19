@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator;
 
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidationException;
@@ -26,8 +28,8 @@ public class ReportingDevice {
   private static final char DETAIL_SEPARATOR_CHAR = ';';
   private static final char DETAIL_REPLACE_CHAR = ',';
   private static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
-  private static final long THRESHOLD_SEC = 3600;
   private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  private static final long THRESHOLD_SEC = 3600;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
@@ -54,15 +56,17 @@ public class ReportingDevice {
   /**
    * Make a status Entry corresponding to a single exception.
    *
-   * @param error exception to summarize
+   * @param error    exception to summarize
+   * @param category
    * @param detail
    * @return Entry summarizing the exception
    */
-  private static Entry makeEntry(Exception error, String detail) {
+  private static Entry makeEntry(Exception error, String category, String detail) {
     Entry entry = new Entry();
     entry.message = Common.getExceptionMessage(error);
     entry.detail = detail == null ? getExceptionDetail(error) : detail;
-    entry.category = Category.VALIDATION_DEVICE_RESULT;
+    assertTrue("valid entry category", Category.LEVEL.containsKey(category));
+    entry.category = Category.VALIDATION_DEVICE_SCHEMA;
     entry.level = Level.ERROR.value();
     entry.timestamp = getTimestamp();
     return entry;
@@ -119,7 +123,7 @@ public class ReportingDevice {
     }
 
     Entry entry = new Entry();
-    entry.category = Category.VALIDATION_DEVICE_RESULT;
+    entry.category = Category.VALIDATION_DEVICE_MULTIPLE;
     entry.message = "Multiple validation errors";
     entry.detail = DETAIL_JOINER
         .join(entries.stream()
@@ -190,16 +194,14 @@ public class ReportingDevice {
 
     missingPoints = metadataDiff.missingPoints;
     if (!missingPoints.isEmpty()) {
-      addError(pointValidationError("missing points", missingPoints), attributes);
+      addError(pointValidationError("missing points", missingPoints), attributes,
+          Category.VALIDATION_DEVICE_CONTENT);
     }
 
     extraPoints = metadataDiff.extraPoints;
     if (!extraPoints.isEmpty()) {
-      addError(pointValidationError("extra points", extraPoints), attributes);
-    }
-
-    if (metadataDiff.errors != null) {
-      metadataDiff.errors.forEach(this::addEntry);
+      addError(pointValidationError("extra points", extraPoints), attributes,
+          Category.VALIDATION_DEVICE_CONTENT);
     }
   }
 
@@ -217,15 +219,17 @@ public class ReportingDevice {
    *
    * @param error      Exception to add
    * @param attributes attributes of message causing error
+   * @param category   error category
    */
-  void addError(Exception error, Map<String, String> attributes) {
+  void addError(Exception error, Map<String, String> attributes, String category) {
     String subFolder = attributes.get("subFolder");
     String subType = attributes.get("subType");
-    addError(error, String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
+    addError(error, category,
+        String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
   }
 
-  void addError(Exception error, String detail) {
-    addEntry(makeEntry(error, detail));
+  void addError(Exception error, String category, String detail) {
+    addEntry(makeEntry(error, category, detail));
   }
 
   /**
@@ -293,8 +297,6 @@ public class ReportingDevice {
    * Encapsulation of metadata differences.
    */
   public static class MetadataDiff {
-
-    public List<Entry> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;
   }

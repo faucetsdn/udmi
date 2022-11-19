@@ -135,10 +135,35 @@ public class Category {
     public static final Level VALIDATION_DEVICE_RECEIVE_LEVEL = DEBUG;
     static { LEVEL.put(VALIDATION_DEVICE_RECEIVE, DEBUG); }
 
-    // Regarding the actual validation results.
-    public static final String VALIDATION_DEVICE_RESULT = "validation.device.result";
-    public static final Level VALIDATION_DEVICE_RESULT_LEVEL = INFO;
-    static { LEVEL.put(VALIDATION_DEVICE_RESULT, INFO); }
+    // Relating to the model (metadata) for the device.
+    public static final String VALIDATION_DEVICE_MODEL = "validation.device.model";
+    public static final Level VALIDATION_DEVICE_MODEL_LEVEL = DEBUG;
+    static { LEVEL.put(VALIDATION_DEVICE_MODEL, DEBUG); }
+
+    // Schema conformance validation results.
+    public static final String VALIDATION_DEVICE_SCHEMA = "validation.device.schema";
+    public static final Level VALIDATION_DEVICE_SCHEMA_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_SCHEMA, INFO); }
+
+    // Timing related validation results.
+    public static final String VALIDATION_DEVICE_TIMING = "validation.device.timing";
+    public static final Level VALIDATION_DEVICE_TIMING_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_TIMING, INFO); }
+
+    // Relating to the message envelope, not message itself.
+    public static final String VALIDATION_DEVICE_ENVELOPE = "validation.device.envelope";
+    public static final Level VALIDATION_DEVICE_ENVELOPE_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_ENVELOPE, INFO); }
+
+    // Multiple issues reported.
+    public static final String VALIDATION_DEVICE_MULTIPLE = "validation.device.multiple";
+    public static final Level VALIDATION_DEVICE_MULTIPLE_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_MULTIPLE, INFO); }
+
+    // Errors validating semantic content of the message.
+    public static final String VALIDATION_DEVICE_CONTENT = "validation.device.content";
+    public static final Level VALIDATION_DEVICE_CONTENT_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_CONTENT, INFO); }
 
     // The validation summary report.
     public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
