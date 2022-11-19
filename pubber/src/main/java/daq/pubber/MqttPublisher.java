@@ -272,13 +272,17 @@ public class MqttPublisher implements Publisher {
       Preconditions.checkNotNull(deviceId, "deviceId is null");
       String clientId = getClientId(deviceId);
       String brokerUrl = getBrokerUrl();
-      MqttClient mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      MqttClient mqttClient = getMqttClient(clientId, brokerUrl);
       info("Creating new client to " + brokerUrl + " as " + clientId);
       return mqttClient;
     } catch (Exception e) {
       errorCounter.incrementAndGet();
       throw new RuntimeException("Creating new MQTT client " + deviceId, e);
     }
+  }
+
+  MqttClient getMqttClient(String clientId, String brokerUrl) throws MqttException {
+    return new MqttClient(brokerUrl, clientId, new MemoryPersistence());
   }
 
   private MqttClient connectMqttClient(String deviceId) {

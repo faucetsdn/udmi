@@ -7,24 +7,21 @@ import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
 
 /**
- * Unit tests for a mqtt device abstraction.
+ * Tests for simple string list publisher.
  */
-public class MqttDeviceTest extends TestBase {
+public class ListPublisherTest extends TestBase {
 
   @Test
-  public void publishTopicPrefix() throws InterruptedException {
+  public void testPublish() throws InterruptedException {
+    ListPublisher listPublisher = new ListPublisher(getTestConfiguration(), null);
+    listPublisher.setDeviceTopicPrefix(TEST_DEVICE, TEST_PREFIX);
     final CountDownLatch sent = new CountDownLatch(1);
-    MqttDevice mqttDevice = new MqttDevice(getTestConfiguration(), exception -> sent.countDown());
-
-    mqttDevice.publish(TEST_TOPIC, TEST_MESSAGE, sent::countDown);
+    listPublisher.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();
-
-    ListPublisher mockPublisher = mqttDevice.getMockPublisher();
-    List<String> messages = mockPublisher.getMessages();
+    List<String> messages = listPublisher.getMessages();
     assertEquals("published message count", 1, messages.size());
 
     String publishedMessage = messages.get(0);
     assertEquals("published message", EXPECTED_MESSAGE_STRING, publishedMessage);
   }
-
 }

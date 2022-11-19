@@ -15,10 +15,13 @@ import udmi.schema.PubberConfiguration;
 public class ListPublisher implements Publisher {
 
   private final ExecutorService publisherExecutor = Executors.newFixedThreadPool(1);
+  private final PubberConfiguration configuration;
   private List<String> messages = new ArrayList<>();
   private String usePrefix;
 
   public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
+    this.configuration = configuration;
+    usePrefix = configuration.endpoint.topic_prefix;
   }
 
   /**
