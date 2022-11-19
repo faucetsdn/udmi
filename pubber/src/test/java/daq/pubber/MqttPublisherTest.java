@@ -17,7 +17,10 @@ import udmi.schema.PubberConfiguration;
  */
 public class MqttPublisherTest extends TestBase {
 
+  private static final String EXPECTED_TOPIC = TEST_PREFIX + "/" + TEST_TOPIC;
+  private static final String EXPECTED_MESSAGE = "{}";
   private String publishedTopic;
+  private String publishedData;
 
   @Test
   public void testPublish() throws InterruptedException {
@@ -27,8 +30,8 @@ public class MqttPublisherTest extends TestBase {
     final CountDownLatch sent = new CountDownLatch(1);
     mqttPublisher.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();
-    String expected = TEST_PREFIX + "/" + TEST_TOPIC;
-    assertEquals("published topic", expected, publishedTopic);
+    assertEquals("published topic", EXPECTED_TOPIC, publishedTopic);
+    assertEquals("published message", EXPECTED_MESSAGE, publishedData);
   }
 
   private PubberConfiguration getEndpointConfiguration() {
@@ -57,6 +60,7 @@ public class MqttPublisherTest extends TestBase {
       Mockito.when(mocked.isConnected()).thenReturn(true);
       Mockito.doAnswer(invocation -> {
         publishedTopic = invocation.getArgument(0, String.class);
+        publishedData = new String((byte[]) invocation.getArgument(1, Object.class));
         return null;
       }).when(mocked)
       .publish(Mockito.anyString(), Mockito.any(), Mockito.anyInt(), Mockito.anyBoolean());
