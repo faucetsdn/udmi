@@ -25,8 +25,8 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
   "sub_type" : "event",
   "status" : {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "from event_pointset",
-    "category" : "validation.device.result",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
@@ -36,8 +36,8 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
   },
   "errors" : [ {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "from event_pointset",
-    "category" : "validation.device.result",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   } ]
@@ -52,15 +52,15 @@ sites/udmi_site_model/out/devices/AHU-22/config.out
   "sub_type" : "config",
   "status" : {
     "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "from config_update",
-    "category" : "validation.device.result",
+    "detail" : "config_update: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"subsystem\"]; object has missing required properties ([\"families\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
     "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "from config_update",
-    "category" : "validation.device.result",
+    "detail" : "config_update: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"subsystem\"]; object has missing required properties ([\"families\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   } ]
