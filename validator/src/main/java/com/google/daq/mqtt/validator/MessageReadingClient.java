@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -165,9 +164,9 @@ public class MessageReadingClient implements MessagePublisher {
 
   @Override
   public Validator.MessageBundle takeNextMessage() {
-    String deviceId = getNextDevice();
-    Map<String, Object> message = deviceMessages.remove(deviceId);
-    Map<String, String> attributes = deviceAttributes.remove(deviceId);
+    final String deviceId = getNextDevice();
+    final Map<String, Object> message = deviceMessages.remove(deviceId);
+    final Map<String, String> attributes = deviceAttributes.remove(deviceId);
     lastValidTimestamp = deviceNextTimestamp.remove(deviceId);
     deviceLastTimestamp.put(deviceId, lastValidTimestamp);
     prepNextMessage(deviceId);

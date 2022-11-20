@@ -57,8 +57,8 @@ public class ReportingDevice {
    * Make a status Entry corresponding to a single exception.
    *
    * @param error    exception to summarize
-   * @param category
-   * @param detail
+   * @param category entry category
+   * @param detail   entry detail
    * @return Entry summarizing the exception
    */
   private static Entry makeEntry(Exception error, String category, String detail) {

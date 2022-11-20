@@ -22,11 +22,12 @@ public class PlaybackTest extends TestBase {
 
   private static final String TRACE_BASE = "../validator/traces/";
   private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
+  public static final String SIMPLE_TRACE_DIR = "simple.in";
 
   @Test
   public void simpleTraceReport() {
-    MessageReadingClient client = validateTrace("simple");
-    assertEquals("trace message count", 10, client.messageCount);
+    MessageReadingClient client = validateTrace(SIMPLE_TRACE_DIR);
+    assertEquals("trace message count", 12, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
     ValidationState finalReport = asValidationState(lastBundle.message);
@@ -35,7 +36,7 @@ public class PlaybackTest extends TestBase {
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
       assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
       assertEquals("error devices", 2, finalReport.summary.error_devices.size());
-      assertEquals("device summaries", 2, finalReport.devices.size());
+      assertEquals("device summaries", 3, finalReport.devices.size());
 
       List<ValidationEvent> deviceReports = reports(outputMessages, "AHU-1");
 
@@ -65,8 +66,8 @@ public class PlaybackTest extends TestBase {
 
   @Test
   public void deviceArgs() {
-    MessageReadingClient client = validateTrace("simple", TRACE_DEVICES);
-    assertEquals("trace message count", 10, client.messageCount);
+    MessageReadingClient client = validateTrace(SIMPLE_TRACE_DIR, TRACE_DEVICES);
+    assertEquals("trace message count", 12, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     TreeMap<String, Object> lastMessage = outputMessages.get(outputMessages.size() - 1).message;
     ValidationState finalReport = asValidationState(lastMessage);

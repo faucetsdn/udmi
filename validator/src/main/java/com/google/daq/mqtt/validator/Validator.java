@@ -875,8 +875,18 @@ public class Validator {
     public String timestamp;
   }
 
+  /**
+   * Container for validation errors of a message.
+   */
   public static class ErrorContainer extends TreeMap<String, Object> {
 
+    /**
+     * Create a new instance.
+     *
+     * @param exception base exception for error
+     * @param message   message string that caused the error
+     * @param timestamp timestamp of generating message
+     */
     public ErrorContainer(Exception exception, String message, String timestamp) {
       put(EXCEPTION_KEY, exception);
       put("message", message);
