@@ -297,7 +297,7 @@ public class Validator {
           reportingDevice.setMetadata(OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
-          reportingDevice.addError(e, Category.VALIDATION_DEVICE_MODEL, "loading device");
+          reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
         expectedDevices.put(device, reportingDevice);
       }
@@ -489,7 +489,7 @@ public class Validator {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e);
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_ENVELOPE);
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       }
 
       if (schemaMap.containsKey(schemaName)) {

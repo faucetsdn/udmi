@@ -26,6 +26,7 @@
     { "pattern": "^blobset\\.blob\\.receive$" },
     { "pattern": "^blobset\\.blob\\.fetch$" },
     { "pattern": "^blobset\\.blob\\.apply$" },
+    { "pattern": "^validation\\.device\\.receive$" },
     { "pattern": "^validation\\.device\\.schema$" },
     { "pattern": "^validation\\.device\\.content$" },
     { "pattern": "^validation\\.device\\.multiple$" },

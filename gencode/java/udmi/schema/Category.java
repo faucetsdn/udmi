@@ -130,7 +130,12 @@ public class Category {
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
 
-    // Schema conformance validation results.
+    // Receiving/processing a message for validation.
+    public static final String VALIDATION_DEVICE_RECEIVE = "validation.device.receive";
+    public static final Level VALIDATION_DEVICE_RECEIVE_LEVEL = DEBUG;
+    static { LEVEL.put(VALIDATION_DEVICE_RECEIVE, DEBUG); }
+
+    // Basic schema and structure validation.
     public static final String VALIDATION_DEVICE_SCHEMA = "validation.device.schema";
     public static final Level VALIDATION_DEVICE_SCHEMA_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_DEVICE_SCHEMA, INFO); }

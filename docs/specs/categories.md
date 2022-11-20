@@ -49,8 +49,8 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _apply_: (**NOTICE**) Applying a blob update
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.
-    * _system_ (**DEBUG**) Receiving/processing a message for validation.
-    * _schema_: (**INFO**) Schema conformance validation results.
+    * _receive_: (**DEBUG**) Receiving/processing a message for validation.
+    * _schema_: (**INFO**) Basic schema and structure validation.
     * _content_: (**INFO**) Errors validating semantic content of the message.
     * _multiple_: (**INFO**) Multiple issues reported.
   * _summary_: Conditions specific to an overall site summary.
