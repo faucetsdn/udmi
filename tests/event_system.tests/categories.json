@@ -3,45 +3,52 @@
   "timestamp": "2018-08-26T21:39:29.364Z",
   "logentries": [
     {
-      "message": "things are happening",
+      "message": "fetching a blob",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "blobset.blob.fetch",
       "level": 600
     },
     {
-      "message": "things are happening",
+      "message": "basic device category",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "device.foobar",
       "level": 600
     },
     {
-      "message": "things are happening",
+      "message": "underscores are allowed",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "device.foo_bar",
       "level": 600
     },
     {
-      "message": "things are happening",
+      "message": "no mixed case",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "device.fooBar",
       "level": 600
     },
     {
-      "message": "things are happening",
+      "message": "no double underscores",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "device.foo__bar",
       "level": 600
     },
     {
-      "message": "things are happening",
+      "message": "no leading underscores",
       "detail": "someplace, sometime",
       "timestamp": "2018-08-26T21:39:19.364Z",
       "category": "device._foo_bar",
+      "level": 600
+    },
+    {
+      "message": "no dashes",
+      "detail": "someplace, sometime",
+      "timestamp": "2018-08-26T21:39:19.364Z",
+      "category": "device.foo-bar",
       "level": 600
     }
   ]
