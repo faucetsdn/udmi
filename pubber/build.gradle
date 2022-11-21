@@ -79,6 +79,6 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     }
     implementation 'org.slf4j:slf4j-simple:1.7.30'
-    implementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation 'org.mockito:mockito-core:3.+'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation 'org.mockito:mockito-core:3.11.2'
 }
