@@ -565,7 +565,7 @@ public class Validator {
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
-    String type = attributes.get("subType");
+    String type = attributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
     String folder = attributes.get("subFolder");
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
