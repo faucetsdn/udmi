@@ -33,7 +33,7 @@ fi
 
 error=0
 echo java -cp $jarfile $mainclass -r $ROOT -s $site_dir $project_opt $*
-java -cp $jarfile $mainclass -r $ROOT -s $site_dir $project_opt $* || error=$?
+java -cp $jarfile $mainclass -r $ROOT -t -s $site_dir $project_opt $* || error=$?
 
 echo Registrar complete, exit $error
 exit $error
