@@ -1,27 +1,12 @@
 <div class="table-controls">
-  <app-search-filter
-    serviceName="SitesService"
-    [fields]="searchFields"
-    [limit]="15"
-    [handleFilterChange]="filterData"
-  ></app-search-filter>
-  <mat-paginator
-    [length]="totalFilteredCount"
-    [pageSize]="pageSize"
-    [pageIndex]="currentPage"
-    [pageSizeOptions]="pageSizeOptions"
-    (page)="pageChanged($event)"
-    aria-label="Select page"
-  >
+  <app-search-filter serviceName="SitesService" [fields]="searchFields" [limit]="15"
+    [handleFilterChange]="filterData"></app-search-filter>
+  <mat-paginator [length]="totalFilteredCount" [pageSize]="pageSize" [pageIndex]="currentPage"
+    [pageSizeOptions]="pageSizeOptions" (page)="pageChanged($event)" aria-label="Select page">
   </mat-paginator>
 </div>
-<mat-table
-  multiTemplateDataRows
-  [dataSource]="sites"
-  matSort
-  (matSortChange)="sortData($event)"
-  aria-label="List of sites"
->
+<mat-table multiTemplateDataRows [dataSource]="sites" matSort (matSortChange)="sortData($event)"
+  aria-label="List of sites">
   <ng-container *ngFor="let column of columns" matColumnDef="{{ column.value }}">
     <ng-container *ngIf="column.isSortable">
       <mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.label }}</mat-header-cell>
@@ -31,24 +16,19 @@
     </ng-container>
     <ng-container [ngSwitch]="column.value">
       <ng-container *ngSwitchCase="'name'">
-        <mat-cell *matCellDef="let element"
-          ><a [routerLink]="element.name">{{ element.name }}</a></mat-cell
-        >
+        <mat-cell *matCellDef="let element"><a [routerLink]="element.name">{{ element.name }}</a></mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'correctDevicesCount'">
-        <mat-cell *matCellDef="let element"
-          >{{ element.correctDevicesCount }} ({{ element.correctDevicesPercent | percent: '1.0-2' }})</mat-cell
-        >
+        <mat-cell *matCellDef="let element">{{ element.correctDevicesCount }} ({{ element.correctDevicesPercent |
+          percent: '1.0-2' }})</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'missingDevicesCount'">
-        <mat-cell *matCellDef="let element"
-          >{{ element.missingDevicesCount }} ({{ element.missingDevicesPercent | percent: '1.0-2' }})</mat-cell
-        >
+        <mat-cell *matCellDef="let element">{{ element.missingDevicesCount }} ({{ element.missingDevicesPercent |
+          percent: '1.0-2' }})</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'errorDevicesCount'">
-        <mat-cell *matCellDef="let element"
-          >{{ element.errorDevicesCount }} ({{ element.errorDevicesPercent | percent: '1.0-2' }})</mat-cell
-        >
+        <mat-cell *matCellDef="let element">{{ element.errorDevicesCount }} ({{ element.errorDevicesPercent | percent:
+          '1.0-2' }})</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'lastValidated'">
         <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'short' }}</mat-cell>
@@ -56,12 +36,8 @@
       <ng-container *ngSwitchCase="'totalDeviceErrorsCount'">
         <mat-cell *matCellDef="let element" class="expand-trigger-cell">
           {{ element.totalDeviceErrorsCount }}
-          <button
-            *ngIf="element.totalDeviceErrorsCount"
-            mat-icon-button
-            aria-label="expand row"
-            (click)="expandedElement = expandedElement === element ? null : element"
-          >
+          <button *ngIf="element.totalDeviceErrorsCount" mat-icon-button aria-label="expand row"
+            (click)="expandedElement = expandedElement === element ? null : element">
             <mat-icon *ngIf="expandedElement !== element">keyboard_arrow_down</mat-icon>
             <mat-icon *ngIf="expandedElement === element">keyboard_arrow_up</mat-icon>
           </button>
@@ -77,28 +53,19 @@
   <ng-container matColumnDef="expandedDetails">
     <mat-cell *matCellDef="let element" class="expanded-row-content-wrapper">
       <ul>
-        <li
-          *ngFor="
+        <li *ngFor="
             let item of getSiteErrorSummaryItems(element.deviceErrors) | orderBy: 'count':'desc';
             trackBy: trackBy
-          "
-        >
-          <span class="device-errors-count">{{ item.count }}</span
-          >{{ item.message }}
+          ">
+          <span class="device-errors-count">{{ item.count }}</span>{{ item.message }}
         </li>
       </ul>
     </mat-cell>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row
-    *matRowDef="let row; columns: displayedColumns"
-    class="expandable-row"
-    [class.row-is-expanded]="expandedElement === row"
-  ></mat-row>
-  <mat-row
-    *matRowDef="let row; columns: ['expandedDetails']"
-    class="expanded-row-content"
-    [@detailExpand]="row === expandedElement ? 'expanded' : 'collapsed'"
-  ></mat-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns" class="expandable-row"
+    [class.row-is-expanded]="expandedElement === row"></mat-row>
+  <mat-row *matRowDef="let row; columns: ['expandedDetails']" class="expanded-row-content"
+    [@detailExpand]="row === expandedElement ? 'expanded' : 'collapsed'"></mat-row>
 </mat-table>
