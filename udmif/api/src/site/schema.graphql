@@ -22,20 +22,26 @@ type DeviceError {
 type Site {
   # Name of the site
   name: String!
-  # Total number of devices associated to the site
+  # Total devices seen by UDMIF on the site
+  seenDevicesCount: Int!
+  # Total number of devices on the site; correct + missing + error
   totalDevicesCount: Int!
   # Number of correct devices in the message
   correctDevicesCount: Int!
+  # Percent of correct devices in the message
+  correctDevicesPercent: Float!
   # Number of missing devices in the message
   missingDevicesCount: Int!
+  # Percent of error devices in the message
+  missingDevicesPercent: Float!
   # Number of error devices in the message
   errorDevicesCount: Int!
+  # Percent of extra devices in the message
+  errorDevicesPercent: Float!
   # Number of extra devices in the message
   extraDevicesCount: Int!
   # Last time the validation message was updated
   lastValidated: String
-  # Percent of devices validated i.e. 0.97
-  percentValidated: Float!
   # Total number of errors across all devices
   deviceErrors: [DeviceError!]!
   # Total number of errors across all devices

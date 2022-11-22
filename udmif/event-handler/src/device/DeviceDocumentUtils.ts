@@ -87,7 +87,7 @@ function buildDeviceDocumentFromPointset(
     points.push(point);
   }
 
-  return deviceBuilder.points(points).build();
+  return deviceBuilder.points(points).lastPayload(udmiEvent.data.timestamp).build();
 }
 
 export function buildPoint(udmiEvent: UdmiEvent, existingPoint: Point, pointCode: string): Point {

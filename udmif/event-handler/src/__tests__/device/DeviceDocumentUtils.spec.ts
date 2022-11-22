@@ -92,11 +92,12 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
   });
 
   test('creates a device document when existing points are undefined', () => {
+    const timestamp: string = '2022-04-25T17:00:26Z';
     // arrange
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
-        timestamp: '2022-04-25T17:00:26Z',
+        timestamp,
         points: {
           [faps]: { present_value: 78 },
           [fdpsp]: { present_value: 71 },
@@ -111,18 +112,19 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, undefined)).toEqual(expectedDevice);
   });
 
   test('creates a device document with pointset', () => {
+    const timestamp: string = '2022-04-25T17:00:26Z';
     // arrange
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
-        timestamp: '2022-04-25T17:00:26Z',
+        timestamp,
         points: {
           [faps]: { present_value: 78 },
           [fdpsp]: { present_value: 71 },
@@ -137,7 +139,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -176,6 +178,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
   });
 
   test('creates a device document with pointset state', () => {
+    const timestamp: string = '2022-04-25T17:00:26Z';
     // arrange
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES, subType: STATE },
@@ -185,7 +188,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
           [fdpsp]: {},
           [fdps]: {},
         },
-        timestamp: '2022-04-25T17:00:26Z',
+        timestamp,
       },
     };
 
@@ -194,7 +197,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -225,6 +228,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
   });
 
   test('merges a device document with pointset', () => {
+    const timestamp: string = '2022-04-25T17:00:26Z';
     // existing point has units and a value
     existingPoints.push(getFapsPoint('70', 'Bars'));
 
@@ -232,7 +236,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_POINTSET_ATTRIBUTES },
       data: {
-        timestamp: '2022-04-25T17:00:26Z',
+        timestamp,
         points: {
           [faps]: { present_value: 78 },
           [fdpsp]: { present_value: 71 },
@@ -247,7 +251,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
