@@ -3,11 +3,16 @@ package com.google.daq.mqtt.validator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.json.Json;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
+import java.util.Date;
 import java.util.List;
 import org.junit.Test;
+import udmi.schema.DeviceValidationEvent;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -57,7 +62,12 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENT_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
-    assertEquals("No error devices", 0, report.devices.size());
+    assertEquals("No error devices", 1, report.devices.size());
+    DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
+    assertEquals("no report status", null, deviceValidationEvent.status);
+    String expected = JsonUtil.getTimestamp(messageObject.timestamp);
+    String lastSeen = JsonUtil.getTimestamp(deviceValidationEvent.last_seen);
+    assertEquals("status last_seen", expected, lastSeen);
   }
 
   @Test

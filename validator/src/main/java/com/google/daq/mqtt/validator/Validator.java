@@ -23,7 +23,6 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.NullPublisher;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,8 +66,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvent;
-import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -117,6 +116,7 @@ public class Validator {
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
+  public static final String EXCEPTION_KEY = "exception";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -297,7 +297,7 @@ public class Validator {
           reportingDevice.setMetadata(OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
-          reportingDevice.addError(e);
+          reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
         expectedDevices.put(device, reportingDevice);
       }
@@ -373,7 +373,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          client.processMessage(this::validateMessage);
+          validateMessage(client.takeNextMessage());
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -465,6 +465,12 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
+      if (message.containsKey(EXCEPTION_KEY)) {
+        device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
+            Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
       sanitizeMessage(schemaName, message);
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
@@ -476,14 +482,14 @@ public class Validator {
         }
       } catch (Exception e) {
         System.err.println("Missing schema entry " + schemaName);
-        device.addError(e);
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       }
 
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), attributes);
       } catch (Exception e) {
         System.err.println("Error validating attributes: " + e);
-        device.addError(e);
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
       }
 
       if (schemaMap.containsKey(schemaName)) {
@@ -491,7 +497,7 @@ public class Validator {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
           System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
-          device.addError(e);
+          device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
         }
       }
 
@@ -503,11 +509,11 @@ public class Validator {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
             Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
-            device.validateMessageType(messageObject, timestamp);
+            device.validateMessageType(messageObject, timestamp, attributes);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
-          device.addError(e);
+          device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
         }
       } else {
         extraDevices.add(deviceId);
@@ -518,7 +524,7 @@ public class Validator {
       }
     } catch (Exception e) {
       System.err.println("Generic device error " + deviceId);
-      device.addError(e);
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
   }
@@ -672,17 +678,25 @@ public class Validator {
       deviceInfo.expireEntries(getNow());
       if (deviceInfo.hasErrors()) {
         summary.error_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceId,
-            key -> new DeviceValidationEvent());
+        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
         deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
       } else if (deviceInfo.seenRecently(getNow())) {
         summary.correct_devices.add(deviceId);
+        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
       } else {
         summary.missing_devices.add(deviceId);
       }
     }
 
     sendValidationReport(makeValidationReport(summary, devices));
+  }
+
+  private DeviceValidationEvent getValidationEvent(Map<String, DeviceValidationEvent> devices,
+      ReportingDevice deviceInfo) {
+    DeviceValidationEvent deviceValidationEvent = devices.computeIfAbsent(deviceInfo.getDeviceId(),
+        key -> new DeviceValidationEvent());
+    deviceValidationEvent.last_seen = deviceInfo.getLastSeen();
+    return deviceValidationEvent;
   }
 
   private Instant getNow() {
@@ -858,6 +872,26 @@ public class Validator {
 
     public Map<String, Object> message;
     public Map<String, String> attributes;
+    public String timestamp;
+  }
+
+  /**
+   * Container for validation errors of a message.
+   */
+  public static class ErrorContainer extends TreeMap<String, Object> {
+
+    /**
+     * Create a new instance.
+     *
+     * @param exception base exception for error
+     * @param message   message string that caused the error
+     * @param timestamp timestamp of generating message
+     */
+    public ErrorContainer(Exception exception, String message, String timestamp) {
+      put(EXCEPTION_KEY, exception);
+      put("message", message);
+      put("timestamp", timestamp);
+    }
   }
 
   class RelativeDownloader implements URIDownloader {

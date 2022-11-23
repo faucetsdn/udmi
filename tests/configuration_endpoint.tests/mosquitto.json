@@ -5,6 +5,7 @@
   "port": 8883,
   "config_sync_sec": -1,
   "client_id": "any_client_id",
+  "topic_prefix": "/devices/AHU-2",
   "auth_provider": {
     "basic": {
       "username": "username",
