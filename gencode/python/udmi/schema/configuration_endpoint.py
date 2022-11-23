@@ -54,6 +54,7 @@ class EndpointConfiguration:
     self.client_id = None
     self.topic_prefix = None
     self.sub_topic = None
+    self.send_topic = None
     self.auth_provider = None
     self.nonce = None
 
@@ -70,6 +71,7 @@ class EndpointConfiguration:
     result.client_id = source.get('client_id')
     result.topic_prefix = source.get('topic_prefix')
     result.sub_topic = source.get('sub_topic')
+    result.send_topic = source.get('send_topic')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.nonce = source.get('nonce')
     return result
@@ -108,6 +110,8 @@ class EndpointConfiguration:
       result['topic_prefix'] = self.topic_prefix # 5
     if self.sub_topic:
       result['sub_topic'] = self.sub_topic # 5
+    if self.send_topic:
+      result['send_topic'] = self.send_topic # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
     if self.nonce:

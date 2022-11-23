@@ -3,8 +3,8 @@
     "protocol": "mqtt",
     "client_id": "username@t1f7e77c0200f496e81128d0188662254_hub",
     "hostname": "mqtt.bosch-iot-hub.com",
-    "topic_prefix": "event",
     "sub_topic": "c///q/#",
+    "send_topic": "telemetry",
     "auth_provider": {
       "basic": {
         "username": "username@t1f7e77c0200f496e81128d0188662254_hub",

@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -179,7 +180,7 @@ public class MqttPublisher implements Publisher {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
       debug("Sending message to " + topicSuffix);
-      sendMessage(deviceId, getMessageTopic(deviceId, topicSuffix), payload.getBytes());
+      sendMessage(deviceId, getSendTopic(deviceId, topicSuffix), payload.getBytes());
       if (callback != null) {
         callback.run();
       }
@@ -196,6 +197,11 @@ public class MqttPublisher implements Publisher {
         close();
       }
     }
+  }
+
+  private String getSendTopic(String deviceId, String topicSuffix) {
+    return Objects.requireNonNullElseGet(configuration.endpoint.send_topic,
+        () -> getMessageTopic(deviceId, topicSuffix));
   }
 
   private void closeMqttClient(String deviceId) {
@@ -604,7 +610,9 @@ public class MqttPublisher implements Publisher {
         Class<Object> type = handlersType.get(handlerKey);
         if (handler == null) {
           error("Missing handler", messageType, "receive",
-              new RuntimeException("No registered handler for " + handlerKey));
+              new RuntimeException("No registered handler for topic " + topic));
+          handlersType.put(handlerKey, Object.class);
+          handlers.put(handlerKey, this::ignoringHandler);
           return;
         }
         success("Received config", messageType, "receive");
@@ -624,5 +632,10 @@ public class MqttPublisher implements Publisher {
         handler.accept(payload);
       }
     }
+
+    private void ignoringHandler(Object message) {
+      // Do nothing, just ignore everything.
+    }
   }
 }
+
