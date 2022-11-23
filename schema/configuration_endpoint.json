@@ -32,6 +32,11 @@
     "client_id": {
       "type": "string"
     },
+    "topic_prefix": {
+      "description": "Prefix for message topics",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9]+$"
+    },
     "auth_provider": {
       "type": "object",
       "additionalProperties": false,

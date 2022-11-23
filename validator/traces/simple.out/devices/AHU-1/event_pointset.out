@@ -5,7 +5,8 @@
   "sub_type" : "event",
   "status" : {
     "message" : "Device has missing points: filter_differential_pressure_setpoint",
-    "category" : "validation.error.simple",
+    "detail" : "event_pointset: Device has missing points: filter_differential_pressure_setpoint",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
@@ -15,7 +16,8 @@
   },
   "errors" : [ {
     "message" : "Device has missing points: filter_differential_pressure_setpoint",
-    "category" : "validation.error.simple",
+    "detail" : "event_pointset: Device has missing points: filter_differential_pressure_setpoint",
+    "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   } ]

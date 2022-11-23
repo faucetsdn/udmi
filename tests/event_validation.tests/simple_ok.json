@@ -5,7 +5,7 @@
   "sub_folder": "discovery",
   "status": {
     "message": "All systems normal",
-    "category": "validation.device.result",
+    "category": "validation.device.schema",
     "timestamp": "2018-08-26T21:39:30.364Z",
     "level": 400
   },

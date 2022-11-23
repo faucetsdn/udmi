@@ -20,7 +20,7 @@
       "oldest_mark": "2022-07-16T18:27:19Z",
       "status": {
         "message": "Tickity Boo",
-        "category": "validation.device.result",
+        "category": "validation.device.content",
         "timestamp": "2018-08-26T21:39:30.364Z",
         "level": 400
       }
