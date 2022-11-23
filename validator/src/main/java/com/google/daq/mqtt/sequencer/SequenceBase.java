@@ -2,7 +2,6 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
-import static com.google.daq.mqtt.validator.Validator.EXCEPTION_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -21,8 +20,6 @@ import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
-import com.google.daq.mqtt.validator.Validator;
-import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -109,7 +106,7 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
-  private static final long CLEAN_START_DELAY_MS = 20 * 1000;
+  private static final long CLEAN_START_DELAY_MS = 1 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -473,7 +470,7 @@ public abstract class SequenceBase {
     String subFolder = attributes.get("subFolder");
     String timestamp =
         message == null ? JsonUtil.getTimestamp() : (String) message.get("timestamp");
-    String messageBase = String.format("%s_%s", subType, subFolder);
+    String messageBase = String.format("%s_%s", subType, subFolder, JsonUtil.getTimestamp());
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
     }
@@ -506,12 +503,7 @@ public abstract class SequenceBase {
 
     String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
-    Object savedException = message.get(EXCEPTION_KEY);
     try {
-      // An actual exception here will cause the JSON seralizer to barf, so temporarily sanitize.
-      if (savedException instanceof Exception) {
-        message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
-      }
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
       boolean traceMessage =
           traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
@@ -526,10 +518,6 @@ public abstract class SequenceBase {
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
-    } finally {
-      if (savedException != null) {
-        message.put(EXCEPTION_KEY, savedException);
-      }
     }
   }
 
@@ -778,7 +766,7 @@ public abstract class SequenceBase {
     updateConfig("before " + description);
     recordSequence("Wait for " + description);
     while (evaluator.get()) {
-      processMessage();
+      receiveMessage();
     }
     info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
     waitingCondition = "nothing";
@@ -813,17 +801,18 @@ public abstract class SequenceBase {
     untilLoop(() -> catchToFalse(evaluator), description);
   }
 
-  private void processMessage() {
+  private void receiveMessage() {
     if (!client.isActive()) {
       throw new RuntimeException("Trying to receive message from inactive client");
     }
-    MessageBundle bundle = client.takeNextMessage();
-    String category = bundle.attributes.get("category");
-    if ("commands".equals(category)) {
-      processCommand(bundle.message, bundle.attributes);
-    } else if ("config".equals(category)) {
-      processConfig(bundle.message, bundle.attributes);
-    }
+    client.processMessage((message, attributes) -> {
+      String category = attributes.get("category");
+      if ("commands".equals(category)) {
+        processCommand(message, attributes);
+      } else if ("config".equals(category)) {
+        processConfig(message, attributes);
+      }
+    });
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
@@ -876,8 +865,8 @@ public abstract class SequenceBase {
   private synchronized void handleReflectorMessage(String subFolderRaw,
       Map<String, Object> message) {
     try {
-      if (message.containsKey(EXCEPTION_KEY)) {
-        debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
+      if (message.containsKey("exception")) {
+        debug("Ignoring reflector exception:\n" + stringify(message));
         return;
       }
       Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
