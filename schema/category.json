@@ -27,8 +27,10 @@
     { "pattern": "^blobset\\.blob\\.fetch$" },
     { "pattern": "^blobset\\.blob\\.apply$" },
     { "pattern": "^validation\\.device\\.receive$" },
-    { "pattern": "^validation\\.device\\.result$" },
+    { "pattern": "^validation\\.device\\.schema$" },
+    { "pattern": "^validation\\.device\\.content$" },
+    { "pattern": "^validation\\.device\\.multiple$" },
     { "pattern": "^validation\\.summary\\.report$" },
-    { "pattern": "^device[\\.a-z]+$" }
+    { "pattern": "^device\\.[a-z]+(_[a-z]+)*$" }
     ]
 }

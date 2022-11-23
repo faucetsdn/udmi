@@ -1,7 +1,7 @@
 {
   "logentries" : [ {
     "message" : "1999-10-20T01:02:03Z sent message #70",
-    "category" : "device.log_message",
+    "category" : "device.logMessage",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 200
   } ],

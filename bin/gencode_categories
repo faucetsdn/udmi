@@ -10,9 +10,11 @@ import sys
 GENCODE_MARKER = '@@ '
 CATEGORY_MARKER = '* '
 WILDCARD_REGEX = ' *\\* _\?\?\?_: (.*)'
+WILDCARD_SUFFIX = '.[a-z]+(_[a-z]+)*'
+
 CATEGORY_REGEX = ' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
-DEVICE_PREFIX = 'device['
+DEVICE_PREFIX = 'device'
 
 JAVA_DESCRIPTION = "\n%s// %s\n"
 JAVA_TARGET = '%spublic static final String %s = "%s";\n'
@@ -35,7 +37,7 @@ def read_categories():
             indent = line.find(CATEGORY_MARKER)//2
             wildcard = re.match(WILDCARD_REGEX, line)
             if wildcard:
-                entry = (group + '[.a-z]+', 'INFO', wildcard.group(1))
+                entry = (group + WILDCARD_SUFFIX, 'INFO', wildcard.group(1))
                 categories.append(entry)
                 continue
             match = re.match(CATEGORY_REGEX, line)
