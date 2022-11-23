@@ -74,6 +74,7 @@ public class MqttPublisher implements Publisher {
   private static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
+  private static final String GCP_CLIENT_PREFIX = "projects/";
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -113,8 +114,8 @@ public class MqttPublisher implements Publisher {
   }
 
   private boolean isGcpIotCore(PubberConfiguration configuration) {
-    return configuration.endpoint.auth_provider == null
-        || configuration.endpoint.auth_provider.jwt != null;
+    return configuration.endpoint.client_id != null && configuration.endpoint.client_id.startsWith(
+        GCP_CLIENT_PREFIX);
   }
 
   private String getClientId(String deviceId) {
@@ -382,8 +383,13 @@ public class MqttPublisher implements Publisher {
     boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
-    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
+    if (configuration.endpoint.sub_topic == null) {
+      subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
+      subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
+    } else {
+      subscribeTopic(client, configuration.endpoint.sub_topic, configQos);
+    }
+
     info("Updates subscribed");
   }
 
