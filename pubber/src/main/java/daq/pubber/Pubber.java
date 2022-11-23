@@ -422,7 +422,7 @@ public class Pubber {
   private void markStateDirty() {
     markStateDirty(0);
   }
-
+    
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
