@@ -1,7 +1,14 @@
 {
   "system": {
     "location": {
-      "site": "AA-TEST-SITE"
+      "site": "US-SFO-XYY"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "site": "US-SFO-XYY",
+        "name": "AHU-1"
+      }
     }
   }
 }

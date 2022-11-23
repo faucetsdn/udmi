@@ -54,6 +54,7 @@ cat <<EOF > out/endpoint.json
 {
   "protocol": "mqtt",
   "client_id": "projects/$project_id/locations/$cloud_region/registries/reconfigure/devices/$device_id",
+  "topic_prefix": "/devices/$device_id",
   "hostname": "mqtt.googleapis.com",
   "auth_provider": {
     "jwt": {

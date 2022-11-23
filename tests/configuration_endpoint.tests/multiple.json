@@ -2,6 +2,7 @@
   "protocol": "mqtt",
   "hostname": "mqtt.googleapis.com",
   "port": 8883,
+  "topic_prefix": "/devices/#",
   "client_id": "prasjdhsadas",
   "auth_provider": {
     "jwt": {

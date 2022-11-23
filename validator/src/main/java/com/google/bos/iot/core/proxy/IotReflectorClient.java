@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +19,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.BiConsumer;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -34,7 +36,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
 
-  private final BlockingQueue<MessageBundle> messages = new LinkedBlockingDeque<>();
+  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingDeque<>();
 
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;
@@ -98,10 +100,10 @@ public class IotReflectorClient implements MessagePublisher {
         return;
       }
     } catch (Exception e) {
-      asMap = new ErrorContainer(e, topic, payload);
+      asMap = new ErrorContainer(e, payload, JsonUtil.getTimestamp());
     }
 
-    MessageBundle messageBundle = new MessageBundle();
+    Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
     messageBundle.message = asMap;
 
@@ -154,12 +156,11 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public Validator.MessageBundle takeNextMessage() {
     try {
-      MessageBundle message = messages.take();
-      validator.accept(message.message, message.attributes);
+      return messages.take();
     } catch (Exception e) {
-      throw new RuntimeException("While processing message on subscription " + subscriptionId, e);
+      throw new RuntimeException("While taking next message", e);
     }
   }
 
@@ -185,12 +186,4 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, String> attributes;
   }
 
-  static class ErrorContainer extends TreeMap<String, Object> {
-
-    ErrorContainer(Exception e, String topic, String message) {
-      put("exception", e.toString());
-      put("topic", topic);
-      put("message", message);
-    }
-  }
 }

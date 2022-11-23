@@ -15,6 +15,9 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.daq.mqtt.validator.Validator;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.pubsub.v1.ProjectSubscriptionName;
@@ -176,20 +179,15 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     throw new RuntimeException("This hasn't been implemented yet");
   }
 
-  /**
-   * Process the given message.
-   *
-   * @param handler the handler to use for processing the message
-   */
-  @SuppressWarnings("unchecked")
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> handler) {
+  @Override
+  public Validator.MessageBundle takeNextMessage() {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
       if (flushSubscription && seconds < startTimeSec) {
         System.err.println(String.format("Flushing outdated message from %d seconds ago",
             startTimeSec - seconds));
-        return;
+        return null;
       }
       Map<String, String> attributes = message.getAttributesMap();
       byte[] rawData = message.getData().toByteArray();
@@ -202,17 +200,22 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       }
       Map<String, Object> asMap;
       try {
-        asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> dataMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+        asMap = dataMap;
       } catch (JsonProcessingException e) {
-        asMap = new ErrorContainer(e, data);
+        asMap = new ErrorContainer(e, getSubscriptionId(), JsonUtil.getTimestamp());
       }
 
       attributes = new HashMap<>(attributes);
       attributes.put(WAS_BASE_64, "" + base64);
 
-      handler.accept(asMap, attributes);
+      MessageBundle bundle = new MessageBundle();
+      bundle.message = asMap;
+      bundle.attributes = attributes;
+      return bundle;
     } catch (Exception e) {
-      throw new RuntimeException("Processing pubsub message for " + getSubscriptionId(), e);
+      throw new RuntimeException("While taking next message", e);
     }
   }
 
@@ -236,7 +239,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void messageLoop() {
     while (isActive()) {
       try {
-        processMessage(this::handlerHandler);
+        handlerHandler(takeNextMessage());
       } catch (Exception e) {
         System.err.println("Exception processing received message:");
         e.printStackTrace();
@@ -247,15 +250,15 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private void ignoreMessage(Envelope attributes, Object message) {
   }
 
-  private void handlerHandler(Map<String, Object> message, Map<String, String> attributes) {
-    Envelope envelope = JsonUtil.convertTo(Envelope.class, attributes);
+  private void handlerHandler(MessageBundle bundle) {
+    Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
       Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
         System.err.println("Ignoring messages of type " + mapKey);
         return Object.class;
       });
-      Object messageObject = JsonUtil.convertTo(handlerType, message);
+      Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
       HandlerConsumer<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
           key -> this::ignoreMessage);
       handlerConsumer.accept(envelope, messageObject);
@@ -316,14 +319,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     } catch (Exception e) {
       throw new RuntimeException(
           String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
-    }
-  }
-
-  static class ErrorContainer extends TreeMap<String, Object> {
-
-    ErrorContainer(Exception e, String message) {
-      put("exception", e.toString());
-      put("message", message);
     }
   }
 
