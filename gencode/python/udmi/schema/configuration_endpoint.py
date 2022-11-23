@@ -52,6 +52,7 @@ class EndpointConfiguration:
     self.port = None
     self.config_sync_sec = None
     self.client_id = None
+    self.topic_prefix = None
     self.auth_provider = None
     self.nonce = None
 
@@ -66,6 +67,7 @@ class EndpointConfiguration:
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
+    result.topic_prefix = source.get('topic_prefix')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.nonce = source.get('nonce')
     return result
@@ -100,6 +102,8 @@ class EndpointConfiguration:
       result['config_sync_sec'] = self.config_sync_sec # 5
     if self.client_id:
       result['client_id'] = self.client_id # 5
+    if self.topic_prefix:
+      result['topic_prefix'] = self.topic_prefix # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
     if self.nonce:
