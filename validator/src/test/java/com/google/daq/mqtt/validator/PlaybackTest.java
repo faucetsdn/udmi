@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.Category;
 import udmi.schema.Level;
 import udmi.schema.ValidationEvent;
 import udmi.schema.ValidationState;
@@ -20,9 +21,9 @@ import udmi.schema.ValidationState;
  */
 public class PlaybackTest extends TestBase {
 
+  public static final String SIMPLE_TRACE_DIR = "simple.in";
   private static final String TRACE_BASE = "../validator/traces/";
   private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
-  public static final String SIMPLE_TRACE_DIR = "simple.in";
 
   @Test
   public void simpleTraceReport() {
@@ -37,6 +38,11 @@ public class PlaybackTest extends TestBase {
       assertEquals("missing devices", 1, finalReport.summary.missing_devices.size());
       assertEquals("error devices", 2, finalReport.summary.error_devices.size());
       assertEquals("device summaries", 3, finalReport.devices.size());
+      assertNull("no AHU-1 status", finalReport.devices.get("AHU-1").status);
+      assertEquals("AHU-22 status", Category.VALIDATION_DEVICE_SCHEMA,
+          finalReport.devices.get("AHU-22").status.category);
+      assertEquals("SNS-4 status", Category.VALIDATION_DEVICE_MULTIPLE,
+          finalReport.devices.get("SNS-4").status.category);
 
       List<ValidationEvent> deviceReports = reports(outputMessages, "AHU-1");
 
