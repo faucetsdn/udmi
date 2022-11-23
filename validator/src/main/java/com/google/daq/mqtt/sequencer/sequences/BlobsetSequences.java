@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
@@ -18,6 +17,7 @@ import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.SystemConfig.SystemMode;
+
 
 /**
  * Validation tests for instances that involve blobset config messages.
@@ -45,35 +45,9 @@ public class BlobsetSequences extends SequenceBase {
         deviceId);
   }
 
-  private String generateEndpointConfigDeviceIdClientId(String deviceId) {
-    return String.format(
-        ENDPOINT_CONFIG_CLIENT_ID,
-        projectId,
-        cloudRegion,
-        registryId,
-        deviceId);
-  }
-
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(),
-        ENDPOINT_CONFIG_HOSTNAME);
-    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
-  }
-
-  private String generateEndpointConfigBase64HostnamePayload(String hostname) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
-    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
-  }
-
-  private String generateEndpointConfigBase64DeviceIdPayload(String deviceId) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigDeviceIdClientId(deviceId),
-        ENDPOINT_CONFIG_HOSTNAME);
-    info("============PAYLOAD " + payload);
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
     String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
     return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
@@ -90,7 +64,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64HostnamePayload("localhost");
+    config.base64 = generateEndpointConfigBase64Payload("localhost");
     config.content_type = "application/json";
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
@@ -111,7 +85,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_success_reconnect() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64HostnamePayload(ENDPOINT_CONFIG_HOSTNAME);
+    config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
     config.content_type = "application/json";
     config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
@@ -171,30 +145,4 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  //  @Test
-  //  @Description("Redirect to a different endpoint")
-  //  public void endpoint_config_connection_success_redirect() {
-  //    BlobBlobsetConfig config = new BlobBlobsetConfig();
-  //    config.phase = BlobPhase.FINAL;
-  //    config.base64 = generateEndpointConfigBase64DeviceIdPayload("AHU-99");
-  //    config.content_type = "application/json";
-  //    config.nonce = generateNonce();
-  //    deviceConfig.blobset = new BlobsetConfig();
-  //    deviceConfig.blobset.blobs = new HashMap<>();
-  //    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
-  //    updateConfig();
-  //
-  //    untilTrue("blobset entry config status is success", () -> {
-  //      BlobPhase phase = deviceState.blobset.blobs.get(
-  //          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-  //      Entry stateStatus = deviceState.system.status;
-  //      if (phase != null) {
-  //        info("phase = " + phase);
-  //      }
-  //      return phase != null
-  //          && phase.equals(BlobPhase.FINAL)
-  //          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-  //          && stateStatus.level == Level.NOTICE.value();
-  //    });
-  //  }
 }

@@ -422,13 +422,6 @@ public class Pubber {
   private void markStateDirty() {
     markStateDirty(0);
   }
-    
-  private void publishDirtyState() {
-    if (stateDirty.get()) {
-      System.err.println("Publishing dirty state block");
-      markStateDirty(0);
-    }
-  }
 
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
@@ -438,6 +431,13 @@ public class Pubber {
       } catch (Exception e) {
         System.err.println("Rejecting state publish after " + delayMs + " " + e);
       }
+    }
+  }
+
+  private void publishDirtyState() {
+    if (stateDirty.get()) {
+      System.err.println("Publishing dirty state block");
+      markStateDirty(0);
     }
   }
 
