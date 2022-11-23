@@ -10,12 +10,13 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
-
+import com.google.daq.mqtt.util.SamplingRange;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -133,58 +134,78 @@ public class ConfigSequences extends SequenceBase {
   @Description("test sample rate")
   public void pointset_sample_rate_sec() {
 
-    // Start small
-    deviceConfig.pointset.sample_rate_sec = 2;
+    int first_sample_rate_sec = 2;
+    int second_sample_rate_sec = 10;
+    int tolerance = 2;
 
+    // Start small
+    deviceConfig.pointset.sample_rate_sec = first_sample_rate_sec;
     getReceivedEvents(PointsetEvent.class);
     // wait 3 because there might be one message stuck in the system
     untilTrue("receive 3 pointset event",
-        () -> (countReceivedEvents(PointsetEvent.class) > 5)
+        () -> (countReceivedEvents(PointsetEvent.class) > 4)
+    );
+    List<PointsetEvent> receivedEvents = getReceivedEvents(PointsetEvent.class);
+    List<Long> vector = telemetryTimestampDeltaVector(receivedEvents);
+    assertTrue("all values greater than x",
+        allValuesLessThan(first_sample_rate_sec, tolerance, vector));
+
+    deviceConfig.pointset.sample_rate_sec = second_sample_rate_sec;
+    getReceivedEvents(PointsetEvent.class);
+    untilTrue("receive some telemetry events",
+        () -> (countReceivedEvents(PointsetEvent.class) > 4)
+    );
+    receivedEvents = getReceivedEvents(PointsetEvent.class);
+    vector = telemetryTimestampDeltaVector(receivedEvents);
+    vector.remove(0); // Ignore first
+
+    assertTrue("all values greater than x",
+        allValuesLessThan(second_sample_rate_sec, tolerance, vector));
+  }
+
+  @Test
+  @Description("test sample rate")
+  public void pointset_sample_limit_test() {
+    SamplingRange samplingWindow = new SamplingRange(1,5,2);
+
+    // Start small
+    deviceConfig.pointset.sample_limit_sec = samplingWindow.sampleLimit;
+    deviceConfig.pointset.sample_rate_sec = samplingWindow.sampleRate;
+    getReceivedEvents(PointsetEvent.class);
+
+    // wait for a few because there might be one message stuck in the system and then ignore the first
+    untilTrue("receive 3 pointset event",
+        () -> (countReceivedEvents(PointsetEvent.class) > 4)
     );
 
     List<PointsetEvent> receivedEvents = getReceivedEvents(PointsetEvent.class);
     List<Long> vector = telemetryTimestampDeltaVector(receivedEvents);
-
-    for (Number value : vector)
-    {
-      info(value.toString());
-    }
-
-    info(String.format("%d", vector.stream().filter(x -> x > 3.0).count()));
-
-    deviceConfig.pointset.sample_rate_sec = 5;
-    getReceivedEvents(PointsetEvent.class);
-    // wait 3 because there might be one message stuck in the system
-    untilTrue("receive 3 pointset event",
-        () -> (countReceivedEvents(PointsetEvent.class) > 5)
-    );
-
-    receivedEvents = getReceivedEvents(PointsetEvent.class);
-    vector = telemetryTimestampDeltaVector(receivedEvents);
-    vector.remove(0);
-
-    for (Number value : vector)
-    {
-      info(value.toString());
-    }
-
-    assertTrue("all values greater than x", allValuesLessThan(1, vector));
-
-    info(String.format("%d", vector.stream().filter(x -> x > 3.0).count()));
-
+    vector.remove(0); // Ignore first
+    assertTrue(samplingWindow.valuesInRange(vector));
   }
 
   private List<Long> telemetryTimestampDeltaVector(List<PointsetEvent> receivedEvents) {
     ArrayList<Long> deltaVector = new ArrayList<>();
-    List <Date> events = receivedEvents.stream().map(event -> event.timestamp).collect(Collectors.toList());
+    List<Date> events = receivedEvents.stream().map(event -> event.timestamp)
+        .collect(Collectors.toList());
     Collections.sort(events);
     for (int i = 1; i < events.size(); i++) {
-      deltaVector.add(((events.get(i).getTime() - events.get(i-1).getTime())/1000));
+      deltaVector.add(((events.get(i).getTime() - events.get(i - 1).getTime()) / 1000));
     }
     return deltaVector;
   }
 
-  private boolean allValuesLessThan(double threshold, List<Long> vector){
-    return (vector.stream().filter(x -> x < threshold).count() > 0);
+  private boolean allValuesLessThan(double threshold, double tolerance, List<Long> vector) {
+    return (vector.stream().filter(x -> x < threshold + tolerance).count() > 0);
   }
+
+  private boolean allValuesInRange(double lower, double upper, double tolerance,
+      List<Long> vector) {
+    return (vector.stream().filter(x -> (
+        x < upper + tolerance && x > lower - tolerance
+    )).count() > 0);
+  }
+
 }
+
+

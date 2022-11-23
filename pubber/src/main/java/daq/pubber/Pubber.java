@@ -858,7 +858,7 @@ public class Pubber {
   }
 
   private void processConfigUpdate(Config config) {
-    final int actualInterval;
+    int actualInterval;
     if (config != null) {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
@@ -870,6 +870,9 @@ public class Pubber {
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
+    }
+    if (configuration.options.fixedSampleRate != null) {
+      actualInterval = configuration.options.fixedSampleRate;
     }
     maybeRestartExecutor(actualInterval);
   }
