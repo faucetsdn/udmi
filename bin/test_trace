@@ -8,12 +8,13 @@ fi
 trace_name=$1
 shift
 
-trace_out=validator/traces/$trace_name.out
+trace_out=validator/traces/${trace_name}.out
+trace_in=validator/traces/${trace_name}.in
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
 rm -rf $site_out
-validator/bin/validate -- schema trace $trace_name $site_model
+validator/bin/validate -- schema trace $trace_in $site_model
 
 echo
 
@@ -21,7 +22,8 @@ for file in `find $site_out -type f`; do
     sed -E -i $file \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e "s/Validator.java:[0-9]+/redacted/" \
-        -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'
+        -e 's/\\t.*\.java:[0-9]+\)/\\tredacted\\n/g' \
+        -e 's/\\n.*\.java:[0-9]+\)/\\tredacted\\n/g'
 done
 
 echo Checking diff -r $site_out $trace_out

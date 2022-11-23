@@ -1,17 +1,24 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.3.14",
-  "hash": "1064d284",
+  "hash": "c62d55be",
   "cloud": {
     "auth_type": "RS256"
   },
   "system": {
     "location": {
-      "site": "AA-TEST-SITE",
+      "site": "US-SFO-XYY",
       "section": "2-3N8C",
       "position": {
         "x": -111.0,
         "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "site": "US-SFO-XYY",
+        "name": "AHU-1"
       }
     },
     "min_loglevel": 300

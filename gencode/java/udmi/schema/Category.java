@@ -135,10 +135,20 @@ public class Category {
     public static final Level VALIDATION_DEVICE_RECEIVE_LEVEL = DEBUG;
     static { LEVEL.put(VALIDATION_DEVICE_RECEIVE, DEBUG); }
 
-    // Regarding the actual validation results.
-    public static final String VALIDATION_DEVICE_RESULT = "validation.device.result";
-    public static final Level VALIDATION_DEVICE_RESULT_LEVEL = INFO;
-    static { LEVEL.put(VALIDATION_DEVICE_RESULT, INFO); }
+    // Basic schema and structure validation.
+    public static final String VALIDATION_DEVICE_SCHEMA = "validation.device.schema";
+    public static final Level VALIDATION_DEVICE_SCHEMA_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_SCHEMA, INFO); }
+
+    // Errors validating semantic content of the message.
+    public static final String VALIDATION_DEVICE_CONTENT = "validation.device.content";
+    public static final Level VALIDATION_DEVICE_CONTENT_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_CONTENT, INFO); }
+
+    // Multiple issues reported.
+    public static final String VALIDATION_DEVICE_MULTIPLE = "validation.device.multiple";
+    public static final Level VALIDATION_DEVICE_MULTIPLE_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_MULTIPLE, INFO); }
 
     // The validation summary report.
     public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
