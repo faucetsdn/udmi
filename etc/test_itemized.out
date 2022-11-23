@@ -1,2 +1,3 @@
 TEST writeback_success_state noWriteback RESULT fail writeback_success_state timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST writeback_success_apply noPointState RESULT pass writeback_success_apply Sequence complete
+TEST pointset_sample_rate fixedSampleRate=10 RESULT fail pointset_sample_rate Failed check that time period between successive pointset events is between 1 and 5 seconds

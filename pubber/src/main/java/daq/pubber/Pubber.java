@@ -863,8 +863,8 @@ public class Pubber {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
-      actualInterval = updateSystemConfig(config.pointset);
-      updatePointsetConfig(config.pointset);
+      actualInterval = updatePointsetConfig(config.pointset);
+      updatePointsetPointsConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
       extractEndpointBlobConfig();
     } else {
@@ -872,7 +872,7 @@ public class Pubber {
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
     if (configuration.options.fixedSampleRate != null) {
-      actualInterval = configuration.options.fixedSampleRate;
+      actualInterval = configuration.options.fixedSampleRate * 1000;
     }
     maybeRestartExecutor(actualInterval);
   }
@@ -1269,7 +1269,7 @@ public class Pubber {
     }
   }
 
-  private void updatePointsetConfig(PointsetConfig pointsetConfig) {
+  private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     Map<String, PointPointsetConfig> points =
         useConfig.points != null ? useConfig.points : new HashMap<>();
@@ -1286,9 +1286,11 @@ public class Pubber {
     updateState(point);
   }
 
-  private int updateSystemConfig(PointsetConfig pointsetConfig) {
+  private int updatePointsetConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
     boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
+    boolean hasSampleLimit = pointsetConfig != null && pointsetConfig.sample_limit_sec != null;
+    //if(hasSampleRate && hasSampleLimit && pointsetConfig.sample_rate_sec < )
     int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
     actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
     return actualInterval;

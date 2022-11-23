@@ -118,7 +118,7 @@ public class WritebackSequences extends PointSequencer {
     );
   }
 
-  @Test
+  @Test(timeout = 90000)
   public void writeback_invalid_state() {
     TargetTestingModel invalidTarget = getTarget(INVALID_STATE);
     String invalidPoint = invalidTarget.target_point;
@@ -136,7 +136,7 @@ public class WritebackSequences extends PointSequencer {
   
   }
 
-  @Test
+  @Test(timeout = 90000)
   public void writeback_failure_state() {
     TargetTestingModel failureTarget = getTarget(FAILURE_STATE);
     String failurePoint = failureTarget.target_point;

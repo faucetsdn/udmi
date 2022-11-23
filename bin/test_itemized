@@ -14,6 +14,11 @@ GOLDEN_FILE=etc/test_itemized.out
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
 touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
 
+#pubber/bin/build
+#validator/bin/build
+
+bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
+
 while read -u 7 action test_name remainder; do
     if [[ $action != TEST ]]; then
         continue;
@@ -25,7 +30,7 @@ while read -u 7 action test_name remainder; do
     
     serial_no=sequencer-$RANDOM
     bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
-    WAITING=60
+    WAITING=20
     for i in `seq 1 $WAITING`; do
         if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
             break
@@ -39,7 +44,7 @@ while read -u 7 action test_name remainder; do
         false
     fi
 
-    bin/sequencer $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT 
+    bin/sequencer -v $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name 2>&1 | tee $SEQUENCER_OUT 
     
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}')
 

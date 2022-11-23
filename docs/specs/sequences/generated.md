@@ -33,6 +33,8 @@ Some caveats:
 * [endpoint_config_connection_success_reconnect](#endpoint_config_connection_success_reconnect): Push endpoint config message to device that results in successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
+* [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
+* [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
 * [self_enumeration](#self_enumeration)
 * [single_scan](#single_scan)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
@@ -118,6 +120,32 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config before scan iterations:
     * Add `discovery.families.virtual` = { "generation": _family generation_, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
+
+## pointset_publish_interval
+
+test sample rate and sample limit sec
+
+1. Update config before receive at least 3 pointset events:
+    * Add `pointset.sample_rate_sec` = `8`
+    * Add `pointset.sample_limit_sec` = `5`
+1. Wait for receive at least 3 pointset events
+1. Check that time period between successive pointset events is between 5 and 8 seconds
+1. Update config before receive at least 3 pointset events:
+    * Set `pointset.sample_rate_sec` = `15`
+    * Set `pointset.sample_limit_sec` = `12`
+1. Wait for receive at least 3 pointset events
+1. Check that time period between successive pointset events is between 12 and 15 seconds
+
+## pointset_sample_rate
+
+device publishes pointset events at a rate of no more than config sample_rate_sec
+
+1. Wait for measure initial sample rate
+1. Update config before receive at least 5 pointset events:
+    * Add `pointset.sample_rate_sec` = `5`
+    * Add `pointset.sample_limit_sec` = `1`
+1. Wait for receive at least 5 pointset events
+1. Check that time period between successive pointset events is between 1 and 5 seconds
 
 ## self_enumeration
 

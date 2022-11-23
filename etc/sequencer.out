@@ -4,6 +4,8 @@ RESULT pass endpoint_config_connection_error Sequence complete
 RESULT pass endpoint_config_connection_success_reconnect Sequence complete
 RESULT pass extra_config Sequence complete
 RESULT pass periodic_scan Sequence complete
+RESULT pass pointset_publish_interval Sequence complete
+RESULT pass pointset_sample_rate Sequence complete
 RESULT pass self_enumeration Sequence complete
 RESULT pass single_scan Sequence complete
 RESULT pass system_last_update Sequence complete

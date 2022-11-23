@@ -35,7 +35,7 @@ public class DiscoverySequences extends SequenceBase {
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
 
-  @Test
+  @Test(timeout = 120000)
   public void self_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
@@ -64,7 +64,7 @@ public class DiscoverySequences extends SequenceBase {
         discoveredPoints);
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -105,7 +105,7 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
