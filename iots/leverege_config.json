@@ -3,6 +3,7 @@
       "protocol": "mqtt",
       "client_id": "registry/ZZ-TRI-FECTA/device/AHU-1",
       "hostname": "gx-coreplus-broker.leverege.com",
+      "transport": "tcp",
       "port": 1883,
       "auth_provider": {
         "jwt": {
