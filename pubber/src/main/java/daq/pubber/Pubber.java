@@ -579,7 +579,7 @@ public class Pubber {
     if (systemConfig == null) {
       return;
     }
-    info("maybeRestartSystem " + deviceState.system.mode + " " + systemConfig.mode
+    debug("maybeRestartSystem " + deviceState.system.mode + " " + systemConfig.mode
          + " " + persistentData.restart_count);
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
         && SystemMode.RESTART.equals(systemConfig.mode)) {
