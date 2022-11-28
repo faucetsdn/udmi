@@ -31,6 +31,7 @@ Some caveats:
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
 * [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_config_connection_success_reconnect](#endpoint_config_connection_success_reconnect): Push endpoint config message to device that results in successful reconnect to the same endpoint.
+* [endpoint_config_connection_success_restart](#endpoint_config_connection_success_restart): Restart and connect to same endpoint and expect it returns.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -50,7 +51,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Update config before no interesting status:
     * Set `system.min_loglevel` = `100`
 1. Wait for no interesting status
-1. Wait for clean config/state synced
 1. Wait for state synchronized
 1. Check that initial stable_config matches last_config
 1. Wait for log category `system.config.receive` level `DEBUG`
@@ -59,7 +59,7 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
 1. Update config before log category `system.config.receive` level `DEBUG`:
-    * Add `system.last_start` = _device reported_
+    * Add `system.last_start` = `device reported`
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for no interesting status
 1. Wait for last_config updated
@@ -77,7 +77,7 @@ Check that the device MQTT-acknowledges a sent config.
 Push endpoint config message to device that results in a connection error.
 
 1. Update config before blobset entry config status is error:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_ } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload` } } }
 1. Wait for blobset entry config status is error
 
 ## endpoint_config_connection_success_reconnect
@@ -85,8 +85,25 @@ Push endpoint config message to device that results in a connection error.
 Push endpoint config message to device that results in successful reconnect to the same endpoint.
 
 1. Update config before blobset entry config status is success:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": _endpoint_base64_payload_, "nonce": _endpoint_nonce_ } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
 1. Wait for blobset entry config status is success
+
+## endpoint_config_connection_success_restart
+
+Restart and connect to same endpoint and expect it returns.
+
+1. Wait for last_start is not zero
+1. Update config:
+    * Add `system.mode` = `active`
+1. Wait for deviceState.system.mode == ACTIVE
+1. Update config:
+    * Set `system.mode` = `restart`
+1. Wait for deviceState.system.mode == INITIAL
+1. Update config:
+    * Set `system.mode` = `active`
+1. Wait for deviceState.system.mode == ACTIVE
+1. Wait for last_config is newer than previous last_config
+1. Wait for last_start is newer than previous last_start
 
 ## extra_config
 
@@ -116,14 +133,14 @@ Check that the device correctly handles an extra out-of-schema field
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
 1. Update config before scan iterations:
-    * Add `discovery.families.virtual` = { "generation": _family generation_, "scan_interval_sec": `10`, "enumerate": `true` }
+    * Add `discovery.families.virtual` = { "generation": `family generation`, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
 ## self_enumeration
 
 1. Wait for enumeration not active
 1. Update config before enumeration generation:
-    * Add `discovery` = { "enumeration": { "generation": _generation start time_ } }
+    * Add `discovery` = { "enumeration": { "generation": `generation start time` } }
 1. Wait for enumeration generation
 1. Wait for enumeration still not active
 
@@ -133,7 +150,7 @@ Check that the device correctly handles an extra out-of-schema field
     * Add `discovery` = { "families": {  } }
 1. Wait for all scans not active
 1. Update config before scheduled scan start:
-    * Add `discovery.families.virtual` = { "generation": _family generation_, "enumerate": `true` }
+    * Add `discovery.families.virtual` = { "generation": `family generation`, "enumerate": `true` }
 1. Wait for scheduled scan start
 1. Wait for scan activation
 1. Wait for scan completed
@@ -157,7 +174,7 @@ Check that the min log-level config is honored by the device.
 
 ## valid_serial_no
 
-1. Check that received serial no matches
+1. Wait for received serial no matches
 
 ## writeback_failure_state
 
