@@ -87,6 +87,8 @@ Push endpoint config message to device that results in successful reconnect to t
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
 1. Wait for blobset entry config status is success
 
+## extra_config
+
 Check that the device correctly handles an extra out-of-schema field
 
 1. Update config before last_config not null:
