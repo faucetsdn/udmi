@@ -34,7 +34,6 @@ Some caveats:
 * [endpoint_config_connection_success_redirect](#endpoint_config_connection_success_redirect): Redirect to a different endpoint
 * [endpoint_config_connection_success_reset](#endpoint_config_connection_success_reset): Reset and connect to same endpoint and expect it returns
 * [endpoint_config_connection_success_restart_only](#endpoint_config_connection_success_restart_only): Restart and connect to same endpoint and expect it returns.
-* [endpoint_config_connection_success_restart](#endpoint_config_connection_success_restart): Restart and connect to same endpoint and expect it returns.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -116,23 +115,6 @@ Reset and connect to same endpoint and expect it returns
 1. Wait for last_start is newer than previous last_start 1970-01-01T00:00:00Z
 
 ## endpoint_config_connection_success_restart_only
-
-Restart and connect to same endpoint and expect it returns.
-
-1. Wait for last_start is not zero
-1. Update config:
-    * Add `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Update config:
-    * Set `system.mode` = `restart`
-1. Wait for deviceState.system.mode == INITIAL
-1. Update config:
-    * Set `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Wait for last_config is newer than previous last_config
-1. Wait for last_start is newer than previous last_start
-
-## endpoint_config_connection_success_restart
 
 Restart and connect to same endpoint and expect it returns.
 
