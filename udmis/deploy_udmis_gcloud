@@ -6,7 +6,7 @@ if (( $# < 1 )); then
 fi
 
 ROOT=$(realpath $(dirname $0)/..)
-cd $ROOT/udms
+cd $ROOT/udmis
 
 PROJECT=$1
 shift
@@ -16,7 +16,6 @@ SOURCE=functions/
 
 version=`git describe --dirty`
 echo Deploying version $version to $PROJECT
-echo "const udmi_deploy_version = '$version';" > public/deploy_version.js
 
 cat <<EOF > functions/version.js
 module.exports = {
