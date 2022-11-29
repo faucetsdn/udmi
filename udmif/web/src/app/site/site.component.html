@@ -5,7 +5,7 @@
     <span class="mat-body-2">{{ field.label }}</span>
     <ng-container [ngSwitch]="field.value">
       <ng-container *ngSwitchCase="'lastValidated'">
-        <p>{{ site?.lastValidated | date: 'MM/dd/yy h:mm a' }}</p>
+        <p>{{ site?.lastValidated | date: 'short' }}</p>
       </ng-container>
       <ng-container *ngSwitchCase="'correctDevicesCount'">
         <p>{{ site?.correctDevicesCount }} ({{ site?.correctDevicesPercent | percent: '1.0-2' }})</p>

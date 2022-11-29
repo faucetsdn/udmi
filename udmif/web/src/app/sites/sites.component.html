@@ -51,7 +51,7 @@
         >
       </ng-container>
       <ng-container *ngSwitchCase="'lastValidated'">
-        <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+        <mat-cell *matCellDef="let element">{{ element.lastValidated | date: 'short' }}</mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'totalDeviceErrorsCount'">
         <mat-cell *matCellDef="let element" class="expand-trigger-cell">

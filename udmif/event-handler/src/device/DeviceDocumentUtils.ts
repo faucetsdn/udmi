@@ -1,5 +1,5 @@
 import { DeviceBuilder, Device, DeviceKey, DeviceValidation } from './model/Device';
-import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../EventUtils';
+import { isPointsetSubType, isSubType, isSystemSubType, isValidationSubType, STATE } from '../EventUtils';
 import { PointsetEvent, SystemEvent, UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
@@ -50,6 +50,8 @@ function buildDeviceDocumentFromSystem(udmiEvent: SystemEvent, builder: DeviceBu
     .firmware(udmiEvent.data.software?.firmware)
     .section(udmiEvent.data.location?.section)
     .id(udmiEvent.attributes.deviceNumId)
+    .lastStateUpdated(isSubType(udmiEvent, STATE) ? udmiEvent.data.timestamp : null)
+    .lastStateSaved(isSubType(udmiEvent, STATE) ? getNow() : null)
     .build();
 }
 
@@ -87,7 +89,12 @@ function buildDeviceDocumentFromPointset(
     points.push(point);
   }
 
-  return deviceBuilder.points(points).lastPayload(udmiEvent.data.timestamp).build();
+  return deviceBuilder
+    .points(points)
+    .lastPayload(udmiEvent.data.timestamp)
+    .lastTelemetryUpdated(isSubType(udmiEvent, STATE) ? udmiEvent.data.timestamp : null)
+    .lastTelemetrySaved(isSubType(udmiEvent, STATE) ? getNow() : null)
+    .build();
 }
 
 export function buildPoint(udmiEvent: UdmiEvent, existingPoint: Point, pointCode: string): Point {
@@ -107,4 +114,8 @@ export function buildPoint(udmiEvent: UdmiEvent, existingPoint: Point, pointCode
     .metaUnit(units)
     .metaCode(pointCode)
     .build();
+}
+
+function getNow() {
+  return new Date().toISOString().split('.')[0] + 'Z';
 }

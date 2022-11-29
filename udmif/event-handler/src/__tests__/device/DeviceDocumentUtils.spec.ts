@@ -6,6 +6,10 @@ import { Point } from '../../device/model/Point';
 import { Validation } from '../../model/Validation';
 import { createEvent, DEVICE_VALIDATION_EVENT } from '../dataUtils';
 
+const today: string = '2022-11-01T09:09:09Z';
+
+jest.useFakeTimers().setSystemTime(new Date(today));
+
 const name: string = 'name';
 const site: string = 'site-1';
 const id: string = 'num1';
@@ -50,6 +54,9 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
     const operational: string = 'true';
     const serialNumber: string = 'serial-no';
     const firmware: string = 'v1';
+    const lastPayload: string = '2022-03-21T13:19:32Z';
+    const lastStateSaved: string = today;
+    const lastStateUpdated: string = '2022-03-21T13:19:32Z';
 
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: STATE },
@@ -58,22 +65,38 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
         hardware: { make, model },
         operational,
         serial_no: serialNumber,
+        timestamp: '2022-03-21T13:19:32Z',
       },
     };
-    const expectedDevice: Device = { name, site, id, make, model, operational, serialNumber, firmware, tags };
+    const expectedDevice: Device = {
+      name,
+      site,
+      id,
+      make,
+      model,
+      operational,
+      serialNumber,
+      firmware,
+      tags,
+      lastPayload,
+      lastStateSaved,
+      lastStateUpdated,
+    };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
   test('creates a device document with system model', () => {
     const section: string = 'section-a';
+    const lastPayload: string = '2022-03-21T13:19:32Z';
 
     const inputEvent: UdmiEvent = {
       attributes: { ...BASIC_SYSTEM_ATTRIBUTES, subType: MODEL },
       data: {
         location: { section, site },
+        timestamp: '2022-03-21T13:19:32Z',
       },
     };
-    const expectedDevice: Device = { name, section, site, id, tags };
+    const expectedDevice: Device = { name, section, site, id, tags, lastPayload };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
@@ -197,7 +220,16 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = {
+      name,
+      site,
+      id,
+      tags: [],
+      points: expectedPoints,
+      lastPayload: timestamp,
+      lastTelemetrySaved: today,
+      lastTelemetryUpdated: timestamp,
+    };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
