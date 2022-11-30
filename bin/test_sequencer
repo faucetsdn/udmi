@@ -21,7 +21,7 @@ fi
 site_path=sites/udmi_site_model
 device_id=AHU-1
 
-rm -rf $site_path//out/devices/$device_id/tests
+rm -rf $site_path/out/devices/$device_id/tests
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
