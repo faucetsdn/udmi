@@ -78,9 +78,7 @@ public class ConfigSequences extends SequenceBase {
     hasLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     hasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     resetConfig(); // clears extra_field
-    recordSequence("TAP BEFORE HAS LOGGED " + deviceConfig.system.last_start);
     hasLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    recordSequence("TAP AFTER HAS LOGGED " + deviceConfig.system.last_start);
     untilFalse("no interesting status", this::hasInterestingStatus);
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
