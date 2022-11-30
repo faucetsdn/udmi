@@ -361,6 +361,9 @@ public class Pubber {
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
       }
+      if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
+        throw new IllegalStateException("Device ID " + configuration.deviceId + " not found in site model");
+      }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
       pullDeviceMessage();
