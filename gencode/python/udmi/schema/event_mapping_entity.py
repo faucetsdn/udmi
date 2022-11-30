@@ -1,38 +1,4 @@
 """Generated class for event_mapping_entity.json"""
-
-
-class ObjectBA7012F3:
-  """Generated schema class"""
-
-  def __init__(self):
-    pass
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ObjectBA7012F3()
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ObjectBA7012F3.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    return result
 from .virtual_links import VirtualEquipmentLinks
 from .equipment_translation import BuildingConfig
 
@@ -57,7 +23,7 @@ class MappingEventEntity:
     result.code = source.get('code')
     result.type = source.get('type')
     result.cloud_device_id = source.get('cloud_device_id')
-    result.connections = ObjectBA7012F3.from_dict(source.get('connections'))
+    result.connections = source.get('connections')
     result.links = Object1135B5BB.map_from(source.get('links'))
     result.translation = BuildingTranslation.map_from(source.get('translation'))
     result.missing_telemetry_fields = source.get('missing_telemetry_fields')
@@ -88,7 +54,7 @@ class MappingEventEntity:
     if self.cloud_device_id:
       result['cloud_device_id'] = self.cloud_device_id # 5
     if self.connections:
-      result['connections'] = self.connections.to_dict() # 4
+      result['connections'] = self.connections # 1
     if self.links:
       result['links'] = Object1135B5BB.expand_dict(self.links) # 2
     if self.translation:

@@ -1699,7 +1699,7 @@
         <div class="card-header" id="headingentities_pattern1">
             <h2 class="mb-0">
                 <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#entities_pattern1"
-                        aria-expanded="" aria-controls="entities_pattern1" onclick="setAnchor('#entities_pattern1')"><span class="property-name">^[-0-9a-zA-Z$]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+                        aria-expanded="" aria-controls="entities_pattern1" onclick="setAnchor('#entities_pattern1')"><span class="property-name">^[-0-9a-z]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
@@ -1710,7 +1710,7 @@
                         <label>Pattern Property</label>
                     </h2>
                     <p>All property whose name matches the following regular expression must respect the following conditions</p>
-                    <span class="pattern-value">Property name regular expression: <code>^[-0-9a-zA-Z$]+$</code></span>
+                    <span class="pattern-value">Property name regular expression: <code>^[-0-9a-z]+$</code></span>
                     <br/>
 
     <div class="breadcrumbs">root
@@ -1774,7 +1774,7 @@
         </svg>
     <a href="#entities_pattern1_code" onclick="anchorLink('entities_pattern1_code')">code</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Human readable code for the entity, should be unique in the document scope</p>
-</span>
+</span><span class="pattern-value" id="entities_pattern1_code_pattern">Must match regular expression: <code>^[-_A-Za-z0-9]+$</code></span>
             
 
             
@@ -1826,7 +1826,7 @@
         </svg>
     <a href="#entities_pattern1_type" onclick="anchorLink('entities_pattern1_type')">type</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>DBO namespace and entity type</p>
-</span>
+</span><span class="pattern-value" id="entities_pattern1_type_pattern">Must match regular expression: <code>^([_A-Z]+/)?[_A-Z]+$</code></span>
             
 
             
@@ -1878,7 +1878,7 @@
         </svg>
     <a href="#entities_pattern1_cloud_device_id" onclick="anchorLink('entities_pattern1_cloud_device_id')">cloud_device_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Opaque identifier for the entity</p>
-</span>
+</span><span class="pattern-value" id="entities_pattern1_cloud_device_id_pattern">Must match regular expression: <code>^[0-9]+$</code></span>
             
 
             
@@ -1942,6 +1942,68 @@
     <span class="s2">&quot;dea1fcd5-6942-47a2-ba75-448a7ed47fd7&quot;</span><span class="o">:</span> <span class="s2">&quot;CONTAINS&quot;</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="accordion" id="accordionentities_pattern1_connections_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingentities_pattern1_connections_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#entities_pattern1_connections_pattern1"
+                        aria-expanded="" aria-controls="entities_pattern1_connections_pattern1" onclick="setAnchor('#entities_pattern1_connections_pattern1')"><span class="property-name">^[-0-9a-z]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="entities_pattern1_connections_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingentities_pattern1_connections_pattern1"
+             data-parent="#accordionentities_pattern1_connections_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[-0-9a-z]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities" onclick="anchorLink('entities')">entities</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1" onclick="anchorLink('entities_pattern1')">Mapping Event Entity</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_connections" onclick="anchorLink('entities_pattern1_connections')">connections</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#entities_pattern1_connections_pattern1" onclick="anchorLink('entities_pattern1_connections_pattern1')">^[-0-9a-z]+$</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="entities_pattern1_connections_pattern1_enum">
+                <h4>Must be one of:</h4>
+                <ul class="list-group"><li class="list-group-item enum-item">"CONTAINS"</li></ul>
+                </div>
+            
+
+            
+            
+
+            
+            </div>
+        </div>
+    </div>
 </div>
             </div>
         </div>
@@ -2437,7 +2499,7 @@
             />
         </svg>
     <a href="#entities_pattern1_missing_telemetry_fields_items" onclick="anchorLink('entities_pattern1_missing_telemetry_fields_items')">missing_telemetry_fields items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-
+<span class="pattern-value" id="entities_pattern1_missing_telemetry_fields_items_pattern">Must match regular expression: <code>^[a-z_]+$</code></span>
             
 
             
