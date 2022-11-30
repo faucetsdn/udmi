@@ -2,8 +2,6 @@ package daq.pubber;
 
 import static daq.pubber.ListPublisher.getMessageString;
 
-import org.checkerframework.checker.units.qual.A;
-import udmi.schema.Auth_provider;
 import udmi.schema.DiscoveryCommand;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.PubberConfiguration;
