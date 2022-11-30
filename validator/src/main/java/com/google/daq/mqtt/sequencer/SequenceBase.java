@@ -784,7 +784,7 @@ public abstract class SequenceBase {
     waitingCondition = "nothing";
   }
 
-  private void recordSequence(String step) {
+  protected void recordSequence(String step) {
     if (recordSequence) {
       sequenceMd.println("1. " + step);
       sequenceMd.flush();
