@@ -1,11 +1,12 @@
 package daq.pubber;
 
-import static org.junit.Assert.assertTrue;
-
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Test;
 
+/**
+ * Unit tests for Pubber.
+ */
 public class PubberTest extends TestBase {
 
   private static final String TEST_PROJECT = "test-project";
