@@ -269,10 +269,10 @@ public class Pubber {
         return true;
       });
     } catch (Exception e) {
-      new RuntimeException("While starting singular pubber", e).printStackTrace();
       if (pubber != null) {
         pubber.terminate();
       }
+      throw new RuntimeException("While starting singular pubber", e);
     }
   }
 
@@ -360,6 +360,10 @@ public class Pubber {
       siteModel.initialize();
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
+      }
+      if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
+        throw new IllegalArgumentException(
+            "Device ID " + configuration.deviceId + " not found in site model");
       }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
