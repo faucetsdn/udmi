@@ -371,7 +371,10 @@ public abstract class SequenceBase {
     if (!SemanticValue.isSemanticString(deviceConfig.version)) {
       deviceConfig.version = SemanticValue.describe("cloud udmi version", deviceConfig.version);
     }
-    if (deviceConfig.system != null && !(deviceConfig.system.last_start instanceof SemanticDate)) {
+    if (deviceConfig.system == null) {
+      deviceConfig.system = new SystemConfig();
+    }
+    if (!(deviceConfig.system.last_start instanceof SemanticDate)) {
       deviceConfig.system.last_start = SemanticDate.describe("device reported",
           deviceConfig.system.last_start);
     }
