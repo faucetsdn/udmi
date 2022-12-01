@@ -31,7 +31,6 @@ Some caveats:
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
 * [endpoint_config_connection_error](#endpoint_config_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_config_connection_success_reconnect](#endpoint_config_connection_success_reconnect): Push endpoint config message to device that results in successful reconnect to the same endpoint.
-* [endpoint_config_connection_success_restart](#endpoint_config_connection_success_restart): Restart and connect to same endpoint and expect it returns.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
 * [self_enumeration](#self_enumeration)
@@ -85,23 +84,6 @@ Push endpoint config message to device that results in successful reconnect to t
 1. Update config before blobset entry config status is success:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
 1. Wait for blobset entry config status is success
-
-## endpoint_config_connection_success_restart
-
-Restart and connect to same endpoint and expect it returns.
-
-1. Wait for last_start is not zero
-1. Update config:
-    * Add `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Update config:
-    * Set `system.mode` = `restart`
-1. Wait for deviceState.system.mode == INITIAL
-1. Update config:
-    * Set `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Wait for last_config is newer than previous last_config
-1. Wait for last_start is newer than previous last_start
 
 ## extra_config
 
