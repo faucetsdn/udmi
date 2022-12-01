@@ -40,6 +40,7 @@ Some caveats:
 * [valid_serial_no](#valid_serial_no)
 * [writeback_failure_state](#writeback_failure_state)
 * [writeback_invalid_state](#writeback_invalid_state)
+* [writeback_states](#writeback_states)
 * [writeback_success_apply](#writeback_success_apply)
 * [writeback_success_state](#writeback_success_state)
 
@@ -57,8 +58,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for log category `system.config.parse` level `ERROR`
 1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
-1. Update config before log category `system.config.receive` level `DEBUG`:
-    * Add `system.last_start` = `device reported`
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for no interesting status
 1. Wait for last_config updated
@@ -171,6 +170,13 @@ Check that the min log-level config is honored by the device.
 1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
 1. Wait for point filter_differential_pressure_sensor to have value_state invalid
+
+## writeback_states
+
+1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
+1. Wait for point filter_alarm_pressure_status to have value_state default (null)
+1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
+1. Test failed: timeout waiting for point filter_differential_pressure_setpoint to have value_state default (null)
 
 ## writeback_success_apply
 
