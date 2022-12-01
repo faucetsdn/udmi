@@ -81,8 +81,8 @@ public abstract class SequenceBase {
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
-  public static final int CONFIG_UPDATE_DELAY_MS = 2000;
-  public static final int NORM_TIMEOUT_MS = 120 * 1000;
+  public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
+  public static final int NORM_TIMEOUT_MS = 180 * 1000;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -109,7 +109,6 @@ public abstract class SequenceBase {
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
-  private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -372,10 +371,7 @@ public abstract class SequenceBase {
     if (!SemanticValue.isSemanticString(deviceConfig.version)) {
       deviceConfig.version = SemanticValue.describe("cloud udmi version", deviceConfig.version);
     }
-    if (deviceConfig.system == null) {
-      deviceConfig.system = new SystemConfig();
-    }
-    if (!(deviceConfig.system.last_start instanceof SemanticDate)) {
+    if (deviceConfig.system != null && !(deviceConfig.system.last_start instanceof SemanticDate)) {
       deviceConfig.system.last_start = SemanticDate.describe("device reported",
           deviceConfig.system.last_start);
     }
@@ -400,7 +396,7 @@ public abstract class SequenceBase {
   public void setUp() {
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
-    safeSleep(CLEAN_START_DELAY_MS);
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
 
     deviceState = new State();
     configAcked = false;
@@ -416,7 +412,7 @@ public abstract class SequenceBase {
     clearLogs();
     queryState();
 
-    syncConfig();
+    updateConfig();
 
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
@@ -425,29 +421,24 @@ public abstract class SequenceBase {
   protected void resetConfig() {
     recordSequence("Force reset config");
     withRecordSequence(false, () -> {
-      recordSequence = false;
       debug("Starting reset_config");
       resetDeviceConfig(true);
       extraField = "reset_config";
       deviceConfig.system.testing.sequence_name = extraField;
-      waitForConfigSync();
+      updateConfig();
       clearLogs();
       extraField = null;
       resetDeviceConfig();
-      waitForConfigSync();
+      updateConfig();
       debug("Done with reset_config");
     });
   }
 
   private void waitForConfigSync() {
-    untilTrue("device config sync", this::configUpdateComplete);
-  }
-
-  private Date syncConfig() {
-    updateConfig();
-    waitForConfigSync();
-    debug("config synced to " + JsonUtil.getTimestamp(deviceConfig.timestamp));
-    return CleanDateFormat.cleanDate(deviceConfig.timestamp);
+    // TODO: Cleanup delay, which is a workaround for cloud-based race-conditions.
+    info("waiting for config sync...");
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
+    messageEvaluateLoop(this::configNotReady);
   }
 
   @Test
@@ -455,7 +446,7 @@ public abstract class SequenceBase {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    checkThat("received serial no matches", () -> serialNo.equals(lastSerialNo));
+    untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -621,10 +612,12 @@ public abstract class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    localConfigChange(reason);
+    if (localConfigChange(reason)) {
+      waitForConfigSync();
+    }
   }
 
-  private void updateConfig(SubFolder subBlock, Object data) {
+  private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
@@ -637,9 +630,8 @@ public abstract class SequenceBase {
         debug(String.format("update %s_%s", "config", subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        // Delay so the backend can process the update before others arrive.
-        Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
+      return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
@@ -659,7 +651,7 @@ public abstract class SequenceBase {
     }
   }
 
-  private void localConfigChange(String reason) {
+  private boolean localConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
@@ -667,11 +659,12 @@ public abstract class SequenceBase {
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
-        return;
+        return false;
       }
       recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
+      return true;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
@@ -780,11 +773,15 @@ public abstract class SequenceBase {
     info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
     updateConfig("before " + description);
     recordSequence("Wait for " + description);
+    messageEvaluateLoop(evaluator);
+    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
+    waitingCondition = "nothing";
+  }
+
+  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
       processMessage();
     }
-    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
-    waitingCondition = "nothing";
   }
 
   private void recordSequence(String step) {
@@ -954,17 +951,20 @@ public abstract class SequenceBase {
     }
   }
 
-  protected boolean configUpdateComplete() {
+  private boolean configNotReady() {
     Object receivedConfig = receivedUpdates.get("config");
     if (!(receivedConfig instanceof Config)) {
-      return false;
+      trace("no valid received config");
+      return true;
     }
-    List<String> differences = configDiffEngine.diff(deviceConfig,
-        sanitizeConfig((Config) receivedConfig));
-    if (traceLogLevel() && !differences.isEmpty()) {
+    List<String> differences = configDiffEngine.diff(
+        sanitizeConfig((Config) receivedConfig), deviceConfig);
+    boolean configNotReady = !differences.isEmpty();
+    trace("testing valid received config " + configNotReady);
+    if (traceLogLevel() && configNotReady) {
       trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
-    return differences.isEmpty();
+    return configNotReady;
   }
 
   protected void trace(String message) {
