@@ -859,7 +859,6 @@ public class Pubber {
 
   private void processConfigUpdate(Config config) {
     final int actualInterval;
-    final int useInterval;
     if (config != null) {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
@@ -872,7 +871,7 @@ public class Pubber {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
-    useInterval = configuration.options.fixedSampleRate == null
+    int useInterval = configuration.options.fixedSampleRate == null
         ? actualInterval : configuration.options.fixedSampleRate * 1000;
     maybeRestartExecutor(useInterval);
   }
@@ -1289,8 +1288,6 @@ public class Pubber {
   private int updatePointsetConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
     boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
-    boolean hasSampleLimit = pointsetConfig != null && pointsetConfig.sample_limit_sec != null;
-    //if(hasSampleRate && hasSampleLimit && pointsetConfig.sample_rate_sec < )
     int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;
     actualInterval = Integer.max(MIN_REPORT_MS, reportInterval * 1000);
     return actualInterval;
