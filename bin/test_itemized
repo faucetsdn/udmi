@@ -14,8 +14,8 @@ GOLDEN_FILE=etc/test_itemized.out
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
 touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
 
-#pubber/bin/build
-#validator/bin/build
+pubber/bin/build
+validator/bin/build
 
 bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
 
