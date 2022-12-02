@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.util;
 
+/**
+ * Constants representing different time periods.
+ */
 public class TimePeriodConstants {
   public static final int NINETY_SECONDS_MS = 2 * 60 * 1000;
   public static final int TWO_MINUTES_MS = 2 * 60 * 1000;
