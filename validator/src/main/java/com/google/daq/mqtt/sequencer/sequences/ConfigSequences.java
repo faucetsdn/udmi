@@ -204,7 +204,7 @@ public class ConfigSequences extends SequenceBase {
    * Tests both sample_rate_sec and sample_limit_sec by defining two non-intersecting narrow
    * ranges of both parameters, and ensuring telemetry is within this range.
    */
-  @Test(timeout = TEST_MS)
+  @Test(timeout = THREE_MINUTES_MS)
   @Description("test sample rate and sample limit sec")
   public void pointset_publish_interval() {
     // Test two narrow non-intersecting windows
