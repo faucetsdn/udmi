@@ -858,7 +858,8 @@ public class Pubber {
   }
 
   private void processConfigUpdate(Config config) {
-    int actualInterval;
+    final int actualInterval;
+    final int useInterval;
     if (config != null) {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
@@ -871,10 +872,9 @@ public class Pubber {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
-    if (configuration.options.fixedSampleRate != null) {
-      actualInterval = configuration.options.fixedSampleRate * 1000;
-    }
-    maybeRestartExecutor(actualInterval);
+    useInterval = configuration.options.fixedSampleRate == null ?
+        actualInterval : configuration.options.fixedSampleRate * 1000;
+    maybeRestartExecutor(useInterval);
   }
 
   private void extractEndpointBlobConfig() {

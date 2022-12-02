@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +33,7 @@ import udmi.schema.PointsetEvent;
  */
 public class ConfigSequences extends SequenceBase {
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", () -> {
@@ -40,7 +43,7 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the min log-level config is honored by the device.")
   public void system_min_loglevel() {
     clearLogs();
@@ -51,13 +54,13 @@ public class ConfigSequences extends SequenceBase {
     hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
@@ -106,7 +109,7 @@ public class ConfigSequences extends SequenceBase {
         && deviceState.pointset.status.level >= Level.WARNING.value();
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
@@ -144,7 +147,7 @@ public class ConfigSequences extends SequenceBase {
    * Fail if: final interval > new sample_rate_min + tolerance
    * Skip if: initial interval < 5s (too fast for automated test)
    */
-  @Test(timeout = 180000)
+  @Test(timeout = THREE_MINUTES_MS)
   @Description("device publishes pointset events at a rate of no more than config sample_rate_sec")
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;

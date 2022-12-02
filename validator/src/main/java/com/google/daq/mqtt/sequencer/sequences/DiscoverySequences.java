@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -35,7 +36,7 @@ public class DiscoverySequences extends SequenceBase {
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   public void self_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
@@ -64,7 +65,7 @@ public class DiscoverySequences extends SequenceBase {
         discoveredPoints);
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -105,7 +106,7 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = TWO_MINUTES_MS)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
