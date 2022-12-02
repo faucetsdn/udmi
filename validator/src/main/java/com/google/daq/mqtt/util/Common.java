@@ -2,7 +2,7 @@ package com.google.daq.mqtt.util;
 
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
+import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -113,7 +113,7 @@ public abstract class Common {
    */
   public static Class<?> classForName(String className) {
     try {
-      return ConfigSequences.class.getClassLoader().loadClass(className);
+      return WritebackSequences.class.getClassLoader().loadClass(className);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("Class not found " + className, e);
     }
