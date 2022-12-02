@@ -872,8 +872,8 @@ public class Pubber {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
-    useInterval = configuration.options.fixedSampleRate == null ?
-        actualInterval : configuration.options.fixedSampleRate * 1000;
+    useInterval = configuration.options.fixedSampleRate == null
+        ? actualInterval : configuration.options.fixedSampleRate * 1000;
     maybeRestartExecutor(useInterval);
   }
 
