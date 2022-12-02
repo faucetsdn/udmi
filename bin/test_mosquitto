@@ -72,8 +72,8 @@ $ROOT_DIR/pubber/bin/build
 
 timeout 10s $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json || true
 
-received_no=$(fgrep operational out/mosquitto.sub | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-received_topic=$(fgrep operational out/mosquitto.sub | awk '{ print $1 }')
+received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
+received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
 
 expected_topic=/$serial_no/$device_id/state
 if [[ $received_topic != $expected_topic ]]; then
