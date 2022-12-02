@@ -37,6 +37,7 @@ public class ReportingDevice {
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
+  private final List<Entry> messageEntries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
   private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
   private ReportingPointset reportingPointset;
@@ -193,7 +194,7 @@ public class ReportingDevice {
     }
 
     missingPoints = metadataDiff.missingPoints;
-    if (!missingPoints.isEmpty()) {
+    if (missingPoints != null && !missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
     }
@@ -211,7 +212,11 @@ public class ReportingDevice {
   }
 
   private void addEntry(Entry entry) {
+    // entries collects everything, and is garbage-collected by time
     entries.add(entry);
+
+    // newEntries collects everything on a per-message basis
+    messageEntries.add(entry);
   }
 
   /**
@@ -291,6 +296,14 @@ public class ReportingDevice {
 
   public Date getLastSeen() {
     return lastSeen;
+  }
+
+  public void clearMessageEntries() {
+    messageEntries.clear();
+  }
+
+  public List<Entry> getMessageEntries() {
+    return messageEntries;
   }
 
   /**

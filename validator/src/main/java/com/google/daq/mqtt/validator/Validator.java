@@ -449,8 +449,11 @@ public class Validator {
       Map<String, Object> message,
       Map<String, String> attributes) {
 
+
     String deviceId = attributes.get("deviceId");
     ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    device.clearMessageEntries();
+
     try {
       String schemaName = messageSchema(attributes);
       if (!device.markMessageType(schemaName, getNow())) {
@@ -538,8 +541,9 @@ public class Validator {
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
+      event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
+
       event.errors = reportingDevice.getErrors(validationStart);
-      event.status = ReportingDevice.getSummaryEntry(event.errors);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
