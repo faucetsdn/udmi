@@ -602,14 +602,13 @@ public abstract class SequenceBase {
   public void tearDown() {
     recordMessages = false;
     recordSequence = false;
-    if (debugLogLevel()) {
-      warning("Not resetting config to enable post-execution debugging");
-    } else {
-      // Save the current waiting condition which will include the relevant info for reporting.
-      String savedCondition = waitingCondition;
-      resetConfig();
-      waitingCondition = savedCondition;
-    }
+    //if (debugLogLevel()) {
+    //  warning("Not resetting config to enable post-execution debugging");
+    //} else {
+    String savedCondition = waitingCondition;
+    resetConfig();
+    waitingCondition = savedCondition;
+    //}
     deviceConfig = null;
     deviceState = null;
     configAcked = false;
