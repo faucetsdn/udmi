@@ -21,7 +21,6 @@ import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
-import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
@@ -110,6 +109,7 @@ public abstract class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final long CLEAN_START_DELAY_MS = 20 * 1000;
+  private static final String WAITING_FOR_GODOT = "nothing";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String deviceId;
@@ -211,7 +211,8 @@ public abstract class SequenceBase {
       final String type;
       final Level level;
       if (e instanceof TestTimedOutException) {
-        message = "timeout " + waitingCondition;
+        message = waitingCondition.equals(WAITING_FOR_GODOT) ? "test timeout exceeded"
+            : "timeout " + waitingCondition;
         type = RESULT_FAIL;
         level = Level.ERROR;
       } else if (e instanceof SkipTest) {
@@ -459,9 +460,10 @@ public abstract class SequenceBase {
   }
 
   private void recordResult(String result, String methodName, String message) {
-    notice(String.format(RESULT_FORMAT, result, methodName, message));
+    String resultString = String.format(RESULT_FORMAT, result, methodName, message);
+    notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
-      log.printf(RESULT_FORMAT, result, methodName, message);
+      log.print(resultString);
     } catch (Exception e) {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
@@ -603,7 +605,10 @@ public abstract class SequenceBase {
     if (debugLogLevel()) {
       warning("Not resetting config to enable post-execution debugging");
     } else {
+      // Save the current waiting condition which will include the relevant info for reporting.
+      String savedCondition = waitingCondition;
       resetConfig();
+      waitingCondition = savedCondition;
     }
     deviceConfig = null;
     deviceState = null;
@@ -784,7 +789,7 @@ public abstract class SequenceBase {
       processMessage();
     }
     info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
-    waitingCondition = "nothing";
+    waitingCondition = WAITING_FOR_GODOT;
   }
 
   private void recordSequence(String step) {
