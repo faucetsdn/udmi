@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -114,8 +117,8 @@ public class MessageReadingClient implements MessagePublisher {
 
       Matcher matcher = filenamePattern.matcher(msgName);
       if (matcher.matches()) {
-        attributes.put("subType", matcher.group(1));
-        attributes.put("subFolder", matcher.group(2));
+        attributes.put(SUBTYPE_PROPERTY_KEY, matcher.group(1));
+        attributes.put(SUBFOLDER_PROPERTY_KEY, matcher.group(2));
       } else {
         throw new RuntimeException("Malformed filename " + msgName);
       }
