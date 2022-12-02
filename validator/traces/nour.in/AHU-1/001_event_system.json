@@ -1,0 +1,11 @@
+{
+  "last_config" : "1970-01-01T00:00:00Z",
+  "logentries" : [ {
+    "message" : "Connection complete.",
+    "category" : "device.log",
+    "timestamp" : "2022-12-02T17:27:40Z",
+    "level" : 200
+  } ],
+  "timestamp" : "2022-12-02T17:27:40.003Z",
+  "version" : "1.4.0"
+}

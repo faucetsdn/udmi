@@ -1,0 +1,20 @@
+{
+  "errors" : [ {
+    "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "state_update: While converting to json node: 2 schema violations found @Validator.validateMessage(Validator.java:437); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"__POINT\"]; object has missing required properties ([\"hardware\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "2022-12-02T17:27:42Z",
+    "level" : 500
+  } ],
+  "status" : {
+    "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "state_update: While converting to json node: 2 schema violations found @Validator.validateMessage(Validator.java:437); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"__POINT\"]; object has missing required properties ([\"hardware\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "2022-12-02T17:27:42Z",
+    "level" : 500
+  },
+  "sub_folder" : "update",
+  "sub_type" : "state",
+  "timestamp" : "2022-12-02T17:27:42Z",
+  "version" : "1.4.0"
+}

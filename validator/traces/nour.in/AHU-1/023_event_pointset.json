@@ -1,0 +1,19 @@
+{
+  "extraField" : "extraField",
+  "points" : {
+    "filter_alarm_pressure_status" : {
+      "present_value" : 23
+    },
+    "filter_differential_pressure_setpoint" : {
+      "present_value" : 98
+    },
+    "__POINT" : {
+      "present_value" : 84
+    },
+    "filter_differential_pressure_sensor" : {
+      "present_value" : 11
+    }
+  },
+  "timestamp" : "2022-12-02T17:27:51.001Z",
+  "version" : "1.4.0"
+}

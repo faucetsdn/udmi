@@ -1,0 +1,11 @@
+{
+  "last_config" : "2020-05-01T13:39:07Z",
+  "logentries" : [ {
+    "message" : "State update defer 1732ms",
+    "category" : "device.log",
+    "timestamp" : "2022-12-02T17:27:41Z",
+    "level" : 400
+  } ],
+  "timestamp" : "2022-12-02T17:27:41.007Z",
+  "version" : "1.4.0"
+}
