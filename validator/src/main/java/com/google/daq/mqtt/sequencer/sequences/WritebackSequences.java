@@ -89,27 +89,6 @@ public class WritebackSequences extends PointSequencer {
 
   }
 
-  @Test(timeout = 90000)
-  public void writeback_success_state() {
-    TargetTestingModel appliedTarget = getTarget(APPLIED_STATE);
-    String appliedPoint = appliedTarget.target_point;
-    Object appliedValue = appliedTarget.target_value;
-
-    untilTrue(expectedValueState(appliedPoint, DEFAULT_STATE),
-        () -> valueStateIs(appliedPoint, DEFAULT_STATE)
-    );
-
-    deviceConfig.pointset.points.get(appliedPoint).set_value = appliedValue;
-
-    untilTrue(expectedValueState(appliedPoint, APPLIED_STATE),
-        () -> valueStateIs(appliedPoint, APPLIED_STATE)
-    );
-    
-    untilTrue(expectedPresentValue(appliedPoint, appliedValue),
-        () -> presentValueIs(appliedPoint, appliedValue)
-    );
-  }
-
   @Test
   public void writeback_invalid_state() {
     TargetTestingModel invalidTarget = getTarget(INVALID_STATE);
