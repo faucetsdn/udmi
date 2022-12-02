@@ -2,9 +2,9 @@
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.0",
   "summary" : {
-    "correct_devices" : [ "AHU-1" ],
+    "correct_devices" : [ "AHU-1", "GAT-123" ],
     "extra_devices" : [ ],
-    "missing_devices" : [ "GAT-123" ],
+    "missing_devices" : [ ],
     "error_devices" : [ "AHU-22", "SNS-4" ]
   },
   "devices" : {
@@ -20,6 +20,9 @@
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
       }
+    },
+    "GAT-123" : {
+      "last_seen" : "1999-10-20T01:02:03Z"
     },
     "SNS-4" : {
       "last_seen" : "1999-10-20T01:02:03Z",
