@@ -847,12 +847,15 @@ public abstract class SequenceBase {
   }
 
   private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
-    if (!deviceId.equals(attributes.get("deviceId"))) {
+    String deviceId = attributes.get("deviceId");
+    String subFolderRaw = attributes.get("subFolder");
+    String subTypeRaw = attributes.get("subType");
+    String commandMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
+    trace("received " + commandMark + ": " + JsonUtil.stringify(message));
+    if (!SequenceBase.deviceId.equals(deviceId)) {
       return;
     }
     recordRawMessage(message, attributes);
-    String subFolderRaw = attributes.get("subFolder");
-    String subTypeRaw = attributes.get("subType");
 
     if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
       handleReflectorMessage(subTypeRaw, message);
