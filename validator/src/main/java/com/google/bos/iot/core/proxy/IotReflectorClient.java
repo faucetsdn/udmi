@@ -53,7 +53,7 @@ public class IotReflectorClient implements MessagePublisher {
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig) {
     final byte[] keyBytes;
-    checkNotNull(iotConfig.key_file,"missing key file in config");
+    checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
       keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
