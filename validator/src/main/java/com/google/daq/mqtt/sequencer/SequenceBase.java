@@ -853,7 +853,7 @@ public abstract class SequenceBase {
   }
 
   private MessageBundle nextMessageBundle() {
-    synchronized (client) {
+    synchronized (SequenceBase.class) {
       if (stashedBundle != null) {
         debug("using stashed message bundle");
         MessageBundle bundle = stashedBundle;

@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
-import com.google.daq.mqtt.sequencer.sequences.WritebackSequences;
+import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   static ExecutionConfiguration executionConfiguration;
-  private final Set<String> sequenceClasses = Common.allClassesInPackage(WritebackSequences.class);
+  private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
   private int successes = -1;
   private List<Failure> failures;
 

@@ -1,10 +1,18 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.google.daq.mqtt.sequencer.PointSequencer;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.junit.Test;
+import udmi.schema.DiscoveryEvent;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetEvent;
 import udmi.schema.TargetTestingModel;
@@ -89,6 +97,27 @@ public class WritebackSequences extends PointSequencer {
 
   }
 
+  @Test(timeout = 90000)
+  public void writeback_success_state() {
+    TargetTestingModel appliedTarget = getTarget(APPLIED_STATE);
+    String appliedPoint = appliedTarget.target_point;
+    Object appliedValue = appliedTarget.target_value;
+
+    untilTrue(expectedValueState(appliedPoint, DEFAULT_STATE),
+        () -> valueStateIs(appliedPoint, DEFAULT_STATE)
+    );
+
+    deviceConfig.pointset.points.get(appliedPoint).set_value = appliedValue;
+
+    untilTrue(expectedValueState(appliedPoint, APPLIED_STATE),
+        () -> valueStateIs(appliedPoint, APPLIED_STATE)
+    );
+    
+    untilTrue(expectedPresentValue(appliedPoint, appliedValue),
+        () -> presentValueIs(appliedPoint, appliedValue)
+    );
+  }
+
   @Test
   public void writeback_invalid_state() {
     TargetTestingModel invalidTarget = getTarget(INVALID_STATE);
@@ -96,7 +125,7 @@ public class WritebackSequences extends PointSequencer {
     Object invalidValue = invalidTarget.target_value;
 
     untilTrue(expectedValueState(invalidPoint, DEFAULT_STATE),
-        () -> false
+        () -> valueStateIs(invalidPoint, DEFAULT_STATE)
     );
 
     deviceConfig.pointset.points.get(invalidPoint).set_value = invalidValue;
