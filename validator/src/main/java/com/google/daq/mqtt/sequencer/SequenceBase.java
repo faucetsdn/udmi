@@ -19,6 +19,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -39,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -70,7 +70,7 @@ import udmi.schema.TestingSystemConfig;
 /**
  * Validate a device using a sequence of message exchanges.
  */
-public abstract class SequenceBase {
+public class SequenceBase {
 
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
@@ -123,7 +123,7 @@ public abstract class SequenceBase {
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
-  private static IotReflectorClient client;
+  private static MessagePublisher client;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
@@ -146,6 +146,8 @@ public abstract class SequenceBase {
   protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
+  @Rule
+  protected SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   private Date lastLog;
   private String waitingCondition;
   private boolean enforceSerial;
@@ -159,98 +161,6 @@ public abstract class SequenceBase {
   private String lastSerialNo;
   private boolean recordMessages;
   private boolean recordSequence;
-  @Rule
-  public TestWatcher testWatcher = new TestWatcher() {
-    @Override
-    protected void starting(org.junit.runner.Description description) {
-      try {
-        testName = description.getMethodName();
-        testDescription = getTestDescription(description);
-        if (deviceConfig != null) {
-          deviceConfig.system.testing.sequence_name = testName;
-        }
-
-        testStartTimeMs = System.currentTimeMillis();
-
-        testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
-        FileUtils.deleteDirectory(testDir);
-        testDir.mkdirs();
-        systemLog = new PrintWriter(new FileOutputStream(new File(testDir, SYSTEM_LOG)));
-        sequencerLog = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCER_LOG)));
-        sequenceMd = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCE_MD)));
-        writeSequenceMdHeader();
-
-        notice("starting test " + testName);
-        debug("initial receivedConfig: " + debugMarker());
-        activeInstance = SequenceBase.this;
-      } catch (Exception e) {
-        e.printStackTrace();
-        throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
-      }
-    }
-
-    @Override
-    protected void finished(org.junit.runner.Description description) {
-      if (!testName.equals(description.getMethodName())) {
-        throw new IllegalStateException("Unexpected test method name");
-      }
-      long stopTimeMs = System.currentTimeMillis();
-      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
-      testName = null;
-      if (deviceConfig != null) {
-        deviceConfig.system.testing = null;
-      }
-      systemLog.close();
-      sequencerLog.close();
-      sequenceMd.close();
-      debug("finished receivedConfig: " + debugMarker());
-      activeInstance = null;
-    }
-
-    @Override
-    protected void succeeded(org.junit.runner.Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
-    }
-
-    @Override
-    protected void failed(Throwable e, org.junit.runner.Description description) {
-      final String message;
-      final String type;
-      final Level level;
-      if (e instanceof TestTimedOutException) {
-        message = waitingCondition.equals(WAITING_FOR_GODOT) ? "test timeout exceeded"
-            : "timeout " + waitingCondition;
-        type = RESULT_FAIL;
-        level = Level.ERROR;
-      } else if (e instanceof SkipTest) {
-        message = e.getMessage();
-        type = RESULT_SKIP;
-        level = Level.WARNING;
-      } else {
-        while (e.getCause() != null) {
-          e = e.getCause();
-        }
-        message = e.getMessage();
-        type = RESULT_FAIL;
-        level = Level.ERROR;
-      }
-      recordCompletion(type, level, description, message);
-      withRecordSequence(true, () -> recordSequence("Test failed: " + message));
-    }
-
-    private void recordCompletion(String result, Level level,
-        org.junit.runner.Description description, String message) {
-      String category = description.getMethodName();
-      recordResult(result, category, message);
-      Entry logEntry = new Entry();
-      logEntry.category = SEQUENCER_CATEGORY;
-      logEntry.message = message;
-      logEntry.level = level.value();
-      logEntry.timestamp = CleanDateFormat.cleanDate();
-      writeSequencerLog(logEntry);
-      writeSystemLog(logEntry);
-    }
-  };
 
   private static void ensureValidatorConfig() {
     if (SequenceRunner.executionConfiguration != null) {
@@ -286,16 +196,8 @@ public abstract class SequenceBase {
       throw new RuntimeException("While processing validator config", e);
     }
 
-    File cloudIotConfigFile = new File(new File(siteModel), CLOUD_IOT_CONFIG_FILE);
-    final ExecutionConfiguration executionConfiguration;
-    try {
-      executionConfiguration = ConfigUtil.readExecutionConfiguration(cloudIotConfigFile);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading " + cloudIotConfigFile.getAbsolutePath(), e);
-    }
-
-    cloudRegion = executionConfiguration.cloud_region;
-    registryId = executionConfiguration.registry_id;
+    cloudRegion = validatorConfig.cloud_region;
+    registryId = validatorConfig.registry_id;
 
     deviceMetadata = readDeviceMetadata();
 
@@ -308,11 +210,12 @@ public abstract class SequenceBase {
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = new IotReflectorClient(projectId, executionConfiguration, key_file);
-    setReflectorState();
+    client = getReflectorClient(validatorConfig);
   }
 
-  private static void setReflectorState() {
+  private static MessagePublisher getReflectorClient(
+      ExecutionConfiguration executionConfiguration) {
+    IotReflectorClient client = new IotReflectorClient(executionConfiguration);
     ReflectorState reflectorState = new ReflectorState();
     stateTimestamp = new Date();
     reflectorState.timestamp = stateTimestamp;
@@ -326,6 +229,7 @@ public abstract class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
+    return client;
   }
 
   private static Metadata readDeviceMetadata() {
@@ -852,7 +756,7 @@ public abstract class SequenceBase {
     }
   }
 
-  private MessageBundle nextMessageBundle() {
+  MessageBundle nextMessageBundle() {
     synchronized (SequenceBase.class) {
       if (stashedBundle != null) {
         debug("using stashed message bundle");
@@ -866,6 +770,7 @@ public abstract class SequenceBase {
       MessageBundle bundle = client.takeNextMessage();
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
+        assert stashedBundle == null;
         stashedBundle = bundle;
         throw new RuntimeException("Message loop no longer for active thread");
       }
@@ -1097,5 +1002,97 @@ public abstract class SequenceBase {
      * @return test description
      */
     String value();
+  }
+
+  class SequenceTestWatcher extends TestWatcher {
+
+    @Override
+    protected void starting(org.junit.runner.Description description) {
+      try {
+        testName = description.getMethodName();
+        testDescription = getTestDescription(description);
+        if (deviceConfig != null) {
+          deviceConfig.system.testing.sequence_name = testName;
+        }
+
+        testStartTimeMs = System.currentTimeMillis();
+
+        testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
+        FileUtils.deleteDirectory(testDir);
+        testDir.mkdirs();
+        systemLog = new PrintWriter(new FileOutputStream(new File(testDir, SYSTEM_LOG)));
+        sequencerLog = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCER_LOG)));
+        sequenceMd = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCE_MD)));
+        writeSequenceMdHeader();
+
+        notice("starting test " + testName);
+        debug("initial receivedConfig: " + debugMarker());
+        activeInstance = SequenceBase.this;
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
+      }
+    }
+
+    @Override
+    protected void finished(org.junit.runner.Description description) {
+      if (!testName.equals(description.getMethodName())) {
+        throw new IllegalStateException("Unexpected test method name");
+      }
+      long stopTimeMs = System.currentTimeMillis();
+      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
+      testName = null;
+      if (deviceConfig != null) {
+        deviceConfig.system.testing = null;
+      }
+      systemLog.close();
+      sequencerLog.close();
+      sequenceMd.close();
+      debug("finished receivedConfig: " + debugMarker());
+      activeInstance = null;
+    }
+
+    @Override
+    protected void succeeded(org.junit.runner.Description description) {
+      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
+    }
+
+    @Override
+    protected void failed(Throwable e, org.junit.runner.Description description) {
+      final String message;
+      final String type;
+      final Level level;
+      if (e instanceof TestTimedOutException) {
+        message = "timeout " + waitingCondition;
+        type = RESULT_FAIL;
+        level = Level.ERROR;
+      } else if (e instanceof SkipTest) {
+        message = e.getMessage();
+        type = RESULT_SKIP;
+        level = Level.WARNING;
+      } else {
+        while (e.getCause() != null) {
+          e = e.getCause();
+        }
+        message = e.getMessage();
+        type = RESULT_FAIL;
+        level = Level.ERROR;
+      }
+      recordCompletion(type, level, description, message);
+      withRecordSequence(true, () -> recordSequence("Test failed: " + message));
+    }
+
+    private void recordCompletion(String result, Level level,
+        org.junit.runner.Description description, String message) {
+      String category = description.getMethodName();
+      recordResult(result, category, message);
+      Entry logEntry = new Entry();
+      logEntry.category = SEQUENCER_CATEGORY;
+      logEntry.message = message;
+      logEntry.level = level.value();
+      logEntry.timestamp = CleanDateFormat.cleanDate();
+      writeSequencerLog(logEntry);
+      writeSystemLog(logEntry);
+    }
   }
 }

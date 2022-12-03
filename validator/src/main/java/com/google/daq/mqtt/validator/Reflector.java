@@ -91,7 +91,8 @@ public class Reflector {
   private void initialize() {
     String keyFile = new File(siteDir, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(projectId, executionConfiguration, keyFile);
+    executionConfiguration.key_file = keyFile;
+    client = new IotReflectorClient(executionConfiguration);
   }
 
   private List<String> parseArgs(List<String> argsList) {

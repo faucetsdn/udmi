@@ -360,7 +360,8 @@ public class Validator {
   private void validateReflector() {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(config.project_id, config, keyFile);
+    config.key_file = keyFile;
+    client = new IotReflectorClient(config);
   }
 
   void messageLoop() {

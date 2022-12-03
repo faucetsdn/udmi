@@ -1,5 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -47,21 +49,21 @@ public class IotReflectorClient implements MessagePublisher {
   /**
    * Create a new reflector instance.
    *
-   * @param projectId target project
    * @param iotConfig configuration file
-   * @param keyFile   auth key file
    */
-  public IotReflectorClient(String projectId, ExecutionConfiguration iotConfig, String keyFile) {
+  public IotReflectorClient(ExecutionConfiguration iotConfig) {
     final byte[] keyBytes;
+    checkNotNull(iotConfig.key_file,"missing key file in config");
     try {
-      keyBytes = getFileBytes(keyFile);
+      keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
-      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
+      throw new RuntimeException(
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(),
           e);
     }
 
     siteName = iotConfig.registry_id;
-    this.projectId = projectId;
+    projectId = iotConfig.project_id;
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =

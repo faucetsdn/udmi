@@ -1,10 +1,12 @@
 package com.google.daq.mqtt;
 
+import static com.google.daq.mqtt.sequencer.SequenceBase.SERIAL_NO_MISSING;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import java.util.Map;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 
 /**
@@ -28,4 +30,15 @@ public class TestCommon {
   public static final String SITE_DIR = TOOL_ROOT + "/sites/udmi_site_model";
   public static final String LOG_LEVEL = Level.DEBUG.name();
   public static final String KEY_FILE = SITE_DIR + "/validator/rsa_private.pkcs8";
+
+  public static ExecutionConfiguration testConfiguration() {
+    ExecutionConfiguration validatorConfig = new ExecutionConfiguration();
+    validatorConfig.project_id = PROJECT_ID;
+    validatorConfig.site_model = SITE_DIR;
+    validatorConfig.log_level = LOG_LEVEL;
+    validatorConfig.serial_no = SERIAL_NO_MISSING;
+    validatorConfig.key_file = KEY_FILE;
+    validatorConfig.udmi_version = UDMI_VERSION;
+    return validatorConfig;
+  }
 }
