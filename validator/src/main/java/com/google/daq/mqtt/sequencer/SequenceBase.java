@@ -435,7 +435,7 @@ public abstract class SequenceBase {
     recordSequence = true;
   }
 
-  private void resetConfig() {
+  protected void resetConfig() {
     recordSequence("Force reset config");
     debug("reset receivedConfig: " + debugMarker());
     withRecordSequence(false, () -> {
