@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -123,6 +124,8 @@ public abstract class SequenceBase {
   private static File deviceOutputDir;
   private static File resultSummary;
   private static IotReflectorClient client;
+  private static SequenceBase activeInstance;
+  private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
 
   // Because of the way tests are run and configured, these parameters need to be
@@ -178,6 +181,8 @@ public abstract class SequenceBase {
         writeSequenceMdHeader();
 
         notice("starting test " + testName);
+        debug("initial receivedConfig: " + debugMarker());
+        activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
         throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
@@ -198,6 +203,8 @@ public abstract class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
+      debug("finished receivedConfig: " + debugMarker());
+      activeInstance = null;
     }
 
     @Override
@@ -331,6 +338,11 @@ public abstract class SequenceBase {
     }
   }
 
+  private String debugMarker() {
+    return "#" + System.identityHashCode(receivedUpdates) + "/" + System.identityHashCode(this)
+        + "-" + Thread.currentThread().getId();
+  }
+
   private void withRecordSequence(boolean value, Runnable operation) {
     boolean saved = recordSequence;
     recordSequence = value;
@@ -423,8 +435,9 @@ public abstract class SequenceBase {
     recordSequence = true;
   }
 
-  protected void resetConfig() {
+  private void resetConfig() {
     recordSequence("Force reset config");
+    debug("reset receivedConfig: " + debugMarker());
     withRecordSequence(false, () -> {
       recordSequence = false;
       debug("Starting reset_config");
@@ -441,7 +454,16 @@ public abstract class SequenceBase {
   }
 
   private void waitForConfigSync() {
-    untilTrue("device config sync", this::configUpdateComplete);
+    try {
+      debug("pre receivedConfig: " + debugMarker());
+      untilTrue("device config sync", this::configUpdateComplete);
+    } finally {
+      if (!configUpdateComplete()) {
+        debug("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
+        debug("final receivedConfig: " + debugMarker());
+        debug("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get("config")));
+      }
+    }
   }
 
   private Date syncConfig() {
@@ -821,15 +843,33 @@ public abstract class SequenceBase {
   }
 
   private void processMessage() {
-    if (!client.isActive()) {
-      throw new RuntimeException("Trying to receive message from inactive client");
-    }
-    MessageBundle bundle = client.takeNextMessage();
+    MessageBundle bundle = nextMessageBundle();
     String category = bundle.attributes.get("category");
     if ("commands".equals(category)) {
       processCommand(bundle.message, bundle.attributes);
     } else if ("config".equals(category)) {
       processConfig(bundle.message, bundle.attributes);
+    }
+  }
+
+  private MessageBundle nextMessageBundle() {
+    synchronized (client) {
+      if (stashedBundle != null) {
+        debug("using stashed message bundle");
+        MessageBundle bundle = stashedBundle;
+        stashedBundle = null;
+        return bundle;
+      }
+      if (!client.isActive()) {
+        throw new RuntimeException("Trying to receive message from inactive client");
+      }
+      MessageBundle bundle = client.takeNextMessage();
+      if (activeInstance != this) {
+        debug("stashing interrupted message bundle");
+        stashedBundle = bundle;
+        throw new RuntimeException("Message loop no longer for active thread");
+      }
+      return bundle;
     }
   }
 
@@ -850,8 +890,10 @@ public abstract class SequenceBase {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
-    String commandMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-    trace("received " + commandMark + ": " + JsonUtil.stringify(message));
+    if ("config".equals(subTypeRaw)) {
+      String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
+      trace("received command " + attributeMark + " nonce " + message.get(CONFIG_NONCE_KEY));
+    }
     if (!SequenceBase.deviceId.equals(deviceId)) {
       return;
     }
@@ -891,6 +933,9 @@ public abstract class SequenceBase {
         return;
       }
       Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
+      if (subFolderRaw.equals("config")) {
+        debug("received receivedConfig: " + debugMarker());
+      }
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
           .incrementAndGet();

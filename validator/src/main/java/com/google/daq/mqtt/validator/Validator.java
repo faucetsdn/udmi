@@ -117,6 +117,8 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   public static final String EXCEPTION_KEY = "exception";
+  public static final String TIMESTAMP_KEY = "timestamp";
+  public static final String MESSAGE_KEY = "message";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -417,7 +419,7 @@ public class Validator {
     }
 
     if (simulatedMessages) {
-      mockNow = Instant.parse((String) message.get("timestamp"));
+      mockNow = Instant.parse((String) message.get(TIMESTAMP_KEY));
       ReportingDevice.setMockNow(mockNow);
     }
     Date validationStart = simulatedMessages ? Date.from(mockNow) : new Date();
@@ -508,7 +510,7 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
+            Date timestamp = JsonUtil.getDate((String) message.get(TIMESTAMP_KEY));
             device.validateMessageType(messageObject, timestamp, attributes);
           }
         } catch (Exception e) {
@@ -581,7 +583,7 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
-      String timestamp = (String) message.get("timestamp");
+      String timestamp = (String) message.get(TIMESTAMP_KEY);
       System.out.printf("Capture %s for %s%n", timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
@@ -889,8 +891,8 @@ public class Validator {
      */
     public ErrorContainer(Exception exception, String message, String timestamp) {
       put(EXCEPTION_KEY, exception);
-      put("message", message);
-      put("timestamp", timestamp);
+      put(MESSAGE_KEY, message);
+      put(TIMESTAMP_KEY, timestamp);
     }
   }
 
