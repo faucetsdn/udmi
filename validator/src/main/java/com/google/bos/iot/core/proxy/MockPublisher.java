@@ -14,13 +14,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MockPublisher implements MessagePublisher {
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
-  private boolean active = true;
+  private boolean active;
 
-  /**
-   * Create a mock publisher that can optionally fail fast on any operation.
-   *
-   * @param failFast true to fail immediately
-   */
   public MockPublisher(boolean failFast) {
     active = !failFast;
   }
