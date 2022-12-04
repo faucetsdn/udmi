@@ -130,13 +130,6 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
 
-  // Because of the way tests are run and configured, these parameters need to be
-  // a singleton to avoid runtime conflicts.
-  static {
-    ensureValidatorConfig();
-    setupSequencer();
-  }
-
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
@@ -216,12 +209,12 @@ public class SequenceBase {
 
   private static MessagePublisher getPublisherClient() {
     boolean isMockProject = validatorConfig.project_id.equals(SiteModel.MOCK_PROJECT);
-    return isMockProject ? getMockClient() : getReflectorClient();
+    boolean failFast = SiteModel.MOCK_PROJECT.equals(validatorConfig.alt_project);
+    return isMockProject ? getMockClient(failFast) : getReflectorClient();
   }
 
-  static MockPublisher getMockClient() {
-    return Optional.ofNullable((MockPublisher) client)
-        .orElseGet(() -> new MockPublisher(validatorConfig));
+  static MockPublisher getMockClient(boolean failFast) {
+    return Optional.ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
   private static MessagePublisher getReflectorClient() {
@@ -242,11 +235,9 @@ public class SequenceBase {
     return client;
   }
 
-  static void resetForTest() {
+  static void resetState() {
     validatorConfig = null;
     client = null;
-    ensureValidatorConfig();
-    setupSequencer();
   }
 
   private static Metadata readDeviceMetadata() {
@@ -265,7 +256,9 @@ public class SequenceBase {
   }
 
   protected static void setDeviceId(String deviceId) {
-    validatorConfig.device_id = deviceId;
+    if (validatorConfig != null) {
+      validatorConfig.device_id = deviceId;
+    }
   }
 
   private String debugMarker() {
@@ -1045,6 +1038,8 @@ public class SequenceBase {
     @Override
     protected void starting(org.junit.runner.Description description) {
       try {
+        ensureValidatorConfig();
+        setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
         assert client.isActive();
 

@@ -89,6 +89,8 @@ public class SequenceRunner {
     failures.clear();
     allTests.clear();
 
+    SequenceBase.resetState();
+
     if (deviceId != null) {
       SequenceRunner.processConfig(config);
     } else {

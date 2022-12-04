@@ -23,13 +23,6 @@ public class SequenceRunnerTest {
   private static final int MODEL_DEVICE_COUNT = 4;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;
 
-  @Before
-  public void resetForTest() {
-    SequenceRunner.executionConfiguration = TestCommon.testConfiguration();
-    SequenceRunner.executionConfiguration.device_id = TEST_DEVICE;
-    SequenceBase.resetForTest();
-  }
-
   @Test
   public void processSite() {
     ExecutionConfiguration config = TestCommon.testConfiguration();

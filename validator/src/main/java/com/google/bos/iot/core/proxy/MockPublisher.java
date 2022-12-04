@@ -7,7 +7,6 @@ import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import udmi.schema.ExecutionConfiguration;
 
 /**
  * Message publisher used for testing.
@@ -17,8 +16,8 @@ public class MockPublisher implements MessagePublisher {
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
   private boolean active = true;
 
-  public MockPublisher(ExecutionConfiguration configuration) {
-    active = !SiteModel.MOCK_PROJECT.equals(configuration.alt_project);
+  public MockPublisher(boolean failFast) {
+    active = !failFast;
   }
 
   @Override

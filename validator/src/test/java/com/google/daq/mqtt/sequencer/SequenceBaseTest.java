@@ -18,21 +18,19 @@ public class SequenceBaseTest {
 
   private static final String TEST_TOPIC = "mock/topic";
 
-  static {
+  @Before
+  public void resetForTest() {
+    SequenceBase.resetState();
     SequenceRunner.executionConfiguration = TestCommon.testConfiguration();
     SequenceRunner.executionConfiguration.device_id = TestCommon.DEVICE_ID;
   }
 
-  @Before
-  public void resetForTest() {
-    SequenceBase.resetForTest();
-  }
-
   @Test
   public void messageInterrupted() {
-    final MockPublisher mockClient = SequenceBase.getMockClient();
     final SequenceBase base1 = new SequenceBase();
-    final SequenceBase base2 = new SequenceBase();
+    base1.testWatcher.starting(makeTestDescription("test_one"));
+
+    final MockPublisher mockClient = SequenceBase.getMockClient(false);
 
     State stateMessage = new State();
     stateMessage.version = "hello";
@@ -40,10 +38,10 @@ public class SequenceBaseTest {
     stateMessage.version = "world";
     mockClient.publish(TestCommon.DEVICE_ID, TEST_TOPIC, JsonUtil.stringify(stateMessage));
 
-    base1.testWatcher.starting(makeTestDescription("test_one"));
     MessageBundle bundle1 = base1.nextMessageBundle();
     assertEquals("first message contents", "hello", bundle1.message.get("version"));
 
+    final SequenceBase base2 = new SequenceBase();
     base2.testWatcher.starting(makeTestDescription("test_two"));
     try {
       base1.nextMessageBundle();
