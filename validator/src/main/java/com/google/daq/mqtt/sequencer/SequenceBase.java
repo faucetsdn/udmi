@@ -126,8 +126,6 @@ public class SequenceBase {
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
-  private static SequenceBase activeInstance;
-  private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
 
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
@@ -775,34 +773,11 @@ public class SequenceBase {
     }
   }
 
-  /**
-   * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
-   * might end up trying to take a message while another thread is still looping. This prevents that
-   * by checking that the calling test is still active, and then if not, saves the message for the
-   * next round and interrupts the current thread.
-   *
-   * @return message bundle
-   */
-  MessageBundle nextMessageBundle() {
-    synchronized (SequenceBase.class) {
-      if (stashedBundle != null) {
-        debug("using stashed message bundle");
-        MessageBundle bundle = stashedBundle;
-        stashedBundle = null;
-        return bundle;
-      }
-      if (!client.isActive()) {
-        throw new RuntimeException("Trying to receive message from inactive client");
-      }
-      MessageBundle bundle = client.takeNextMessage();
-      if (activeInstance != this) {
-        debug("stashing interrupted message bundle");
-        assert stashedBundle == null;
-        stashedBundle = bundle;
-        throw new RuntimeException("Message loop no longer for active thread");
-      }
-      return bundle;
+  private MessageBundle nextMessageBundle() {
+    if (!client.isActive()) {
+      throw new RuntimeException("Trying to receive message from inactive client");
     }
+    return client.takeNextMessage();
   }
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
@@ -1055,7 +1030,6 @@ public class SequenceBase {
         writeSequenceMdHeader();
 
         notice("starting test " + testName);
-        activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
         throw new RuntimeException("While preparing " + deviceOutputDir.getAbsolutePath(), e);
@@ -1076,8 +1050,6 @@ public class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
-
-      activeInstance = null;
     }
 
     @Override
