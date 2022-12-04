@@ -28,9 +28,9 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   static ExecutionConfiguration executionConfiguration;
+  private static final Set<String> failures = new TreeSet<>();
+  private static final Set<String> allTests = new TreeSet<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
-  private static Set<String> failures = new TreeSet<>();
-  private static Set<String> allTests = new TreeSet<>();
 
   /**
    * Thundercats are go.
@@ -101,13 +101,6 @@ public class SequenceRunner {
     }
   }
 
-  private int resultCode() {
-    if (failures == null) {
-      throw new RuntimeException("Sequences have not been processed");
-    }
-    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
-  }
-
   public static Set<String> getFailures() {
     return failures;
   }
@@ -116,12 +109,20 @@ public class SequenceRunner {
     return allTests;
   }
 
+  private int resultCode() {
+    if (failures == null) {
+      throw new RuntimeException("Sequences have not been processed");
+    }
+    return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
+  }
+
   private void process(List<String> targetMethods) {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
-    String deviceId = executionConfiguration.device_id;
+    SequenceBase.ensureValidatorConfig();
+    String deviceId = SequenceBase.validatorConfig.device_id;
     Set<String> remainingMethods = new HashSet<>(targetMethods);
     int runCount = 0;
     for (String className : sequenceClasses) {

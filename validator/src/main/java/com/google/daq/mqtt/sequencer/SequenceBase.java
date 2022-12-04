@@ -157,7 +157,7 @@ public class SequenceBase {
   private boolean recordMessages;
   private boolean recordSequence;
 
-  private static void ensureValidatorConfig() {
+  static void ensureValidatorConfig() {
     if (SequenceRunner.executionConfiguration != null) {
       validatorConfig = SequenceRunner.executionConfiguration;
     } else {
@@ -168,6 +168,12 @@ public class SequenceBase {
       try {
         System.err.println("Reading config file " + configFile.getAbsolutePath());
         validatorConfig = ConfigUtil.readValidatorConfig(configFile);
+        SiteModel model = new SiteModel(validatorConfig.site_model);
+        model.initialize();
+        validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
+            .orElse(model.getCloudRegion());
+        validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
+            .orElse(model.getRegistryId());
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
       }
@@ -195,7 +201,7 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    deviceOutputDir = new File(new File(siteModel), "out/devices/" + getDeviceId());
+    deviceOutputDir = new File(new File(SequenceBase.siteModel), "out/devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
     resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
@@ -259,11 +265,6 @@ public class SequenceBase {
     if (validatorConfig != null) {
       validatorConfig.device_id = deviceId;
     }
-  }
-
-  private String debugMarker() {
-    return "#" + System.identityHashCode(receivedUpdates) + "/" + System.identityHashCode(this)
-        + "-" + Thread.currentThread().getId();
   }
 
   private void withRecordSequence(boolean value, Runnable operation) {
@@ -362,7 +363,6 @@ public class SequenceBase {
 
   protected void resetConfig() {
     recordSequence("Force reset config");
-    debug("reset receivedConfig: " + debugMarker());
     withRecordSequence(false, () -> {
       recordSequence = false;
       debug("Starting reset_config");
@@ -380,12 +380,10 @@ public class SequenceBase {
 
   private void waitForConfigSync() {
     try {
-      debug("pre receivedConfig: " + debugMarker());
       untilTrue("device config sync", this::configUpdateComplete);
     } finally {
       if (!configUpdateComplete()) {
         debug("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        debug("final receivedConfig: " + debugMarker());
         debug("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get("config")));
       }
     }
@@ -867,9 +865,6 @@ public class SequenceBase {
         return;
       }
       Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
-      if (subFolderRaw.equals("config")) {
-        debug("received receivedConfig: " + debugMarker());
-      }
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
           .incrementAndGet();
@@ -1060,7 +1055,6 @@ public class SequenceBase {
         writeSequenceMdHeader();
 
         notice("starting test " + testName);
-        debug("initial receivedConfig: " + debugMarker());
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1082,7 +1076,7 @@ public class SequenceBase {
       systemLog.close();
       sequencerLog.close();
       sequenceMd.close();
-      debug("finished receivedConfig: " + debugMarker());
+
       activeInstance = null;
     }
 

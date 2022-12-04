@@ -65,7 +65,8 @@ public class SiteModel {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
     executionConfiguration.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
-    executionConfiguration.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+    executionConfiguration.cloud_region = Preconditions.checkNotNull(
+        attributes.deviceRegistryLocation,
         "deviceRegistryLocation");
     return executionConfiguration;
   }
@@ -200,6 +201,15 @@ public class SiteModel {
    */
   public String getRegistryId() {
     return executionConfiguration.registry_id;
+  }
+
+  /**
+   * Get the cloud region for this model.
+   *
+   * @return cloud region
+   */
+  public String getCloudRegion() {
+    return executionConfiguration.cloud_region;
   }
 
   /**
