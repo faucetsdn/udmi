@@ -3,13 +3,11 @@ package com.google.daq.mqtt.validator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.api.client.json.Json;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
-import java.util.Date;
+import com.google.udmi.util.SiteModel;
 import java.util.List;
 import org.junit.Test;
 import udmi.schema.DeviceValidationEvent;
@@ -30,7 +28,7 @@ public class BasicTest extends TestBase {
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final List<String> TEST_ARGS = ImmutableList.of(
       "-n",
-      "-p", TestCommon.PROJECT_ID,
+      "-p", SiteModel.MOCK_PROJECT,
       "-a", TestCommon.SCHEMA_SPEC,
       "-s", TestCommon.SITE_DIR);
   private static final String FLUX_READING = "FLUX_READING";

@@ -26,6 +26,7 @@ import udmi.schema.Metadata;
 
 public class SiteModel {
 
+  public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -35,6 +36,7 @@ public class SiteModel {
   private static final String DEFAULT_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
+
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;

@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -38,7 +38,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
 
-  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingDeque<>();
+  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -116,7 +117,7 @@ public class PlaybackTest extends TestBase {
 
     List<String> testArgs = new ArrayList<>();
     testArgs.addAll(List.of(
-        "-p", TestCommon.PROJECT_ID,
+        "-p", SiteModel.MOCK_PROJECT,
         "-a", TestCommon.SCHEMA_SPEC,
         "-s", TestCommon.SITE_DIR,
         "-r", tracePath));

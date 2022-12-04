@@ -8,6 +8,7 @@ import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
@@ -30,7 +31,6 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
-  private static final String MOCK_PROJECT = "unit-testing";
 
   public final ExecutionConfiguration executionConfiguration;
 
@@ -105,7 +105,7 @@ public class CloudIotManager {
 
   private void initializeIotProvider() {
     try {
-      iotProvider = projectId.equals(MOCK_PROJECT)
+      iotProvider = projectId.equals(SiteModel.MOCK_PROJECT)
           ? new IotMockProvider(projectId, registryId, cloudRegion)
           : new IotCoreProvider(projectId, registryId, cloudRegion);
       System.err.println("Created service for project " + projectId);

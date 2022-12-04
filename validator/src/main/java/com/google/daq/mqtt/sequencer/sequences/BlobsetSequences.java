@@ -39,7 +39,7 @@ public class BlobsetSequences extends SequenceBase {
         projectId,
         cloudRegion,
         registryId,
-        deviceId);
+        getDeviceId());
   }
 
   private String generateEndpointConfigBase64Payload(String hostname) {

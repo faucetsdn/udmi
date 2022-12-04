@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ import org.junit.Test;
  */
 public class WebServerRunnerTest {
 
-  private static final List<String> SERVER_ARGS = ImmutableList.of("0", TestCommon.PROJECT_ID);
+  private static final List<String> SERVER_ARGS = ImmutableList.of("0", SiteModel.MOCK_PROJECT);
 
   @Test
   public void sitePathMissing() {

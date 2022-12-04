@@ -5,6 +5,7 @@ import com.google.daq.mqtt.validator.Validator;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.ExecutionConfiguration;
 
 /**
  * Very dumb publisher that just drops all messages.

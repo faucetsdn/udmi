@@ -10,6 +10,7 @@ import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +26,7 @@ import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -113,7 +116,6 @@ public class SequenceBase {
   private static final String WAITING_FOR_GODOT = "nothing";
   protected static Metadata deviceMetadata;
   protected static String projectId;
-  protected static String deviceId;
   protected static String cloudRegion;
   protected static String registryId;
   static ExecutionConfiguration validatorConfig;
@@ -142,12 +144,12 @@ public class SequenceBase {
   private final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+  @Rule
+  public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected String extraField;
   protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
-  @Rule
-  protected SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   private Date lastLog;
   private String waitingCondition;
   private boolean enforceSerial;
@@ -183,7 +185,6 @@ public class SequenceBase {
     final String key_file;
     try {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
-      deviceId = checkNotNull(validatorConfig.device_id, "device_id not defined");
       projectId = checkNotNull(validatorConfig.project_id, "project_id not defined");
       udmiVersion = checkNotNull(validatorConfig.udmi_version, "udmi_version not defined");
       String serial = checkNotNull(validatorConfig.serial_no, "serial_no not defined");
@@ -201,7 +202,7 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    deviceOutputDir = new File(new File(siteModel), "out/devices/" + deviceId);
+    deviceOutputDir = new File(new File(siteModel), "out/devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
     resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
@@ -209,13 +210,22 @@ public class SequenceBase {
     System.err.println("Writing results to " + resultSummary.getAbsolutePath());
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
-    System.err.printf("Validating against device %s serial %s%n", deviceId, serialNo);
-    client = getReflectorClient(validatorConfig);
+    System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
+    client = getPublisherClient();
   }
 
-  private static MessagePublisher getReflectorClient(
-      ExecutionConfiguration executionConfiguration) {
-    IotReflectorClient client = new IotReflectorClient(executionConfiguration);
+  private static MessagePublisher getPublisherClient() {
+    boolean isMockProject = validatorConfig.project_id.equals(SiteModel.MOCK_PROJECT);
+    return isMockProject ? getMockClient() : getReflectorClient();
+  }
+
+  static MockPublisher getMockClient() {
+    return Optional.ofNullable((MockPublisher) client)
+        .orElseGet(() -> new MockPublisher(validatorConfig));
+  }
+
+  private static MessagePublisher getReflectorClient() {
+    IotReflectorClient client = new IotReflectorClient(validatorConfig);
     ReflectorState reflectorState = new ReflectorState();
     stateTimestamp = new Date();
     reflectorState.timestamp = stateTimestamp;
@@ -233,13 +243,18 @@ public class SequenceBase {
   }
 
   private static Metadata readDeviceMetadata() {
-    File deviceMetadataFile = new File(String.format(DEVICE_METADATA_FORMAT, siteModel, deviceId));
+    File deviceMetadataFile = new File(
+        String.format(DEVICE_METADATA_FORMAT, siteModel, getDeviceId()));
     try {
       System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
       return JsonUtil.OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
     }
+  }
+
+  protected static String getDeviceId() {
+    return checkNotNull(validatorConfig.device_id, "device_id not defined");
   }
 
   private String debugMarker() {
@@ -300,7 +315,7 @@ public class SequenceBase {
   }
 
   private Config readGeneratedConfig() {
-    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, deviceId));
+    File deviceConfigFile = new File(String.format(DEVICE_CONFIG_FORMAT, siteModel, getDeviceId()));
     try {
       debug("Reading generated config file " + deviceConfigFile.getPath());
       Config generatedConfig = JsonUtil.OBJECT_MAPPER.readValue(deviceConfigFile, Config.class);
@@ -315,6 +330,8 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
+    assert client.isActive();
+
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CLEAN_START_DELAY_MS);
@@ -518,7 +535,7 @@ public class SequenceBase {
   }
 
   protected void queryState() {
-    client.publish(deviceId, Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
+    client.publish(getDeviceId(), Common.STATE_QUERY_TOPIC, EMPTY_MESSAGE);
   }
 
   /**
@@ -563,7 +580,7 @@ public class SequenceBase {
         final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
-        client.publish(deviceId, topic, augmentedMessage);
+        client.publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", "config", subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
@@ -756,6 +773,14 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
+   * might end up trying to take a message while another thread is still looping. This prevents that
+   * by checking that the calling test is still active, and then if not, saves the message for the
+   * next round and interrupts the current thread.
+   *
+   * @return message bundle
+   */
   MessageBundle nextMessageBundle() {
     synchronized (SequenceBase.class) {
       if (stashedBundle != null) {
@@ -799,7 +824,7 @@ public class SequenceBase {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
       trace("received command " + attributeMark + " nonce " + message.get(CONFIG_NONCE_KEY));
     }
-    if (!SequenceBase.deviceId.equals(deviceId)) {
+    if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
     }
     recordRawMessage(message, attributes);
@@ -1009,6 +1034,9 @@ public class SequenceBase {
     @Override
     protected void starting(org.junit.runner.Description description) {
       try {
+        SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
+        assert client.isActive();
+
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
         if (deviceConfig != null) {
