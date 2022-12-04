@@ -242,6 +242,13 @@ public class SequenceBase {
     return client;
   }
 
+  static void resetForTest() {
+    validatorConfig = null;
+    client = null;
+    ensureValidatorConfig();
+    setupSequencer();
+  }
+
   private static Metadata readDeviceMetadata() {
     File deviceMetadataFile = new File(
         String.format(DEVICE_METADATA_FORMAT, siteModel, getDeviceId()));
@@ -255,6 +262,10 @@ public class SequenceBase {
 
   protected static String getDeviceId() {
     return checkNotNull(validatorConfig.device_id, "device_id not defined");
+  }
+
+  protected static void setDeviceId(String deviceId) {
+    validatorConfig.device_id = deviceId;
   }
 
   private String debugMarker() {

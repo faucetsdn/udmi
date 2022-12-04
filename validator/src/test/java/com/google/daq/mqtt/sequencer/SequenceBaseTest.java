@@ -6,6 +6,7 @@ import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.JsonUtil;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
 import udmi.schema.State;
@@ -20,6 +21,11 @@ public class SequenceBaseTest {
   static {
     SequenceRunner.executionConfiguration = TestCommon.testConfiguration();
     SequenceRunner.executionConfiguration.device_id = TestCommon.DEVICE_ID;
+  }
+
+  @Before
+  public void resetForTest() {
+    SequenceBase.resetForTest();
   }
 
   @Test

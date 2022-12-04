@@ -7,6 +7,7 @@ import com.google.daq.mqtt.WebServerRunner;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
 
@@ -22,16 +23,23 @@ public class SequenceRunnerTest {
   private static final int MODEL_DEVICE_COUNT = 4;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;
 
+  @Before
+  public void resetForTest() {
+    SequenceRunner.executionConfiguration = TestCommon.testConfiguration();
+    SequenceRunner.executionConfiguration.device_id = TEST_DEVICE;
+    SequenceBase.resetForTest();
+  }
+
   @Test
   public void processSite() {
     ExecutionConfiguration config = TestCommon.testConfiguration();
     SequenceRunner.handleRequest(makeParams(config));
-    int runCount = SequenceRunner.getAllTests().size();
-    int failures = SequenceRunner.getFailures().size();
+    final int runCount = SequenceRunner.getAllTests().size();
+    final int failures = SequenceRunner.getFailures().size();
 
     // TODO: SequenceRunner is not properly mocked, so everything fails.
-    assertTrue("site executions", runCount >= SITE_COUNT_MIN);
-    assertTrue("site failures", failures >= SITE_COUNT_MIN);
+    assertTrue("site executions " + runCount, runCount >= SITE_COUNT_MIN);
+    assertTrue("site failures " + failures, failures >= SITE_COUNT_MIN);
   }
 
   @Test
@@ -39,8 +47,8 @@ public class SequenceRunnerTest {
     ExecutionConfiguration config = TestCommon.testConfiguration();
     config.device_id = TEST_DEVICE;
     SequenceRunner.handleRequest(makeParams(config));
-    int runCount = SequenceRunner.getAllTests().size();
-    int failures = SequenceRunner.getFailures().size();
+    final int runCount = SequenceRunner.getAllTests().size();
+    final int failures = SequenceRunner.getFailures().size();
 
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertTrue("device executions", runCount >= TEST_COUNT_MIN);

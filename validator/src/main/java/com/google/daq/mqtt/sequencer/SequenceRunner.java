@@ -56,6 +56,7 @@ public class SequenceRunner {
   private static SequenceRunner processConfig(ExecutionConfiguration config) {
     executionConfiguration = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
+    SequenceBase.setDeviceId(config.device_id);
     sequenceRunner.process(List.of());
     return sequenceRunner;
   }
