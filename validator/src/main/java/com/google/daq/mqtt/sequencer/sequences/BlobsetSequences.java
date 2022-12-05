@@ -105,7 +105,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
-  public void endpoint_config_connection_success_restart_only() {
+  public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero", () -> deviceState.system.last_start.after(dateZero));
