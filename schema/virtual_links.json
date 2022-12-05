@@ -9,6 +9,12 @@
     "^[-0-9a-zA-Z$]+$": {
       "type": "object",
       "description": "A map from target device field to source device field",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        }
+      },
       "examples": [
         {
           "compressor_run_status": "compressor_run_status",

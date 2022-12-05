@@ -24,7 +24,7 @@ class MappingEventEntity:
     result.type = source.get('type')
     result.cloud_device_id = source.get('cloud_device_id')
     result.connections = source.get('connections')
-    result.links = Object1135B5BB.map_from(source.get('links'))
+    result.links = Object96DF83D1.map_from(source.get('links'))
     result.translation = BuildingTranslation.map_from(source.get('translation'))
     result.missing_telemetry_fields = source.get('missing_telemetry_fields')
     return result
@@ -56,7 +56,7 @@ class MappingEventEntity:
     if self.connections:
       result['connections'] = self.connections # 1
     if self.links:
-      result['links'] = Object1135B5BB.expand_dict(self.links) # 2
+      result['links'] = Object96DF83D1.expand_dict(self.links) # 2
     if self.translation:
       result['translation'] = BuildingTranslation.expand_dict(self.translation) # 2
     if self.missing_telemetry_fields:
