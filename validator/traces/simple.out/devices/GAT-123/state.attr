@@ -3,6 +3,7 @@
   "subFolder" : "update",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "state",
+  "msgSource" : "001_state_update.json",
   "deviceId" : "GAT-123",
   "projectId" : "playback-project"
 }
