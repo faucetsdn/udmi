@@ -60,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -453,7 +454,6 @@ public class Validator {
       Map<String, Object> message,
       Map<String, String> attributes) {
 
-
     String deviceId = attributes.get("deviceId");
     ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     device.clearMessageEntries();
@@ -483,8 +483,9 @@ public class Validator {
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
       String timeString = (String) message.get(TIMESTAMP_PROPERTY_KEY);
-      if (timeString != null && LAST_SEEN_SUBTYPES.contains(
-          SubType.fromValue(attributes.get(SUBTYPE_PROPERTY_KEY)))) {
+      String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
         device.updateLastSeen(Date.from(Instant.parse(timeString)));
       }
 
