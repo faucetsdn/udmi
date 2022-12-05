@@ -606,6 +606,7 @@ class LocalDevice {
 
   PointPointsetConfig configFromMetadata(PointPointsetModel metadata) {
     PointPointsetConfig pointConfig = new PointPointsetConfig();
+    pointConfig.units = metadata.units;
     pointConfig.ref = metadata.ref;
     if (Boolean.TRUE.equals(metadata.writable)) {
       pointConfig.set_value = metadata.baseline_value;

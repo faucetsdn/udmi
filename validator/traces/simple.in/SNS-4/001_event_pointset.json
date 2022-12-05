@@ -1,15 +1,17 @@
 {
+  "partial_update": true,
   "points" : {
     "split_threshold" : {
       "present_value" : true
     },
-    "triangulating_axis" : {
+    "triangulating_axis_y" : {
       "present_value" : 11
     },
     "rocket_count": {
       "present_value" : "yes"
     }
   },
+  "monkey": true,
   "timestamp" : "2022-07-19T05:04:26Z",
   "version" : "1.3.14"
 }

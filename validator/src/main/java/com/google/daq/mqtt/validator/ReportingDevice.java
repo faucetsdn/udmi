@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,7 +32,7 @@ public class ReportingDevice {
   private static final char DETAIL_REPLACE_CHAR = ',';
   private static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
-  private static final long THRESHOLD_SEC = 3600;
+  private static final long THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
@@ -39,6 +40,7 @@ public class ReportingDevice {
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
+  private final List<Entry> messageEntries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
   private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
   private ReportingPointset reportingPointset;
@@ -194,7 +196,7 @@ public class ReportingDevice {
     }
 
     missingPoints = metadataDiff.missingPoints;
-    if (!missingPoints.isEmpty()) {
+    if (missingPoints != null && !missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
     }
@@ -221,7 +223,11 @@ public class ReportingDevice {
   }
 
   private void addEntry(Entry entry) {
+    // entries collects everything, and is garbage-collected by time
     entries.add(entry);
+
+    // newEntries collects everything on a per-message basis
+    messageEntries.add(entry);
   }
 
   /**
@@ -245,15 +251,15 @@ public class ReportingDevice {
   /**
    * Get the error Entries associated with this device.
    *
-   * @param threshold date threshold beyond which to ignore (null for all)
+   * @param now current time for thresholding, or null for everything
    * @return Entry list or errors.
    */
-  public List<Entry> getErrors(Date threshold) {
-    if (threshold == null) {
+  public List<Entry> getErrors(Date now) {
+    if (now == null) {
       return entries;
     }
     return entries.stream()
-        .filter(entry -> !entry.timestamp.before(threshold))
+        .filter(entry -> !entry.timestamp.before(getThreshold(now.toInstant())))
         .collect(Collectors.toList());
   }
 
@@ -301,6 +307,14 @@ public class ReportingDevice {
 
   public Date getLastSeen() {
     return lastSeen;
+  }
+
+  public void clearMessageEntries() {
+    messageEntries.clear();
+  }
+
+  public List<Entry> getMessageEntries() {
+    return messageEntries;
   }
 
   /**

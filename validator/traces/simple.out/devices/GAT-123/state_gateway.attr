@@ -3,6 +3,7 @@
   "subFolder" : "gateway",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "state",
+  "msgSource" : "002_state_gateway.json",
   "deviceId" : "GAT-123",
   "projectId" : "playback-project"
 }
