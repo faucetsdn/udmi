@@ -25,7 +25,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "Device has extra points: rocket_count; Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; While converting to json node: 1 schema violations found",
+        "detail" : "While converting to json node: 1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y; Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; While converting to json node: 1 schema violations found",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500

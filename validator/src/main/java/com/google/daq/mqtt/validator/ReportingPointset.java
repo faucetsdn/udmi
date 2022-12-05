@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator;
 
+import static java.lang.Boolean.TRUE;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import java.util.Map;
@@ -25,7 +27,7 @@ public class ReportingPointset {
 
   MetadataDiff validateMessage(PointsetEvent message) {
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
-    if (message.partial_update != null && message.partial_update) {
+    if (TRUE.equals(message.partial_update)) {
       metadataDiff.missingPoints = null;
     }
     return metadataDiff;
