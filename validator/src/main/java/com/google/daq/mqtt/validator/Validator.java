@@ -420,10 +420,10 @@ public class Validator {
       mockNow = Instant.parse((String) message.get("timestamp"));
       ReportingDevice.setMockNow(mockNow);
     }
-    Date validationStart = simulatedMessages ? Date.from(mockNow) : new Date();
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
     if (reportingDevice != null) {
-      sendValidationResult(attributes, reportingDevice, validationStart);
+      Date now = simulatedMessages ? Date.from(mockNow) : new Date();
+      sendValidationResult(attributes, reportingDevice, now);
     }
     if (simulatedMessages) {
       processValidationReport();
@@ -449,8 +449,11 @@ public class Validator {
       Map<String, Object> message,
       Map<String, String> attributes) {
 
+
     String deviceId = attributes.get("deviceId");
     ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    device.clearMessageEntries();
+
     try {
       String schemaName = messageSchema(attributes);
       if (!device.markMessageType(schemaName, getNow())) {
@@ -530,7 +533,7 @@ public class Validator {
   }
 
   private void sendValidationResult(Map<String, String> origAttributes,
-      ReportingDevice reportingDevice, Date validationStart) {
+      ReportingDevice reportingDevice, Date now) {
     try {
       ValidationEvent event = new ValidationEvent();
       event.version = UDMI_VERSION;
@@ -538,8 +541,9 @@ public class Validator {
       String subFolder = origAttributes.get("subFolder");
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
-      event.errors = reportingDevice.getErrors(validationStart);
-      event.status = ReportingDevice.getSummaryEntry(event.errors);
+      event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
+
+      event.errors = reportingDevice.getErrors(now);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());

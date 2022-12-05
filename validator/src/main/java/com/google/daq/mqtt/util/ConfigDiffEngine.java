@@ -30,34 +30,44 @@ public class ConfigDiffEngine {
    */
   @SuppressWarnings("unchecked")
   public List<String> computeChanges(Config deviceConfig) {
-    Map<String, Object> updated = convertSemantics(deviceConfig);
+    Map<String, Object> updated = extractDefinitions(deviceConfig);
     List<String> configUpdates = new ArrayList<>();
     accumulateDifference("", previous, updated, configUpdates);
     previous = updated;
     return configUpdates;
   }
 
-  @SuppressWarnings("unchecked")
-  private Map<String, Object> convertSemantics(Object thing) {
+  private Map<String, Object> extractValues(Object thing) {
+    return traverseExtract(thing, true);
+  }
+
+  private Map<String, Object> extractDefinitions(Object thing) {
+    return traverseExtract(thing, false);
+  }
+
+  private Map<String, Object> traverseExtract(Object thing, boolean asValues) {
     if (thing == null) {
       return ImmutableMap.of();
     }
     if (thing instanceof Map) {
+      @SuppressWarnings("unchecked")
       Map<String, Object> asMap = (Map<String, Object>) thing;
       return asMap.keySet().stream()
-          .collect(Collectors.toMap(key -> key, key -> convertSemantics(asMap.get(key))));
+          .collect(Collectors.toMap(key -> key, key -> traverseExtract(asMap.get(key), asValues)));
     }
     return Arrays.stream(thing.getClass().getFields())
         .filter(field -> isNotNull(thing, field)).collect(
-            Collectors.toMap(Field::getName, field -> convertSemantics(thing, field)));
+            Collectors.toMap(Field::getName, field -> extractField(thing, field, asValues)));
   }
 
-  private Object convertSemantics(Object thing, Field field) {
+  private Object extractField(Object thing, Field field, boolean asValue) {
     try {
-      if (isBaseType(field) || isBaseType(field.get(thing))) {
-        return field.get(thing);
+      Object result = field.get(thing);
+      if (isBaseType(field) || isBaseType(result)) {
+        boolean useValue = asValue || !SemanticValue.isSemanticValue(result);
+        return useValue ? SemanticValue.getValue(result) : SemanticValue.getDescription(result);
       } else {
-        return convertSemantics(field.get(thing));
+        return traverseExtract(result, asValue);
       }
     } catch (Exception e) {
       throw new RuntimeException("While converting field " + field.getName(), e);
@@ -161,8 +171,8 @@ public class ConfigDiffEngine {
    * @return list of differences
    */
   public List<String> diff(Config deviceConfig, Object receivedConfig) {
-    Map<String, Object> left = convertSemantics(deviceConfig);
-    Map<String, Object> right = convertSemantics(receivedConfig);
+    Map<String, Object> left = extractValues(deviceConfig);
+    Map<String, Object> right = extractValues(receivedConfig);
     List<String> configUpdates = new ArrayList<>();
     accumulateDifference("", left, right, configUpdates);
     return configUpdates;
