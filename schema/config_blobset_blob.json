@@ -8,13 +8,6 @@
     "phase": {
       "$ref": "file:common.json#/definitions/phase"
     },
-    "content_type": {
-      "type": "string"
-    },
-    "base64": {
-      "type": "string",
-      "pattern": "^[0-9A-Za-z=+/]{4,}$"
-    },
     "url": {
       "type": "string",
       "format": "uri"
@@ -29,8 +22,5 @@
       "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
     }
   },
-  "oneOf": [
-    { "required": ["content_type", "base64", "phase"] },
-    { "required": ["url", "sha256", "phase"] }
-  ]
+  { "required": ["url", "sha256", "phase"] }
 }
