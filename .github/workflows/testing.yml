@@ -24,7 +24,10 @@ jobs:
           bin/setup_base
           bin/clone_model
       - name: udmi locate
-        run: bin/test_locate
+        run: |
+          echo $PATH
+          cp -a bin/udmi /usr/local/sbin/
+          bin/test_locate
       - name: code checks
         if: ${{ always() }}
         run: |
