@@ -25,8 +25,7 @@ jobs:
           bin/clone_model
       - name: udmi locate
         run: |
-          echo $PATH
-          sudo cp -a bin/udmi /usr/local/bin/
+          sudo ln -s $PWD/bin/udmi /usr/local/bin/udmi
           bin/test_locate
       - name: code checks
         if: ${{ always() }}
