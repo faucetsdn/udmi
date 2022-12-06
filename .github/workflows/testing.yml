@@ -26,7 +26,7 @@ jobs:
       - name: udmi locate
         run: |
           echo $PATH
-          cp -a bin/udmi /usr/local/sbin/
+          sudo cp -a bin/udmi /usr/local/bin/
           bin/test_locate
       - name: code checks
         if: ${{ always() }}
