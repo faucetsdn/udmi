@@ -111,7 +111,7 @@ public class SequenceBase {
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
-  private static final String CONFIG_NONCE_KEY = "debug_config_nonce";
+  public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   private static final String WAITING_FOR_GODOT = "nothing";
   protected static Metadata deviceMetadata;

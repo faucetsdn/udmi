@@ -29,6 +29,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -448,9 +449,17 @@ public class Validator {
   }
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
+    message.remove(SequenceBase.CONFIG_NONCE_KEY);
+    message.values().forEach(this::sanitizeBlock);
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_PROPERTY_KEY);
       message.remove(TIMESTAMP_PROPERTY_KEY);
+    }
+  }
+
+  private void sanitizeBlock(Object subBlock) {
+    if (subBlock instanceof Map) {
+      ((Map<?, ?>) subBlock).remove(SequenceBase.CONFIG_NONCE_KEY);
     }
   }
 
