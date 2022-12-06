@@ -14,8 +14,7 @@
     }
   },
   "include": [
-    "src/**/*",
-    "util/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"
