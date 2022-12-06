@@ -1,4 +1,5 @@
 {
+  "monkey" : true,
   "partial_update" : true,
   "points" : {
     "split_threshold" : {
