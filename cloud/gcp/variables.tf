@@ -109,6 +109,24 @@ variable "create_vpc" {
   description = "Indicates if we use the default vpc or create a new one."
 }
 
+## Postgresql variables
+variable "instance_name" {
+  type = string
+  description = "The name of the DB instance"
+}
+variable "database_version" {
+  type = string
+  description = "DB Server version to use"
+}
+variable "region" {
+  type = string
+  description = "The region the instance will sit in."
+}
+variable "tier" {
+  type = string
+  description = "custom machine type to use"
+}
+
 ## Mongodb variables
 variable "public_key" {
   type        = string
