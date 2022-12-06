@@ -49,14 +49,14 @@ export class MongoDAO<Type> implements DAO<Type> {
    * @param {Type} filter, a filter for type {Type}
    * @param {Type} document, a document of type {Type}
    */
-  async upsert(filter: Filter<Type>, document: Type): Promise<void> {
+  async upsert(document: Type, filter: Filter<Type>): Promise<void> {
     // we're using upsert which will allow document updates if it already exists and a document cretion if it does not
     console.log('Attempting to Upsert the following document: ' + JSON.stringify(document));
 
     const result = await this.collection.updateOne(filter, { $set: document }, { upsert: true });
 
     // let's log the result to give us some feedback on what occurred during the upsert
-    console.log('Upsert result: ' + JSON.stringify(result));
+    console.log('MongoDb Upsert result: ' + JSON.stringify(result));
   }
 
   /**
@@ -65,12 +65,14 @@ export class MongoDAO<Type> implements DAO<Type> {
    * @returns {Type} a document if it was found
    */
   async get(filter: Filter<Type>): Promise<Type> {
+    console.log('Getting record from Mongo');
+
     return this.collection.findOne<Type>(filter);
   }
 
   async insert(document: Type): Promise<void> {
     const result = await this.collection.insertOne(document as any);
     // let's log the result to give us some feedback on what occurred during the insert
-    console.log('insert result: ' + JSON.stringify(result));
+    console.log('MongoDb Insert result: ' + JSON.stringify(result));
   }
 }

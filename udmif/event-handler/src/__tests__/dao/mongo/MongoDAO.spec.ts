@@ -63,24 +63,25 @@ describe('DAO<Device>', () => {
   let deviceDao: DAO<Device>;
   let deviceCollection: Collection<Device>;
 
-  const siteName: string = 'site-2';
+  const site: string = 'site-2';
   const id: string = 'num-1';
   const name: string = 'name';
-  const deviceKey: DeviceKey = { name, site: siteName };
+  const deviceKey: DeviceKey = { name, site: site };
 
   beforeEach(async () => {
+    jest.resetModules();
     deviceCollection = db.collection('device');
     await deviceCollection.deleteMany({});
     deviceDao = new MongoDAO<Device>(deviceCollection);
   });
 
-  test('upsert calls the updateOne method on the provided collection', () => {
+  test('upsert calls the updateOne method on the provided collection', async () => {
     // arrange
-    const device: Device = { name, id, site: siteName };
+    const device: Device = { id, site, name };
     const updateOneSpy = jest.spyOn(deviceCollection, 'updateOne').mockImplementation(jest.fn());
 
     // act
-    deviceDao.upsert(deviceKey, device);
+    await deviceDao.upsert(device, deviceKey);
 
     // assert
     expect(updateOneSpy).toHaveBeenCalledWith(deviceKey, { $set: device }, { upsert: true });
@@ -89,7 +90,7 @@ describe('DAO<Device>', () => {
   test('get method is called and returns the matching document', async () => {
     // arrange
     const findOneSpy = jest.spyOn(deviceCollection, 'findOne');
-    const insertedDeviceDocument: Device = { name, site: siteName, id, points: [], serialNumber: 'randomSerialId' };
+    const insertedDeviceDocument: Device = { name, site, id, points: [], serialNumber: 'randomSerialId' };
     deviceCollection.insertOne(insertedDeviceDocument);
 
     // act
@@ -109,6 +110,7 @@ describe('DAO<Site>', () => {
   const siteKey = { name: siteName };
 
   beforeEach(async () => {
+    jest.resetModules();
     siteCollection = db.collection('site');
     await siteCollection.deleteMany({});
     siteDao = new MongoDAO<Site>(siteCollection);
@@ -120,7 +122,7 @@ describe('DAO<Site>', () => {
     const updateOneSpy = jest.spyOn(siteCollection, 'updateOne').mockImplementation(jest.fn());
 
     // act
-    siteDao.upsert(siteKey, site);
+    siteDao.upsert(site, siteKey);
 
     // assert
     expect(updateOneSpy).toHaveBeenCalledWith(siteKey, { $set: site }, { upsert: true });

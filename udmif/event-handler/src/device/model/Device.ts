@@ -10,27 +10,9 @@ export interface DeviceKey {
 export interface DeviceValidation {
   deviceKey: DeviceKey;
   timestamp: Date;
-  data: any;
+  message: any;
 }
 
-/**
- * Sample Device Document
- * {
-    "id": "85c3e6b7-9d9b-43f4-bbde-a2d569254c6a",
-    "name": "acq-3",
-    "make": "Acquisuite",
-    "model": "Obvious AcquiSuite A88 12-1",
-    "site": "CA-US-M3",
-    "section": "FK",
-    "lastPayload": "2022-03-16T05:18:26.871Z",
-    "operational": "false",
-    "serialNumber": "PI1H230ZQX",
-    "firmware": "v3.4",
-    "tags": string[],
-    "points": Point[],
-    "validation": Validation,
-   }
- */
 export interface Device {
   name: string;
   site: string;
@@ -39,7 +21,7 @@ export interface Device {
   model?: string;
   section?: string;
   lastPayload?: string;
-  operational?: string;
+  operational?: boolean;
   serialNumber?: string;
   firmware?: string;
   tags?: string[];
@@ -58,7 +40,6 @@ export class DeviceBuilder {
     this._document = {
       name: '',
       site: '',
-      tags: [],
       id: '',
     };
   }
@@ -77,7 +58,7 @@ export class DeviceBuilder {
     return this;
   }
 
-  operational(operational: string): DeviceBuilder {
+  operational(operational: boolean): DeviceBuilder {
     if (operational) {
       this._document.operational = operational;
     }
@@ -185,3 +166,5 @@ export class DeviceBuilder {
     return this._document;
   }
 }
+
+export const PRIMARY_KEYS: string[] = ['name', 'site'];

@@ -1,11 +1,20 @@
 import type { EventFunction } from '@google-cloud/functions-framework/build/src/functions';
-import { getDeviceDAO, getDeviceValidationDAO, getSiteDAO, getSiteValidationDAO } from './dao/mongo/MongoDAO';
 import UdmiEventHandler from './UdmiEventHandler';
 import { UdmiEvent } from './model/UdmiEvent';
 import { InvalidEventError } from './InvalidEventError';
 import { SiteHandler } from './site/SiteHandler';
 import { Handler } from './Handler';
 import { DeviceHandler } from './device/DeviceHandler';
+import {
+  getDeviceDAO as getMongoDeviceDao,
+  getSiteDAO as getMongoSiteDao,
+  getDeviceValidationDAO as getMongoDeviceValidationDao,
+  getSiteValidationDAO as getMongoSiteValidationDao,
+} from './dao/mongo/MongoDAO';
+import { getDeviceDAO } from './dao/postgresql/DeviceDAO';
+import { getSiteDAO } from './dao/postgresql/SiteDAO';
+import { getDeviceValidationDAO } from './dao/postgresql/DeviceValidationDAO';
+import { getSiteValidationDAO } from './dao/postgresql/SiteValidationDAO';
 
 let eventHandler: UdmiEventHandler;
 
@@ -18,8 +27,18 @@ export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
     if (!eventHandler) {
       console.log('Creating Event Handler');
-      const siteHandler: Handler = new SiteHandler(await getSiteDAO(), await getSiteValidationDAO());
-      const deviceHandler: Handler = new DeviceHandler(await getDeviceDAO(), await getDeviceValidationDAO());
+      const siteHandler: Handler = new SiteHandler(
+        await getMongoSiteDao(),
+        await getSiteDAO(),
+        await getMongoSiteValidationDao(),
+        await getSiteValidationDAO()
+      );
+      const deviceHandler: Handler = new DeviceHandler(
+        await getMongoDeviceDao(),
+        await getDeviceDAO(),
+        await getMongoDeviceValidationDao(),
+        await getDeviceValidationDAO()
+      );
       eventHandler = new UdmiEventHandler(deviceHandler, siteHandler);
     }
     const udmiEvent: UdmiEvent = decodeEventData(event);

@@ -11,7 +11,7 @@ describe('SiteHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    siteHandler = new SiteHandler(mockDAO, mockDAO);
+    siteHandler = new SiteHandler(mockDAO, mockDAO, mockDAO, mockDAO);
   });
 
   test('Calling handleUdmiEvent invokes upsert', async () => {

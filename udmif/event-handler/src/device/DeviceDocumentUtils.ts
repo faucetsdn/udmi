@@ -18,6 +18,7 @@ export function getDeviceKey(message: UdmiEvent): DeviceKey {
 }
 
 export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Device {
+  console.log('createDevice: ' + existingPoints);
   const builder: DeviceBuilder = new DeviceBuilder();
   builder
     .site(udmiEvent.attributes.deviceRegistryId)
@@ -25,7 +26,7 @@ export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Dev
     .id(udmiEvent.attributes.deviceNumId);
 
   if (isSystemSubType(udmiEvent)) {
-    return buildDeviceDocumentFromSystem(udmiEvent, builder);
+    return buildDeviceDocumentFromSystem(udmiEvent, builder, existingPoints);
   } else if (isPointsetSubType(udmiEvent)) {
     return buildDeviceDocumentFromPointset(udmiEvent, builder, existingPoints);
   } else if (isValidationSubType(udmiEvent)) {
@@ -34,13 +35,17 @@ export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Dev
 }
 
 export function getDeviceValidation(udmiEvent: ValidationEvent, deviceKey: DeviceKey): DeviceValidation {
-  return { timestamp: new Date(udmiEvent.data.timestamp), deviceKey, data: udmiEvent.data };
+  return { timestamp: new Date(udmiEvent.data.timestamp), deviceKey, message: udmiEvent.data };
 }
 
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
  */
-function buildDeviceDocumentFromSystem(udmiEvent: SystemEvent, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromSystem(
+  udmiEvent: SystemEvent,
+  builder: DeviceBuilder,
+  existingPoints: Point[]
+): Device {
   return builder
     .lastPayload(udmiEvent.data.timestamp)
     .operational(udmiEvent.data.operational)
@@ -49,6 +54,7 @@ function buildDeviceDocumentFromSystem(udmiEvent: SystemEvent, builder: DeviceBu
     .model(udmiEvent.data.hardware?.model)
     .firmware(udmiEvent.data.software?.firmware)
     .section(udmiEvent.data.location?.section)
+    .points(existingPoints)
     .id(udmiEvent.attributes.deviceNumId)
     .lastStateUpdated(isSubType(udmiEvent, STATE) ? udmiEvent.data.timestamp : null)
     .lastStateSaved(isSubType(udmiEvent, STATE) ? getNow() : null)
@@ -82,7 +88,10 @@ function buildDeviceDocumentFromPointset(
 ): Device {
   const points: Point[] = [];
 
-  console.log('buildDeviceDocumentFromPointset ' + existingPoints);
+  if (!existingPoints) {
+    existingPoints = [];
+  }
+  console.log('Device Document Existing Pointset: ' + existingPoints);
   for (let pointCode in udmiEvent.data.points) {
     const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiEvent, existingPoint, pointCode);

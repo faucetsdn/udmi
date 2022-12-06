@@ -43,7 +43,7 @@ export interface SystemEvent extends UdmiEvent {
     software?: {
       firmware?: string;
     };
-    operational?: string;
+    operational?: boolean;
     serial_no?: string;
     timestamp?: string;
   };

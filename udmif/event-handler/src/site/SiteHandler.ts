@@ -5,17 +5,24 @@ import { Site, SiteKey, SiteValidation } from './model/Site';
 import { getSiteDocument, getSiteKey, getSiteValidationDocument } from './SiteDocumentUtils';
 
 export class SiteHandler implements Handler {
-  constructor(private siteDao: DAO<Site>, private siteValidationDao: DAO<SiteValidation>) {}
+  constructor(
+    private siteMongoDao: DAO<Site>,
+    private sitePGDao: DAO<Site>,
+    private siteMongoValidationDao: DAO<SiteValidation>,
+    private sitePGValidationDao: DAO<SiteValidation>
+  ) {}
 
   async handle(udmiEvent: UdmiEvent): Promise<void> {
     const siteKey: SiteKey = getSiteKey(udmiEvent);
-
-    // we'll upsert the site document in case it exists
     const site: Site = getSiteDocument(udmiEvent);
-    this.siteDao.upsert(siteKey, site);
+    const siteValidation: SiteValidation = getSiteValidationDocument(udmiEvent);
+
+    // we'll upsert the site document in mongo in case it exists, this will get removed once postgresql is working
+    this.siteMongoDao.upsert(siteKey, site);
+    this.sitePGDao.upsert(siteKey, site);
 
     // we want to insert new validation message and leave the old ones alone
-    const siteValidation: SiteValidation = getSiteValidationDocument(udmiEvent);
-    this.siteValidationDao.insert(siteValidation);
+    this.siteMongoValidationDao.insert(siteValidation);
+    this.sitePGValidationDao.insert(siteValidation);
   }
 }

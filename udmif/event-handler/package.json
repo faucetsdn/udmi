@@ -1,14 +1,16 @@
 {
   "name": "udmi-device-cf",
   "version": "1.0.0",
-  "description": "Cloud Function that Receives Events and Writes Device Documents to MongoDB",
+  "description": "Cloud Function that Receives Events and Writes Device and Site Documents to a Database",
   "author": "Buildings IOT",
   "main": "dist/index.js",
   "dependencies": {
-    "jest-html-reporter": "^3.6.0",
-    "mongodb": "^4.4.1"
+    "mongodb": "^4.4.1",
+    "knex": "^2.3.0",
+    "pg": "^8.8.0"
   },
   "devDependencies": {
+    "jest-html-reporter": "^3.6.0",
     "@google-cloud/functions-framework": "^3.0.0",
     "@shelf/jest-mongodb": "^2.2.1",
     "@types/jest": "^27.4.0",
@@ -25,12 +27,13 @@
     "typescript": "^4.5.5"
   },
   "scripts": {
-    "watch": "functions-framework --source=dist/ --target=handleUdmiEvent --signature-type=event",
-    "start": "concurrently \"tsc -w\" \"nodemon --watch ./dist/ --exec npm run watch\"",
+    "watch": "functions-framework --source=dist/src/ --target=handleUdmiEvent --signature-type=event",
+    "start": "concurrently \"tsc -w\" \"nodemon --watch ./dist/src --exec npm run watch\"",
     "test": "NODE_ENV=test jest --silent --runInBand --detectOpenHandles",
     "testVerbose": "NODE_ENV=test jest --runInBand --verbose --detectOpenHandles",
-    "testInteractive": "NODE_ENV=test jest --silent --runInBand --watchAll",
+    "testInteractive": "NODE_ENV=test jest --runInBand --silent --watchAll --detectOpenHandles",
     "postinstall": "cd ../.. && husky install udmif/event-handler/.husky",
+    "migrate": "knex --knexfile knexfile.ts migrate:latest",
     "build": "tsc -p ."
   },
   "lint-staged": {

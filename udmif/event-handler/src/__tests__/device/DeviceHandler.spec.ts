@@ -10,7 +10,7 @@ describe('DeviceHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    deviceHandler = new DeviceHandler(mockDAO, mockDAO);
+    deviceHandler = new DeviceHandler(mockDAO, mockDAO, mockDAO, mockDAO);
   });
 
   test.each([SYSTEM_MODEL_EVENT, POINTSET_STATE_EVENT, DEVICE_VALIDATION_EVENT])(
