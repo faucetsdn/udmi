@@ -100,8 +100,8 @@ public class PubSubUdmiClient implements MessagePublisher, MessageHandler {
    * @param updateTopic  output PubSub topic for updates (else null)
    * @param reset        if the connection should be reset before use
    */
-  public PubSubUdmiClient(String projectId, String registryId, String subscription, String updateTopic,
-      boolean reset) {
+  public PubSubUdmiClient(String projectId, String registryId, String subscription,
+      String updateTopic, boolean reset) {
     try {
       this.projectId = Preconditions.checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
@@ -191,7 +191,7 @@ public class PubSubUdmiClient implements MessagePublisher, MessageHandler {
       }
       Map<String, String> attributes = message.getAttributesMap();
       if (!attributes.containsKey(Validator.DEVICE_REGISTRY_ID_KEY)) {
-        return;
+        return null;
       }
       byte[] rawData = message.getData().toByteArray();
       final String data;
@@ -255,7 +255,7 @@ public class PubSubUdmiClient implements MessagePublisher, MessageHandler {
 
   private void handlerHandler(MessageBundle bundle) {
     Envelope envelope = JsonUtil.convertTo(Envelope.class, bundle.attributes);
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    String mapKey = typeFolderKey(envelope.subType, envelope.subFolder);
     try {
       Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
         System.err.println("Ignoring messages of type " + mapKey);
