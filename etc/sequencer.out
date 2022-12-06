@@ -2,13 +2,13 @@ RESULT pass broken_config Sequence complete
 RESULT pass device_config_acked Sequence complete
 RESULT pass endpoint_config_connection_error Sequence complete
 RESULT pass endpoint_config_connection_success_reconnect Sequence complete
-RESULT pass endpoint_config_connection_success_restart_only Sequence complete
 RESULT pass extra_config Sequence complete
 RESULT pass periodic_scan Sequence complete
 RESULT pass self_enumeration Sequence complete
 RESULT pass single_scan Sequence complete
 RESULT pass system_last_update Sequence complete
 RESULT pass system_min_loglevel Sequence complete
+RESULT pass system_mode_restart Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete

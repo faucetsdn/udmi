@@ -27,6 +27,8 @@ site_path=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
+## jrand
+alt_project_id="bos-johnrandolph-ci2"
 
 serial_no=${1:-//}
 shift || true
@@ -49,6 +51,7 @@ echo Writing config to $VALIDATOR_CONFIG:
 cat <<EOF > $VALIDATOR_CONFIG
 {
   "project_id": "$project_id",
+  "alt_project": "${alt_project_id}",
   "site_model": "$site_path",
   "device_id": "$device_id",
   "serial_no": "$serial_no",
