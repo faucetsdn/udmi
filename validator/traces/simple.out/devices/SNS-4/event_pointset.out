@@ -4,19 +4,18 @@
   "sub_folder" : "pointset",
   "sub_type" : "event",
   "status" : {
-    "message" : "Device has extra points: rocket_count",
-    "detail" : "event_pointset: Device has extra points: rocket_count",
+    "message" : "Device has extra points: rocket_count, triangulating_axis_y",
+    "detail" : "event_pointset: Device has extra points: rocket_count, triangulating_axis_y",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "pointset" : {
-    "missing" : [ ],
-    "extra" : [ "rocket_count" ]
+    "extra" : [ "rocket_count", "triangulating_axis_y" ]
   },
   "errors" : [ {
-    "message" : "Device has extra points: rocket_count",
-    "detail" : "event_pointset: Device has extra points: rocket_count",
+    "message" : "Device has extra points: rocket_count, triangulating_axis_y",
+    "detail" : "event_pointset: Device has extra points: rocket_count, triangulating_axis_y",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500

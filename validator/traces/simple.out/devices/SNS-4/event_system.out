@@ -11,6 +11,18 @@
     "level" : 500
   },
   "errors" : [ {
+    "message" : "Device has extra points: rocket_count, triangulating_axis_y",
+    "detail" : "event_pointset: Device has extra points: rocket_count, triangulating_axis_y",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File); line: 1, column: 3]",
+    "detail" : "event_discovery: Unexpected character ('{' (code 123)): was expecting double-quote to start field name\tredacted\n",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
     "message" : "While converting to json node: 1 schema violations found",
     "detail" : "event_system: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; instance entry category not recognized",
     "category" : "validation.device.schema",
