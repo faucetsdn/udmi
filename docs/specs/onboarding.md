@@ -12,7 +12,7 @@ separable phases, each with a distinct role and function:
   into higher-level semantic concepts.
 * [Provisioning](provisioning.md): Setting up various system registries and device
   configuration to operate properly within the target system.
-* [Pointset](pointset.md): The 'phase' of actually sending pointset telemetry from
+* [Pointset](../messages/pointset.md): The 'phase' of actually sending pointset telemetry from
   the on-prem devices to the actual pipeline. The ultimate goal of onboarding!
 
 As an analogy, these phases correspond to biological _eyes_ (discovery), _brain_ (mapping), and
