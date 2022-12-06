@@ -84,8 +84,8 @@ public class SequenceBase {
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
-  public static final int CONFIG_UPDATE_DELAY_MS = 2000;
-  public static final int NORM_TIMEOUT_MS = 120 * 1000;
+  public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
+  public static final int NORM_TIMEOUT_MS = 180 * 1000;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -337,7 +337,7 @@ public class SequenceBase {
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
-    safeSleep(CLEAN_START_DELAY_MS);
+    safeSleep(CONFIG_UPDATE_DELAY_MS);
 
     deviceState = new State();
     configAcked = false;
@@ -353,7 +353,7 @@ public class SequenceBase {
     clearLogs();
     queryState();
 
-    syncConfig();
+    updateConfig();
 
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
@@ -362,36 +362,28 @@ public class SequenceBase {
   protected void resetConfig() {
     recordSequence("Force reset config");
     withRecordSequence(false, () -> {
-      recordSequence = false;
       debug("Starting reset_config");
       resetDeviceConfig(true);
       extraField = "reset_config";
       deviceConfig.system.testing.sequence_name = extraField;
-      waitForConfigSync();
+      updateConfig();
       clearLogs();
       extraField = null;
       resetDeviceConfig();
-      waitForConfigSync();
+      updateConfig();
       debug("Done with reset_config");
     });
   }
 
   private void waitForConfigSync() {
     try {
-      untilTrue("device config sync", this::configUpdateComplete);
+      untilTrue("device config sync", this::configReady);
     } finally {
-      if (!configUpdateComplete()) {
+      if (!configReady()) {
         debug("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
         debug("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get("config")));
       }
     }
-  }
-
-  private Date syncConfig() {
-    updateConfig();
-    waitForConfigSync();
-    debug("config synced to " + JsonUtil.getTimestamp(deviceConfig.timestamp));
-    return CleanDateFormat.cleanDate(deviceConfig.timestamp);
   }
 
   @Test
@@ -399,7 +391,7 @@ public class SequenceBase {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    checkThat("received serial no matches", () -> serialNo.equals(lastSerialNo));
+    untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -568,10 +560,12 @@ public class SequenceBase {
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    localConfigChange(reason);
+    if (localConfigChange(reason)) {
+      waitForConfigSync();
+    }
   }
 
-  private void updateConfig(SubFolder subBlock, Object data) {
+  private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
@@ -584,9 +578,8 @@ public class SequenceBase {
         debug(String.format("update %s_%s", "config", subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        // Delay so the backend can process the update before others arrive.
-        Thread.sleep(CONFIG_UPDATE_DELAY_MS);
       }
+      return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
@@ -606,7 +599,7 @@ public class SequenceBase {
     }
   }
 
-  private void localConfigChange(String reason) {
+  private boolean localConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
@@ -614,11 +607,12 @@ public class SequenceBase {
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
       if (configUpdates.isEmpty()) {
-        return;
+        return false;
       }
       recordSequence(header);
       configUpdates.forEach(this::recordBullet);
       sequenceMd.flush();
+      return true;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
@@ -727,6 +721,12 @@ public class SequenceBase {
     info(String.format("start %s after %s", waitingCondition, timeSinceStart()));
     updateConfig("before " + description);
     recordSequence("Wait for " + description);
+    messageEvaluateLoop(evaluator);
+    info(String.format("finished %s after %s", waitingCondition, timeSinceStart()));
+    waitingCondition = "nothing";
+  }
+
+  private void messageEvaluateLoop(Supplier<Boolean> evaluator) {
     while (evaluator.get()) {
       processMessage();
     }
@@ -910,17 +910,20 @@ public class SequenceBase {
     }
   }
 
-  protected boolean configUpdateComplete() {
+  private boolean configReady() {
     Object receivedConfig = receivedUpdates.get("config");
     if (!(receivedConfig instanceof Config)) {
+      trace("no valid received config");
       return false;
     }
-    List<String> differences = configDiffEngine.diff(deviceConfig,
-        sanitizeConfig((Config) receivedConfig));
-    if (traceLogLevel() && !differences.isEmpty()) {
+    List<String> differences = configDiffEngine.diff(
+        sanitizeConfig((Config) receivedConfig), deviceConfig);
+    boolean configReady = differences.isEmpty();
+    trace("testing valid received config " + configReady);
+    if (traceLogLevel() && configReady) {
       trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
-    return differences.isEmpty();
+    return configReady;
   }
 
   protected void trace(String message) {
