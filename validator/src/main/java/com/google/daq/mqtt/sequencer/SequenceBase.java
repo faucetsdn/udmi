@@ -920,7 +920,7 @@ public class SequenceBase {
         sanitizeConfig((Config) receivedConfig), deviceConfig);
     boolean configReady = differences.isEmpty();
     trace("testing valid received config " + configReady);
-    if (traceLogLevel() && configReady) {
+    if (!configReady) {
       trace("\n+- " + Joiner.on("\n+- ").join(differences));
     }
     return configReady;
@@ -1012,7 +1012,9 @@ public class SequenceBase {
     protected void starting(org.junit.runner.Description description) {
       try {
         ensureValidatorConfig();
-        setupSequencer();
+        if (client == null) {
+          setupSequencer();
+        }
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
         assert client.isActive();
 
