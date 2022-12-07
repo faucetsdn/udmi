@@ -3,26 +3,35 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-if [[ $# != 1 ]]; then
-    echo Usage: $0 PROJECT_ID
+if [[ $# -lt 1 ]]; then
+    echo Usage: $0 PROJECT_ID [tests...]
     false
 fi
 
 project_id=$1
 shift
+targets=$*
 
+echo "Workflow run number $GITHUB_RUN_NUMBER"
 if [[ -n `which rot13` ]]; then
    # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
    echo 'Using target project (rot13):' $(echo $project_id | rot13)
    echo 'With sequence opts (rot13):' $(echo $SEQUENCER_OPTS | rot13)
 else
    echo 'Using target project:' $project_id
+   echo 'With sequence opts:' $SEQUENCER_OPTS
 fi
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
 
-rm -rf $site_path/out/devices/$device_id/tests
+if [[ -z $targets ]]; then
+    rm -rf $site_path/out/devices/$device_id/tests
+else
+    for target in $targets; do
+        rm -rf $site_path/out/devices/$device_id/tests/$target
+    done
+fi
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -60,7 +69,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no | tee sequencer.out
+bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets | tee sequencer.out
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
