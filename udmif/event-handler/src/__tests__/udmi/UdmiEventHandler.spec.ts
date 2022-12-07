@@ -1,5 +1,5 @@
-import { UdmiEvent } from '../model/UdmiEvent';
-import UdmiEventHandler, { VALIDATOR_ID } from '../udmi/UdmiEventHandler';
+import { UdmiEvent } from '../../udmi/UdmiEvent';
+import UdmiEventHandler, { VALIDATOR_ID } from '../../udmi/UdmiEventHandler';
 import {
   CONFIG,
   EVENT,
@@ -9,9 +9,9 @@ import {
   SYSTEM_SUB_FOLDER,
   UPDATE_SUB_FOLDER,
   VALIDATION_SUB_FOLDER,
-} from '../EventUtils';
-import { Handler } from '../Handler';
-import { createEvent, createEventFromTypes } from './dataUtils';
+} from '../../EventUtils';
+import { Handler } from '../../Handler';
+import { createEvent, createEventFromTypes } from '../dataUtils';
 
 const AHU_ID: string = 'AHU-1';
 const SITE_ID: string = 'site-1';
