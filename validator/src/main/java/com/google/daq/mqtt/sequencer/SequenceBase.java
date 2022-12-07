@@ -86,6 +86,7 @@ public class SequenceBase {
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
   public static final int NORM_TIMEOUT_MS = 180 * 1000;
+  public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -111,7 +112,6 @@ public class SequenceBase {
   private static final String SEQUENCER_LOG = "sequencer.log";
   private static final String SYSTEM_LOG = "system.log";
   private static final String SEQUENCE_MD = "sequence.md";
-  public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final long CLEAN_START_DELAY_MS = 20 * 1000;
   private static final String WAITING_FOR_GODOT = "nothing";
   protected static Metadata deviceMetadata;
@@ -156,6 +156,9 @@ public class SequenceBase {
   private boolean recordSequence;
 
   static void ensureValidatorConfig() {
+    if (validatorConfig != null) {
+      return;
+    }
     if (SequenceRunner.executionConfiguration != null) {
       validatorConfig = SequenceRunner.executionConfiguration;
     } else {
@@ -179,6 +182,10 @@ public class SequenceBase {
   }
 
   private static void setupSequencer() {
+    ensureValidatorConfig();
+    if (client != null) {
+      return;
+    }
     final String key_file;
     try {
       siteModel = checkNotNull(validatorConfig.site_model, "site_model not defined");
@@ -377,7 +384,7 @@ public class SequenceBase {
 
   private void waitForConfigSync() {
     try {
-      untilTrue("device config sync", this::configReady);
+      withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
     } finally {
       if (!configReady()) {
         debug("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
@@ -1011,10 +1018,7 @@ public class SequenceBase {
     @Override
     protected void starting(org.junit.runner.Description description) {
       try {
-        ensureValidatorConfig();
-        if (client == null) {
-          setupSequencer();
-        }
+        setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
         assert client.isActive();
 
