@@ -1,4 +1,4 @@
-import { Site } from '../src/site/model';
+import { Site } from './model';
 
 export const getCorrectDevicesCount = (site: Site): number => {
   return site.validation?.summary?.correct_devices?.length ?? 0;

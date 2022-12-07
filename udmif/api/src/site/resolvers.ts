@@ -1,9 +1,4 @@
-import {
-  getCorrectDevicesCount,
-  getErrorDevicesCount,
-  getMissingDevicesCount,
-  getTotalDevicesCount,
-} from '../../util/siteUtil';
+import { getCorrectDevicesCount, getErrorDevicesCount, getMissingDevicesCount, getTotalDevicesCount } from './siteUtil';
 import { DistinctArgs } from '../common/model';
 import { ApolloContext } from '../server/datasources';
 import { Site, SiteArgs, SitesArgs } from './model';
