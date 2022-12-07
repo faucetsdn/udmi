@@ -7,6 +7,7 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
@@ -15,6 +16,8 @@ import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Entry;
 import udmi.schema.Level;
+import udmi.schema.SystemConfig.SystemMode;
+
 
 /**
  * Validation tests for instances that involve blobset config messages.
@@ -99,4 +102,47 @@ public class BlobsetSequences extends SequenceBase {
           && stateStatus.level == Level.NOTICE.value();
     });
   }
+
+  @Test
+  @Description("Restart and connect to same endpoint and expect it returns.")
+  public void system_mode_restart() {
+    // Prepare for the restart.
+    final Date dateZero = new Date(0);
+    untilTrue("last_start is not zero", () -> deviceState.system.last_start.after(dateZero));
+
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+    updateConfig();
+
+    untilTrue("deviceState.system.mode == ACTIVE", () -> {
+      return deviceState.system.mode.equals(SystemMode.ACTIVE);
+    });
+
+    final Date last_config = deviceState.system.last_config;
+    final Date last_start = deviceConfig.system.last_start;
+
+    // Send the restart mode.
+    deviceConfig.system.mode = SystemMode.RESTART;
+    updateConfig();
+
+    // Wait for the device to go through the correct states as it restarts.
+    untilTrue("deviceState.system.mode == INITIAL", () -> {
+      return deviceState.system.mode.equals(SystemMode.INITIAL);
+    });
+
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+    updateConfig();
+
+    untilTrue("deviceState.system.mode == ACTIVE", () -> {
+      return deviceState.system.mode.equals(SystemMode.ACTIVE);
+    });
+
+    untilTrue("last_config is newer than previous last_config", () -> {
+      return deviceState.system.last_config.after(last_config);
+    });
+
+    untilTrue("last_start is newer than previous last_start", () -> {
+      return deviceConfig.system.last_start.after(last_start);
+    });
+  }
+
 }
