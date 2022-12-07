@@ -1,22 +1,28 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.api.client.json.Json;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import org.junit.Test;
+import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvent;
+import udmi.schema.DiscoveryEvent;
+import udmi.schema.DiscoveryState;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
+import udmi.schema.State;
 import udmi.schema.ValidationEvent;
 import udmi.schema.ValidationState;
 
@@ -26,14 +32,18 @@ import udmi.schema.ValidationState;
 public class BasicTest extends TestBase {
 
   private static final String EVENT_SUBTYPE = "event";
+  private static final String CONFIG_SUBTYPE = "config";
   private static final String STATE_SUBTYPE = "state";
   private static final String POINTSET_SUBFOLDER = "pointset";
+  private static final String DISCOVERY_SUBFOLDER = "discovery";
+  private static final String UPDATE_SUBFOLDER = "update";
   private static final List<String> TEST_ARGS = ImmutableList.of(
       "-n",
       "-p", TestCommon.PROJECT_ID,
       "-a", TestCommon.SCHEMA_SPEC,
       "-s", TestCommon.SITE_DIR);
   private static final String FLUX_READING = "FLUX_READING";
+  private static final long TWO_SECONDS_MS = 1000 * 2;
   private final Validator validator = new Validator(TEST_ARGS).prepForMock();
 
   @Test
@@ -65,8 +75,8 @@ public class BasicTest extends TestBase {
     assertEquals("No error devices", 1, report.devices.size());
     DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
     assertEquals("no report status", null, deviceValidationEvent.status);
-    String expected = JsonUtil.getTimestamp(messageObject.timestamp);
-    String lastSeen = JsonUtil.getTimestamp(deviceValidationEvent.last_seen);
+    String expected = getTimestamp(messageObject.timestamp);
+    String lastSeen = getTimestamp(deviceValidationEvent.last_seen);
     assertEquals("status last_seen", expected, lastSeen);
   }
 
@@ -117,5 +127,24 @@ public class BasicTest extends TestBase {
     assertTrue("Missing correct point", missingPoints.contains(FILTER_ALARM_PRESSURE_STATUS));
   }
 
+  @Test
+  public void lastSeenUpdate() {
+    Validator.MessageBundle eventBundle = getMessageBundle(EVENT_SUBTYPE, DISCOVERY_SUBFOLDER,
+        new DiscoveryEvent());
+    validator.validateMessage(eventBundle);
+
+    // Add enough of a delay to ensure that a seconds-based timestamp is different.
+    safeSleep(TWO_SECONDS_MS);
+    Validator.MessageBundle configBundle = getMessageBundle(CONFIG_SUBTYPE, UPDATE_SUBFOLDER,
+        new Config());
+    validator.validateMessage(configBundle);
+
+    // Only the event should update the last seen, since config is not from the device.
+    ValidationState report = getValidationReport();
+    DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
+    Date lastSeen = deviceValidationEvent.last_seen;
+    Instant parse = Instant.parse((String) eventBundle.message.get(TIMESTAMP_PROPERTY_KEY));
+    assertEquals("device last seen", getTimestamp(Date.from(parse)), getTimestamp(lastSeen));
+  }
 
 }
