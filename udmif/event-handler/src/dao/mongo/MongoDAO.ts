@@ -65,8 +65,6 @@ export class MongoDAO<Type> implements DAO<Type> {
    * @returns {Type} a document if it was found
    */
   async get(filter: Filter<Type>): Promise<Type> {
-    console.log('Getting record from Mongo');
-
     return this.collection.findOne<Type>(filter);
   }
 

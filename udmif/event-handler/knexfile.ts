@@ -6,7 +6,7 @@ module.exports = {
         host: process.env.POSTGRESQL_INSTANCE_HOST,
         port: parseInt(process.env.POSTGRESQL_PORT || ""),
         user: process.env.POSTGRESQL_USER,
-        password: process.env.POSTGRESQL_PASS,
+        password: process.env.POSTGRESQL_PASSWORD,
         database: process.env.POSTGRESQL_DATABASE,
     }
 };

@@ -18,7 +18,6 @@ export function getDeviceKey(message: UdmiEvent): DeviceKey {
 }
 
 export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Device {
-  console.log('createDevice: ' + existingPoints);
   const builder: DeviceBuilder = new DeviceBuilder();
   builder
     .site(udmiEvent.attributes.deviceRegistryId)
@@ -91,7 +90,6 @@ function buildDeviceDocumentFromPointset(
   if (!existingPoints) {
     existingPoints = [];
   }
-  console.log('Device Document Existing Pointset: ' + existingPoints);
   for (let pointCode in udmiEvent.data.points) {
     const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiEvent, existingPoint, pointCode);

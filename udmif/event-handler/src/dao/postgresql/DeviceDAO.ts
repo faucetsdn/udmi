@@ -27,14 +27,10 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
   }
 
   async get(filterQuery: any): Promise<Device> {
-    console.log('Getting device from PostgreSQL');
-
     const deviceFromPg: any = await super.get(filterQuery);
     if (!deviceFromPg) {
-      console.log('Could not find device from PostgreSQL');
       return null;
     }
-    console.log('Device from PG without Transformation: \n' + JSON.stringify(deviceFromPg));
 
     const pointsAsString = JSON.stringify(deviceFromPg?.points);
     const points: Point[] = JSON.parse(pointsAsString);
