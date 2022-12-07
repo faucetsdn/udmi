@@ -1,7 +1,7 @@
-"""Generated class for building_config.json"""
+"""Generated class for virtual_links.json"""
 
 
-class BuildingConfig:
+class VirtualEquipmentLinks:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class BuildingConfig:
   def from_dict(source):
     if not source:
       return None
-    result = BuildingConfig()
+    result = VirtualEquipmentLinks()
     return result
 
   @staticmethod
@@ -20,7 +20,7 @@ class BuildingConfig:
       return None
     result = {}
     for key in source:
-      result[key] = BuildingConfig.from_dict(source[key])
+      result[key] = VirtualEquipmentLinks.from_dict(source[key])
     return result
 
   @staticmethod
