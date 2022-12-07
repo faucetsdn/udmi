@@ -11,10 +11,10 @@ import {
   getDeviceValidationDAO as getMongoDeviceValidationDao,
   getSiteValidationDAO as getMongoSiteValidationDao,
 } from './dao/mongo/MongoDAO';
-import { getDeviceDAO } from './dao/postgresql/DeviceDAO';
-import { getSiteDAO } from './dao/postgresql/SiteDAO';
-import { getDeviceValidationDAO } from './dao/postgresql/DeviceValidationDAO';
-import { getSiteValidationDAO } from './dao/postgresql/SiteValidationDAO';
+import { getDeviceDAO } from './device/DeviceDAO';
+import { getSiteDAO } from './site/SiteDAO';
+import { getDeviceValidationDAO } from './device/DeviceValidationDAO';
+import { getSiteValidationDAO } from './site/SiteValidationDAO';
 import { isConnectedToPostgreSQL } from './dao/postgresql/PgDaoProvider';
 
 let eventHandler: UdmiEventHandler;
