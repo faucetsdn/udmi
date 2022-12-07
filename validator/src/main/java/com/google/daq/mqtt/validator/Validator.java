@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.daq.mqtt.util.Common.NO_SITE;
 import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
@@ -28,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -57,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -110,13 +114,14 @@ public class Validator {
       EVENT_POINTSET, PointsetEvent.class,
       STATE_POINTSET, PointsetState.class
   );
+  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENT,
+      SubType.STATE);
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
-  public static final String EXCEPTION_KEY = "exception";
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -449,7 +454,6 @@ public class Validator {
       Map<String, Object> message,
       Map<String, String> attributes) {
 
-
     String deviceId = attributes.get("deviceId");
     ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     device.clearMessageEntries();
@@ -468,8 +472,8 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      if (message.containsKey(EXCEPTION_KEY)) {
-        device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
+      if (message.containsKey(Common.EXCEPTION_KEY)) {
+        device.addError((Exception) message.get(Common.EXCEPTION_KEY), attributes,
             Category.VALIDATION_DEVICE_RECEIVE);
         return device;
       }
@@ -477,6 +481,13 @@ public class Validator {
       sanitizeMessage(schemaName, message);
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
+
+      String timeString = (String) message.get(TIMESTAMP_PROPERTY_KEY);
+      String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {
+        device.updateLastSeen(Date.from(Instant.parse(timeString)));
+      }
 
       try {
         if (!schemaMap.containsKey(schemaName)) {
@@ -511,8 +522,7 @@ public class Validator {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
             Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-            Date timestamp = JsonUtil.getDate((String) message.get("timestamp"));
-            device.validateMessageType(messageObject, timestamp, attributes);
+            device.validateMessageType(messageObject, JsonUtil.getDate(timeString), attributes);
           }
         } catch (Exception e) {
           System.err.println("Error validating contents: " + e.getMessage());
@@ -538,11 +548,10 @@ public class Validator {
       ValidationEvent event = new ValidationEvent();
       event.version = UDMI_VERSION;
       event.timestamp = new Date();
-      String subFolder = origAttributes.get("subFolder");
+      String subFolder = origAttributes.get(SUBFOLDER_PROPERTY_KEY);
       event.sub_folder = subFolder;
-      event.sub_type = origAttributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
+      event.sub_type = origAttributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-
       event.errors = reportingDevice.getErrors(now);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
@@ -575,8 +584,8 @@ public class Validator {
 
   private void writeMessageCapture(Map<String, Object> message, Map<String, String> attributes) {
     String deviceId = attributes.get("deviceId");
-    String type = attributes.getOrDefault("subType", UNKNOWN_TYPE_DEFAULT);
-    String folder = attributes.get("subFolder");
+    String type = attributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
+    String folder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
@@ -612,8 +621,8 @@ public class Validator {
       return false;
     }
 
-    String subType = attributes.get("subType");
-    String subFolder = attributes.get("subFolder");
+    String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
+    String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
     boolean isInteresting = subType == null
         || INTERESTING_TYPES.contains(subType)
@@ -644,8 +653,8 @@ public class Validator {
   }
 
   private String messageSchema(Map<String, String> attributes) {
-    String subFolder = attributes.get("subFolder");
-    String subType = attributes.get("subType");
+    String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
 
     if (SubFolder.UPDATE.value().equals(subFolder)) {
       return subType;
@@ -892,7 +901,7 @@ public class Validator {
      * @param timestamp timestamp of generating message
      */
     public ErrorContainer(Exception exception, String message, String timestamp) {
-      put(EXCEPTION_KEY, exception);
+      put(Common.EXCEPTION_KEY, exception);
       put("message", message);
       put("timestamp", timestamp);
     }
