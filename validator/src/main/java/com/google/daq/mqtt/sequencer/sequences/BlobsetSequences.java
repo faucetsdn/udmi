@@ -47,7 +47,7 @@ public class BlobsetSequences extends SequenceBase {
 
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
     String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
     return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
