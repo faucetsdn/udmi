@@ -69,7 +69,6 @@ Check that the device correctly handles a broken (non-json) config message.
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
-1. Test failed: timeout waiting for config acked
 
 ## endpoint_config_connection_error
 
