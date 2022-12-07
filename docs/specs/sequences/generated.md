@@ -37,6 +37,7 @@ Some caveats:
 * [single_scan](#single_scan)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
+* [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
 * [valid_serial_no](#valid_serial_no)
 * [writeback_failure_state](#writeback_failure_state)
 * [writeback_invalid_state](#writeback_invalid_state)
@@ -151,6 +152,23 @@ Check that the min log-level config is honored by the device.
 1. Update config before log category `system.config.apply` level `NOTICE`:
     * Set `system.min_loglevel` = `200`
 1. Wait for log category `system.config.apply` level `NOTICE`
+
+## system_mode_restart
+
+Restart and connect to same endpoint and expect it returns.
+
+1. Wait for last_start is not zero
+1. Update config:
+    * Add `system.mode` = `active`
+1. Wait for deviceState.system.mode == ACTIVE
+1. Update config:
+    * Set `system.mode` = `restart`
+1. Wait for deviceState.system.mode == INITIAL
+1. Update config:
+    * Set `system.mode` = `active`
+1. Wait for deviceState.system.mode == ACTIVE
+1. Wait for last_config is newer than previous last_config
+1. Wait for last_start is newer than previous last_start
 
 ## valid_serial_no
 
