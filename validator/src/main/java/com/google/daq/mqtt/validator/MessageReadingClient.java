@@ -1,5 +1,8 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +38,7 @@ public class MessageReadingClient implements MessagePublisher {
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
   private static final String TRACE_FILE_SUFFIX = ".json";
+  public static final String MSG_SOURCE = "msgSource";
   private final File messageDir;
   private final String registryId;
   private final Map<String, List<String>> deviceMessageLists = new HashMap<>();
@@ -107,6 +111,7 @@ public class MessageReadingClient implements MessagePublisher {
   private Map<String, String> makeAttributes(String deviceId, String msgName) {
     try {
       Map<String, String> attributes = new HashMap<>();
+      attributes.put(MSG_SOURCE, msgName);
       attributes.put("deviceId", deviceId);
       attributes.put("deviceNumId", getNumId(deviceId));
       attributes.put("projectId", PLAYBACK_PROJECT_ID);
@@ -114,8 +119,8 @@ public class MessageReadingClient implements MessagePublisher {
 
       Matcher matcher = filenamePattern.matcher(msgName);
       if (matcher.matches()) {
-        attributes.put("subType", matcher.group(1));
-        attributes.put("subFolder", matcher.group(2));
+        attributes.put(SUBTYPE_PROPERTY_KEY, matcher.group(1));
+        attributes.put(SUBFOLDER_PROPERTY_KEY, matcher.group(2));
       } else {
         throw new RuntimeException("Malformed filename " + msgName);
       }
@@ -170,7 +175,8 @@ public class MessageReadingClient implements MessagePublisher {
     lastValidTimestamp = deviceNextTimestamp.remove(deviceId);
     deviceLastTimestamp.put(deviceId, lastValidTimestamp);
     prepNextMessage(deviceId);
-    System.out.printf("Replay %s for %s%n", lastValidTimestamp, deviceId);
+    String messageName = attributes.get(MSG_SOURCE);
+    System.out.printf("Replay %s %s for %s%n", messageName, lastValidTimestamp, deviceId);
     messageCount++;
     MessageBundle bundle = new MessageBundle();
     bundle.message = message;

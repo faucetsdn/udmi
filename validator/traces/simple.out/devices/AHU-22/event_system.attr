@@ -3,6 +3,7 @@
   "subFolder" : "system",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "event",
+  "msgSource" : "003_event_system.json",
   "deviceId" : "AHU-22",
   "projectId" : "playback-project"
 }

@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
@@ -181,7 +183,6 @@ public class ReportingDevice {
    * @param attributes message attributes
    */
   public void validateMessageType(Object message, Date timestamp, Map<String, String> attributes) {
-    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
     if (reportingPointset == null) {
       return;
     }
@@ -207,6 +208,15 @@ public class ReportingDevice {
     }
   }
 
+  /**
+   * Update the last seen timestamp for this device.
+   *
+   * @param timestamp timestamp for last seen update
+   */
+  public void updateLastSeen(Date timestamp) {
+    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
+  }
+
   private Exception pointValidationError(String description, Set<String> points) {
     return new ValidationException(
         String.format("Device has %s: %s", description, Joiner.on(", ").join(points)));
@@ -228,8 +238,8 @@ public class ReportingDevice {
    * @param category   error category
    */
   void addError(Exception error, Map<String, String> attributes, String category) {
-    String subFolder = attributes.get("subFolder");
-    String subType = attributes.get("subType");
+    String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     addError(error, category,
         String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
   }
