@@ -20,8 +20,11 @@ public abstract class Common {
   public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_PROPERTY_KEY = "timestamp";
   public static final String VERSION_PROPERTY_KEY = "version";
+  public static final String SUBTYPE_PROPERTY_KEY = "subType";
+  public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
+  public static final String EXCEPTION_KEY = "exception";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
 
   /**
