@@ -96,11 +96,11 @@ public class BlobsetSequences extends SequenceBase {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
       // Successful reconnect sends a state message with empty Entry.
-      Entry stateStatus = deviceState.blobset.blobs.get(
+      Entry blobStateStatus = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
       return phase != null
           && phase.equals(BlobPhase.FINAL)
-          && (stateStatus == null);
+          && blobStateStatus == null;
     });
   }
 
