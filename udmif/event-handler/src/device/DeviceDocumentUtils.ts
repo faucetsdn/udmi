@@ -83,13 +83,12 @@ function buildDeviceDocumentFromValidation(udmiEvent: ValidationEvent, builder: 
 function buildDeviceDocumentFromPointset(
   udmiEvent: PointsetEvent,
   deviceBuilder: DeviceBuilder,
-  existingPoints: Point[] = []
+  existingPoints: Point[]
 ): Device {
   const points: Point[] = [];
 
-  if (!existingPoints) {
-    existingPoints = [];
-  }
+  if (!existingPoints) existingPoints = [];
+
   for (let pointCode in udmiEvent.data.points) {
     const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiEvent, existingPoint, pointCode);
