@@ -53,7 +53,7 @@ describe('AbstractPostgreSQLDAO.insert', () => {
     expect(result).toEqual(object2);
   });
 
-  test('get with value that does not exist returns null', async () => {
+  test('get with value that does not exist returns undefined', async () => {
     // arramge
     const object = { id: 'some-id', name: 'name1' };
     await testClass.insert(object);
