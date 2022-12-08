@@ -22,10 +22,8 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
   }
 
   async upsert(device: any, primaryKeyFields: string[]): Promise<void> {
-    // converting an array of points to a proper json object.
-    const points: any = JSON.stringify(device.points);
-    // replace the incoming points with the convererted version
-    const deviceForPG = { ...device, points };
+    // replace the incoming points with the convert to json version
+    const deviceForPG = { ...device, points: JSON.stringify(device.points) };
     await super.upsert(deviceForPG, primaryKeyFields);
   }
 
