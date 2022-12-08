@@ -18,7 +18,7 @@ describe('Device DAO', () => {
     deviceDAO = await getDeviceDAO();
   });
 
-  test('it calls the abstract inserts with the same arguments', async () => {
+  test('it passes through the arguments to the abstract insert implementation', async () => {
     // arrange
     const insertSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'insert');
     const deviceDoc: Device = { name, id, site };
@@ -30,7 +30,7 @@ describe('Device DAO', () => {
     expect(insertSpy).toHaveBeenCalledWith(deviceDoc);
   });
 
-  test('it calls the abstract upsert with the same arguments when points are not provided', async () => {
+  test('it passes through the arguments to the abstract upsert implementation', async () => {
     // arrange
     const upsertSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'upsert');
     const deviceDoc: Device = { name, id, site };
@@ -43,7 +43,7 @@ describe('Device DAO', () => {
     expect(upsertSpy).toHaveBeenCalledWith(deviceDoc, filter);
   });
 
-  test('it calls the abstract upsert with the points converted to a json string', async () => {
+  test('it passes through the arguments to the abstract upsert implementation with the points converted to a json string', async () => {
     // arrange
     const upsertSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'upsert');
     const points: Point[] = [];
@@ -59,7 +59,7 @@ describe('Device DAO', () => {
     expect(upsertSpy).toHaveBeenCalledWith(convertedDeviceDoc, filter);
   });
 
-  test('it calls the abstract get and returs null if a device is not found', async () => {
+  test('it passes through the arguments to the abstract get and returs null if a device is not found', async () => {
     // arrange
     const getSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'get');
     const deviceDoc: Device = { name, id, site };
@@ -72,14 +72,14 @@ describe('Device DAO', () => {
     expect(result).toBe(null);
   });
 
-  test('it calls the abstract get with the right arguments', async () => {
+  test('it passes through the arguments to the abstract and returns a Device object', async () => {
     // arrange
     const returnedDeviceDoc = { name, id, site, points: '[]', validation: '' };
     const getSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'get').mockResolvedValueOnce(returnedDeviceDoc);
     const deviceDoc: Device = { name, id, site };
 
     // act
-    const result = await deviceDAO.get(deviceDoc);
+    const result: Device = await deviceDAO.get(deviceDoc);
 
     // assert
     expect(getSpy).toHaveBeenCalledWith(deviceDoc);
