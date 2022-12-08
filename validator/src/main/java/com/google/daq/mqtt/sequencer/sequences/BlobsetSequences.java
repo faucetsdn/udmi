@@ -92,15 +92,15 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
 
-    untilTrue("blobset entry config status is success", () -> {
+    untilTrue("blobset phase is FINAL and stateStatus is null", () -> {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-      Entry stateStatus = deviceState.system.status;
+      // Successful reconnect sends a state message with empty Entry.
+      Entry stateStatus = deviceState.blobset.blobs.get(
+          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
       return phase != null
           && phase.equals(BlobPhase.FINAL)
-          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value()
-          && stateStatus.message.equals("success");
+          && (stateStatus == null);
     });
   }
 
