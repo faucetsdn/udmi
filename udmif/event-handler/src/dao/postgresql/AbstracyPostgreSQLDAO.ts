@@ -11,6 +11,7 @@ export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
         console.log('PostgreSQL Insert result: ' + JSON.stringify(result));
       });
   }
+
   async upsert(document: TYPE, primaryKeyFields: string[]): Promise<void> {
     await this.getTable()
       .insert(document)
@@ -21,6 +22,7 @@ export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
         console.log('PostgreSQL Upsert result: ' + JSON.stringify(result));
       });
   }
+
   async get(filterQuery: any): Promise<TYPE> {
     return this.getTable()
       .where(filterQuery)
