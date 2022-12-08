@@ -1,7 +1,6 @@
 import { AbstractPostgreSQLDAO } from '../../dao/postgresql/AbstracyPostgreSQLDAO';
 import { DAO } from '../../dao/DAO';
-import { getSiteDAO } from '../../site/SiteDAO';
-import { Site, SiteValidation } from '../../site/model/Site';
+import { SiteValidation } from '../../site/model/Site';
 import { getSiteValidationDAO } from '../../site/SiteValidationDAO';
 
 jest.mock('../../dao/postgresql/AbstracyPostgreSQLDAO');
