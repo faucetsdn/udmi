@@ -1,16 +1,21 @@
 import { Collection, Filter } from 'mongodb';
+import { Configuration } from '../server/config';
+import { Device } from '../device/model';
+import { Site } from '../site/model';
+import { getMongoCollection } from '../mongo/MongoCollectionProvider';
 import { getAggregate } from '../mongo/MongoAggregateBuilder';
 import { getFilter } from '../mongo/MongoFilterBuilder';
 import { getSort } from '../mongo/MongoSortBuilder';
 import { fromString } from '../common/FilterParser';
 import { ValidatedDistinctSearchOptions, ValidatedSearchOptions } from '../common/model';
+import { DAO } from './DAO';
 
-export interface DAO<Type> {
-  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]>;
-  getOne(filterQuery: any): Promise<Type>;
-  getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number>;
-  getCount(): Promise<number>;
-  getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]>;
+export async function getDeviceDAO(systemConfiguration: Configuration): Promise<DefaultDAO<Device>> {
+  return new DefaultDAO<Device>(await getMongoCollection<Device>('device', systemConfiguration));
+}
+
+export async function getSiteDAO(systemConfiguration: Configuration): Promise<DefaultDAO<Site>> {
+  return new DefaultDAO<Site>(await getMongoCollection<Site>('site', systemConfiguration));
 }
 
 /**

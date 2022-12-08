@@ -10,6 +10,8 @@
     "dotenv": "^16.0.0",
     "google-auth-library": "^7.14.1",
     "graphql": "^16.2.0",
+    "knex": "^2.3.0",
+    "pg": "^8.8.0",
     "lodash": "^4.17.21",
     "mongodb": "^4.4.1",
     "uuid": "^8.3.2",
@@ -32,11 +34,12 @@
     "typescript": "^4.5.5"
   },
   "scripts": {
+    "migrate": "knex --knexfile knexfile.ts migrate:latest",
+    "postinstall": "cd ../.. && husky install udmif/api/.husky",
+    "production": "NODE_ENV=production node -r ts-node/register src/app.ts",
     "start": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:6329  src/app.ts",
     "test": "NODE_ENV=test jest --runInBand --silent",
-    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll",
-    "postinstall": "cd ../.. && husky install udmif/api/.husky",
-    "production": "NODE_ENV=production node -r ts-node/register src/app.ts"
+    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll"
   },
   "lint-staged": {
     "{src,util}/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
