@@ -37,7 +37,6 @@ public class SiteModel {
   private static final Pattern ID_PATTERN = Pattern.compile(
       "projects/(.*)/locations/(.*)/registries/(.*)/devices/(.*)");
 
-
   final String sitePath;
   private Map<String, Metadata> allMetadata;
   private Map<String, Device> allDevices;

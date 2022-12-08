@@ -12,7 +12,7 @@ project_id=$1
 shift
 targets=$*
 
-echo "Workflow run number $GITHUB_RUN_NUMBER"
+[[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 if [[ -n `which rot13` ]]; then
    # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
    echo 'Using target project (rot13):' $(echo $project_id | rot13)
@@ -69,7 +69,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets | tee sequencer.out
+bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
