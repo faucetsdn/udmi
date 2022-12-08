@@ -47,7 +47,7 @@ public class BlobsetSequences extends SequenceBase {
 
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
     String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
     return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
@@ -92,14 +92,15 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
 
-    untilTrue("blobset entry config status is success", () -> {
+    untilTrue("blobset phase is FINAL and stateStatus is null", () -> {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-      Entry stateStatus = deviceState.system.status;
+      // Successful reconnect sends a state message with empty Entry.
+      Entry blobStateStatus = deviceState.blobset.blobs.get(
+          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
       return phase != null
           && phase.equals(BlobPhase.FINAL)
-          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value();
+          && blobStateStatus == null;
     });
   }
 
