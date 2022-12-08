@@ -1,4 +1,5 @@
 import { Device } from './model/Device';
+import { Validation } from '../model/Validation';
 import { DAO } from '../dao/DAO';
 import { knexDb } from '../dao/postgresql/PgDaoProvider';
 import { Knex } from 'knex';
@@ -21,7 +22,9 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
   }
 
   async upsert(device: any, primaryKeyFields: string[]): Promise<void> {
+    // converting an array of points to a proper json object.
     const points: any = JSON.stringify(device.points);
+    // replace the incoming points with the convererted version
     const deviceForPG = { ...device, points };
     await super.upsert(deviceForPG, primaryKeyFields);
   }
@@ -32,11 +35,11 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
       return null;
     }
 
-    const pointsAsString = JSON.stringify(deviceFromPg?.points);
+    const pointsAsString = JSON.stringify(deviceFromPg.points);
     const points: Point[] = JSON.parse(pointsAsString);
 
-    const validationAsString = JSON.stringify(deviceFromPg?.validation);
-    const validation: Point[] = JSON.parse(validationAsString);
+    const validationAsString = JSON.stringify(deviceFromPg.validation);
+    const validation: Validation = JSON.parse(validationAsString);
 
     return { ...deviceFromPg, points, validation };
   }
