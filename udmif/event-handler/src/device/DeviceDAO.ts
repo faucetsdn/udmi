@@ -1,7 +1,7 @@
 import { Device } from './model/Device';
 import { Validation } from '../model/Validation';
 import { DAO } from '../dao/DAO';
-import { knexDb } from '../dao/postgresql/PgDaoProvider';
+import { knexDb } from '../dao/postgresql/PostgreSQLProvider';
 import { Knex } from 'knex';
 import { Point } from './model/Point';
 import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';

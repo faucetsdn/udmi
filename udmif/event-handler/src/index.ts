@@ -15,7 +15,7 @@ import { getDeviceDAO } from './device/DeviceDAO';
 import { getSiteDAO } from './site/SiteDAO';
 import { getDeviceValidationDAO } from './device/DeviceValidationDAO';
 import { getSiteValidationDAO } from './site/SiteValidationDAO';
-import { isConnectedToPostgreSQL } from './dao/postgresql/PgDaoProvider';
+import { isConnectedToPostgreSQL } from './dao/postgresql/PostgreSQLProvider';
 
 let eventHandler: UdmiEventHandler;
 

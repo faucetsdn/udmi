@@ -1,6 +1,6 @@
 import { DeviceValidation } from './model/Device';
 import { DAO } from '../dao/DAO';
-import { knexDb } from '../dao/postgresql/PgDaoProvider';
+import { knexDb } from '../dao/postgresql/PostgreSQLProvider';
 import { Knex } from 'knex';
 import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';
 
