@@ -99,7 +99,8 @@ public class BlobsetSequences extends SequenceBase {
       return phase != null
           && phase.equals(BlobPhase.FINAL)
           && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value();
+          && stateStatus.level == Level.NOTICE.value()
+          && stateStatus.message.equals("success");
     });
   }
 
