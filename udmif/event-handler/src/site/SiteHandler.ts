@@ -19,10 +19,10 @@ export class SiteHandler implements Handler {
 
     // we'll upsert the site document in mongo in case it exists, this will get removed once postgresql is working
     this.siteMongoDao.upsert(siteKey, site);
-    this.sitePGDao.upsert(siteKey, site);
+    if (this.sitePGDao) this.sitePGDao.upsert(siteKey, site);
 
     // we want to insert new validation message and leave the old ones alone
     this.siteMongoValidationDao.insert(siteValidation);
-    this.sitePGValidationDao.insert(siteValidation);
+    if (this.sitePGValidationDao) this.sitePGValidationDao.insert(siteValidation);
   }
 }

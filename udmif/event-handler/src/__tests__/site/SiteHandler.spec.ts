@@ -22,4 +22,14 @@ describe('SiteHandler', () => {
     expect(upsertMock).toHaveBeenCalled();
     expect(insertMock).toHaveBeenCalled();
   });
+
+  test("Site is not saved to PostgreSQL (PG) if the PG Dao's are null", async () => {
+    siteHandler = new SiteHandler(mockDAO, null, mockDAO, null);
+
+    // arrange and act
+    await siteHandler.handle(event);
+
+    // assert
+    expect(insertMock).toHaveBeenCalledTimes(1);
+  });
 });
