@@ -20,9 +20,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "guid",
     "status",
-    "translation"
+    "entities"
 })
 @Generated("jsonschema2pojo")
 public class MappingEvent {
@@ -42,13 +41,6 @@ public class MappingEvent {
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
-     * device guid
-     * 
-     */
-    @JsonProperty("guid")
-    @JsonPropertyDescription("device guid")
-    public java.lang.String guid;
-    /**
      * Entry
      * <p>
      * 
@@ -57,21 +49,20 @@ public class MappingEvent {
     @JsonProperty("status")
     public Entry status;
     /**
-     * Building Config
+     * Mapping Event Entities
      * <p>
-     * [Discovery result](../docs/specs/discovery.md) with implicit enumeration
+     * Mapper output describing a group of devices by their guids
      * 
      */
-    @JsonProperty("translation")
-    @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit enumeration")
-    public HashMap<String, BuildingTranslation> translation;
+    @JsonProperty("entities")
+    @JsonPropertyDescription("Mapper output describing a group of devices by their guids")
+    public HashMap<String, MappingEventEntity> entities;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.translation == null)? 0 :this.translation.hashCode()));
-        result = ((result* 31)+((this.guid == null)? 0 :this.guid.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.entities == null)? 0 :this.entities.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -86,7 +77,7 @@ public class MappingEvent {
             return false;
         }
         MappingEvent rhs = ((MappingEvent) other);
-        return ((((((this.translation == rhs.translation)||((this.translation!= null)&&this.translation.equals(rhs.translation)))&&((this.guid == rhs.guid)||((this.guid!= null)&&this.guid.equals(rhs.guid))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.entities == rhs.entities)||((this.entities!= null)&&this.entities.equals(rhs.entities))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

@@ -10,6 +10,7 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/setup-java@v1
         with:

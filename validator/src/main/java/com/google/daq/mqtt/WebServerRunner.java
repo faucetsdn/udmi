@@ -19,6 +19,7 @@ public class WebServerRunner extends SimpleWebServer {
   public static final String PROJECT_PARAM = "project";
   public static final String DEVICE_PARAM = "device";
   public static final String SERIAL_PARAM = "serial";
+  public static final String TEST_PARAM = "test";
   private String projectId;
 
   /**
