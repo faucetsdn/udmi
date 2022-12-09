@@ -16,15 +16,11 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "guid": {
-      "description": "device guid",
-      "type": "string"
-    },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "translation": {
-      "$ref": "file:building_config.json"
+    "entities": {
+      "$ref": "file:event_mapping_entities.json"
     }
   }
 }

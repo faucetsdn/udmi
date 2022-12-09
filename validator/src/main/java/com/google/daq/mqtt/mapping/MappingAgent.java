@@ -84,23 +84,24 @@ public class MappingAgent extends MappingBase {
     String deviceId = envelope.deviceId;
     System.err.println("Processing mapping event for " + deviceId);
 
-    DeviceMappingState state = mappingSink.ensureDeviceState(deviceId);
-    state.guid = mappingEvent.guid;
-    state.exported = mappingEvent.timestamp;
-    mappingSink.updateState(envelope, state);
+    mappingEvent.entities.forEach((guid, entity) -> {
+      DeviceMappingState state = mappingSink.ensureDeviceState(deviceId);
+      state.guid = guid;
+      state.exported = mappingEvent.timestamp;
+      mappingSink.updateState(envelope, state);
 
-    DeviceMappingConfig config = mappingSink.ensureDeviceConfig(deviceId);
-    config.applied = mappingEvent.timestamp;
-    config.guid = mappingEvent.guid;
-    enginePublish(mappingSink.getMappingConfig());
-    mappingSink.updateConfig(envelope, config);
+      DeviceMappingConfig config = mappingSink.ensureDeviceConfig(deviceId);
+      config.applied = mappingEvent.timestamp;
+      config.guid = guid;
+      enginePublish(mappingSink.getMappingConfig());
+      mappingSink.updateConfig(envelope, config);
 
-    MappingCommand mappingCommand = new MappingCommand();
-    mappingCommand.guid = mappingEvent.guid;
-    mappingCommand.timestamp = mappingEvent.timestamp;
-    mappingCommand.translation = mappingEvent.translation;
-    mappingCommand.device_num_id = Objects.hashCode(deviceId);
-    mappingSink.updateCommand(envelope, mappingCommand);
+      MappingCommand mappingCommand = new MappingCommand();
+      mappingCommand.guid = guid;
+      mappingCommand.timestamp = mappingEvent.timestamp;
+      mappingCommand.translation = entity.translation;
+      mappingSink.updateCommand(envelope, mappingCommand);
+    });
   }
 
 }

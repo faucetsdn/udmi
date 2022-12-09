@@ -6,26 +6,80 @@
 {
   "version": "1.4.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
-  "guid": "21387BBA787ADD",
-  "translation": {
-    "zone_air_temperature_sensor": {
-      "present_value": "points.temp_1.present_value",
-      "units": {
-        "key": "pointset.points.temp_1.units",
-        "values": {
-          "degrees_celsius": "degC"
-        }
+  "entities": {
+    "dea1fcd5-6942-47a2-ba75-448a7ed47fd7": {
+      "code": "US-SVL-MP2",
+      "type": "FACILITIES/BUILDING"
+    },
+    "7e39af7a-9135-4e06-bbf8-bcd671b67ed6": {
+      "code": "US-SVL-MP2-8",
+      "type": "FACILITIES/FLOOR",
+      "connections": {
+        "dea1fcd5-6942-47a2-ba75-448a7ed47fd7": "CONTAINS"
       }
     },
-    "supply_air_isolation_damper_command": {
-      "present_value": "points.damper_1.present_value",
-      "states": {
-        "OPEN": "1",
-        "CLOSED": [
-          "2",
-          "3"
-        ]
-      }
+    "98d597ab-1183-4cfc-803e-728ec55cae39": {
+      "code": "US-SVL-MP2-8-Rm-8F7",
+      "type": "FACILITIES/ROOM",
+      "connections": {
+        "dea1fcd5-6942-47a2-ba75-448a7ed47fd7": "CONTAINS",
+        "7e39af7a-9135-4e06-bbf8-bcd671b67ed6": "CONTAINS"
+      },
+      "links": {
+        "5cdde161-6517-4152-b3a6-211acc7a5b89": {
+          "supply_air_damper_position_command": "supply_air_damper_command_1",
+          "zone_air_temperature": "zone_air_temperature_sensor_1"
+        }
+      },
+      "translation": {
+        "zone_air_temperature_sensor": {
+          "present_value": "points.temp_1.present_value",
+          "units": {
+            "key": "pointset.points.temp_1.units",
+            "values": {
+              "degrees_celsius": "degC"
+            }
+          }
+        },
+        "supply_air_isolation_damper_command": {
+          "present_value": "points.damper_1.present_value",
+          "states": {
+            "OPEN": "1",
+            "CLOSED": [
+              "2",
+              "3"
+            ]
+          }
+        }
+      }      
+    },
+    "b3964996-17f8-41b3-a761-e961f94d6760": {
+      "code": "fcu-8_1",
+      "type": "HVAC/FCU_DFSS_DSP_CHWZC",
+      "connections": {
+        "dea1fcd5-6942-47a2-ba75-448a7ed47fd7": "CONTAINS",
+        "7e39af7a-9135-4e06-bbf8-bcd671b67ed6": "CONTAINS",
+        "98d597ab-1183-4cfc-803e-728ec55cae39": "CONTAINS"
+      },
+      "cloud_device_id": "3607425",
+      "translation": {
+        "zone_air_temperature_sensor": {
+          "present_value": "data.analog-input_4.present-value",
+          "units": {
+            "key": "data.analog-input_4.present-value",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "missing_telemetry_fields": [
+        "discharge_fan_run_command",
+        "discharge_fan_run_status",
+        "zone_air_heating_temperature_setpoint",
+        "zone_air_cooling_temperature_setpoint",
+        "chilled_water_valve_percentage_command"
+      ]
     }
   }
 }

@@ -27,7 +27,7 @@
       "type": "integer"
     },
     "translation": {
-      "$ref": "file:building_config.json"
+      "$ref": "file:equipment_translation.json"
     }
   }
 }
