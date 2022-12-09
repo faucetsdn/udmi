@@ -1,9 +1,13 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.daq.mqtt.sequencer.SequenceBase.SERIAL_NO_MISSING;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.daq.mqtt.TestCommon;
+import com.google.daq.mqtt.WebServerRunner;
+import com.google.udmi.util.SiteModel;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
 
@@ -13,31 +17,47 @@ import udmi.schema.ExecutionConfiguration;
 public class SequenceRunnerTest {
 
   private static final String TEST_DEVICE = "AHU-1";
+  private static final int MODEL_DEVICE_COUNT = 4;
 
-  private ExecutionConfiguration getExecutionConfiguration() {
-    ExecutionConfiguration validatorConfig = new ExecutionConfiguration();
-    validatorConfig.project_id = TestCommon.PROJECT_ID;
-    validatorConfig.site_model = TestCommon.SITE_DIR;
-    validatorConfig.log_level = TestCommon.LOG_LEVEL;
-    validatorConfig.serial_no = SERIAL_NO_MISSING;
-    validatorConfig.key_file = TestCommon.KEY_FILE;
-    return validatorConfig;
-  }
+  // Minimum number of tests allowed. This is a "low water mark" to be increased as appropriate.
+  private static final int TEST_COUNT_MIN = 15;
+  private static final int TEST_COUNT_MAX = TEST_COUNT_MIN * 2;
+  private static final int SITE_COUNT_MAX = TEST_COUNT_MAX * MODEL_DEVICE_COUNT;
+  private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;
 
   @Test
   public void processSite() {
-    ExecutionConfiguration config = getExecutionConfiguration();
-    SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
+    ExecutionConfiguration config = TestCommon.testConfiguration();
+    SequenceRunner.handleRequest(makeParams(config));
+    final int runCount = SequenceRunner.getAllTests().size();
+    final int failures = SequenceRunner.getFailures().size();
+
     // TODO: SequenceRunner is not properly mocked, so everything fails.
-    assertTrue("many failures", sequenceRunner.getFailures().size() > 10);
+    assertEquals("site execution failures", runCount, failures);
+    assertTrue("site executions", runCount >= SITE_COUNT_MIN && runCount < SITE_COUNT_MAX);
   }
 
   @Test
   public void processDevice() {
-    ExecutionConfiguration config = getExecutionConfiguration();
+    ExecutionConfiguration config = TestCommon.testConfiguration();
     config.device_id = TEST_DEVICE;
-    SequenceRunner sequenceRunner = SequenceRunner.processConfig(config);
+    SequenceRunner.handleRequest(makeParams(config));
+    final int runCount = SequenceRunner.getAllTests().size();
+    final int failures = SequenceRunner.getFailures().size();
+
     // TODO: SequenceRunner is not properly mocked, so everything fails.
-    assertTrue("many failures", sequenceRunner.getFailures().size() > 10);
+    assertEquals("site execution failures", runCount, failures);
+    assertTrue("device executions", runCount >= TEST_COUNT_MIN && runCount < TEST_COUNT_MAX);
   }
+
+  private Map<String, String> makeParams(ExecutionConfiguration config) {
+    Map<String, String> params = new HashMap<>();
+    params.put(WebServerRunner.SITE_PARAM, config.site_model);
+    params.put(WebServerRunner.PROJECT_PARAM, config.project_id);
+    params.put(WebServerRunner.SERIAL_PARAM, config.serial_no);
+    params.put(WebServerRunner.DEVICE_PARAM, config.device_id);
+    params.put(WebServerRunner.TEST_PARAM, SiteModel.MOCK_PROJECT);
+    return params;
+  }
+
 }
