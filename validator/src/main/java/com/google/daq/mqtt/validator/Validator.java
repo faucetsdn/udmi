@@ -29,6 +29,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -88,6 +89,9 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
+  public static final String EXCEPTION_KEY = "exception";
+  public static final String TIMESTAMP_KEY = "timestamp";
+  public static final String MESSAGE_KEY = "message";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -363,7 +367,8 @@ public class Validator {
   private void validateReflector() {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
-    client = new IotReflectorClient(config.project_id, config, keyFile);
+    config.key_file = keyFile;
+    client = new IotReflectorClient(config);
   }
 
   void messageLoop() {
@@ -422,7 +427,7 @@ public class Validator {
     }
 
     if (simulatedMessages) {
-      mockNow = Instant.parse((String) message.get("timestamp"));
+      mockNow = Instant.parse((String) message.get(TIMESTAMP_KEY));
       ReportingDevice.setMockNow(mockNow);
     }
     ReportingDevice reportingDevice = validateUpdate(message, attributes);
@@ -444,9 +449,17 @@ public class Validator {
   }
 
   private void sanitizeMessage(String schemaName, Map<String, Object> message) {
+    message.remove(SequenceBase.CONFIG_NONCE_KEY);
+    message.values().forEach(this::sanitizeBlock);
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_PROPERTY_KEY);
       message.remove(TIMESTAMP_PROPERTY_KEY);
+    }
+  }
+
+  private void sanitizeBlock(Object subBlock) {
+    if (subBlock instanceof Map) {
+      ((Map<?, ?>) subBlock).remove(SequenceBase.CONFIG_NONCE_KEY);
     }
   }
 
@@ -594,7 +607,7 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
-      String timestamp = (String) message.get("timestamp");
+      String timestamp = (String) message.get(TIMESTAMP_KEY);
       System.out.printf("Capture %s for %s%n", timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
@@ -901,9 +914,9 @@ public class Validator {
      * @param timestamp timestamp of generating message
      */
     public ErrorContainer(Exception exception, String message, String timestamp) {
-      put(Common.EXCEPTION_KEY, exception);
-      put("message", message);
-      put("timestamp", timestamp);
+      put(EXCEPTION_KEY, exception);
+      put(MESSAGE_KEY, message);
+      put(TIMESTAMP_KEY, timestamp);
     }
   }
 

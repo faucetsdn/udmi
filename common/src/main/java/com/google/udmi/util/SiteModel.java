@@ -26,6 +26,7 @@ import udmi.schema.Metadata;
 
 public class SiteModel {
 
+  public static final String MOCK_PROJECT = "mock-project";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -63,7 +64,8 @@ public class SiteModel {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
     executionConfiguration.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
-    executionConfiguration.cloud_region = Preconditions.checkNotNull(attributes.deviceRegistryLocation,
+    executionConfiguration.cloud_region = Preconditions.checkNotNull(
+        attributes.deviceRegistryLocation,
         "deviceRegistryLocation");
     return executionConfiguration;
   }
@@ -198,6 +200,15 @@ public class SiteModel {
    */
   public String getRegistryId() {
     return executionConfiguration.registry_id;
+  }
+
+  /**
+   * Get the cloud region for this model.
+   *
+   * @return cloud region
+   */
+  public String getCloudRegion() {
+    return executionConfiguration.cloud_region;
   }
 
   /**

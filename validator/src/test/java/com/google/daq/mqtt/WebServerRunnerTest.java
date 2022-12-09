@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +17,7 @@ import org.junit.Test;
  */
 public class WebServerRunnerTest {
 
-  private static final List<String> SERVER_ARGS = ImmutableList.of("0", TestCommon.PROJECT_ID);
+  private static final List<String> SERVER_ARGS = ImmutableList.of("0", SiteModel.MOCK_PROJECT);
 
   @Test
   public void sitePathMissing() {
@@ -31,6 +33,7 @@ public class WebServerRunnerTest {
     Map<String, String> params = new HashMap<>();
     params.put("site", TestCommon.SITE_DIR);
     params.put("device", TestCommon.DEVICE_ID);
+    params.put("test", SiteModel.MOCK_PROJECT);
     String sequencerResult = webServerRunner.tryHandler("sequencer", params);
     // TODO: Expand limited test that only checks that the requests (not tests) were successful.
     assertEquals("sequence success", "success", sequencerResult);
