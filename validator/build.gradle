@@ -14,6 +14,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.adarshr.test-logger' version '3.2.0'
     id 'java'
+    id 'jacoco'
     id 'checkstyle'
 }
 
@@ -33,6 +34,16 @@ sourceSets {
         java {
             srcDirs '../common/src/test/java'
         }
+        finalizedBy jacocoTestRerport
+    }
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
 }
 
