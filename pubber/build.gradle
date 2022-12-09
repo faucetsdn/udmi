@@ -40,8 +40,8 @@ sourceSets {
 jacocoTestReport {
     dependsOn test
     reports {
-        xml.required = false
-        csv.required = true
+        xml.required = true
+        csv.required = false
         html.outputLocation = layout.BuildDirectory.dir('jacocoHtml')
     }
 }
