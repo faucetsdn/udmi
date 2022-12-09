@@ -971,16 +971,16 @@ public class SequenceBase {
   }
 
   protected void noticeTestStarting(String testName) {
-    notice("TEST [ RUNNING                 ] " + testName);
+    notice("TEST        [ RUNNING                 ] " + testName);
   }
 
   protected void noticeTestResult(String result, String testName, String message) {
-    notice(String.format("TEST [         %6s          ] ",
+    notice(String.format("TEST RESULT [         %6s          ] ",
         result.toUpperCase()) + testName + " " + message);
   }
 
   protected void noticeTestFinished(String testName, long durationSeconds) {
-    notice("TEST [                FINISHED ] " + testName + " after duration " + durationSeconds + " secs");
+    notice("TEST        [                FINISHED ] " + testName + " after duration " + durationSeconds + " secs");
   }
 
   protected void notice(String message) {
