@@ -1,5 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -18,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -36,7 +38,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
 
-  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingDeque<>();
+  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;
@@ -47,21 +49,21 @@ public class IotReflectorClient implements MessagePublisher {
   /**
    * Create a new reflector instance.
    *
-   * @param projectId target project
    * @param iotConfig configuration file
-   * @param keyFile   auth key file
    */
-  public IotReflectorClient(String projectId, ExecutionConfiguration iotConfig, String keyFile) {
+  public IotReflectorClient(ExecutionConfiguration iotConfig) {
     final byte[] keyBytes;
+    checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
-      keyBytes = getFileBytes(keyFile);
+      keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
-      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
+      throw new RuntimeException(
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(),
           e);
     }
 
     siteName = iotConfig.registry_id;
-    this.projectId = projectId;
+    projectId = iotConfig.project_id;
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =

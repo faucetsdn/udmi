@@ -1,0 +1,26 @@
+{
+  "$udmi_version": "1.4.0",
+  "title": "Virtual Equipment Links",
+  "description": "Virtual equipment mapping, keyed by guid",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[-0-9a-zA-Z$]+$": {
+      "type": "object",
+      "description": "A map from target device field to source device field",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        }
+      },
+      "examples": [
+        {
+          "compressor_run_status": "compressor_run_status",
+          "discharge_air_cooling_temperature_setpoint": "discharge_air_cooling_temperature_setpoint_1"
+        }
+      ]
+    }
+  }
+}
