@@ -18,6 +18,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Envelope;
 import udmi.schema.MappingConfig;
 import udmi.schema.MappingEvent;
+import udmi.schema.MappingEventEntity;
 import udmi.schema.MappingState;
 import udmi.schema.PointEnumerationEvent;
 
@@ -74,10 +75,12 @@ public class MappingEngine extends MappingBase {
 
   private void updateTranslation(String deviceId, Map<String, PointEnumerationEvent> uniqs) {
     MappingEvent result = new MappingEvent();
-    result.guid = deviceGuid(deviceId);
-    result.translation = uniqs.entrySet()
-        .stream().map(this::makeTranslation).collect(Collectors.toMap(SimpleEntry::getKey,
-            SimpleEntry::getValue, (existing, replacement) -> replacement, HashMap::new));
+    result.entities = new HashMap<>();
+    final MappingEventEntity entity = new MappingEventEntity();
+    entity.translation = uniqs.entrySet()
+            .stream().map(this::makeTranslation).collect(Collectors.toMap(SimpleEntry::getKey,
+                    SimpleEntry::getValue, (existing, replacement) -> replacement, HashMap::new));
+    result.entities.put(deviceGuid(deviceId), entity);
     result.timestamp = new Date();
     publishMessage(deviceId, result);
     getDeviceState(deviceId).exported = new Date();

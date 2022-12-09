@@ -1,6 +1,6 @@
 """Generated class for event_mapping.json"""
 from .common import Entry
-from .building_config import BuildingConfig
+from .event_mapping_entities import MappingEventEntities
 
 
 class MappingEvent:
@@ -9,9 +9,8 @@ class MappingEvent:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.guid = None
     self.status = None
-    self.translation = None
+    self.entities = None
 
   @staticmethod
   def from_dict(source):
@@ -20,9 +19,8 @@ class MappingEvent:
     result = MappingEvent()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.guid = source.get('guid')
     result.status = Entry.from_dict(source.get('status'))
-    result.translation = BuildingTranslation.map_from(source.get('translation'))
+    result.entities = MappingEventEntity.map_from(source.get('entities'))
     return result
 
   @staticmethod
@@ -47,10 +45,8 @@ class MappingEvent:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.guid:
-      result['guid'] = self.guid # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.translation:
-      result['translation'] = BuildingTranslation.expand_dict(self.translation) # 2
+    if self.entities:
+      result['entities'] = MappingEventEntity.expand_dict(self.entities) # 2
     return result

@@ -1,6 +1,6 @@
 """Generated class for command_mapping.json"""
 from .common import Entry
-from .building_config import BuildingConfig
+from .equipment_translation import BuildingConfig
 
 
 class MappingCommand:

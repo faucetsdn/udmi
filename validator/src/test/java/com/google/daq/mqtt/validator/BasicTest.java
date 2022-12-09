@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -17,12 +17,10 @@ import org.junit.Test;
 import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.DiscoveryEvent;
-import udmi.schema.DiscoveryState;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
-import udmi.schema.State;
 import udmi.schema.ValidationEvent;
 import udmi.schema.ValidationState;
 
@@ -39,7 +37,7 @@ public class BasicTest extends TestBase {
   private static final String UPDATE_SUBFOLDER = "update";
   private static final List<String> TEST_ARGS = ImmutableList.of(
       "-n",
-      "-p", TestCommon.PROJECT_ID,
+      "-p", SiteModel.MOCK_PROJECT,
       "-a", TestCommon.SCHEMA_SPEC,
       "-s", TestCommon.SITE_DIR);
   private static final String FLUX_READING = "FLUX_READING";
