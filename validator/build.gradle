@@ -21,6 +21,15 @@ plugins {
 group 'daq-validator'
 version '1.0-SNAPSHOT'
 
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.BuildDirectory.dir('jacocoHtml')
+    }
+}
+
 sourceCompatibility = 1.9
 
 sourceSets {
@@ -34,17 +43,11 @@ sourceSets {
         java {
             srcDirs '../common/src/test/java'
         }
-        finalizedBy jacocoTestRerport
     }
 }
 
-jacocoTestReport {
-    dependsOn test // tests are required to run before generating the report
-    reports {
-        xml.required = false
-        csv.required = false
-        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
-    }
+test {
+  finalizedBy jacocoTestReport
 }
 
 checkstyle {
