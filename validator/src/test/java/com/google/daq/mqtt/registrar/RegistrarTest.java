@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.daq.mqtt.TestCommon.PROJECT_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.daq.mqtt.TestCommon.TOOL_ROOT;
 import static com.google.daq.mqtt.util.IotMockProvider.BIND_DEVICE_ACTION;
@@ -16,6 +15,7 @@ import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
+import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class RegistrarTest {
     try {
       Registrar registrar = new Registrar();
       registrar.setSitePath(SITE_DIR);
-      registrar.setProjectId(PROJECT_ID);
+      registrar.setProjectId(SiteModel.MOCK_PROJECT);
       registrar.setToolRoot(TOOL_ROOT);
       if (args != null) {
         Registrar.processArgs(new ArrayList<>(args), registrar);
