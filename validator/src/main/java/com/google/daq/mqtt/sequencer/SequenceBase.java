@@ -405,7 +405,7 @@ public class SequenceBase {
 
   private void recordResult(String result, String methodName, String message) {
     String resultString = String.format(RESULT_FORMAT, result, methodName, message);
-    notice(resultString);
+    noticeTestResult(result, methodName, message);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);
     } catch (Exception e) {
@@ -970,6 +970,19 @@ public class SequenceBase {
     log(message, Level.INFO);
   }
 
+  protected void noticeTestStarting(String testName) {
+    notice("TEST [ RUNNING                 ] " + testName);
+  }
+
+  protected void noticeTestResult(String result, String testName, String message) {
+    notice(String.format("TEST [         %6s          ] ",
+        result.toUpperCase()) + testName + " " + message);
+  }
+
+  protected void noticeTestFinished(String testName, long durationSeconds) {
+    notice("TEST [                FINISHED ] " + testName + " after duration " + durationSeconds + " secs");
+  }
+
   protected void notice(String message) {
     log(message, Level.NOTICE);
   }
@@ -1063,7 +1076,7 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCE_MD)));
         writeSequenceMdHeader();
 
-        notice("starting test " + testName);
+        noticeTestStarting(testName);
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1077,7 +1090,7 @@ public class SequenceBase {
         throw new IllegalStateException("Unexpected test method name");
       }
       long stopTimeMs = System.currentTimeMillis();
-      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
+      noticeTestFinished(testName, (stopTimeMs - testStartTimeMs) / 1000);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;

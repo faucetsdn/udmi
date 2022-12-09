@@ -161,6 +161,7 @@ public class SequenceRunner {
       throw new RuntimeException("No tests were executed!");
     }
 
+    // TODO: What consumes this output?
     allTests.forEach(testName -> {
       String result = failures.contains(testName) ? "FAIL" : "PASS";
       System.err.printf("%s %s%n", result, testName);
