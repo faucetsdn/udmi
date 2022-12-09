@@ -1,0 +1,25 @@
+#!/bin/bash
+
+function emitfileurl() {
+  local report="$1"
+  local path="$2"
+  local fullpath=$(realpath ${ROOT})
+  echo "Coverage Report"
+  echo "  ${name}"
+  if [[ -f "${fullpath}/${path}" ]]; then
+    echo "  file://${fullpath}/${path}"
+  else
+    echo "  Missing ${path}"
+  fi
+  echo
+}
+
+ROOT=$(dirname $0)/..
+BASE=..
+cd $ROOT
+
+pubber/bin/build covg
+validator/bin/build covg
+
+emitfileurl pubber pubber/build/jacocoHtml/index.html
+emitfileurl validator validator/build/jacocoHtml/index.html 
