@@ -39,10 +39,9 @@ Some caveats:
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
 * [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
 * [valid_serial_no](#valid_serial_no)
-* [writeback_failure_state](#writeback_failure_state)
-* [writeback_invalid_state](#writeback_invalid_state)
-* [writeback_success_apply](#writeback_success_apply)
-* [writeback_success_state](#writeback_success_state)
+* [writeback_failure](#writeback_failure)
+* [writeback_invalid](#writeback_invalid)
+* [writeback_success](#writeback_success)
 
 ## broken_config
 
@@ -53,16 +52,17 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for no interesting status
 1. Wait for state synchronized
 1. Check that initial stable_config matches last_config
+1. Wait for log category `system.config.apply` level `NOTICE`
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for has interesting status
 1. Wait for log category `system.config.parse` level `ERROR`
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
-1. Wait for log category `system.config.receive` level `DEBUG`
+1. Update config before no interesting status:
+    * Add `system.last_start` = `device reported`
+    * Set `system.min_loglevel` = `100`
 1. Wait for no interesting status
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE`
-1. Wait for log category `system.config.parse` level `DEBUG`
 
 ## device_config_acked
 
@@ -146,7 +146,8 @@ Check that last_update state is correctly set in response to a config update.
 
 Check that the min log-level config is honored by the device.
 
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
+1. Wait for log category `system.config.apply` level `NOTICE`
+1. Check that device config resolved within 10s
 1. Update config:
     * Set `system.min_loglevel` = `400`
 1. Update config before log category `system.config.apply` level `NOTICE`:
@@ -167,37 +168,33 @@ Restart and connect to same endpoint and expect it returns.
 1. Update config before deviceState.system.mode == ACTIVE:
     * Set `system.mode` = `active`
 1. Wait for deviceState.system.mode == ACTIVE
-1. Wait for last_config is newer than previous last_config
+1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 
 ## valid_serial_no
 
 1. Wait for received serial no matches
 
-## writeback_failure_state
+## writeback_failure
 
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Update config before point filter_alarm_pressure_status to have value_state failure:
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
 1. Wait for point filter_alarm_pressure_status to have value_state failure
 
-## writeback_invalid_state
+## writeback_invalid
 
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
 1. Wait for point filter_differential_pressure_sensor to have value_state invalid
 
-## writeback_success_apply
+## writeback_success
 
-1. Update config before point `filter_differential_pressure_setpoint` to have present_value `60`:
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
-1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`
-
-## writeback_success_state
-
+1. Update config before point filter_differential_pressure_setpoint to have value_state default (null):
+    * Remove `pointset.points.filter_differential_pressure_setpoint.set_value`
 1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
 1. Update config before point filter_differential_pressure_setpoint to have value_state applied:
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
+    * Add `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
 1. Wait for point filter_differential_pressure_setpoint to have value_state applied
 1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`
