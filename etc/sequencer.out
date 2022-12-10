@@ -13,7 +13,6 @@ RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
-RESULT pass writeback_failure_state Sequence complete
-RESULT pass writeback_invalid_state Sequence complete
-RESULT pass writeback_success_apply Sequence complete
-RESULT pass writeback_success_state Sequence complete
+RESULT pass writeback_failure Sequence complete
+RESULT pass writeback_invalid Sequence complete
+RESULT pass writeback_success Sequence complete
