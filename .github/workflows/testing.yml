@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '40 * * * *'
 
 jobs:
   unit:
@@ -109,15 +109,6 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: telemetry validator
-        env:
-          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
-        run: |
-          bin/test_validator $GCP_TARGET_PROJECT
-          more /tmp/validator.out
-          echo Comparing test run results with golden file:
-          diff -u /tmp/validator.out etc/validator.out
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -140,6 +131,15 @@ jobs:
           bin/test_itemized $GCP_TARGET_PROJECT
           more /tmp/test_itemized.out
           diff -u /tmp/test_itemized.out etc/test_itemized.out
+      - name: telemetry validator
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+        run: |
+          bin/test_validator $GCP_TARGET_PROJECT
+          more /tmp/validator.out
+          echo Comparing test run results with golden file:
+          diff -u /tmp/validator.out etc/validator.out
       - name: output logs
         if: ${{ always() }}
         run: |

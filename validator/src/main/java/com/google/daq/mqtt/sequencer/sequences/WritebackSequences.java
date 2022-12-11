@@ -27,7 +27,7 @@ public class WritebackSequences extends PointsetBase {
    */
   private boolean valueStateIs(String pointName, String expected) {
     if (deviceState.pointset == null || !deviceState.pointset.points.containsKey(pointName)) {
-      return false;
+      throw new AbortMessageLoop("Missing pointset point " + pointName);
     }
     Value_state rawState = deviceState.pointset.points.get(pointName).value_state;
     String valueState = rawState == null ? null : rawState.value();
@@ -62,7 +62,7 @@ public class WritebackSequences extends PointsetBase {
    */
   private boolean presentValueIs(TargetTestingModel targetModel) {
     String pointName = targetModel.target_point;
-    List<PointsetEvent> messages = getReceivedEvents(PointsetEvent.class);
+    List<PointsetEvent> messages = popReceivedEvents(PointsetEvent.class);
     for (PointsetEvent pointsetEvent : messages) {
       if (pointsetEvent.points.get(pointName) != null
           && pointsetEvent.points.get(pointName).present_value == targetModel.target_value) {

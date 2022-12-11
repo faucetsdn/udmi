@@ -52,16 +52,17 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Wait for no interesting status
 1. Wait for state synchronized
 1. Check that initial stable_config matches last_config
+1. Wait for log category `system.config.apply` level `NOTICE`
 1. Wait for log category `system.config.receive` level `DEBUG`
 1. Wait for has interesting status
 1. Wait for log category `system.config.parse` level `ERROR`
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
 1. Force reset config
-1. Wait for log category `system.config.receive` level `DEBUG`
+1. Update config before no interesting status:
+    * Add `system.last_start` = `device reported`
+    * Set `system.min_loglevel` = `100`
 1. Wait for no interesting status
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE`
-1. Wait for log category `system.config.parse` level `DEBUG`
 
 ## device_config_acked
 
@@ -145,7 +146,8 @@ Check that last_update state is correctly set in response to a config update.
 
 Check that the min log-level config is honored by the device.
 
-1. Check has not logged category `system.config.apply` level `NOTICE` (**incomplete!**)
+1. Wait for log category `system.config.apply` level `NOTICE`
+1. Check that device config resolved within 10s
 1. Update config:
     * Set `system.min_loglevel` = `400`
 1. Update config before log category `system.config.apply` level `NOTICE`:
@@ -166,7 +168,7 @@ Restart and connect to same endpoint and expect it returns.
 1. Update config before deviceState.system.mode == ACTIVE:
     * Set `system.mode` = `active`
 1. Wait for deviceState.system.mode == ACTIVE
-1. Wait for last_config is newer than previous last_config
+1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 
 ## valid_serial_no
