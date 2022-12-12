@@ -1,7 +1,7 @@
 import { Collection, MongoClient, Db } from 'mongodb';
-import { Filter } from '../..//common/model';
+import { Filter } from '../../common/model';
 import { DAO } from '../../dao/DAO';
-import { DefaultDAO } from '../../dao/DAO';
+import { DefaultDAO } from '../../dao/MongoDAO';
 import { Device } from '../../device/model';
 
 describe('DAO', () => {
