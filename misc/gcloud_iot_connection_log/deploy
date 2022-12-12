@@ -30,7 +30,7 @@ bq mk \
     --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TABLE_NAME \
     schema_iot_logs.json 
-exit 1
+
 # Create pub/sub topic
 gcloud pubsub topics create $TOPIC --project=$PROJECT_ID 
 
