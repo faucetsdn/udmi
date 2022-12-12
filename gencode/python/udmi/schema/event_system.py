@@ -70,6 +70,7 @@ class SystemEvent:
     self.version = None
     self.last_config = None
     self.logentries = None
+    self.event_count = None
     self.metrics = None
 
   @staticmethod
@@ -81,6 +82,7 @@ class SystemEvent:
     result.version = source.get('version')
     result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
+    result.event_count = source.get('event_count')
     result.metrics = ObjectD1FC597A.from_dict(source.get('metrics'))
     return result
 
@@ -110,6 +112,8 @@ class SystemEvent:
       result['last_config'] = self.last_config # 5
     if self.logentries:
       result['logentries'] = self.logentries.to_dict() # 3
+    if self.event_count:
+      result['event_count'] = self.event_count # 5
     if self.metrics:
       result['metrics'] = self.metrics.to_dict() # 4
     return result

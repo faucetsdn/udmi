@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -47,6 +48,16 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Get a proper JSON string representation of the given Instant.
+   *
+   * @param timestamp thing to convert
+   * @return converted to string
+   */
+  public static String getTimestamp(Instant timestamp) {
+    return getTimestamp(Date.from(timestamp));
+  }
+
+  /**
    * Get a current timestamp string.
    *
    * @return current ISO timestamp
@@ -62,6 +73,8 @@ public abstract class JsonUtil {
    */
   public static void safeSleep(long logClearTimeMs) {
     try {
+      // Sanity check in case somebody accidentally passes in sec rather than ms.
+      checkArgument(logClearTimeMs <= 0 || logClearTimeMs >= 100, "sleep too short");
       Thread.sleep(logClearTimeMs);
     } catch (Exception e) {
       throw new RuntimeException("Interruped sleep", e);

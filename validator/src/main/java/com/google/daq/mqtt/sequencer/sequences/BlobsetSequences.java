@@ -131,7 +131,15 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("deviceState.system.mode == ACTIVE",
         () -> deviceState.system.mode.equals(SystemMode.ACTIVE));
 
-    untilTrue("last_config is newer than previous last_config",
+    // Capture error from last_start unexpectedly changing due to restart condition.
+    try {
+      untilTrue("last_config is newer than previous last_config before abort",
+          () -> deviceState.system.last_config.after(last_config));
+    } catch (AbortMessageLoop e) {
+      info("Squelching aborted message loop: " + e.getMessage());
+    }
+
+    untilTrue("last_config is newer than previous last_config after abort",
         () -> deviceState.system.last_config.after(last_config));
 
     untilTrue("last_start is newer than previous last_start",
