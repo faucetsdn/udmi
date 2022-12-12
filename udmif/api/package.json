@@ -23,6 +23,7 @@
     "@types/lodash": "^4.14.184",
     "@types/node": "^17.0.10",
     "@types/uuid": "^8.3.4",
+    "sqlite3": "^5.1.2",
     "husky": "^7.0.4",
     "jest": "^27.4.7",
     "jest-junit": "^13.0.0",
@@ -39,7 +40,8 @@
     "production": "NODE_ENV=production node -r ts-node/register src/app.ts",
     "start": "nodemon --watch src --watch data -e js,ts,txt,response,json --exec node -r ts-node/register --inspect=0.0.0.0:6329  src/app.ts",
     "test": "NODE_ENV=test jest --runInBand --silent",
-    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll"
+    "verbose": "NODE_ENV=test jest --runInBand --watchAll",
+    "testInteractive": "NODE_ENV=test jest --runInBand --watchAll --silent"
   },
   "lint-staged": {
     "{src,util}/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
