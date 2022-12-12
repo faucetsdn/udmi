@@ -18,17 +18,17 @@ STATE_TABLE=bos_state
 
 BUCKET=$PROJECT_ID-iot-messages
 
-#if [[ $1 == "--drop" ]]; then
-#    shift 1
-#    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
-#    echo $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
-#    echo $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
-#    echo $PROJECT_ID:$DATASET_ID.$STATE_TABLE
-#    sleep 3 && echo "Deleting tables " && sleep 2
-#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
-#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
-#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$STATE_TABLE
-#fi
+if [[ $1 == "--drop" ]]; then
+    shift 1
+    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
+    echo $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+    echo $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+    echo $PROJECT_ID:$DATASET_ID.$STATE_TABLE
+    sleep 3 && echo "Deleting tables " && sleep 2
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$STATE_TABLE
+fi
 
 # Create Dataset
 bq --location=$LOCATION mk \
@@ -38,9 +38,9 @@ bq --location=$LOCATION mk \
 # Create Messsages table
 bq mk \
     --table \
-    --time_partitioning_field publish_timestamp \
+    --time_partitioning_field timestamp \
     --time_partitioning_type DAY \
-    --clustering_fields registry_id,device_id \
+    --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE \
     schema_messages.json
 
@@ -49,7 +49,7 @@ bq mk \
     --table \
     --time_partitioning_field timestamp \
     --time_partitioning_type DAY \
-    --clustering_fields registry_id,device_id \
+    --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE \
     schema_telemetry.json
 
@@ -58,7 +58,7 @@ bq mk \
     --table \
     --time_partitioning_field timestamp \
     --time_partitioning_type DAY \
-    --clustering_fields registry_id,device_id \
+    --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$STATE_TABLE \
     schema_state.json
 
