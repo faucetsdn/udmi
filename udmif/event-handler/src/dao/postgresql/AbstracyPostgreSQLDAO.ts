@@ -1,10 +1,10 @@
 import { Knex } from 'knex';
 import { DAO } from '../DAO';
 
-export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
-  constructor(private db: Knex, private tableName: string) {}
+export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
+  constructor(private db: Knex, private tableName: string) { }
 
-  async insert(document: TYPE): Promise<void> {
+  async insert(document: Type): Promise<void> {
     await this.getTable()
       .insert(document)
       .then((result) => {
@@ -12,7 +12,7 @@ export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
       });
   }
 
-  async upsert(document: TYPE, primaryKeyFields: string[]): Promise<void> {
+  async upsert(document: Type, primaryKeyFields: string[]): Promise<void> {
     await this.getTable()
       .insert(document)
       .onConflict(primaryKeyFields)
@@ -23,7 +23,7 @@ export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
       });
   }
 
-  async get(filterQuery: any): Promise<TYPE> {
+  async get(filterQuery: Type): Promise<Type> {
     return this.getTable()
       .where(filterQuery)
       .first()

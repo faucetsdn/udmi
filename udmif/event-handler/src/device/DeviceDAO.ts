@@ -27,7 +27,7 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
     await super.upsert(deviceForPG, primaryKeyFields);
   }
 
-  async get(filterQuery: any): Promise<Device> {
+  async get(filterQuery: Device): Promise<Device> {
     const deviceFromPg: any = await super.get(filterQuery);
     if (!deviceFromPg) {
       return null;
