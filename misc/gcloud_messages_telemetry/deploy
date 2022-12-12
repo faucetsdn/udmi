@@ -28,7 +28,7 @@ BUCKET=$PROJECT_ID-iot-messages
 #    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
 #    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
 #    bq rm -t -f $PROJECT_ID:$DATASET_ID.$STATE_TABLE
-fi
+#fi
 
 # Create Dataset
 bq --location=$LOCATION mk \
