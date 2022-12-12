@@ -39,10 +39,9 @@ Some caveats:
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
 * [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
 * [valid_serial_no](#valid_serial_no)
-* [writeback_failure_state](#writeback_failure_state)
-* [writeback_invalid_state](#writeback_invalid_state)
-* [writeback_success_apply](#writeback_success_apply)
-* [writeback_success_state](#writeback_success_state)
+* [writeback_failure](#writeback_failure)
+* [writeback_invalid](#writeback_invalid)
+* [writeback_success](#writeback_success)
 
 ## broken_config
 
@@ -82,9 +81,9 @@ Push endpoint config message to device that results in a connection error.
 
 Push endpoint config message to device that results in successful reconnect to the same endpoint.
 
-1. Update config before blobset entry config status is success:
+1. Update config before blobset phase is FINAL and stateStatus is null:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
-1. Wait for blobset entry config status is success
+1. Wait for blobset phase is FINAL and stateStatus is null
 
 ## extra_config
 
@@ -174,30 +173,26 @@ Restart and connect to same endpoint and expect it returns.
 
 1. Wait for received serial no matches
 
-## writeback_failure_state
+## writeback_failure
 
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Update config before point filter_alarm_pressure_status to have value_state failure:
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
 1. Wait for point filter_alarm_pressure_status to have value_state failure
 
-## writeback_invalid_state
+## writeback_invalid
 
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
 1. Wait for point filter_differential_pressure_sensor to have value_state invalid
 
-## writeback_success_apply
+## writeback_success
 
-1. Update config before point `filter_differential_pressure_setpoint` to have present_value `60`:
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
-1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`
-
-## writeback_success_state
-
+1. Update config before point filter_differential_pressure_setpoint to have value_state default (null):
+    * Remove `pointset.points.filter_differential_pressure_setpoint.set_value`
 1. Wait for point filter_differential_pressure_setpoint to have value_state default (null)
 1. Update config before point filter_differential_pressure_setpoint to have value_state applied:
-    * Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
+    * Add `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
 1. Wait for point filter_differential_pressure_setpoint to have value_state applied
 1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`

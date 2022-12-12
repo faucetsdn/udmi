@@ -11,7 +11,7 @@ import udmi.schema.TargetTestingModel;
 /**
  * Class used for testing sequences with points.
  */
-public abstract class PointSequencer extends SequenceBase {
+public abstract class PointsetBase extends SequenceBase {
 
   /**
    * Make the required set of points in the config block.
@@ -32,9 +32,11 @@ public abstract class PointSequencer extends SequenceBase {
 
   private void ensurePointConfig(String target) {
     String targetPoint = getTarget(target).target_point;
-    if (!deviceConfig.pointset.points.containsKey(targetPoint)) {
-      deviceConfig.pointset.points.put(targetPoint, new PointPointsetConfig());
-    }
+    deviceConfig.pointset.points.computeIfAbsent(targetPoint, this::makePointsetConfig);
+  }
+
+  private PointPointsetConfig makePointsetConfig(String pointName) {
+    return new PointPointsetConfig();
   }
 
   protected TargetTestingModel getTarget(String target) {
