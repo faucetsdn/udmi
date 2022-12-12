@@ -740,7 +740,7 @@ public class SequenceBase {
 
   protected void untilLogged(String category, Level exactLevel) {
     final List<Entry> entries = new ArrayList<>();
-    untilTrue(String.format("log category `%s` level `%s`", category, exactLevel), () -> {
+    untilTrue(String.format("log category `%s` level `%s` was logged", category, exactLevel), () -> {
       processLogMessages();
       entries.addAll(matchingLogQueueEntries(
           entry -> category.equals(entry.category) && entry.level == exactLevel.value()));
@@ -758,14 +758,14 @@ public class SequenceBase {
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
     List<Entry> entries = matchingLogQueueEntries(
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
-    if (!entries.isEmpty()) {
-      warning(String.format("Filtered config between %s and %s", getTimestamp(lastConfigUpdate),
-          getTimestamp(endTime)));
-      entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
-      throw new AbortMessageLoop(
-          String.format("found undesired log entry %s %s", Level.fromValue(entries.get(0).level),
-              category));
-    }
+    checkThat(String.format("log category `%s` level `%s` not logged", category, minLevel), () -> {
+      if (!entries.isEmpty()) {
+        warning(String.format("Filtered config between %s and %s", getTimestamp(lastConfigUpdate),
+            getTimestamp(endTime)));
+        entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
+      }
+      return entries.isEmpty();
+    });
   }
 
   private List<Entry> matchingLogQueueEntries(Function<Entry, Boolean> predicate) {
