@@ -40,7 +40,7 @@ gcloud logging sinks create iot_connections_logsink \
     --project=$PROJECT_ID
 
 LOGSINK_SERVICE_ACCOUNT=$(gcloud logging sinks describe iot_connections_logsink --project=$PROJECT_ID | grep writerIdentity | sed "s/writerIdentity: //")
-gcloud pubsub topics add-iam-policy-binding $TOPIC--member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'  --project=$PROJECT_ID 
+gcloud pubsub topics add-iam-policy-binding $TOPIC --member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'  --project=$PROJECT_ID 
 
 # Deploy Cloud Function
 gcloud functions deploy $FUNCTION_NAME \
