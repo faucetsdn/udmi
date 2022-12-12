@@ -47,7 +47,7 @@ bq mk \
 # Create Messsages table
 bq mk \
     --table \
-    --time_partitioning_field timestamp \
+    --time_partitioning_field publish_timestamp \
     --time_partitioning_type DAY \
     --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE \
