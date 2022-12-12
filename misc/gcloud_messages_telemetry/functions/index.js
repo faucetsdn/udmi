@@ -67,7 +67,8 @@ exports.processMessage = async (event, context) => {
 
   // Insert telemetry if pointset event
   // TODO break out into processTelemetry
-  if (messageType == EVENT_POINTSET && 'points' in msg){
+  // disable temporarily
+  if (messageType == EVENT_POINTSET && 'points' in msg && true == false){
     var rows = []
     Object.keys(msg.points).forEach(function(key) {
       let row = {
