@@ -6,4 +6,4 @@ python3 --version
 python3 -m venv venv
 
 venv_pip3=$($(dirname $0)/which_venv_pip3)
-venv_pip3 install -r etc/requirements.txt
+${venv_pip3} install -r etc/requirements.txt
