@@ -740,12 +740,13 @@ public class SequenceBase {
 
   protected void untilLogged(String category, Level exactLevel) {
     final List<Entry> entries = new ArrayList<>();
-    untilTrue(String.format("log category `%s` level `%s` was logged", category, exactLevel), () -> {
-      processLogMessages();
-      entries.addAll(matchingLogQueueEntries(
-          entry -> category.equals(entry.category) && entry.level == exactLevel.value()));
-      return !entries.isEmpty();
-    });
+    untilTrue(String.format("log category `%s` level `%s` was logged", category, exactLevel),
+        () -> {
+          processLogMessages();
+          entries.addAll(matchingLogQueueEntries(
+              entry -> category.equals(entry.category) && entry.level == exactLevel.value()));
+          return !entries.isEmpty();
+        });
     entries.forEach(entry -> debug("matching " + entryMessage(entry)));
   }
 
