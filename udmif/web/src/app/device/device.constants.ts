@@ -19,7 +19,10 @@ export class DeviceConstants {
       'serialNumber',
       'firmware',
       'state',
-      'lastSeen',
+      'lastStateUpdated',
+      'lastStateSaved',
+      'lastTelemetryUpdated',
+      'lastTelemetrySaved',
       'errorsCount',
     ]).map((value) => ({ value })),
     'value'
