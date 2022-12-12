@@ -31,15 +31,16 @@ bq mk \
     schema_iot_logs.json 
 
 # Create pub/sub topic
-gcloud pubsub topics create $TOPIC --project $PROJECT_ID
+gcloud pubsub topics create $TOPIC --project=$PROJECT_ID 
 
 # create logs router
 gcloud logging sinks create iot_connections_logsink \
     pubsub.googleapis.com/projects/$PROJECT_ID/topics/$TOPIC \
     --log-filter='resource.type="cloudiot_device" AND (jsonPayload.eventType="DISCONNECT" OR jsonPayload.eventType="CONNECT")'
+    --project=$PROJECT_ID
 
 LOGSINK_SERVICE_ACCOUNT=$(gcloud logging sinks describe iot_connections_logsink --project=$PROJECT_ID | grep writerIdentity | sed "s/writerIdentity: //")
-gcloud pubsub topics add-iam-policy-binding $TOPIC --project=$PROJECT_ID --member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'
+gcloud pubsub topics add-iam-policy-binding $TOPIC--member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'  --project=$PROJECT_ID 
 
 # Deploy Cloud Function
 gcloud functions deploy $FUNCTION_NAME \
