@@ -11,7 +11,7 @@
   },
   {
     "mode": "NULLABLE",
-    "name": "registry_id",
+    "name": "device_registry_id",
     "type": "STRING"
   },
   {
