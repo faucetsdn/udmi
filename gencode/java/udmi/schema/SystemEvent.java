@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "last_config",
     "logentries",
+    "event_count",
     "metrics"
 })
 @Generated("jsonschema2pojo")
@@ -53,12 +54,20 @@ public class SystemEvent {
     public Date last_config;
     @JsonProperty("logentries")
     public List<Entry> logentries = new ArrayList<Entry>();
+    /**
+     * Accumulated count of the number of system event messages sent.
+     * 
+     */
+    @JsonProperty("event_count")
+    @JsonPropertyDescription("Accumulated count of the number of system event messages sent.")
+    public Integer event_count;
     @JsonProperty("metrics")
     public Metrics metrics;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.event_count == null)? 0 :this.event_count.hashCode()));
         result = ((result* 31)+((this.metrics == null)? 0 :this.metrics.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -76,7 +85,7 @@ public class SystemEvent {
             return false;
         }
         SystemEvent rhs = ((SystemEvent) other);
-        return ((((((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
+        return (((((((this.event_count == rhs.event_count)||((this.event_count!= null)&&this.event_count.equals(rhs.event_count)))&&((this.metrics == rhs.metrics)||((this.metrics!= null)&&this.metrics.equals(rhs.metrics))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.logentries == rhs.logentries)||((this.logentries!= null)&&this.logentries.equals(rhs.logentries))));
     }
 
 }

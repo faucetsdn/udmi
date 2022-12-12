@@ -39,6 +39,6 @@
     "production": "NODE_ENV=production node -r ts-node/register src/app.ts"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
+    "{src,util}/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write"
   }
 }

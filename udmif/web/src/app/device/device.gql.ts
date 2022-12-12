@@ -14,10 +14,13 @@ export const GET_DEVICE = gql`
       firmware
       serialNumber
       level
-      lastSeen
       state
       errorsCount
       validation
+      lastStateUpdated
+      lastStateSaved
+      lastTelemetryUpdated
+      lastTelemetrySaved
     }
   }
 `;

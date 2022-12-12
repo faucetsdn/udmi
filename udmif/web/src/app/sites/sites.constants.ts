@@ -12,8 +12,13 @@ export class SitesConstants {
       isSortable: true,
     },
     {
+      value: 'seenDevicesCount',
+      label: 'Seen Devices',
+      isSortable: false,
+    },
+    {
       value: 'totalDevicesCount',
-      label: 'Devices',
+      label: 'Total Devices',
       isSortable: false,
     },
     {
@@ -39,11 +44,6 @@ export class SitesConstants {
     {
       value: 'lastValidated',
       label: 'Last Validated',
-      isSortable: false,
-    },
-    {
-      value: 'percentValidated',
-      label: '% Validated',
       isSortable: false,
     },
     {

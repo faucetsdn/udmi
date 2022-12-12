@@ -26,7 +26,6 @@ describe('SitesComponent', () => {
       errorDevicesCount: 0,
       extraDevicesCount: 0,
       lastValidated: '2022-04-24T02:54:51Z',
-      percentValidated: 0,
       deviceErrors: [],
       totalDeviceErrorsCount: 0,
     },
