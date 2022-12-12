@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if (( $# < 4 )); then
+if (( $# < 3 )); then
     echo $0 PROJECT_ID DATASET_ID LOCATION [--drop]
     exit
 fi
@@ -8,7 +8,6 @@ fi
 PROJECT_ID=$1
 DATASET_ID=$2
 LOCATION=$3
-TRIGGER_TOPIC=$4
 shift 4
 
 if [[ $1 == "--drop" ]]; then
@@ -25,11 +24,14 @@ TABLE_NAME=iot_connection_log
 # State table
 bq mk \
     --table \
+    --time_partitioning_field timestamp \
+    --time_partitioning_type DAY \
+    --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TABLE_NAME \
     schema_iot_logs.json 
 
 # Create pub/sub topic
-gcloud pubsub topics create $TOPIC
+gcloud pubsub topics create $TOPIC --project $PROJECT_ID
 
 # create logs router
 gcloud logging sinks create iot_connections_logsink \
