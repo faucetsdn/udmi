@@ -18,6 +18,10 @@ function needs_gencode_update() {
   bin/gencode check
 }
 
+function needs_gencode_seq_update() {
+  return 0  # needs
+}
+
 function reset_needs() {
   needs="0"
 }
@@ -35,12 +39,11 @@ function genscript() {
 }
 
 #
-# main
+# Main
 #
 
-ROOT=$(dirname $0)/..
-BASE=..
-cd $ROOT
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
 
 # Generate code coverage
 banner "Code Coverage"
@@ -50,7 +53,7 @@ for project in pubber validator; do
 done
 
 if [[ ${needs} -gt 0 ]]; then
-  genscript $ROOT/bin/gencovg
+  genscript $ROOT_DIR/bin/gencovg
 fi
 
 # Generate code from schemas
@@ -59,5 +62,16 @@ reset_needs
 needs_gencode_update && add_needs
 
 if [[ ${needs} -gt 0 ]]; then
-  genscript $ROOT/bin/gencode
+  genscript $ROOT_DIR/bin/gencode
 fi
+
+# Generate code for sequencer.md
+banner "Gencode for sequencer.md"
+reset_needs
+needs_gencode_seq_update && add_needs
+
+if [[ ${needs} -gt 0 ]]; then
+  genscript $ROOT_DIR/bin/gencode_seq
+fi
+
+# Done
