@@ -50,7 +50,7 @@ log_entry = {
     timestamp: t2,
     device_id: logData['labels']['device_id'],
     device_num_id: logData['resource']['labels']['device_num_id'],
-    registry_id: logData['resource']['labels']['device_registry_id'],
+    device_registry_id: logData['resource']['labels']['device_registry_id'],
     event: newState,
     logentry: 1,
     logentry_description: description,
@@ -63,7 +63,7 @@ log_entry = {
     timestamp: t1,
     device_id: logData['labels']['device_id'],
     device_num_id: logData['resource']['labels']['device_num_id'],
-    registry_id: logData['resource']['labels']['device_registry_id'],
+    device_registry_id: logData['resource']['labels']['device_registry_id'],
     event: oldState,
     logentry: 0
   }
