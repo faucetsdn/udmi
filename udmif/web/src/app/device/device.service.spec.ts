@@ -38,10 +38,13 @@ describe('DeviceService', () => {
         serialNumber: 's123',
         firmware: 'V3',
         level: 400,
-        lastSeen: '2022-01-03',
         state: 'CORRECT',
         errorsCount: 2,
         validation: '',
+        lastStateUpdated: '2022-01-03',
+        lastStateSaved: '2022-01-03',
+        lastTelemetryUpdated: '2022-01-03',
+        lastTelemetrySaved: '2022-01-03',
       },
     };
 

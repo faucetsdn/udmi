@@ -45,6 +45,10 @@ export interface Device {
   tags?: string[];
   points?: Point[];
   validation?: Validation;
+  lastTelemetryUpdated?: string;
+  lastStateUpdated?: string;
+  lastTelemetrySaved?: string;
+  lastStateSaved?: string;
 }
 
 export class DeviceBuilder {
@@ -139,6 +143,34 @@ export class DeviceBuilder {
   validation(validation: Validation): DeviceBuilder {
     if (validation) {
       this._document.validation = validation;
+    }
+    return this;
+  }
+
+  lastStateUpdated(timestamp: string): DeviceBuilder {
+    if (timestamp) {
+      this._document.lastStateUpdated = timestamp;
+    }
+    return this;
+  }
+
+  lastStateSaved(timestamp: string): DeviceBuilder {
+    if (timestamp) {
+      this._document.lastStateSaved = timestamp;
+    }
+    return this;
+  }
+
+  lastTelemetryUpdated(timestamp: string): DeviceBuilder {
+    if (timestamp) {
+      this._document.lastTelemetryUpdated = timestamp;
+    }
+    return this;
+  }
+
+  lastTelemetrySaved(timestamp: string): DeviceBuilder {
+    if (timestamp) {
+      this._document.lastTelemetrySaved = timestamp;
     }
     return this;
   }

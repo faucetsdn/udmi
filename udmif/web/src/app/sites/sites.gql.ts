@@ -5,13 +5,16 @@ export const GET_SITES = gql`
     sites(searchOptions: $searchOptions) {
       sites {
         name
+        seenDevicesCount
         totalDevicesCount
         correctDevicesCount
+        correctDevicesPercent
         missingDevicesCount
+        missingDevicesPercent
         errorDevicesCount
+        errorDevicesPercent
         extraDevicesCount
         lastValidated
-        percentValidated
         deviceErrors {
           message
           timestamp
