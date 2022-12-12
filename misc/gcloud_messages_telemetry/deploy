@@ -44,10 +44,10 @@ bq mk \
     $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE \
     schema_messages.json
 
-# Create Messsages table
+# Create Telemetry table
 bq mk \
-    --table \h
-    --time_partitioning_field publish_timestamp \
+    --table \
+    --time_partitioning_field timestamp \
     --time_partitioning_type DAY \
     --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE \
@@ -61,6 +61,7 @@ bq mk \
     --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$STATE_TABLE \
     schema_state.json
+exit 1
 
 # Deploy Cloud Function
 gcloud functions deploy messages_to_bq \
