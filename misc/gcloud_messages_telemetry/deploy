@@ -61,7 +61,6 @@ bq mk \
     --clustering_fields device_registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$STATE_TABLE \
     schema_state.json
-exit 1
 
 # Deploy Cloud Function
 gcloud functions deploy messages_to_bq \
