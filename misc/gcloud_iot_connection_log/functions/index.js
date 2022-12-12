@@ -71,7 +71,7 @@ log_entry = {
   }
   
   return await Promise.all([
-    bigquery.dataset(DATASET_ID).table('iot_connects').insert([log_derivative, log_entry]),
+    bigquery.dataset(DATASET_ID).table(TABLE_NAME).insert([log_derivative, log_entry]),
   ]);
 };
 
