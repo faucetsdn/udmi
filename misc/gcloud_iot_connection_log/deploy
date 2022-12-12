@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if (( $# < 4 )); then
-    echo $0 PROJECT_ID DATASET_ID LOCATION TRIGGER_TOPIC [--drop]
+    echo $0 PROJECT_ID DATASET_ID LOCATION [--drop]
     exit
 fi
 
@@ -11,8 +11,6 @@ LOCATION=$3
 TRIGGER_TOPIC=$4
 shift 4
 
-
-
 if [[ $1 == "--drop" ]]; then
     shift 1
     #echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
@@ -21,12 +19,13 @@ if [[ $1 == "--drop" ]]; then
 fi
 
 FUNCTION_NAME=gcloud_iot_connection_log
-TOPIC=iot_connections
+TOPIC=iot_connection_log
+TABLE_NAME=iot_connection_log
 
 # State table
 bq mk \
     --table \
-    $PROJECT_ID:$DATASET_ID.iot_connects \
+    $PROJECT_ID:$DATASET_ID.$TABLE_NAME \
     schema_iot_logs.json 
 
 # Create pub/sub topic
@@ -35,14 +34,14 @@ gcloud pubsub topics create $TOPIC
 # create logs router
 gcloud logging sinks create iot_connections_logsink \
     pubsub.googleapis.com/projects/$PROJECT_ID/topics/$TOPIC \
-    --log-filter='resource.type="gce_instance"'
+    --log-filter='resource.type="cloudiot_device" AND (jsonPayload.eventType="DISCONNECT" OR jsonPayload.eventType="CONNECT")'
 
 LOGSINK_SERVICE_ACCOUNT=$(gcloud logging sinks describe iot_connections_logsink --project=$PROJECT_ID | grep writerIdentity | sed "s/writerIdentity: //")
 gcloud pubsub topics add-iam-policy-binding $TOPIC --project=$PROJECT_ID --member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher'
 
 # Deploy Cloud Function
 gcloud functions deploy $FUNCTION_NAME \
-    --trigger-topic=logtest\
+    --trigger-topic=$TOPIC\
     --entry-point=logConnectionEvents \
     --runtime nodejs16 \
     --project=$PROJECT_ID \

@@ -1,0 +1,79 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "publish_timestamp",
+      "type": "TIMESTAMP"
+    },
+    {
+    "mode": "NULLABLE",
+    "name": "registry_id",
+    "type": "STRING"
+    },
+    {
+    "mode": "NULLABLE",
+    "name": "device_id",
+    "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "device_num_id",
+      "type": "INTEGER"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "gateway_id",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "message_id",
+      "type": "INTEGER"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "make",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "serial_no",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "model",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "sku",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "rev",
+      "type": "STRING"
+    },
+    {
+      "name": "software",
+      "type": "RECORD",
+      "mode": "REPEATED",
+      "fields": [
+        {
+          "name": "id",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        },
+        {
+          "name": "version",
+          "type": "STRING",
+          "mode": "NULLABLE"
+        }
+      ]
+    }
+]

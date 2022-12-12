@@ -12,22 +12,23 @@ TRIGGER_TOPIC=$4
 shift 4
 
 FUNCTION_NAME=function-11
-MESSAGES_TABLE=messages
+MESSAGES_TABLE=bos_messages
 TELEMETRY_TABLE=points
+STATE_TABLE=bos_state
 
 BUCKET=$PROJECT_ID-iot-messages
 
-if [[ $1 == "--drop" ]]; then
-    shift 1
-    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
-    echo $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
-    echo $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
-    sleep 8 && echo "Deleting tables " && sleep 4
-    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
-    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+#if [[ $1 == "--drop" ]]; then
+#    shift 1
+#    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
+#    echo $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+#    echo $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+#    echo $PROJECT_ID:$DATASET_ID.$STATE_TABLE
+#    sleep 3 && echo "Deleting tables " && sleep 2
+#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$MESSAGES_TABLE
+#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE
+#    bq rm -t -f $PROJECT_ID:$DATASET_ID.$STATE_TABLE
 fi
-
-gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
 
 # Create Dataset
 bq --location=$LOCATION mk \
@@ -46,11 +47,20 @@ bq mk \
 # Create Messsages table
 bq mk \
     --table \
-    --time_partitioning_field publish_timestamp \
+    --time_partitioning_field timestamp \
     --time_partitioning_type DAY \
     --clustering_fields registry_id,device_id \
     $PROJECT_ID:$DATASET_ID.$TELEMETRY_TABLE \
     schema_telemetry.json
+
+# State table
+bq mk \
+    --table \
+    --time_partitioning_field timestamp \
+    --time_partitioning_type DAY \
+    --clustering_fields registry_id,device_id \
+    $PROJECT_ID:$DATASET_ID.$STATE_TABLE \
+    schema_state.json
 
 # Deploy Cloud Function
 gcloud functions deploy messages_to_bq \
@@ -59,16 +69,6 @@ gcloud functions deploy messages_to_bq \
     --runtime nodejs16 \
     --project=$PROJECT_ID \
     --source=functions/ \
-    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,MESSAGES_TABLE=$MESSAGES_TABLE,TELEMETRY_TABLE=$TELEMETRY_TABLE,BUCKET=$BUCKET &
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,MESSAGES_TABLE=$MESSAGES_TABLE,TELEMETRY_TABLE=$TELEMETRY_TABLE,STATE_TABLE=$STATE_TABLE
 
-# Deploy Cloud Function
-gcloud functions deploy dump_raw_messages \
-    --trigger-topic=$TRIGGER_TOPIC \
-    --entry-point=storeMessage \
-    --runtime nodejs16 \
-    --project=$PROJECT_ID \
-    --source=functions/ \
-    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,MESSAGES_TABLE=$MESSAGES_TABLE,TELEMETRY_TABLE=$TELEMETRY_TABLE,BUCKET=$BUCKET &
-
-wait
 echo Done
