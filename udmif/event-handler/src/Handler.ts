@@ -1,4 +1,4 @@
-import { UdmiEvent } from './model/UdmiEvent';
+import { UdmiEvent } from './udmi/UdmiEvent';
 
 /**
  * Interface for handlers

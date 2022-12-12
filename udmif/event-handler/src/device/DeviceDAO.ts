@@ -9,10 +9,10 @@ import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';
 const TABLE_NAME = 'devices';
 
 export async function getDeviceDAO(): Promise<DAO<Device>> {
-  return new PostgreSQLDAO<Device>(knexDb);
+  return new PostgreSQLDAO(knexDb);
 }
 
-export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
+export class PostgreSQLDAO extends AbstractPostgreSQLDAO<Device> {
   constructor(db: Knex) {
     super(db, TABLE_NAME);
   }
@@ -21,7 +21,7 @@ export class PostgreSQLDAO<Device> extends AbstractPostgreSQLDAO<Device> {
     await super.insert(device);
   }
 
-  async upsert(device: any, primaryKeyFields: string[]): Promise<void> {
+  async upsert(device: Device, primaryKeyFields: string[]): Promise<void> {
     // replace the incoming points with the convert to json version
     const deviceForPG = { ...device, points: JSON.stringify(device.points) };
     await super.upsert(deviceForPG, primaryKeyFields);

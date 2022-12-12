@@ -1,7 +1,7 @@
 import { buildPoint, createDevice, getDeviceKey, getDeviceValidation } from '../../device/DeviceDocumentUtils';
 import { Device, DeviceValidation } from '../../device/model/Device';
 import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../EventUtils';
-import { UdmiEvent } from '../../model/UdmiEvent';
+import { UdmiEvent } from '../../udmi/UdmiEvent';
 import { Point } from '../../device/model/Point';
 import { Validation } from '../../model/Validation';
 import { createEvent, DEVICE_VALIDATION_EVENT } from '../dataUtils';
@@ -366,7 +366,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
       ],
     };
 
-    const expectedDevice: Device = { name, site, id, validation: expectedValidations };
+    const expectedDevice: Device = { name, site, id, validation: expectedValidations, points: [] };
 
     // act and assert
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);

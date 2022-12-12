@@ -1,6 +1,6 @@
 import type { EventFunction } from '@google-cloud/functions-framework/build/src/functions';
 import UdmiEventHandler from './udmi/UdmiEventHandler';
-import { UdmiEvent } from './model/UdmiEvent';
+import { UdmiEvent } from './udmi/UdmiEvent';
 import { InvalidEventError } from './InvalidEventError';
 import { SiteHandler } from './site/SiteHandler';
 import { Handler } from './Handler';

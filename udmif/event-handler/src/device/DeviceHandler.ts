@@ -1,9 +1,10 @@
 import { createDevice, getDeviceKey, getDeviceValidation } from './DeviceDocumentUtils';
 import { Handler } from '../Handler';
 import { Device, DeviceKey, DeviceValidation, PRIMARY_KEYS } from './model/Device';
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 import { DAO } from '../dao/DAO';
 import { isValidationSubType } from '../EventUtils';
+import { Point } from './model/Point';
 
 export class DeviceHandler implements Handler {
   constructor(
@@ -24,10 +25,8 @@ export class DeviceHandler implements Handler {
     }
 
     const deviceKey: DeviceKey = getDeviceKey(udmiEvent);
-
     const existingDeviceDocumentFromPg: Device = await this.devicePgDao.get(deviceKey);
-
-    const pgDevice: Device = createDevice(udmiEvent, existingDeviceDocumentFromPg?.points);
+    const pgDevice: Device = createDevice(udmiEvent, existingDeviceDocumentFromPg?.points as Point[]);
 
     // let's upsert the existing document
     await this.devicePgDao.upsert(pgDevice, PRIMARY_KEYS);
@@ -44,7 +43,7 @@ export class DeviceHandler implements Handler {
 
     const existingDeviceDocument: Device = await this.deviceDao.get(deviceKey);
 
-    const mongoDevice: Device = createDevice(udmiEvent, existingDeviceDocument?.points);
+    const mongoDevice: Device = createDevice(udmiEvent, existingDeviceDocument?.points as Point[]);
 
     // let's upsert the existing document
     await this.deviceDao.upsert(mongoDevice, deviceKey);

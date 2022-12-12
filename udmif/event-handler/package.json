@@ -29,13 +29,12 @@
   },
   "scripts": {
     "build": "tsc -p .",
-    "migrate": "knex --knexfile knexfile.ts migrate:latest",
     "postinstall": "cd ../.. && husky install udmif/event-handler/.husky",
     "start": "concurrently \"tsc -w\" \"nodemon --watch ./dist/src --exec npm run watch\"",
     "test": "NODE_ENV=test jest --silent --runInBand --detectOpenHandles",
     "testInteractive": "NODE_ENV=test jest --runInBand --silent --watchAll --detectOpenHandles",
     "testVerbose": "NODE_ENV=test jest --runInBand --verbose --watchAll --detectOpenHandles",
-    "watch": "functions-framework --source=dist/src/ --target=handleUdmiEvent --signature-type=event"
+    "watch": "functions-framework --source=dist/ --target=handleUdmiEvent --signature-type=event"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,json}": "prettier --single-quote --arrow-parens always --trailing-comma es5 --print-width 120 --write",

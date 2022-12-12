@@ -25,7 +25,7 @@ export interface Device {
   serialNumber?: string;
   firmware?: string;
   tags?: string[];
-  points?: Point[];
+  points?: Point[] | string;
   validation?: Validation;
   lastTelemetryUpdated?: string;
   lastStateUpdated?: string;

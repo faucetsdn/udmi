@@ -7,10 +7,10 @@ import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';
 const TABLE_NAME = 'device_validations';
 
 export async function getDeviceValidationDAO(): Promise<DAO<DeviceValidation>> {
-  return new PostgreSQLDAO<DeviceValidation>(knexDb);
+  return new PostgreSQLDAO(knexDb);
 }
 
-export class PostgreSQLDAO<DeviceValidation> extends AbstractPostgreSQLDAO<DeviceValidation> {
+export class PostgreSQLDAO extends AbstractPostgreSQLDAO<DeviceValidation> {
   constructor(db: Knex) {
     super(db, TABLE_NAME);
   }

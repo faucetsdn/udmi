@@ -1,4 +1,4 @@
-import { Error, Status } from './UdmiEvent';
+import { Error, Status } from '../udmi/UdmiEvent';
 import { InvalidEventError } from '../InvalidEventError';
 
 /**

@@ -7,6 +7,7 @@ export interface UdmiEvent {
     subType?: string;
     projectId?: string;
   };
+  data: any;
 }
 
 export interface PointsetEvent extends UdmiEvent {
@@ -72,7 +73,7 @@ export interface Summary {
   extra_devices?: string[];
   missing_devices?: string[];
   error_devices?: string[];
-};
+}
 
 export interface ValidationEvent extends UdmiEvent {
   data: {
