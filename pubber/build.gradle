@@ -14,6 +14,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.adarshr.test-logger' version '3.2.0'
     id 'java'
+    id 'jacoco'
     id 'checkstyle'
 }
 
@@ -35,6 +36,17 @@ sourceSets {
         }
     }
 }
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.BuildDirectory.dir('jacocoHtml')
+    }
+}
+
+// TODO(future): jacocoTestCoverageVerification
 
 checkstyle {
     ignoreFailures = false
