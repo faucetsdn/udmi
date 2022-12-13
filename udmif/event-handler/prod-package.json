@@ -6,6 +6,7 @@
   "main": "index.js",
   "license": "ISC",
   "dependencies": {
+    "knex": "^2.3.0",
     "mongodb": "^4.4.1"
   },
   "scripts": {
