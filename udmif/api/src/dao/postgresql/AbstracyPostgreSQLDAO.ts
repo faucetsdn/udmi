@@ -6,39 +6,59 @@ import { getWhereOptions } from './Where';
 
 export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   defaultOrder: Order;
+  ID_AS_COUNT = 'id as count';
 
   constructor(private db: Knex, private tableName: string) {}
 
-  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[] | null> {
+  async getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
     return this.getTable()
       .select()
       .orderBy(this.getOrderBy(searchOptions.sortOptions))
-      .where((builder) => this.getWhere(searchOptions.filter, builder))
+      .where((builder) => this.addWhereClause(searchOptions.filter, builder))
       .limit(searchOptions.batchSize)
       .offset(searchOptions.offset);
   }
 
-  getOne(filterQuery: any): Promise<Type | null> {
-    throw new Error('Method not implemented.');
+  async getOne(filterQuery: any): Promise<Type> {
+    return this.getTable()
+      .where(filterQuery)
+      .first()
+      .then((row) => row);
   }
 
-  getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number> {
-    throw new Error('Method not implemented.');
+  async getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number> {
+    return this.getTable()
+      .select('id')
+      .orderBy(this.getOrderBy(searchOptions.sortOptions))
+      .where((builder) => this.addWhereClause(searchOptions.filter, builder))
+      .limit(searchOptions.batchSize)
+      .offset(searchOptions.offset)
+      .count(this.ID_AS_COUNT)
+      .first()
+      .then((row) => row.count);
   }
 
-  getCount(): Promise<number> {
-    throw new Error('Method not implemented.');
+  async getCount(): Promise<number> {
+    return this.getTable()
+      .count(this.ID_AS_COUNT)
+      .first()
+      .then((row) => row.count);
   }
 
-  getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[] | null> {
-    throw new Error('Method not implemented.');
+  async getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]> {
+    return this.getTable()
+      .select(field)
+      .where((builder) => this.addWhereClause(searchOptions.filter, builder))
+      .limit(searchOptions.limit)
+      .pluck(field)
+      .distinct();
   }
 
   private getTable(): Knex.QueryBuilder<any, any[]> {
     return this.db(this.tableName);
   }
 
-  private getWhere(filter: string, builder: Knex.QueryBuilder<any, any[]>) {
+  private addWhereClause(filter: string, builder: Knex.QueryBuilder<any, any[]>) {
     getWhereOptions(filter).forEach((filter) => builder.where(filter.field, filter.operator, filter.values));
   }
 

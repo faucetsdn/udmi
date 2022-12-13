@@ -1,5 +1,6 @@
 import knex, { Knex } from 'knex';
-import { ValidatedSearchOptions, SORT_DIRECTION, Filter } from '../../../common/model';
+import { Order } from '../../../dao/postgresql/OrderBy';
+import { ValidatedSearchOptions, SORT_DIRECTION, Filter, ValidatedDistinctSearchOptions } from '../../../common/model';
 import { AbstractPostgreSQLDAO } from '../../../dao/postgresql/AbstracyPostgreSQLDAO';
 
 class TestClass extends AbstractPostgreSQLDAO<any> {
@@ -7,6 +8,20 @@ class TestClass extends AbstractPostgreSQLDAO<any> {
     super(db, 'any');
   }
 }
+
+class TestClassWithDefaultOrder extends AbstractPostgreSQLDAO<any> {
+  defaultOrder: Order;
+
+  constructor(db: Knex) {
+    super(db, 'any');
+    this.defaultOrder = {
+      column: 'name',
+      order: 'desc',
+    };
+  }
+}
+
+let testClass: TestClass;
 
 let db: Knex;
 beforeEach(async () => {
@@ -25,6 +40,8 @@ beforeEach(async () => {
     table.string('site', 255).nullable();
     table.string('section', 255).nullable();
     table.unique(['id']);
+
+    testClass = new TestClass(db);
   });
 });
 
@@ -32,13 +49,7 @@ afterEach(() => {
   db.destroy();
 });
 
-describe('AbstractPostgreSQLDAO.insert', () => {
-  let testClass: TestClass;
-
-  beforeEach(async () => {
-    testClass = new TestClass(db);
-  });
-
+describe('getAll', () => {
   test('we can limit the number of records retrieved', async () => {
     await db('any').insert(createRecords(3));
 
@@ -123,6 +134,84 @@ describe('AbstractPostgreSQLDAO.insert', () => {
     let expectedIndexes = [...Array(10)].map((_, i) => i + 1 + offset);
 
     expect(responseIndexes).toEqual(expectedIndexes);
+  });
+
+  test('a default order is applied', async () => {
+    const records = createRecords(3);
+
+    await db('any').insert(records);
+    const daoWithDefaultOrder = new TestClassWithDefaultOrder(db);
+
+    const result = await daoWithDefaultOrder.getAll({ batchSize: 10, offset: 0 });
+
+    expect(result).toEqual([records[2], records[1], records[0]]);
+  });
+});
+
+describe('getOne', () => {
+  test('returns null if record not found', async () => {
+    // arrange
+    const records = createRecords(6);
+    await db('any').insert(records);
+
+    // act/assert
+    await expect(testClass.getOne({ name: 'name1' })).resolves.toEqual(undefined);
+  });
+
+  test('we can retrieve a single record', async () => {
+    // arrange
+    const records = createRecords(6);
+    await db('any').insert(records);
+
+    // act/assert
+    await expect(testClass.getOne({ name: 'name-1' })).resolves.toEqual(records[0]);
+  });
+});
+
+describe('count', () => {
+  test('returns count of records', async () => {
+    // arrange
+    const records = createRecords(55);
+    await db('any').insert(records);
+
+    // act/assert
+    await expect(testClass.getCount()).resolves.toEqual(55);
+  });
+});
+
+describe('getFilteredCount', () => {
+  test('returns count of filtered records', async () => {
+    // arrange
+    const records = createRecords(60);
+    await db('any').insert(records);
+
+    const filter: string = JSON.stringify(<Filter[]>[{ field: 'site', operator: '=', value: 'site-1' }]);
+
+    const searchOptions: ValidatedSearchOptions = {
+      offset: 0,
+      filter,
+    };
+
+    // act/assert
+    await expect(testClass.getFilteredCount(searchOptions)).resolves.toEqual(20);
+  });
+});
+
+describe('getDistinct', () => {
+  test('returns count of distinct records by field with no filter', async () => {
+    // arrange
+    const records = createRecords(60);
+    await db('any').insert(records);
+
+    const searchOptions: ValidatedDistinctSearchOptions = {
+      filter: '',
+      limit: 20,
+    };
+
+    // act/assert
+    await expect(testClass.getDistinct('site', searchOptions)).resolves.toEqual(
+      expect.arrayContaining(['site-1', 'site-2', 'site-3'])
+    );
   });
 });
 
