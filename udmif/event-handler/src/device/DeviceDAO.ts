@@ -1,5 +1,4 @@
 import { Device } from './model/Device';
-import { Validation } from '../model/Validation';
 import { DAO } from '../dao/DAO';
 import { knexDb } from '../dao/postgresql/PostgreSQLProvider';
 import { Knex } from 'knex';
@@ -22,7 +21,9 @@ export class PostgreSQLDAO extends AbstractPostgreSQLDAO<Device> {
   }
 
   async upsert(device: Device, primaryKeyFields: string[]): Promise<void> {
-    // replace the incoming points with the convert to json version
+    // postgresql complains about a array of objects as a json object
+    // so we'll replace it with a string representation of json which
+    // postgres is happy with
     const deviceForPG = { ...device, points: JSON.stringify(device.points) };
     await super.upsert(deviceForPG, primaryKeyFields);
   }
@@ -33,12 +34,13 @@ export class PostgreSQLDAO extends AbstractPostgreSQLDAO<Device> {
       return null;
     }
 
+    // return deviceFromPg;
+    // // postgresql is returning the points as an object that needs to be converted into a Point[]
+    // // we'll stringify the the object and then parse it into a Point[]
+
     const pointsAsString = JSON.stringify(deviceFromPg.points);
     const points: Point[] = JSON.parse(pointsAsString);
 
-    const validationAsString = JSON.stringify(deviceFromPg.validation);
-    const validation: Validation = JSON.parse(validationAsString);
-
-    return { ...deviceFromPg, points, validation };
+    return { ...deviceFromPg, points };
   }
 }
