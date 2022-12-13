@@ -3,14 +3,12 @@ import { DeviceHandler } from '../../device/DeviceHandler';
 import { DEVICE_VALIDATION_EVENT, POINTSET_STATE_EVENT, SYSTEM_MODEL_EVENT } from '../dataUtils';
 import { getMock, insertMock, mockDAO, upsertMock } from '../MockDAO';
 
-const AHU_ID: string = 'AHU-1';
-
 describe('DeviceHandler', () => {
   let deviceHandler: Handler;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    deviceHandler = new DeviceHandler(mockDAO, mockDAO);
+    deviceHandler = new DeviceHandler(mockDAO, mockDAO, mockDAO, mockDAO);
   });
 
   test.each([SYSTEM_MODEL_EVENT, POINTSET_STATE_EVENT, DEVICE_VALIDATION_EVENT])(
@@ -41,5 +39,15 @@ describe('DeviceHandler', () => {
 
     // assert
     expect(insertMock).toHaveBeenCalled();
+  });
+
+  test("Device is not saved to PostgreSQL (PG) if the PG Dao's are null", async () => {
+    deviceHandler = new DeviceHandler(mockDAO, null, mockDAO, null);
+
+    // arrange and act
+    await deviceHandler.handle(DEVICE_VALIDATION_EVENT);
+
+    // assert
+    expect(insertMock).toHaveBeenCalledTimes(1);
   });
 });

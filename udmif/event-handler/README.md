@@ -13,6 +13,17 @@ In order to properly run the cloud function, it requires MongoDB to be up and ru
 
 You will need to configure the connection parameters in your runDev.sh file if they are different from a standard install.
 
+## PostgreSQL
+---
+
+In order to run this cloud function, a connection to a PostgreSQL DB is required.  Please follow these instructions for installing PostgreSQL locally.
+
+[PostgreSQL Download and Instructions](https://www.postgresql.org/download/)
+
+The shell script `runMigration.sh` runs a DB schema migration against the local PostgreSQL instance.
+
+In production, the DB schema migration will be handled by the API service found in the sibling `udmif/api` folder to `udmif/event-handler`.
+
 ## Build and Run
 ---
 

@@ -1,6 +1,6 @@
-import { UdmiEvent } from './model/UdmiEvent';
-import { isPointsetSubType, isSystemSubType, isValidationSubType } from './EventUtils';
-import { Handler } from './Handler';
+import { UdmiEvent } from '../udmi/UdmiEvent';
+import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../EventUtils';
+import { Handler } from '../Handler';
 
 export const VALIDATOR_ID: string = '_validator';
 

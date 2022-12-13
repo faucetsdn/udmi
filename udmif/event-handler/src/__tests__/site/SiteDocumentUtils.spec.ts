@@ -1,5 +1,5 @@
 import { Site, SiteValidation } from '../../site/model/Site';
-import { UdmiEvent } from '../../model/UdmiEvent';
+import { UdmiEvent } from '../../udmi/UdmiEvent';
 import { SITE_VALIDATION_EVENT } from '../dataUtils';
 import { getSiteDocument, getSiteKey, getSiteValidationDocument } from '../../site/SiteDocumentUtils';
 

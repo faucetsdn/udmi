@@ -12,3 +12,5 @@ export interface SiteValidation {
   timestamp: Date;
   data: any;
 }
+
+export const PRIMARY_KEYS: string[] = ['name'];
