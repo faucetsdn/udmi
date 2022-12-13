@@ -1,0 +1,12 @@
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "subscriptions/google-staging/registries/ZZ-TRI-FECTA/devices/AHU-1",
+      "hostname": "google-staging.mqtt.korewireless.com"
+    },
+    "sitePath": "sites/udmi_site_model/",
+    "deviceId": "AHU-1",
+    "projectId": "bos-peringknife-dev",
+    "serialNo": "54321",
+    "options": {}
+}
