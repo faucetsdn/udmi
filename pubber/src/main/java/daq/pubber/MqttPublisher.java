@@ -638,4 +638,3 @@ public class MqttPublisher implements Publisher {
     }
   }
 }
-
