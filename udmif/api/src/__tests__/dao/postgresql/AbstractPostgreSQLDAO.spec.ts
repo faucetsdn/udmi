@@ -101,6 +101,29 @@ describe('AbstractPostgreSQLDAO.insert', () => {
     // act/assert
     expect(testClass.defaultOrder).toEqual(undefined);
   });
+
+  test('we can get pages with an offset', async () => {
+    const records = createRecords(100);
+    await db('any').insert(records);
+
+    const offset = 15;
+    const batchSize = 10;
+
+    const searchOptions: ValidatedSearchOptions = {
+      offset,
+      batchSize,
+    };
+
+    const response = await testClass.getAll(searchOptions);
+
+    // make this an array of id, where the id's increment numerically
+    let responseIndexes = response.map((value) => value.id);
+
+    // create an array of expected indexes using the offset
+    let expectedIndexes = [...Array(10)].map((_, i) => i + 1 + offset);
+
+    expect(responseIndexes).toEqual(expectedIndexes);
+  });
 });
 
 function createRecords(numberOfRecords: number) {
