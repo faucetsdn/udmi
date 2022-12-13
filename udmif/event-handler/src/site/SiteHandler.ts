@@ -1,6 +1,6 @@
 import { DAO } from '../dao/DAO';
 import { Handler } from '../Handler';
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 import { Site, SiteKey, SiteValidation } from './model/Site';
 import { getSiteDocument, getSiteKey, getSiteValidationDocument } from './SiteDocumentUtils';
 

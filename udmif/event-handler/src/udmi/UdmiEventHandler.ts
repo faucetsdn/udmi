@@ -1,4 +1,4 @@
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 import { isPointsetSubType, isSystemSubType, isValidationSubType } from '../EventUtils';
 import { Handler } from '../Handler';
 

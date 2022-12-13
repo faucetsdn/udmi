@@ -7,10 +7,10 @@ import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';
 const TABLE_NAME: string = 'site_validations';
 
 export async function getSiteValidationDAO(): Promise<DAO<SiteValidation>> {
-  return new PostgreSQLDAO<SiteValidation>(knexDb);
+  return new PostgreSQLDAO(knexDb);
 }
 
-export class PostgreSQLDAO<SiteValidation> extends AbstractPostgreSQLDAO<SiteValidation> {
+export class PostgreSQLDAO extends AbstractPostgreSQLDAO<SiteValidation> {
   constructor(db: Knex) {
     super(db, TABLE_NAME);
   }

@@ -10,7 +10,7 @@ import {
   isPointsetSubType,
   isValidationSubType,
 } from '../EventUtils';
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 import { createEventFromTypes } from './dataUtils';
 
 describe('EventUtils.System', () => {

@@ -1,4 +1,4 @@
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 import UdmiEventHandler, { VALIDATOR_ID } from '../udmi/UdmiEventHandler';
 import {
   CONFIG,
