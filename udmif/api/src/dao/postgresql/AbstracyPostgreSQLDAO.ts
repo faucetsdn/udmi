@@ -9,20 +9,16 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
 
   constructor(private db: Knex, private tableName: string) {}
 
-  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
+  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[] | null> {
     return this.getTable()
       .select()
       .orderBy(this.getOrderBy(searchOptions.sortOptions))
-      .where((builder) => {
-        getWhereOptions(searchOptions.filter).forEach((filter) =>
-          builder.where(filter.field, filter.operator, filter.values)
-        );
-      })
+      .where((builder) => this.getWhere(searchOptions.filter, builder))
       .limit(searchOptions.batchSize)
       .offset(searchOptions.offset);
   }
 
-  getOne(filterQuery: any): Promise<Type> {
+  getOne(filterQuery: any): Promise<Type | null> {
     throw new Error('Method not implemented.');
   }
 
@@ -34,12 +30,16 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
     throw new Error('Method not implemented.');
   }
 
-  getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[]> {
+  getDistinct(field: string, searchOptions: ValidatedDistinctSearchOptions): Promise<string[] | null> {
     throw new Error('Method not implemented.');
   }
 
-  private getTable() {
+  private getTable(): Knex.QueryBuilder<any, any[]> {
     return this.db(this.tableName);
+  }
+
+  private getWhere(filter: string, builder: Knex.QueryBuilder<any, any[]>) {
+    getWhereOptions(filter).forEach((filter) => builder.where(filter.field, filter.operator, filter.values));
   }
 
   private getOrderBy(searchOptions: SortOptions): Order[] {
