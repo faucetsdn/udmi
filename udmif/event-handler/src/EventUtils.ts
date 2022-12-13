@@ -1,4 +1,4 @@
-import { UdmiEvent } from './model/UdmiEvent';
+import { UdmiEvent } from './udmi/UdmiEvent';
 
 export const POINTSET_SUB_FOLDER = 'pointset';
 export const SYSTEM_SUB_FOLDER = 'system';

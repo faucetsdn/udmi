@@ -43,7 +43,7 @@ export interface SystemEvent extends UdmiEvent {
     software?: {
       firmware?: string;
     };
-    operational?: string;
+    operational?: boolean;
     serial_no?: string;
     timestamp?: string;
   };
@@ -68,6 +68,13 @@ export interface PointSet {
   extra: string[];
 }
 
+export interface Summary {
+  correct_devices?: string[];
+  extra_devices?: string[];
+  missing_devices?: string[];
+  error_devices?: string[];
+}
+
 export interface ValidationEvent extends UdmiEvent {
   data: {
     version: string;
@@ -78,7 +85,7 @@ export interface ValidationEvent extends UdmiEvent {
     status?: Status;
     errors?: Error[];
     pointset: PointSet[];
-    summary: any;
+    summary: Summary;
     devices: any;
   };
 }

@@ -1,5 +1,5 @@
 import { InvalidEventError } from '../InvalidEventError';
-import { UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
+import { UdmiEvent, ValidationEvent } from '../udmi/UdmiEvent';
 import { Site, SiteKey, SiteValidation } from './model/Site';
 
 export function getSiteDocument(udmiEvent: ValidationEvent): Site {

@@ -1,10 +1,10 @@
 import { handleUdmiEvent } from '../index';
 import * as MongoDAO from '../dao/mongo/MongoDAO';
-import UdmiEventHandler from '../UdmiEventHandler';
+import UdmiEventHandler from '../udmi/UdmiEventHandler';
 import { InvalidEventError } from '../InvalidEventError';
 import { SYSTEM_MODEL_EVENT } from './dataUtils';
 
-jest.mock('../UdmiEventHandler');
+jest.mock('../udmi/UdmiEventHandler');
 
 describe('index', () => {
   let deviceDAOSpy;

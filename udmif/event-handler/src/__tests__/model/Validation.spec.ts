@@ -1,4 +1,4 @@
-import { Error, Status } from '../../model/UdmiEvent';
+import { Error, Status } from '../../udmi/UdmiEvent';
 import { Validation, ValidationBuilder } from '../../model/Validation';
 
 describe('Validation.ValidationBuilder', () => {

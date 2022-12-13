@@ -1,6 +1,6 @@
 import { DeviceBuilder, Device, DeviceKey, DeviceValidation } from './model/Device';
 import { isPointsetSubType, isSubType, isSystemSubType, isValidationSubType, STATE } from '../EventUtils';
-import { PointsetEvent, SystemEvent, UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
+import { PointsetEvent, SystemEvent, UdmiEvent, ValidationEvent } from '../udmi/UdmiEvent';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
 import { InvalidEventError } from '../InvalidEventError';
@@ -22,10 +22,11 @@ export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Dev
   builder
     .site(udmiEvent.attributes.deviceRegistryId)
     .name(udmiEvent.attributes.deviceId)
-    .id(udmiEvent.attributes.deviceNumId);
+    .id(udmiEvent.attributes.deviceNumId)
+    .points(existingPoints);
 
   if (isSystemSubType(udmiEvent)) {
-    return buildDeviceDocumentFromSystem(udmiEvent, builder);
+    return buildDeviceDocumentFromSystem(udmiEvent, builder, existingPoints);
   } else if (isPointsetSubType(udmiEvent)) {
     return buildDeviceDocumentFromPointset(udmiEvent, builder, existingPoints);
   } else if (isValidationSubType(udmiEvent)) {
@@ -34,13 +35,17 @@ export function createDevice(udmiEvent: UdmiEvent, existingPoints: Point[]): Dev
 }
 
 export function getDeviceValidation(udmiEvent: ValidationEvent, deviceKey: DeviceKey): DeviceValidation {
-  return { timestamp: new Date(udmiEvent.data.timestamp), deviceKey, data: udmiEvent.data };
+  return { timestamp: new Date(udmiEvent.data.timestamp), deviceKey, message: udmiEvent.data };
 }
 
 /**
  * https://faucetsdn.github.io/udmi/gencode/docs/event_system.html describes the incoming schema for an event system message
  */
-function buildDeviceDocumentFromSystem(udmiEvent: SystemEvent, builder: DeviceBuilder): Device {
+function buildDeviceDocumentFromSystem(
+  udmiEvent: SystemEvent,
+  builder: DeviceBuilder,
+  existingPoints: Point[]
+): Device {
   return builder
     .lastPayload(udmiEvent.data.timestamp)
     .operational(udmiEvent.data.operational)
@@ -78,11 +83,12 @@ function buildDeviceDocumentFromValidation(udmiEvent: ValidationEvent, builder: 
 function buildDeviceDocumentFromPointset(
   udmiEvent: PointsetEvent,
   deviceBuilder: DeviceBuilder,
-  existingPoints: Point[] = []
+  existingPoints: Point[]
 ): Device {
   const points: Point[] = [];
 
-  console.log('buildDeviceDocumentFromPointset ' + existingPoints);
+  if (!existingPoints) existingPoints = [];
+
   for (let pointCode in udmiEvent.data.points) {
     const existingPoint = existingPoints.find((candidatePoint) => candidatePoint.name === pointCode);
     const point: Point = buildPoint(udmiEvent, existingPoint, pointCode);

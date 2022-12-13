@@ -1,5 +1,5 @@
 import { EVENT, POINTSET_SUB_FOLDER, STATE, VALIDATION_SUB_FOLDER } from '../EventUtils';
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 
 export function createEvent(attributes: any, data: object = {}): UdmiEvent {
   return { attributes, data };

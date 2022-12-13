@@ -1,11 +1,21 @@
 import type { EventFunction } from '@google-cloud/functions-framework/build/src/functions';
-import { getDeviceDAO, getDeviceValidationDAO, getSiteDAO, getSiteValidationDAO } from './dao/mongo/MongoDAO';
-import UdmiEventHandler from './UdmiEventHandler';
-import { UdmiEvent } from './model/UdmiEvent';
+import UdmiEventHandler from './udmi/UdmiEventHandler';
+import { UdmiEvent } from './udmi/UdmiEvent';
 import { InvalidEventError } from './InvalidEventError';
 import { SiteHandler } from './site/SiteHandler';
 import { Handler } from './Handler';
 import { DeviceHandler } from './device/DeviceHandler';
+import {
+  getDeviceDAO as getMongoDeviceDao,
+  getSiteDAO as getMongoSiteDao,
+  getDeviceValidationDAO as getMongoDeviceValidationDao,
+  getSiteValidationDAO as getMongoSiteValidationDao,
+} from './dao/mongo/MongoDAO';
+import { getDeviceDAO } from './device/DeviceDAO';
+import { getSiteDAO } from './site/SiteDAO';
+import { getDeviceValidationDAO } from './device/DeviceValidationDAO';
+import { getSiteValidationDAO } from './site/SiteValidationDAO';
+import { isConnectedToPostgreSQL } from './dao/postgresql/PostgreSQLProvider';
 
 let eventHandler: UdmiEventHandler;
 
@@ -17,9 +27,24 @@ let eventHandler: UdmiEventHandler;
 export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
     if (!eventHandler) {
+      const connectedToPostgreSQL: boolean = await isConnectedToPostgreSQL();
+      if (!connectedToPostgreSQL) console.log('Skipping all PostgreSQL operations.');
+
+      const siteHandler: Handler = new SiteHandler(
+        await getMongoSiteDao(),
+        connectedToPostgreSQL ? await getSiteDAO() : null,
+        await getMongoSiteValidationDao(),
+        connectedToPostgreSQL ? await getSiteValidationDAO() : null
+      );
+
+      const deviceHandler: Handler = new DeviceHandler(
+        await getMongoDeviceDao(),
+        connectedToPostgreSQL ? await getDeviceDAO() : null,
+        await getMongoDeviceValidationDao(),
+        connectedToPostgreSQL ? await getDeviceValidationDAO() : null
+      );
+
       console.log('Creating Event Handler');
-      const siteHandler: Handler = new SiteHandler(await getSiteDAO(), await getSiteValidationDAO());
-      const deviceHandler: Handler = new DeviceHandler(await getDeviceDAO(), await getDeviceValidationDAO());
       eventHandler = new UdmiEventHandler(deviceHandler, siteHandler);
     }
     const udmiEvent: UdmiEvent = decodeEventData(event);
