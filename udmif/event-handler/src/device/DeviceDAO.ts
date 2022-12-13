@@ -28,16 +28,14 @@ export class PostgreSQLDAO extends AbstractPostgreSQLDAO<Device> {
     await super.upsert(deviceForPG, primaryKeyFields);
   }
 
-  async get(filterQuery: Device): Promise<Device> {
-    const deviceFromPg: any = await super.get(filterQuery);
+  async get(device: Device): Promise<Device> {
+    const deviceFromPg: any = await super.get(device);
     if (!deviceFromPg) {
       return null;
     }
 
-    // return deviceFromPg;
-    // // postgresql is returning the points as an object that needs to be converted into a Point[]
-    // // we'll stringify the the object and then parse it into a Point[]
-
+    // postgresql is returning the points as an object that needs to be converted into a Point[]
+    // we'll stringify the the object and then parse it into a Point[]
     const pointsAsString = JSON.stringify(deviceFromPg.points);
     const points: Point[] = JSON.parse(pointsAsString);
 
