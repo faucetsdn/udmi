@@ -4,12 +4,12 @@ import { DAO } from '../DAO';
 import { Order, getOrderByOptions } from './OrderBy';
 import { getWhereOptions } from './Where';
 
-export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
+export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   defaultOrder: Order;
 
   constructor(private db: Knex, private tableName: string) {}
 
-  getAll(searchOptions: ValidatedSearchOptions): Promise<TYPE[]> {
+  getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
     return this.getTable()
       .select()
       .orderBy(this.getOrderBy(searchOptions.sortOptions))
@@ -18,10 +18,11 @@ export abstract class AbstractPostgreSQLDAO<TYPE> implements DAO<TYPE> {
           builder.where(filter.field, filter.operator, filter.values)
         );
       })
-      .limit(searchOptions.batchSize);
+      .limit(searchOptions.batchSize)
+      .offset(searchOptions.offset);
   }
 
-  getOne(filterQuery: any): Promise<TYPE> {
+  getOne(filterQuery: any): Promise<Type> {
     throw new Error('Method not implemented.');
   }
 

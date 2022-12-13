@@ -3,6 +3,11 @@ import { getWhereOptions } from '../../../dao/postgresql/Where';
 
 describe('Where', () => {
   test('is creates an empty where statement', () => {
+    const result = getWhereOptions(null);
+    expect(result).toEqual([]);
+  });
+
+  test('is creates an empty where statement', () => {
     const filter: Filter[] = [];
     const result = getWhereOptions(JSON.stringify(filter));
     expect(result).toEqual([]);

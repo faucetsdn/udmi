@@ -8,27 +8,34 @@ class TestClass extends AbstractPostgreSQLDAO<any> {
   }
 }
 
+let db: Knex;
+beforeEach(async () => {
+  db = knex({
+    client: 'sqlite3',
+    connection: {
+      filename: ':memory:',
+    },
+  });
+
+  await db.schema.createTable('any', function (table) {
+    table.integer('id');
+    table.string('name', 255).nullable();
+    table.string('make', 255).nullable();
+    table.string('model', 255).nullable();
+    table.string('site', 255).nullable();
+    table.string('section', 255).nullable();
+    table.unique(['id']);
+  });
+});
+
+afterEach(() => {
+  db.destroy();
+});
+
 describe('AbstractPostgreSQLDAO.insert', () => {
   let testClass: TestClass;
 
-  let db: Knex;
   beforeEach(async () => {
-    db = knex({
-      client: 'sqlite3',
-      connection: {
-        filename: ':memory:',
-      },
-    });
-
-    await db.schema.createTable('any', function (table) {
-      table.integer('id');
-      table.string('name', 255).nullable();
-      table.string('make', 255).nullable();
-      table.string('model', 255).nullable();
-      table.string('site', 255).nullable();
-      table.string('section', 255).nullable();
-      table.unique(['id']);
-    });
     testClass = new TestClass(db);
   });
 
@@ -62,7 +69,6 @@ describe('AbstractPostgreSQLDAO.insert', () => {
     // arrange
     const records = createRecords(6);
     await db('any').insert(records);
-    console.log(await await db('any').select());
 
     const filter: string = JSON.stringify(<Filter[]>[{ field: 'make', operator: '~', value: 'x' }]);
 

@@ -1,4 +1,4 @@
-import { SORT_DIRECTION, ValidatedSearchOptions } from '../../../common/model';
+import { SORT_DIRECTION } from '../../../common/model';
 import { getOrderByOptions } from '../../../dao/postgresql/OrderBy';
 
 describe('OrderBy', () => {
