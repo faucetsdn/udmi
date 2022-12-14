@@ -5,10 +5,16 @@
     <span class="mat-body-2">{{ field.label }}</span>
     <ng-container [ngSwitch]="field.value">
       <ng-container *ngSwitchCase="'lastValidated'">
-        <p>{{ site?.lastValidated | date: 'MM/dd/yy h:mm a' }}</p>
+        <p>{{ site?.lastValidated | date: 'short' }}</p>
       </ng-container>
-      <ng-container *ngSwitchCase="'percentValidated'">
-        <p>{{ site?.percentValidated | percent: '1.0-2' }}</p>
+      <ng-container *ngSwitchCase="'correctDevicesCount'">
+        <p>{{ site?.correctDevicesCount }} ({{ site?.correctDevicesPercent | percent: '1.0-2' }})</p>
+      </ng-container>
+      <ng-container *ngSwitchCase="'missingDevicesCount'">
+        <p>{{ site?.missingDevicesCount }} ({{ site?.missingDevicesPercent | percent: '1.0-2' }})</p>
+      </ng-container>
+      <ng-container *ngSwitchCase="'errorDevicesCount'">
+        <p>{{ site?.errorDevicesCount }} ({{ site?.errorDevicesPercent | percent: '1.0-2' }})</p>
       </ng-container>
       <ng-container *ngSwitchDefault>
         <p>{{ site?.[field.value] }}</p>

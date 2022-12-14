@@ -40,7 +40,6 @@ describe('DevicesService', () => {
             level: 400,
             message: '',
             details: '',
-            lastSeen: '2022-06-203T04:55:21Z',
             state: 'COMPLETE',
             errorsCount: 0,
             validation: '{}',

@@ -13,6 +13,7 @@ export interface UdmiEvent {
 export interface PointsetEvent extends UdmiEvent {
   data: {
     // pointset
+    timestamp?: string;
     points?: any;
   };
 }

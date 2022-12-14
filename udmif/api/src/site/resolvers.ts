@@ -1,4 +1,4 @@
-import { sum } from 'lodash';
+import { getCorrectDevicesCount, getErrorDevicesCount, getMissingDevicesCount, getTotalDevicesCount } from './siteUtil';
 import { DistinctArgs } from '../common/model';
 import { ApolloContext } from '../server/datasources';
 import { Site, SiteArgs, SitesArgs } from './model';
@@ -16,36 +16,35 @@ export const resolvers = {
     },
   },
   Site: {
-    totalDevicesCount: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
+    seenDevicesCount: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
       return (await deviceDS.getDevicesBySite(site.name)).totalFilteredCount;
     },
+    totalDevicesCount: async (site: Site) => {
+      return getTotalDevicesCount(site);
+    },
     correctDevicesCount: (site: Site) => {
-      return site.validation?.summary.correct_devices?.length ?? 0;
+      return getCorrectDevicesCount(site);
+    },
+    correctDevicesPercent: (site: Site) => {
+      return getCorrectDevicesCount(site) / (getTotalDevicesCount(site) || 1);
     },
     missingDevicesCount: (site: Site) => {
-      return site.validation?.summary.missing_devices?.length ?? 0;
+      return getMissingDevicesCount(site);
+    },
+    missingDevicesPercent: (site: Site) => {
+      return getMissingDevicesCount(site) / (getTotalDevicesCount(site) || 1);
     },
     errorDevicesCount: (site: Site) => {
-      return site.validation?.summary.error_devices?.length ?? 0;
+      return getErrorDevicesCount(site);
+    },
+    errorDevicesPercent: (site: Site) => {
+      return getErrorDevicesCount(site) / (getTotalDevicesCount(site) || 1);
     },
     extraDevicesCount: (site: Site) => {
       return site.validation?.summary.extra_devices?.length ?? 0;
     },
     lastValidated: (site: Site) => {
       return site.validation?.last_updated;
-    },
-    percentValidated: async (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
-      const validationSummary = site.validation?.summary;
-
-      return (
-        sum([
-          0,
-          validationSummary?.correct_devices?.length,
-          validationSummary?.missing_devices?.length,
-          validationSummary?.error_devices?.length,
-          validationSummary?.extra_devices?.length,
-        ]) / ((await deviceDS.getDevicesBySite(site.name)).totalFilteredCount || 1)
-      );
     },
     deviceErrors: (site: Site, _args, { dataSources: { deviceDS } }: ApolloContext) => {
       return deviceDS.getDeviceErrorsBySite(site.name);
