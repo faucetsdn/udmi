@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if (( $# < 3 )); then
+    echo $0 PROJECT_ID DATASET_ID LOCATION [--drop]
+    exit
+fi
+
+PROJECT_ID=$1
+DATASET_ID=$2
+LOCATION=$3
+shift 3
+
+FUNCTION_NAME=gcloud_iot_pingreq_log
+TOPIC=iot_pingreq_log
+TABLE_NAME=pingreq_test
+LOGSINK_NAME=iot_pingreq_log
+
+if [[ $1 == "--drop" ]]; then
+    shift 1
+    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
+    sleep 3 && echo "Deleting tables ..." && sleep 3
+    echo bq rm -t -f $PROJECT_ID:$DATASET_ID.$TABLE_NAME
+    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TABLE_NAME
+fi
+
+# State table
+bq mk \
+    --table \
+    --time_partitioning_field publish_timestamp \
+    --time_partitioning_type DAY \
+    --clustering_fields device_registry_id,device_id \
+    $PROJECT_ID:$DATASET_ID.$TABLE_NAME \
+    schema_messages.json 
+
+# Create pub/sub topic
+gcloud pubsub topics create $TOPIC --project=$PROJECT_ID 
+
+# create logs router
+gcloud logging sinks create $LOGSINK_NAME \
+    pubsub.googleapis.com/projects/$PROJECT_ID/topics/$TOPIC \
+    --log-filter='resource.type="cloudiot_device" AND jsonPayload.eventType="PINGREQ"' \
+    --project=$PROJECT_ID
+
+LOGSINK_SERVICE_ACCOUNT=$(gcloud logging sinks describe $LOGSINK_NAME --project=$PROJECT_ID | grep writerIdentity | sed "s/writerIdentity: //")
+gcloud pubsub topics add-iam-policy-binding $TOPIC --member=$LOGSINK_SERVICE_ACCOUNT --role='roles/pubsub.publisher' --project=$PROJECT_ID 
+
+# Deploy Cloud Function
+gcloud functions deploy $FUNCTION_NAME \
+    --trigger-topic=$TOPIC\
+    --entry-point=logPingReq \
+    --runtime nodejs16 \
+    --project=$PROJECT_ID \
+    --source=functions/ \
+    --set-env-vars PROJECT_ID=$PROJECT_ID,DATASET_ID=$DATASET_ID,TABLE_NAME=$TABLE_NAME

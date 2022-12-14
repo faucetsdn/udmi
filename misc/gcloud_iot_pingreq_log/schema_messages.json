@@ -1,0 +1,42 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "publish_timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "device_registry_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "device_num_id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "device_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "gateway_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "message_type",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "message_id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "payload_size_bytes",
+    "type": "INTEGER"
+  }
+]
