@@ -33,13 +33,16 @@ const QUERY_SITE = gql`
   query {
     site(name: "00000000-0000-0000-0000-0000000001") {
       name
+      seenDevicesCount
       totalDevicesCount
       correctDevicesCount
+      correctDevicesPercent
       missingDevicesCount
+      missingDevicesPercent
       errorDevicesCount
+      errorDevicesPercent
       extraDevicesCount
       lastValidated
-      percentValidated
       deviceErrors {
         timestamp
         message

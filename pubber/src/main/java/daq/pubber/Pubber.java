@@ -17,6 +17,7 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
@@ -32,10 +33,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -170,6 +173,8 @@ public class Pubber {
   private PrintStream logPrintWriter;
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
+  private int systemEventCount;
+  private final List<Entry> logentries = new ArrayList<>();
 
   /**
    * Start an instance from a configuration file.
@@ -550,20 +555,23 @@ public class Pubber {
       updatePoints();
       deferredConfigActions();
       sendDevicePoints();
-      sendSystemMetrics();
+      sendSystemEvent();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }
   }
 
-  private void sendSystemMetrics() {
+  private void sendSystemEvent() {
     SystemEvent systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
     systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+    systemEvent.event_count = systemEventCount++;
+    systemEvent.logentries = ImmutableList.copyOf(logentries);
+    logentries.clear();
     publishDeviceMessage(systemEvent);
   }
 
@@ -583,8 +591,6 @@ public class Pubber {
     if (systemConfig == null) {
       return;
     }
-    debug("maybeRestartSystem " + deviceState.system.mode + " " + systemConfig.mode
-         + " " + persistentData.restart_count);
     if (SystemMode.ACTIVE.equals(deviceState.system.mode)
         && SystemMode.RESTART.equals(systemConfig.mode)) {
       restartSystem(true);
@@ -857,8 +863,7 @@ public class Pubber {
       info("Config handler");
       File configOut = new File(outDir, traceTimestamp("config") + ".json");
       toJsonFile(configOut, config);
-      debug(String.format("Config update%s", getTestingTag(config)),
-          toJsonString(config));
+      debug(String.format("Config update%s", getTestingTag(config)), toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -1335,9 +1340,7 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
-      SystemEvent systemEvent = getSystemEvent();
-      systemEvent.logentries.add(report);
-      publishDeviceMessage(systemEvent);
+      logentries.add(report);
     }
   }
 
@@ -1345,7 +1348,7 @@ public class Pubber {
     if (stateLock.tryAcquire()) {
       try {
         long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-        warn(String.format("State update defer %dms", delay));
+        debug(String.format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
         } else {
@@ -1488,7 +1491,8 @@ public class Pubber {
   }
 
   private void localLog(Entry entry) {
-    String message = String.format("Entry %s %s %s %s%s", Level.fromValue(entry.level).name(),
+    String message = String.format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
+        shouldLogLevel(entry.level) ? "" : "*",
         entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
   }

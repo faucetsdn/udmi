@@ -10,13 +10,13 @@ export class SiteConstants {
   public siteDetails: SiteDetail[] = intersectionBy(
     this.sitesConstants.siteColumns,
     (<(keyof SiteModel)[]>[
+      'seenDevicesCount',
       'totalDevicesCount',
       'correctDevicesCount',
       'missingDevicesCount',
       'errorDevicesCount',
       'extraDevicesCount',
       'lastValidated',
-      'percentValidated',
       'totalDeviceErrorsCount',
     ]).map((value) => ({ value })),
     'value'
