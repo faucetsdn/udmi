@@ -30,13 +30,16 @@ describe('SitesService', () => {
         sites: [
           {
             name: 'site one',
+            seenDevicesCount: 0,
             totalDevicesCount: 0,
             correctDevicesCount: 0,
+            correctDevicesPercent: 0,
             missingDevicesCount: 0,
+            missingDevicesPercent: 0,
             errorDevicesCount: 0,
+            errorDevicesPercent: 0,
             extraDevicesCount: 0,
             lastValidated: '2022-04-24T02:54:51Z',
-            percentValidated: 0,
             deviceErrors: [],
             totalDeviceErrorsCount: 0,
           },

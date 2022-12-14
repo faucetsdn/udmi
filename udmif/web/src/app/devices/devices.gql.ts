@@ -15,7 +15,6 @@ export const GET_DEVICES = gql`
         level
         message
         details
-        lastSeen
         state
         errorsCount
         validation

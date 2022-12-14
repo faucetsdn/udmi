@@ -40,9 +40,6 @@ export const resolvers = {
     details: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
       return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.status?.details;
     },
-    lastSeen: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
-      return (await siteDS.getSite(device.site))?.validation?.devices[device.name]?.last_seen;
-    },
     state: async (device: Device, _args, { dataSources: { siteDS } }: ApolloContext) => {
       const siteValidationSummary = (await siteDS.getSite(device.site))?.validation?.summary;
 

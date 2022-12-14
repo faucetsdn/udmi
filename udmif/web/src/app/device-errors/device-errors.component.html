@@ -3,7 +3,7 @@
   <ng-container *ngFor="let columnName of displayedColumns" matColumnDef="{{ columnName }}">
     <mat-header-cell *matHeaderCellDef mat-sort-header>{{ columnName | capitalize }}</mat-header-cell>
     <div *ngIf="columnName === 'timestamp'; else elseBlock">
-      <mat-cell *matCellDef="let element">{{ element.timestamp | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      <mat-cell *matCellDef="let element">{{ element.timestamp | date: 'short' }}</mat-cell>
     </div>
     <ng-template #elseBlock
       ><mat-cell *matCellDef="let element">{{ element[columnName] }}</mat-cell></ng-template
