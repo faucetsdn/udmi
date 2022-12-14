@@ -56,9 +56,12 @@ const QUERY_DEVICE = gql`
       level
       message
       details
-      lastSeen
       state
       errorsCount
+      lastStateUpdated
+      lastStateSaved
+      lastTelemetryUpdated
+      lastTelemetrySaved
     }
   }
 `;

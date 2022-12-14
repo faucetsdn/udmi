@@ -15,12 +15,15 @@ globalConfig.json
 # System files
 .DS_Store
 
-# environment variables
+# Environment variables
 setupEnv.sh
 
-# mongo output
+# Mongo output
 .mongodb
 
-#Build specific files
+# Build specific files
 dist/
 credentials.json
+
+# Test output
+test-report.html

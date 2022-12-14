@@ -28,7 +28,7 @@ public class SemanticDate extends Date implements SemanticValue {
    * @return constructed SemanticDate
    */
   public static Date describe(String description, Date date) {
-    return new SemanticDate(description, date);
+    return date == null ? null : new SemanticDate(description, date);
   }
 
   public String getDescription() {

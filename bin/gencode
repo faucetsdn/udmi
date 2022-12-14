@@ -16,7 +16,9 @@ if [[ -n $check ]]; then
     bin/gencode_docs_examples check
 fi
 
-venv/bin/pip3 freeze > $tmpfile
+venv_pip3=$(bin/which_venv_pip3)
+
+$venv_pip3 freeze > $tmpfile
 if ! diff etc/requirements.txt $tmpfile; then
     echo etc/requirements.txt differences found
     echo please run bin/setup_base

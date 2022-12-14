@@ -2,13 +2,16 @@ import { DeviceError } from '../device-errors/device-errors';
 
 interface SiteModel {
   name: string;
+  seenDevicesCount: number;
   totalDevicesCount: number;
   correctDevicesCount: number;
+  correctDevicesPercent: number;
   missingDevicesCount: number;
+  missingDevicesPercent: number;
   errorDevicesCount: number;
+  errorDevicesPercent: number;
   extraDevicesCount: number;
   lastValidated: string;
-  percentValidated: number;
   deviceErrors: DeviceError[];
   totalDeviceErrorsCount: number;
   validation: string;
