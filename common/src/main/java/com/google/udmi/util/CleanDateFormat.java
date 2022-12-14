@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -25,6 +26,17 @@ public class CleanDateFormat extends ISO8601DateFormat {
 
   public static Date cleanDate() {
     return cleanDate(new Date());
+  }
+
+  /**
+   * Clean a date object (remove ms).
+   *
+   * @param instant Instant to clean
+   * @return cleaned date
+   */
+  public static Instant clean(Instant instant) {
+    // Recycle just the seconds, ignoring <1s bits.
+    return instant == null ? null : Instant.ofEpochSecond(instant.getEpochSecond());
   }
 
   /**

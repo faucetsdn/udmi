@@ -16,5 +16,25 @@ export interface SiteArgs {
 
 export interface Site {
   name: string;
-  validation?: any;
+  validation?: SiteValidation;
 }
+
+export type SiteValidation = {
+  timestamp?: string;
+  version?: string;
+  last_updated: string;
+  status?: {
+    message: string;
+    detail?: string;
+    category: string;
+    timestamp: string;
+    level: number;
+  };
+  summary: {
+    correct_devices?: string[];
+    extra_devices?: string[];
+    missing_devices?: string[];
+    error_devices?: string[];
+  };
+  devices: any; //TODO::
+};

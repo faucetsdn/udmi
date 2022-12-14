@@ -61,7 +61,7 @@ function recordMessage(attributes, message) {
     message.version = message.version || UDMI_VERSION;
   }
 
-  console.log('Message record', registryId, deviceId, subType, subFolder);
+  console.log('Message record', registryId, deviceId, subType, subFolder, message.event_count);
 
   if (useFirestore) {
     const reg_doc = firestore.collection('registries').doc(registryId);

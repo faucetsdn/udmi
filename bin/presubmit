@@ -1,0 +1,77 @@
+#!/bin/bash -e
+
+function banner() {
+  echo
+  echo
+  echo ===========================
+  echo "$*"
+  echo ===========================
+}
+
+function needs_covg_update() {
+  local project="$1"
+  local output=$(find "${project}/src" -name "*.java" -newer "${project}/build/reports/jacoco/test/jacocoTestReport.xml")
+  test -n "${output}"  # 0=needs, 1=does not need
+}
+
+function needs_gencode_update() {
+  bin/gencode check
+}
+
+function needs_gencode_seq_update() {
+  return 0  # needs
+}
+
+function reset_needs() {
+  needs="0"
+}
+
+function add_needs() {
+  needs=$["${needs}"+1]
+}
+
+function genscript() {
+  echo running: "$@"
+  local rc="$?"
+  "$@"
+  echo exit status: $rc
+  return $rc
+}
+
+#
+# Main
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+
+# Generate code coverage
+banner "Code Coverage"
+reset_needs 
+for project in pubber validator; do
+  needs_covg_update "${project}" && add_needs
+done
+
+if [[ ${needs} -gt 0 ]]; then
+  genscript $ROOT_DIR/bin/gencovg
+fi
+
+# Generate code from schemas
+banner "Gencode from schemas"
+reset_needs
+needs_gencode_update && add_needs
+
+if [[ ${needs} -gt 0 ]]; then
+  genscript $ROOT_DIR/bin/gencode
+fi
+
+# Generate code for sequencer.md
+banner "Gencode for sequencer.md"
+reset_needs
+needs_gencode_seq_update && add_needs
+
+if [[ ${needs} -gt 0 ]]; then
+  genscript $ROOT_DIR/bin/gencode_seq
+fi
+
+# Done

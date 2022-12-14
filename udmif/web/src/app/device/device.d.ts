@@ -14,9 +14,12 @@ interface DeviceModel {
   level: number;
   message: string;
   details: string;
-  lastSeen: string;
   state: string;
   errorsCount: number;
+  lastStateUpdated?: string;
+  lastStateSaved?: string;
+  lastTelemetryUpdated?: string;
+  lastTelemetrySaved?: string;
 }
 
 export type Device = Partial<DeviceModel>;

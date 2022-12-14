@@ -40,4 +40,8 @@ export interface Device {
   tags?: string[];
   points?: Point[];
   validation?: any;
+  lastStateUpdated?: string;
+  lastStateSaved?: string;
+  lastTelemetryUpdated?: string;
+  lastTelemetrySaved?: string;
 }

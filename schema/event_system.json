@@ -29,6 +29,10 @@
         "$ref": "file:common.json#/definitions/entry"
       }
     },
+    "event_count": {
+      "description": "Accumulated count of the number of system event messages sent.",
+      "type": "integer"
+    },
     "metrics": {
       "type": "object",
       "additionalProperties": false,

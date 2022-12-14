@@ -1,0 +1,10 @@
+#!/bin/bash -e
+for f in venv/bin/pip3 $HOME/venv/bin/pip3; do
+  if [[ -x "$f" ]]; then
+    echo "$f"
+    exit 0
+  fi
+done
+
+>&2 echo Cannot find venv
+false
