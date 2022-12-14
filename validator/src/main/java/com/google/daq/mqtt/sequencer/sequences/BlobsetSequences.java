@@ -106,7 +106,8 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_connection_success_alternate() {
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     withAlternateClient(() -> {
-      untilTrue("alternate last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+      untilTrue("alternate last_config matches config timestamp",
+          this::stateMatchesConfigTimestamp);
     });
     untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
