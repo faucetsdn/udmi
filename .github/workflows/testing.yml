@@ -6,7 +6,9 @@ on:
   schedule:
     - cron: '40 * * * *'
 
-concurrency: ci-${{ github.repository }}
+concurrency:
+  group: ci-${{ github.repository }}
+  cancel-in-progress: true
 
 jobs:
   unit:
@@ -19,7 +21,7 @@ jobs:
           java-version: '11'
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10' 
+          python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v2.3.4
       - name: Install dependencies
@@ -97,7 +99,7 @@ jobs:
           fgrep 'Stopping system with extreme prejudice, restart true' pubber.out.2  # restart config
           fgrep 'Stopping system with extreme prejudice, restart false' pubber.out.2  # auto-kill
           fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
-    
+
   udmi:
     name: Integration Tests
     runs-on: ubuntu-latest
