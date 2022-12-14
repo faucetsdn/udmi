@@ -12,16 +12,8 @@ shift 3
 
 FUNCTION_NAME=gcloud_iot_pingreq_log
 TOPIC=iot_pingreq_log
-TABLE_NAME=pingreq_test
+TABLE_NAME=bos_messages
 LOGSINK_NAME=iot_pingreq_log
-
-if [[ $1 == "--drop" ]]; then
-    shift 1
-    echo "WARNING: Dropping tables in 5 seconds. Data will be permanently lost"
-    sleep 3 && echo "Deleting tables ..." && sleep 3
-    echo bq rm -t -f $PROJECT_ID:$DATASET_ID.$TABLE_NAME
-    bq rm -t -f $PROJECT_ID:$DATASET_ID.$TABLE_NAME
-fi
 
 # State table
 bq mk \

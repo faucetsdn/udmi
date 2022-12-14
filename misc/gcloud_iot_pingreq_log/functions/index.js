@@ -5,7 +5,7 @@ const PROJECT_ID = process.env.PROJECT_ID
 const DATASET_ID = process.env.DATASET_ID
 const TABLE_NAME = process.env.TABLE_NAME
 
-const PINGREQ = 8;
+const MESSAGE_TYPE_PINGREQ = 8;
 
 exports.logPingReq = async (event, context) => {
   const pubsubMessage = event.data;
@@ -17,12 +17,12 @@ exports.logPingReq = async (event, context) => {
   }
 
   log_entry = {
-    timestamp: logData['timestamp'],
+    publish_timestamp: logData['timestamp'],
     device_id: logData['labels']['device_id'],
     device_num_id: logData['resource']['labels']['device_num_id'],
     device_registry_id: logData['resource']['labels']['device_registry_id'],
-    message_type: PINGREQ,
-    payload_bytes: 0
+    message_type: MESSAGE_TYPE_PINGREQ,
+    payload_size_bytes: 0
   }
   
   return await Promise.all([
