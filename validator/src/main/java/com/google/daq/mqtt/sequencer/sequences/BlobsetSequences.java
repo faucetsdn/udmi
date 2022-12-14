@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
@@ -61,7 +60,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
-  public void endpoint_config_connection_error() {
+  public void endpoint_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
     config.base64 = generateEndpointConfigBase64Payload("localhost");
@@ -79,10 +78,8 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description(
-      "Push endpoint config message to device that results in successful reconnect to "
-          + "the same endpoint.")
-  public void endpoint_config_connection_success_reconnect() {
+  @Description("Check a successful reconnect to the same endpoint.")
+  public void endpoint_connection_success_reconnect() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
     config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
@@ -102,6 +99,16 @@ public class BlobsetSequences extends SequenceBase {
           && phase.equals(BlobPhase.FINAL)
           && blobStateStatus == null;
     });
+  }
+
+  @Test
+  @Description("Check connection to an alternate project.")
+  public void endpoint_connection_success_alternate() {
+    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    withAlternateClient(() -> {
+      untilTrue("alternate last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    });
+    untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test

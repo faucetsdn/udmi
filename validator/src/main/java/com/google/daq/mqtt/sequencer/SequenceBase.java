@@ -27,6 +27,7 @@ import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -134,6 +135,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
+  private static MessagePublisher altClient;
 
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
@@ -230,6 +232,7 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+    altClient = getAlternateClient();
   }
 
   private static MessagePublisher getPublisherClient() {
@@ -242,8 +245,25 @@ public class SequenceBase {
     return Optional.ofNullable((MockPublisher) client).orElseGet(() -> new MockPublisher(failFast));
   }
 
+  private static MessagePublisher getAlternateClient() {
+    if (validatorConfig.alt_registry == null) {
+      return null;
+    }
+    ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
+    altConfiguration.registry_id = altConfiguration.alt_registry;
+    altConfiguration.alt_registry = null;
+    IotReflectorClient client = new IotReflectorClient(altConfiguration);
+    initializeReflectorState(client);
+    return client;
+  }
+
   private static MessagePublisher getReflectorClient() {
     IotReflectorClient client = new IotReflectorClient(validatorConfig);
+    initializeReflectorState(client);
+    return client;
+  }
+
+  private static void initializeReflectorState(IotReflectorClient client) {
     ReflectorState reflectorState = new ReflectorState();
     stateTimestamp = new Date();
     reflectorState.timestamp = stateTimestamp;
@@ -257,7 +277,6 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
-    return client;
   }
 
   static void resetState() {
@@ -1103,6 +1122,19 @@ public class SequenceBase {
     }
     return events.stream().map(message -> JsonUtil.convertTo(clazz, message))
         .collect(Collectors.toList());
+  }
+
+  protected void withAlternateClient(Runnable evaluator) {
+    assert deviceConfig.system.testing.endpoint_type == null;
+    deviceConfig.system.testing.endpoint_type = "alternate";
+    evaluator.run();
+    deviceConfig.system.testing.endpoint_type = null;
+  }
+
+  protected boolean stateMatchesConfigTimestamp() {
+    Date expectedConfig = deviceConfig.timestamp;
+    Date lastConfig = deviceState.system.last_config;
+    return dateEquals(expectedConfig, lastConfig);
   }
 
   /**

@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "sequence_name"
+    "sequence_name",
+    "endpoint_type"
 })
 @Generated("jsonschema2pojo")
 public class TestingSystemConfig {
@@ -28,11 +29,19 @@ public class TestingSystemConfig {
     @JsonProperty("sequence_name")
     @JsonPropertyDescription("The sequence name currently being tested (for debug logging)")
     public String sequence_name;
+    /**
+     * Designator for the kind of endpoint being used for this test
+     * 
+     */
+    @JsonProperty("endpoint_type")
+    @JsonPropertyDescription("Designator for the kind of endpoint being used for this test")
+    public String endpoint_type;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.sequence_name == null)? 0 :this.sequence_name.hashCode()));
+        result = ((result* 31)+((this.endpoint_type == null)? 0 :this.endpoint_type.hashCode()));
         return result;
     }
 
@@ -45,7 +54,7 @@ public class TestingSystemConfig {
             return false;
         }
         TestingSystemConfig rhs = ((TestingSystemConfig) other);
-        return ((this.sequence_name == rhs.sequence_name)||((this.sequence_name!= null)&&this.sequence_name.equals(rhs.sequence_name)));
+        return (((this.sequence_name == rhs.sequence_name)||((this.sequence_name!= null)&&this.sequence_name.equals(rhs.sequence_name)))&&((this.endpoint_type == rhs.endpoint_type)||((this.endpoint_type!= null)&&this.endpoint_type.equals(rhs.endpoint_type))));
     }
 
 }
