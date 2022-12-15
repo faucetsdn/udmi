@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash 
 # Setups a blank GCP project with the UDMI cloud functions and the registers
 # the default site model
 #
@@ -12,7 +12,7 @@ PROJECT_ID=$1
 shift 1
 
 SERVICE_ACCOUNT_NAME=udmi-cloud-functions
-SERVICE_ACCOUNT=$(SERVICE_ACCOUNT_NAME)@$(PROJECT_ID).iam.gserviceaccount.com 
+SERVICE_ACCOUNT=${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com 
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 
@@ -37,10 +37,11 @@ cloud_region=$(jq -r .cloud_region $ROOT_DIR/sites/udmi_site_model/cloud_iot_con
 gcloud iot registries create $registry_id \
     --project=$PROJECT_ID \
     --region=$cloud_region \
+    --log-level=INFO \
     --event-notification-config=topic=projects/$PROJECT_ID/topics/udmi_target \
     --state-pubsub-topic=projects/$PROJECT_ID/topics/udmi_state
 
-$ROOT_DIR/bin/registrar sites/udmi_site_model $PROJECT_ID
+$ROOT_DIR/bin/registrar $ROOT_DIR/sites/udmi_site_model $PROJECT_ID
 
 gcloud iot registries create UDMS-REFLECT \
     --project=$PROJECT_ID \
