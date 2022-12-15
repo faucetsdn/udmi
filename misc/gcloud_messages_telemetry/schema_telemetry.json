@@ -1,7 +1,7 @@
 [
   {
     "mode": "NULLABLE",
-    "name": "publish_timestamp",
+    "name": "publish_time",
     "type": "TIMESTAMP"
   },
   {
@@ -11,7 +11,7 @@
   },
   {
     "mode": "NULLABLE",
-    "name": "registry_id",
+    "name": "device_registry_id",
     "type": "STRING"
   },
   {
@@ -22,11 +22,6 @@
   {
     "mode": "NULLABLE",
     "name": "device_id",
-    "type": "STRING"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "gateway_id",
     "type": "STRING"
   },
   {
