@@ -11,7 +11,7 @@ shift 1
 FUNCTION_NAME=gcloud_iot_config
 ENTRY_POINT=storeConfig
 TOPIC=config_updates
-BUCKET=$(PROJECT_ID)-iot-configs
+BUCKET=${PROJECT_ID}-iot-configs
 
 ## storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
 gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
