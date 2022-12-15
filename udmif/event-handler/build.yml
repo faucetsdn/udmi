@@ -6,7 +6,7 @@ cache:
 
 include:
   - project: 'buildings-iot/templates/cicd_pipelines'
-    ref: main
+    ref: gcp-version
     file: node16.yml
 
 stages:
@@ -51,9 +51,9 @@ deploy-staging:
     - gcloud auth activate-service-account --key-file ../credentials.json 
     - gcloud config set project $GCP_PROJECT_ID
     - cd udmif/event-handler/dist
-    - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
+    - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars=POSTGRESQL_INSTANCE_HOST=$POSTGRESQL_INSTANCE_HOST,POSTGRESQL_PORT=$POSTGRESQL_PORT,POSTGRESQL_USER=$POSTGRESQL_USER,POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD,POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
   rules:
-      - if: $CI_COMMIT_BRANCH == "master"
+      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
         
 deploy-lab:
   stage: deploy-lab
@@ -65,9 +65,9 @@ deploy-lab:
     - gcloud auth activate-service-account --key-file ../credentials.json 
     - gcloud config set project $GCP_PROJECT_ID
     - cd udmif/event-handler/dist
-    - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
+    - gcloud functions deploy udmif_event_handler --runtime=nodejs16 --entry-point=handleUdmiEvent --region=us-central1 --trigger-topic=udmi_target --set-env-vars
   rules:
-      - if: $CI_COMMIT_BRANCH == "master"
+      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
         when: manual 
   
 

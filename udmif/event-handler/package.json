@@ -6,12 +6,10 @@
   "main": "dist/index.js",
   "dependencies": {
     "knex": "^2.3.0",
-    "mongodb": "^4.4.1",
     "pg": "^8.8.0"
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^3.0.0",
-    "@shelf/jest-mongodb": "^2.2.1",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.10",
     "concurrently": "^7.1.0",

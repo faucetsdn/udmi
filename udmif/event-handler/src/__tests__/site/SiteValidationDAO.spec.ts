@@ -20,7 +20,7 @@ describe('Site DAO', () => {
     const siteValidationDoc: SiteValidation = {
       siteName,
       timestamp: null,
-      data: null,
+      message: null,
     };
     const insertSpy = jest.spyOn(AbstractPostgreSQLDAO.prototype, 'insert');
 
@@ -37,7 +37,7 @@ describe('Site DAO', () => {
     const siteValidationDoc: SiteValidation = {
       siteName,
       timestamp: null,
-      data: null,
+      message: null,
     };
     const filter = { siteName };
 
