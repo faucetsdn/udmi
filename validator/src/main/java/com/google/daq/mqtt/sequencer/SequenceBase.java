@@ -159,7 +159,7 @@ public class SequenceBase {
   private String extraField;
   private boolean extraFieldChanged;
   private Instant lastConfigUpdate;
-  private Stack<String> waitingCondition = new Stack<>();
+  private final Stack<String> waitingCondition = new Stack<>();
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
@@ -745,7 +745,8 @@ public class SequenceBase {
     try {
       return evaluator.get();
     } catch (AbortMessageLoop e) {
-      error("Aborting message loop while " + waitingCondition.peek() + " because " + e.getMessage());
+      error(
+          "Aborting message loop while " + waitingCondition.peek() + " because " + e.getMessage());
       throw e;
     } catch (Exception e) {
       debug("Suppressing exception: " + e);
