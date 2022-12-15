@@ -126,6 +126,7 @@ jobs:
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
           SEQUENCER_OPTS: ${{ secrets.SEQUENCER_OPTS }}
+          UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
