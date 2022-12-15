@@ -599,7 +599,6 @@ public class SequenceBase {
   @After
   public void tearDown() {
     debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
-    waitingCondition.pop();
     recordMessages = false;
     recordSequence = false;
     if (debugLogLevel()) {
@@ -610,8 +609,6 @@ public class SequenceBase {
     deviceConfig = null;
     deviceState = null;
     configAcked = false;
-    waitingCondition.pop();
-    assert waitingCondition.isEmpty();
   }
 
   protected void updateConfig() {
@@ -1276,7 +1273,8 @@ public class SequenceBase {
         level = Level.ERROR;
       }
       recordCompletion(type, level, description, message);
-      withRecordSequence(true, () -> recordSequence("Test failed: " + message));
+      String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
+      withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
     }
 
     private void recordCompletion(String result, Level level,
