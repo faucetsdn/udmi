@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2022-12-15T12:13:31Z",
+  "timestamp" : "2022-12-15T12:42:12Z",
   "version" : "1.4.0",
   "system" : {
     "last_config" : "2022-12-09T10:40:57Z",
     "operational" : true,
     "mode" : "initial",
-    "last_start" : "2022-12-15T12:13:25Z",
+    "last_start" : "2022-12-15T12:42:02Z",
     "serial_no" : "123",
     "hardware" : {
       "make" : "BOS",
@@ -17,7 +17,7 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2022-12-15T12:13:29Z",
+      "timestamp" : "2022-12-15T12:42:10Z",
       "level" : 300
     }
   },

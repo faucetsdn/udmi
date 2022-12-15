@@ -1,5 +1,5 @@
 {
-  "timestamp" : "2022-12-15T12:27:19Z",
+  "timestamp" : "2022-12-15T13:08:16Z",
   "version" : "1.4.0",
   "points" : {
     "filter_alarm_pressure_status" : {
@@ -9,7 +9,7 @@
       "present_value" : 98
     },
     "filter_differential_pressure_sensor" : {
-      "present_value" : 11
+      "present_value" : 10
     }
   }
 }

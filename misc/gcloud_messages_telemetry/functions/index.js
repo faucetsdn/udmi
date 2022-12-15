@@ -71,92 +71,95 @@ exports.processMessage = async (event, context) => {
   // TODO break out into processTelemetry
   // disable temporarily
   if (messageType == EVENT_POINTSET && 'points' in msg){
-    var rows = []
-    Object.keys(msg.points).forEach(function(key) {
-      let row = {
-        device_id: deviceId,
-        device_num_id: parseInt(event.attributes.deviceNumId),
-        message_id: messageId,
-        device_registry_id: deviceRegistryId,
-        publish_time: publishTimestamp,
-        timestamp: BigQuery.timestamp(msg.timestamp),
-        point_name: key,
-        present_value: (isNaN(parseFloat(msg.points[key].present_value)) ? null : parseFloat(msg.points[key].present_value) ),
-        present_value_string: String(msg.points[key].present_value)
-      };
-        rows.push(row)    
-    });
+    try {
+      var rows = []
+      Object.keys(msg.points).forEach(function(key) {
+        let row = {
+          device_id: deviceId,
+          device_num_id: parseInt(event.attributes.deviceNumId),
+          message_id: messageId,
+          device_registry_id: deviceRegistryId,
+          publish_time: publishTimestamp,
+          timestamp: BigQuery.timestamp(msg.timestamp),
+          point_name: key,
+          present_value: (isNaN(parseFloat(msg.points[key].present_value)) ? null : parseFloat(msg.points[key].present_value) ),
+          present_value_string: String(msg.points[key].present_value)
+        };
+          rows.push(row)    
+      });
 
-     if (rows.length > 0){
-      promises.push(bigquery.dataset(DATASET_ID).table(TELEMETRY_TABLE).insert(rows))
-     }
-
-  } else if (messageType == STATE) {
-    //TODO break out to processState
-
-    if ("system" in msg === false) {
-      return await Promise.all(promises);
-    }
-
-    // TODO break out to upgradeState 
-    const softwareEntries = []
-
-    // Upgrade software as applicable
-    if("firmware" in msg.system && "version" in msg.system.firmware) {
-      // Legacy (<1.3.14)
-      softwareEntries.push({id: "firmware", version:msg.system.firmware.version});
-    } else {
-      // Modern (>1.3.14)
-      for (const [key, value] of Object.entries(msg.system.software)) {
-        if (isString(key) && isString(value)){
-          softwareEntries.push({id: key, version:value})
-        }
+      if (rows.length > 0){
+        promises.push(bigquery.dataset(DATASET_ID).table(TELEMETRY_TABLE).insert(rows))
       }
+    } catch (err) {
+      console.log(err.message)
     }
     
-    // Upgrade Hardware
-    if("make_model" in msg.system && isString(msg.system.make_model)){
-      // Legacy (<1.3.14)
-      make = "unknown";
-      model = msg.system.make_model;
-      rev = null;
-      sku = null;
-    } else {
-      make = ("make" in msg.system.hardware && isString(msg.system.hardware.make)) 
-        && msg.system.hardware.make || null;
-      model = ("model" in msg.system.hardware && isString(msg.system.hardware.model)) 
-        && msg.system.hardware.model || null;
-      rev = ("rev" in msg.system.hardware && isString(msg.system.hardware.rev)) 
-        && msg.system.hardware.rev || null;
-      sku = ("sku" in msg.system.hardware && isString(msg.system.hardware.sku)) 
-        && msg.system.hardware.sku || null;
-    }
+  } else if (messageType == STATE) {
+    //TODO break out to processState
+    try {
+      if ("system" in msg === false) {
+        return await Promise.all(promises);
+      }
 
-    // Data for devices table
-    stateRow = {
-      timestamp: BigQuery.timestamp(msg.timestamp),
-      publish_timestamp: publishTimestamp,
-      device_id: event.attributes.deviceId,
-      device_num_id: parseInt(event.attributes.deviceNumId),
-      gateway_id: gatewayId,
-      device_registry_id: event.attributes.deviceRegistryId,
-      message_id: messageId,
-      make: make,
-      model: model,
-      serial_no: ("serial_no" in msg.system) && msg.system.serial_no || null,
-      rev: rev,
-      sku: sku,
-      software: softwareEntries
-    }
+      // TODO break out to upgradeState 
+      const softwareEntries = []
 
-    promises.push(bigquery.dataset(DATASET_ID).table(STATE_TABLE).insert([stateRow]));
+      // Upgrade software as applicable
+      if("firmware" in msg.system && "version" in msg.system.firmware) {
+        // Legacy (<1.3.14)
+        softwareEntries.push({id: "firmware", version:msg.system.firmware.version});
+      } else {
+        // Modern (>1.3.14)
+        for (const [key, value] of Object.entries(msg.system.software)) {
+          if (isString(key) && isString(value)){
+            softwareEntries.push({id: key, version:value})
+          }
+        }
+      }
+      
+      // Upgrade Hardware
+      if("make_model" in msg.system && isString(msg.system.make_model)){
+        // Legacy (<1.3.14)
+        make = "unknown";
+        model = msg.system.make_model;
+        rev = null;
+        sku = null;
+      } else {
+        make = ("make" in msg.system.hardware && isString(msg.system.hardware.make)) 
+          && msg.system.hardware.make || null;
+        model = ("model" in msg.system.hardware && isString(msg.system.hardware.model)) 
+          && msg.system.hardware.model || null;
+        rev = ("rev" in msg.system.hardware && isString(msg.system.hardware.rev)) 
+          && msg.system.hardware.rev || null;
+        sku = ("sku" in msg.system.hardware && isString(msg.system.hardware.sku)) 
+          && msg.system.hardware.sku || null;
+      }
+
+      // Data for devices table
+      stateRow = {
+        timestamp: BigQuery.timestamp(msg.timestamp),
+        publish_timestamp: publishTimestamp,
+        device_id: event.attributes.deviceId,
+        device_num_id: parseInt(event.attributes.deviceNumId),
+        gateway_id: gatewayId,
+        device_registry_id: event.attributes.deviceRegistryId,
+        message_id: messageId,
+        make: make,
+        model: model,
+        serial_no: ("serial_no" in msg.system) && msg.system.serial_no || null,
+        rev: rev,
+        sku: sku,
+        software: softwareEntries
+      }
+
+      promises.push(bigquery.dataset(DATASET_ID).table(STATE_TABLE).insert([stateRow]));
+    } catch (err) {
+      console.log(err.message);
+    }
   }
-  try {
-    await Promise.all(promises);
-  } catch (err) {
-    console.log(util.inspect(err, {showHidden: false, depth: null, colors: true}))
-  }
-  return 
+  
+  return await Promise.all(promises);
 };
 
 function isString(variable){

@@ -4,7 +4,7 @@
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
-    "last_start" : "2022-12-15T12:13:25Z",
+    "last_start" : "2022-12-15T12:42:02Z",
     "testing" : {
       "sequence_name" : "broken_config"
     }
