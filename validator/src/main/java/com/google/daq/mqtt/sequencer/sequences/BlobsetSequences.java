@@ -7,6 +7,7 @@ import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
@@ -15,6 +16,8 @@ import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Entry;
 import udmi.schema.Level;
+import udmi.schema.SystemConfig.SystemMode;
+
 
 /**
  * Validation tests for instances that involve blobset config messages.
@@ -39,12 +42,12 @@ public class BlobsetSequences extends SequenceBase {
         projectId,
         cloudRegion,
         registryId,
-        deviceId);
+        getDeviceId());
   }
 
   private String generateEndpointConfigBase64Payload(String hostname) {
     String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, ENDPOINT_CONFIG_CLIENT_ID, hostname);
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
     String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
     return SemanticValue.describe("endpoint_base64_payload", base64Payload);
   }
@@ -89,14 +92,58 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
 
-    untilTrue("blobset entry config status is success", () -> {
+    untilTrue("blobset phase is FINAL and stateStatus is null", () -> {
       BlobPhase phase = deviceState.blobset.blobs.get(
           SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
-      Entry stateStatus = deviceState.system.status;
+      // Successful reconnect sends a state message with empty Entry.
+      Entry blobStateStatus = deviceState.blobset.blobs.get(
+          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
       return phase != null
           && phase.equals(BlobPhase.FINAL)
-          && stateStatus.category.equals(SYSTEM_CONFIG_APPLY)
-          && stateStatus.level == Level.NOTICE.value();
+          && blobStateStatus == null;
     });
   }
+
+  @Test
+  @Description("Restart and connect to same endpoint and expect it returns.")
+  public void system_mode_restart() {
+    // Prepare for the restart.
+    final Date dateZero = new Date(0);
+    untilTrue("last_start is not zero", () -> deviceState.system.last_start.after(dateZero));
+
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+
+    untilTrue("deviceState.system.mode == ACTIVE",
+        () -> deviceState.system.mode.equals(SystemMode.ACTIVE));
+
+    final Date last_config = deviceState.system.last_config;
+    final Date last_start = deviceConfig.system.last_start;
+
+    // Send the restart mode.
+    deviceConfig.system.mode = SystemMode.RESTART;
+
+    // Wait for the device to go through the correct states as it restarts.
+    untilTrue("deviceState.system.mode == INITIAL",
+        () -> deviceState.system.mode.equals(SystemMode.INITIAL));
+
+    deviceConfig.system.mode = SystemMode.ACTIVE;
+
+    untilTrue("deviceState.system.mode == ACTIVE",
+        () -> deviceState.system.mode.equals(SystemMode.ACTIVE));
+
+    // Capture error from last_start unexpectedly changing due to restart condition.
+    try {
+      untilTrue("last_config is newer than previous last_config before abort",
+          () -> deviceState.system.last_config.after(last_config));
+    } catch (AbortMessageLoop e) {
+      info("Squelching aborted message loop: " + e.getMessage());
+    }
+
+    untilTrue("last_config is newer than previous last_config after abort",
+        () -> deviceState.system.last_config.after(last_config));
+
+    untilTrue("last_start is newer than previous last_start",
+        () -> deviceConfig.system.last_start.after(last_start));
+  }
+
 }

@@ -3,6 +3,7 @@
   "subFolder" : "pointset",
   "deviceRegistryId" : "ZZ-TRI-FECTA",
   "subType" : "event",
+  "msgSource" : "001_event_pointset.json",
   "deviceId" : "SNS-4",
   "projectId" : "playback-project"
 }

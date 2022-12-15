@@ -10,11 +10,11 @@ RESULT pass self_enumeration Sequence complete
 RESULT pass single_scan Sequence complete
 RESULT pass system_last_update Sequence complete
 RESULT pass system_min_loglevel Sequence complete
+RESULT pass system_mode_restart Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
 RESULT pass valid_serial_no Sequence complete
-RESULT pass writeback_failure_state Sequence complete
-RESULT pass writeback_invalid_state Sequence complete
-RESULT pass writeback_success_apply Sequence complete
-RESULT pass writeback_success_state Sequence complete
+RESULT pass writeback_failure Sequence complete
+RESULT pass writeback_invalid Sequence complete
+RESULT pass writeback_success Sequence complete

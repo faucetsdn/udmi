@@ -52,7 +52,7 @@ public class DiscoverySequences extends SequenceBase {
         () -> deviceState.discovery.enumeration.generation.equals(startTime)
     );
     untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
-    List<DiscoveryEvent> allEvents = getReceivedEvents(DiscoveryEvent.class);
+    List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
         .collect(Collectors.toList());
@@ -87,7 +87,7 @@ public class DiscoverySequences extends SequenceBase {
     }
     untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
     untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
-    List<DiscoveryEvent> receivedEvents = getReceivedEvents(
+    List<DiscoveryEvent> receivedEvents = popReceivedEvents(
         DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
     Set<String> eventFamilies = receivedEvents.stream()
@@ -118,7 +118,7 @@ public class DiscoverySequences extends SequenceBase {
     Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
     assertTrue("premature termination",
         families.stream().noneMatch(familyScanComplete(finishTime)));
-    List<DiscoveryEvent> receivedEvents = getReceivedEvents(DiscoveryEvent.class);
+    List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
     int expected = SCAN_ITERATIONS * families.size();
     int received = receivedEvents.size();
@@ -144,7 +144,7 @@ public class DiscoverySequences extends SequenceBase {
       getConfigFamily(family).enumerate = enumerate;
       getConfigFamily(family).scan_interval_sec = scanIntervalSec;
     });
-    getReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
+    popReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
   }
 
   private FamilyDiscoveryConfig getConfigFamily(String family) {

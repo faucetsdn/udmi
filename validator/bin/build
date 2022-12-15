@@ -1,9 +1,16 @@
 #!/bin/bash -e
 
-if [[ $1 == check ]]; then
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "check" ]]; then
     check=check
     shift
-fi
+  elif [[ "$1" == "covg" ]]; then
+    covg=jacocoTestReport
+    shift
+  else
+    break
+  fi
+done
 
 ROOT=$(dirname $0)/..
 BASE=..
@@ -12,7 +19,7 @@ cd $ROOT
 jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
 
 newest=$(ls -rt `find src/ $BASE/gencode/java -type f` | tail -n 1)
-if [[ -z $check && -f $jarfile && $jarfile -nt $newest ]]; then
+if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     echo $jarfile up-to-date, skipping build.
     exit 0
 fi
@@ -22,7 +29,7 @@ export JAVA_HOME=$JAVA_HOME_11_X64
 echo Building validator in $PWD
 
 rm -rf build
-./gradlew shadow $check $*
+./gradlew shadow $check $covg $*
 
 ls -l $jarfile
 

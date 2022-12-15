@@ -1,0 +1,11 @@
+{
+  "timestamp" : "2022-12-15T13:08:18Z",
+  "version" : "1.4.0",
+  "last_config" : "2022-12-09T10:40:57Z",
+  "logentries" : [ {
+    "message" : "Connection closed, attempting reconnect...",
+    "category" : "device.log",
+    "timestamp" : "2022-12-15T13:08:18Z",
+    "level" : 500
+  } ]
+}
