@@ -1162,7 +1162,6 @@ public class SequenceBase {
   }
 
   private MessagePublisher reflector(boolean useAlternateClient) {
-    assert altClient != null;
     return useAlternateClient ? altClient : client;
   }
 
