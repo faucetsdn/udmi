@@ -1172,7 +1172,7 @@ public class SequenceBase {
   }
 
   /**
-   * Add a description for a test that can be programatically extracted.
+   * Add a description for a test that can be programmatically extracted.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD})
