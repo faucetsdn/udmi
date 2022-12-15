@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -113,6 +114,9 @@ public class BlobsetSequences extends SequenceBase {
   @Test
   @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
+    if (altRegistry == null) {
+      throw new SkipTest("No alternate registry defined");
+    }
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry);

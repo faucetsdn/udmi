@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -225,7 +226,7 @@ public class SequenceBase {
 
     cloudRegion = validatorConfig.cloud_region;
     registryId = validatorConfig.registry_id;
-    altRegistry = validatorConfig.alt_registry;
+    altRegistry = Strings.emptyToNull(validatorConfig.alt_registry);
 
     deviceMetadata = readDeviceMetadata();
 
@@ -253,11 +254,11 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getAlternateClient() {
-    if (validatorConfig.alt_registry == null) {
+    if (altRegistry == null) {
       return null;
     }
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
-    altConfiguration.registry_id = altConfiguration.alt_registry;
+    altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
     IotReflectorClient client = new IotReflectorClient(altConfiguration);
     initializeReflectorState(client);
