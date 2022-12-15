@@ -14,7 +14,7 @@ FUNCTION_NAME=dump_raw_messages
 MESSAGES_TABLE=messages
 TELEMETRY_TABLE=points
 
-BUCKET=$(PROJECT_ID)-iot-messages
+BUCKET=${PROJECT_ID}-iot-messages
 
 gcloud storage buckets create gs://$BUCKET --project=$PROJECT_ID --default-storage-class=STANDARD --location=us-central1 
 
