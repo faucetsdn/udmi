@@ -49,14 +49,19 @@ public class BlobsetSequences extends SequenceBase {
 
   private URI generateEndpointConfigUrl(String hostname) {
     try {
-      String payload = String.format(
-          ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
+      String payload = generateEndpointData(hostname);
       String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
       String url = String.format(BASE_64_DATA_URL_FORMAT, JSON_CONTENT_TYPE, base64Payload);
       return new URI(url);
     } catch (Exception e) {
       throw new RuntimeException("While creating data URL for endpoint " + hostname);
     }
+  }
+
+  private String generateEndpointData(String hostname) {
+    String payload = String.format(
+        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
+    return payload;
   }
 
   private String generateNonce() {
