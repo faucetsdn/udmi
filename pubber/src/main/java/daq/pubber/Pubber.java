@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1017,14 +1018,17 @@ public class Pubber {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)
-          && blobBlobsetConfig.base64 != null) {
-        return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
+      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)) {
+        return acquireBlobData(blobBlobsetConfig.url);
       }
       return null;
     } catch (Exception e) {
       throw new RuntimeException("While extracting config blob " + blobName, e);
     }
+  }
+
+  private String acquireBlobData(URI url) {
+    return url.toString();
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {

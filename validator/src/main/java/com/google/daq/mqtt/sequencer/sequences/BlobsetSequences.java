@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import java.net.URI;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
@@ -35,6 +35,8 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
+  public static final String JSON_CONTENT_TYPE = "application/json";
+  public static final String BASE_64_DATA_URL_FORMAT = "data:%s;base64,%s";
 
   private String generateEndpointConfigClientId() {
     return String.format(
@@ -45,11 +47,16 @@ public class BlobsetSequences extends SequenceBase {
         getDeviceId());
   }
 
-  private String generateEndpointConfigBase64Payload(String hostname) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
-    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
+  private URI generateEndpointConfigUrl(String hostname) {
+    try {
+      String payload = String.format(
+          ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
+      String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
+      String url = String.format(BASE_64_DATA_URL_FORMAT, JSON_CONTENT_TYPE, base64Payload);
+      return new URI(url);
+    } catch (Exception e) {
+      throw new RuntimeException("While creating data URL for endpoint " + hostname);
+    }
   }
 
   private String generateNonce() {
@@ -64,8 +71,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_error() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload("localhost");
-    config.content_type = "application/json";
+    config.url = generateEndpointConfigUrl("localhost");
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
@@ -85,8 +91,7 @@ public class BlobsetSequences extends SequenceBase {
   public void endpoint_config_connection_success_reconnect() {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
-    config.content_type = "application/json";
+    config.url = generateEndpointConfigUrl(ENDPOINT_CONFIG_HOSTNAME);
     config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();

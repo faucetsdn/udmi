@@ -22,5 +22,5 @@
       "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
     }
   },
-  { "required": ["url", "sha256", "phase"] }
+  "required": ["url", "sha256", "phase"]
 }
