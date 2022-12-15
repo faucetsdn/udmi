@@ -59,28 +59,6 @@ public class BlobsetSequences extends SequenceBase {
     return SemanticValue.describe("endpoint_nonce", base64Nonce);
   }
 
-  @Test
-  @Description("Push endpoint config message to device that results in a connection error.")
-  public void endpoint_connection_error() {
-    String localhost = "localhost";
-    setDeviceConfigEndpointBlob(localhost, registryId);
-
-    untilTrue("blobset entry config status is error", () -> {
-      Entry stateStatus = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
-      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
-          && stateStatus.level == Level.ERROR.value();
-    });
-  }
-
-  @Test
-  @Description("Check a successful reconnect to the same endpoint.")
-  public void endpoint_connection_success_reconnect() {
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId);
-    untilSuccessfulRedirect(BlobPhase.FINAL);
-    untilClearedRedirect();
-  }
-
   private void untilClearedRedirect() {
     deviceConfig.blobset.blobs.remove(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
     untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
@@ -112,6 +90,30 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
+  @Description("Push endpoint config message to device that results in a connection error.")
+  public void endpoint_connection_error() {
+    String localhost = "localhost";
+    setDeviceConfigEndpointBlob(localhost, registryId);
+
+    untilTrue("blobset entry config status is error", () -> {
+      Entry stateStatus = deviceState.blobset.blobs.get(
+          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
+      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
+          && stateStatus.level == Level.ERROR.value();
+    });
+
+    untilClearedRedirect();
+  }
+
+  @Test
+  @Description("Check a successful reconnect to the same endpoint.")
+  public void endpoint_connection_success_reconnect() {
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId);
+    untilSuccessfulRedirect(BlobPhase.FINAL);
+    untilClearedRedirect();
+  }
+
+  @Test
   @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     if (altRegistry == null) {
@@ -131,6 +133,7 @@ public class BlobsetSequences extends SequenceBase {
       untilClearedRedirect();
 
       // Phase three: initiate connection back to initial registry.
+      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId);
       untilSuccessfulRedirect(BlobPhase.APPLY);
       mirrorDeviceConfig();
