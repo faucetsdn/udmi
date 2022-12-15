@@ -1,7 +1,7 @@
 import { Site, SiteValidation } from '../../site/model/Site';
 import { UdmiEvent } from '../../udmi/UdmiEvent';
 import { SITE_VALIDATION_EVENT } from '../dataUtils';
-import { getSiteDocument, getSiteKey, getSiteValidationDocument } from '../../site/SiteDocumentUtils';
+import { getSiteDocument, getSiteValidationDocument } from '../../site/SiteDocumentUtils';
 
 describe('SiteDocumentUtils.getSiteDocument', () => {
   const SITE_ID: string = 'reg-1';
@@ -25,7 +25,7 @@ describe('SiteDocumentUtils.getSiteValidationDocument', () => {
     const expectedSiteDocumet: SiteValidation = {
       timestamp: new Date(event.data.timestamp),
       siteName: event.attributes.deviceRegistryId,
-      data: event.data,
+      message: event.data,
     };
 
     // act
@@ -33,18 +33,5 @@ describe('SiteDocumentUtils.getSiteValidationDocument', () => {
 
     // assert
     expect(document).toEqual(expectedSiteDocumet);
-  });
-});
-
-describe('SiteDocumentUtils.getSiteKey', () => {
-  test('throws an exception if a mandatory field deviceRegistryId is null', () => {
-    // arrange
-    const message: UdmiEvent = SITE_VALIDATION_EVENT;
-    message.attributes.deviceRegistryId = null;
-
-    // act and assert
-    expect(() => {
-      getSiteKey(message);
-    }).toThrow('An invalid site name was submitted');
   });
 });

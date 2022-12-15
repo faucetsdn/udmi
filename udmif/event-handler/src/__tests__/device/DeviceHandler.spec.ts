@@ -8,7 +8,7 @@ describe('DeviceHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    deviceHandler = new DeviceHandler(mockDAO, mockDAO, mockDAO, mockDAO);
+    deviceHandler = new DeviceHandler(mockDAO, mockDAO);
   });
 
   test.each([SYSTEM_MODEL_EVENT, POINTSET_STATE_EVENT, DEVICE_VALIDATION_EVENT])(
@@ -41,13 +41,4 @@ describe('DeviceHandler', () => {
     expect(insertMock).toHaveBeenCalled();
   });
 
-  test("Device is not saved to PostgreSQL (PG) if the PG Dao's are null", async () => {
-    deviceHandler = new DeviceHandler(mockDAO, null, mockDAO, null);
-
-    // arrange and act
-    await deviceHandler.handle(DEVICE_VALIDATION_EVENT);
-
-    // assert
-    expect(insertMock).toHaveBeenCalledTimes(1);
-  });
 });

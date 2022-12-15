@@ -8,7 +8,7 @@ describe('SiteHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    siteHandler = new SiteHandler(mockDAO, mockDAO, mockDAO, mockDAO);
+    siteHandler = new SiteHandler(mockDAO, mockDAO);
   });
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
@@ -20,13 +20,4 @@ describe('SiteHandler', () => {
     expect(insertMock).toHaveBeenCalled();
   });
 
-  test("Site is not saved to PostgreSQL (PG) if the PG Dao's are null", async () => {
-    siteHandler = new SiteHandler(mockDAO, null, mockDAO, null);
-
-    // arrange and act
-    await siteHandler.handle(SITE_VALIDATION_EVENT);
-
-    // assert
-    expect(insertMock).toHaveBeenCalledTimes(1);
-  });
 });

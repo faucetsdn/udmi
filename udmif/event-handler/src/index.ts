@@ -5,17 +5,10 @@ import { InvalidEventError } from './InvalidEventError';
 import { SiteHandler } from './site/SiteHandler';
 import { Handler } from './Handler';
 import { DeviceHandler } from './device/DeviceHandler';
-import {
-  getDeviceDAO as getMongoDeviceDao,
-  getSiteDAO as getMongoSiteDao,
-  getDeviceValidationDAO as getMongoDeviceValidationDao,
-  getSiteValidationDAO as getMongoSiteValidationDao,
-} from './dao/mongo/MongoDAO';
 import { getDeviceDAO } from './device/DeviceDAO';
 import { getSiteDAO } from './site/SiteDAO';
 import { getDeviceValidationDAO } from './device/DeviceValidationDAO';
 import { getSiteValidationDAO } from './site/SiteValidationDAO';
-import { isConnectedToPostgreSQL } from './dao/postgresql/PostgreSQLProvider';
 
 let eventHandler: UdmiEventHandler;
 
@@ -27,22 +20,9 @@ let eventHandler: UdmiEventHandler;
 export const handleUdmiEvent: EventFunction = async (event: any) => {
   try {
     if (!eventHandler) {
-      const connectedToPostgreSQL: boolean = await isConnectedToPostgreSQL();
-      if (!connectedToPostgreSQL) console.log('Skipping all PostgreSQL operations.');
 
-      const siteHandler: Handler = new SiteHandler(
-        await getMongoSiteDao(),
-        connectedToPostgreSQL ? await getSiteDAO() : null,
-        await getMongoSiteValidationDao(),
-        connectedToPostgreSQL ? await getSiteValidationDAO() : null
-      );
-
-      const deviceHandler: Handler = new DeviceHandler(
-        await getMongoDeviceDao(),
-        connectedToPostgreSQL ? await getDeviceDAO() : null,
-        await getMongoDeviceValidationDao(),
-        connectedToPostgreSQL ? await getDeviceValidationDAO() : null
-      );
+      const siteHandler: Handler = new SiteHandler(await getSiteDAO(), await getSiteValidationDAO());
+      const deviceHandler: Handler = new DeviceHandler(await getDeviceDAO(), await getDeviceValidationDAO());
 
       console.log('Creating Event Handler');
       eventHandler = new UdmiEventHandler(deviceHandler, siteHandler);

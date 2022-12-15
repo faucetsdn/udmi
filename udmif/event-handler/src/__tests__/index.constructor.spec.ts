@@ -1,5 +1,4 @@
 import { handleUdmiEvent } from '../index';
-import * as MongoDao from '../dao/mongo/MongoDAO';
 import { SYSTEM_MODEL_EVENT } from './dataUtils';
 import UdmiEventHandler from '../udmi/UdmiEventHandler';
 
@@ -12,10 +11,6 @@ describe('index.constructor', () => {
     jest.clearAllMocks();
 
     // arrange
-    jest.spyOn(MongoDao, 'getDeviceDAO').mockImplementation(jest.fn());
-    jest.spyOn(MongoDao, 'getSiteDAO').mockImplementation(jest.fn());
-    jest.spyOn(MongoDao, 'getSiteValidationDAO').mockImplementation(jest.fn());
-    jest.spyOn(MongoDao, 'getDeviceValidationDAO').mockImplementation(jest.fn());
     jest.spyOn(UdmiEventHandler.prototype, 'handleUdmiEvent').mockImplementation(handleUdmiEventMock);
   });
 

@@ -7,7 +7,6 @@
   "license": "ISC",
   "dependencies": {
     "knex": "^2.3.0",
-    "mongodb": "^4.4.1",
     "pg": "^8.8.0"
   },
   "scripts": {
