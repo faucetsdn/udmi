@@ -1,0 +1,42 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+    },
+    {
+    "mode": "NULLABLE",
+    "name": "device_registry_id",
+    "type": "STRING"
+    },
+    {
+    "mode": "NULLABLE",
+    "name": "device_id",
+    "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "device_num_id",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "event",
+      "type": "INTEGER"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "logentry",
+      "type": "INTEGER"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "logentry_description",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "logentry_message",
+      "type": "STRING"
+    }
+]

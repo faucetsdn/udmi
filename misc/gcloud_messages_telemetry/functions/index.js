@@ -12,6 +12,8 @@ const EVENT_POINTSET = 2
 const EVENT_SYSTEM = 3
 const EVENT_OTHER = 9
 
+const util = require('util')
+
 exports.processMessage = async (event, context) => {
   // Only process messages from device and ignore all message fragments
   if (event.attributes.subType == 'state' && event.attributes.subFolder == 'update') {
@@ -68,16 +70,15 @@ exports.processMessage = async (event, context) => {
   // Insert telemetry if pointset event
   // TODO break out into processTelemetry
   // disable temporarily
-  if (messageType == EVENT_POINTSET && 'points' in msg && true == false){
+  if (messageType == EVENT_POINTSET && 'points' in msg){
     var rows = []
     Object.keys(msg.points).forEach(function(key) {
       let row = {
         device_id: deviceId,
         device_num_id: parseInt(event.attributes.deviceNumId),
         message_id: messageId,
-        gateway_id: gatewayId,
         device_registry_id: deviceRegistryId,
-        publish_timestamp: publishTimestamp,
+        publish_time: publishTimestamp,
         timestamp: BigQuery.timestamp(msg.timestamp),
         point_name: key,
         present_value: (isNaN(parseFloat(msg.points[key].present_value)) ? null : parseFloat(msg.points[key].present_value) ),
@@ -150,8 +151,12 @@ exports.processMessage = async (event, context) => {
 
     promises.push(bigquery.dataset(DATASET_ID).table(STATE_TABLE).insert([stateRow]));
   }
- 
-  return await Promise.all(promises);
+  try {
+    await Promise.all(promises);
+  } catch (err) {
+    console.log(util.inspect(err, {showHidden: false, depth: null, colors: true}))
+  }
+  return 
 };
 
 function isString(variable){

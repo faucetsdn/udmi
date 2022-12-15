@@ -1,0 +1,11 @@
+{
+  "timestamp" : "2022-12-15T12:27:19Z",
+  "version" : "1.4.0",
+  "last_config" : "2022-12-09T10:40:57Z",
+  "logentries" : [ ],
+  "metrics" : {
+    "restart_count" : 7,
+    "mem_total_mb" : 256.0,
+    "mem_free_mb" : 234.2368927001953
+  }
+}

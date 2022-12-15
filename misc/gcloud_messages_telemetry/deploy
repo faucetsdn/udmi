@@ -13,7 +13,7 @@ shift 4
 
 FUNCTION_NAME=function-11
 MESSAGES_TABLE=bos_messages
-TELEMETRY_TABLE=points
+TELEMETRY_TABLE=bos_telemetry
 STATE_TABLE=bos_state
 
 BUCKET=$PROJECT_ID-iot-messages
