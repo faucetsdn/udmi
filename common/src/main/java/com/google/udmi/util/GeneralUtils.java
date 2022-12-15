@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.hash.Hashing;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -110,5 +111,13 @@ public class GeneralUtils {
         target.put(key, sourceValue);
       }
     }
+  }
+
+  public static String sha256(String input) {
+    return sha256(input.getBytes());
+  }
+
+  public static String sha256(byte[] bytes) {
+    return Hashing.sha256().hashBytes(bytes).toString();
   }
 }

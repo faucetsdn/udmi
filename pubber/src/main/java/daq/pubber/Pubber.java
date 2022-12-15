@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -1020,7 +1021,7 @@ public class Pubber {
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
       if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)) {
-        return acquireBlobData(blobBlobsetConfig.url);
+        return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
       }
       return null;
     } catch (Exception e) {
@@ -1028,7 +1029,7 @@ public class Pubber {
     }
   }
 
-  private String acquireBlobData(URI url) {
+  private String acquireBlobData(URI url, String sha256) {
     if (!url.getScheme().equals("data")) {
       throw new RuntimeException("Blob URL scheme not supported: " + url.getScheme());
     }
@@ -1037,7 +1038,12 @@ public class Pubber {
     if (!parts[0].equals(DATA_URL_JSON_BASE64)) {
       throw new RuntimeException("Data URL encoding not supported: " + parts[0]);
     }
-    return new String(Base64.getDecoder().decode(parts[1]));
+    byte[] dataBytes = Base64.getDecoder().decode(parts[1]);
+    String dataSha256 = GeneralUtils.sha256(dataBytes);
+    if (!dataSha256.equals(sha256)) {
+      throw new RuntimeException("Blob data hash mismatch");
+    }
+    return new String(dataBytes);
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
