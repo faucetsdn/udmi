@@ -148,6 +148,7 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  public static final String DATA_URL_JSON_BASE64 = "application/json;base64";
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -1028,7 +1029,15 @@ public class Pubber {
   }
 
   private String acquireBlobData(URI url) {
-    return url.toString();
+    if (!url.getScheme().equals("data")) {
+      throw new RuntimeException("Blob URL scheme not supported: " + url.getScheme());
+    }
+    String dataStuff = url.getSchemeSpecificPart();
+    String[] parts = dataStuff.split(",", 2);
+    if (!parts[0].equals(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("Data URL encoding not supported: " + parts[0]);
+    }
+    return new String(Base64.getDecoder().decode(parts[1]));
   }
 
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
