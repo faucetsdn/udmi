@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '40 * * * *'
+    - cron: '0 13 * * *'
 
 concurrency:
   group: ci-${{ github.repository }}
