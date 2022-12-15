@@ -1,8 +1,10 @@
 const {BigQuery} = require('@google-cloud/bigquery');
 const bigquery = new BigQuery();
+const util = require('util');
 
 const PROJECT_ID = process.env.PROJECT_ID
 const DATASET_ID = process.env.DATASET_ID
+const TABLE_NAME = process.env.TABLE_NAME
 
 exports.logConnectionEvents = async (event, context) => {
   const pubsubMessage = event.data;
@@ -30,7 +32,7 @@ exports.logConnectionEvents = async (event, context) => {
   // reduce nanoseconds to microseconds
   ts_ts = logData['timestamp'].substring(0,19)
   ts_ns = logData['timestamp'].substring(20,29)
-  ms = Math.floor(parseInt(ts_ns) / 1000).padStart(6, '0')
+  ms = Math.floor(parseInt(ts_ns) / 1000)
   ts = ts_ts + '.' + String(ms).padStart(6, '0') + 'Z';
 
   // Order events by timestamp
@@ -50,7 +52,7 @@ log_entry = {
     timestamp: t2,
     device_id: logData['labels']['device_id'],
     device_num_id: logData['resource']['labels']['device_num_id'],
-    registry_id: logData['resource']['labels']['device_registry_id'],
+    device_registry_id: logData['resource']['labels']['device_registry_id'],
     event: newState,
     logentry: 1,
     logentry_description: description,
@@ -63,14 +65,13 @@ log_entry = {
     timestamp: t1,
     device_id: logData['labels']['device_id'],
     device_num_id: logData['resource']['labels']['device_num_id'],
-    registry_id: logData['resource']['labels']['device_registry_id'],
+    device_registry_id: logData['resource']['labels']['device_registry_id'],
     event: oldState,
     logentry: 0
   }
   
   return await Promise.all([
-    bigquery.dataset(DATASET_ID).table('iot_connects').insert([log_derivative, log_entry]),
+    bigquery.dataset(DATASET_ID).table(TABLE_NAME).insert([log_derivative, log_entry]),
   ]);
-
 };
 
