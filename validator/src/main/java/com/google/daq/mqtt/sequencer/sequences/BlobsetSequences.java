@@ -8,7 +8,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
-import java.net.URI;
+import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
@@ -82,20 +82,17 @@ public class BlobsetSequences extends SequenceBase {
       boolean badHash) {
     String payload = endpointConfigPayload(hostname, registryId);
     BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.url = generateEndpointConfigDataUrl(payload);
+    config.url = SemanticValue.describe("endpoint url", generateEndpointConfigDataUrl(payload));
     config.phase = BlobPhase.FINAL;
     config.generation = SemanticDate.describe("blob generation", new Date());
-    config.sha256 = badHash ? sha256(payload + "X") : sha256(payload);
+    String description = badHash ? "invalid blob data hash" : "blob data hash";
+    config.sha256 = SemanticValue.describe(description,
+        badHash ? sha256(payload + "X") : sha256(payload));
     return config;
   }
 
-  private URI generateEndpointConfigDataUrl(String payload) {
-    try {
-      String url = String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
-      return new URI(url);
-    } catch (Exception e) {
-      throw new RuntimeException("While generating endpoint data url for " + payload);
-    }
+  private String generateEndpointConfigDataUrl(String payload) {
+    return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
   @Test

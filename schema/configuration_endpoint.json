@@ -62,9 +62,11 @@
         }
       }
     },
-    "nonce": {
+    "generation": {
+      "description": "The timestamp of the endpoint generation",
       "type": "string",
-      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     }
   },
   "required": [

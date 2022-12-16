@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -31,7 +30,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -904,8 +902,8 @@ public class Pubber {
       if (extractedEndpoint != null) {
         // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          extractedEndpoint.nonce = JsonUtil.getTimestamp(
-              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).generation);
+          BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
+          extractedEndpoint.generation = config.generation;
         }
       }
     } catch (Exception e) {
@@ -1029,16 +1027,16 @@ public class Pubber {
     }
   }
 
-  private String acquireBlobData(URI url, String sha256) {
-    if (!url.getScheme().equals("data")) {
-      throw new RuntimeException("Blob URL scheme not supported: " + url.getScheme());
+  private String acquireBlobData(String url, String sha256) {
+    if (!url.startsWith("data:")) {
+      throw new RuntimeException("Blob URL scheme not supported: " + url);
     }
-    String dataStuff = url.getSchemeSpecificPart();
-    String[] parts = dataStuff.split(",", 2);
-    if (!parts[0].equals(DATA_URL_JSON_BASE64)) {
-      throw new RuntimeException("Data URL encoding not supported: " + parts[0]);
+    String[] colonParts = url.split(":", 2);
+    String[] commaParts = colonParts[1].split(",", 2);
+    if (!commaParts[0].equals(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("Data URL encoding not supported: " + commaParts[0]);
     }
-    byte[] dataBytes = Base64.getDecoder().decode(parts[1]);
+    byte[] dataBytes = Base64.getDecoder().decode(commaParts[1]);
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
       throw new RuntimeException("Blob data hash mismatch");

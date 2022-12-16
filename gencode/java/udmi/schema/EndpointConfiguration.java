@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
@@ -28,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "client_id",
     "topic_prefix",
     "auth_provider",
-    "nonce"
+    "generation"
 })
 @Generated("jsonschema2pojo")
 public class EndpointConfiguration {
@@ -74,19 +75,24 @@ public class EndpointConfiguration {
     public String topic_prefix;
     @JsonProperty("auth_provider")
     public Auth_provider auth_provider;
-    @JsonProperty("nonce")
-    public String nonce;
+    /**
+     * The timestamp of the endpoint generation
+     * 
+     */
+    @JsonProperty("generation")
+    @JsonPropertyDescription("The timestamp of the endpoint generation")
+    public Date generation;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.protocol == null)? 0 :this.protocol.hashCode()));
         result = ((result* 31)+((this.hostname == null)? 0 :this.hostname.hashCode()));
         result = ((result* 31)+((this.port == null)? 0 :this.port.hashCode()));
         result = ((result* 31)+((this.topic_prefix == null)? 0 :this.topic_prefix.hashCode()));
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.config_sync_sec == null)? 0 :this.config_sync_sec.hashCode()));
-        result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.client_id == null)? 0 :this.client_id.hashCode()));
         result = ((result* 31)+((this.auth_provider == null)? 0 :this.auth_provider.hashCode()));
         return result;
@@ -101,7 +107,7 @@ public class EndpointConfiguration {
             return false;
         }
         EndpointConfiguration rhs = ((EndpointConfiguration) other);
-        return ((((((((((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol)))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.topic_prefix == rhs.topic_prefix)||((this.topic_prefix!= null)&&this.topic_prefix.equals(rhs.topic_prefix))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
+        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.protocol == rhs.protocol)||((this.protocol!= null)&&this.protocol.equals(rhs.protocol))))&&((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname))))&&((this.port == rhs.port)||((this.port!= null)&&this.port.equals(rhs.port))))&&((this.topic_prefix == rhs.topic_prefix)||((this.topic_prefix!= null)&&this.topic_prefix.equals(rhs.topic_prefix))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.config_sync_sec == rhs.config_sync_sec)||((this.config_sync_sec!= null)&&this.config_sync_sec.equals(rhs.config_sync_sec))))&&((this.client_id == rhs.client_id)||((this.client_id!= null)&&this.client_id.equals(rhs.client_id))))&&((this.auth_provider == rhs.auth_provider)||((this.auth_provider!= null)&&this.auth_provider.equals(rhs.auth_provider))));
     }
 
     @Generated("jsonschema2pojo")

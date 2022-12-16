@@ -9,8 +9,7 @@
       "$ref": "file:common.json#/definitions/phase"
     },
     "url": {
-      "type": "string",
-      "format": "uri"
+      "type": "string"
     },
     "sha256": {
       "type": "string",

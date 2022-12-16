@@ -54,7 +54,7 @@ class EndpointConfiguration:
     self.client_id = None
     self.topic_prefix = None
     self.auth_provider = None
-    self.nonce = None
+    self.generation = None
 
   @staticmethod
   def from_dict(source):
@@ -69,7 +69,7 @@ class EndpointConfiguration:
     result.client_id = source.get('client_id')
     result.topic_prefix = source.get('topic_prefix')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
-    result.nonce = source.get('nonce')
+    result.generation = source.get('generation')
     return result
 
   @staticmethod
@@ -106,6 +106,6 @@ class EndpointConfiguration:
       result['topic_prefix'] = self.topic_prefix # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
-    if self.nonce:
-      result['nonce'] = self.nonce # 5
+    if self.generation:
+      result['generation'] = self.generation # 5
     return result

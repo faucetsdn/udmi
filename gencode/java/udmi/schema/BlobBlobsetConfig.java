@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class BlobBlobsetConfig {
      * 
      */
     @JsonProperty("url")
-    public URI url;
+    public String url;
     /**
      * Expected hash of the retrieved resource
      * (Required)
