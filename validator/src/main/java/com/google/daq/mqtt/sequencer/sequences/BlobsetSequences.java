@@ -79,13 +79,14 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
-    BlobBlobsetConfig config = getEndpointConfig(hostname, registryId, badHash);
+    BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
   }
 
-  private BlobBlobsetConfig getEndpointConfig(String hostname, String registryId, boolean badHash) {
+  private BlobBlobsetConfig makeEndpointConfigBlob(String hostname, String registryId,
+      boolean badHash) {
     String payload = endpointConfigPayload(hostname, registryId);
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = generateEndpointConfigDataUrl(payload);
