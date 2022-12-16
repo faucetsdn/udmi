@@ -8,7 +8,6 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.udmi.util.GeneralUtils;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.Date;
@@ -31,11 +30,11 @@ import udmi.schema.SystemConfig.SystemMode;
 
 public class BlobsetSequences extends SequenceBase {
 
+  public static final String JSON_MIME_TYPE = "application/json";
+  public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
-  public static final String JSON_MIME_TYPE = "application/json";
-  public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(
@@ -79,16 +78,21 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
-  private void setDeviceConfigEndpointBlob(String hostname, String registryId) {
+  private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
+    BlobBlobsetConfig config = getEndpointConfig(hostname, registryId, badHash);
+    deviceConfig.blobset = new BlobsetConfig();
+    deviceConfig.blobset.blobs = new HashMap<>();
+    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+  }
+
+  private BlobBlobsetConfig getEndpointConfig(String hostname, String registryId, boolean badHash) {
     String payload = endpointConfigPayload(hostname, registryId);
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = generateEndpointConfigDataUrl(payload);
     config.phase = BlobPhase.FINAL;
     config.nonce = generateNonce();
-    config.sha256 = sha256(payload);
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+    config.sha256 = badHash ? sha256(payload + "X") : sha256(payload);
+    return config;
   }
 
   private URI generateEndpointConfigDataUrl(String payload) {
@@ -104,7 +108,7 @@ public class BlobsetSequences extends SequenceBase {
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_connection_error() {
     String localhost = "localhost";
-    setDeviceConfigEndpointBlob(localhost, registryId);
+    setDeviceConfigEndpointBlob(localhost, registryId, false);
 
     untilTrue("blobset entry config status is error", () -> {
       Entry stateStatus = deviceState.blobset.blobs.get(
@@ -119,7 +123,15 @@ public class BlobsetSequences extends SequenceBase {
   @Test
   @Description("Check a successful reconnect to the same endpoint.")
   public void endpoint_connection_success_reconnect() {
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId);
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+    untilSuccessfulRedirect(BlobPhase.FINAL);
+    untilClearedRedirect();
+  }
+
+  @Test
+  @Description("Failed connection because of bad hash.")
+  public void endpoint_connection_bad_hash() {
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
     untilSuccessfulRedirect(BlobPhase.FINAL);
     untilClearedRedirect();
   }
@@ -132,7 +144,7 @@ public class BlobsetSequences extends SequenceBase {
     }
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry);
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
     mirrorDeviceConfig();
 
@@ -145,7 +157,7 @@ public class BlobsetSequences extends SequenceBase {
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId);
+      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
       untilSuccessfulRedirect(BlobPhase.APPLY);
       mirrorDeviceConfig();
     });
