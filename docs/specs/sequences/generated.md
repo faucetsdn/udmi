@@ -29,6 +29,7 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [endpoint_connection_bad_hash](#endpoint_connection_bad_hash): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
@@ -74,12 +75,21 @@ Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
 
+## endpoint_connection_bad_hash
+
+Failed connection because of bad hash.
+
+1. Update config before blobset phase is final and stateStatus is null:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "sha256": `2b6b47470d4fa9075f97d3af909088d92b91e444ce7eb2b8cacaead4aa63800e`, "nonce": `endpoint_nonce`, "url": {  } } } }
+1. Wait for blobset phase is final and stateStatus is null
+1. Test failed: timeout waiting for blobset phase is final and stateStatus is null
+
 ## endpoint_connection_error
 
 Push endpoint config message to device that results in a connection error.
 
 1. Update config before blobset entry config status is error:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "sha256": `47124552daef9c5f833ac04c8923b05048c88051387541b2fd0fd00904d00b20`, "nonce": `endpoint_nonce`, "url": {  } } } }
 1. Wait for blobset entry config status is error
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
@@ -89,34 +99,14 @@ Push endpoint config message to device that results in a connection error.
 
 Check connection to an alternate project.
 
-1. Wait for initial last_config matches config timestamp
-1. Update config before blobset phase is apply and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
-1. Wait for blobset phase is apply and stateStatus is null
-1. Update config before blobset phase is final and stateStatus is null:
-    * Add `system.testing.endpoint_type` = `alternate`
-1. Wait for blobset phase is final and stateStatus is null
-1. Wait for alternate last_config matches config timestamp
-1. Update config before endpoint config blobset state not defined:
-    * Remove `blobset.blobs._iot_endpoint_config`
-1. Wait for endpoint config blobset state not defined
-1. Update config before blobset phase is apply and stateStatus is null:
-    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` }
-1. Wait for blobset phase is apply and stateStatus is null
-1. Update config before blobset phase is final and stateStatus is null:
-    * Remove `system.testing.endpoint_type`
-1. Wait for blobset phase is final and stateStatus is null
-1. Wait for restored last_config matches config timestamp
-1. Update config before endpoint config blobset state not defined:
-    * Remove `blobset.blobs._iot_endpoint_config`
-1. Wait for endpoint config blobset state not defined
+1. Test skipped: No alternate registry defined
 
 ## endpoint_connection_success_reconnect
 
 Check a successful reconnect to the same endpoint.
 
 1. Update config before blobset phase is final and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "sha256": `6c41a829dacd5915299df9e69a9421b8ae973b3c8be4421ed7973ff392bce185`, "nonce": `endpoint_nonce`, "url": {  } } } }
 1. Wait for blobset phase is final and stateStatus is null
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`

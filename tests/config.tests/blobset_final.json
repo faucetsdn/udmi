@@ -4,18 +4,13 @@
     "blobs": {
       "arbitrary_manufacturer_id": {
         "phase": "final",
-        "content_type": "application/zip",
-        "base64": "UEsDBAoAAAAAAAZZ3VSU7ZiuBQAAAAUAAAAIABwAYm9vdC5pbWdVVAkAA9xqvGLcarxidXgLAAEEFjQAAARTXwEAYm9vdApQSwMECgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAHABmdy5pbWdVVAkAA95qvGLearxidXgLAAEEFjQAAARTXwEAZncKUEsBAh4DCgAAAAAABlndVJTtmK4FAAAABQAAAAgAGAAAAAAAAQAAAKSBAAAAAGJvb3QuaW1nVVQFAAPcarxidXgLAAEEFjQAAARTXwEAUEsBAh4DCgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAGAAAAAAAAQAAAKSBRwAAAGZ3LmltZ1VUBQAD3mq8YnV4CwABBBY0AAAEU18BAFBLBQYAAAAAAgACAJoAAACKAAAAAAA="
+        "url": "data:application/zip;base64,UEsDBAoAAAAAAAZZ3VSU7ZiuBQAAAAUAAAAIABwAYm9vdC5pbWdVVAkAA9xqvGLcarxidXgLAAEEFjQAAARTXwEAYm9vdApQSwMECgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAHABmdy5pbWdVVAkAA95qvGLearxidXgLAAEEFjQAAARTXwEAZncKUEsBAh4DCgAAAAAABlndVJTtmK4FAAAABQAAAAgAGAAAAAAAAQAAAKSBAAAAAGJvb3QuaW1nVVQFAAPcarxidXgLAAEEFjQAAARTXwEAUEsBAh4DCgAAAAAAB1ndVK9osDMDAAAAAwAAAAYAGAAAAAAAAQAAAKSBRwAAAGZ3LmltZ1VUBQAD3mq8YnV4CwABBBY0AAAEU18BAFBLBQYAAAAAAgACAJoAAACKAAAAAAA=",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "_firmware_update": {
         "phase": "final",
         "url": "https://manuf.com/path/file.zip",
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-      },
-      "_iot_endpoint_config": {
-        "phase": "final",
-        "content_type": "application/json",
-        "base64": "e30="
       }
     }
   },
