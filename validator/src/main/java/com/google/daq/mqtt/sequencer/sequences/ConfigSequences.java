@@ -177,7 +177,7 @@ public class ConfigSequences extends SequenceBase {
     Integer defaultSampleRate = 10;
 
     // Clear received events because this could contain messages from a previous sample rate test
-    getReceivedEvents(PointsetEvent.class);
+    popReceivedEvents(PointsetEvent.class);
 
     Instant endTime = Instant.now().plusSeconds(defaultSampleRate * 3);
     // To pick the test sample rate, either measure the devices
@@ -193,7 +193,7 @@ public class ConfigSequences extends SequenceBase {
       // 2 messages not seen, assume interval is longer than wait period, pick a small number
       testSampleRate = defaultSampleRate;
     } else {
-      List<PointsetEvent> receivedEvents = getReceivedEvents(PointsetEvent.class);
+      List<PointsetEvent> receivedEvents = popReceivedEvents(PointsetEvent.class);
       List<Long> telemetryDelta = intervalFromEvents(receivedEvents);
       Integer nominalInterval = telemetryDelta.get(0).intValue();
       info(String.format("initial sample rate is %d seconds", nominalInterval));
@@ -287,12 +287,12 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.pointset.sample_limit_sec = sampleRange.sampleLimit;
     deviceConfig.pointset.sample_rate_sec = sampleRange.sampleRate;
 
-    getReceivedEvents(PointsetEvent.class);
+    popReceivedEvents(PointsetEvent.class);
     untilTrue(String.format("receive at least %d pointset events", messagesToSample),
         () -> (countReceivedEvents(PointsetEvent.class) > messagesToSample)
     );
 
-    List<PointsetEvent> receivedEvents = getReceivedEvents(PointsetEvent.class);
+    List<PointsetEvent> receivedEvents = popReceivedEvents(PointsetEvent.class);
     List<Long> intervals = intervalFromEvents(receivedEvents);
 
     if (intervalsToIgnore > 0) {
