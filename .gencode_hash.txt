@@ -1,10 +1,6 @@
 b35646a2f3d7c30fd34e3ea6ab6a1070b39c469fd1de49cab1093ff32faaf06d  gencode/docs/command_discovery.html
 3e292717e9b220403c250eebcfb4132becb6f59546f0bd3c3ec3042c31986d48  gencode/docs/command_mapping.html
-<<<<<<< HEAD
-2f84c91abb1c5a6fd5538beaaf9001ab16c662b406a507264dc2875f70f9efb8  gencode/docs/config.html
-=======
-d7a900e410265489c1527107d560b5e0cf19a220ee35abe1d61a698bcada5b4b  gencode/docs/config.html
->>>>>>> endpoint
+332b86d5ddef5be1ab11e36deded78f532ceb808f0bfe02e6d066d369e389c8e  gencode/docs/config.html
 73b3beb740f5bc3ff26d173c356b2d3bf3b9892be83a704d3eeee7c9ff030230  gencode/docs/config_mapping.html
 e6b9cc7798e71237416b092801356f51c5178f3aac35811a8cee8a0045ad96d8  gencode/docs/configuration_endpoint.html
 b7ca70e3176f997f254c32bd8d53dff1462ac8a71c0e166aaa85193d67bff60b  gencode/docs/configuration_execution.html
