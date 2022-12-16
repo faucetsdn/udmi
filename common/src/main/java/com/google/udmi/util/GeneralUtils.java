@@ -8,6 +8,7 @@ import com.google.common.hash.Hashing;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -119,5 +120,13 @@ public class GeneralUtils {
 
   public static String sha256(byte[] bytes) {
     return Hashing.sha256().hashBytes(bytes).toString();
+  }
+
+  public static String encodeBase64(String payload) {
+    return encodeBase64(payload.getBytes());
+  }
+
+  public static String encodeBase64(byte[] payload) {
+    return Base64.getEncoder().encodeToString(payload);
   }
 }
