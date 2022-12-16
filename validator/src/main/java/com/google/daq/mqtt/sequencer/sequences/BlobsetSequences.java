@@ -1,10 +1,13 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.udmi.util.JsonUtil.stringify;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.udmi.util.JsonUtil;
+import java.net.URI;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
@@ -14,6 +17,9 @@ import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.SystemConfig.SystemMode;
@@ -25,16 +31,11 @@ import udmi.schema.SystemConfig.SystemMode;
 
 public class BlobsetSequences extends SequenceBase {
 
-  private static final String ENDPOINT_CONFIG_HOSTNAME_PAYLOAD =
-      "{ "
-          + "  \"protocol\": \"mqtt\",\n"
-          + "  \"client_id\": \"%s\",\n"
-          + "  \"hostname\": \"%s\"\n"
-          + "}";
-
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  public static final String JSON_MIME_TYPE = "application/json";
+  public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(
@@ -46,10 +47,11 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private String generateEndpointConfigBase64Payload(String hostname, String registryId) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(registryId), hostname);
-    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
+    EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+    endpointConfiguration.protocol = Protocol.MQTT;
+    endpointConfiguration.hostname = hostname;
+    endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
+    return Base64.getEncoder().encodeToString(stringify(endpointConfiguration).getBytes());
   }
 
   private String generateNonce() {
@@ -81,12 +83,22 @@ public class BlobsetSequences extends SequenceBase {
   private void setDeviceConfigEndpointBlob(String googleEndpointHostname, String registryId) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload(googleEndpointHostname, registryId);
-    config.content_type = "application/json";
+    config.url = generateEndpointConfigDataUrl(googleEndpointHostname, registryId);
     config.nonce = generateNonce();
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+  }
+
+  private URI generateEndpointConfigDataUrl(String hostname, String registryId) {
+    try {
+      String url = String.format(
+          DATA_URL_FORMAT, JSON_MIME_TYPE,
+          generateEndpointConfigBase64Payload(hostname, registryId));
+      return new URI(url);
+    } catch (Exception e) {
+      throw new RuntimeException("While generating endpoint data url for " + hostname);
+    }
   }
 
   @Test
