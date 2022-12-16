@@ -30,11 +30,7 @@ public class ConfigSequences extends SequenceBase {
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
-    untilTrue("state last_config matches config timestamp", () -> {
-      Date expectedConfig = deviceConfig.timestamp;
-      Date lastConfig = deviceState.system.last_config;
-      return dateEquals(expectedConfig, lastConfig);
-    });
+    untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test
