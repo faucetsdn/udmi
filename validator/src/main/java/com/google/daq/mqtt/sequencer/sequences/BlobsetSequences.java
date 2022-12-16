@@ -7,9 +7,8 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
-import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import java.net.URI;
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
@@ -53,12 +52,6 @@ public class BlobsetSequences extends SequenceBase {
     return stringify(endpointConfiguration);
   }
 
-  private String generateNonce() {
-    byte[] nonce = new byte[32];
-    new SecureRandom().nextBytes(nonce);
-    return SemanticValue.describe("endpoint_nonce", encodeBase64(nonce));
-  }
-
   private void untilClearedRedirect() {
     deviceConfig.blobset.blobs.remove(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
     untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
@@ -91,7 +84,7 @@ public class BlobsetSequences extends SequenceBase {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = generateEndpointConfigDataUrl(payload);
     config.phase = BlobPhase.FINAL;
-    config.nonce = generateNonce();
+    config.generation = SemanticDate.describe("blob generation", new Date());
     config.sha256 = badHash ? sha256(payload + "X") : sha256(payload);
     return config;
   }

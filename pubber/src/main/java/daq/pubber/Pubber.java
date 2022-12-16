@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -107,6 +108,7 @@ public class Pubber {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
+  public static final String DATA_URL_JSON_BASE64 = "application/json;base64";
   private static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -125,7 +127,6 @@ public class Pubber {
       ExtraPointsetEvent.class, getEventsSuffix("pointset"),
       DiscoveryEvent.class, getEventsSuffix("discovery")
   );
-
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -149,7 +150,6 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
-  public static final String DATA_URL_JSON_BASE64 = "application/json;base64";
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
@@ -161,6 +161,7 @@ public class Pubber {
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
+  private final List<Entry> logentries = new ArrayList<>();
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -177,7 +178,6 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
-  private final List<Entry> logentries = new ArrayList<>();
 
   /**
    * Start an instance from a configuration file.
@@ -434,7 +434,7 @@ public class Pubber {
   private void markStateDirty() {
     markStateDirty(0);
   }
-    
+
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
@@ -904,8 +904,8 @@ public class Pubber {
       if (extractedEndpoint != null) {
         // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          extractedEndpoint.nonce =
-              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
+          extractedEndpoint.nonce = JsonUtil.getTimestamp(
+              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).generation);
         }
       }
     } catch (Exception e) {

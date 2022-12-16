@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
@@ -24,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "phase",
     "url",
     "sha256",
-    "nonce"
+    "generation"
 })
 @Generated("jsonschema2pojo")
 public class BlobBlobsetConfig {
@@ -54,15 +55,21 @@ public class BlobBlobsetConfig {
     @JsonProperty("sha256")
     @JsonPropertyDescription("Expected hash of the retrieved resource")
     public String sha256;
-    @JsonProperty("nonce")
-    public String nonce;
+    /**
+     * The timestamp of the blob generation
+     * (Required)
+     * 
+     */
+    @JsonProperty("generation")
+    @JsonPropertyDescription("The timestamp of the blob generation")
+    public Date generation;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
+        result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.sha256 == null)? 0 :this.sha256 .hashCode()));
-        result = ((result* 31)+((this.nonce == null)? 0 :this.nonce.hashCode()));
         result = ((result* 31)+((this.url == null)? 0 :this.url.hashCode()));
         return result;
     }
@@ -76,7 +83,7 @@ public class BlobBlobsetConfig {
             return false;
         }
         BlobBlobsetConfig rhs = ((BlobBlobsetConfig) other);
-        return (((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.nonce == rhs.nonce)||((this.nonce!= null)&&this.nonce.equals(rhs.nonce))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
+        return (((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
     }
 
 
