@@ -42,7 +42,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;
-  private final String siteName;
+  private final String registryId;
   private final String projectId;
   private boolean active;
 
@@ -62,7 +62,7 @@ public class IotReflectorClient implements MessagePublisher {
           e);
     }
 
-    siteName = iotConfig.registry_id;
+    registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
@@ -72,7 +72,7 @@ public class IotReflectorClient implements MessagePublisher {
 
     try {
       mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
-          siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+          registryId, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
     } catch (Exception e) {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }
@@ -115,10 +115,10 @@ public class IotReflectorClient implements MessagePublisher {
   private String parseMessageTopic(String topic, Map<String, String> attributes) {
     String[] parts = topic.substring(1).split("/");
     assert "devices".equals(parts[0]);
-    assert siteName.equals(parts[1]);
+    assert registryId.equals(parts[1]);
     String messageCategory = parts[2];
     attributes.put("category", messageCategory);
-    attributes.put("deviceRegistryId", siteName);
+    attributes.put("deviceRegistryId", registryId);
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
       attributes.put("deviceId", parts[4]);
@@ -169,7 +169,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void publish(String deviceId, String topic, String data) {
     String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
-    mqttPublisher.publish(siteName, reflectorTopic, data);
+    mqttPublisher.publish(registryId, reflectorTopic, data);
   }
 
   @Override
@@ -179,7 +179,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   public void setReflectorState(String stateData) {
-    mqttPublisher.publish(siteName, "state", stateData);
+    mqttPublisher.publish(registryId, "state", stateData);
   }
 
   static class MessageBundle {

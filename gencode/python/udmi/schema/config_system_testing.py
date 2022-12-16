@@ -6,6 +6,7 @@ class TestingSystemConfig:
 
   def __init__(self):
     self.sequence_name = None
+    self.endpoint_type = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +14,7 @@ class TestingSystemConfig:
       return None
     result = TestingSystemConfig()
     result.sequence_name = source.get('sequence_name')
+    result.endpoint_type = source.get('endpoint_type')
     return result
 
   @staticmethod
@@ -35,4 +37,6 @@ class TestingSystemConfig:
     result = {}
     if self.sequence_name:
       result['sequence_name'] = self.sequence_name # 5
+    if self.endpoint_type:
+      result['endpoint_type'] = self.endpoint_type # 5
     return result
