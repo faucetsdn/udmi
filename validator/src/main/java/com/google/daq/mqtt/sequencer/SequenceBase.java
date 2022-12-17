@@ -52,6 +52,7 @@ import java.util.Stack;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -1191,6 +1192,12 @@ public class SequenceBase {
     }
     return deviceState.system.status != null
         && deviceState.system.status.level >= Level.WARNING.value();
+  }
+
+  protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    BiConsumer<String, Supplier<Boolean>> check =
+        isInteresting ? this::checkThat : this::checkNotThat;
+    check.accept("interesting system status", this::hasInterestingSystemStatus);
   }
 
   /**

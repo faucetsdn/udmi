@@ -945,6 +945,7 @@ public class Pubber {
 
     if (extractedEndpoint != null) {
       if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
+        notice("Starting new endpoint generation");
         endpointState.phase = null;
         endpointState.status = null;
         endpointState.generation = extractedEndpoint.generation;
@@ -955,6 +956,8 @@ public class Pubber {
         endpointState.phase = BlobPhase.FINAL;
         Exception applyError = new RuntimeException(extractedEndpoint.error);
         endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
+        publishSynchronousState();
+        return;
       }
     }
 
