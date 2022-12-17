@@ -823,7 +823,7 @@ public class SequenceBase {
   }
 
   protected void whileDoing(String condition, Runnable action) {
-    Instant startTime = Instant.now();
+    final Instant startTime = Instant.now();
 
     trace(String.format("stage suspend %s at %s", waitingCondition.peek(), timeSinceStart()));
     waitingCondition.push("waiting for " + condition);
