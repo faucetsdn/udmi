@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -942,13 +943,26 @@ public class Pubber {
       return; // No need to redirect anything!
     }
 
+    if (extractedEndpoint != null) {
+      if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
+        endpointState.phase = null;
+        endpointState.status = null;
+        endpointState.generation = extractedEndpoint.generation;
+      }
+
+      if (extractedEndpoint.error != null) {
+        attemptedEndpoint = extractedSignature;
+        endpointState.phase = BlobPhase.FINAL;
+        Exception applyError = new RuntimeException(extractedEndpoint.error);
+        endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
+      }
+    }
+
     info("New config blob endpoint detected");
 
     try {
       attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
-      endpointState.status = null;
-      endpointState.generation = extractedEndpoint == null ? null : extractedEndpoint.generation;
       publishSynchronousState();
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
@@ -1024,7 +1038,9 @@ public class Pubber {
       }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("While extracting config blob " + blobName, e);
+      EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+      endpointConfiguration.error = e.toString();
+      return JsonUtil.stringify(endpointConfiguration);
     }
   }
 

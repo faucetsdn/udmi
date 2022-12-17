@@ -759,16 +759,19 @@ public class SequenceBase {
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
     if (!catchToFalse(condition)) {
+      warning("Failed check that " + description);
       throw new IllegalStateException("Failed check that " + description);
     }
     recordSequence("Check that " + description);
   }
 
   protected void checkNotThat(String description, Supplier<Boolean> condition) {
+    String notDescription = "no " + description;
     if (catchToTrue(condition)) {
-      throw new IllegalStateException("Failed check that " + description);
+      warning("Failed check that " + notDescription);
+      throw new IllegalStateException("Failed check that " + notDescription);
     }
-    recordSequence("Check that " + description);
+    recordSequence("Check that " + notDescription);
   }
 
   protected void untilLogged(String category, Level exactLevel) {
@@ -1176,7 +1179,10 @@ public class SequenceBase {
     return dateEquals(expectedConfig, lastConfig);
   }
 
-  protected boolean hasInterestingStatus() {
+  protected boolean hasInterestingSystemStatus() {
+    if (deviceState.system.status != null) {
+      debug("Status level: " + deviceState.system.status.level);
+    }
     return deviceState.system.status != null
         && deviceState.system.status.level >= Level.WARNING.value();
   }

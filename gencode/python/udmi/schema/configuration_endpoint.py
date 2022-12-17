@@ -49,6 +49,7 @@ class EndpointConfiguration:
     self.protocol = None
     self.transport = None
     self.hostname = None
+    self.error = None
     self.port = None
     self.config_sync_sec = None
     self.client_id = None
@@ -64,6 +65,7 @@ class EndpointConfiguration:
     result.protocol = source.get('protocol')
     result.transport = source.get('transport')
     result.hostname = source.get('hostname')
+    result.error = source.get('error')
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
@@ -96,6 +98,8 @@ class EndpointConfiguration:
       result['transport'] = self.transport # 5
     if self.hostname:
       result['hostname'] = self.hostname # 5
+    if self.error:
+      result['error'] = self.error # 5
     if self.port:
       result['port'] = self.port # 5
     if self.config_sync_sec:

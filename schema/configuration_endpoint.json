@@ -21,6 +21,10 @@
     "hostname": {
       "type": "string"
     },
+    "error": {
+      "description": "Error message for situations when the config is invalid",
+      "type": "string"
+    },
     "port": {
       "type": "integer",
       "default": 8883

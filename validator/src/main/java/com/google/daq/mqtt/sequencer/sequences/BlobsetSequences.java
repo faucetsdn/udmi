@@ -70,6 +70,7 @@ public class BlobsetSequences extends SequenceBase {
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
           && blobStateStatus == null;
     });
+    checkNotThat("interesting status", this::hasInterestingSystemStatus);
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
@@ -107,6 +108,7 @@ public class BlobsetSequences extends SequenceBase {
       return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && stateStatus.level == Level.ERROR.value();
     });
+    checkNotThat("interesting status", this::hasInterestingSystemStatus);
 
     untilClearedRedirect();
   }
@@ -133,7 +135,7 @@ public class BlobsetSequences extends SequenceBase {
           && blobStateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && blobStateStatus.level == Level.ERROR.value();
     });
-    checkNotThat("no interesting status", this::hasInterestingStatus);
+    checkNotThat("interesting status", this::hasInterestingSystemStatus);
   }
 
   @Test
