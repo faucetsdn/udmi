@@ -65,6 +65,7 @@ cat <<EOF > out/endpoint.json
 EOF
 
 base64=$(base64 -w 0 out/endpoint.json)
+sha256=$(cat out/endpoint.json | sha256sum | sed 's/ .*//')
 
 cat <<EOF > out/blobs.json
 {
@@ -75,7 +76,8 @@ cat <<EOF > out/blobs.json
     "blobs": {
       "_iot_endpoint_config": {
         "phase": "final",
-        "base64": "$base64"
+        "url": "data:application/json;base64,$base64",
+        "sha256": "$sha256"
       }
     }
   }
