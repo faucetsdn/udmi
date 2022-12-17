@@ -32,10 +32,10 @@ public class BlobsetSequences extends SequenceBase {
 
   public static final String JSON_MIME_TYPE = "application/json";
   public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
+  public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
-  public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(

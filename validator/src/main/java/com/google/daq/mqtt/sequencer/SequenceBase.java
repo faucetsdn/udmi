@@ -832,9 +832,8 @@ public class SequenceBase {
     action.run();
 
     Duration between = Duration.between(startTime, Instant.now());
-    debug(
-        String.format("stage finished %s at %s after %ss", waitingCondition.peek(), timeSinceStart(),
-            between.toSeconds()));
+    debug(String.format("stage finished %s at %s after %ss", waitingCondition.peek(),
+        timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
     trace(String.format("stage resume %s at %s", waitingCondition.peek(), timeSinceStart()));
   }
