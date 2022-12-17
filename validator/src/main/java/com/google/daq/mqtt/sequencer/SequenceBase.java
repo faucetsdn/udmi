@@ -1167,6 +1167,8 @@ public class SequenceBase {
     String receivedConfig = actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+    // There's a race condition if the mirror command gets delayed, so chill for a bit.
+    safeSleep(ONE_SECOND_MS);
   }
 
   private MessagePublisher reflector() {
