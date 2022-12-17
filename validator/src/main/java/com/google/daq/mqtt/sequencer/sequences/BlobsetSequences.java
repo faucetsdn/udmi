@@ -14,6 +14,7 @@ import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
@@ -34,6 +35,7 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(
@@ -53,20 +55,19 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void untilClearedRedirect() {
-    deviceConfig.blobset.blobs.remove(SystemBlobsets.IOT_ENDPOINT_CONFIG.value());
+    deviceConfig.blobset.blobs.remove(IOT_BLOB_KEY);
     untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
-        || deviceState.blobset.blobs.get(SystemBlobsets.IOT_ENDPOINT_CONFIG.value()) == null);
+        || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
     untilTrue(String.format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
-      BlobPhase phase = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
       // Successful reconnect sends a state message with empty Entry.
-      Entry blobStateStatus = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
-      return phase != null
-          && phase.equals(blobPhase)
+      Entry blobStateStatus = blobBlobsetState.status;
+      return blobPhase.equals(blobBlobsetState.phase)
+          && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
           && blobStateStatus == null;
     });
   }
@@ -75,7 +76,7 @@ public class BlobsetSequences extends SequenceBase {
     BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+    deviceConfig.blobset.blobs.put(IOT_BLOB_KEY, config);
   }
 
   private BlobBlobsetConfig makeEndpointConfigBlob(String hostname, String registryId,
@@ -102,8 +103,7 @@ public class BlobsetSequences extends SequenceBase {
     setDeviceConfigEndpointBlob(localhost, registryId, false);
 
     untilTrue("blobset entry config status is error", () -> {
-      Entry stateStatus = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
+      Entry stateStatus = deviceState.blobset.blobs.get(IOT_BLOB_KEY).status;
       return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
           && stateStatus.level == Level.ERROR.value();
     });
@@ -123,8 +123,17 @@ public class BlobsetSequences extends SequenceBase {
   @Description("Failed connection because of bad hash.")
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
-    untilSuccessfulRedirect(BlobPhase.FINAL);
-    untilClearedRedirect();
+    untilTrue("blobset status is ERROR", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
+      // Successful reconnect sends a state message with empty Entry.
+      Entry blobStateStatus = blobBlobsetState.status;
+      return BlobPhase.FINAL.equals(blobBlobsetState.phase)
+          && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+          && blobStateStatus.category.equals(BLOBSET_BLOB_APPLY)
+          && blobStateStatus.level == Level.ERROR.value();
+    });
+    checkNotThat("no interesting status", this::hasInterestingStatus);
   }
 
   @Test

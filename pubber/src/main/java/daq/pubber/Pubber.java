@@ -106,7 +106,7 @@ public class Pubber {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
-  public static final String DATA_URL_JSON_BASE64 = "application/json;base64";
+  public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
   private static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
@@ -948,6 +948,7 @@ public class Pubber {
       attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
       endpointState.status = null;
+      endpointState.generation = extractedEndpoint == null ? null : extractedEndpoint.generation;
       publishSynchronousState();
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
@@ -1028,15 +1029,10 @@ public class Pubber {
   }
 
   private String acquireBlobData(String url, String sha256) {
-    if (!url.startsWith("data:")) {
-      throw new RuntimeException("Blob URL scheme not supported: " + url);
+    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("URL encoding not supported: " + url);
     }
-    String[] colonParts = url.split(":", 2);
-    String[] commaParts = colonParts[1].split(",", 2);
-    if (!commaParts[0].equals(DATA_URL_JSON_BASE64)) {
-      throw new RuntimeException("Data URL encoding not supported: " + commaParts[0]);
-    }
-    byte[] dataBytes = Base64.getDecoder().decode(commaParts[1]);
+    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
       throw new RuntimeException("Blob data hash mismatch");
