@@ -16,7 +16,7 @@ import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Entry;
 import udmi.schema.Level;
-import udmi.schema.SystemConfig.SystemMode;
+import udmi.schema.Operation.SystemMode;
 
 
 /**
@@ -154,25 +154,25 @@ public class BlobsetSequences extends SequenceBase {
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero", () -> deviceState.system.last_start.after(dateZero));
 
-    deviceConfig.system.mode = SystemMode.ACTIVE;
+    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
     untilTrue("deviceState.system.mode == ACTIVE",
-        () -> deviceState.system.mode.equals(SystemMode.ACTIVE));
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
 
     final Date last_config = deviceState.system.last_config;
     final Date last_start = deviceConfig.system.last_start;
 
     // Send the restart mode.
-    deviceConfig.system.mode = SystemMode.RESTART;
+    deviceConfig.system.operation.mode = SystemMode.RESTART;
 
     // Wait for the device to go through the correct states as it restarts.
     untilTrue("deviceState.system.mode == INITIAL",
-        () -> deviceState.system.mode.equals(SystemMode.INITIAL));
+        () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
 
-    deviceConfig.system.mode = SystemMode.ACTIVE;
+    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
     untilTrue("deviceState.system.mode == ACTIVE",
-        () -> deviceState.system.mode.equals(SystemMode.ACTIVE));
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
 
     // Capture error from last_start unexpectedly changing due to restart condition.
     try {

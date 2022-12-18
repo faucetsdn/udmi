@@ -765,7 +765,7 @@ public class Validator {
             System.out.println(
                 "Validating " + targetFile.getName() + " against " + schemaFile.getName());
             String schemaName = fileName.substring(0, fileName.length() - JSON_SUFFIX.length());
-            validateFile(prefix, targetSpec, schemaName, schema);
+            validateFile(prefix, targetFile.getPath(), schemaName, schema);
           } catch (Exception e) {
             validateExceptions.put(targetFile.getName(), e);
           }
