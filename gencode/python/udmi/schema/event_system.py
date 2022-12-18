@@ -1,11 +1,10 @@
 """Generated class for event_system.json"""
 
 
-class ObjectD1FC597A:
+class ObjectC75823DD:
   """Generated schema class"""
 
   def __init__(self):
-    self.restart_count = None
     self.mem_total_mb = None
     self.mem_free_mb = None
     self.store_total_mb = None
@@ -17,8 +16,7 @@ class ObjectD1FC597A:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectD1FC597A()
-    result.restart_count = source.get('restart_count')
+    result = ObjectC75823DD()
     result.mem_total_mb = source.get('mem_total_mb')
     result.mem_free_mb = source.get('mem_free_mb')
     result.store_total_mb = source.get('store_total_mb')
@@ -33,7 +31,7 @@ class ObjectD1FC597A:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectD1FC597A.from_dict(source[key])
+      result[key] = ObjectC75823DD.from_dict(source[key])
     return result
 
   @staticmethod
@@ -45,8 +43,6 @@ class ObjectD1FC597A:
 
   def to_dict(self):
     result = {}
-    if self.restart_count:
-      result['restart_count'] = self.restart_count # 5
     if self.mem_total_mb:
       result['mem_total_mb'] = self.mem_total_mb # 5
     if self.mem_free_mb:
@@ -83,7 +79,7 @@ class SystemEvent:
     result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
     result.event_count = source.get('event_count')
-    result.metrics = ObjectD1FC597A.from_dict(source.get('metrics'))
+    result.metrics = ObjectC75823DD.from_dict(source.get('metrics'))
     return result
 
   @staticmethod

@@ -3,7 +3,7 @@ from .common import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .ancillary_properties import AncillaryProperties
-from .state_system_hardware import SystemHardware
+from .state_system_hardware import StateSystemHardware
 
 
 class SystemDiscoveryEvent:
@@ -21,7 +21,7 @@ class SystemDiscoveryEvent:
     result = SystemDiscoveryEvent()
     result.serial_no = source.get('serial_no')
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
-    result.hardware = SystemHardware.from_dict(source.get('hardware'))
+    result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
     return result
 
   @staticmethod

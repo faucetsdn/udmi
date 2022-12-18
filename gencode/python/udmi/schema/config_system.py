@@ -8,7 +8,7 @@ class SystemConfig:
   def __init__(self):
     self.min_loglevel = None
     self.metrics_rate_sec = None
-    self.mode = None
+    self.operation = None
     self.last_start = None
     self.testing = None
 
@@ -19,7 +19,7 @@ class SystemConfig:
     result = SystemConfig()
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
-    result.mode = source.get('mode')
+    result.operation = source.get('operation')
     result.last_start = source.get('last_start')
     result.testing = TestingSystemConfig.from_dict(source.get('testing'))
     return result
@@ -46,8 +46,8 @@ class SystemConfig:
       result['min_loglevel'] = self.min_loglevel # 5
     if self.metrics_rate_sec:
       result['metrics_rate_sec'] = self.metrics_rate_sec # 5
-    if self.mode:
-      result['mode'] = self.mode # 5
+    if self.operation:
+      result['operation'] = self.operation # 5
     if self.last_start:
       result['last_start'] = self.last_start # 5
     if self.testing:

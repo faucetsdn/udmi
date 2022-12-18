@@ -22,12 +22,8 @@
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
-    "operational": {
-      "description": "Operational status of the device.",
-      "type": "boolean"
-    },
-    "mode": {
-      "$ref": "file:common.json#/definitions/mode"
+    "operation": {
+      "$ref": "file:state_system_operation.json"
     },
     "last_start": {
       "description": "Last time the system started up.",

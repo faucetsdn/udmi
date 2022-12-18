@@ -4,7 +4,9 @@
   "system": {
     "metrics_rate_sec": 10,
     "min_loglevel": 400,
-    "mode": "restart"
+    "operation": {
+      "mode": "restart"
+    }
   },
   "pointset": {
     "sample_limit_sec": 2,

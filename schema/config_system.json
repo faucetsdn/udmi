@@ -20,8 +20,13 @@
       "maximum": 86400,
       "default": 600
     },
-    "mode": {
-      "$ref": "file:common.json#/definitions/mode"
+    "operation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "$ref": "file:common.json#/definitions/mode"
+        }
+      }
     },
     "last_start": {
       "description": "Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.",

@@ -1,5 +1,6 @@
 """Generated class for state_system.json"""
-from .state_system_hardware import SystemHardware
+from .state_system_operation import StateSystemOperation
+from .state_system_hardware import StateSystemHardware
 from .common import Entry
 
 
@@ -10,8 +11,7 @@ class SystemState:
     self.timestamp = None
     self.version = None
     self.last_config = None
-    self.operational = None
-    self.mode = None
+    self.operation = None
     self.last_start = None
     self.serial_no = None
     self.hardware = None
@@ -27,11 +27,10 @@ class SystemState:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_config = source.get('last_config')
-    result.operational = source.get('operational')
-    result.mode = source.get('mode')
+    result.operation = StateSystemOperation.from_dict(source.get('operation'))
     result.last_start = source.get('last_start')
     result.serial_no = source.get('serial_no')
-    result.hardware = SystemHardware.from_dict(source.get('hardware'))
+    result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.params = source.get('params')
     result.status = Entry.from_dict(source.get('status'))
@@ -61,10 +60,8 @@ class SystemState:
       result['version'] = self.version # 5
     if self.last_config:
       result['last_config'] = self.last_config # 5
-    if self.operational:
-      result['operational'] = self.operational # 5
-    if self.mode:
-      result['mode'] = self.mode # 5
+    if self.operation:
+      result['operation'] = self.operation.to_dict() # 4
     if self.last_start:
       result['last_start'] = self.last_start # 5
     if self.serial_no:

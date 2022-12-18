@@ -37,9 +37,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "restart_count": {
-          "type": "integer"
-        },
         "mem_total_mb": {
           "type": "number"
         },
