@@ -79,6 +79,7 @@ import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
+import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -89,8 +90,9 @@ import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.StateSystemHardware;
+import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
 import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
@@ -354,7 +356,8 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.system.hardware = new SystemHardware();
+    deviceState.system.operation = new StateSystemOperation();
+    deviceState.system.hardware = new StateSystemHardware();
     deviceState.system.last_start = DEVICE_START_TIME;
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
@@ -381,8 +384,8 @@ public class Pubber {
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, optionsString(configuration.options)));
 
-    deviceState.system.operational = true;
-    deviceState.system.mode = SystemMode.INITIAL;
+    deviceState.system.operation.operational = true;
+    deviceState.system.operation.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -415,6 +418,7 @@ public class Pubber {
         persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
             : new DevicePersistent();
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
+    deviceState.system.operation.restart_count = persistentData.restart_count;
     writePersistentStore();
   }
 
@@ -565,7 +569,6 @@ public class Pubber {
   private void sendSystemEvent() {
     SystemEvent systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
-    systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
@@ -591,12 +594,12 @@ public class Pubber {
     if (systemConfig == null) {
       return;
     }
-    if (SystemMode.ACTIVE.equals(deviceState.system.mode)
-        && SystemMode.RESTART.equals(systemConfig.mode)) {
+    if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
+        && SystemMode.RESTART.equals(systemConfig.operation.mode)) {
       restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
-      deviceState.system.mode = SystemMode.ACTIVE;
+    if (SystemMode.ACTIVE.equals(systemConfig.operation.mode)) {
+      deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
     if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
@@ -607,7 +610,7 @@ public class Pubber {
   }
 
   private void restartSystem(boolean restart) {
-    deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
     try {
       publishSynchronousState();
     } catch (Exception e) {
@@ -653,7 +656,7 @@ public class Pubber {
 
   private void terminate() {
     warn("Terminating");
-    deviceState.system.mode = SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);

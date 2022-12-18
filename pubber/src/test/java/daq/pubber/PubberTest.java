@@ -20,6 +20,7 @@ public class PubberTest extends TestBase {
       List<String> args = ImmutableList.of(TEST_PROJECT, TEST_SITE, BAD_DEVICE, SERIAL_NO);
       Pubber.main(args.toArray(new String[0]));
     } catch (Throwable e) {
+      e.printStackTrace();
       while (e != null) {
         String message = e.getMessage();
         if (message.contains(BAD_DEVICE)) {
