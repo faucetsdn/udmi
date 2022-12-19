@@ -62,18 +62,10 @@ public class MessageUpgrader {
     if (minor < 4) {
       upgrade_1_4();
     }
-    if (minor == 4 && patch < 1) {
-      upgrade_1_4_1();
-    }
     if (message.has(VERSION_PROPERTY_KEY)) {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
-  }
-
-  private void upgrade_1_4() {
-    minor = 4;
-    patch = 0;
   }
 
   private void upgrade_1_3() {
@@ -111,14 +103,15 @@ public class MessageUpgrader {
     }
   }
 
-  private void upgrade_1_4_1() {
-    patch = 1;
+  private void upgrade_1_4() {
+    minor = 4;
+    patch = 0;
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_1_state();
+      upgrade_1_4_state();
     }
   }
 
-  private void upgrade_1_4_1_state() {
+  private void upgrade_1_4_state() {
     ObjectNode system = (ObjectNode) message.get("system");
     if (system != null) {
       JsonNode operational = system.remove("operational");
