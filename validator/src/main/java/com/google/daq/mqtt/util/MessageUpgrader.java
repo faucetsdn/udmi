@@ -51,7 +51,7 @@ public class MessageUpgrader {
   /**
    * Update message to the latest standard.
    *
-   * @param forceUpgrade
+   * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
    * @return true if the message has been altered
    */
   public boolean upgrade(boolean forceUpgrade) {
