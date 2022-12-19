@@ -845,8 +845,12 @@ public class Validator {
       Map<String, Object> message = OBJECT_MAPPER.readValue(inputFile, Map.class);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
-      upgradeMessage(schemaName, jsonNode);
-      OBJECT_MAPPER.writeValue(outputStream, jsonNode);
+      if (upgradeMessage(schemaName, jsonNode)) {
+        OBJECT_MAPPER.writeValue(outputStream, jsonNode);
+      } else {
+        outputStream.close();
+        outputFile.delete();
+      }
       validateJsonNode(schema, jsonNode);
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
