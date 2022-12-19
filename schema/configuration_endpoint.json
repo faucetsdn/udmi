@@ -22,7 +22,7 @@
       "type": "string"
     },
     "error": {
-      "description": "Error message for situations when the config is invalid",
+      "description": "Error message container for capturing errors during parsing/handling",
       "type": "string"
     },
     "port": {
