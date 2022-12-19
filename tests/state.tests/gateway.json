@@ -22,7 +22,9 @@
     },
     "serial_no": "182732142",
     "last_config": "2018-08-26T21:49:29.364Z",
-    "operational": true,
+    "operation": {
+      "operational": true
+    },
     "status": {
       "message": "Tickity Boo",
       "category": "system.config.apply",

@@ -119,7 +119,9 @@ a successful reconfiguration
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {
@@ -147,7 +149,9 @@ This is an example of the state message sent to the original endpoint after a fa
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {
