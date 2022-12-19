@@ -29,13 +29,17 @@ public class GeneralUtils {
 
     for (Field field : fields) {
       try {
+        if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+          continue;
+        }
+
         if (field.get(target) != null && Boolean.TRUE.equals(field.get(target))) {
           options.add(field.getName());
         } else if (field.get(target) != null) {
           options.add(field.getName() + "=" + field.get(target));
         }
       } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException("While accessing field " + field.getName(), e);
       }
     }
     return String.join(" ", options);

@@ -1,8 +1,19 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.sha256;
+import static org.junit.Assert.assertEquals;
+import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
+
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.JsonUtil;
+import java.util.HashMap;
 import java.util.List;
 import org.junit.Test;
+import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobsetConfig;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Unit tests for Pubber.
@@ -12,13 +23,23 @@ public class PubberTest extends TestBase {
   private static final String TEST_PROJECT = "test-project";
   private static final String TEST_SITE = "../sites/udmi_site_model";
   private static final String BAD_DEVICE = "ASHDQWHD";
+  private static final String TEST_DEVICE = "AHU-1";
   private static final String SERIAL_NO = "18217398172";
+  private static final String TEST_BLOB_DATA = "mary had a little lamb";
+  private static final String DATA_URL_PREFIX = "data:application/json;base64,";
+  private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
+  private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
+
+  private static EndpointConfiguration getEndpointConfiguration() {
+    EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+    endpointConfiguration.client_id = TEST_DEVICE;
+    return endpointConfiguration;
+  }
 
   @Test
   public void missingDevice() {
     try {
-      List<String> args = ImmutableList.of(TEST_PROJECT, TEST_SITE, BAD_DEVICE, SERIAL_NO);
-      Pubber.main(args.toArray(new String[0]));
+      makeTestPubber(BAD_DEVICE);
     } catch (Throwable e) {
       while (e != null) {
         String message = e.getMessage();
@@ -29,5 +50,47 @@ public class PubberTest extends TestBase {
       }
     }
     throw new RuntimeException("No exception thrown for bad device");
+  }
+
+  private Pubber makeTestPubber(String deviceId) {
+    try {
+      List<String> args = ImmutableList.of(TEST_PROJECT, TEST_SITE, deviceId, SERIAL_NO);
+      return Pubber.singularPubber(args.toArray(new String[0]));
+    } catch (Exception e) {
+      throw new RuntimeException("While creating singular pubber", e);
+    }
+  }
+
+  @Test
+  public void parseDataUrl() {
+    String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
+    String blobData = Pubber.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    assertEquals("extracted blob data", blobData, TEST_BLOB_DATA);
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void badDataUrl() {
+    String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA + "XXXX");
+    Pubber.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+  }
+
+  @Test
+  public void extractedEndpointConfigBlob() {
+    Pubber pubber = makeTestPubber(TEST_DEVICE);
+    try {
+      BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
+      blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
+      blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
+      blobBlobsetConfig.phase = BlobPhase.FINAL;
+      pubber.deviceConfig.blobset = new BlobsetConfig();
+      pubber.deviceConfig.blobset.blobs = new HashMap<>();
+      pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+
+      EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
+      String extractedClientId = endpointConfiguration.client_id;
+      assertEquals("blob client id", TEST_DEVICE, extractedClientId);
+    } finally {
+      pubber.terminate();
+    }
   }
 }

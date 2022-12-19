@@ -154,14 +154,14 @@ public class Pubber {
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  private final State deviceState = new State();
+  final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  private Config deviceConfig = new Config();
+  Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -259,7 +259,7 @@ public class Pubber {
     LOG.info("Done with main");
   }
 
-  private static void singularPubber(String[] args) throws InterruptedException {
+  static Pubber singularPubber(String[] args) throws InterruptedException {
     Pubber pubber = null;
     try {
       if (args.length == 1) {
@@ -281,6 +281,7 @@ public class Pubber {
       }
       throw new RuntimeException("While starting singular pubber", e);
     }
+    return pubber;
   }
 
   private static void swarmPubber(String[] args) throws InterruptedException {
@@ -653,7 +654,7 @@ public class Pubber {
     }
   }
 
-  private void terminate() {
+  void terminate() {
     warn("Terminating");
     deviceState.system.mode = SystemMode.SHUTDOWN;
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
@@ -892,10 +893,10 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
-  private void extractEndpointBlobConfig() {
+  EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
-      return;
+      return null;
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
@@ -910,6 +911,7 @@ public class Pubber {
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
+    return extractedEndpoint;
   }
 
   private void removeBlobsetBlobState(SystemBlobsets blobId) {
@@ -1047,7 +1049,7 @@ public class Pubber {
     }
   }
 
-  private String acquireBlobData(String url, String sha256) {
+  static String acquireBlobData(String url, String sha256) {
     if (!url.startsWith(DATA_URL_JSON_BASE64)) {
       throw new RuntimeException("URL encoding not supported: " + url);
     }
@@ -1480,12 +1482,12 @@ public class Pubber {
   private void augmentDeviceMessage(Object message) {
     try {
       Field version = message.getClass().getField("version");
-      assert version.get(message) == null;
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
-      assert timestamp.get(message) == null;
-      timestamp.set(message, getCurrentTimestamp());
-    } catch (Exception e) {
+      if (timestamp.get(message) == null) {
+        timestamp.set(message, getCurrentTimestamp());
+      }
+    } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
   }
