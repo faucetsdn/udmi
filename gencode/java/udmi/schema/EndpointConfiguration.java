@@ -52,11 +52,11 @@ public class EndpointConfiguration {
     @JsonProperty("hostname")
     public String hostname;
     /**
-     * Error message for situations when the config is invalid
+     * Error message container for capturing errors during parsing/handling
      * 
      */
     @JsonProperty("error")
-    @JsonPropertyDescription("Error message for situations when the config is invalid")
+    @JsonPropertyDescription("Error message container for capturing errors during parsing/handling")
     public String error;
     @JsonProperty("port")
     public Integer port = 8883;
