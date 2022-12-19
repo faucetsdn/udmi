@@ -25,11 +25,6 @@
     "operation": {
       "$ref": "file:state_system_operation.json"
     },
-    "last_start": {
-      "description": "Last time the system started up.",
-      "type": "string",
-      "format": "date-time"
-    },
     "serial_no": {
       "description": "The serial number of the physical device",
       "type": "string",

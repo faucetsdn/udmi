@@ -10,6 +10,11 @@
       "description": "Operational status of the device.",
       "type": "boolean"
     },
+    "last_start": {
+      "description": "Last time the system started up.",
+      "type": "string",
+      "format": "date-time"
+    },
     "restart_count": {
       "description": "Number of system restarts",
       "type": "integer"

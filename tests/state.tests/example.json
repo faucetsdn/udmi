@@ -16,7 +16,7 @@
       "last_start": "2018-08-25T21:49:29.364Z",
       "mode": "active",
       "restart_count": 121
-    }
+    },
     "status": {
       "message": "Tickity Boo",
       "category": "system.config.apply",

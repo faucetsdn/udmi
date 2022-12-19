@@ -1,6 +1,6 @@
 6 schema violations found
   instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  object has missing required properties (["hardware","last_config","operational","serial_no","software"])
+  object has missing required properties (["hardware","last_config","operation","serial_no","software"])
   object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
   object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","system_status"]
   object instance has properties which are not allowed by the schema: ["id","status"]

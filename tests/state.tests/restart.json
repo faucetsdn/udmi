@@ -16,7 +16,7 @@
       "last_start": "2018-08-25T21:49:29.364Z",
       "mode": "restart",
       "restart_count": 10
-    }
+    },
     "status": {
       "message": "System rebooting due to config trigger",
       "category": "system.config.apply",

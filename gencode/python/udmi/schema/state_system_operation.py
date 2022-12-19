@@ -6,6 +6,7 @@ class StateSystemOperation:
 
   def __init__(self):
     self.operational = None
+    self.last_start = None
     self.restart_count = None
     self.mode = None
 
@@ -15,6 +16,7 @@ class StateSystemOperation:
       return None
     result = StateSystemOperation()
     result.operational = source.get('operational')
+    result.last_start = source.get('last_start')
     result.restart_count = source.get('restart_count')
     result.mode = source.get('mode')
     return result
@@ -39,6 +41,8 @@ class StateSystemOperation:
     result = {}
     if self.operational:
       result['operational'] = self.operational # 5
+    if self.last_start:
+      result['last_start'] = self.last_start # 5
     if self.restart_count:
       result['restart_count'] = self.restart_count # 5
     if self.mode:

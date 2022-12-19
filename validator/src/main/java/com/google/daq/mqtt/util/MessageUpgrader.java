@@ -59,6 +59,9 @@ public class MessageUpgrader {
     if (minor == 3 && patch < 14) {
       upgrade_1_3_14();
     }
+    if (minor < 4) {
+      upgrade_1_4();
+    }
     if (minor == 4 && patch < 1) {
       upgrade_1_4_1();
     }
@@ -66,6 +69,11 @@ public class MessageUpgrader {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
+  }
+
+  private void upgrade_1_4() {
+    minor = 4;
+    patch = 0;
   }
 
   private void upgrade_1_3() {
@@ -124,16 +132,7 @@ public class MessageUpgrader {
 
   private void upgradeStatuses(ObjectNode system) {
     JsonNode statuses = system.remove("statuses");
-    if (statuses != null) {
-      if (system.has("status")) {
-        throw new IllegalStateException("Node already has status field");
-      }
-      if (statuses.size() == 0) {
-        return;
-      }
-      if (statuses.size() > 1) {
-        throw new IllegalStateException("More than one statuses to upgrade");
-      }
+    if (statuses != null && !system.has("status") && statuses.size() != 0) {
       system.set("status", statuses.get(0));
     }
   }
@@ -141,11 +140,8 @@ public class MessageUpgrader {
   private void upgradeFirmware(ObjectNode system) {
     JsonNode firmware = system.remove("firmware");
     if (firmware != null) {
-      if (system.has("software")) {
-        throw new IllegalStateException("Node already has software field");
-      }
       JsonNode version = ((ObjectNode) firmware).remove(VERSION_PROPERTY_KEY);
-      if (version != null) {
+      if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
         softwareNode.put("firmware", version.asText());
         system.set("software", softwareNode);
@@ -155,10 +151,7 @@ public class MessageUpgrader {
 
   private void upgradeMakeModel(ObjectNode system) {
     JsonNode makeModel = system.remove("make_model");
-    if (makeModel != null) {
-      if (system.has("hardware")) {
-        throw new IllegalStateException("Node already has hardware field");
-      }
+    if (makeModel != null && !system.has("hardware")) {
       ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
       hardwareNode.put("model", makeModel.asText());
       hardwareNode.put("make", "unknown");

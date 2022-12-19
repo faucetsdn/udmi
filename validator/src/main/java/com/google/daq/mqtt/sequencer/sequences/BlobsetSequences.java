@@ -152,7 +152,8 @@ public class BlobsetSequences extends SequenceBase {
   public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
-    untilTrue("last_start is not zero", () -> deviceState.system.last_start.after(dateZero));
+    untilTrue("last_start is not zero",
+        () -> deviceState.system.operation.last_start.after(dateZero));
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
