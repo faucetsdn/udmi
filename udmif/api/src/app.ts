@@ -5,7 +5,9 @@ import { logger } from './common/logger';
 import { getDefaultContextProcessor } from './server/context';
 import { Configuration, loadConfig } from './server/config';
 import { DAO } from './dao/DAO';
-import { getDeviceDAO, getSiteDAO } from './dao/MongoDAO';
+// import { getDeviceDAO, getSiteDAO } from './dao/MongoDAO';
+import { DeviceDAO } from './device/DeviceDao';
+import { SiteDAO } from './site/SiteDao';
 import { Device } from './device/model';
 import { Site } from './site/model';
 import { resolvers } from './server/resolvers';
@@ -17,8 +19,8 @@ import { resolvers } from './server/resolvers';
   // required context processor
   const context = await getDefaultContextProcessor(config.clientIds);
 
-  const deviceDAO: DAO<Device> = await getDeviceDAO(config);
-  const siteDAO: DAO<Site> = await getSiteDAO(config);
+  const deviceDAO: DAO<Device> = new DeviceDAO();
+  const siteDAO: DAO<Site> = new SiteDAO();
 
   // server initialization
   const server: ApolloServer = new ApolloServer({

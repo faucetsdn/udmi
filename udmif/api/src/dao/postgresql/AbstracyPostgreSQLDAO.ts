@@ -6,7 +6,7 @@ import { getWhereOptions } from './Where';
 
 export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   defaultOrder: Order;
-  ID_AS_COUNT = 'id as count';
+  ID_AS_COUNT = 'uuid as count';
 
   constructor(private db: Knex, private tableName: string) {}
 
@@ -28,11 +28,8 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
 
   async getFilteredCount(searchOptions: ValidatedSearchOptions): Promise<number> {
     return this.getTable()
-      .select('id')
-      .orderBy(this.getOrderBy(searchOptions.sortOptions))
+      .select()
       .where((builder) => this.addWhereClause(searchOptions.filter, builder))
-      .limit(searchOptions.batchSize)
-      .offset(searchOptions.offset)
       .count(this.ID_AS_COUNT)
       .first()
       .then((row) => row.count);
@@ -59,7 +56,15 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   }
 
   private addWhereClause(filter: string, builder: Knex.QueryBuilder<any, any[]>) {
-    getWhereOptions(filter).forEach((filter) => builder.where(filter.field, filter.operator, filter.values));
+    getWhereOptions(filter).forEach((filter) => {
+      const field = filter.field;
+      builder.andWhere((queryBuilder) => {
+        if (filter.inFields.length > 0) {
+          queryBuilder.whereIn(field, filter.inFields);
+        }
+        filter.likeFields.forEach((value) => queryBuilder.orWhereLike(field, value));
+      });
+    });
   }
 
   private getOrderBy(searchOptions: SortOptions): Order[] {

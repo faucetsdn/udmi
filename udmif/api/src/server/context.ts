@@ -22,7 +22,7 @@ export class ContextProcessor {
       throw new Error('Invalid Headers');
     }
 
-    await authenticateIdToken(req.headers.idtoken.toString(), this.clientIds);
+    // await authenticateIdToken(req.headers.idtoken.toString(), this.clientIds);
 
     // initialize the context
     const context: Context<any> = {};

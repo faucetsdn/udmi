@@ -2,8 +2,11 @@
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
+
+    await knex.raw('create extension if not exists "uuid-ossp"');
+
     await knex.schema.createTable('devices', function (table) {
-        table.increments('uuid');
+        table.uuid('uuid').defaultTo(knex.raw('uuid_generate_v4()')).primary();
         table.string('id', 255).notNullable();
         table.string('name', 255).notNullable();
         table.string('site', 255).notNullable();
@@ -23,22 +26,24 @@ export async function up(knex: Knex): Promise<any> {
         table.jsonb('tags');
         table.unique(['name', 'site']);
     });
+
     await knex.schema.createTable('sites', function (table) {
-        table.increments('uuid');
-        table.string('id', 255).notNullable();
+        table.uuid('uuid').defaultTo(knex.raw('uuid_generate_v4()')).primary();;
         table.string('name', 255).notNullable();
         table.jsonb('validation');
         table.unique(['name']);
     });
+
     await knex.schema.createTable('device_validations', function (table) {
-        table.increments('uuid');
+        table.uuid('uuid').defaultTo(knex.raw('uuid_generate_v4()')).primary();;
         table.string('timestamp', 255).notNullable();
         table.jsonb('deviceKey').notNullable();
         table.jsonb('message').notNullable();
         table.unique(['timestamp', 'deviceKey']);
     });
+
     await knex.schema.createTable('site_validations', function (table) {
-        table.increments('uuid');
+        table.uuid('uuid').defaultTo(knex.raw('uuid_generate_v4()')).primary();;
         table.string('timestamp', 255).notNullable();
         table.string('siteName', 255).notNullable();
         table.jsonb('message');

@@ -2,7 +2,7 @@ import { Knex } from 'knex';
 import { DAO } from '../DAO';
 
 export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
-  constructor(private db: Knex, private tableName: string) { }
+  constructor(private db: Knex, private tableName: string) {}
 
   async insert(document: Type): Promise<void> {
     await this.getTable()
@@ -30,7 +30,7 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
       .then((row) => row);
   }
 
-  private getTable() {
+  private getTable(): Knex.QueryBuilder {
     return this.db(this.tableName);
   }
 }

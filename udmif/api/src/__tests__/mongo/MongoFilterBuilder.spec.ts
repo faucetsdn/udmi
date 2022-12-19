@@ -24,6 +24,21 @@ describe('MongoFilterBuilder.getFilter', () => {
       ],
     });
   });
+
+  test('multiple contains filters on the different field results in a ANDed filter where the same field uses an in clause', () => {
+    const filters: Filter[] = [
+      getEqualsFilter('make', 'val1'),
+      getEqualsFilter('make', 'val2'),
+      getContainsFilter('make', 'val3'),
+    ];
+    expect(getFilter(filters)).toEqual({
+      $and: [
+        {
+          make: { $in: ['val1', 'val2', /val3/i] },
+        },
+      ],
+    });
+  });
 });
 
 function getContainsFilter(field: string, value: string): Filter {

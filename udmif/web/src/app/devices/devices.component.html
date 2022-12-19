@@ -33,7 +33,7 @@
     <ng-container [ngSwitch]="column.value">
       <ng-container *ngSwitchCase="'name'">
         <mat-cell *matCellDef="let element"
-          ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
+          ><a [routerLink]="'/devices/' + element.uuid">{{ element.name }}</a></mat-cell
         >
       </ng-container>
       <ng-container *ngSwitchCase="'lastPayload'">

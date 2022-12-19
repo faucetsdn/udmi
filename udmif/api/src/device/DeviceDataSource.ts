@@ -30,7 +30,7 @@ export class DeviceDataSource extends GraphQLDataSource {
   }
 
   async getDevice(id: string): Promise<Device> {
-    return this.deviceDAO.getOne({ id });
+    return this.deviceDAO.getOne({ uuid: id });
   }
 
   async getPoints(deviceId: string): Promise<Point[]> {

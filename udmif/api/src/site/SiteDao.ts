@@ -1,10 +1,10 @@
-import { Device } from './model';
 import { AbstractPostgreSQLDAO } from '../dao/postgresql/AbstracyPostgreSQLDAO';
 import { knexDb } from '../dao/postgresql/PostgreSQLProvider';
+import { Site } from './model';
 
-export class DeviceDAO extends AbstractPostgreSQLDAO<Device> {
+export class SiteDAO extends AbstractPostgreSQLDAO<Site> {
   constructor() {
-    super(knexDb, 'devices');
+    super(knexDb, 'sites');
     this.defaultOrder = { column: 'name', order: 'asc' };
   }
 }
