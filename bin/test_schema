@@ -15,7 +15,7 @@ upgrade=
 schemadir=schema
 testdir=tests
 
-while getopts "d:s:fnpu" opt; do
+while getopts "d:s:fnu" opt; do
     case $opt in
         f)
             force=y

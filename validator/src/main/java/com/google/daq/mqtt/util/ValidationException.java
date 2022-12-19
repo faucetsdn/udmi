@@ -2,10 +2,10 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.google.api.client.util.Strings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.stream.StreamSupport;
@@ -51,7 +51,8 @@ public class ValidationException extends RuntimeException {
 
   private static ValidationException convertMessage(ProcessingMessage processingMessage) {
     String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
-    return new ValidationException(pointer + ": " + processingMessage.getMessage());
+    String prefix = Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   /**

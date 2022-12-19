@@ -37,7 +37,7 @@ jobs:
       - name: Schema conformance tests
         if: ${{ always() }}
         run: |
-          bin/test_schema -p
+          bin/test_schema
       - name: simple trace test
         run: |
           bin/test_trace simple
