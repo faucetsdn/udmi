@@ -295,7 +295,7 @@ class LocalDevice {
     try (InputStream targetStream = new FileInputStream(metadataFile)) {
       instance = OBJECT_MAPPER.readTree(targetStream);
       baseVersion = instance.get(VERSION_PROPERTY_KEY);
-      new MessageUpgrader(METADATA_SCHEMA, instance).upgrade();
+      new MessageUpgrader(METADATA_SCHEMA, instance).upgrade(false);
     } catch (IOException ioException) {
       exceptionMap.put(EXCEPTION_LOADING, ioException);
       return null;

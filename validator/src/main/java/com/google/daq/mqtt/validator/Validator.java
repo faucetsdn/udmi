@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -145,6 +146,7 @@ public class Validator {
   private File traceDir;
   private boolean simulatedMessages;
   private Instant mockNow = null;
+  private boolean forceUpgrade;
 
   /**
    * Create validator with the given args.
@@ -208,6 +210,9 @@ public class Validator {
             break;
           case "-f":
             validateFilesOutput(removeNextArg(argList));
+            break;
+          case "-u":
+            forceUpgrade = true;
             break;
           case "-r":
             validateMessageTrace(removeNextArg(argList));
@@ -833,18 +838,34 @@ public class Validator {
   private void validateFile(
       String prefix, String targetFile, String schemaName, JsonSchema schema) {
     final File targetOut = getTargetPath(prefix, targetFile.replace(".json", ".out"));
-    try {
-      File fullPath = getFullPath(prefix, new File(targetFile));
-      Map<String, Object> message = OBJECT_MAPPER.readValue(fullPath, Map.class);
+    File outputFile = getTargetPath(prefix, targetFile);
+    try (OutputStream outputStream = new FileOutputStream(outputFile)) {
+      File inputFile = getFullPath(prefix, new File(targetFile));
+      copyFileHeader(inputFile, outputStream);
+      Map<String, Object> message = OBJECT_MAPPER.readValue(inputFile, Map.class);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       upgradeMessage(schemaName, jsonNode);
-      OBJECT_MAPPER.writeValue(getTargetPath(prefix, targetFile), jsonNode);
+      OBJECT_MAPPER.writeValue(outputStream, jsonNode);
       validateJsonNode(schema, jsonNode);
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
+    }
+  }
+
+  private void copyFileHeader(File inputFile, OutputStream outputFile) {
+    try (Scanner scanner = new Scanner(inputFile)) {
+      while (scanner.hasNextLine()) {
+        String line = scanner.nextLine();
+        if (!line.trim().startsWith("//")) {
+          break;
+        }
+        outputFile.write((line + "\n").getBytes());
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While copying header from " + inputFile.getAbsolutePath(), e);
     }
   }
 
@@ -876,8 +897,8 @@ public class Validator {
     message.putAll(objectMap);
   }
 
-  private void upgradeMessage(String schemaName, JsonNode jsonNode) {
-    new MessageUpgrader(schemaName, jsonNode).upgrade();
+  private boolean upgradeMessage(String schemaName, JsonNode jsonNode) {
+    return new MessageUpgrader(schemaName, jsonNode).upgrade(forceUpgrade);
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {

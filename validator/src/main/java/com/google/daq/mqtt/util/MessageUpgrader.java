@@ -18,6 +18,7 @@ public class MessageUpgrader {
   private final JsonNode message;
   private final String schemaName;
   private final int major;
+  private final JsonNode original;
   private int patch;
   private int minor;
 
@@ -28,6 +29,7 @@ public class MessageUpgrader {
    * @param message    message to be upgraded
    */
   public MessageUpgrader(String schemaName, JsonNode message) {
+    original = message.deepCopy();
     this.message = message;
     this.schemaName = schemaName;
 
@@ -48,33 +50,44 @@ public class MessageUpgrader {
 
   /**
    * Update message to the latest standard.
+   *
+   * @param forceUpgrade
+   * @return true if the message has been altered
    */
-  public void upgrade() {
+  public boolean upgrade(boolean forceUpgrade) {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }
-    if (minor < 3) {
-      upgrade_1_3();
+
+    if (forceUpgrade) {
+      minor = 1;
     }
+
+    if (minor < 3) {
+      minor = 3;
+      patch = 0;
+    }
+
     if (minor == 3 && patch < 14) {
       upgrade_1_3_14();
+      patch = 14;
     }
+
     if (minor < 4) {
       upgrade_1_4();
+      minor = 4;
+      patch = 0;
     }
+
     if (message.has(VERSION_PROPERTY_KEY)) {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
-  }
 
-  private void upgrade_1_3() {
-    minor = 3;
-    patch = 0;
+    return !original.equals(message);
   }
 
   private void upgrade_1_3_14() {
-    patch = 14;
     if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_3_14_state();
     }
@@ -104,8 +117,6 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_4() {
-    minor = 4;
-    patch = 0;
     if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_4_state();
     }

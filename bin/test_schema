@@ -10,17 +10,21 @@ rm -f $errorfile
 
 build=y
 force=n
+upgrade=
 
 schemadir=schema
 testdir=tests
 
-while getopts "d:s:fnp" opt; do
+while getopts "d:s:fnpu" opt; do
     case $opt in
         f)
             force=y
             ;;
         n)
             build=n
+            ;;
+        u)
+            upgrade=-u
             ;;
         s)
             subsets=${OPTARG}
@@ -29,7 +33,7 @@ while getopts "d:s:fnp" opt; do
             testdir=${OPTARG}
             ;;
         \?)
-            echo "Usage: $0 [-f] [-n] [-d TEST_DATA_DIR] [-s TEST_SUBSET]"
+            echo "Usage: $0 [-f] [-n] [-u] [-d TEST_DATA_DIR] [-s TEST_SUBSET]"
             exit -1
             ;;
     esac
@@ -57,13 +61,15 @@ for subset in $subsets; do
     testfiles=$(cd $testdir/$subset; ls *.json || true)
     testbase=$testdir/$subset
 
+    echo ================================== $subset
+
     if [[ "$testbase" == "$schemadir" ]]; then
         reltest=$subset
     else
         reldir=$(realpath --relative-to $schemadir $testdir)
         reltest=$reldir:$subset
     fi
-    (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -a $schemaname -f $reltest) || true
+    (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -a $schemaname $upgrade -f $reltest) || true
 
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out
@@ -90,14 +96,21 @@ for subset in $subsets; do
           reldir=$(realpath --relative-to $schemadir $testdir)
           reltest=$reldir:$(realpath --relative-to $testdir $testpath)
         fi
+
         if [ $force == y ]; then
             diff $output $expected || echo Updating $expected && cp $output $expected
         else
             diff -b $output $expected || (echo '   ' diff $output $expected | tee -a $errorfile)
         fi
+
+        if [[ -n $upgrade ]]; then
+            upgrade_new=${output%.out}.json
+            diff $upgrade_new $testpath || (echo cp $upgrade_new $testpath | tee -a $errorfile)
+        fi
     done
 done
 
+echo ==================================
 echo
 
 if [ -f $errorfile ]; then
