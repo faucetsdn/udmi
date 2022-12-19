@@ -18,7 +18,6 @@ public class MessageUpgrader {
   private final JsonNode message;
   private final String schemaName;
   private final int major;
-  private final JsonNode original;
   private int patch;
   private int minor;
 
@@ -29,7 +28,6 @@ public class MessageUpgrader {
    * @param message    message to be upgraded
    */
   public MessageUpgrader(String schemaName, JsonNode message) {
-    original = message.deepCopy();
     this.message = message;
     this.schemaName = schemaName;
 
@@ -59,8 +57,12 @@ public class MessageUpgrader {
       throw new IllegalArgumentException("Starting major version " + major);
     }
 
+    JsonNode original = message.deepCopy();
+    boolean upgraded = false;
+
     if (forceUpgrade) {
       minor = 1;
+      upgraded = true;
     }
 
     if (minor < 3) {
@@ -69,17 +71,21 @@ public class MessageUpgrader {
     }
 
     if (minor == 3 && patch < 14) {
+      JsonNode before = message.deepCopy();
       upgrade_1_3_14();
       patch = 14;
+      upgraded |= !before.equals(message);
     }
 
     if (minor < 4) {
+      JsonNode before = message.deepCopy();
       upgrade_1_4();
       minor = 4;
       patch = 0;
+      upgraded |= !before.equals(message);
     }
 
-    if (message.has(VERSION_PROPERTY_KEY)) {
+    if (upgraded && message.has(VERSION_PROPERTY_KEY)) {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
