@@ -19,9 +19,6 @@
     }
   },
   "required": [
-    "mode",
-    "restart_count",
     "operational"
   ]
 }
-

@@ -59,6 +59,9 @@ public class MessageUpgrader {
     if (minor == 3 && patch < 14) {
       upgrade_1_3_14();
     }
+    if (minor == 4 && patch < 1) {
+      upgrade_1_4_1();
+    }
     if (message.has(VERSION_PROPERTY_KEY)) {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
@@ -97,6 +100,25 @@ public class MessageUpgrader {
     ObjectNode subsystem = (ObjectNode) localnet.remove("subsystem");
     if (subsystem != null) {
       localnet.set("families", subsystem);
+    }
+  }
+
+  private void upgrade_1_4_1() {
+    patch = 1;
+    if (STATE_SCHEMA.equals(schemaName)) {
+      upgrade_1_4_1_state();
+    }
+  }
+
+  private void upgrade_1_4_1_state() {
+    ObjectNode system = (ObjectNode) message.get("system");
+    if (system != null) {
+      JsonNode operational = system.remove("operational");
+      if (operational != null) {
+        ObjectNode operation = new ObjectNode(NODE_FACTORY);
+        system.set("operation", operation);
+        operation.set("operational", operational);
+      }
     }
   }
 
