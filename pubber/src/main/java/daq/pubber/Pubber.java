@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -79,6 +80,7 @@ import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
+import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
@@ -594,11 +596,12 @@ public class Pubber {
     if (systemConfig == null) {
       return;
     }
+    Operation operation = Optional.ofNullable(systemConfig.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
-        && SystemMode.RESTART.equals(systemConfig.operation.mode)) {
+        && SystemMode.RESTART.equals(operation.mode)) {
       restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(systemConfig.operation.mode)) {
+    if (SystemMode.ACTIVE.equals(operation.mode)) {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }

@@ -72,6 +72,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
@@ -842,14 +843,15 @@ public class Validator {
     try (OutputStream outputStream = new FileOutputStream(outputFile)) {
       File inputFile = getFullPath(prefix, new File(targetFile));
       copyFileHeader(inputFile, outputStream);
-      Map<String, Object> message = OBJECT_MAPPER.readValue(inputFile, Map.class);
+      Map<String, Object> message = JsonUtil.toMap(inputFile);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       if (upgradeMessage(schemaName, jsonNode)) {
         OBJECT_MAPPER.writeValue(outputStream, jsonNode);
       } else {
+        // If the message was not upgraded, then copy over unmolested to preserve formatting.
         outputStream.close();
-        outputFile.delete();
+        FileUtils.copyFile(inputFile, outputFile);
       }
       validateJsonNode(schema, jsonNode);
       writeExceptionOutput(targetOut, null);
