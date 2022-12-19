@@ -38,8 +38,8 @@ public class MessageUpgrader {
     String[] components = verStr.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
-    minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
-    patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
+    minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
+    patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
 
     if (parts.length >= 4) {
       throw new IllegalArgumentException("Unexpected version " + verStr);
@@ -60,8 +60,9 @@ public class MessageUpgrader {
     JsonNode original = message.deepCopy();
     boolean upgraded = false;
 
-    if (forceUpgrade) {
-      minor = 1;
+    if (forceUpgrade || minor < 0) {
+      minor = 0;
+      patch = 0;
       upgraded = true;
     }
 
