@@ -57,7 +57,7 @@ public class MessageUpgrader {
       throw new IllegalArgumentException("Starting major version " + major);
     }
 
-    JsonNode original = message.deepCopy();
+    final JsonNode original = message.deepCopy();
     boolean upgraded = false;
 
     if (forceUpgrade || minor < 0) {
@@ -74,16 +74,16 @@ public class MessageUpgrader {
     if (minor == 3 && patch < 14) {
       JsonNode before = message.deepCopy();
       upgrade_1_3_14();
-      patch = 14;
       upgraded |= !before.equals(message);
+      patch = 14;
     }
 
     if (minor < 4) {
       JsonNode before = message.deepCopy();
       upgrade_1_4();
+      upgraded |= !before.equals(message);
       minor = 4;
       patch = 0;
-      upgraded |= !before.equals(message);
     }
 
     if (upgraded && message.has(VERSION_PROPERTY_KEY)) {
