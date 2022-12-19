@@ -65,7 +65,7 @@ cat <<EOF > out/endpoint.json
 EOF
 
 base64=$(base64 -w 0 out/endpoint.json)
-sha256=$(cat out/endpoint.json | sha256sum | sed 's/ .*//')
+sha256=$(openssl sha256 < out/endpoint.json | awk '{print $2}')
 
 cat <<EOF > out/blobs.json
 {
