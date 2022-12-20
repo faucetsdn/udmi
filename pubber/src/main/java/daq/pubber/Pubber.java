@@ -927,7 +927,6 @@ public class Pubber {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
-        // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
@@ -1057,6 +1056,7 @@ public class Pubber {
   }
 
   private String extractConfigBlob(String blobName) {
+    // TODO: Refactor to get any blob meta parameters.
     try {
       if (deviceConfig == null || deviceConfig.blobset == null
           || deviceConfig.blobset.blobs == null) {

@@ -12,6 +12,7 @@ import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.After;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -33,11 +34,20 @@ public class PubberTest extends TestBase {
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
   private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
+  private Pubber pubber;
 
   private static EndpointConfiguration getEndpointConfiguration() {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.client_id = TEST_DEVICE;
     return endpointConfiguration;
+  }
+
+  @After
+  public void terminatePubber() {
+    if (pubber != null) {
+      pubber.terminate();
+      pubber = null;
+    }
   }
 
   @Test
@@ -80,22 +90,18 @@ public class PubberTest extends TestBase {
 
   @Test
   public void extractedEndpointConfigBlob() {
-    Pubber pubber = makeTestPubber(TEST_DEVICE);
-    try {
-      BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
-      blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
-      blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
-      blobBlobsetConfig.phase = BlobPhase.FINAL;
-      pubber.deviceConfig.blobset = new BlobsetConfig();
-      pubber.deviceConfig.blobset.blobs = new HashMap<>();
-      pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+    pubber = makeTestPubber(TEST_DEVICE);
+    BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
+    blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
+    blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
+    blobBlobsetConfig.phase = BlobPhase.FINAL;
+    pubber.deviceConfig.blobset = new BlobsetConfig();
+    pubber.deviceConfig.blobset.blobs = new HashMap<>();
+    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
-      EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
-      String extractedClientId = endpointConfiguration.client_id;
-      assertEquals("blob client id", TEST_DEVICE, extractedClientId);
-    } finally {
-      pubber.terminate();
-    }
+    EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
+    String extractedClientId = endpointConfiguration.client_id;
+    assertEquals("blob client id", TEST_DEVICE, extractedClientId);
   }
 
   @Test
