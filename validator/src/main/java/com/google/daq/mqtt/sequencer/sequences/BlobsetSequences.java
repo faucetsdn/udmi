@@ -173,7 +173,7 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("deviceState.system.mode == INITIAL",
         () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
 
-    checkThat("restart count increased",
+    checkThat("restart count increased by one",
         () -> deviceState.system.operation.restart_count == initialCount + 1);
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
