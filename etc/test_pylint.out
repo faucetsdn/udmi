@@ -1,0 +1,13 @@
+bin/gcp_device_logs 0
+bin/gencode_categories 6
+bin/gencode_docs_checklinks 7
+bin/gencode_docs_examples 0
+bin/gencode_python 6
+bin/gencode_root_schemas 0
+bin/gendocs.py 7
+bin/pagent 6
+bin/stream_device_messages 0
+bin/test_py 0
+bin/test_pylint
+misc/gcloud_pubsub_mirror/mirror.py 4
+misc/replay_validated/replay 0

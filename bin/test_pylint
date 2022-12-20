@@ -1,0 +1,29 @@
+#!/bin/bash -e
+#
+# Run pylint on all the detected python files and compare against the expected list.
+# This is far from perfect, but the goal is just to prevent horrible things and to get
+# people to at least think about the style of python code. Adding a new python file will
+# require people to add another line in the test_pylint.out golden file.
+#
+
+dirs="bin/ etc/ misc/"
+files1=$(fgrep -l /python3 -r $dirs)
+files2=$(fgrep -l "env python3" -r $dirs)
+files3=$(find $dirs -name \*.py)
+files=$(ls $files1 $files2 $files3 | sort | uniq | fgrep -v \~)
+
+echo scanning: $files
+
+LINT_OUT=out/test_pylint.out
+LINT_GOLDEN=etc/${LINT_OUT#out/}
+
+rm -f $LINT_OUT
+mkdir -p out
+
+for file in $files; do
+    linty=$(pylint $file | fgrep "rated at" | awk '{print $7}' | sed -e 's/\..*//')
+    echo $file $linty | tee -a $LINT_OUT
+done
+
+echo diff $LINT_OUT $LINT_GOLDEN
+diff $LINT_OUT $LINT_GOLDEN
