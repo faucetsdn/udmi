@@ -32,6 +32,7 @@ Some caveats:
 * [endpoint_connection_bad_hash](#endpoint_connection_bad_hash): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry): Check repeated endpoint with same information gets retried.
+* [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [periodic_scan](#periodic_scan)
@@ -107,6 +108,36 @@ Check repeated endpoint with same information gets retried.
     * Set `blobset.blobs._iot_endpoint_config.generation` = `new generation`
 1. Wait for blobset entry config status is error
 1. Check that no interesting system status
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+
+## endpoint_connection_success_alternate
+
+Check connection to an alternate project.
+
+1. Wait for initial last_config matches config timestamp
+1. Update config before blobset phase is apply and stateStatus is null:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Check that no interesting system status
+1. Update config before blobset phase is final and stateStatus is null:
+    * Add `system.testing.endpoint_type` = `alternate`
+1. Wait for blobset phase is final and stateStatus is null
+1. Check that no interesting system status
+1. Wait for alternate last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+1. Update config before blobset phase is apply and stateStatus is null:
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
+1. Wait for blobset phase is apply and stateStatus is null
+1. Check that no interesting system status
+1. Update config before blobset phase is final and stateStatus is null:
+    * Remove `system.testing.endpoint_type`
+1. Wait for blobset phase is final and stateStatus is null
+1. Check that no interesting system status
+1. Wait for restored last_config matches config timestamp
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
