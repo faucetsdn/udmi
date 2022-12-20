@@ -108,7 +108,7 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
-  private static final String UDMI_VERSION = "1.4.0";
+  static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -149,12 +149,12 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
@@ -327,6 +327,31 @@ public class Pubber {
 
   private static Date getCurrentTimestamp() {
     return new Date();
+  }
+
+  static String acquireBlobData(String url, String sha256) {
+    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("URL encoding not supported: " + url);
+    }
+    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    String dataSha256 = GeneralUtils.sha256(dataBytes);
+    if (!dataSha256.equals(sha256)) {
+      throw new RuntimeException("Blob data hash mismatch");
+    }
+    return new String(dataBytes);
+  }
+
+  static void augmentDeviceMessage(Object message) {
+    try {
+      Field version = message.getClass().getField("version");
+      version.set(message, UDMI_VERSION);
+      Field timestamp = message.getClass().getField("timestamp");
+      if (timestamp.get(message) == null) {
+        timestamp.set(message, getCurrentTimestamp());
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException("While augmenting device message", e);
+    }
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -1049,18 +1074,6 @@ public class Pubber {
     }
   }
 
-  static String acquireBlobData(String url, String sha256) {
-    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
-      throw new RuntimeException("URL encoding not supported: " + url);
-    }
-    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
-    String dataSha256 = GeneralUtils.sha256(dataBytes);
-    if (!dataSha256.equals(sha256)) {
-      throw new RuntimeException("Blob data hash mismatch");
-    }
-    return new String(dataBytes);
-  }
-
   private void updateDiscoveryConfig(DiscoveryConfig discovery) {
     DiscoveryConfig discoveryConfig = discovery == null ? new DiscoveryConfig() : discovery;
     if (deviceState.discovery == null) {
@@ -1477,19 +1490,6 @@ public class Pubber {
         .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
     return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
-  }
-
-  private void augmentDeviceMessage(Object message) {
-    try {
-      Field version = message.getClass().getField("version");
-      version.set(message, UDMI_VERSION);
-      Field timestamp = message.getClass().getField("timestamp");
-      if (timestamp.get(message) == null) {
-        timestamp.set(message, getCurrentTimestamp());
-      }
-    } catch (Throwable e) {
-      throw new RuntimeException("While augmenting device message", e);
-    }
   }
 
   private boolean publisherActive() {

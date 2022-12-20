@@ -3,10 +3,13 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.Test;
@@ -14,6 +17,7 @@ import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.State;
 
 /**
  * Unit tests for Pubber.
@@ -92,5 +96,20 @@ public class PubberTest extends TestBase {
     } finally {
       pubber.terminate();
     }
+  }
+
+  @Test
+  public void augmentDeviceMessageTest() {
+    State testMessage = new State();
+
+    assertNull(testMessage.timestamp);
+    Pubber.augmentDeviceMessage(testMessage);
+    assertEquals(testMessage.version, Pubber.UDMI_VERSION);
+    assertNotEquals(testMessage.timestamp, null);
+
+    testMessage.timestamp = new Date(1241);
+    Pubber.augmentDeviceMessage(testMessage);
+    assertEquals(testMessage.version, Pubber.UDMI_VERSION);
+    assertEquals(testMessage.timestamp, new Date(1241));
   }
 }
