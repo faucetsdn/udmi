@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.Date;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "min_loglevel",
     "metrics_rate_sec",
     "operation",
-    "last_start",
     "testing"
 })
 @Generated("jsonschema2pojo")
@@ -43,13 +41,6 @@ public class SystemConfig {
     @JsonProperty("operation")
     public Operation operation;
     /**
-     * Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.
-     * 
-     */
-    @JsonProperty("last_start")
-    @JsonPropertyDescription("Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.")
-    public Date last_start;
-    /**
      * Testing System Config
      * <p>
      * Configuration parameters for device-under-test
@@ -63,7 +54,6 @@ public class SystemConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.metrics_rate_sec == null)? 0 :this.metrics_rate_sec.hashCode()));
-        result = ((result* 31)+((this.last_start == null)? 0 :this.last_start.hashCode()));
         result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
         result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
@@ -79,7 +69,7 @@ public class SystemConfig {
             return false;
         }
         SystemConfig rhs = ((SystemConfig) other);
-        return ((((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.last_start == rhs.last_start)||((this.last_start!= null)&&this.last_start.equals(rhs.last_start))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
+        return (((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
     }
 
 }

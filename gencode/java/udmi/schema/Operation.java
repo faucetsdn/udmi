@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.processing.Generated;
@@ -13,7 +14,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "mode"
+    "mode",
+    "last_start"
 })
 @Generated("jsonschema2pojo")
 public class Operation {
@@ -27,11 +29,19 @@ public class Operation {
     @JsonProperty("mode")
     @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
     public Operation.SystemMode mode;
+    /**
+     * Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.
+     * 
+     */
+    @JsonProperty("last_start")
+    @JsonPropertyDescription("Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.")
+    public Date last_start;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
+        result = ((result* 31)+((this.last_start == null)? 0 :this.last_start.hashCode()));
         return result;
     }
 
@@ -44,7 +54,7 @@ public class Operation {
             return false;
         }
         Operation rhs = ((Operation) other);
-        return ((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)));
+        return (((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.last_start == rhs.last_start)||((this.last_start!= null)&&this.last_start.equals(rhs.last_start))));
     }
 
 

@@ -152,9 +152,9 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
+  private final Stack<String> waitingCondition = new Stack<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected Config deviceConfig;
@@ -163,7 +163,6 @@ public class SequenceBase {
   private String extraField;
   private boolean extraFieldChanged;
   private Instant lastConfigUpdate;
-  private final Stack<String> waitingCondition = new Stack<>();
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
@@ -375,9 +374,9 @@ public class SequenceBase {
     if (deviceConfig.system.operation == null) {
       deviceConfig.system.operation = new Operation();
     }
-    if (!(deviceConfig.system.last_start instanceof SemanticDate)) {
-      deviceConfig.system.last_start = SemanticDate.describe("device reported",
-          deviceConfig.system.last_start);
+    if (!(deviceConfig.system.operation.last_start instanceof SemanticDate)) {
+      deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
+          deviceConfig.system.operation.last_start);
     }
     return deviceConfig;
   }
@@ -1021,7 +1020,7 @@ public class SequenceBase {
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
     if (config.system != null) {
-      deviceConfig.system.last_start = config.system.last_start;
+      deviceConfig.system.operation.last_start = config.system.operation.last_start;
     }
     sanitizeConfig(deviceConfig);
   }
@@ -1069,7 +1068,7 @@ public class SequenceBase {
       return true;
     }
     // Config isn't properly sync'd until this is filled in, else there are startup race-conditions.
-    if (deviceConfig.system.last_start == null) {
+    if (deviceConfig.system.operation.last_start == null) {
       return false;
     }
     List<String> differences = configDiffEngine.diff(

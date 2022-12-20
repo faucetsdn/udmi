@@ -160,17 +160,17 @@ public class BlobsetSequences extends SequenceBase {
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
-    untilTrue("deviceState.system.mode == ACTIVE",
+    untilTrue("system mode is ACTIVE",
         () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
 
     final Date last_config = deviceState.system.last_config;
-    final Date last_start = deviceConfig.system.last_start;
+    final Date last_start = deviceConfig.system.operation.last_start;
 
     // Send the restart mode.
     deviceConfig.system.operation.mode = SystemMode.RESTART;
 
     // Wait for the device to go through the correct states as it restarts.
-    untilTrue("deviceState.system.mode == INITIAL",
+    untilTrue("system mode is INITIAL",
         () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
 
     checkThat("restart count increased by one",
@@ -178,7 +178,7 @@ public class BlobsetSequences extends SequenceBase {
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
-    untilTrue("deviceState.system.mode == ACTIVE",
+    untilTrue("system mode is ACTIVE",
         () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
 
     // Capture error from last_start unexpectedly changing due to restart condition.
@@ -193,7 +193,7 @@ public class BlobsetSequences extends SequenceBase {
         () -> deviceState.system.last_config.after(last_config));
 
     untilTrue("last_start is newer than previous last_start",
-        () -> deviceConfig.system.last_start.after(last_start));
+        () -> deviceConfig.system.operation.last_start.after(last_start));
   }
 
 }

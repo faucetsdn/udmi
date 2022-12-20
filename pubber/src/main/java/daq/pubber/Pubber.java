@@ -96,7 +96,6 @@ import udmi.schema.StateSystemHardware;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
 
 /**
@@ -162,6 +161,7 @@ public class Pubber {
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
+  private final List<Entry> logentries = new ArrayList<>();
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -178,7 +178,6 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
-  private final List<Entry> logentries = new ArrayList<>();
 
   /**
    * Start an instance from a configuration file.
@@ -437,7 +436,7 @@ public class Pubber {
   private void markStateDirty() {
     markStateDirty(0);
   }
-    
+
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
@@ -592,11 +591,8 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    SystemConfig systemConfig = deviceConfig.system;
-    if (systemConfig == null) {
-      return;
-    }
-    Operation operation = Optional.ofNullable(systemConfig.operation).orElseGet(Operation::new);
+    SystemConfig system = Optional.ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
+    Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
         && SystemMode.RESTART.equals(operation.mode)) {
       restartSystem(true);
@@ -605,9 +601,9 @@ public class Pubber {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
-    if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
+    if (operation.last_start != null && DEVICE_START_TIME.before(operation.last_start)) {
       System.err.printf("Device start time %s before last config start %s, terminating.",
-          isoConvert(DEVICE_START_TIME), isoConvert(systemConfig.last_start));
+          isoConvert(DEVICE_START_TIME), isoConvert(operation.last_start));
       restartSystem(false);
     }
   }
