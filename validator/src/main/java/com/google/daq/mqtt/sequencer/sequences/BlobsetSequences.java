@@ -123,7 +123,7 @@ public class BlobsetSequences extends SequenceBase {
   @Description("Check repeated endpoint with same information gets retried.")
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
-    Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
+    final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
     untilErrorReported();
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     // Semantically this is a different date; manually update for change-detection purposes.
