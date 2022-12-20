@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -36,6 +37,7 @@ public class BlobsetSequences extends SequenceBase {
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
 
   private String generateEndpointConfigClientId(String registryId) {
     return String.format(
@@ -73,6 +75,18 @@ public class BlobsetSequences extends SequenceBase {
     checkThatHasInterestingSystemStatus(false);
   }
 
+  private void untilErrorReported() {
+    untilTrue("blobset entry config status is error", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
+      return blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+          && blobBlobsetState.phase.equals(BlobPhase.FINAL)
+          && blobBlobsetState.status.category.equals(BLOBSET_BLOB_APPLY)
+          && blobBlobsetState.status.level == Level.ERROR.value();
+    });
+    checkThatHasInterestingSystemStatus(false);
+  }
+
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
     BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
     deviceConfig.blobset = new BlobsetConfig();
@@ -100,16 +114,24 @@ public class BlobsetSequences extends SequenceBase {
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_connection_error() {
-    String localhost = "localhost";
-    setDeviceConfigEndpointBlob(localhost, registryId, false);
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    untilErrorReported();
+    untilClearedRedirect();
+  }
 
-    untilTrue("blobset entry config status is error", () -> {
-      Entry stateStatus = deviceState.blobset.blobs.get(IOT_BLOB_KEY).status;
-      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
-          && stateStatus.level == Level.ERROR.value();
-    });
-    checkThatHasInterestingSystemStatus(false);
-
+  @Test
+  @Description("Check repeated endpoint with same information gets retried.")
+  public void endpoint_connection_retry() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
+    untilErrorReported();
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    // Semantically this is a different date; manually update for change-detection purposes.
+    deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation = SemanticDate.describe(
+        "new generation", new Date());
+    assertNotEquals("config generation", savedGeneration,
+        deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation);
+    untilErrorReported();
     untilClearedRedirect();
   }
 

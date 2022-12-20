@@ -631,8 +631,8 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     boolean computedConfigChange = localConfigChange(reason);
     if (computedConfigChange != updated) {
-      debug("cachedMessageData " + cachedMessageData);
-      debug("cachedSentBlock " + cachedSentBlock);
+      notice("cachedMessageData " + cachedMessageData);
+      notice("cachedSentBlock " + cachedSentBlock);
       throw new AbortMessageLoop("Unexpected config change!");
     }
     if (computedConfigChange) {
