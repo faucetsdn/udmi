@@ -71,6 +71,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
@@ -370,6 +371,9 @@ public class SequenceBase {
     }
     if (deviceConfig.system == null) {
       deviceConfig.system = new SystemConfig();
+    }
+    if (deviceConfig.system.operation == null) {
+      deviceConfig.system.operation = new Operation();
     }
     if (!(deviceConfig.system.last_start instanceof SemanticDate)) {
       deviceConfig.system.last_start = SemanticDate.describe("device reported",

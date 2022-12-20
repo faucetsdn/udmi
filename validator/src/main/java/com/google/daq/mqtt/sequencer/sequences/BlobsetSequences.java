@@ -155,6 +155,9 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is not zero",
         () -> deviceState.system.operation.last_start.after(dateZero));
 
+    final Integer initialCount = deviceState.system.operation.restart_count;
+    checkThat("initial count is greater than 0", () -> initialCount > 0);
+
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
     untilTrue("deviceState.system.mode == ACTIVE",
@@ -169,6 +172,9 @@ public class BlobsetSequences extends SequenceBase {
     // Wait for the device to go through the correct states as it restarts.
     untilTrue("deviceState.system.mode == INITIAL",
         () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
+
+    checkThat("restart count increased",
+        () -> deviceState.system.operation.restart_count == initialCount + 1);
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
