@@ -114,7 +114,7 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert the pojo to a mapped representation.
+   * Convert the given input file to a mapped representation.
    *
    * @param inputFile input file to convert to a map
    * @return object-as-map
