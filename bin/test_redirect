@@ -69,7 +69,9 @@ base64=$(base64 -w 0 out/endpoint.json)
 cat <<EOF > out/blobs.json
 {
   "system": {
-    "mode": "active"
+    "operation": {
+      "mode": "active"
+    }
   },
   "blobset": {
     "blobs": {
