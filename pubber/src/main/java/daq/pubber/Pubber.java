@@ -949,7 +949,7 @@ public class Pubber {
     markStateDirty();
   }
 
-  private void maybeRedirectEndpoint() {
+  void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
     String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =

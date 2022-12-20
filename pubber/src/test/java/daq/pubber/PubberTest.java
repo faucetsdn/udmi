@@ -42,6 +42,32 @@ public class PubberTest extends TestBase {
     return endpointConfiguration;
   }
 
+  private Pubber makeTestPubber(String deviceId) {
+    try {
+      List<String> args = ImmutableList.of(TEST_PROJECT, TEST_SITE, deviceId, SERIAL_NO);
+      return Pubber.singularPubber(args.toArray(new String[0]));
+    } catch (Exception e) {
+      throw new RuntimeException("While creating singular pubber", e);
+    }
+  }
+
+  private EndpointConfiguration configurePubberEndpoint() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
+    blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
+    blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
+    blobBlobsetConfig.phase = BlobPhase.FINAL;
+    pubber.deviceConfig.blobset = new BlobsetConfig();
+    pubber.deviceConfig.blobset.blobs = new HashMap<>();
+    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+
+    EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
+    return endpointConfiguration;
+  }
+
+  /**
+   * Properly shutdown pubber if it had been instantiated.
+   */
   @After
   public void terminatePubber() {
     if (pubber != null) {
@@ -66,15 +92,6 @@ public class PubberTest extends TestBase {
     throw new RuntimeException("No exception thrown for bad device");
   }
 
-  private Pubber makeTestPubber(String deviceId) {
-    try {
-      List<String> args = ImmutableList.of(TEST_PROJECT, TEST_SITE, deviceId, SERIAL_NO);
-      return Pubber.singularPubber(args.toArray(new String[0]));
-    } catch (Exception e) {
-      throw new RuntimeException("While creating singular pubber", e);
-    }
-  }
-
   @Test
   public void parseDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
@@ -90,18 +107,18 @@ public class PubberTest extends TestBase {
 
   @Test
   public void extractedEndpointConfigBlob() {
-    pubber = makeTestPubber(TEST_DEVICE);
-    BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
-    blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
-    blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
-    blobBlobsetConfig.phase = BlobPhase.FINAL;
-    pubber.deviceConfig.blobset = new BlobsetConfig();
-    pubber.deviceConfig.blobset.blobs = new HashMap<>();
-    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
-
-    EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
+    EndpointConfiguration endpointConfiguration = configurePubberEndpoint();
     String extractedClientId = endpointConfiguration.client_id;
     assertEquals("blob client id", TEST_DEVICE, extractedClientId);
+  }
+
+  @Test
+  public void redirectEndpoint() {
+    configurePubberEndpoint();
+
+    pubber.maybeRedirectEndpoint();
+    assertEquals(BlobPhase.FINAL,
+        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
   }
 
   @Test
