@@ -31,8 +31,6 @@ public class ConfigSequences extends SequenceBase {
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
   @Test()
-  @FeatureBucket("system.baseline.last_update")
-  @FeatureStage(REQUIRED)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);

@@ -1,7 +1,11 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.PREVIEW;
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
+import com.google.daq.mqtt.sequencer.FeatureBucket;
+import com.google.daq.mqtt.sequencer.FeatureStage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
@@ -149,6 +153,8 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
+  @FeatureBucket("system.baseline.restart")
+  @FeatureStage(PREVIEW)
   public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
