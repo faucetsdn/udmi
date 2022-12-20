@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -12,6 +13,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
+import com.google.daq.mqtt.sequencer.FeatureBucket;
+import com.google.daq.mqtt.sequencer.FeatureStage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
 import java.util.Date;
@@ -28,6 +31,8 @@ public class ConfigSequences extends SequenceBase {
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
   @Test()
+  @FeatureBucket("system.baseline.last_update")
+  @FeatureStage(REQUIRED)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
