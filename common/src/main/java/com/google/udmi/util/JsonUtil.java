@@ -121,7 +121,7 @@ public abstract class JsonUtil {
    */
   public static Map<String, Object> toMap(File inputFile) {
     @SuppressWarnings("unchecked")
-    Map<String, Object> map = convertTo(TreeMap.class, inputFile);
+    Map<String, Object> map = convertTo(TreeMap.class, loadFile(TreeMap.class, inputFile));
     return map;
   }
 
