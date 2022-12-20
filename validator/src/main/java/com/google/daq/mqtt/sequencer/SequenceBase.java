@@ -456,7 +456,7 @@ public class SequenceBase {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, String methodName, String message) {
@@ -724,12 +724,12 @@ public class SequenceBase {
     String deviceSerial = deviceState == null ? null
         : deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(deviceSerial, lastSerialNo)) {
-      notice(String.format("Received serial no %s", deviceSerial));
+      notice(String.format("Received serial number %s", deviceSerial));
       lastSerialNo = deviceSerial;
     }
     boolean serialValid = deviceSerial != null && Objects.equals(serialNo, deviceSerial);
     if (!serialValid && enforceSerial && Objects.equals(serialNo, deviceSerial)) {
-      throw new IllegalStateException("Serial no mismatch " + serialNo + " != " + deviceSerial);
+      throw new IllegalStateException("Serial number mismatch " + serialNo + " != " + deviceSerial);
     }
     enforceSerial = serialValid;
     return serialValid;
