@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+FUNCTIONS_VERSION=1
+
 if (( $# < 1 )); then
     echo Usage: $0 PROJECT_ID [options]
     false
@@ -19,7 +21,8 @@ echo Deploying version $version to $PROJECT
 
 cat <<EOF > functions/version.js
 module.exports = {
-  udmis: '$version'
+  udmis: '$version',
+  functions: $FUNCTIONS_VERSION
 }
 EOF
 

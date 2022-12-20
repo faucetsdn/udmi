@@ -125,6 +125,8 @@ public class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
+  private static final int MIN_CLOUD_FUNC_VER = 1;
+  private static final int MAX_CLOUD_FUNC_VER = 1;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -912,9 +914,17 @@ public class SequenceBase {
     ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
     if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
+      info("Received matching state/config timestamp " + getTimestamp(lastState));
+
       info("Cloud UDMI version " + reflectorConfig.version);
       if (!udmiVersion.equals(reflectorConfig.version)) {
         warning("Local/cloud UDMI version mismatch!");
+      }
+
+      int funcVer = Optional.ofNullable(reflectorConfig.setup.functions).orElse(0);
+      info("Cloud functions version " + funcVer);
+      if (funcVer < MIN_CLOUD_FUNC_VER || funcVer > MAX_CLOUD_FUNC_VER) {
+        throw new RuntimeException("Unsupported cloud function version, please redeploy");
       }
     } else {
       info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));

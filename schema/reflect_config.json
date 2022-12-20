@@ -20,6 +20,9 @@
       "title": "Setup Reflector Config",
       "type": "object",
       "properties": {
+        "functions": {
+          "type": "integer"
+        },
         "last_state": {
           "type": "string",
           "format": "date-time"

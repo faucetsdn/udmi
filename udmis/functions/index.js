@@ -19,6 +19,7 @@ const iot = require('@google-cloud/iot');
 
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const UDMI_VERSION = version.udmis;
+const UDMI_FUNCTIONS = version.functions;
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
@@ -30,6 +31,7 @@ const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
 console.log('Using UDMI version ' + UDMI_VERSION);
+console.log('Using functions ver ' + UDMI_FUNCTIONS);
 
 if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
@@ -197,6 +199,7 @@ function udmi_reflector_state(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = {
+    'functions': UDMI_FUNCTIONS,
     'last_state': msgObject.timestamp
   };
   const startTime = currentTimestamp();
@@ -273,7 +276,9 @@ function process_state_update(attributes, msgObject) {
   attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  const stateStart = msgObject.system && msgObject.system.last_start;
+  // Check both potential locations for last_start, can be cleaned-up post release.
+  const stateStart = msgObject.system &&
+        (msgObject.system.last_start || msgObject.system.operation.last_start);
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp()));
 
