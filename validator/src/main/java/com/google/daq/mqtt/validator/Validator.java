@@ -498,7 +498,6 @@ public class Validator {
         return device;
       }
 
-      final Map<String, Object> original = GeneralUtils.deepCopy(message);
       sanitizeMessage(schemaName, message);
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
@@ -532,11 +531,6 @@ public class Validator {
           validateMessage(schemaMap.get(schemaName), message);
         } catch (Exception e) {
           System.err.printf("Error validating schema %s: %s%n", schemaName, e.getMessage());
-          System.err.println("========================================");
-          System.err.println(stringify(original));
-          System.err.println("========================================");
-          System.err.println(stringify(message));
-          System.err.println("========================================");
           device.addError(e, attributes, Category.VALIDATION_DEVICE_SCHEMA);
         }
       }
