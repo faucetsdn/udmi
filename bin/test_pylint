@@ -14,6 +14,8 @@ files=$(ls $files1 $files2 $files3 | sort | uniq | fgrep -v \~)
 
 echo scanning: $files
 
+source venv/bin/activate
+
 LINT_OUT=out/test_pylint.out
 LINT_GOLDEN=etc/${LINT_OUT#out/}
 
