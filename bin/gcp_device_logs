@@ -14,6 +14,7 @@ import json
 import dateutil.parser
 import argparse
 
+# pylint: disable-next=line-too-long
 SHELL_TEMPLATE = 'gcloud logging read "logName=projects/{}/logs/cloudiot.googleapis.com%2Fdevice_activity AND ({}) AND timestamp>=\\\"{}\\\"" --limit 1000 --format json --project {}'
 TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ' #timestamp >= "2016-11-29T23:00:00Z"
 
@@ -29,7 +30,8 @@ args = parse_command_line_args()
 target_devices = args.device_ids
 project_id = args.project_id
 
-device_filter = ' OR '.join([f'labels.device_id={target}' for target in target_devices])
+device_filter = ' OR '.join([f'labels.device_id={target}' \
+  for target in target_devices])
 
 # sleep duration - balance of speed and accuracy for ordering as some entries
 # can be delayed by about 10 seconds
@@ -42,8 +44,15 @@ seen = []
 
 while True:
   try:
-    shell_command = SHELL_TEMPLATE.format(project_id, device_filter, search_timestamp.strftime(TIMESTAMP_FORMAT), project_id)
-    output = subprocess.run(shell_command, capture_output=True, shell=True, check=True)
+    shell_command = SHELL_TEMPLATE.format(project_id,
+      device_filter,
+      search_timestamp.strftime(TIMESTAMP_FORMAT),
+      project_id)
+
+    output = subprocess.run(shell_command,
+        capture_output=True,
+        shell=True,
+        check=True)
 
     data = json.loads(output.stdout)
 
@@ -56,16 +65,16 @@ while True:
         continue
 
       seen.append(insert_id)
-
-      event_type = entry['jsonPayload']['eventType']
+      log_data = entry['jsonPayload']
+      event_type = log_data['eventType']
       timestamp = entry['timestamp']
       registry_id = entry['resource']['labels']['device_registry_id']
       log_device_id = entry['labels']['device_id']
       metadata = ''
 
       if event_type == 'PUBLISH':
-        metadata = entry['jsonPayload'].get('publishFromDeviceTopicType')
-        publishToDeviceTopicType = entry['jsonPayload'].get('publishToDeviceTopicType')
+        metadata = log_data.get('publishFromDeviceTopicType')
+        publishToDeviceTopicType = log_data.get('publishToDeviceTopicType')
         if publishToDeviceTopicType == 'CONFIG':
           event_type = 'CONFIG'
           metadata = ''
@@ -73,21 +82,21 @@ while True:
           metadata = f'TO DEVICE {publishToDeviceTopicType}'
 
       if event_type == 'PUBACK':
-        metadata = entry['jsonPayload']['publishToDeviceTopicType']
+        metadata = log_data['publishToDeviceTopicType']
 
       if event_type == 'SUBSCRIBE':
-        metadata =  entry['jsonPayload']['mqttTopic']
+        metadata =  log_data['mqttTopic']
 
       if event_type == 'ATTACH_TO_GATEWAY':
-        metadata = entry['jsonPayload']['gateway']['id']
+        metadata = log_data['gateway']['id']
 
       if event_type == 'DISCONNECT':
-        metadata = entry['jsonPayload']['disconnectType']
+        metadata = log_data['disconnectType']
 
-      if entry['jsonPayload']['status'].get('code') != 0:
-        metadata = (f"{metadata}"
-                    f"({entry['jsonPayload']['status'].get('description')}"
-                    f"{entry['jsonPayload']['status'].get('message', '')})")
+      if log_data['status'].get('code') != 0:
+        metadata = (f'{metadata}'
+                    f'({log_data["status"].get("description")}'
+                    f'{log_data["status"].get("message", "")})')
 
       entries.append({'timestamp_obj': dateutil.parser.parse(timestamp),
               'timestamp': timestamp,
@@ -112,7 +121,5 @@ while True:
     print('Ensure gcloud is authenticated and account has permissions')
     print('to access cloud logging')
     sys.exit(1)
-  except Exception:
-    pass
   finally:
     time.sleep(dt)

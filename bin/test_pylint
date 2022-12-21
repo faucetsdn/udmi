@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Run pylint on all the detected python files and compare against the expected list.
 # This is far from perfect, but the goal is just to prevent horrible things and to get
@@ -24,7 +24,8 @@ rm -f $LINT_OUT
 mkdir -p out
 
 for file in $files; do
-    linty=$(pylint --rcfile=$RCFILE $file | fgrep "rated at" | awk '{print $7}' | sed -e 's/\..*//')
+    [[ $file == $0 ]] && continue
+    pylint --rcfile=$RCFILE $file
     echo $file $linty | tee -a $LINT_OUT
 done
 
