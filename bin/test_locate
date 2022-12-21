@@ -14,9 +14,12 @@ function test_locate {
         result=PASS
     else
         result=FAIL
-        echo $1 param: $2 >> $failures
-        echo "  profile expected" $3 was $profile >> $failures
-        echo "  site_model expected" $4 was $site_model >> $failures
+        config_files=$(cd $HOME; find .udmi sites/udmi_site_model/.udmi -name \*.json 2>/dev/null)
+        echo "$1: udmi locate $2" >> $failures
+        echo "  working directory: " $PWD >> $failures
+        echo "  config files:" $config_files >> $failures
+        echo "  profile expected:" $3 was $profile >> $failures
+        echo "  site_model expected:" $4 was $site_model >> $failures
     fi
     echo $result $1
 }
@@ -33,30 +36,38 @@ EOF
 
 rm -rf   $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
 mkdir -p $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
+
 cp $ROOT/out/default_profile.json $USER_DEFAULT
 cp $USER_DEFAULT $HOME/.udmi/profile_foo.json
 
-echo Testing invocation from user root directory...
 cd $HOME
+echo Testing from $PWD
+
 test_locate default_site "" .udmi/default_profile.json sites/udmi_site_model
 test_locate user_profile foo .udmi/profile_foo.json sites/udmi_site_model
 test_locate user_missing bar "" ""
 
 echo Remove user default profile...
 rm -f .udmi/default_profile.json
+
 test_locate default_missing "" "" ""
 
-echo Empty user default profile...
+echo Create empty user default profile...
 echo {} > .udmi/default_profile.json
+
 test_locate default_empty "" .udmi/default_profile.json ""
 
-echo Testing invocation from site model directory...
 cd $HOME/sites/udmi_site_model
-cp $ROOT/out/default_profile.json .udmi/
+echo Testing from $PWD
 
-test_locate site_default "" sites/udmi_site_model/.udmi/default_profile.json sites/udmi_site_model
-test_locate site_profile foo sites/udmi_site_model/.udmi/profile_foo.json sites/udmi_site_model
-test_locate site_missing bar "" ""
+echo Copying profiles to .udmi/
+cp $ROOT/out/default_profile.json .udmi/
+cp $ROOT/out/default_profile.json .udmi/profile_bar.json
+
+test_locate site_default "" .udmi/default_profile.json .
+test_locate site_missing foo "" .
+test_locate site_profile bar .udmi/profile_bar.json .
+test_locate site_nothing baz "" .
 
 echo
 #rm -rf $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
