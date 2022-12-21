@@ -25,7 +25,8 @@ function test_locate {
 }
 
 USER_DEFAULT=$HOME/.udmi/default_profile.json
-cat <<EOF > $ROOT/out/default_profile.json
+mkdir -p out/
+cat <<EOF > out/default_profile.json
 {
   "site_model": "sites/udmi_site_model"
 }  
