@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -13,8 +12,6 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.daq.mqtt.sequencer.FeatureBucket;
-import com.google.daq.mqtt.sequencer.FeatureStage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
 import java.util.Date;

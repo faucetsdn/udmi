@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
@@ -18,6 +19,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.sequencer.FeatureStage.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
@@ -88,7 +90,7 @@ public class SequenceBase {
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
   public static final String RESULT_SKIP = "skip";
-  public static final String RESULT_FORMAT = "RESULT %s %s %s";
+  public static final String RESULT_FORMAT = "RESULT %s%s %s %s";
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
@@ -446,6 +448,7 @@ public class SequenceBase {
   }
 
   @Test
+  @FeatureStage(REQUIRED)
   public void valid_serial_no() {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
@@ -1279,8 +1282,8 @@ public class SequenceBase {
 
     private void recordCompletion(String result, Level level,
         org.junit.runner.Description description, String message) {
-      String category = description.getMethodName();
-      recordResult(result, category, message);
+      String methodName = description.getMethodName();
+      recordResult(result, methodName, message);
       Entry logEntry = new Entry();
       logEntry.category = SEQUENCER_CATEGORY;
       logEntry.message = message;
