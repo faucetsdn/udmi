@@ -90,7 +90,7 @@ public class SequenceBase {
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
   public static final String RESULT_SKIP = "skip";
-  public static final String RESULT_FORMAT = "RESULT %s%s %s %s";
+  public static final String RESULT_FORMAT = "RESULT %s %s%s %s";
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
@@ -456,8 +456,11 @@ public class SequenceBase {
     untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
-  private void recordResult(String result, String methodName, String message) {
-    String resultString = String.format(RESULT_FORMAT, result, methodName, message);
+  private void recordResult(String result, org.junit.runner.Description description, String message) {
+    String methodName = description.getMethodName();
+    FeatureStage stage = description.getAnnotation(FeatureStage.class);
+    String suffix = (stage == null || stage.value() == REQUIRED) ? "" : (" " + stage.value());
+    String resultString = String.format(RESULT_FORMAT, result, methodName, suffix, message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);
@@ -1282,8 +1285,7 @@ public class SequenceBase {
 
     private void recordCompletion(String result, Level level,
         org.junit.runner.Description description, String message) {
-      String methodName = description.getMethodName();
-      recordResult(result, methodName, message);
+      recordResult(result, description, message);
       Entry logEntry = new Entry();
       logEntry.category = SEQUENCER_CATEGORY;
       logEntry.message = message;

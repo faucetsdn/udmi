@@ -12,6 +12,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
+import com.google.daq.mqtt.sequencer.FeatureStage;
+import com.google.daq.mqtt.sequencer.FeatureStage.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
 import java.util.Date;
@@ -27,6 +29,11 @@ public class ConfigSequences extends SequenceBase {
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
+  private boolean hasInterestingStatus() {
+    return deviceState.system.status != null
+        && deviceState.system.status.level >= Level.WARNING.value();
+  }
+
   @Test()
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
@@ -35,6 +42,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test
   @Description("Check that the min log-level config is honored by the device.")
+  @FeatureStage(Stage.BETA)
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
@@ -105,11 +113,6 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
 
-  private boolean hasInterestingStatus() {
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
-  }
-
   @Test
   @Description("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
@@ -136,6 +139,4 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
-
-
 }
