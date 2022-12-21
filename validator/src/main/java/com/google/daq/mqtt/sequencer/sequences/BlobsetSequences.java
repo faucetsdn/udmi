@@ -1,19 +1,25 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.sha256;
+import static com.google.udmi.util.JsonUtil.stringify;
+import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 
 import com.google.daq.mqtt.sequencer.SequenceBase;
+import com.google.daq.mqtt.sequencer.SkipTest;
+import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.SystemConfig.SystemMode;
@@ -25,18 +31,15 @@ import udmi.schema.SystemConfig.SystemMode;
 
 public class BlobsetSequences extends SequenceBase {
 
-  private static final String ENDPOINT_CONFIG_HOSTNAME_PAYLOAD =
-      "{ "
-          + "  \"protocol\": \"mqtt\",\n"
-          + "  \"client_id\": \"%s\",\n"
-          + "  \"hostname\": \"%s\"\n"
-          + "}";
-
+  public static final String JSON_MIME_TYPE = "application/json";
+  public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
+  public static final String IOT_BLOB_KEY = SystemBlobsets.IOT_ENDPOINT_CONFIG.value();
   private static final String ENDPOINT_CONFIG_CLIENT_ID =
       "projects/%s/locations/%s/registries/%s/devices/%s";
-  private static final String ENDPOINT_CONFIG_HOSTNAME = "mqtt.googleapis.com";
+  private static final String GOOGLE_ENDPOINT_HOSTNAME = "mqtt.googleapis.com";
+  private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
 
-  private String generateEndpointConfigClientId() {
+  private String generateEndpointConfigClientId(String registryId) {
     return String.format(
         ENDPOINT_CONFIG_CLIENT_ID,
         projectId,
@@ -45,62 +48,149 @@ public class BlobsetSequences extends SequenceBase {
         getDeviceId());
   }
 
-  private String generateEndpointConfigBase64Payload(String hostname) {
-    String payload = String.format(
-        ENDPOINT_CONFIG_HOSTNAME_PAYLOAD, generateEndpointConfigClientId(), hostname);
-    String base64Payload = Base64.getEncoder().encodeToString(payload.getBytes());
-    return SemanticValue.describe("endpoint_base64_payload", base64Payload);
+  private String endpointConfigPayload(String hostname, String registryId) {
+    EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+    endpointConfiguration.protocol = Protocol.MQTT;
+    endpointConfiguration.hostname = hostname;
+    endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
+    return stringify(endpointConfiguration);
   }
 
-  private String generateNonce() {
-    byte[] nonce = new byte[32];
-    new SecureRandom().nextBytes(nonce);
-    String base64Nonce = Base64.getEncoder().encodeToString(nonce);
-    return SemanticValue.describe("endpoint_nonce", base64Nonce);
+  private void untilClearedRedirect() {
+    deviceConfig.blobset.blobs.remove(IOT_BLOB_KEY);
+    untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
+        || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
+  }
+
+  private void untilSuccessfulRedirect(BlobPhase blobPhase) {
+    untilTrue(String.format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
+      // Successful reconnect sends a state message with empty Entry.
+      Entry blobStateStatus = blobBlobsetState.status;
+      return blobPhase.equals(blobBlobsetState.phase)
+          && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+          && blobStateStatus == null;
+    });
+    checkThatHasInterestingSystemStatus(false);
+  }
+
+  private void untilErrorReported() {
+    untilTrue("blobset entry config status is error", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
+      return blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+          && blobBlobsetState.phase.equals(BlobPhase.FINAL)
+          && blobBlobsetState.status.category.equals(BLOBSET_BLOB_APPLY)
+          && blobBlobsetState.status.level == Level.ERROR.value();
+    });
+    checkThatHasInterestingSystemStatus(false);
+  }
+
+  private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
+    BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
+    deviceConfig.blobset = new BlobsetConfig();
+    deviceConfig.blobset.blobs = new HashMap<>();
+    deviceConfig.blobset.blobs.put(IOT_BLOB_KEY, config);
+  }
+
+  private BlobBlobsetConfig makeEndpointConfigBlob(String hostname, String registryId,
+      boolean badHash) {
+    String payload = endpointConfigPayload(hostname, registryId);
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.url = SemanticValue.describe("endpoint url", generateEndpointConfigDataUrl(payload));
+    config.phase = BlobPhase.FINAL;
+    config.generation = SemanticDate.describe("blob generation", new Date());
+    String description = badHash ? "invalid blob data hash" : "blob data hash";
+    config.sha256 = SemanticValue.describe(description,
+        badHash ? sha256(payload + "X") : sha256(payload));
+    return config;
+  }
+
+  private String generateEndpointConfigDataUrl(String payload) {
+    return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
-  public void endpoint_config_connection_error() {
-    BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload("localhost");
-    config.content_type = "application/json";
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
-
-    untilTrue("blobset entry config status is error", () -> {
-      Entry stateStatus = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
-      return stateStatus.category.equals(BLOBSET_BLOB_APPLY)
-          && stateStatus.level == Level.ERROR.value();
-    });
+  public void endpoint_connection_error() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    untilErrorReported();
+    untilClearedRedirect();
   }
 
   @Test
-  @Description(
-      "Push endpoint config message to device that results in successful reconnect to "
-          + "the same endpoint.")
-  public void endpoint_config_connection_success_reconnect() {
-    BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.phase = BlobPhase.FINAL;
-    config.base64 = generateEndpointConfigBase64Payload(ENDPOINT_CONFIG_HOSTNAME);
-    config.content_type = "application/json";
-    config.nonce = generateNonce();
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(SystemBlobsets.IOT_ENDPOINT_CONFIG.value(), config);
+  @Description("Check repeated endpoint with same information gets retried.")
+  public void endpoint_connection_retry() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
+    untilErrorReported();
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    // Semantically this is a different date; manually update for change-detection purposes.
+    deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation = SemanticDate.describe(
+        "new generation", new Date());
+    assertNotEquals("config generation", savedGeneration,
+        deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation);
+    untilErrorReported();
+    untilClearedRedirect();
+  }
 
-    untilTrue("blobset phase is FINAL and stateStatus is null", () -> {
-      BlobPhase phase = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).phase;
+  @Test
+  @Description("Check a successful reconnect to the same endpoint.")
+  public void endpoint_connection_success_reconnect() {
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+    untilSuccessfulRedirect(BlobPhase.FINAL);
+    untilClearedRedirect();
+  }
+
+  @Test
+  @Description("Failed connection because of bad hash.")
+  public void endpoint_connection_bad_hash() {
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
+    untilTrue("blobset status is ERROR", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
+      BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
       // Successful reconnect sends a state message with empty Entry.
-      Entry blobStateStatus = deviceState.blobset.blobs.get(
-          SystemBlobsets.IOT_ENDPOINT_CONFIG.value()).status;
-      return phase != null
-          && phase.equals(BlobPhase.FINAL)
-          && blobStateStatus == null;
+      Entry blobStateStatus = blobBlobsetState.status;
+      return BlobPhase.FINAL.equals(blobBlobsetState.phase)
+          && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+          && blobStateStatus.category.equals(BLOBSET_BLOB_APPLY)
+          && blobStateStatus.level == Level.ERROR.value();
+    });
+    checkThatHasInterestingSystemStatus(false);
+  }
+
+  @Test
+  @Description("Check connection to an alternate project.")
+  public void endpoint_connection_success_alternate() {
+    if (altRegistry == null) {
+      throw new SkipTest("No alternate registry defined");
+    }
+    // Phase one: initiate connection to alternate registry.
+    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
+    untilSuccessfulRedirect(BlobPhase.APPLY);
+    mirrorDeviceConfig();
+
+    withAlternateClient(() -> {
+      // Phase two: verify connection to alternate registry.
+      untilSuccessfulRedirect(BlobPhase.FINAL);
+      untilTrue("alternate last_config matches config timestamp",
+          this::stateMatchesConfigTimestamp);
+      untilClearedRedirect();
+
+      // Phase three: initiate connection back to initial registry.
+      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
+      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+      untilSuccessfulRedirect(BlobPhase.APPLY);
+      mirrorDeviceConfig();
+    });
+
+    // Phase four: verify restoration of initial registry connection.
+    whileDoing("restoring main connection", () -> {
+      untilSuccessfulRedirect(BlobPhase.FINAL);
+      untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+      untilClearedRedirect();
     });
   }
 

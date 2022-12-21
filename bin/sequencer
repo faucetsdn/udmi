@@ -51,6 +51,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "project_id": "$project_id",
   "site_model": "$site_path",
   "device_id": "$device_id",
+  "alt_registry": "$UDMI_ALT_REGISTRY",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "udmi_version": "$udmi_version",

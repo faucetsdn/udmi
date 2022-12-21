@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.hash.Hashing;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -27,13 +29,17 @@ public class GeneralUtils {
 
     for (Field field : fields) {
       try {
+        if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+          continue;
+        }
+
         if (field.get(target) != null && Boolean.TRUE.equals(field.get(target))) {
           options.add(field.getName());
         } else if (field.get(target) != null) {
           options.add(field.getName() + "=" + field.get(target));
         }
       } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException("While accessing field " + field.getName(), e);
       }
     }
     return String.join(" ", options);
@@ -110,5 +116,21 @@ public class GeneralUtils {
         target.put(key, sourceValue);
       }
     }
+  }
+
+  public static String sha256(String input) {
+    return sha256(input.getBytes());
+  }
+
+  public static String sha256(byte[] bytes) {
+    return Hashing.sha256().hashBytes(bytes).toString();
+  }
+
+  public static String encodeBase64(String payload) {
+    return encodeBase64(payload.getBytes());
+  }
+
+  public static String encodeBase64(byte[] payload) {
+    return Base64.getEncoder().encodeToString(payload);
   }
 }

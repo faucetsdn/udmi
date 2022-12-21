@@ -9,6 +9,10 @@
     "sequence_name": {
       "description": "The sequence name currently being tested (for debug logging)",
       "type": "string"
+    },
+    "endpoint_type": {
+      "description": "Designator for the kind of endpoint being used for this test",
+      "type": "string"
     }
   }
 }
