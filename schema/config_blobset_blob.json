@@ -8,29 +8,20 @@
     "phase": {
       "$ref": "file:common.json#/definitions/phase"
     },
-    "content_type": {
-      "type": "string"
-    },
-    "base64": {
-      "type": "string",
-      "pattern": "^[0-9A-Za-z=+/]{4,}$"
-    },
     "url": {
-      "type": "string",
-      "format": "uri"
+      "type": "string"
     },
     "sha256": {
       "type": "string",
       "description": "Expected hash of the retrieved resource",
       "pattern": "^[0-9a-f]{64}$"
     },
-    "nonce": {
+    "generation": {
+      "description": "The timestamp of the blob generation",
       "type": "string",
-      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     }
   },
-  "oneOf": [
-    { "required": ["content_type", "base64", "phase"] },
-    { "required": ["url", "sha256", "phase"] }
-  ]
+  "required": ["url", "sha256", "phase", "generation"]
 }
