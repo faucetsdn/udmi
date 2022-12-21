@@ -44,7 +44,7 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery.generation = startTime;
     info("Starting empty enumeration at " + JsonUtil.getTimestamp(startTime));
-    untilTrue("enumeration generation", () -> deviceState.discovery.generation.equals(startTime));
+    untilTrue("matching enumeration generation", () -> deviceState.discovery.generation.equals(startTime));
 
     deviceConfig.discovery.generation = null;
     untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);

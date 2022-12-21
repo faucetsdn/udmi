@@ -159,6 +159,7 @@ public class Pubber {
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
+  private final List<Entry> logentries = new ArrayList<>();
   private Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
@@ -175,7 +176,6 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
-  private final List<Entry> logentries = new ArrayList<>();
 
   /**
    * Start an instance from a configuration file.
@@ -432,7 +432,7 @@ public class Pubber {
   private void markStateDirty() {
     markStateDirty(0);
   }
-    
+
   private void markStateDirty(long delayMs) {
     stateDirty.set(true);
     if (delayMs >= 0) {
@@ -1028,16 +1028,16 @@ public class Pubber {
     }
   }
 
-  private void updateDiscoveryConfig(DiscoveryConfig discovery) {
-    DiscoveryConfig discoveryConfig = discovery == null ? new DiscoveryConfig() : discovery;
+  private void updateDiscoveryConfig(DiscoveryConfig config) {
+    if (config == null) {
+      deviceState.discovery = null;
+      return;
+    }
     if (deviceState.discovery == null) {
       deviceState.discovery = new DiscoveryState();
     }
-    updateDiscoveryEnumeration(discoveryConfig);
-    updateDiscoveryScan(discoveryConfig.families);
-    if (deviceState.discovery.families == null && deviceState.discovery.generation == null) {
-      deviceState.discovery = null;
-    }
+    updateDiscoveryEnumeration(config);
+    updateDiscoveryScan(config.families);
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -1046,7 +1046,8 @@ public class Pubber {
       deviceState.discovery.generation = null;
       return;
     }
-    if (!enumerationGeneration.after(deviceState.discovery.generation)) {
+    if (deviceState.discovery.generation != null &&
+        !enumerationGeneration.after(deviceState.discovery.generation)) {
       return;
     }
     deviceState.discovery.generation = enumerationGeneration;
