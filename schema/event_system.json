@@ -52,10 +52,7 @@
         "store_free_mb": {
           "type": "number"
         },
-        "cpu_temp_c": {
-          "type": "number"
-        },
-        "cpu_load_5m": {
+        "system_load": {
           "type": "number"
         }
       }
