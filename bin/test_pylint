@@ -18,12 +18,13 @@ source venv/bin/activate
 
 LINT_OUT=out/test_pylint.out
 LINT_GOLDEN=etc/${LINT_OUT#out/}
+RCFILE=etc/pylintrc
 
 rm -f $LINT_OUT
 mkdir -p out
 
 for file in $files; do
-    linty=$(pylint $file | fgrep "rated at" | awk '{print $7}' | sed -e 's/\..*//')
+    linty=$(pylint --rcfile=$RCFILE $file | fgrep "rated at" | awk '{print $7}' | sed -e 's/\..*//')
     echo $file $linty | tee -a $LINT_OUT
 done
 
