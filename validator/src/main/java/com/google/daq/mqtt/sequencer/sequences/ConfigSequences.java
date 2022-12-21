@@ -38,9 +38,6 @@ public class ConfigSequences extends SequenceBase {
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
-  // Delay to wait to let a device apply a new config.
-  private static final long CONFIG_THRESHOLD_SEC = 10;
-
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
@@ -85,7 +82,7 @@ public class ConfigSequences extends SequenceBase {
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilFalse("no interesting status", this::hasInterestingSystemStatus);
+    untilFalse("no interesting status", this::hasInterestingStatus);
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
@@ -96,7 +93,7 @@ public class ConfigSequences extends SequenceBase {
 
     setExtraField("break_json");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("has interesting status", this::hasInterestingSystemStatus);
+    untilTrue("has interesting status", this::hasInterestingStatus);
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -113,7 +110,7 @@ public class ConfigSequences extends SequenceBase {
 
     resetConfig(); // clears extra_field
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilFalse("no interesting status", this::hasInterestingSystemStatus);
+    untilFalse("no interesting status", this::hasInterestingStatus);
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
@@ -123,14 +120,9 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
 
-  private boolean hasInterestingSystemStatus() {
+  private boolean hasInterestingStatus() {
     return deviceState.system.status != null
         && deviceState.system.status.level >= Level.WARNING.value();
-  }
-
-  private boolean hasInterestingPointsetStatus() {
-    return deviceState.pointset.status != null
-        && deviceState.pointset.status.level >= Level.WARNING.value();
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -139,14 +131,13 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingSystemStatus);
-    clearLogs();
+    untilFalse("no interesting status", this::hasInterestingStatus);
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingSystemStatus);
+    untilFalse("no interesting status", this::hasInterestingStatus);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
@@ -156,9 +147,9 @@ public class ConfigSequences extends SequenceBase {
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingSystemStatus);
-    hasLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
-    hasLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    untilFalse("no interesting status", this::hasInterestingStatus);
+    untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
+    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
   /**
