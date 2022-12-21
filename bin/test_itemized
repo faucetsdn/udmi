@@ -10,16 +10,26 @@ fi
 PROJECT_ID=$1
 shift 1
 
+udmi_profile=out/pubber_profile.json
 SITE_PATH=sites/udmi_site_model
 DEVICE_ID=AHU-1
 
-PUBBER_OUT=pubber.out
-SEQUENCER_OUT=sequencer.out
-RESULTS_OUT=/tmp/test_itemized.out
+PUBBER_OUT=out/pubber.out
+SEQUENCER_OUT=out/sequencer.out
+RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
 
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
-touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT 
+touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
+mkdir -p out
+
+cat <<EOF > $udmi_profile
+{
+  "site_model": "$SITE_PATH",
+  "device_id": "$DEVICE_ID",
+  "project_id": "$PROJECT_ID"
+}  
+EOF
 
 while read -u 7 action test_name remainder; do
     if [[ $action != TEST ]]; then
@@ -31,7 +41,7 @@ while read -u 7 action test_name remainder; do
     echo "TEST $test_name $pubber_opts"
     
     serial_no=sequencer-$RANDOM
-    bin/pubber $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
+    udmi pubber $udmi_profile -x $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
     WAITING=60
     for i in `seq 1 $WAITING`; do
         if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then

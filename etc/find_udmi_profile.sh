@@ -68,12 +68,12 @@ if [[ ! -f ${udmi_profile} ]]; then
     echo Invalid/empty udmi_profile ${udmi_profile}
     udmi_profile=
 else
-    udmi_profile=$(realpath --relative-base $HOME ${udmi_profile})
+    udmi_profile=$(realpath --relative-base $PWD ${udmi_profile})
 fi
 
 if [[ ! -f ${site_model}/cloud_iot_config.json ]]; then
     echo Invalid/empty site_model ${site_model}
     site_model=
 else
-    site_model=$(realpath --relative-base $HOME ${site_model})
+    site_model=$(realpath --relative-base $PWD ${site_model})
 fi

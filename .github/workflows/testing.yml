@@ -147,8 +147,8 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_itemized $GCP_TARGET_PROJECT
-          more /tmp/test_itemized.out
-          diff -u /tmp/test_itemized.out etc/test_itemized.out
+          more out/test_itemized.out
+          diff -u out/test_itemized.out etc/test_itemized.out
       - name: output logs
         if: ${{ always() }}
         run: |
