@@ -5,12 +5,12 @@
 
 
 #
-# Walk up the directory tree looking for the cloud_iot_core.json site model marker.
+# Walk up the directory tree looking for the cloud_iot_config.json site model marker.
 # If not found, just return empty.
 #
 function find_site_model_root {
     while [ $PWD != "/" ]; do
-        test -f cloud_iot_core.json && { pwd; break; }
+        test -f cloud_iot_config.json && { pwd; break; }
         cd ..
     done
 }
