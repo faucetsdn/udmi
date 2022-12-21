@@ -75,7 +75,7 @@ public class ConfigSequences extends SequenceBase {
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilFalse("no interesting status", this::hasInterestingStatus);
+    updateConfig();
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
@@ -86,7 +86,7 @@ public class ConfigSequences extends SequenceBase {
 
     setExtraField("break_json");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("has interesting status", this::hasInterestingStatus);
+    checkThatHasInterestingSystemStatus(true);
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -103,7 +103,7 @@ public class ConfigSequences extends SequenceBase {
 
     resetConfig(); // clears extra_field
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilFalse("no interesting status", this::hasInterestingStatus);
+    checkThatHasInterestingSystemStatus(false);
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
@@ -119,13 +119,13 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingStatus);
+    checkThatHasInterestingSystemStatus(false);
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingStatus);
+    checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
@@ -135,7 +135,7 @@ public class ConfigSequences extends SequenceBase {
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
     untilTrue("system operational", () -> deviceState.system.operational);
-    untilFalse("no interesting status", this::hasInterestingStatus);
+    checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }

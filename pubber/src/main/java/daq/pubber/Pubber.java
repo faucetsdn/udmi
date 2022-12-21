@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -107,7 +109,8 @@ public class Pubber {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
-  private static final String UDMI_VERSION = "1.4.0";
+  public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  static final String UDMI_VERSION = "1.4.0";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -125,7 +128,6 @@ public class Pubber {
       ExtraPointsetEvent.class, getEventsSuffix("pointset"),
       DiscoveryEvent.class, getEventsSuffix("discovery")
   );
-
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -149,19 +151,19 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  private Config deviceConfig = new Config();
+  Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -259,7 +261,7 @@ public class Pubber {
     LOG.info("Done with main");
   }
 
-  private static void singularPubber(String[] args) throws InterruptedException {
+  static Pubber singularPubber(String[] args) throws InterruptedException {
     Pubber pubber = null;
     try {
       if (args.length == 1) {
@@ -281,6 +283,7 @@ public class Pubber {
       }
       throw new RuntimeException("While starting singular pubber", e);
     }
+    return pubber;
   }
 
   private static void swarmPubber(String[] args) throws InterruptedException {
@@ -326,6 +329,31 @@ public class Pubber {
 
   private static Date getCurrentTimestamp() {
     return new Date();
+  }
+
+  static String acquireBlobData(String url, String sha256) {
+    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("URL encoding not supported: " + url);
+    }
+    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    String dataSha256 = GeneralUtils.sha256(dataBytes);
+    if (!dataSha256.equals(sha256)) {
+      throw new RuntimeException("Blob data hash mismatch");
+    }
+    return new String(dataBytes);
+  }
+
+  static void augmentDeviceMessage(Object message) {
+    try {
+      Field version = message.getClass().getField("version");
+      version.set(message, UDMI_VERSION);
+      Field timestamp = message.getClass().getField("timestamp");
+      if (timestamp.get(message) == null) {
+        timestamp.set(message, getCurrentTimestamp());
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException("While augmenting device message", e);
+    }
   }
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
@@ -653,7 +681,7 @@ public class Pubber {
     }
   }
 
-  private void terminate() {
+  void terminate() {
     warn("Terminating");
     deviceState.system.mode = SystemMode.SHUTDOWN;
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
@@ -892,24 +920,24 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
-  private void extractEndpointBlobConfig() {
+  EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
-      return;
+      return null;
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
-        // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          extractedEndpoint.nonce =
-              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
+          BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
+          extractedEndpoint.generation = config.generation;
         }
       }
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
+    return extractedEndpoint;
   }
 
   private void removeBlobsetBlobState(SystemBlobsets blobId) {
@@ -923,7 +951,7 @@ public class Pubber {
     markStateDirty();
   }
 
-  private void maybeRedirectEndpoint() {
+  void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
     String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =
@@ -943,12 +971,29 @@ public class Pubber {
       return; // No need to redirect anything!
     }
 
+    if (extractedEndpoint != null) {
+      if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
+        notice("Starting new endpoint generation");
+        endpointState.phase = null;
+        endpointState.status = null;
+        endpointState.generation = extractedEndpoint.generation;
+      }
+
+      if (extractedEndpoint.error != null) {
+        attemptedEndpoint = extractedSignature;
+        endpointState.phase = BlobPhase.FINAL;
+        Exception applyError = new RuntimeException(extractedEndpoint.error);
+        endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
+        publishSynchronousState();
+        return;
+      }
+    }
+
     info("New config blob endpoint detected");
 
     try {
       attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
-      endpointState.status = null;
       publishSynchronousState();
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
@@ -1013,19 +1058,21 @@ public class Pubber {
   }
 
   private String extractConfigBlob(String blobName) {
+    // TODO: Refactor to get any blob meta parameters.
     try {
       if (deviceConfig == null || deviceConfig.blobset == null
           || deviceConfig.blobset.blobs == null) {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)
-          && blobBlobsetConfig.base64 != null) {
-        return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
+      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)) {
+        return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
       }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("While extracting config blob " + blobName, e);
+      EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+      endpointConfiguration.error = e.toString();
+      return JsonUtil.stringify(endpointConfiguration);
     }
   }
 
@@ -1047,8 +1094,8 @@ public class Pubber {
       deviceState.discovery.generation = null;
       return;
     }
-    if (deviceState.discovery.generation != null &&
-        !enumerationGeneration.after(deviceState.discovery.generation)) {
+    if (deviceState.discovery.generation != null
+        && !enumerationGeneration.after(deviceState.discovery.generation)) {
       return;
     }
     deviceState.discovery.generation = enumerationGeneration;
@@ -1460,19 +1507,6 @@ public class Pubber {
         .incrementAndGet();
     String timestamp = getTimestamp().replace("Z", String.format(".%03dZ", serial));
     return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
-  }
-
-  private void augmentDeviceMessage(Object message) {
-    try {
-      Field version = message.getClass().getField("version");
-      assert version.get(message) == null;
-      version.set(message, UDMI_VERSION);
-      Field timestamp = message.getClass().getField("timestamp");
-      assert timestamp.get(message) == null;
-      timestamp.set(message, getCurrentTimestamp());
-    } catch (Exception e) {
-      throw new RuntimeException("While augmenting device message", e);
-    }
   }
 
   private boolean publisherActive() {
