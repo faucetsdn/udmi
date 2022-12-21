@@ -38,6 +38,7 @@ if [[ -d $prefix ]]; then
         fi
         echo "  $name"
         cat $prefix/$sequence >> $SEQUENCE_MD
+        mkdir -p validator/sequences/$directory
         cp $prefix/$sequence validator/sequences/$directory/
     done
 else
