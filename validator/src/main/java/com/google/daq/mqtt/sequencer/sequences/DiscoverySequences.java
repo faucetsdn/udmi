@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 
@@ -35,22 +36,19 @@ public class DiscoverySequences extends SequenceBase {
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
 
-  @Test
-  public void self_enumeration() {
-    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new SkipTest("No metadata pointset points defined");
-    }
-    untilUntrue("enumeration not active", () -> deviceState.discovery.enumeration.active);
-    Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
+  private DiscoveryEvent runEnumeration(Enumerate enumerate) {
     deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
-    deviceConfig.discovery.enumeration.generation =
-        SemanticDate.describe("generation start time", startTime);
-    info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
-    untilTrue("enumeration generation",
-        () -> deviceState.discovery.enumeration.generation.equals(startTime)
-    );
-    untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
+    deviceConfig.discovery.enumerate = enumerate;
+    untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
+
+    Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
+    deviceConfig.discovery.generation = startTime;
+    info("Starting empty enumeration at " + JsonUtil.getTimestamp(startTime));
+    untilTrue("enumeration generation", () -> deviceState.discovery.generation.equals(startTime));
+
+    deviceConfig.discovery.generation = null;
+    untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);
+
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
@@ -59,9 +57,24 @@ public class DiscoverySequences extends SequenceBase {
     DiscoveryEvent event = enumEvents.get(0);
     info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
     assertEquals("matching event generation", startTime, event.generation);
-    int discoveredPoints = event.uniqs == null ? 0 : event.uniqs.size();
-    assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
-        discoveredPoints);
+    return event;
+  }
+
+  @Test
+  public void empty_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    DiscoveryEvent event = runEnumeration(enumerate);
+
+    checkThat("no family enumeration", () -> event.families == null);
+    checkThat("no point enumeration", () -> event.uniqs == null);
+    checkThat("no feature enumeration", () -> event.features == null);
+  }
+
+  @Test
+  public void point_enumeration() {
+    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
+      throw new SkipTest("No metadata pointset points defined");
+    }
   }
 
   @Test

@@ -19,7 +19,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.sequencer.FeatureStage.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
@@ -151,9 +150,9 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
+  private final Stack<String> waitingCondition = new Stack<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected Config deviceConfig;
@@ -162,7 +161,6 @@ public class SequenceBase {
   private String extraField;
   private boolean extraFieldChanged;
   private Instant lastConfigUpdate;
-  private final Stack<String> waitingCondition = new Stack<>();
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
@@ -456,7 +454,8 @@ public class SequenceBase {
     untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
   }
 
-  private void recordResult(String result, org.junit.runner.Description description, String message) {
+  private void recordResult(String result, org.junit.runner.Description description,
+      String message) {
     String methodName = description.getMethodName();
     FeatureStage stage = description.getAnnotation(FeatureStage.class);
     String suffix = (stage == null || stage.value() == REQUIRED) ? "" : (" " + stage.value());
