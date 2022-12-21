@@ -70,6 +70,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
+import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -1032,33 +1033,34 @@ public class Pubber {
     if (deviceState.discovery == null) {
       deviceState.discovery = new DiscoveryState();
     }
-    updateDiscoveryEnumeration(discoveryConfig.enumeration);
+    updateDiscoveryEnumeration(discoveryConfig);
     updateDiscoveryScan(discoveryConfig.families);
-    if (deviceState.discovery.families == null && deviceState.discovery.enumeration == null) {
+    if (deviceState.discovery.families == null && deviceState.discovery.generation == null) {
       deviceState.discovery = null;
     }
   }
 
-  private void updateDiscoveryEnumeration(FamilyDiscoveryConfig enumeration) {
-    if (enumeration == null) {
+  private void updateDiscoveryEnumeration(DiscoveryConfig config) {
+    Date enumerationGeneration = config.generation;
+    if (enumerationGeneration == null) {
+      deviceState.discovery.generation = null;
       return;
     }
-    if (deviceState.discovery.enumeration == null) {
-      deviceState.discovery.enumeration = new FamilyDiscoveryState();
-      deviceState.discovery.enumeration.generation = DEVICE_START_TIME;
-    }
-    Date enumerationGeneration = enumeration.generation;
-    if (enumerationGeneration == null
-        || !enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
+    if (!enumerationGeneration.after(deviceState.discovery.generation)) {
       return;
     }
-    deviceState.discovery.enumeration = new FamilyDiscoveryState();
-    deviceState.discovery.enumeration.generation = enumerationGeneration;
+    deviceState.discovery.generation = enumerationGeneration;
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.uniqs = enumeratePoints(configuration.deviceId);
+    Enumerate enumerate = config.enumerate;
+    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
+    discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
     publishDeviceMessage(discoveryEvent);
+  }
+
+  private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
+    return isTrue(() -> condition) ? supplier.get() : null;
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
