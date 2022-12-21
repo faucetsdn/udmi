@@ -78,6 +78,7 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
+import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.PointEnumerationEvent;
@@ -1057,7 +1058,20 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
+    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
     publishDeviceMessage(discoveryEvent);
+  }
+
+  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+    LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
+    return localnet == null ? null : localnet.families.keySet().stream()
+        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
+  }
+
+  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
+    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
+    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
+    return familyDiscoveryEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {

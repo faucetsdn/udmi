@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -44,7 +45,8 @@ public class DiscoverySequences extends SequenceBase {
     Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
     deviceConfig.discovery.generation = startTime;
     info("Starting empty enumeration at " + JsonUtil.getTimestamp(startTime));
-    untilTrue("matching enumeration generation", () -> deviceState.discovery.generation.equals(startTime));
+    untilTrue("matching enumeration generation",
+        () -> deviceState.discovery.generation.equals(startTime));
 
     deviceConfig.discovery.generation = null;
     untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);
@@ -53,7 +55,7 @@ public class DiscoverySequences extends SequenceBase {
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
         .collect(Collectors.toList());
-    assertEquals("a single discovery event received", enumEvents.size(), 1);
+    assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
     info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
     assertEquals("matching event generation", startTime, event.generation);
@@ -71,10 +73,69 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  public void point_enumeration() {
+  public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
     }
+    Enumerate enumerate = new Enumerate();
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  public void feature_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.features = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  public void family_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  public void multi_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    enumerate.features = true;
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
+    if (isTrue(enumerate.families)) {
+      Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
+          .map(localnet -> localnet.families.keySet()).orElse(null);
+      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
+      checkThat("family enumeration matches", () -> Objects.equals(models, events));
+    } else {
+      checkThat("no family enumeration", () -> event.families == null);
+    }
+
+    if (isTrue(enumerate.features)) {
+      checkThat("features enumerated", () -> event.features != null);
+    } else {
+      checkThat("no feature enumeration", () -> event.features == null);
+    }
+
+    if (isTrue(enumerate.uniqs)) {
+      int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
+          .orElse(0);
+      checkThat("points enumerated " + expectedSize, () -> event.uniqs.size() == expectedSize);
+    } else {
+      checkThat("no point enumeration", () -> event.uniqs == null);
+    }
+  }
+
+  private boolean isTrue(Boolean condition) {
+    return Optional.ofNullable(condition).orElse(false);
   }
 
   @Test

@@ -79,11 +79,11 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary id of the device (for scan_family)")
     public java.lang.String scan_id;
     /**
-     * Address family results for a scan. Not included for device enumeration messages.
+     * Address family discovery results.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family results for a scan. Not included for device enumeration messages.")
+    @JsonPropertyDescription("Address family discovery results.")
     public Map<String, FamilyDiscoveryEvent> families;
     /**
      * Collection of unique data points available for this device.

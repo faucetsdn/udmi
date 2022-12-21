@@ -1,13 +1,12 @@
 """Generated class for state_discovery.json"""
 from .state_discovery_family import FamilyDiscoveryState
-from .state_discovery_family import FamilyDiscoveryState
 
 
 class DiscoveryState:
   """Generated schema class"""
 
   def __init__(self):
-    self.enumeration = None
+    self.generation = None
     self.families = None
 
   @staticmethod
@@ -15,7 +14,7 @@ class DiscoveryState:
     if not source:
       return None
     result = DiscoveryState()
-    result.enumeration = FamilyDiscoveryState.from_dict(source.get('enumeration'))
+    result.generation = source.get('generation')
     result.families = FamilyDiscoveryState.map_from(source.get('families'))
     return result
 
@@ -37,8 +36,8 @@ class DiscoveryState:
 
   def to_dict(self):
     result = {}
-    if self.enumeration:
-      result['enumeration'] = self.enumeration.to_dict() # 4
+    if self.generation:
+      result['generation'] = self.generation # 5
     if self.families:
       result['families'] = FamilyDiscoveryState.expand_dict(self.families) # 2
     return result
