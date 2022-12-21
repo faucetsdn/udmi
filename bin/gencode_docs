@@ -142,4 +142,8 @@ find $OUTPUT_DIR -type f -exec sed -i -E "s;</head>;<script src=\"schema_extras.
 find $OUTPUT_DIR -type f -exec sed -i -E "s/<body onload=\"anchorOnLoad\(\);\"/\
     <body onload=\"anchorOnLoad\(\);removedHostedMDExtensions\(\);\"/" {} \;
 
+# And update examples if necessary
+echo Generating docs examples updates...
+bin/gencode_docs_examples
+
 echo Done with $0

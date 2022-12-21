@@ -29,7 +29,9 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [endpoint_connection_bad_hash](#endpoint_connection_bad_hash): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error): Push endpoint config message to device that results in a connection error.
+* [endpoint_connection_retry](#endpoint_connection_retry): Check repeated endpoint with same information gets retried.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
@@ -48,21 +50,20 @@ Some caveats:
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Update config before no interesting status:
+1. Update config:
     * Set `system.min_loglevel` = `100`
-1. Wait for no interesting status
 1. Wait for state synchronized
 1. Check that initial stable_config matches last_config
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
-1. Wait for has interesting status
+1. Check that interesting system status
 1. Wait for log category `system.config.parse` level `ERROR` was logged
 1. Check that log category `system.config.apply` level `NOTICE` not logged
 1. Force reset config
-1. Update config before no interesting status:
+1. Check that no interesting system status
+1. Update config before last_config updated:
     * Add `system.last_start` = `device reported`
     * Set `system.min_loglevel` = `100`
-1. Wait for no interesting status
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 1. Check that log category `system.config.receive` level `DEBUG` not logged
@@ -74,13 +75,39 @@ Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
 
+## endpoint_connection_bad_hash
+
+Failed connection because of bad hash.
+
+1. Update config before blobset status is ERROR:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint url` } } }
+1. Wait for blobset status is ERROR
+1. Check that no interesting system status
+
 ## endpoint_connection_error
 
 Push endpoint config message to device that results in a connection error.
 
 1. Update config before blobset entry config status is error:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
 1. Wait for blobset entry config status is error
+1. Check that no interesting system status
+1. Update config before endpoint config blobset state not defined:
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+
+## endpoint_connection_retry
+
+Check repeated endpoint with same information gets retried.
+
+1. Update config before blobset entry config status is error:
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+1. Wait for blobset entry config status is error
+1. Check that no interesting system status
+1. Update config before blobset entry config status is error:
+    * Set `blobset.blobs._iot_endpoint_config.generation` = `new generation`
+1. Wait for blobset entry config status is error
+1. Check that no interesting system status
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
@@ -91,21 +118,25 @@ Check connection to an alternate project.
 
 1. Wait for initial last_config matches config timestamp
 1. Update config before blobset phase is apply and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
 1. Wait for blobset phase is apply and stateStatus is null
+1. Check that no interesting system status
 1. Update config before blobset phase is final and stateStatus is null:
     * Add `system.testing.endpoint_type` = `alternate`
 1. Wait for blobset phase is final and stateStatus is null
+1. Check that no interesting system status
 1. Wait for alternate last_config matches config timestamp
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 1. Update config before blobset phase is apply and stateStatus is null:
-    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` }
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
 1. Wait for blobset phase is apply and stateStatus is null
+1. Check that no interesting system status
 1. Update config before blobset phase is final and stateStatus is null:
     * Remove `system.testing.endpoint_type`
 1. Wait for blobset phase is final and stateStatus is null
+1. Check that no interesting system status
 1. Wait for restored last_config matches config timestamp
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
@@ -116,8 +147,9 @@ Check connection to an alternate project.
 Check a successful reconnect to the same endpoint.
 
 1. Update config before blobset phase is final and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "content_type": `application/json`, "base64": `endpoint_base64_payload`, "nonce": `endpoint_nonce` } } }
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
 1. Wait for blobset phase is final and stateStatus is null
+1. Check that no interesting system status
 1. Update config before endpoint config blobset state not defined:
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
@@ -130,17 +162,17 @@ Check that the device correctly handles an extra out-of-schema field
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
-1. Wait for no interesting status
+1. Check that no interesting system status
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
 1. Wait for last_config updated
 1. Wait for system operational
-1. Wait for no interesting status
+1. Check that no interesting system status
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 1. Wait for log category `system.config.receive` level `DEBUG` was logged
 1. Wait for last_config updated again
 1. Wait for system operational
-1. Wait for no interesting status
+1. Check that no interesting system status
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
