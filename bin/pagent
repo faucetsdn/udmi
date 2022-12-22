@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+""" Provisioning agent for GCP IoT Core """
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 import json
@@ -10,58 +10,63 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+  """ HTTP Server for receiving provision requests """
+  def _run_process_command(self, command):
+    command_list = command.split() if isinstance(command, str) else command
+    return subprocess.Popen(command_list,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE)
 
-    def _run_process_command(self, command):
-        command_list = command.split() if isinstance(command, str) else command
-        return subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  def _reap_process_command(self, process):
+    process.wait()
+    stdout, stderr = process.communicate()
+    return process.returncode, str(stdout, 'utf-8'), str(stderr, 'utf-8')
 
-    def _reap_process_command(self, process):
-        process.wait()
-        stdout, stderr = process.communicate()
-        return process.returncode, str(stdout, 'utf-8'), str(stderr, 'utf-8')
+  def _process_command(self, command):
+    return self._reap_process_command(self._run_process_command(command))
 
-    def _process_command(self, command):
-        return self._reap_process_command(self._run_process_command(command))
+  def _provision(self, device_id):
+    return self._process_command(
+      f'bin/provision {site_path} {project_id} {device_id}')
 
-    def _provision(self, device_id):
-        return self._process_command('bin/provision %s %s %s' % (site_path, project_id, device_id))
+  def generate_reply(self, params):
+    device_id = params['device'][0]
+    print(f'Processing provisioning request for device {device_id}')
+    code, stdout, stderr = self._provision(device_id)
+    if code:
+      print(stdout)
+      print(stderr)
+      raise Exception('keygen failed')
+    keyfile = f'{site_path}/devices/{device_id}/rsa_private.pem'
+    with open(keyfile, 'r', encoding='utf-8') as f:
+      keystr = f.read()
+    reply = {
+      'project_id': project_id,
+      'device_id': device_id,
+      'rsa_private.pem': keystr
+    }
+    reply.update(cloud_iot_config)
+    return reply
 
-    def generate_reply(self, params):
-        device_id = params['device'][0]
-        print("Processing provisioning request for device %s" % device_id)
-        code, stdout, stderr = self._provision(device_id)
-        if code:
-            print(stdout)
-            print(stderr)
-            raise Exception('keygen failed')
-        keyfile = '%s/devices/%s/rsa_private.pem' % (site_path, device_id)
-        keystr = open(keyfile, "r").read()
-        reply = {
-            'project_id': project_id,
-            'device_id': device_id,
-            'rsa_private.pem': keystr
-        }
-        reply.update(cloud_iot_config)
-        return reply
-
-    def do_GET(self):
-        parsed_path = urlparse(self.path)
-        print(parsed_path)
-        params = parse_qs(parsed_path.query)
-        reply = self.generate_reply(params)
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write((json.dumps(reply) + '\n').encode('utf-8'))
+  # pylint: disable-next=invalid-name
+  def do_GET(self):
+    parsed_path = urlparse(self.path)
+    print(parsed_path)
+    params = parse_qs(parsed_path.query)
+    reply = self.generate_reply(params)
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write((json.dumps(reply) + '\n').encode('utf-8'))
 
 assert len(sys.argv) == 3, 'usage: pagent site_path project_id'
 
 site_path = sys.argv[1]
 project_id = sys.argv[2]
-filename = '%s/cloud_iot_config.json' % site_path
-with open(filename) as data_file:
-    cloud_iot_config = yaml.safe_load(data_file)
+filename = f'{site_path}/cloud_iot_config.json'
+with open(filename, 'r', encoding='utf-8') as data_file:
+  cloud_iot_config = yaml.safe_load(data_file)
 
 ADDRESS = ('0.0.0.0', 8192)
 httpd = HTTPServer(ADDRESS, SimpleHTTPRequestHandler)
-print("Listening for provisioning requests on %s" % str(ADDRESS))
+print(f'Listening for provisioning requests on {str(ADDRESS)}')
 httpd.serve_forever()
