@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+function usage() {
+  >&2 echo "$0 [step]"
+  false
+}
+
+case "$1" in
+  install_dependencies)
+    bin/setup_base
+    bin/clone_model
+    ;;
+  code_checks)
+    bin/gencode check
+    pubber/bin/build check
+    validator/bin/build check
+    bin/test_pylint
+    ;;
+  schema_conformance_tests)
+    bin/test_schema -p
+    ;;
+  simple_trace_test)
+    bin/test_trace simple
+    ;;
+  registrar_tests)
+    bin/test_registrar
+    bin/test_sites
+    ;; 
+  *)
+    usage
+    ;;
+esac

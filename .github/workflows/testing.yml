@@ -25,27 +25,18 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v2.3.4
       - name: Install dependencies
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/github_testing install_dependencies
       - name: code checks
         if: ${{ always() }}
-        run: |
-          bin/gencode check
-          pubber/bin/build check
-          validator/bin/build check
+        run: bin/github_testing code_checks
       - name: Schema conformance tests
         if: ${{ always() }}
-        run: |
-          bin/test_schema -p
+        run: bin/github_testing schema_conformance_tests
       - name: simple trace test
-        run: |
-          bin/test_trace simple
+        run: bin/github_testing simple_trace_test
       - name: Registrar tests
         if: ${{ always() }}
-        run: |
-          bin/test_registrar
-          bin/test_sites
+        run: bin/github_testing registrar_tests
 
   redirect:
     name: Endpoint Redirection
@@ -58,9 +49,7 @@ jobs:
         with:
           java-version: '11'
       - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/github_testing install_dependencies
       - name: mosquitto connect
         run: |
           bin/test_mosquitto
@@ -110,9 +99,7 @@ jobs:
         with:
           java-version: '11'
       - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/github_testing install_dependencies
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
