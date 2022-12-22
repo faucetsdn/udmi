@@ -164,11 +164,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-<<<<<<< HEAD
-  private Config deviceConfig = new Config();
-=======
   Config deviceConfig = new Config();
->>>>>>> faucet/master
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
