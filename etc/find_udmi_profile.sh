@@ -17,10 +17,13 @@
 function find_or_extract {
     if [[ -f $1 ]]; then
         site_model=$(jq -r .site_model < $1)
+        profile_dir=$(dirname $1)
         if [[ -z ${site_model} ]]; then
-            site_model=$(cd $(dirname $1); find_site_model_root)
+            site_model=$(cd ${profile_dir}; find_site_model_root)
         elif [[ ${site_model} == "null" ]]; then
             site_model=
+        else
+            site_model=$(realpath --relative-base ${profile_dir} ${site_model})
         fi
         echo ${site_model}
     fi
