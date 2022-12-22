@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Run pylint on all the detected python files and compare against the expected list.
 #
