@@ -25,7 +25,7 @@ mkdir -p out
 
 cat <<EOF > $udmi_profile
 {
-  "site_model": "$SITE_PATH",
+  "site_model": "$PWD/$SITE_PATH",
   "device_id": "$DEVICE_ID",
   "project_id": "$PROJECT_ID"
 }  
@@ -42,7 +42,7 @@ while read -u 7 action test_name remainder; do
     
     serial_no=sequencer-$RANDOM
     udmi pubber $udmi_profile -x $serial_no $pubber_opts > $PUBBER_OUT 2>&1 &
-    WAITING=60
+    WAITING=20
     for i in `seq 1 $WAITING`; do
         if [[ -n $(fgrep "Connection complete" $PUBBER_OUT) ]]; then
             break
