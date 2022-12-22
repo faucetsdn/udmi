@@ -134,7 +134,7 @@ public class SequenceBase {
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
-  static protected Config deviceConfig;
+  protected static Config deviceConfig;
   static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
