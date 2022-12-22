@@ -101,7 +101,6 @@ public class SequenceBase {
   public static final int NORM_TIMEOUT_MS = 180 * 1000;
   public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
-  private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
@@ -147,7 +146,7 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static Date stateTimestamp;
-
+  private static boolean resetRequired = true;
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
@@ -159,7 +158,7 @@ public class SequenceBase {
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
-  protected Config deviceConfig;
+  static protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
   private String extraField;
@@ -415,7 +414,7 @@ public class SequenceBase {
     recordMessages = true;
     recordSequence = false;
 
-    resetConfig();
+    resetConfig(resetRequired);
 
     queryState();
 
@@ -428,18 +427,25 @@ public class SequenceBase {
   }
 
   protected void resetConfig() {
-    recordSequence("Force reset config");
-    withRecordSequence(false, () -> {
-      debug("Starting reset_config");
-      resetDeviceConfig(true);
-      setExtraField("reset_config");
-      deviceConfig.system.testing.sequence_name = extraField;
-      updateConfig();
-      setExtraField(null);
-      resetDeviceConfig();
-      updateConfig();
-      debug("Done with reset_config");
-    });
+    resetConfig(true);
+  }
+
+  protected void resetConfig(boolean doReset) {
+    if (doReset) {
+      recordSequence("Force reset config");
+      withRecordSequence(false, () -> {
+        debug("Starting reset_config");
+        resetDeviceConfig(true);
+        setExtraField("reset_config");
+        deviceConfig.system.testing.sequence_name = extraField;
+        updateConfig();
+        setExtraField(null);
+        resetDeviceConfig();
+        updateConfig();
+        debug("Done with reset_config");
+        resetRequired = false;
+      });
+    }
   }
 
   private void waitForConfigSync(Instant configUpdateStart) {
@@ -611,9 +617,8 @@ public class SequenceBase {
     if (debugLogLevel()) {
       warning("Not resetting config to enable post-execution debugging");
     } else {
-      whileDoing("tear down", this::resetConfig);
+      whileDoing("tear down", () -> resetConfig((resetRequired)));
     }
-    deviceConfig = null;
     deviceState = null;
     configAcked = false;
   }
@@ -1250,9 +1255,6 @@ public class SequenceBase {
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
-        if (deviceConfig != null) {
-          deviceConfig.system.testing.sequence_name = testName;
-        }
 
         testStartTimeMs = System.currentTimeMillis();
 
@@ -1320,6 +1322,7 @@ public class SequenceBase {
       recordCompletion(type, level, description, message);
       String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
+      resetRequired = true;
     }
 
     private void recordCompletion(String result, Level level,

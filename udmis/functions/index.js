@@ -348,11 +348,13 @@ function parse_old_config(configStr, resetConfig) {
   }
 
   if (resetConfig) {
-    const configLastStart = config.system && config.system.last_start;
+    const configLastStart = config.system && config.system.operation && config.system.operation.last_start;
     console.warn('Resetting config bock', configLastStart);
     config = {
       system: {
-        last_start: configLastStart
+        "operation": {
+          last_start: configLastStart
+        }
       }
     }
   }
@@ -360,11 +362,12 @@ function parse_old_config(configStr, resetConfig) {
 }
 
 function update_last_start(config, stateStart) {
-  const configStart = config.system && config.system.last_start;
+  const configStart = config.system && config.system.operation && config.system.operation.last_start;
   const stateNonce = Date.now();
   const shouldUpdate = stateStart && (!configStart || (stateStart > configStart));
   console.log('State update last state/config', stateStart, configStart, shouldUpdate, stateNonce);
-  config.system.last_start = stateStart;
+  config.system.operation || (config.system.operation = {});
+  config.system.operation.last_start = stateStart;
   if (config.debug_config_nonce) {
     config.debug_config_nonce = stateNonce;
     config.system.debug_config_nonce = stateNonce;
