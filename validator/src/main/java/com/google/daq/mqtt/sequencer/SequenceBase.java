@@ -38,6 +38,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,6 +52,7 @@ import java.util.Stack;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -149,9 +151,9 @@ public class SequenceBase {
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
+  private final Stack<String> waitingCondition = new Stack<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
   protected Config deviceConfig;
@@ -160,7 +162,6 @@ public class SequenceBase {
   private String extraField;
   private boolean extraFieldChanged;
   private Instant lastConfigUpdate;
-  private final Stack<String> waitingCondition = new Stack<>();
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
@@ -630,8 +631,8 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     boolean computedConfigChange = localConfigChange(reason);
     if (computedConfigChange != updated) {
-      debug("cachedMessageData " + cachedMessageData);
-      debug("cachedSentBlock " + cachedSentBlock);
+      notice("cachedMessageData " + cachedMessageData);
+      notice("cachedSentBlock " + cachedSentBlock);
       throw new AbortMessageLoop("Unexpected config change!");
     }
     if (computedConfigChange) {
@@ -759,9 +760,19 @@ public class SequenceBase {
 
   protected void checkThat(String description, Supplier<Boolean> condition) {
     if (!catchToFalse(condition)) {
+      warning("Failed check that " + description);
       throw new IllegalStateException("Failed check that " + description);
     }
     recordSequence("Check that " + description);
+  }
+
+  protected void checkNotThat(String description, Supplier<Boolean> condition) {
+    String notDescription = "no " + description;
+    if (catchToTrue(condition)) {
+      warning("Failed check that " + notDescription);
+      throw new IllegalStateException("Failed check that " + notDescription);
+    }
+    recordSequence("Check that " + notDescription);
   }
 
   protected void untilLogged(String category, Level exactLevel) {
@@ -813,13 +824,17 @@ public class SequenceBase {
   }
 
   protected void whileDoing(String condition, Runnable action) {
+    final Instant startTime = Instant.now();
+
     trace(String.format("stage suspend %s at %s", waitingCondition.peek(), timeSinceStart()));
     waitingCondition.push("waiting for " + condition);
     info(String.format("stage start %s at %s", waitingCondition.peek(), timeSinceStart()));
 
     action.run();
 
-    debug(String.format("stage finished %s at %s", waitingCondition.peek(), timeSinceStart()));
+    Duration between = Duration.between(startTime, Instant.now());
+    debug(String.format("stage finished %s at %s after %ss", waitingCondition.peek(),
+        timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
     trace(String.format("stage resume %s at %s", waitingCondition.peek(), timeSinceStart()));
   }
@@ -1153,6 +1168,8 @@ public class SequenceBase {
     String receivedConfig = actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+    // There's a race condition if the mirror command gets delayed, so chill for a bit.
+    safeSleep(ONE_SECOND_MS);
   }
 
   private MessagePublisher reflector() {
@@ -1167,6 +1184,20 @@ public class SequenceBase {
     Date expectedConfig = deviceConfig.timestamp;
     Date lastConfig = deviceState.system.last_config;
     return dateEquals(expectedConfig, lastConfig);
+  }
+
+  protected boolean hasInterestingSystemStatus() {
+    if (deviceState.system.status != null) {
+      debug("Status level: " + deviceState.system.status.level);
+    }
+    return deviceState.system.status != null
+        && deviceState.system.status.level >= Level.WARNING.value();
+  }
+
+  protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
+    BiConsumer<String, Supplier<Boolean>> check =
+        isInteresting ? this::checkThat : this::checkNotThat;
+    check.accept("interesting system status", this::hasInterestingSystemStatus);
   }
 
   /**

@@ -49,6 +49,7 @@ class EndpointConfiguration:
     self.protocol = None
     self.transport = None
     self.hostname = None
+    self.error = None
     self.port = None
     self.config_sync_sec = None
     self.client_id = None
@@ -56,7 +57,7 @@ class EndpointConfiguration:
     self.sub_topic = None
     self.send_topic = None
     self.auth_provider = None
-    self.nonce = None
+    self.generation = None
 
   @staticmethod
   def from_dict(source):
@@ -66,6 +67,7 @@ class EndpointConfiguration:
     result.protocol = source.get('protocol')
     result.transport = source.get('transport')
     result.hostname = source.get('hostname')
+    result.error = source.get('error')
     result.port = source.get('port')
     result.config_sync_sec = source.get('config_sync_sec')
     result.client_id = source.get('client_id')
@@ -73,7 +75,7 @@ class EndpointConfiguration:
     result.sub_topic = source.get('sub_topic')
     result.send_topic = source.get('send_topic')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
-    result.nonce = source.get('nonce')
+    result.generation = source.get('generation')
     return result
 
   @staticmethod
@@ -100,6 +102,8 @@ class EndpointConfiguration:
       result['transport'] = self.transport # 5
     if self.hostname:
       result['hostname'] = self.hostname # 5
+    if self.error:
+      result['error'] = self.error # 5
     if self.port:
       result['port'] = self.port # 5
     if self.config_sync_sec:
@@ -114,6 +118,6 @@ class EndpointConfiguration:
       result['send_topic'] = self.send_topic # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
-    if self.nonce:
-      result['nonce'] = self.nonce # 5
+    if self.generation:
+      result['generation'] = self.generation # 5
     return result

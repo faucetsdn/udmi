@@ -6,11 +6,9 @@ class BlobBlobsetConfig:
 
   def __init__(self):
     self.phase = None
-    self.content_type = None
-    self.base64 = None
     self.url = None
     self.sha256 = None
-    self.nonce = None
+    self.generation = None
 
   @staticmethod
   def from_dict(source):
@@ -18,11 +16,9 @@ class BlobBlobsetConfig:
       return None
     result = BlobBlobsetConfig()
     result.phase = source.get('phase')
-    result.content_type = source.get('content_type')
-    result.base64 = source.get('base64')
     result.url = source.get('url')
     result.sha256 = source.get('sha256')
-    result.nonce = source.get('nonce')
+    result.generation = source.get('generation')
     return result
 
   @staticmethod
@@ -45,14 +41,10 @@ class BlobBlobsetConfig:
     result = {}
     if self.phase:
       result['phase'] = self.phase # 5
-    if self.content_type:
-      result['content_type'] = self.content_type # 5
-    if self.base64:
-      result['base64'] = self.base64 # 5
     if self.url:
       result['url'] = self.url # 5
     if self.sha256:
       result['sha256'] = self.sha256 # 5
-    if self.nonce:
-      result['nonce'] = self.nonce # 5
+    if self.generation:
+      result['generation'] = self.generation # 5
     return result
