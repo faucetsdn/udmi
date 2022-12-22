@@ -108,7 +108,7 @@ a successful reconfiguration
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:10.000Z",
   "system": {
     "hardware": {
@@ -138,7 +138,7 @@ This is an example of the state message sent to the original endpoint after a fa
 <!--example:state/endpoint_reconfiguration_failed.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:11.000Z",
   "system": {
     "hardware": {
