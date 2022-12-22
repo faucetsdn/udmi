@@ -41,6 +41,8 @@ EOF
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
 [[ -d $ROOT/sites/udmi_site_model/.udmi ]] && (echo $ROOT/sites/udmi_site_model/.udmi exists, remove before testing && false)
 
+ls -l $ROOT/sites/udmi_site_model/
+
 rm -rf   $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
 mkdir -p $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
 
