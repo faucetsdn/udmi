@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
@@ -23,6 +23,9 @@ function test_locate {
     fi
     echo $result $1
 }
+
+# Make sure udmi is in the path.
+export PATH=$ROOT/bin:$PATH
 
 USER_DEFAULT=$HOME/.udmi/default_profile.json
 PROFILE_TEMPLATE=$ROOT/out/default_profile.json
