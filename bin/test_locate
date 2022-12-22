@@ -11,7 +11,7 @@ function test_locate {
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
     if [[ -n $4 ]]; then
-        expected_site=$(realpath --relative-base ${PWD} $4)
+        expected_site=$(realpath --relative-base $PWD $ROOT/$4)
     else
         expected_site=
     fi
@@ -19,7 +19,7 @@ function test_locate {
         result=PASS
     else
         result=FAIL
-        config_files=$(find $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi -name \*.json 2>/dev/null)
+        config_files=$(cd $ROOT; find $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi -name \*.json 2>/dev/null)
         echo "$1: udmi locate $2" >> $failures
         echo "  working directory: " $PWD >> $failures
         echo "  config files:" $config_files >> $failures
@@ -32,22 +32,22 @@ function test_locate {
 # Make sure udmi is in the path.
 export PATH=$ROOT/bin:$PATH
 
+SITE_PATH=sites/udmi_site_model
 USER_DEFAULT=$HOME/.udmi/default_profile.json
 PROFILE_TEMPLATE=$ROOT/out/default_profile.json
 mkdir -p ${PROFILE_TEMPLATE%/*.json}
 cat <<EOF > $PROFILE_TEMPLATE
 {
-  "site_model": "$ROOT/sites/udmi_site_model"
+  "site_model": "$ROOT/$SITE_PATH"
 }  
 EOF
-cat $PROFILE_TEMPLATE
 
-[[ ! -d $ROOT/sites/udmi_site_model ]] && (echo $ROOT/sites/udmi_site_model not found, check your setup. && false)
+[[ ! -d $ROOT/$SITE_PATH ]] && (echo $ROOT/$SITE_PATH not found, check your setup. && false)
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
-[[ -d $ROOT/sites/udmi_site_model/.udmi ]] && (echo $ROOT/sites/udmi_site_model/.udmi exists, remove before testing && false)
+[[ -d $ROOT/$SITE_PATH/.udmi ]] && (echo $ROOT/$SITE_PATH/.udmi exists, remove before testing && false)
 
-rm -rf   $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
-mkdir -p $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
+rm -rf   $HOME/.udmi $ROOT/$SITE_PATH/.udmi
+mkdir -p $HOME/.udmi $ROOT/$SITE_PATH/.udmi
 
 cp $PROFILE_TEMPLATE $USER_DEFAULT
 cp $PROFILE_TEMPLATE $HOME/.udmi/profile_foo.json
@@ -55,8 +55,8 @@ cp $PROFILE_TEMPLATE $HOME/.udmi/profile_foo.json
 cd $HOME
 echo Testing from $PWD
 
-test_locate default_site "" .udmi/default_profile.json udmi/sites/udmi_site_model
-test_locate user_profile foo .udmi/profile_foo.json udmi/sites/udmi_site_model
+test_locate default_site "" .udmi/default_profile.json $SITE_PATH
+test_locate user_profile foo .udmi/profile_foo.json $SITE_PATH
 test_locate user_missing bar "" ""
 
 echo Remove user default profile...
@@ -69,20 +69,20 @@ echo {} > $HOME/.udmi/default_profile.json
 
 test_locate default_empty "" .udmi/default_profile.json ""
 
-cd $ROOT/sites/udmi_site_model
+cd $ROOT/$SITE_PATH
 echo Testing from $PWD
 
 echo Copying profiles to .udmi/
 cp $PROFILE_TEMPLATE .udmi/
 cp $PROFILE_TEMPLATE .udmi/profile_bar.json
 
-test_locate site_default "" .udmi/default_profile.json .
-test_locate site_missing foo "" .
-test_locate site_profile bar .udmi/profile_bar.json .
-test_locate site_nothing baz "" .
+test_locate site_default "" .udmi/default_profile.json $SITE_PATH
+test_locate site_missing foo "" $SITE_PATH
+test_locate site_profile bar .udmi/profile_bar.json $SITE_PATH
+test_locate site_nothing baz "" $SITE_PATH
 
 echo Cleanup .udmi directories...
-rm -rf $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
+rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
 
 if [[ -n $(cat $failures) ]]; then
     echo Test failures:
