@@ -34,6 +34,7 @@ jobs:
           bin/gencode check
           pubber/bin/build check
           validator/bin/build check
+          bin/test_pylint
       - name: Schema conformance tests
         if: ${{ always() }}
         run: |
