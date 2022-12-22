@@ -43,8 +43,6 @@ Some caveats:
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
 * [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
-* [test_one](#test_one)
-* [test_two](#test_two)
 * [valid_serial_no](#valid_serial_no)
 * [writeback_failure](#writeback_failure)
 * [writeback_invalid](#writeback_invalid)
@@ -281,12 +279,6 @@ Restart and connect to same endpoint and expect it returns.
 1. Wait for deviceState.system.mode == ACTIVE
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
-
-## test_one
-
-
-## test_two
-
 
 ## valid_serial_no
 

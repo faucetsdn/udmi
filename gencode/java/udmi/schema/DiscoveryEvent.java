@@ -27,7 +27,8 @@ import com.google.udmi.util.Features;
     "scan_id",
     "families",
     "uniqs",
-    "features"
+    "features",
+    "system"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryEvent {
@@ -99,12 +100,21 @@ public class DiscoveryEvent {
     @JsonProperty("features")
     @JsonPropertyDescription("UDMI Features Supported by this device")
     public Features features;
+    /**
+     * System Discovery Event
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("system")
+    public SystemDiscoveryEvent system;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
+        result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.uniqs == null)? 0 :this.uniqs.hashCode()));
         result = ((result* 31)+((this.scan_id == null)? 0 :this.scan_id.hashCode()));
         result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
@@ -124,7 +134,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_id == rhs.scan_id)||((this.scan_id!= null)&&this.scan_id.equals(rhs.scan_id))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_id == rhs.scan_id)||((this.scan_id!= null)&&this.scan_id.equals(rhs.scan_id))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }
