@@ -1,9 +1,6 @@
 #!/bin/bash
 #
 # Run pylint on all the detected python files and compare against the expected list.
-# This is far from perfect, but the goal is just to prevent horrible things and to get
-# people to at least think about the style of python code. Adding a new python file will
-# require people to add another line in the test_pylint.out golden file.
 #
 
 dirs="bin/ etc/ misc/"
@@ -16,18 +13,7 @@ echo scanning: $files
 
 source venv/bin/activate
 
-LINT_OUT=out/test_pylint.out
-LINT_GOLDEN=etc/${LINT_OUT#out/}
-RCFILE=etc/pylintrc
-
-rm -f $LINT_OUT
-mkdir -p out
-
 for file in $files; do
     [[ $file == $0 ]] && continue
-    pylint --rcfile=$RCFILE $file
-    echo $file $linty | tee -a $LINT_OUT
+    pylint $file
 done
-
-echo diff $LINT_OUT $LINT_GOLDEN
-diff $LINT_OUT $LINT_GOLDEN
