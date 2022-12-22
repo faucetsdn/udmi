@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#  pylint: skip-file
 
 import hashlib
 import json
@@ -6,12 +7,12 @@ import os
 import shutil
 import sys
 
-FILE_PREFIX="file:"
-FILE_SPLIT="#"
-REF_KEY="$ref"
-SOURCE_KEY="$source"
-PREFIX="udmi/schema"
-JSON_SUFFIX=".json"
+FILE_PREFIX = 'file:'
+FILE_SPLIT = '#'
+REF_KEY = '$ref'
+SOURCE_KEY = '$source'
+PREFIX = 'udmi/schema'
+JSON_SUFFIX = '.json'
 
 out_dir = os.path.join(sys.argv[1], PREFIX)
 in_files = sys.argv[2:]
@@ -19,260 +20,260 @@ in_files = sys.argv[2:]
 processed = {}
 
 def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+  print(*args, file=sys.stderr, **kwargs)
 
 def get_title(contents, default=None):
-    title = contents.get('title')
-    if title:
-        return title
-    if default:
-        return default;
-    md5_hash = hashlib.md5(json.dumps(contents).encode()).hexdigest()[0:8]
-    return 'Object %s' % md5_hash.upper()
+  title = contents.get('title')
+  if title:
+    return title
+  if default:
+    return default
+  md5_hash = hashlib.md5(json.dumps(contents).encode()).hexdigest()[0:8]
+  return 'Object %s' % md5_hash.upper()
 
 def get_class_name(contents):
-    return get_title(contents).replace(' ', '')
+  return get_title(contents).replace(' ', '')
 
 def get_file_base(parent, contents):
-    source = contents[SOURCE_KEY] if SOURCE_KEY in contents else parent[SOURCE_KEY]
-    module = os.path.basename(source)[:-len(JSON_SUFFIX)]
-    return module
+  source = contents[SOURCE_KEY] if SOURCE_KEY in contents else parent[SOURCE_KEY]
+  module = os.path.basename(source)[:-len(JSON_SUFFIX)]
+  return module
 
 def process_file(source):
-    try:
-        name = os.path.basename(source)
-        if name in processed:
-            return processed[name]
-        eprint('Processing file', source)
-        with open(source) as fd:
-            contents = json.load(fd)
-        contents[SOURCE_KEY] = os.path.relpath(source)
-        generate_class(contents)
-    except Exception:
-        raise Exception('While processing file %s' % source)
-    processed[name] = contents
-    return contents
+  try:
+    name = os.path.basename(source)
+    if name in processed:
+      return processed[name]
+    eprint('Processing file', source)
+    with open(source) as fd:
+      contents = json.load(fd)
+    contents[SOURCE_KEY] = os.path.relpath(source)
+    generate_class(contents)
+  except Exception:
+    raise Exception('While processing file %s' % source)
+  processed[name] = contents
+  return contents
 
 def get_properties(contents):
-    return contents.get('properties', {}).keys()
+  return contents.get('properties', {}).keys()
 
 def is_array(contents):
-    return contents.get('type') == 'array'
+  return contents.get('type') == 'array'
 
 def is_map(contents):
-    return 'patternProperties' in contents
+  return 'patternProperties' in contents
 
 def write_class(writer, contents):
-    class_name = get_class_name(contents)
-    write_deps(writer, contents)
-    writer('')
-    writer('')
-    writer('class %s:' % class_name)
-    writer('  """Generated schema class"""')
-    write_init(writer, contents)
-    write_fromdict(writer, contents)
-    write_mapfrom(writer, contents)
-    write_todict(writer, contents)
+  class_name = get_class_name(contents)
+  write_deps(writer, contents)
+  writer('')
+  writer('')
+  writer('class %s:' % class_name)
+  writer('  """Generated schema class"""')
+  write_init(writer, contents)
+  write_fromdict(writer, contents)
+  write_mapfrom(writer, contents)
+  write_todict(writer, contents)
 
 def process_ref_path(contents, path):
-    if not path:
-        return contents
-    assert path.startswith('/'), 'expected path / start character: %s' % path
-    parts = path[1:].split('/')
-    source = contents[SOURCE_KEY]
-    for part in parts:
-        contents = contents[part]
-    contents[SOURCE_KEY] = source
+  if not path:
     return contents
+  assert path.startswith('/'), 'expected path / start character: %s' % path
+  parts = path[1:].split('/')
+  source = contents[SOURCE_KEY]
+  for part in parts:
+    contents = contents[part]
+  contents[SOURCE_KEY] = source
+  return contents
 
 def resolve_refs_file(parent, contents, ref):
-    index = ref.find(FILE_SPLIT)
-    none_index = index if index >= 0 else None
-    ref_file = ref[len(FILE_PREFIX):none_index]
-    postfix = ref[index + 1:] if index >= 0 else ''
-    source = parent[SOURCE_KEY]
-    full_path = os.path.join(os.path.dirname(source), ref_file)
-    contents = process_file(full_path)
-    subcontents = process_ref_path(contents, postfix)
-    return subcontents, True
+  index = ref.find(FILE_SPLIT)
+  none_index = index if index >= 0 else None
+  ref_file = ref[len(FILE_PREFIX):none_index]
+  postfix = ref[index + 1:] if index >= 0 else ''
+  source = parent[SOURCE_KEY]
+  full_path = os.path.join(os.path.dirname(source), ref_file)
+  contents = process_file(full_path)
+  subcontents = process_ref_path(contents, postfix)
+  return subcontents, True
 
 def resolve_refs_local(parent, contents, ref):
-    subcontents = process_ref_path(parent, ref[1:])
-    return subcontents, True
+  subcontents = process_ref_path(parent, ref[1:])
+  return subcontents, True
 
 def resolve_refs(parent, contents):
-    ref = contents.get(REF_KEY)
-    if not ref:
-        return contents, False
-    if ref.startswith(FILE_PREFIX):
-        return resolve_refs_file(parent, contents, ref)
-    if ref.startswith(FILE_SPLIT):
-        return resolve_refs_local(parent, contents, ref)
-    raise Exception('Unknown ref format %s' % ref)
+  ref = contents.get(REF_KEY)
+  if not ref:
+    return contents, False
+  if ref.startswith(FILE_PREFIX):
+    return resolve_refs_file(parent, contents, ref)
+  if ref.startswith(FILE_SPLIT):
+    return resolve_refs_local(parent, contents, ref)
+  raise Exception('Unknown ref format %s' % ref)
 
 def get_subclass(parent, contents):
-    resolved, _ = resolve_refs(parent, contents)
-    type = resolved.get('type')
-    if type != 'object':
-        return None
-    return get_class_name(resolved)
+  resolved, _ = resolve_refs(parent, contents)
+  type = resolved.get('type')
+  if type != 'object':
+    return None
+  return get_class_name(resolved)
 
 def write_mapfrom(writer, contents):
-    writer('')
-    writer('  @staticmethod')
-    writer('  def map_from(source):')
-    writer('    if not source:')
-    writer('      return None')
-    writer('    result = {}')
-    class_name = get_class_name(contents)
-    writer('    for key in source:')
-    writer('      result[key] = %s.from_dict(source[key])' % class_name)
-    writer('    return result')
+  writer('')
+  writer('  @staticmethod')
+  writer('  def map_from(source):')
+  writer('    if not source:')
+  writer('      return None')
+  writer('    result = {}')
+  class_name = get_class_name(contents)
+  writer('    for key in source:')
+  writer('      result[key] = %s.from_dict(source[key])' % class_name)
+  writer('    return result')
 
 def write_fromdict(writer, contents):
-    writer('')
-    writer('  @staticmethod')
-    writer('  def from_dict(source):')
-    writer('    if not source:')
-    writer('      return None')
-    class_name = get_class_name(contents)
-    properties = get_properties(contents)
-    writer('    result = %s()' % class_name)
-    for property in properties:
-        try:
-            subcontent, _ = resolve_refs(contents, contents['properties'][property])
-            subclass = get_subclass(contents, subcontent)
-            is_submap = is_map(subcontent)
-            if is_submap or is_array(subcontent):
-                objcontent = subcontent['patternProperties'] if is_submap else subcontent['items']
-                tmpcontent, _ = resolve_refs(contents, objcontent)
-                assert not is_submap or len(tmpcontent) == 1, 'multiple patternProperties not supported: %s' % tmpcontent
-                itemcontent = list(tmpcontent.values())[0] if is_submap else tmpcontent
-                itemclass = get_subclass(contents, itemcontent)
-                if not itemclass:
-                    writer("    result.%s = source.get('%s')" % (property, property))
-                elif is_submap:
-                    writer("    result.%s = %s.map_from(source.get('%s'))" % (property, itemclass, property))
-                else:
-                    writer("    result.%s = %s.array_from(source.get('%s'))" % (property, itemclass, property))
-            elif subclass:
-                assert subclass, 'sub class not defined: %s' % subcontent
-                writer("    result.%s = %s.from_dict(source.get('%s'))" % (property, subclass, property))
-            else:
-                writer("    result.%s = source.get('%s')" % (property, property))
-        except Exception:
-            raise Exception('While processing property %s' % property)
-    writer('    return result')
+  writer('')
+  writer('  @staticmethod')
+  writer('  def from_dict(source):')
+  writer('    if not source:')
+  writer('      return None')
+  class_name = get_class_name(contents)
+  properties = get_properties(contents)
+  writer('    result = %s()' % class_name)
+  for property in properties:
+    try:
+      subcontent, _ = resolve_refs(contents, contents['properties'][property])
+      subclass = get_subclass(contents, subcontent)
+      is_submap = is_map(subcontent)
+      if is_submap or is_array(subcontent):
+        objcontent = subcontent['patternProperties'] if is_submap else subcontent['items']
+        tmpcontent, _ = resolve_refs(contents, objcontent)
+        assert not is_submap or len(tmpcontent) == 1, 'multiple patternProperties not supported: %s' % tmpcontent
+        itemcontent = list(tmpcontent.values())[0] if is_submap else tmpcontent
+        itemclass = get_subclass(contents, itemcontent)
+        if not itemclass:
+          writer("    result.%s = source.get('%s')" % (property, property))
+        elif is_submap:
+          writer("    result.%s = %s.map_from(source.get('%s'))" % (property, itemclass, property))
+        else:
+          writer("    result.%s = %s.array_from(source.get('%s'))" % (property, itemclass, property))
+      elif subclass:
+        assert subclass, 'sub class not defined: %s' % subcontent
+        writer("    result.%s = %s.from_dict(source.get('%s'))" % (property, subclass, property))
+      else:
+        writer("    result.%s = source.get('%s')" % (property, property))
+    except Exception:
+      raise Exception('While processing property %s' % property)
+  writer('    return result')
 
 def write_todict(writer, contents):
-    writer('')
-    writer('  @staticmethod')
-    writer('  def expand_dict(input):')
-    writer('    result = {}')
-    writer('    for property in input:')
-    writer('      result[property] = input[property].to_dict() if input[property] else {}')
-    writer('    return result')
-    writer('')
-    writer('  def to_dict(self):')
-    writer('    result = {}')
-    properties = get_properties(contents)
-    for property in properties:
-        try:
-            subcontent, _ = resolve_refs(contents, contents['properties'][property])
-            subclass = get_subclass(contents, subcontent)
-            is_submap = is_map(subcontent)
-            writer("    if self.%s:" % property)
-            if is_submap or is_array(subcontent):
-                objcontent = subcontent['patternProperties'] if is_submap else subcontent['items']
-                tmpcontent, _ = resolve_refs(contents, objcontent)
-                assert not is_submap or len(tmpcontent) == 1, 'multiple patternProperties not supported: %s' % tmpcontent
-                itemcontent = list(tmpcontent.values())[0] if is_submap else tmpcontent
-                itemclass = get_subclass(contents, itemcontent)
-                if not itemclass:
-                    writer("      result['%s'] = self.%s # 1" % ((property,)*2))
-                elif is_submap:
-                    writer("      result['%s'] = %s.expand_dict(self.%s) # 2" % (property, itemclass, property))
-                else:
-                    writer("      result['%s'] = self.%s.to_dict() # 3" % ((property,)*2))
-            elif subclass:
-                assert subclass, 'sub class not defined: %s' % subcontent
-                writer("      result['%s'] = self.%s.to_dict() # 4" % ((property,)*2))
-            else:
-                writer("      result['%s'] = self.%s # 5" % ((property,)*2))
-        except Exception:
-            raise Exception('While processing property %s' % property)
-    writer('    return result')
+  writer('')
+  writer('  @staticmethod')
+  writer('  def expand_dict(input):')
+  writer('    result = {}')
+  writer('    for property in input:')
+  writer('      result[property] = input[property].to_dict() if input[property] else {}')
+  writer('    return result')
+  writer('')
+  writer('  def to_dict(self):')
+  writer('    result = {}')
+  properties = get_properties(contents)
+  for property in properties:
+    try:
+      subcontent, _ = resolve_refs(contents, contents['properties'][property])
+      subclass = get_subclass(contents, subcontent)
+      is_submap = is_map(subcontent)
+      writer("    if self.%s:" % property)
+      if is_submap or is_array(subcontent):
+        objcontent = subcontent['patternProperties'] if is_submap else subcontent['items']
+        tmpcontent, _ = resolve_refs(contents, objcontent)
+        assert not is_submap or len(tmpcontent) == 1, 'multiple patternProperties not supported: %s' % tmpcontent
+        itemcontent = list(tmpcontent.values())[0] if is_submap else tmpcontent
+        itemclass = get_subclass(contents, itemcontent)
+        if not itemclass:
+          writer("      result['%s'] = self.%s # 1" % ((property,)*2))
+        elif is_submap:
+          writer("      result['%s'] = %s.expand_dict(self.%s) # 2" % (property, itemclass, property))
+        else:
+          writer("      result['%s'] = self.%s.to_dict() # 3" % ((property,)*2))
+      elif subclass:
+        assert subclass, 'sub class not defined: %s' % subcontent
+        writer("      result['%s'] = self.%s.to_dict() # 4" % ((property,)*2))
+      else:
+        writer("      result['%s'] = self.%s # 5" % ((property,)*2))
+    except Exception:
+      raise Exception('While processing property %s' % property)
+  writer('    return result')
 
 def write_deps(writer, contents):
-    properties = get_properties(contents)
-    for property in properties:
-        try:
-            write_dep(writer, contents, contents['properties'][property])
-        except Exception:
-            raise Exception('While processing property %s' % property)
-    definitions = contents.get('definitions', {})
-    for definition in definitions:
-        try:
-            write_dep(writer, contents, contents['definitions'][definition])
-        except Exception:
-            raise Exception('While processing definition %s' % definition)
+  properties = get_properties(contents)
+  for property in properties:
+    try:
+      write_dep(writer, contents, contents['properties'][property])
+    except Exception:
+      raise Exception('While processing property %s' % property)
+  definitions = contents.get('definitions', {})
+  for definition in definitions:
+    try:
+      write_dep(writer, contents, contents['definitions'][definition])
+    except Exception:
+      raise Exception('While processing definition %s' % definition)
 
 
 def write_dep(writer, contents, depcontent):
-    subcontent, external = resolve_refs(contents, depcontent)
-    subclass = get_subclass(contents, subcontent)
-    if external and subclass:
-        writer('from .%s import %s' % (get_file_base(contents, subcontent), subclass))
-    elif is_map(subcontent):
-        mapcontent, _ = resolve_refs(contents, subcontent['patternProperties'])
-        assert len(mapcontent) == 1, 'multiple patternProperties not supported'
-        write_dep(writer, contents, list(mapcontent.values())[0])
-    elif subclass:
-        subcontent[SOURCE_KEY] = contents[SOURCE_KEY]
-        write_class(writer, subcontent)
+  subcontent, external = resolve_refs(contents, depcontent)
+  subclass = get_subclass(contents, subcontent)
+  if external and subclass:
+    writer('from .%s import %s' % (get_file_base(contents, subcontent), subclass))
+  elif is_map(subcontent):
+    mapcontent, _ = resolve_refs(contents, subcontent['patternProperties'])
+    assert len(mapcontent) == 1, 'multiple patternProperties not supported'
+    write_dep(writer, contents, list(mapcontent.values())[0])
+  elif subclass:
+    subcontent[SOURCE_KEY] = contents[SOURCE_KEY]
+    write_class(writer, subcontent)
 
 def write_definitions(writer, contents):
-    definitions = contents.get('definitions')
-    if not definitions:
-        return
-    writer('')
-    for definition in definitions:
-        if definitions[definition].get('title'):
-            class_name = get_class_name(definitions[definition])
-            writer('  %s = %s' % (class_name, class_name))
-    writer('')
-        
+  definitions = contents.get('definitions')
+  if not definitions:
+    return
+  writer('')
+  for definition in definitions:
+    if definitions[definition].get('title'):
+      class_name = get_class_name(definitions[definition])
+      writer('  %s = %s' % (class_name, class_name))
+  writer('')
+    
 def write_init(writer, contents):
-    writer('')
-    write_definitions(writer, contents)
-    writer('  def __init__(self):')
-    properties = get_properties(contents)
-    if not properties:
-        writer('    pass')
-    for property in properties:
-        writer('    self.%s = None' % property)
+  writer('')
+  write_definitions(writer, contents)
+  writer('  def __init__(self):')
+  properties = get_properties(contents)
+  if not properties:
+    writer('    pass')
+  for property in properties:
+    writer('    self.%s = None' % property)
 
 def generate_class(contents):
-    file_name = get_file_base(contents, contents) + '.py'
-    full_path = os.path.join(out_dir, file_name)
-    eprint('Generating %s...' % full_path)
-    with open(full_path, 'w') as fd:
-        writer = lambda line: fd.write(line + '\n')
-        writer('"""Generated class for %s"""' % os.path.basename(contents[SOURCE_KEY]))
-        write_class(writer, contents)
+  file_name = get_file_base(contents, contents) + '.py'
+  full_path = os.path.join(out_dir, file_name)
+  eprint('Generating %s...' % full_path)
+  with open(full_path, 'w') as fd:
+    writer = lambda line: fd.write(line + '\n')
+    writer('"""Generated class for %s"""' % os.path.basename(contents[SOURCE_KEY]))
+    write_class(writer, contents)
 
 def generate_module(in_files):
-    shutil.rmtree(out_dir)
-    os.makedirs(out_dir, exist_ok=True)
-    full_path = os.path.join(out_dir, '__init__.py')
-    with open(full_path, 'w') as fd:
-        writer = lambda line: fd.write(line + '\n')
-        for in_file in in_files:
-            try:
-                source = os.path.join(os.getcwd(), in_file)
-                contents = process_file(source)
-                writer('from .%s import %s' % (get_file_base(contents, contents), get_class_name(contents)))
-            except Exception:
-                raise Exception('While processing file %s' % in_file)
+  shutil.rmtree(out_dir)
+  os.makedirs(out_dir, exist_ok=True)
+  full_path = os.path.join(out_dir, '__init__.py')
+  with open(full_path, 'w') as fd:
+    writer = lambda line: fd.write(line + '\n')
+    for in_file in in_files:
+      try:
+        source = os.path.join(os.getcwd(), in_file)
+        contents = process_file(source)
+        writer('from .%s import %s' % (get_file_base(contents, contents), get_class_name(contents)))
+      except Exception:
+        raise Exception('While processing file %s' % in_file)
 
 generate_module(in_files)
