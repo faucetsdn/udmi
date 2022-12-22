@@ -83,16 +83,6 @@ public class MessageUpgrader {
       patch = 0;
     }
 
-    if (minor == 4 && patch == 0) {
-      ObjectNode system = (ObjectNode) message.get("system");
-      if (system != null) {
-        JsonNode operation = system.get("operation");
-        if (operation != null) {
-          throw new RuntimeException("Version 1.4.0 contains operation key");
-        }
-      }
-    }
-    
     if (minor == 4 && patch < 1) {
       JsonNode before = message.deepCopy();
       upgrade_1_4_1();
@@ -146,12 +136,19 @@ public class MessageUpgrader {
   private void upgrade_1_4_1_state() {
     ObjectNode system = (ObjectNode) message.get("system");
     if (system != null) {
+      assertFalse("operation key in older version", system.has("operation"));
       JsonNode operational = system.remove("operational");
       if (operational != null) {
         ObjectNode operation = new ObjectNode(NODE_FACTORY);
         system.set("operation", operation);
         operation.set("operational", operational);
       }
+    }
+  }
+
+  private void assertFalse(String message, boolean value) {
+    if (value) {
+      throw new RuntimeException(message);
     }
   }
 
