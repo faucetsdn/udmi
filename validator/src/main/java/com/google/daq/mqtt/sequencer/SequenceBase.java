@@ -134,6 +134,7 @@ public class SequenceBase {
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
+  static protected Config deviceConfig;
   static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
@@ -158,7 +159,6 @@ public class SequenceBase {
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
-  static protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
   private String extraField;
