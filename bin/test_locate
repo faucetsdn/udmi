@@ -35,6 +35,7 @@ cat <<EOF > $PROFILE_TEMPLATE
   "site_model": "$ROOT/sites/udmi_site_model"
 }  
 EOF
+cat $PROFILE_TEMPLATE
 
 [[ ! -d $ROOT/sites/udmi_site_model ]] && (echo $ROOT/sites/udmi_site_model not found, check your setup. && false)
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
