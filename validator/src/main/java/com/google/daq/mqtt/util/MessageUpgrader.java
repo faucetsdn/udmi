@@ -79,10 +79,24 @@ public class MessageUpgrader {
     }
 
     if (minor < 4) {
-      JsonNode before = message.deepCopy();
-      upgrade_1_4();
-      upgraded |= !before.equals(message);
       minor = 4;
+      patch = 0;
+    }
+
+    if (minor == 4 && patch == 0) {
+      ObjectNode system = (ObjectNode) message.get("system");
+      if (system != null) {
+        JsonNode operation = system.get("operation");
+        if (operation != null) {
+          throw new RuntimeException("Version 1.4.0 contains operation key");
+        }
+      }
+    }
+    
+    if (minor == 4 && patch < 1) {
+      JsonNode before = message.deepCopy();
+      upgrade_1_4_1();
+      upgraded |= !before.equals(message);
       patch = 0;
     }
 
@@ -123,13 +137,13 @@ public class MessageUpgrader {
     }
   }
 
-  private void upgrade_1_4() {
+  private void upgrade_1_4_1() {
     if (STATE_SCHEMA.equals(schemaName)) {
-      upgrade_1_4_state();
+      upgrade_1_4_1_state();
     }
   }
 
-  private void upgrade_1_4_state() {
+  private void upgrade_1_4_1_state() {
     ObjectNode system = (ObjectNode) message.get("system");
     if (system != null) {
       JsonNode operational = system.remove("operational");
