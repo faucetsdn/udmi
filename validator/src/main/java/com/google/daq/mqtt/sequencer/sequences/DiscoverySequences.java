@@ -94,6 +94,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
+  @FeatureStage(ALPHA)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
