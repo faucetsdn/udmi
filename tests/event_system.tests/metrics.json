@@ -6,7 +6,6 @@
     "mem_free_mb": 16104.33,
     "store_total_mb": 250164.88,
     "store_free_mb": 169104.33,
-    "cpu_temp_c": 31,
-    "cpu_load_5m": 0.82
+    "system_load": 0.8
   }
 }

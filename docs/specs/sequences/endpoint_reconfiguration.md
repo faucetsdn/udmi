@@ -83,8 +83,9 @@ Config message to initiate Reconfiguration (sequence #1 in diagrams above)
     "blobs": {
       "_iot_endpoint_config": {
         "phase": "final",
-        "content_type": "application/json",
-        "base64": "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzL2Jvcy1zbm9yay1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiLAogICJob3N0bmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIgp9"
+        "url": "data:application/json;base64,ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzL2Jvcy1zbm9yay1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiLAogICJob3N0bmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIgp9",
+        "sha256": "c8a25e6ecf487f0a2ff85845c9bc59fb81e1dd4eaa08d7ff7d55bd924447e015",
+        "generation": "2022-07-13T12:00:00.000Z"
       }
     }
   },
