@@ -8,6 +8,7 @@ class BlobBlobsetState:
   def __init__(self):
     self.phase = None
     self.status = None
+    self.generation = None
 
   @staticmethod
   def from_dict(source):
@@ -16,6 +17,7 @@ class BlobBlobsetState:
     result = BlobBlobsetState()
     result.phase = source.get('phase')
     result.status = Entry.from_dict(source.get('status'))
+    result.generation = source.get('generation')
     return result
 
   @staticmethod
@@ -40,4 +42,6 @@ class BlobBlobsetState:
       result['phase'] = self.phase # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
+    if self.generation:
+      result['generation'] = self.generation # 5
     return result

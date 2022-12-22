@@ -10,6 +10,12 @@
     },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
+    },
+    "generation": {
+      "description": "The timestamp of the blob generation",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     }
   },
   "required": [
