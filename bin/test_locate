@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
@@ -25,8 +25,9 @@ function test_locate {
 }
 
 USER_DEFAULT=$HOME/.udmi/default_profile.json
-mkdir -p out/
-cat <<EOF > out/default_profile.json
+PROFILE_TEMPLATE=$ROOT/out/default_profile.json
+mkdir -p ${PROFILE_TEMPLATE%/*.json}
+cat <<EOF > $PROFILE_TEMPLATE
 {
   "site_model": "sites/udmi_site_model"
 }  
@@ -38,8 +39,8 @@ EOF
 rm -rf   $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
 mkdir -p $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
 
-cp $ROOT/out/default_profile.json $USER_DEFAULT
-cp $USER_DEFAULT $HOME/.udmi/profile_foo.json
+cp $PROFILE_TEMPLATE $USER_DEFAULT
+cp $PROFILE_TEMPLATE $HOME/.udmi/profile_foo.json
 
 cd $HOME
 echo Testing from $PWD
@@ -49,12 +50,12 @@ test_locate user_profile foo .udmi/profile_foo.json sites/udmi_site_model
 test_locate user_missing bar "" ""
 
 echo Remove user default profile...
-rm -f .udmi/default_profile.json
+rm -f $HOME/.udmi/default_profile.json
 
 test_locate default_missing "" "" ""
 
 echo Create empty user default profile...
-echo {} > .udmi/default_profile.json
+echo {} > $HOME/.udmi/default_profile.json
 
 test_locate default_empty "" .udmi/default_profile.json ""
 
@@ -62,16 +63,16 @@ cd $HOME/sites/udmi_site_model
 echo Testing from $PWD
 
 echo Copying profiles to .udmi/
-cp $ROOT/out/default_profile.json .udmi/
-cp $ROOT/out/default_profile.json .udmi/profile_bar.json
+cp $PROFILE_TEMPLATE .udmi/
+cp $PROFILE_TEMPLATE .udmi/profile_bar.json
 
 test_locate site_default "" .udmi/default_profile.json .
 test_locate site_missing foo "" .
 test_locate site_profile bar .udmi/profile_bar.json .
 test_locate site_nothing baz "" .
 
-echo
-#rm -rf $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
+echo Cleanup .udmi directories...
+rm -rf $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
 
 if [[ -n $(cat $failures) ]]; then
     echo Test failures:
