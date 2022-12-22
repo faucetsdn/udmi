@@ -10,7 +10,12 @@ function test_locate {
     udmi locate $2 > $working
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
-    if [[ $profile == $3 && $site_model == $4 ]]; then
+    if [[ -n $4 ]]; then
+        expected_site=$(realpath --relative-base ${PWD} $4)
+    else
+        expected_site=
+    fi
+    if [[ $profile == $3 && $site_model == $expected_site ]]; then
         result=PASS
     else
         result=FAIL
@@ -19,7 +24,7 @@ function test_locate {
         echo "  working directory: " $PWD >> $failures
         echo "  config files:" $config_files >> $failures
         echo "  profile expected:" $3 was $profile >> $failures
-        echo "  site_model expected:" $4 was $site_model >> $failures
+        echo "  site_model expected:" $expected_site was $site_model >> $failures
     fi
     echo $result $1
 }
