@@ -1,10 +1,12 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.daq.mqtt.sequencer.FeatureStage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -62,53 +64,6 @@ public class DiscoverySequences extends SequenceBase {
     return event;
   }
 
-  @Test
-  public void empty_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    DiscoveryEvent event = runEnumeration(enumerate);
-
-    checkThat("no family enumeration", () -> event.families == null);
-    checkThat("no point enumeration", () -> event.uniqs == null);
-    checkThat("no feature enumeration", () -> event.features == null);
-  }
-
-  @Test
-  public void pointset_enumeration() {
-    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new SkipTest("No metadata pointset points defined");
-    }
-    Enumerate enumerate = new Enumerate();
-    enumerate.uniqs = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
-    checkSelfEnumeration(event, enumerate);
-  }
-
-  @Test
-  public void feature_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.features = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
-    checkSelfEnumeration(event, enumerate);
-  }
-
-  @Test
-  public void family_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
-    checkSelfEnumeration(event, enumerate);
-  }
-
-  @Test
-  public void multi_enumeration() {
-    Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
-    enumerate.features = true;
-    enumerate.uniqs = true;
-    DiscoveryEvent event = runEnumeration(enumerate);
-    checkSelfEnumeration(event, enumerate);
-  }
-
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
     if (isTrue(enumerate.families)) {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
@@ -136,6 +91,54 @@ public class DiscoverySequences extends SequenceBase {
 
   private boolean isTrue(Boolean condition) {
     return Optional.ofNullable(condition).orElse(false);
+  }
+
+  @Test
+  public void empty_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void pointset_enumeration() {
+    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
+      throw new SkipTest("No metadata pointset points defined");
+    }
+    Enumerate enumerate = new Enumerate();
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void feature_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.features = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void family_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void multi_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    enumerate.features = true;
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
   }
 
   @Test
