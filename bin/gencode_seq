@@ -8,38 +8,38 @@ SEQUENCE_MD=docs/specs/sequences/generated.md
 # Create doc of generated sequence steps
 prefix=sites/udmi_site_model/out/devices/AHU-1/tests
 if [[ -d $prefix ]]; then
-    echo Updating $SEQUENCE_MD from $prefix:
+  echo Updating $SEQUENCE_MD from $prefix:
 
-    # Clear out existing generated sequences
-    sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
-    
-    sequences=$(cd $prefix; find . -name sequence.md | sort)
+  # Clear out existing generated sequences
+  sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
+  
+  sequences=$(cd $prefix; find . -name sequence.md | sort)
 
-    # Generate table of contents
-    for sequence in $sequences; do
-        directory=${sequence%/sequence.md}
-        name=${directory##.*/}
-        header=$(fgrep \#\# $prefix/$sequence) || true
-        if [[ -z $header ]]; then
-            echo "  $name: Invalid or missing header."
-            continue
-        fi
-        description=": $(sed -n -n '/^1\./q;p' $prefix/$sequence | fgrep -v \#\# | xargs echo)"
-        echo "* [${name}](#${name})${description%: }" >> $SEQUENCE_MD
-    done
+  # Generate table of contents
+  for sequence in $sequences; do
+    directory=${sequence%/sequence.md}
+    name=${directory##.*/}
+    header=$(fgrep \#\# $prefix/$sequence) || true
+    if [[ -z $header ]]; then
+      echo "  $name: Invalid or missing header."
+      continue
+    fi
+    description=": $(sed -n -n '/^1\./q;p' $prefix/$sequence | fgrep -v \#\# | xargs echo)"
+    echo "* [${name}](#${name})${description%: }" >> $SEQUENCE_MD
+  done
 
-    # Add in specific test sequences
-    for sequence in $sequences; do
-        directory=${sequence%/sequence.md}
-        name=${directory##.*/}
-        header=$(fgrep \#\# $prefix/$sequence) || true
-        if [[ -z $header ]]; then
-            continue
-        fi
-        echo "  $name"
-        cat $prefix/$sequence >> $SEQUENCE_MD
-        cp $prefix/$sequence validator/sequences/$directory/
-    done
+  # Add in specific test sequences
+  for sequence in $sequences; do
+    directory=${sequence%/sequence.md}
+    name=${directory##.*/}
+    header=$(fgrep \#\# $prefix/$sequence) || true
+    if [[ -z $header ]]; then
+      continue
+    fi
+    echo "  $name"
+    cat $prefix/$sequence >> $SEQUENCE_MD
+    cp $prefix/$sequence validator/sequences/$directory/
+  done
 else
-    echo $prefix not found, skipping sequence generation.
+  echo $prefix not found, skipping sequence generation.
 fi
