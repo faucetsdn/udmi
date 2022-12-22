@@ -3,12 +3,12 @@
 import re
 import os
 
-GENCODE_MARKER = r'@@ '
-CATEGORY_MARKER = r'* '
-WILDCARD_REGEX = r' *\\* _\?\?\?_: (.*)'
+GENCODE_MARKER = '@@ '
+CATEGORY_MARKER = '* '
+WILDCARD_REGEX = r' *\* _\?\?\?_: (.*)'
 WILDCARD_SUFFIX = r'.[a-z]+(_[a-z]+)*'
 
-CATEGORY_REGEX = r' *\\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
+CATEGORY_REGEX = r' *\* _([a-z]+)_: (\(\*\*([A-Z]+)\*\*\) )?(.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
 DEVICE_PREFIX = 'device'
 
