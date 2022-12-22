@@ -22,8 +22,10 @@ function find_or_extract {
             site_model=$(cd ${profile_dir}; find_site_model_root)
         elif [[ ${site_model} == "null" ]]; then
             site_model=
+        elif [[ ${site_model} =~ ^/ ]]; then
+            true # model is absolue, so don't munge.
         else
-            site_model=$(realpath --relative-base ${profile_dir} ${site_model})
+            site_model=$(realpath --relative-base ${PWD} ${profile_dir}/${site_model})
         fi
         echo ${site_model}
     fi

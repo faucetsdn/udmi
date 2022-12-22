@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
@@ -7,7 +7,6 @@ failures=$(mktemp)
 working=$(mktemp)
 
 function test_locate {
-    echo udmi locate $2 =====================================================================
     udmi locate $2 > $working
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
@@ -33,15 +32,13 @@ PROFILE_TEMPLATE=$ROOT/out/default_profile.json
 mkdir -p ${PROFILE_TEMPLATE%/*.json}
 cat <<EOF > $PROFILE_TEMPLATE
 {
-  "site_model": "sites/udmi_site_model"
+  "site_model": "$ROOT/sites/udmi_site_model"
 }  
 EOF
 
 [[ ! -d $ROOT/sites/udmi_site_model ]] && (echo $ROOT/sites/udmi_site_model not found, check your setup. && false)
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
 [[ -d $ROOT/sites/udmi_site_model/.udmi ]] && (echo $ROOT/sites/udmi_site_model/.udmi exists, remove before testing && false)
-
-ls -l $ROOT/sites/udmi_site_model/
 
 rm -rf   $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
 mkdir -p $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
@@ -52,8 +49,8 @@ cp $PROFILE_TEMPLATE $HOME/.udmi/profile_foo.json
 cd $HOME
 echo Testing from $PWD
 
-test_locate default_site "" .udmi/default_profile.json sites/udmi_site_model
-test_locate user_profile foo .udmi/profile_foo.json sites/udmi_site_model
+test_locate default_site "" .udmi/default_profile.json udmi/sites/udmi_site_model
+test_locate user_profile foo .udmi/profile_foo.json udmi/sites/udmi_site_model
 test_locate user_missing bar "" ""
 
 echo Remove user default profile...
