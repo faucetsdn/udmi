@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
@@ -33,11 +33,12 @@ cat <<EOF > $PROFILE_TEMPLATE
 }  
 EOF
 
+[[ ! -d $ROOT/sites/udmi_site_model ]] && (echo $ROOT/sites/udmi_site_model not found, check your setup. && false)
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
-[[ -d $HOME/sites/udmi_site_model/.udmi ]] && (echo $HOME/sites/udmi_site_model/.udmi exists, remove before testing && false)
+[[ -d $ROOT/sites/udmi_site_model/.udmi ]] && (echo $ROOT/sites/udmi_site_model/.udmi exists, remove before testing && false)
 
-rm -rf   $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
-mkdir -p $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
+rm -rf   $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
+mkdir -p $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
 
 cp $PROFILE_TEMPLATE $USER_DEFAULT
 cp $PROFILE_TEMPLATE $HOME/.udmi/profile_foo.json
@@ -59,7 +60,7 @@ echo {} > $HOME/.udmi/default_profile.json
 
 test_locate default_empty "" .udmi/default_profile.json ""
 
-cd $HOME/sites/udmi_site_model
+cd $ROOT/sites/udmi_site_model
 echo Testing from $PWD
 
 echo Copying profiles to .udmi/
@@ -72,7 +73,7 @@ test_locate site_profile bar .udmi/profile_bar.json .
 test_locate site_nothing baz "" .
 
 echo Cleanup .udmi directories...
-rm -rf $HOME/.udmi $HOME/sites/udmi_site_model/.udmi
+rm -rf $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi
 
 if [[ -n $(cat $failures) ]]; then
     echo Test failures:

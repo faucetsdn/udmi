@@ -8,4 +8,3 @@ source $UDMI_ROOT/etc/find_udmi_profile.sh
 
 echo profile: ${udmi_profile}
 echo site_model: ${site_model}
-
