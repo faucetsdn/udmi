@@ -14,7 +14,7 @@ function test_locate {
         result=PASS
     else
         result=FAIL
-        config_files=$(cd $HOME; find .udmi sites/udmi_site_model/.udmi -name \*.json 2>/dev/null)
+        config_files=$(find $HOME/.udmi $ROOT/sites/udmi_site_model/.udmi -name \*.json 2>/dev/null)
         echo "$1: udmi locate $2" >> $failures
         echo "  working directory: " $PWD >> $failures
         echo "  config files:" $config_files >> $failures
