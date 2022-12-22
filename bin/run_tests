@@ -1,7 +1,18 @@
 #!/bin/bash -e
 
 function usage() {
-  >&2 echo "$0 [step]"
+  >&2 cat << EOF
+
+$0 [step]
+
+step is one of:
+
+  install_dependencies
+  code_checks
+  schema_conformance_tests
+  simple_trace_test
+  registrar_tests
+EOF
   false
 }
 
