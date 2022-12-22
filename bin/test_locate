@@ -39,7 +39,7 @@ mkdir -p ${PROFILE_TEMPLATE%/*.json}
 cat <<EOF > $PROFILE_TEMPLATE
 {
   "site_model": "$ROOT/$SITE_PATH"
-}  
+}
 EOF
 
 [[ ! -d $ROOT/$SITE_PATH ]] && (echo $ROOT/$SITE_PATH not found, check your setup. && false)
