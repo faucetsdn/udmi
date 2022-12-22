@@ -91,8 +91,8 @@ Check that the device MQTT-acknowledges a sent config.
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that no point enumeration
 1. Check that no feature enumeration
+1. Check that no point enumeration
 
 ## endpoint_connection_bad_hash
 
