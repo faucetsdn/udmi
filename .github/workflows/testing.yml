@@ -30,7 +30,6 @@ jobs:
           bin/clone_model
       - name: udmi locate
         run: |
-          sudo ln -s $PWD/bin/udmi /usr/local/bin/udmi
           bin/test_locate
       - name: code checks
         if: ${{ always() }}
@@ -117,6 +116,7 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
+          sudo ln -s $PWD/bin/udmi /usr/local/bin/udmi
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
