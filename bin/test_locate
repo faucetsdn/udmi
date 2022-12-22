@@ -7,6 +7,7 @@ failures=$(mktemp)
 working=$(mktemp)
 
 function test_locate {
+    echo udmi locate $2 =====================================================================
     udmi locate $2 > $working
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
