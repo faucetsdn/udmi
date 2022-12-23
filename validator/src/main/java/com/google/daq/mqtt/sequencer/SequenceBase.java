@@ -412,7 +412,6 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    deviceState = new State();
     configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
@@ -420,9 +419,9 @@ public class SequenceBase {
     recordMessages = true;
     recordSequence = false;
 
-    resetConfig(resetRequired);
-
     queryState();
+
+    resetConfig(resetRequired);
 
     updateConfig();
 
@@ -630,7 +629,6 @@ public class SequenceBase {
     } else {
       whileDoing("tear down", () -> resetConfig((resetRequired)));
     }
-    deviceState = null;
     configAcked = false;
   }
 
