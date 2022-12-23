@@ -62,7 +62,6 @@ public abstract class Common {
     return null;
   }
 
-
   public static String getExceptionMessage(Throwable exception) {
     String message = exception.getMessage();
     return message != null ? message : exception.toString();
