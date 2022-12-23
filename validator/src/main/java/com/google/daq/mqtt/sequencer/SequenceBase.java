@@ -130,6 +130,7 @@ public class SequenceBase {
   private static final long ONE_SECOND_MS = 1000;
   private static final int MIN_CLOUD_FUNC_VER = 1;
   private static final int MAX_CLOUD_FUNC_VER = 1;
+  private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -147,7 +148,6 @@ public class SequenceBase {
   private static MessagePublisher altClient;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
-  private static Date stateTimestamp;
   private static boolean resetRequired = true;
   private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
@@ -277,14 +277,13 @@ public class SequenceBase {
 
   private static void initializeReflectorState(IotReflectorClient client) {
     ReflectorState reflectorState = new ReflectorState();
-    stateTimestamp = new Date();
-    reflectorState.timestamp = stateTimestamp;
+    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
     reflectorState.version = udmiVersion;
     reflectorState.setup = new SetupReflectorState();
     reflectorState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(stateTimestamp));
+          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
       client.setReflectorState(stringify(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -457,6 +456,7 @@ public class SequenceBase {
     } finally {
       notice("executing waitForConfigSync final block");
       configReady(true);
+      notice("finished waitForConfigSync final block");
     }
   }
 
@@ -944,7 +944,7 @@ public class SequenceBase {
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
     ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
-    if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
+    if (CleanDateFormat.dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP)) {
       info("Received matching state/config timestamp " + getTimestamp(lastState));
 
       info("Cloud UDMI version " + reflectorConfig.version);
@@ -959,6 +959,7 @@ public class SequenceBase {
       }
     } else {
       info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
+      debug("Received reflectorConfig: " + stringify(reflectorConfig));
     }
   }
 
@@ -1086,30 +1087,35 @@ public class SequenceBase {
   }
 
   private boolean configReady(boolean debugOut) {
-    Consumer<String> output = debugOut ? this::debug : this::trace;
-    Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
-    if (!(receivedConfig instanceof Config)) {
-      output.accept("no valid received config");
-      return false;
+    try {
+      Consumer<String> output = debugOut ? this::debug : this::trace;
+      Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
+      if (!(receivedConfig instanceof Config)) {
+        output.accept("no valid received config");
+        return false;
+      }
+      if (configExceptionTimestamp != null) {
+        output.accept("Received config exception at " + configExceptionTimestamp);
+        return true;
+      }
+      // Config isn't properly sync'd until this is filled in, else there are race-conditions.
+      if (deviceConfig.system.operation.last_start == null) {
+        return false;
+      }
+      List<String> differences = configDiffEngine.diff(
+          sanitizeConfig((Config) receivedConfig), deviceConfig);
+      boolean configReady = differences.isEmpty();
+      output.accept("testing valid received config " + configReady);
+      if (!configReady) {
+        output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
+        trace("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
+        trace("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+      }
+      return configReady;
+    } catch (Exception e) {
+      error("While processing waitForConfigSync: " + e.getMessage());
+      throw e;
     }
-    if (configExceptionTimestamp != null) {
-      output.accept("Received config exception at " + configExceptionTimestamp);
-      return true;
-    }
-    // Config isn't properly sync'd until this is filled in, else there are startup race-conditions.
-    if (deviceConfig.system.operation.last_start == null) {
-      return false;
-    }
-    List<String> differences = configDiffEngine.diff(
-        sanitizeConfig((Config) receivedConfig), deviceConfig);
-    boolean configReady = differences.isEmpty();
-    output.accept("testing valid received config " + configReady);
-    if (!configReady) {
-      output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-      trace("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-      trace("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
-    }
-    return configReady;
   }
 
   protected void trace(String message) {
