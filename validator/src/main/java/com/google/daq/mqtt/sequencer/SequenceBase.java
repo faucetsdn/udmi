@@ -1335,6 +1335,7 @@ public class SequenceBase {
         type = RESULT_FAIL;
         level = Level.ERROR;
       }
+      debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
       recordCompletion(type, level, description, message);
       String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));

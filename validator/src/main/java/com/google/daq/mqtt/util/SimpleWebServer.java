@@ -1,11 +1,8 @@
 package com.google.daq.mqtt.util;
 
-import com.google.api.client.util.ArrayMap;
 import com.google.common.base.Joiner;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import com.google.udmi.util.GeneralUtils;
 import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -77,7 +74,7 @@ public class SimpleWebServer {
       handler.accept(params);
       return "success";
     } catch (Throwable e) {
-      return Common.stackTraceString(e);
+      return GeneralUtils.stackTraceString(e);
     }
   }
 }
