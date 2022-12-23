@@ -379,6 +379,7 @@ public class SequenceBase {
       config.system.operation.last_start = catchToNull(
           () -> deviceState.system.operation.last_start);
     }
+    debug("sanitized last_start is " + catchToNull(() -> config.system.operation.last_start));
     if (!(config.system.operation.last_start instanceof SemanticDate)) {
       config.system.operation.last_start = SemanticDate.describe("device reported",
           config.system.operation.last_start);
