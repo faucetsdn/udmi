@@ -24,29 +24,19 @@ jobs:
           python-version: '3.10'
       - name: Checkout source
         uses: actions/checkout@v2.3.4
-      - name: Install dependencies
-        run: |
-          bin/setup_base
-          bin/clone_model
-      - name: code checks
+      - name: bin/run_tests install_dependencies
+        run: bin/run_tests install_dependencies
+      - name: bin/run_tests code_checks
         if: ${{ always() }}
-        run: |
-          bin/gencode check
-          pubber/bin/build check
-          validator/bin/build check
-          bin/test_pylint
-      - name: Schema conformance tests
+        run: bin/run_tests code_checks
+      - name: bin/run_tests schema_conformance_tests
         if: ${{ always() }}
-        run: |
-          bin/test_schema
-      - name: simple trace test
-        run: |
-          bin/test_trace simple
-      - name: Registrar tests
+        run: bin/run_tests schema_conformance_tests
+      - name: bin/run_tests trace_tests
+        run: bin/run_tests trace_tests
+      - name: bin/run_tests registrar_tests
         if: ${{ always() }}
-        run: |
-          bin/test_registrar
-          bin/test_sites
+        run: bin/run_tests registrar_tests
 
   redirect:
     name: Endpoint Redirection
@@ -59,9 +49,7 @@ jobs:
         with:
           java-version: '11'
       - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/run_tests install_dependencies
       - name: mosquitto connect
         run: |
           bin/test_mosquitto
@@ -111,9 +99,7 @@ jobs:
         with:
           java-version: '11'
       - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/run_tests install_dependencies
       - name: telemetry validator
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
