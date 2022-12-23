@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import java.util.HashMap;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -17,21 +18,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "enumeration",
+    "generation",
     "families"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryState {
 
     /**
-     * Family Discovery State
-     * <p>
-     * State for [discovery](../docs/specs/discovery.md)
+     * Generational marker for enumeration
      * 
      */
-    @JsonProperty("enumeration")
-    @JsonPropertyDescription("State for [discovery](../docs/specs/discovery.md)")
-    public udmi.schema.FamilyDiscoveryState enumeration;
+    @JsonProperty("generation")
+    @JsonPropertyDescription("Generational marker for enumeration")
+    public Date generation;
     /**
      * Discovery protocol families
      * 
@@ -43,7 +42,7 @@ public class DiscoveryState {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.enumeration == null)? 0 :this.enumeration.hashCode()));
+        result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
@@ -57,7 +56,7 @@ public class DiscoveryState {
             return false;
         }
         DiscoveryState rhs = ((DiscoveryState) other);
-        return (((this.enumeration == rhs.enumeration)||((this.enumeration!= null)&&this.enumeration.equals(rhs.enumeration)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
+        return (((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
     }
 
 }

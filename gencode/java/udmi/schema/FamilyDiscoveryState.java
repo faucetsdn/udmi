@@ -25,11 +25,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class FamilyDiscoveryState {
 
     /**
-     * Generational marker for controlling discovery
+     * Generational marker for reporting discovery
      * 
      */
     @JsonProperty("generation")
-    @JsonPropertyDescription("Generational marker for controlling discovery")
+    @JsonPropertyDescription("Generational marker for reporting discovery")
     public Date generation;
     /**
      * Indicates if the discovery process is currently active

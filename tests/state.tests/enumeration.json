@@ -18,8 +18,6 @@
     "operational": true
   },
   "discovery": {
-    "enumeration": {
-      "generation": "2018-08-26T21:37:12Z"
-    }
+    "generation": "2018-08-26T21:37:12Z"
   }
 }
