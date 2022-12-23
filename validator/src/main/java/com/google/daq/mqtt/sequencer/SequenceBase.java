@@ -132,6 +132,7 @@ public class SequenceBase {
   private static final int MAX_CLOUD_FUNC_VER = 1;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
+  public static final String SYSTEM_TESTING_MARKER = "system.testing.";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -376,11 +377,9 @@ public class SequenceBase {
       config.system.operation = new Operation();
     }
     if (config.system.operation.last_start == null) {
-      Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
-      debug("TAP sanitized state last_start is " + stateLastStart);
-      config.system.operation.last_start = stateLastStart;
+      config.system.operation.last_start = catchToNull(
+          () -> deviceState.system.operation.last_start);
     }
-    debug("TAP sanitized config last_start is " + config.system.operation.last_start);
     if (!(config.system.operation.last_start instanceof SemanticDate)) {
       config.system.operation.last_start = SemanticDate.describe("device reported",
           config.system.operation.last_start);
@@ -1104,8 +1103,11 @@ public class SequenceBase {
         output.accept("Missing config ready last_start field");
         return false;
       }
-      List<String> differences = configDiffEngine.diff(
-          sanitizeConfig((Config) receivedConfig), deviceConfig);
+      List<String> allDiffs = configDiffEngine.diff(sanitizeConfig((Config) receivedConfig),
+          deviceConfig);
+      // Filter out any testing-oriented messages, since they should not impact behavior.
+      List<String> differences = allDiffs.stream()
+          .filter(message -> !message.contains(SYSTEM_TESTING_MARKER)).collect(Collectors.toList());
       boolean configReady = differences.isEmpty();
       output.accept("testing valid received config " + configReady);
       if (!configReady) {
