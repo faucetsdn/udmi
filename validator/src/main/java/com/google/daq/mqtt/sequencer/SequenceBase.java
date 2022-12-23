@@ -359,8 +359,6 @@ public class SequenceBase {
     sanitizeConfig(deviceConfig);
     deviceConfig.system = ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = Level.INFO.value();
-    deviceConfig.system.testing = new TestingSystemConfig();
-    deviceConfig.system.testing.sequence_name = testName;
   }
 
   private Config sanitizeConfig(Config config) {
@@ -373,6 +371,7 @@ public class SequenceBase {
     if (config.system == null) {
       config.system = new SystemConfig();
     }
+
     if (config.system.operation == null) {
       config.system.operation = new Operation();
     }
@@ -386,6 +385,10 @@ public class SequenceBase {
       config.system.operation.last_start = SemanticDate.describe("device reported",
           config.system.operation.last_start);
     }
+    if (config.system.testing == null) {
+      deviceConfig.system.testing = new TestingSystemConfig();
+    }
+    deviceConfig.system.testing.sequence_name = testName;
     return config;
   }
 
@@ -1191,7 +1194,7 @@ public class SequenceBase {
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
-      deviceConfig.system.testing.endpoint_type = null;
+      catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }
 
