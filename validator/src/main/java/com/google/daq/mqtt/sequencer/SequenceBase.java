@@ -376,10 +376,11 @@ public class SequenceBase {
       config.system.operation = new Operation();
     }
     if (config.system.operation.last_start == null) {
-      config.system.operation.last_start = catchToNull(
-          () -> deviceState.system.operation.last_start);
+      Date last_start = catchToNull(() -> deviceState.system.operation.last_start);
+      debug("TAP sanitized state last_start is " + last_start);
+      config.system.operation.last_start = last_start;
     }
-    debug("TAP sanitized last_start is " + catchToNull(() -> config.system.operation.last_start));
+    debug("TAP sanitized config last_start is " + config.system.operation.last_start);
     if (!(config.system.operation.last_start instanceof SemanticDate)) {
       config.system.operation.last_start = SemanticDate.describe("device reported",
           config.system.operation.last_start);
