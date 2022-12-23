@@ -131,6 +131,7 @@ public class SequenceBase {
   private static final int MIN_CLOUD_FUNC_VER = 1;
   private static final int MAX_CLOUD_FUNC_VER = 1;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
+  private static final int EXIT_CODE_PRESERVE = -9;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -376,9 +377,9 @@ public class SequenceBase {
       config.system.operation = new Operation();
     }
     if (config.system.operation.last_start == null) {
-      Date last_start = catchToNull(() -> deviceState.system.operation.last_start);
-      debug("TAP sanitized state last_start is " + last_start);
-      config.system.operation.last_start = last_start;
+      Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
+      debug("TAP sanitized state last_start is " + stateLastStart);
+      config.system.operation.last_start = stateLastStart;
     }
     debug("TAP sanitized config last_start is " + config.system.operation.last_start);
     if (!(config.system.operation.last_start instanceof SemanticDate)) {
@@ -624,11 +625,6 @@ public class SequenceBase {
     debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
     recordMessages = false;
     recordSequence = false;
-    if (debugLogLevel()) {
-      warning("Not resetting config to enable post-execution debugging");
-    } else {
-      whileDoing("tear down", () -> resetConfig((resetRequired)));
-    }
     configAcked = false;
   }
 
@@ -1340,6 +1336,10 @@ public class SequenceBase {
       String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
       resetRequired = true;
+      if (debugLogLevel()) {
+        error("Reset required during debug, forcing exit to preserve failing config/state");
+        System.exit(EXIT_CODE_PRESERVE);
+      }
     }
 
     private void recordCompletion(String result, Level level,
