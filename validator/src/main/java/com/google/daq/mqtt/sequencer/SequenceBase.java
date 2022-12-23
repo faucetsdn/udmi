@@ -362,28 +362,28 @@ public class SequenceBase {
     deviceConfig.system.testing.sequence_name = testName;
   }
 
-  private Config sanitizeConfig(Config deviceConfig) {
-    if (!(deviceConfig.timestamp instanceof SemanticDate)) {
-      deviceConfig.timestamp = SemanticDate.describe("generated timestamp", deviceConfig.timestamp);
+  private Config sanitizeConfig(Config config) {
+    if (!(config.timestamp instanceof SemanticDate)) {
+      config.timestamp = SemanticDate.describe("generated timestamp", config.timestamp);
     }
-    if (!SemanticValue.isSemanticString(deviceConfig.version)) {
-      deviceConfig.version = SemanticValue.describe("cloud udmi version", deviceConfig.version);
+    if (!SemanticValue.isSemanticString(config.version)) {
+      config.version = SemanticValue.describe("cloud udmi version", config.version);
     }
-    if (deviceConfig.system == null) {
-      deviceConfig.system = new SystemConfig();
+    if (config.system == null) {
+      config.system = new SystemConfig();
     }
-    if (deviceConfig.system.operation == null) {
-      deviceConfig.system.operation = new Operation();
+    if (config.system.operation == null) {
+      config.system.operation = new Operation();
     }
-    if (deviceConfig.system.operation.last_start == null) {
-      deviceConfig.system.operation.last_start = catchToNull(
+    if (config.system.operation.last_start == null) {
+      config.system.operation.last_start = catchToNull(
           () -> deviceState.system.operation.last_start);
     }
-    if (!(deviceConfig.system.operation.last_start instanceof SemanticDate)) {
-      deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
-          deviceConfig.system.operation.last_start);
+    if (!(config.system.operation.last_start instanceof SemanticDate)) {
+      config.system.operation.last_start = SemanticDate.describe("device reported",
+          config.system.operation.last_start);
     }
-    return deviceConfig;
+    return config;
   }
 
   private Config readGeneratedConfig() {
@@ -1050,7 +1050,7 @@ public class SequenceBase {
     // These parameters are set by the cloud functions, so explicitly set to maintain parity.
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
-    if (config.system != null) {
+    if (config.system != null && config.system.operation != null) {
       deviceConfig.system.operation.last_start = config.system.operation.last_start;
     }
     sanitizeConfig(deviceConfig);
