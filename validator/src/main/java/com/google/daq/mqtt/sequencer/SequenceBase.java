@@ -455,6 +455,7 @@ public class SequenceBase {
       debug("lastConfigUpdate is " + lastConfigUpdate);
       withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
     } finally {
+      notice("executing waitForConfigSync final block");
       configReady(true);
     }
   }
@@ -1085,13 +1086,14 @@ public class SequenceBase {
   }
 
   private boolean configReady(boolean debugOut) {
+    Consumer<String> output = debugOut ? this::debug : this::trace;
     Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
     if (!(receivedConfig instanceof Config)) {
-      trace("no valid received config");
+      output.accept("no valid received config");
       return false;
     }
     if (configExceptionTimestamp != null) {
-      debug("Received config exception at " + configExceptionTimestamp);
+      output.accept("Received config exception at " + configExceptionTimestamp);
       return true;
     }
     // Config isn't properly sync'd until this is filled in, else there are startup race-conditions.
@@ -1101,7 +1103,6 @@ public class SequenceBase {
     List<String> differences = configDiffEngine.diff(
         sanitizeConfig((Config) receivedConfig), deviceConfig);
     boolean configReady = differences.isEmpty();
-    Consumer<String> output = debugOut ? this::debug : this::trace;
     output.accept("testing valid received config " + configReady);
     if (!configReady) {
       output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
