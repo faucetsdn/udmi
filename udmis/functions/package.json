@@ -15,8 +15,8 @@
     "@google-cloud/iot": "2.3.4",
     "@google-cloud/pubsub": "2.15.1",
     "extend": "3.0.2",
-    "firebase-admin": "^10.0.2",
-    "firebase-functions": "^3.18.0",
+    "firebase-admin": "^11.4.1",
+    "firebase-functions": "^3.24.1",
     "node-forge": "1.3.0"
   },
   "private": true
