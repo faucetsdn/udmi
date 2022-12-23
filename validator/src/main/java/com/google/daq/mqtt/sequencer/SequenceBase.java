@@ -132,7 +132,7 @@ public class SequenceBase {
   private static final int MAX_CLOUD_FUNC_VER = 1;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
-  public static final String SYSTEM_TESTING_MARKER = "system.testing.";
+  public static final String SYSTEM_TESTING_MARKER = " `system.testing";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
