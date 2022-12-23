@@ -29,9 +29,9 @@ jobs:
       - name: bin/run_tests code_checks
         if: ${{ always() }}
         run: bin/run_tests code_checks
-      - name: bin/run_tests schema_conformance_tests
+      - name: bin/run_tests schema_tests
         if: ${{ always() }}
-        run: bin/run_tests schema_conformance_tests
+        run: bin/run_tests schema_tests
       - name: bin/run_tests trace_tests
         run: bin/run_tests trace_tests
       - name: bin/run_tests registrar_tests

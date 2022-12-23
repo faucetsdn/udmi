@@ -135,12 +135,14 @@ public class MessageUpgrader {
 
   private void upgrade_1_4_1_state() {
     ObjectNode system = (ObjectNode) message.get("system");
-    assertFalse("operation key in older version", system.has("operation"));
-    JsonNode operational = system.remove("operational");
-    if (operational != null) {
-      ObjectNode operation = new ObjectNode(NODE_FACTORY);
-      system.set("operation", operation);
-      operation.set("operational", operational);
+    if (system != null) {
+      assertFalse("operation key in older version", system.has("operation"));
+      JsonNode operational = system.remove("operational");
+      if (operational != null) {
+        ObjectNode operation = new ObjectNode(NODE_FACTORY);
+        system.set("operation", operation);
+        operation.set("operational", operational);
+      }
     }
   }
 
