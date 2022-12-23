@@ -375,6 +375,10 @@ public class SequenceBase {
     if (deviceConfig.system.operation == null) {
       deviceConfig.system.operation = new Operation();
     }
+    if (deviceConfig.system.operation.last_start == null) {
+      deviceConfig.system.operation.last_start = catchToNull(
+          () -> deviceState.system.operation.last_start);
+    }
     if (!(deviceConfig.system.operation.last_start instanceof SemanticDate)) {
       deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
           deviceConfig.system.operation.last_start);
@@ -454,9 +458,7 @@ public class SequenceBase {
       debug("lastConfigUpdate is " + lastConfigUpdate);
       withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
     } finally {
-      notice("executing waitForConfigSync final block");
-      configReady(true);
-      notice("finished waitForConfigSync final block");
+      debug("wait for config sync result " + configReady(true));
     }
   }
 
@@ -1100,6 +1102,7 @@ public class SequenceBase {
       }
       // Config isn't properly sync'd until this is filled in, else there are race-conditions.
       if (deviceConfig.system.operation.last_start == null) {
+        output.accept("Missing config ready last_start field");
         return false;
       }
       List<String> differences = configDiffEngine.diff(
