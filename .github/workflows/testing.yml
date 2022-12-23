@@ -107,8 +107,6 @@ jobs:
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
           more /tmp/validator.out
-          echo Comparing test run results with golden file:
-          diff -u /tmp/validator.out etc/validator.out
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

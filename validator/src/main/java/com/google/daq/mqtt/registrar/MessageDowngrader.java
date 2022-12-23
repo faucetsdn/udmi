@@ -51,6 +51,10 @@ public class MessageDowngrader {
 
     downgradeLocalnet();
 
+    if (major == 1 && (minor < 4 || (minor == 4 && patch < 1))) {
+      ((ObjectNode) message.get("system")).remove("operation");
+    }
+
     message.set(VERSION_PROPERTY_KEY, versionNode);
   }
 
