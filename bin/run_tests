@@ -11,6 +11,7 @@ where [step] is one of:
   schema_tests
   trace_tests
   registrar_tests
+  all_tests
 EOF
   false
 }
@@ -35,7 +36,13 @@ case "$1" in
   registrar_tests)
     bin/test_registrar
     bin/test_sites
-    ;; 
+    ;;
+  all_tests)
+    bin/run_tests code_checks
+    bin/run_tests schema_tests
+    bin/run_tests trace_tests
+    bin/run_tests registrar_tests
+    ;;
   *)
     usage
     ;;
