@@ -7,6 +7,10 @@ SEQUENCE_MD=docs/specs/sequences/generated.md
 
 # Create doc of generated sequence steps
 prefix=sites/udmi_site_model/out/devices/AHU-1/tests
+
+# Remove test runs that are from unit testing
+rm -rf $prefix/test_*
+
 if [[ -d $prefix ]]; then
   echo Updating $SEQUENCE_MD from $prefix:
 
@@ -38,6 +42,7 @@ if [[ -d $prefix ]]; then
     fi
     echo "  $name"
     cat $prefix/$sequence >> $SEQUENCE_MD
+    mkdir -p validator/sequences/$directory
     cp $prefix/$sequence validator/sequences/$directory/
   done
 else

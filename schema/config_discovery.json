@@ -6,11 +6,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "enumeration": {
-      "$ref": "file:config_discovery_family.json#"
+    "generation": {
+      "description": "Generational marker for controlling enumeration",
+      "type": "string",
+      "format": "date-time"
+    },
+    "enumerate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "families": {
+          "type": "boolean"
+        },
+        "uniqs": {
+          "type": "boolean"
+        },
+        "features": {
+          "type": "boolean"
+        }
+      }
     },
     "families": {
-      "description": "Address family results for a scan. Not included for device enumeration messages.",
+      "description": "Address family config for a scan. Not included for device enumeration messages.",
       "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {

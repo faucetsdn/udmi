@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "generation": {
-      "description": "Generational marker for controlling discovery",
+      "description": "Generational marker for reporting discovery",
       "type": "string",
       "format": "date-time"
     },
