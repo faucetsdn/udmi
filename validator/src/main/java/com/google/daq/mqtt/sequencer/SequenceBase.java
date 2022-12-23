@@ -132,7 +132,7 @@ public class SequenceBase {
   private static final int MAX_CLOUD_FUNC_VER = 1;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
-  public static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -701,7 +701,7 @@ public class SequenceBase {
       String header = String.format("Update config%s:", suffix);
       debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
+      List<String> configUpdates = filterTesting(configDiffEngine.computeChanges(deviceConfig));
       if (configUpdates.isEmpty() && !extraFieldChanged) {
         return false;
       }
@@ -1103,11 +1103,8 @@ public class SequenceBase {
         output.accept("Missing config ready last_start field");
         return false;
       }
-      List<String> allDiffs = configDiffEngine.diff(sanitizeConfig((Config) receivedConfig),
-          deviceConfig);
-      // Filter out any testing-oriented messages, since they should not impact behavior.
-      List<String> differences = allDiffs.stream()
-          .filter(message -> !message.contains(SYSTEM_TESTING_MARKER)).collect(Collectors.toList());
+      List<String> differences = filterTesting(
+          configDiffEngine.diff(sanitizeConfig((Config) receivedConfig), deviceConfig));
       boolean configReady = differences.isEmpty();
       output.accept("testing valid received config " + configReady);
       if (!configReady) {
@@ -1120,6 +1117,14 @@ public class SequenceBase {
       error("While processing waitForConfigSync: " + e.getMessage());
       throw e;
     }
+  }
+
+  /**
+   * Filter out any testing-oriented messages, since they should not impact behavior.
+   */
+  private List<String> filterTesting(List<String> allDiffs) {
+    return allDiffs.stream()
+        .filter(message -> !message.contains(SYSTEM_TESTING_MARKER)).collect(Collectors.toList());
   }
 
   protected void trace(String message) {

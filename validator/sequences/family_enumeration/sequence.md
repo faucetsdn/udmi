@@ -2,7 +2,8 @@
 ## family_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "families": `true` } }
+    * Add `discovery.enumerate.families` = `true`
+    * Remove `discovery.enumerate.uniqs`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`

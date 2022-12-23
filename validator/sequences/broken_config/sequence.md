@@ -15,7 +15,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Force reset config
 1. Check that no interesting system status
 1. Update config before last_config updated:
-    * Add `system.last_start` = `device reported`
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE` was logged

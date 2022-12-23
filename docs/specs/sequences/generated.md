@@ -66,7 +66,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Force reset config
 1. Check that no interesting system status
 1. Update config before last_config updated:
-    * Add `system.last_start` = `device reported`
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
@@ -82,7 +81,7 @@ Check that the device MQTT-acknowledges a sent config.
 ## empty_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": {  } }
+    * Remove `discovery.enumerate.features`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -108,7 +107,7 @@ Failed connection because of bad hash.
 Push endpoint config message to device that results in a connection error.
 
 1. Update config before blobset entry config status is error:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
 1. Wait for blobset entry config status is error
 1. Check that no interesting system status
 1. Update config before endpoint config blobset state not defined:
@@ -120,7 +119,7 @@ Push endpoint config message to device that results in a connection error.
 Check repeated endpoint with same information gets retried.
 
 1. Update config before blobset entry config status is error:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
 1. Wait for blobset entry config status is error
 1. Check that no interesting system status
 1. Update config before blobset entry config status is error:
@@ -137,7 +136,7 @@ Check connection to an alternate project.
 
 1. Wait for initial last_config matches config timestamp
 1. Update config before blobset phase is apply and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+    * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
 1. Wait for blobset phase is apply and stateStatus is null
 1. Check that no interesting system status
 1. Update config before blobset phase is final and stateStatus is null:
@@ -166,7 +165,7 @@ Check connection to an alternate project.
 Check a successful reconnect to the same endpoint.
 
 1. Update config before blobset phase is final and stateStatus is null:
-    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
+    * Set `blobset.blobs._iot_endpoint_config.sha256` = `blob data hash`
 1. Wait for blobset phase is final and stateStatus is null
 1. Check that no interesting system status
 1. Update config before endpoint config blobset state not defined:
@@ -177,8 +176,6 @@ Check a successful reconnect to the same endpoint.
 
 Check that the device correctly handles an extra out-of-schema field
 
-1. Update config before last_config not null:
-    * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
 1. Check that no interesting system status
@@ -198,7 +195,8 @@ Check that the device correctly handles an extra out-of-schema field
 ## family_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "families": `true` } }
+    * Add `discovery.enumerate.families` = `true`
+    * Remove `discovery.enumerate.uniqs`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -213,7 +211,8 @@ Check that the device correctly handles an extra out-of-schema field
 ## feature_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true` } }
+    * Add `discovery.enumerate` = { "features": `true` }
+    * Remove `discovery.families`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -228,7 +227,8 @@ Check that the device correctly handles an extra out-of-schema field
 ## multi_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+    * Add `discovery.enumerate` = { "features": `true`, "uniqs": `true`, "families": `true` }
+    * Remove `discovery.families`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -243,7 +243,8 @@ Check that the device correctly handles an extra out-of-schema field
 ## periodic_scan
 
 1. Update config before all scans not active:
-    * Add `discovery` = { "families": {  } }
+    * Add `discovery.families` = {  }
+    * Remove `discovery.enumerate`
 1. Wait for all scans not active
 1. Update config before scan iterations:
     * Add `discovery.families.virtual` = { "generation": `family generation`, "scan_interval_sec": `10`, "enumerate": `true` }
@@ -252,7 +253,8 @@ Check that the device correctly handles an extra out-of-schema field
 ## pointset_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "uniqs": `true` } }
+    * Remove `discovery.enumerate.features`
+    * Remove `discovery.enumerate.families`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -300,21 +302,23 @@ Check that the min log-level config is honored by the device.
 Restart and connect to same endpoint and expect it returns.
 
 1. Wait for last_start is not zero
-1. Update config before deviceState.system.mode == ACTIVE:
-    * Add `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Update config before deviceState.system.mode == INITIAL:
-    * Set `system.mode` = `restart`
-1. Wait for deviceState.system.mode == INITIAL
-1. Update config before deviceState.system.mode == ACTIVE:
-    * Set `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
+1. Check that initial count is greater than 0
+1. Update config before system mode is ACTIVE:
+    * Add `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Update config before system mode is INITIAL:
+    * Set `system.operation.mode` = `restart`
+1. Wait for system mode is INITIAL
+1. Check that restart count increased by one
+1. Update config before system mode is ACTIVE:
+    * Set `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 
 ## valid_serial_no
 
-1. Wait for received serial no matches
+1. Wait for received serial number matches
 
 ## writeback_failure
 

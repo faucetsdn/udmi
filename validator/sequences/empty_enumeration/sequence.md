@@ -2,7 +2,7 @@
 ## empty_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": {  } }
+    * Remove `discovery.enumerate.features`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -11,5 +11,5 @@
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that no point enumeration
 1. Check that no feature enumeration
+1. Check that no point enumeration

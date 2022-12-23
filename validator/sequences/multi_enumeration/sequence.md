@@ -2,7 +2,8 @@
 ## multi_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+    * Add `discovery.enumerate` = { "features": `true`, "uniqs": `true`, "families": `true` }
+    * Remove `discovery.families`
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
