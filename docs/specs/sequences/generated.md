@@ -29,14 +29,18 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [empty_enumeration](#empty_enumeration)
 * [endpoint_connection_bad_hash](#endpoint_connection_bad_hash): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry): Check repeated endpoint with same information gets retried.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
+* [family_enumeration](#family_enumeration)
+* [feature_enumeration](#feature_enumeration)
+* [multi_enumeration](#multi_enumeration)
 * [periodic_scan](#periodic_scan)
-* [self_enumeration](#self_enumeration)
+* [pointset_enumeration](#pointset_enumeration)
 * [single_scan](#single_scan)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
@@ -74,6 +78,21 @@ Check that the device correctly handles a broken (non-json) config message.
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
+
+## empty_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": {  } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that no feature enumeration
+1. Check that no point enumeration
 
 ## endpoint_connection_bad_hash
 
@@ -176,6 +195,51 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
+## family_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "families": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration matches
+1. Check that no feature enumeration
+1. Check that no point enumeration
+
+## feature_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "features": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that features enumerated
+1. Check that no point enumeration
+
+## multi_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration matches
+1. Check that features enumerated
+1. Check that points enumerated 3
+
 ## periodic_scan
 
 1. Update config before all scans not active:
@@ -185,13 +249,20 @@ Check that the device correctly handles an extra out-of-schema field
     * Add `discovery.families.virtual` = { "generation": `family generation`, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
-## self_enumeration
+## pointset_enumeration
 
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "uniqs": `true` } }
 1. Wait for enumeration not active
-1. Update config before enumeration generation:
-    * Add `discovery` = { "enumeration": { "generation": `generation start time` } }
-1. Wait for enumeration generation
-1. Wait for enumeration still not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that no feature enumeration
+1. Check that points enumerated 3
 
 ## single_scan
 
