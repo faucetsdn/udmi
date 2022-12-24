@@ -2,8 +2,7 @@
 ## feature_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery.enumerate` = { "features": `true` }
-    * Remove `discovery.families`
+    * Add `discovery` = { "enumerate": { "features": `true` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`

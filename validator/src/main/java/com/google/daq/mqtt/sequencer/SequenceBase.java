@@ -133,6 +133,7 @@ public class SequenceBase {
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -151,7 +152,6 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
-  private final Map<SubFolder, String> sentConfig = new HashMap<>();
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
@@ -531,7 +531,7 @@ public class SequenceBase {
 
     String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
-    Object savedException = message.get(EXCEPTION_KEY);
+    Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
       // An actual exception here will cause the JSON seralizer to barf, so temporarily sanitize.
       if (savedException instanceof Exception) {
@@ -668,12 +668,16 @@ public class SequenceBase {
         cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
         final Object tracedObject = augmentConfigTrace(data);
+        trace("TAP tracedObject " + tracedObject);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
+        trace("TAP augmentedMessage " + augmentedMessage);
         reflector().publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
+      } else {
+        trace("unchanged config_" + subBlock + ": " + messageData);
       }
       return updated;
     } catch (Exception e) {
@@ -968,7 +972,8 @@ public class SequenceBase {
     String subTypeRaw = attributes.get("subType");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      trace("received command " + attributeMark + " nonce " + message.get(CONFIG_NONCE_KEY));
+      Object debugConfigNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
+      trace("received command " + attributeMark + " nonce " + debugConfigNonce);
     }
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
@@ -1109,7 +1114,8 @@ public class SequenceBase {
       if (!configReady) {
         output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
         output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        output.accept("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+        output.accept(
+            "final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
       }
       return configReady;
     } catch (Exception e) {

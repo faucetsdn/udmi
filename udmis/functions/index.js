@@ -62,8 +62,8 @@ function recordMessage(attributes, message) {
     message.timestamp = timestamp;
     message.version = message.version || UDMI_VERSION;
   }
-
-  console.log('Message record', registryId, deviceId, subType, subFolder, message.event_count);
+  const event_count = message && message.event_count;
+  console.log('Message record', registryId, deviceId, subType, subFolder, event_count);
 
   if (useFirestore) {
     const reg_doc = firestore.collection('registries').doc(registryId);
@@ -89,8 +89,8 @@ function recordMessage(attributes, message) {
 }
 
 function sendCommand(registryId, deviceId, subFolder, message) {
-  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message),
-                        message.debug_config_nonce);
+  const nonce = message && message.debug_config_nonce;
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonce);
 }
 
 function sendCommandStr(registryId, deviceId, subFolder, messageStr, nonce) {
@@ -171,13 +171,14 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     return udmi_reflector_state(attributes, msgObject);
   }
 
+  const nonce = msgObject && msgObject.debug_config_nonce;
   const parts = attributes.subFolder.split('/');
   attributes.deviceRegistryId = attributes.deviceId;
   attributes.deviceId = parts[1];
   attributes.subFolder = parts[2];
   attributes.subType = parts[3];
   console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType,
-              attributes.subFolder, msgObject.debug_config_nonce);
+              attributes.subFolder, nonce);
 
   return registry_promise.then(() => {
     attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
@@ -314,8 +315,8 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const msgString = Buffer.from(base64, 'base64').toString();
 
   const msgObject = JSON.parse(msgString);
-  console.log('Config message', registryId, deviceId, subFolder, msgObject.debug_config_nonce,
-              msgString);
+  const nonce = msgObject && msgObject.debug_config_nonce;
+  console.log('Config message', registryId, deviceId, subFolder, nonce, msgString);
   if (!msgString) {
     console.warn('Config abort', registryId, deviceId, subFolder, msgString);
     return null;
@@ -396,6 +397,7 @@ function update_last_start(config, stateStart) {
 async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   var newConfig;
+  const nonce = subContents && subContents.debug_config_nonce;
 
   if (subFolder == 'last_start') {
     newConfig = parse_old_config(oldConfig, false);
@@ -403,7 +405,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
       return;
     }
   } else if (subFolder == 'update') {
-    console.log('Config replace version', version, startTime, subContents.debug_config_nonce);
+    console.log('Config replace version', version, startTime, nonce);
     newConfig = subContents;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
@@ -415,12 +417,12 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig.version = UDMI_VERSION;
     newConfig.timestamp = currentTimestamp();
 
-    console.log('Config modify', subFolder, version, startTime, subContents.debug_config_nonce);
+    console.log('Config modify', subFolder, version, startTime, nonce);
     if (subContents) {
       delete subContents.version;
       delete subContents.timestamp;
       newConfig[subFolder] = subContents;
-      newConfig.debug_config_nonce = subContents.debug_config_nonce;
+      newConfig.debug_config_nonce = nonce;
     } else {
       if (!newConfig[subFolder]) {
         console.log('Config target already null', subFolder, version, startTime);
@@ -438,11 +440,9 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   };
   return update_device_config(newConfig, attributes, version)
     .then(() => {
-      console.log('Config accepted', subFolder, version, startTime,
-                  subContents.debug_config_nonce);
+      console.log('Config accepted', subFolder, version, startTime, nonce);
     }).catch(e => {
-      console.log('Config rejected', subFolder, version, startTime,
-                  subContents.debug_config_nonce);
+      console.log('Config rejected', subFolder, version, startTime, nonce);
       return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
     })
 }
@@ -483,7 +483,7 @@ function update_device_config(message, attributes, preVersion) {
   const normalJson = extraField !== 'break_json';
   console.log('Config extra field is ' + extraField + ' ' + normalJson);
 
-  const nonce = message.debug_config_nonce;
+  const nonce = message && message.debug_config_nonce;
   const msgString = normalJson ? JSON.stringify(message) :
         '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
