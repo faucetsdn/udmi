@@ -81,6 +81,7 @@ public class PubberTest extends TestBase {
     try {
       makeTestPubber(BAD_DEVICE);
     } catch (Throwable e) {
+      e.printStackTrace();
       while (e != null) {
         String message = e.getMessage();
         if (message.contains(BAD_DEVICE)) {

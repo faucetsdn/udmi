@@ -38,8 +38,8 @@ public class MessageUpgrader {
     String[] components = verStr.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
-    minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
-    patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
+    minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : -1;
+    patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : -1;
 
     if (parts.length >= 4) {
       throw new IllegalArgumentException("Unexpected version " + verStr);
@@ -48,30 +48,57 @@ public class MessageUpgrader {
 
   /**
    * Update message to the latest standard.
+   *
+   * @param forceUpgrade true to force a complete upgrade pass irrespective of original version
+   * @return true if the message has been altered
    */
-  public void upgrade() {
+  public boolean upgrade(boolean forceUpgrade) {
     if (major != 1) {
       throw new IllegalArgumentException("Starting major version " + major);
     }
+
+    final JsonNode original = message.deepCopy();
+    boolean upgraded = false;
+
+    if (forceUpgrade || minor < 0) {
+      minor = 0;
+      patch = 0;
+      upgraded = true;
+    }
+
     if (minor < 3) {
-      upgrade_1_3();
+      minor = 3;
+      patch = 0;
     }
+
     if (minor == 3 && patch < 14) {
+      JsonNode before = message.deepCopy();
       upgrade_1_3_14();
+      upgraded |= !before.equals(message);
+      patch = 14;
     }
-    if (message.has(VERSION_PROPERTY_KEY)) {
+
+    if (minor < 4) {
+      minor = 4;
+      patch = 0;
+    }
+
+    if (minor == 4 && patch < 1) {
+      JsonNode before = message.deepCopy();
+      upgrade_1_4_1();
+      upgraded |= !before.equals(message);
+      patch = 0;
+    }
+
+    if (upgraded && message.has(VERSION_PROPERTY_KEY)) {
       ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
-  }
 
-  private void upgrade_1_3() {
-    minor = 3;
-    patch = 0;
+    return !original.equals(message);
   }
 
   private void upgrade_1_3_14() {
-    patch = 14;
     if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_3_14_state();
     }
@@ -100,18 +127,34 @@ public class MessageUpgrader {
     }
   }
 
+  private void upgrade_1_4_1() {
+    if (STATE_SCHEMA.equals(schemaName)) {
+      upgrade_1_4_1_state();
+    }
+  }
+
+  private void upgrade_1_4_1_state() {
+    ObjectNode system = (ObjectNode) message.get("system");
+    if (system != null) {
+      assertFalse("operation key in older version", system.has("operation"));
+      JsonNode operational = system.remove("operational");
+      if (operational != null) {
+        ObjectNode operation = new ObjectNode(NODE_FACTORY);
+        system.set("operation", operation);
+        operation.set("operational", operational);
+      }
+    }
+  }
+
+  private void assertFalse(String message, boolean value) {
+    if (value) {
+      throw new RuntimeException(message);
+    }
+  }
+
   private void upgradeStatuses(ObjectNode system) {
     JsonNode statuses = system.remove("statuses");
-    if (statuses != null) {
-      if (system.has("status")) {
-        throw new IllegalStateException("Node already has status field");
-      }
-      if (statuses.size() == 0) {
-        return;
-      }
-      if (statuses.size() > 1) {
-        throw new IllegalStateException("More than one statuses to upgrade");
-      }
+    if (statuses != null && !system.has("status") && statuses.size() != 0) {
       system.set("status", statuses.get(0));
     }
   }
@@ -119,11 +162,8 @@ public class MessageUpgrader {
   private void upgradeFirmware(ObjectNode system) {
     JsonNode firmware = system.remove("firmware");
     if (firmware != null) {
-      if (system.has("software")) {
-        throw new IllegalStateException("Node already has software field");
-      }
       JsonNode version = ((ObjectNode) firmware).remove(VERSION_PROPERTY_KEY);
-      if (version != null) {
+      if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
         softwareNode.put("firmware", version.asText());
         system.set("software", softwareNode);
@@ -133,10 +173,7 @@ public class MessageUpgrader {
 
   private void upgradeMakeModel(ObjectNode system) {
     JsonNode makeModel = system.remove("make_model");
-    if (makeModel != null) {
-      if (system.has("hardware")) {
-        throw new IllegalStateException("Node already has hardware field");
-      }
+    if (makeModel != null && !system.has("hardware")) {
       ObjectNode hardwareNode = new ObjectNode(NODE_FACTORY);
       hardwareNode.put("model", makeModel.asText());
       hardwareNode.put("make", "unknown");

@@ -1,2 +1,2 @@
 1 schema violations found
-  ECMA 262 regex "^[-_/a-zA-Z0-9]+$" does not match input string "/devices/#"
+  /topic_prefix: ECMA 262 regex "^[-_/a-zA-Z0-9]+$" does not match input string "/devices/#"
