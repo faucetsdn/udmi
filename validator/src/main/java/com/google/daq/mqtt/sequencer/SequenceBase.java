@@ -668,10 +668,8 @@ public class SequenceBase {
         cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
         final Object tracedObject = augmentConfigTrace(data);
-        trace("TAP tracedObject " + tracedObject);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
-        trace("TAP augmentedMessage " + augmentedMessage);
         reflector().publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
