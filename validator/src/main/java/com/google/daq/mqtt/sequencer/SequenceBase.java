@@ -356,6 +356,7 @@ public class SequenceBase {
 
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
+    setExtraField(null);
     sentConfig.clear();
     sanitizeConfig(deviceConfig);
     deviceConfig.system = ofNullable(deviceConfig.system).orElse(new SystemConfig());
@@ -438,22 +439,21 @@ public class SequenceBase {
     resetConfig(true);
   }
 
-  protected void resetConfig(boolean doReset) {
-    if (doReset) {
-      recordSequence("Force reset config");
-      withRecordSequence(false, () -> {
-        debug("Starting reset_config");
+  protected void resetConfig(boolean fullReset) {
+    recordSequence("Force reset config");
+    withRecordSequence(false, () -> {
+      debug("Starting reset_config full reset " + fullReset);
+      if (fullReset) {
         resetDeviceConfig(true);
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         updateConfig();
-        setExtraField(null);
-        resetDeviceConfig();
-        updateConfig();
-        debug("Done with reset_config");
-        resetRequired = false;
-      });
-    }
+      }
+      resetDeviceConfig();
+      updateConfig();
+      debug("Done with reset_config");
+      resetRequired = false;
+    });
   }
 
   private void waitForConfigSync(Instant configUpdateStart) {
