@@ -651,9 +651,9 @@ public class SequenceBase {
     if (computedConfigChange != updated) {
       notice("cachedMessageData " + cachedMessageData);
       notice("cachedSentBlock " + cachedSentBlock);
-      throw new AbortMessageLoop("Unexpected config change!");
+      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
-    if (computedConfigChange) {
+    if (updated) {
       safeSleep(ONE_SECOND_MS);
       waitForConfigSync(configStart);
     }
