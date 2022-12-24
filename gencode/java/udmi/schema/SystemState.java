@@ -21,9 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "timestamp",
     "version",
     "last_config",
-    "operational",
-    "mode",
-    "last_start",
+    "operation",
     "serial_no",
     "hardware",
     "software",
@@ -56,29 +54,15 @@ public class SystemState {
     @JsonPropertyDescription("Time from the `timestamp` field of the last successfully parsed `config` message (not the timestamp the message was received/processed). Part of the [config state sequence](../docs/specs/sequences/config.md)")
     public Date last_config;
     /**
-     * Operational status of the device.
+     * StateSystemOperation
+     * <p>
+     * A collection of state fields that describes the system operation
      * (Required)
      * 
      */
-    @JsonProperty("operational")
-    @JsonPropertyDescription("Operational status of the device.")
-    public Boolean operational;
-    /**
-     * System Mode
-     * <p>
-     * Operating mode for the device. Default is 'active'.
-     * 
-     */
-    @JsonProperty("mode")
-    @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
-    public udmi.schema.SystemConfig.SystemMode mode;
-    /**
-     * Last time the system started up.
-     * 
-     */
-    @JsonProperty("last_start")
-    @JsonPropertyDescription("Last time the system started up.")
-    public Date last_start;
+    @JsonProperty("operation")
+    @JsonPropertyDescription("A collection of state fields that describes the system operation")
+    public StateSystemOperation operation;
     /**
      * The serial number of the physical device
      * (Required)
@@ -88,7 +72,7 @@ public class SystemState {
     @JsonPropertyDescription("The serial number of the physical device")
     public java.lang.String serial_no;
     /**
-     * SystemHardware
+     * State System Hardware
      * <p>
      * A collection of fields which describe the physical hardware of the device.
      * (Required)
@@ -96,7 +80,7 @@ public class SystemState {
      */
     @JsonProperty("hardware")
     @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
-    public SystemHardware hardware;
+    public StateSystemHardware hardware;
     /**
      * A collection of items which can be used to describe version of software running on a device
      * (Required)
@@ -119,12 +103,10 @@ public class SystemState {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.mode == null)? 0 :this.mode.hashCode()));
-        result = ((result* 31)+((this.last_start == null)? 0 :this.last_start.hashCode()));
         result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
-        result = ((result* 31)+((this.operational == null)? 0 :this.operational.hashCode()));
         result = ((result* 31)+((this.params == null)? 0 :this.params.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.last_config == null)? 0 :this.last_config.hashCode()));
@@ -142,7 +124,7 @@ public class SystemState {
             return false;
         }
         SystemState rhs = ((SystemState) other);
-        return ((((((((((((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.last_start == rhs.last_start)||((this.last_start!= null)&&this.last_start.equals(rhs.last_start))))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.params == rhs.params)||((this.params!= null)&&this.params.equals(rhs.params))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.last_config == rhs.last_config)||((this.last_config!= null)&&this.last_config.equals(rhs.last_config))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

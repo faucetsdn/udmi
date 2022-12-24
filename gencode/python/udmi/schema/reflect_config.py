@@ -5,6 +5,7 @@ class SetupReflectorConfig:
   """Generated schema class"""
 
   def __init__(self):
+    self.functions = None
     self.last_state = None
     self.deployed_at = None
 
@@ -13,6 +14,7 @@ class SetupReflectorConfig:
     if not source:
       return None
     result = SetupReflectorConfig()
+    result.functions = source.get('functions')
     result.last_state = source.get('last_state')
     result.deployed_at = source.get('deployed_at')
     return result
@@ -35,6 +37,8 @@ class SetupReflectorConfig:
 
   def to_dict(self):
     result = {}
+    if self.functions:
+      result['functions'] = self.functions # 5
     if self.last_state:
       result['last_state'] = self.last_state # 5
     if self.deployed_at:

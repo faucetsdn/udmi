@@ -15,7 +15,7 @@ if [[ -z $origin ]]; then
     origin=faucetsdn
 fi
 
-git fetch $origin --tags 2>/dev/null
+git fetch $origin --tags 2>/dev/null || true
 
 upstream_ver=`git describe $origin/$branch --abbrev=0 || echo unknown`
 current_ver=`git describe HEAD --abbrev=0 || echo unknown`

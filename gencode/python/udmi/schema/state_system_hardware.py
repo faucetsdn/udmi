@@ -1,7 +1,7 @@
 """Generated class for state_system_hardware.json"""
 
 
-class SystemHardware:
+class StateSystemHardware:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class SystemHardware:
   def from_dict(source):
     if not source:
       return None
-    result = SystemHardware()
+    result = StateSystemHardware()
     result.make = source.get('make')
     result.model = source.get('model')
     result.sku = source.get('sku')
@@ -27,7 +27,7 @@ class SystemHardware:
       return None
     result = {}
     for key in source:
-      result[key] = SystemHardware.from_dict(source[key])
+      result[key] = StateSystemHardware.from_dict(source[key])
     return result
 
   @staticmethod

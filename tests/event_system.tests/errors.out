@@ -1,5 +1,12 @@
 4 schema violations found
+<<<<<<< HEAD
   instance failed to match exactly one schema (matched 0 out of 30)
   instance type (string) does not match any allowed primitive type (allowed: ["object"])
   numeric instance is lower than the required minimum (minimum: 100, found: 60)
   object has missing required properties (["message","timestamp"])
+=======
+  /logentries/0/category: instance failed to match exactly one schema (matched 0 out of 29)
+  /logentries/0/level: numeric instance is lower than the required minimum (minimum: 100, found: 60)
+  /logentries/0: object has missing required properties (["message","timestamp"])
+  /logentries/1: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+>>>>>>> master

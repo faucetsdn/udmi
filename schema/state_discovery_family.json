@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Family Discovery State",
   "description": "State for [discovery](../docs/specs/discovery.md)",
   "type": "object",
@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "generation": {
-      "description": "Generational marker for controlling discovery",
+      "description": "Generational marker for reporting discovery",
       "type": "string",
       "format": "date-time"
     },

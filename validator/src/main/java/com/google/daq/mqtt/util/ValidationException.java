@@ -3,7 +3,9 @@ package com.google.daq.mqtt.util;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.google.api.client.util.Strings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.stream.StreamSupport;
@@ -42,10 +44,15 @@ public class ValidationException extends RuntimeException {
         StreamSupport.stream(report.spliterator(), false)
             .filter(
                 processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
-            .map(processingMessage -> new ValidationException(processingMessage.getMessage()))
-            .collect(toImmutableList());
+            .map(ValidationException::convertMessage).collect(toImmutableList());
     return new ValidationException(
         String.format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
+    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
+    String prefix = Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   /**
