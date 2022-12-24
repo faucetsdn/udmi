@@ -20,6 +20,7 @@ case "$1" in
   install_dependencies)
     bin/setup_base
     bin/clone_model
+    sudo ln -fs $PWD/bin/udmi /usr/local/bin/
     ;;
   code_checks)
     bin/gencode check
