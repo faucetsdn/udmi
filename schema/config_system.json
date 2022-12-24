@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "System Config",
   "description": "[System Config Documentation](../docs/messages/system.md#config)",
   "type": "object",
@@ -20,13 +20,18 @@
       "maximum": 86400,
       "default": 600
     },
-    "mode": {
-      "$ref": "file:common.json#/definitions/mode"
-    },
-    "last_start": {
-      "description": "Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.",
-      "type": "string",
-      "format": "date-time"
+    "operation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "$ref": "file:common.json#/definitions/mode"
+        },
+        "last_start": {
+          "description": "Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     },
     "testing": {
       "$ref": "file:config_system_testing.json#"

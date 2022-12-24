@@ -74,6 +74,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
@@ -101,7 +102,6 @@ public class SequenceBase {
   public static final int NORM_TIMEOUT_MS = 180 * 1000;
   public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
-  private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
@@ -128,11 +128,18 @@ public class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
+  private static final int MIN_CLOUD_FUNC_VER = 1;
+  private static final int MAX_CLOUD_FUNC_VER = 1;
+  private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
+  private static final int EXIT_CODE_PRESERVE = -9;
+  private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
   protected static String registryId;
   protected static String altRegistry;
+  protected static Config deviceConfig;
   static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
@@ -144,9 +151,7 @@ public class SequenceBase {
   private static MessagePublisher altClient;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
-  private static Date stateTimestamp;
-
-  private final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private static boolean resetRequired = true;
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
@@ -157,7 +162,6 @@ public class SequenceBase {
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
   @Rule
   public SequenceTestWatcher testWatcher = new SequenceTestWatcher();
-  protected Config deviceConfig;
   protected State deviceState;
   protected boolean configAcked;
   private String extraField;
@@ -275,14 +279,13 @@ public class SequenceBase {
 
   private static void initializeReflectorState(IotReflectorClient client) {
     ReflectorState reflectorState = new ReflectorState();
-    stateTimestamp = new Date();
-    reflectorState.timestamp = stateTimestamp;
+    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
     reflectorState.version = udmiVersion;
     reflectorState.setup = new SetupReflectorState();
     reflectorState.setup.user = System.getenv("USER");
     try {
       System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(stateTimestamp));
+          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
       client.setReflectorState(stringify(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -353,29 +356,39 @@ public class SequenceBase {
 
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
-    sentConfig.clear();
+    setExtraField(null);
     sanitizeConfig(deviceConfig);
     deviceConfig.system = ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = Level.INFO.value();
-    deviceConfig.system.testing = new TestingSystemConfig();
-    deviceConfig.system.testing.sequence_name = testName;
   }
 
-  private Config sanitizeConfig(Config deviceConfig) {
-    if (!(deviceConfig.timestamp instanceof SemanticDate)) {
-      deviceConfig.timestamp = SemanticDate.describe("generated timestamp", deviceConfig.timestamp);
+  private Config sanitizeConfig(Config config) {
+    if (!(config.timestamp instanceof SemanticDate)) {
+      config.timestamp = SemanticDate.describe("generated timestamp", config.timestamp);
     }
-    if (!SemanticValue.isSemanticString(deviceConfig.version)) {
-      deviceConfig.version = SemanticValue.describe("cloud udmi version", deviceConfig.version);
+    if (!SemanticValue.isSemanticString(config.version)) {
+      config.version = SemanticValue.describe("cloud udmi version", config.version);
     }
-    if (deviceConfig.system == null) {
-      deviceConfig.system = new SystemConfig();
+    if (config.system == null) {
+      config.system = new SystemConfig();
     }
-    if (!(deviceConfig.system.last_start instanceof SemanticDate)) {
-      deviceConfig.system.last_start = SemanticDate.describe("device reported",
-          deviceConfig.system.last_start);
+
+    if (config.system.operation == null) {
+      config.system.operation = new Operation();
     }
-    return deviceConfig;
+    if (config.system.operation.last_start == null) {
+      config.system.operation.last_start = catchToNull(
+          () -> deviceState.system.operation.last_start);
+    }
+    if (!(config.system.operation.last_start instanceof SemanticDate)) {
+      config.system.operation.last_start = SemanticDate.describe("device reported",
+          config.system.operation.last_start);
+    }
+    if (config.system.testing == null) {
+      deviceConfig.system.testing = new TestingSystemConfig();
+    }
+    deviceConfig.system.testing.sequence_name = testName;
+    return config;
   }
 
   private Config readGeneratedConfig() {
@@ -402,7 +415,6 @@ public class SequenceBase {
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
     safeSleep(CONFIG_UPDATE_DELAY_MS);
 
-    deviceState = new State();
     configAcked = false;
     receivedState.clear();
     receivedEvents.clear();
@@ -410,9 +422,9 @@ public class SequenceBase {
     recordMessages = true;
     recordSequence = false;
 
-    resetConfig();
-
     queryState();
+
+    resetConfig(resetRequired);
 
     updateConfig();
 
@@ -423,17 +435,24 @@ public class SequenceBase {
   }
 
   protected void resetConfig() {
+    resetConfig(true);
+  }
+
+  protected void resetConfig(boolean fullReset) {
     recordSequence("Force reset config");
     withRecordSequence(false, () -> {
-      debug("Starting reset_config");
-      resetDeviceConfig(true);
-      setExtraField("reset_config");
-      deviceConfig.system.testing.sequence_name = extraField;
-      updateConfig();
-      setExtraField(null);
+      debug("Starting reset_config full reset " + fullReset);
+      if (fullReset) {
+        resetDeviceConfig(true);
+        sentConfig.clear();
+        setExtraField("reset_config");
+        deviceConfig.system.testing.sequence_name = extraField;
+        updateConfig();
+      }
       resetDeviceConfig();
       updateConfig();
       debug("Done with reset_config");
+      resetRequired = false;
     });
   }
 
@@ -443,7 +462,7 @@ public class SequenceBase {
       debug("lastConfigUpdate is " + lastConfigUpdate);
       withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
     } finally {
-      configReady(true);
+      debug("wait for config sync result " + configReady(true));
     }
   }
 
@@ -453,7 +472,7 @@ public class SequenceBase {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
     }
-    untilTrue("received serial no matches", () -> serialNo.equals(lastSerialNo));
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, org.junit.runner.Description description,
@@ -512,7 +531,7 @@ public class SequenceBase {
 
     String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
-    Object savedException = message.get(EXCEPTION_KEY);
+    Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
       // An actual exception here will cause the JSON seralizer to barf, so temporarily sanitize.
       if (savedException instanceof Exception) {
@@ -608,13 +627,6 @@ public class SequenceBase {
     debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
     recordMessages = false;
     recordSequence = false;
-    if (debugLogLevel()) {
-      warning("Not resetting config to enable post-execution debugging");
-    } else {
-      whileDoing("tear down", this::resetConfig);
-    }
-    deviceConfig = null;
-    deviceState = null;
     configAcked = false;
   }
 
@@ -639,9 +651,9 @@ public class SequenceBase {
     if (computedConfigChange != updated) {
       notice("cachedMessageData " + cachedMessageData);
       notice("cachedSentBlock " + cachedSentBlock);
-      throw new AbortMessageLoop("Unexpected config change!");
+      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
-    if (computedConfigChange) {
+    if (updated) {
       safeSleep(ONE_SECOND_MS);
       waitForConfigSync(configStart);
     }
@@ -662,6 +674,8 @@ public class SequenceBase {
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
+      } else {
+        trace("unchanged config_" + subBlock + ": " + messageData);
       }
       return updated;
     } catch (Exception e) {
@@ -689,20 +703,19 @@ public class SequenceBase {
       String header = String.format("Update config%s:", suffix);
       debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> configUpdates = configDiffEngine.computeChanges(deviceConfig);
-      if (configUpdates.isEmpty() && !extraFieldChanged) {
-        return false;
-      }
-      if (!configUpdates.isEmpty()) {
+      List<String> allDiffs = configDiffEngine.computeChanges(deviceConfig);
+      List<String> filteredDiffs = filterTesting(allDiffs);
+      if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
-        configUpdates.forEach(this::recordBullet);
+        filteredDiffs.forEach(this::recordBullet);
         sequenceMd.flush();
       }
+      boolean somethingChanged = extraFieldChanged || !allDiffs.isEmpty();
       if (extraFieldChanged) {
         debug("Device config extra_field changed: " + extraField);
         extraFieldChanged = false;
       }
-      return true;
+      return somethingChanged;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
@@ -725,12 +738,12 @@ public class SequenceBase {
     String deviceSerial = deviceState == null ? null
         : deviceState.system == null ? null : deviceState.system.serial_no;
     if (!Objects.equals(deviceSerial, lastSerialNo)) {
-      notice(String.format("Received serial no %s", deviceSerial));
+      notice(String.format("Received serial number %s", deviceSerial));
       lastSerialNo = deviceSerial;
     }
     boolean serialValid = deviceSerial != null && Objects.equals(serialNo, deviceSerial);
     if (!serialValid && enforceSerial && Objects.equals(serialNo, deviceSerial)) {
-      throw new IllegalStateException("Serial no mismatch " + serialNo + " != " + deviceSerial);
+      throw new IllegalStateException("Serial number mismatch " + serialNo + " != " + deviceSerial);
     }
     enforceSerial = serialValid;
     return serialValid;
@@ -932,13 +945,22 @@ public class SequenceBase {
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
     ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
     Date lastState = reflectorConfig.setup.last_state;
-    if (CleanDateFormat.dateEquals(lastState, stateTimestamp)) {
+    if (CleanDateFormat.dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP)) {
+      info("Received matching state/config timestamp " + getTimestamp(lastState));
+
       info("Cloud UDMI version " + reflectorConfig.version);
       if (!udmiVersion.equals(reflectorConfig.version)) {
         warning("Local/cloud UDMI version mismatch!");
       }
+
+      int funcVer = Optional.ofNullable(reflectorConfig.setup.functions).orElse(0);
+      info("Cloud functions version " + funcVer);
+      if (funcVer < MIN_CLOUD_FUNC_VER || funcVer > MAX_CLOUD_FUNC_VER) {
+        throw new RuntimeException("Unsupported cloud function version, please redeploy");
+      }
     } else {
       info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
+      debug("Received reflectorConfig: " + stringify(reflectorConfig));
     }
   }
 
@@ -948,7 +970,8 @@ public class SequenceBase {
     String subTypeRaw = attributes.get("subType");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      trace("received command " + attributeMark + " nonce " + message.get(CONFIG_NONCE_KEY));
+      Object debugConfigNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
+      trace("received command " + attributeMark + " nonce " + debugConfigNonce);
     }
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
@@ -1027,8 +1050,8 @@ public class SequenceBase {
     // These parameters are set by the cloud functions, so explicitly set to maintain parity.
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
-    if (config.system != null) {
-      deviceConfig.system.last_start = config.system.last_start;
+    if (config.system != null && config.system.operation != null) {
+      deviceConfig.system.operation.last_start = config.system.operation.last_start;
     }
     sanitizeConfig(deviceConfig);
   }
@@ -1066,30 +1089,45 @@ public class SequenceBase {
   }
 
   private boolean configReady(boolean debugOut) {
-    Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
-    if (!(receivedConfig instanceof Config)) {
-      trace("no valid received config");
-      return false;
+    try {
+      Consumer<String> output = debugOut ? this::debug : this::trace;
+      Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
+      if (!(receivedConfig instanceof Config)) {
+        output.accept("no valid received config");
+        return false;
+      }
+      if (configExceptionTimestamp != null) {
+        output.accept("Received config exception at " + configExceptionTimestamp);
+        return true;
+      }
+      // Config isn't properly sync'd until this is filled in, else there are race-conditions.
+      if (deviceConfig.system.operation.last_start == null) {
+        output.accept("Missing config ready last_start field");
+        return false;
+      }
+      List<String> differences = filterTesting(
+          configDiffEngine.diff(sanitizeConfig((Config) receivedConfig), deviceConfig));
+      boolean configReady = differences.isEmpty();
+      output.accept("testing valid received config " + configReady);
+      if (!configReady) {
+        output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
+        output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
+        output.accept(
+            "final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+      }
+      return configReady;
+    } catch (Exception e) {
+      error("While processing waitForConfigSync: " + e.getMessage());
+      throw e;
     }
-    if (configExceptionTimestamp != null) {
-      debug("Received config exception at " + configExceptionTimestamp);
-      return true;
-    }
-    // Config isn't properly sync'd until this is filled in, else there are startup race-conditions.
-    if (deviceConfig.system.last_start == null) {
-      return false;
-    }
-    List<String> differences = configDiffEngine.diff(
-        sanitizeConfig((Config) receivedConfig), deviceConfig);
-    boolean configReady = differences.isEmpty();
-    Consumer<String> output = debugOut ? this::debug : this::trace;
-    output.accept("testing valid received config " + configReady);
-    if (!configReady) {
-      output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-      trace("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-      trace("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
-    }
-    return configReady;
+  }
+
+  /**
+   * Filter out any testing-oriented messages, since they should not impact behavior.
+   */
+  private List<String> filterTesting(List<String> allDiffs) {
+    return allDiffs.stream()
+        .filter(message -> !message.contains(SYSTEM_TESTING_MARKER)).collect(Collectors.toList());
   }
 
   protected void trace(String message) {
@@ -1166,7 +1204,7 @@ public class SequenceBase {
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
-      deviceConfig.system.testing.endpoint_type = null;
+      catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }
 
@@ -1242,9 +1280,6 @@ public class SequenceBase {
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
-        if (deviceConfig != null) {
-          deviceConfig.system.testing.sequence_name = testName;
-        }
 
         testStartTimeMs = System.currentTimeMillis();
 
@@ -1309,9 +1344,15 @@ public class SequenceBase {
         type = RESULT_FAIL;
         level = Level.ERROR;
       }
+      debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
       recordCompletion(type, level, description, message);
       String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
+      resetRequired = true;
+      if (debugLogLevel()) {
+        error("Reset required during debug, forcing exit to preserve failing config/state");
+        System.exit(EXIT_CODE_PRESERVE);
+      }
     }
 
     private void recordCompletion(String result, Level level,

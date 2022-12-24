@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "System State",
   "description": "[System State Documentation](../docs/messages/system.md#state)",
   "type": "object",
@@ -22,17 +22,8 @@
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
-    "operational": {
-      "description": "Operational status of the device.",
-      "type": "boolean"
-    },
-    "mode": {
-      "$ref": "file:common.json#/definitions/mode"
-    },
-    "last_start": {
-      "description": "Last time the system started up.",
-      "type": "string",
-      "format": "date-time"
+    "operation": {
+      "$ref": "file:state_system_operation.json"
     },
     "serial_no": {
       "description": "The serial number of the physical device",
@@ -73,6 +64,6 @@
     "last_config",
     "hardware",
     "software",
-    "operational"
+    "operation"
   ]
 }

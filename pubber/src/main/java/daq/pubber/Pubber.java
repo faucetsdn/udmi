@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,6 +84,8 @@ import udmi.schema.Level;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
+import udmi.schema.Operation;
+import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -93,10 +96,10 @@ import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.StateSystemHardware;
+import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
 
 /**
@@ -110,7 +113,7 @@ public class Pubber {
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
-  static final String UDMI_VERSION = "1.4.0";
+  static final String UDMI_VERSION = "1.4.1";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -384,8 +387,9 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.system.hardware = new SystemHardware();
-    deviceState.system.last_start = DEVICE_START_TIME;
+    deviceState.system.operation = new StateSystemOperation();
+    deviceState.system.operation.last_start = DEVICE_START_TIME;
+    deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
@@ -411,8 +415,8 @@ public class Pubber {
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, optionsString(configuration.options)));
 
-    deviceState.system.operational = true;
-    deviceState.system.mode = SystemMode.INITIAL;
+    deviceState.system.operation.operational = true;
+    deviceState.system.operation.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -445,6 +449,7 @@ public class Pubber {
         persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
             : new DevicePersistent();
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
+    deviceState.system.operation.restart_count = persistentData.restart_count;
     writePersistentStore();
   }
 
@@ -595,7 +600,6 @@ public class Pubber {
   private void sendSystemEvent() {
     SystemEvent systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
-    systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
@@ -617,27 +621,25 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    SystemConfig systemConfig = deviceConfig.system;
-    if (systemConfig == null) {
-      return;
-    }
-    if (SystemMode.ACTIVE.equals(deviceState.system.mode)
-        && SystemMode.RESTART.equals(systemConfig.mode)) {
+    SystemConfig system = Optional.ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
+    Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
+    if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
+        && SystemMode.RESTART.equals(operation.mode)) {
       restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
-      deviceState.system.mode = SystemMode.ACTIVE;
+    if (SystemMode.ACTIVE.equals(operation.mode)) {
+      deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
-    if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
+    if (operation.last_start != null && DEVICE_START_TIME.before(operation.last_start)) {
       System.err.printf("Device start time %s before last config start %s, terminating.",
-          isoConvert(DEVICE_START_TIME), isoConvert(systemConfig.last_start));
+          isoConvert(DEVICE_START_TIME), isoConvert(operation.last_start));
       restartSystem(false);
     }
   }
 
   private void restartSystem(boolean restart) {
-    deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
     try {
       publishSynchronousState();
     } catch (Exception e) {
@@ -683,7 +685,7 @@ public class Pubber {
 
   void terminate() {
     warn("Terminating");
-    deviceState.system.mode = SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);

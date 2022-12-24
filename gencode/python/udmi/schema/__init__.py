@@ -63,6 +63,7 @@ from .state_mapping_device import DeviceMappingState
 from .state_pointset import PointsetState
 from .state_pointset_point import PointPointsetState
 from .state_system import SystemState
-from .state_system_hardware import SystemHardware
+from .state_system_hardware import StateSystemHardware
+from .state_system_operation import StateSystemOperation
 from .state_validation import ValidationState
 from .virtual_links import VirtualEquipmentLinks

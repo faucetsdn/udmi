@@ -5,13 +5,13 @@ function usage() {
 
 $0 [step]
 
-step is one of:
-
+where [step] is one of:
   install_dependencies
   code_checks
-  schema_conformance_tests
-  simple_trace_test
+  schema_tests
+  trace_tests
   registrar_tests
+  all_tests
 EOF
   false
 }
@@ -27,16 +27,22 @@ case "$1" in
     validator/bin/build check
     bin/test_pylint
     ;;
-  schema_conformance_tests)
-    bin/test_schema -p
+  schema_tests)
+    bin/test_schema
     ;;
-  simple_trace_test)
+  trace_tests)
     bin/test_trace simple
     ;;
   registrar_tests)
     bin/test_registrar
     bin/test_sites
-    ;; 
+    ;;
+  all_tests)
+    bin/run_tests code_checks
+    bin/run_tests schema_tests
+    bin/run_tests trace_tests
+    bin/run_tests registrar_tests
+    ;;
   *)
     usage
     ;;

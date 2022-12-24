@@ -1,4 +1,4 @@
 3 schema violations found
-  object has missing required properties (["families"])
+  /localnet: object has missing required properties (["families"])
+  /localnet: object instance has properties which are not allowed by the schema: ["subsystem"]
   object has missing required properties (["version"])
-  object instance has properties which are not allowed by the schema: ["subsystem"]

@@ -28,19 +28,19 @@ section
 
 ## Releases
 
-The `bin/upversion` tool updates :
+The `bin/upgrade_version` tool updates :
 * the `$udmi_version` field in schema files, 
 * the version in `version` of of manually curated payloads in `tests/*.tests` 
 * documentation inline message examples.
 * the `UDMI_VERSION` constant in specific JAVA files.
 
 File in the `tests` directory must be listed in `etc/upversion.txt`. Only files
-which are preceded by a `y` in `upversion_yay.txt` will have their version upgraded. Comments are supported after the file path, e.g. 
+which are preceded by a `y` in `upversion.txt` will have their version upgraded. Comments are supported after the file path, e.g. 
 `y tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
 
-`bin/upversions` carries out several checks on files which must be cleared before an update.
+`bin/upgrade_version` carries out several checks on files which must be cleared before an update.
 
-`bin/upversion` does not update any generated files (e.g. for CI testing). 
+`bin/upgrade_version` does not update any generated files (e.g. for CI testing). 
 
 The following files need to be update:
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out/devices`

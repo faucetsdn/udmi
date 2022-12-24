@@ -10,12 +10,12 @@ rm -f $errorfile
 
 build=y
 force=n
-parallel=
+upgrade=
 
 schemadir=schema
 testdir=tests
 
-while getopts "d:s:fnp" opt; do
+while getopts "d:s:fnu" opt; do
     case $opt in
         f)
             force=y
@@ -23,17 +23,17 @@ while getopts "d:s:fnp" opt; do
         n)
             build=n
             ;;
+        u)
+            upgrade=-u
+            ;;
         s)
             subsets=${OPTARG}
             ;;
         d)
             testdir=${OPTARG}
             ;;
-        p)
-            parallel=y
-            ;;
         \?)
-            echo "Usage: $0 [-p] [-f] [-n] [-d TEST_DATA_DIR] [-s TEST_SUBSET]"
+            echo "Usage: $0 [-f] [-n] [-u] [-d TEST_DATA_DIR] [-s TEST_SUBSET]"
             exit -1
             ;;
     esac
@@ -48,10 +48,6 @@ fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 
-if [[ -n $parallel ]]; then
-    echo ========================= Running validation tests in parallel...
-fi
-
 if [[ -z $subsets ]]; then
     subsets=$(cd $testdir; ls -d *.tests)
 fi
@@ -63,6 +59,18 @@ echo Testing against $subsets
 for subset in $subsets; do
     schemaname=${subset%.tests}.json
     testfiles=$(cd $testdir/$subset; ls *.json || true)
+    testbase=$testdir/$subset
+
+    echo ================================== $subset
+
+    if [[ "$testbase" == "$schemadir" ]]; then
+        reltest=$subset
+    else
+        reldir=$(realpath --relative-to $schemadir $testdir)
+        reltest=$reldir:$subset
+    fi
+    (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -a $schemaname $upgrade -f $reltest) || true
+
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out
         testbase=$testdir/$subset
@@ -88,27 +96,21 @@ for subset in $subsets; do
           reldir=$(realpath --relative-to $schemadir $testdir)
           reltest=$reldir:$(realpath --relative-to $testdir $testpath)
         fi
-        (
-            (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -a $schemaname -f $reltest) || true
-            if [ $force == y ]; then
-                diff $output $expected || echo Updating $expected && cp $output $expected
-            else
-                diff -b $output $expected || (echo '   ' diff $output $expected | tee -a $errorfile)
-            fi
-        ) &
 
-        if [[ -z $parallel ]]; then
-            wait
+        if [ $force == y ]; then
+            diff $output $expected || echo Updating $expected && cp $output $expected
+        else
+            diff -b $output $expected || (echo '   ' diff $output $expected | tee -a $errorfile)
+        fi
+
+        if [[ -n $upgrade ]]; then
+            upgrade_new=${output%.out}.json
+            diff $upgrade_new $testpath || (echo cp $upgrade_new $testpath | tee -a $errorfile)
         fi
     done
 done
 
-if [[ -n $parallel ]]; then
-    sleep 5
-    echo ========================= Waiting for validation results...
-    wait
-fi
-
+echo ==================================
 echo
 
 if [ -f $errorfile ]; then
