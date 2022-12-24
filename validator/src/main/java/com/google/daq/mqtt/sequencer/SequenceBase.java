@@ -701,20 +701,19 @@ public class SequenceBase {
       String header = String.format("Update config%s:", suffix);
       debug(header + " " + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> configUpdates = filterTesting(configDiffEngine.computeChanges(deviceConfig));
-      if (configUpdates.isEmpty() && !extraFieldChanged) {
-        return false;
-      }
-      if (!configUpdates.isEmpty()) {
+      List<String> allDiffs = configDiffEngine.computeChanges(deviceConfig);
+      List<String> filteredDiffs = filterTesting(allDiffs);
+      if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
-        configUpdates.forEach(this::recordBullet);
+        filteredDiffs.forEach(this::recordBullet);
         sequenceMd.flush();
       }
+      boolean somethingChanged = extraFieldChanged || !allDiffs.isEmpty();
       if (extraFieldChanged) {
         debug("Device config extra_field changed: " + extraField);
         extraFieldChanged = false;
       }
-      return true;
+      return somethingChanged;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
