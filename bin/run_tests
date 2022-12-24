@@ -20,12 +20,14 @@ case "$1" in
   install_dependencies)
     bin/setup_base
     bin/clone_model
+    sudo ln -fs $PWD/bin/udmi /usr/local/bin/
     ;;
   code_checks)
     bin/gencode check
     pubber/bin/build check
     validator/bin/build check
     bin/test_pylint
+    bin/test_locate
     ;;
   schema_tests)
     bin/test_schema
