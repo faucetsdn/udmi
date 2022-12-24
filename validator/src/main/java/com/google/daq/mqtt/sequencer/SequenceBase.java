@@ -357,7 +357,6 @@ public class SequenceBase {
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     setExtraField(null);
-    sentConfig.clear();
     sanitizeConfig(deviceConfig);
     deviceConfig.system = ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -445,6 +444,7 @@ public class SequenceBase {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
         resetDeviceConfig(true);
+        sentConfig.clear();
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         updateConfig();
@@ -1108,8 +1108,8 @@ public class SequenceBase {
       output.accept("testing valid received config " + configReady);
       if (!configReady) {
         output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-        trace("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        trace("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+        output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
+        output.accept("final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
       }
       return configReady;
     } catch (Exception e) {
