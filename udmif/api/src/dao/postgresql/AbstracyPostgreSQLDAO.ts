@@ -8,7 +8,7 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   defaultOrder: Order;
   ID_AS_COUNT = 'uuid as count';
 
-  constructor(private db: Knex, private tableName: string) {}
+  constructor(private db: Knex, private tableName: string) { }
 
   async getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
     return this.getTable()
