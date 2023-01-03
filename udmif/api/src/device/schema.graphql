@@ -28,6 +28,8 @@ type Point{
 }
 
 type Device {
+  # the unique id of the device
+  uuid: String!
   # the ID of the device
   id: ID!
   # the name of the device
@@ -48,8 +50,6 @@ type Device {
   firmware: String
   # the serial number of the device
   serialNumber: String
-  # the tags assigned to a device
-  tags: [String!]!
   # the points on a device
   points: [Point!]!
   # JSON validation message
@@ -60,8 +60,14 @@ type Device {
   message: String
   # message details from site validation message
   details: String
-  # date last seen from site validation message
-  lastSeen: String
+  # timestamp on a telemetry message
+  lastTelemetryUpdated: String
+  # timestamp on a device message
+  lastStateUpdated: String
+  # timestamp when telemetry was saved to db
+  lastTelemetrySaved: String
+  # timestamp when device was saved to db
+  lastStateSaved: String
   # the bin the device fell into during the site validation, i.e. correct, error, missing, or extra
   state: DEVICE_STATE
   # number of errors from device validation message

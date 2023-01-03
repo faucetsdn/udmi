@@ -8,7 +8,7 @@ const firmware: string = 'firmware';
 const lastPayload: string = 'lastPayload';
 const make: string = 'make';
 const model: string = 'model';
-const operational: string = 'operational';
+const operational: boolean = true;
 const section: string = 'section';
 const site: string = 'site';
 const serialNumber: string = 'serialNumber';
@@ -16,6 +16,7 @@ const points: Point[] = [];
 const tags: string[] = [];
 const validation: Validation = {
   timestamp: '2022-08-03T17:28:49Z',
+  last_updated: '2022-08-03T17:28:49Z',
   version: '',
   category: 'category-x',
   message: 'Multiple validation errors',
@@ -56,7 +57,7 @@ describe('Device.DeviceBuilder', () => {
 
   test('Builder creates Device Document with id and name', () => {
     builder.site(site).name(name).id(id);
-    expect(builder.build()).toEqual({ site, name, tags, id });
+    expect(builder.build()).toEqual({ site, name, id });
   });
 
   test('Builder allows optional attributes', () => {
@@ -86,7 +87,6 @@ describe('Device.DeviceBuilder', () => {
       serialNumber,
       points,
       validation,
-      tags,
     });
   });
 });

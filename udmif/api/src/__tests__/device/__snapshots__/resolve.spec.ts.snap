@@ -4,15 +4,21 @@ exports[`Devices device 1`] = `
 Object {
   "data": Object {
     "device": Object {
-      "details": null,
+      "details": "The field x.y was unexpected on line 232 of the message.
+This is by following the logic train x.y.z in the overall flow of the sytem.
+Rabbits are really interesting creatures and make great pets.
+Oh yah, and there was a missing field too.",
       "errorsCount": 0,
       "firmware": "v-1",
       "id": "00000000-0000-0000-0000-000000000001",
       "lastPayload": "2022-08-30",
-      "lastSeen": "2022-07-16T18:27:19Z",
-      "level": 400,
+      "lastStateSaved": null,
+      "lastStateUpdated": null,
+      "lastTelemetrySaved": null,
+      "lastTelemetryUpdated": null,
+      "level": 600,
       "make": "make-1",
-      "message": "Tickity Boo",
+      "message": "Failed schema validation",
       "model": "BBBB-1",
       "name": "AHU-1",
       "operational": true,
@@ -57,7 +63,6 @@ Object {
       "serialNumber": "serialNo-1",
       "site": "LOC-1",
       "state": "ERROR",
-      "tags": Array [],
       "validation": "{\\"version\\":\\"1.3.14\\",\\"timestamp\\":\\"2018-08-26T21:39:29.364Z\\",\\"sub_type\\":\\"event\\",\\"sub_folder\\":\\"discovery\\",\\"status\\":{\\"message\\":\\"Failed schema validation\\",\\"detail\\":\\"The field x.y was unexpected on line 232 of the message.\\\\nThis is by following the logic train x.y.z in the overall flow of the sytem.\\\\nRabbits are really interesting creatures and make great pets.\\\\nOh yah, and there was a missing field too.\\",\\"category\\":\\"validation.device.result\\",\\"timestamp\\":\\"2018-08-26T21:39:30.364Z\\",\\"level\\":600},\\"pointset\\":{\\"missing\\":[\\"filter_differential_pressure_setpoint\\"]},\\"errors\\":[]}",
     },
   },
@@ -85,7 +90,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC1",
           "site": "LOC-1",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000001",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000002",
@@ -96,7 +101,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC2",
           "site": "SITE-2",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000002",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000003",
@@ -107,7 +112,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC3",
           "site": "LOC-3",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000003",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000004",
@@ -118,7 +123,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC4",
           "site": "SITE-4",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000004",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000005",
@@ -129,7 +134,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC5",
           "site": "LOC-5",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000005",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000006",
@@ -140,7 +145,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC6",
           "site": "SITE-6",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000006",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000007",
@@ -151,7 +156,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC7",
           "site": "LOC-7",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000007",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000008",
@@ -162,7 +167,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC8",
           "site": "SITE-8",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000008",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000009",
@@ -173,7 +178,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC9",
           "site": "LOC-9",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000009",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000010",
@@ -184,7 +189,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC10",
           "site": "SITE-10",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000010",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000011",
@@ -195,7 +200,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC11",
           "site": "LOC-11",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000011",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000012",
@@ -206,7 +211,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC12",
           "site": "SITE-12",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000012",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000013",
@@ -217,7 +222,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC13",
           "site": "LOC-13",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000013",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000014",
@@ -228,7 +233,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC14",
           "site": "SITE-14",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000014",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000015",
@@ -239,7 +244,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC15",
           "site": "LOC-15",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000015",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000016",
@@ -250,7 +255,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC16",
           "site": "SITE-16",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000016",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000017",
@@ -261,7 +266,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC17",
           "site": "LOC-17",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000017",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000018",
@@ -272,7 +277,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC18",
           "site": "SITE-18",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000018",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000019",
@@ -283,7 +288,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC19",
           "site": "LOC-19",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000019",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000020",
@@ -294,7 +299,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC20",
           "site": "SITE-20",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000020",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000021",
@@ -305,7 +310,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC21",
           "site": "LOC-21",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000021",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000022",
@@ -316,7 +321,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC22",
           "site": "SITE-22",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000022",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000023",
@@ -327,7 +332,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC23",
           "site": "LOC-23",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000023",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000024",
@@ -338,7 +343,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC24",
           "site": "SITE-24",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000024",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000025",
@@ -349,7 +354,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC25",
           "site": "LOC-25",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000025",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000026",
@@ -360,7 +365,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC26",
           "site": "SITE-26",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000026",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000027",
@@ -371,7 +376,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC27",
           "site": "LOC-27",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000027",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000028",
@@ -382,7 +387,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC28",
           "site": "SITE-28",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000028",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000029",
@@ -393,7 +398,7 @@ Object {
           "operational": true,
           "section": "SIN-MBC29",
           "site": "LOC-29",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000029",
         },
         Object {
           "id": "00000000-0000-0000-0000-000000000030",
@@ -404,7 +409,7 @@ Object {
           "operational": false,
           "section": "SIN-MBC30",
           "site": "SITE-30",
-          "tags": Array [],
+          "uuid": "00000000-0000-0000-0000-000000000030",
         },
       ],
       "totalCount": 30,

@@ -29,6 +29,7 @@ describe('DevicesService', () => {
       devices: {
         devices: [
           {
+            uuid: 'uuid-123',
             id: '123',
             name: 'device one',
             make: 'Mitr',
@@ -40,7 +41,6 @@ describe('DevicesService', () => {
             level: 400,
             message: '',
             details: '',
-            lastSeen: '2022-06-203T04:55:21Z',
             state: 'COMPLETE',
             errorsCount: 0,
             validation: '{}',

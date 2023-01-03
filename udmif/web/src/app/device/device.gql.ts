@@ -3,6 +3,7 @@ import { gql } from 'apollo-angular';
 export const GET_DEVICE = gql`
   query GetDevice($id: ID!) {
     device(id: $id) {
+      uuid
       id
       name
       make
@@ -14,10 +15,13 @@ export const GET_DEVICE = gql`
       firmware
       serialNumber
       level
-      lastSeen
       state
       errorsCount
       validation
+      lastStateUpdated
+      lastStateSaved
+      lastTelemetryUpdated
+      lastTelemetrySaved
     }
   }
 `;

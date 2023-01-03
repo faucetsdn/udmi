@@ -1,22 +1,32 @@
-import { InvalidEventError } from '../InvalidEventError';
-import { UdmiEvent, ValidationEvent } from '../model/UdmiEvent';
-import { Site, SiteKey, SiteValidation } from './model/Site';
+import { Validation } from '../model/Validation';
+import { ValidationEvent } from '../udmi/UdmiEvent';
+import { Site, SiteValidation } from './model/Site';
 
-export function getSiteDocument(udmiEvent: ValidationEvent): Site {
-  return { name: udmiEvent.attributes.deviceRegistryId, validation: udmiEvent.data };
-}
+export function getSiteDocument(originalSite: Site, udmiEvent: ValidationEvent): Site {
+  const name = udmiEvent.attributes.deviceRegistryId;
 
-export function getSiteKey(udmiEvent: UdmiEvent): SiteKey {
-  if (!udmiEvent.attributes.deviceRegistryId) {
-    throw new InvalidEventError('An invalid site name was submitted');
+  let validation;
+  if (!originalSite) {
+    validation = udmiEvent.data;
+  } else {
+    validation = mergeValidations(originalSite.validation, udmiEvent.data);
   }
-  return { name: udmiEvent.attributes.deviceRegistryId };
+
+  return { name, validation };
 }
 
 export function getSiteValidationDocument(udmiEvent: ValidationEvent): SiteValidation {
   return {
     timestamp: new Date(udmiEvent.data.timestamp),
     siteName: udmiEvent.attributes.deviceRegistryId,
-    data: udmiEvent.data,
+    message: udmiEvent.data,
   };
+}
+
+export function mergeValidations(originalValidation: Validation, incomingValidation: Validation): any {
+  let mergedValidation: any = {};
+  Object.keys(originalValidation).forEach(
+    (key) => (mergedValidation[key] = incomingValidation[key] ? incomingValidation[key] : originalValidation[key])
+  );
+  return mergedValidation;
 }

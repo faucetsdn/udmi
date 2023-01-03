@@ -1,6 +1,7 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Site, SitesResponse } from '../../site/model';
+import { Site, SitesResponse, SiteValidation, Status } from '../../site/model';
 import { createSites } from './data';
+import siteMessage from './siteValidationMessage.json';
 
 export default class MockSiteDataSource extends GraphQLDataSource<object> {
   constructor() {
@@ -24,5 +25,14 @@ export default class MockSiteDataSource extends GraphQLDataSource<object> {
 
   async getSite(): Promise<Site> {
     return createSites(1)[0];
+  }
+
+  async getSiteValidation(name: string): Promise<SiteValidation> {
+    return siteMessage;
+  }
+
+  async getSiteDeviceStatus(name: string, deviceName: string): Promise<Status> {
+    const devices = siteMessage.devices;
+    return !devices ? null : devices[deviceName]?.status;
   }
 }

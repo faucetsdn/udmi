@@ -27,6 +27,7 @@ export interface Point {
 }
 
 export interface Device {
+  uuid?: string;
   id: string;
   name: string;
   make?: string;
@@ -37,7 +38,10 @@ export interface Device {
   operational?: boolean;
   firmware?: string;
   serialNumber?: string;
-  tags?: string[];
   points?: Point[];
   validation?: any;
+  lastStateUpdated?: string;
+  lastStateSaved?: string;
+  lastTelemetryUpdated?: string;
+  lastTelemetrySaved?: string;
 }

@@ -72,9 +72,24 @@ export class DevicesConstants {
       isSortable: false,
     },
     {
-      value: 'lastSeen',
-      label: 'Last Seen',
-      isSortable: false,
+      value: 'lastStateUpdated',
+      label: 'Last State Updated',
+      isSortable: true,
+    },
+    {
+      value: 'lastStateSaved',
+      label: 'Last State Saved',
+      isSortable: true,
+    },
+    {
+      value: 'lastTelemetryUpdated',
+      label: 'Last Telemetry Updated',
+      isSortable: true,
+    },
+    {
+      value: 'lastTelemetrySaved',
+      label: 'Last Telemetry Saved',
+      isSortable: true,
     },
     {
       value: 'errorsCount',

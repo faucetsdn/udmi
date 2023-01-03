@@ -17,6 +17,7 @@ const QUERY_DEVICES = gql`
       totalCount
       totalFilteredCount
       devices {
+        uuid
         id
         name
         make
@@ -25,7 +26,6 @@ const QUERY_DEVICES = gql`
         section
         lastPayload
         operational
-        tags
       }
     }
   }
@@ -44,7 +44,6 @@ const QUERY_DEVICE = gql`
       operational
       firmware
       serialNumber
-      tags
       points {
         id
         name
@@ -56,9 +55,12 @@ const QUERY_DEVICE = gql`
       level
       message
       details
-      lastSeen
       state
       errorsCount
+      lastStateUpdated
+      lastStateSaved
+      lastTelemetryUpdated
+      lastTelemetrySaved
     }
   }
 `;

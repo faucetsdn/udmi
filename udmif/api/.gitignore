@@ -18,7 +18,4 @@ globalConfig.json
 # environment variables
 .env
 
-# mongo output
-.mongodb
-
 /util/devices.json

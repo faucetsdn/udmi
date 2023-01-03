@@ -33,14 +33,16 @@
     <ng-container [ngSwitch]="column.value">
       <ng-container *ngSwitchCase="'name'">
         <mat-cell *matCellDef="let element"
-          ><a [routerLink]="'/devices/' + element.id">{{ element.name }}</a></mat-cell
+          ><a [routerLink]="'/devices/' + element.uuid">{{ element.name }}</a></mat-cell
         >
       </ng-container>
       <ng-container *ngSwitchCase="'lastPayload'">
-        <mat-cell *matCellDef="let element">{{ element.lastPayload | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+        <mat-cell *matCellDef="let element">{{ element.lastPayload | date: 'short' }}</mat-cell>
       </ng-container>
-      <ng-container *ngSwitchCase="'lastSeen'">
-        <mat-cell *matCellDef="let element">{{ element.lastSeen | date: 'MM/dd/yy h:mm a' }}</mat-cell>
+      <ng-container *ngSwitchCase="'level'">
+        <mat-cell *matCellDef="let element">
+          <app-level-indicator [level]="element.level"></app-level-indicator>
+        </mat-cell>
       </ng-container>
       <ng-container *ngSwitchCase="'operational'">
         <mat-cell *matCellDef="let element">

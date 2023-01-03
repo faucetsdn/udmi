@@ -1,4 +1,5 @@
 interface DeviceModel {
+  uuid: string;
   id: string;
   name: string;
   make: string;
@@ -14,9 +15,12 @@ interface DeviceModel {
   level: number;
   message: string;
   details: string;
-  lastSeen: string;
   state: string;
   errorsCount: number;
+  lastStateUpdated?: string;
+  lastStateSaved?: string;
+  lastTelemetryUpdated?: string;
+  lastTelemetrySaved?: string;
 }
 
 export type Device = Partial<DeviceModel>;

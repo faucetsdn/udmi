@@ -3,7 +3,8 @@ import {
   getErrorDevicesCount,
   getMissingDevicesCount,
   getTotalDevicesCount,
-} from '../../util/siteUtil';
+  getExtraDevicesCount,
+} from './siteUtil';
 import { DistinctArgs } from '../common/model';
 import { ApolloContext } from '../server/datasources';
 import { Site, SiteArgs, SitesArgs } from './model';
@@ -46,7 +47,7 @@ export const resolvers = {
       return getErrorDevicesCount(site) / (getTotalDevicesCount(site) || 1);
     },
     extraDevicesCount: (site: Site) => {
-      return site.validation?.summary.extra_devices?.length ?? 0;
+      return getExtraDevicesCount(site);
     },
     lastValidated: (site: Site) => {
       return site.validation?.last_updated;

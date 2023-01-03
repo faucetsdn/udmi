@@ -4,6 +4,7 @@ export const GET_DEVICES = gql`
   query GetDevices($searchOptions: SearchOptions) {
     devices(searchOptions: $searchOptions) {
       devices {
+        uuid
         id
         name
         make
@@ -15,7 +16,6 @@ export const GET_DEVICES = gql`
         level
         message
         details
-        lastSeen
         state
         errorsCount
         validation
