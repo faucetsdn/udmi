@@ -1,0 +1,54 @@
+include:
+  - project: 'buildings-iot/templates/cicd_pipelines'
+    ref: main
+    file: terraform/base.yml
+
+stages:
+  - test
+  - init
+  - validate
+  - build
+  - deploy
+  - cleanup
+
+cache:
+  key: ${CI_PROJECT_NAME}-$CI_ENVIRONMENT_SLUG-gcp
+  paths:
+    - ${TF_ROOT}/.terraform
+    
+variables:
+  TF_ROOT: ${CI_PROJECT_DIR}/cloud/gcp
+before_script:
+  - cd cloud/gcp
+  - echo "$MAIN_TF" >> main.tf
+  - echo "$UDMI_SITES_TF" >> udmi-sites.tf
+  - echo "$GCP_CREDENTIALS" >> auth/credentials.json
+
+init-staging:
+  extends: .init
+  environment: staging
+
+validate-staging:
+  extends: .validate
+  environment: staging
+  needs: ["init-staging"]
+
+build-staging:
+  extends: .build
+  environment: staging
+  needs: ["validate-staging"]
+  
+deploy-staging:
+  extends: .deploy
+  environment: staging
+  dependencies:
+    - build-staging
+  needs: ["build-staging"]
+
+destroy-staging:
+  extends: .destroy
+  environment: staging
+  rules:
+    - when: never
+
+
