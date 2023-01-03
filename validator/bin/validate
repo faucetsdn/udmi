@@ -44,7 +44,7 @@ if [[ $target == reflect ]]; then
 elif [[ $target == pubsub ]]; then
     srcargs="-t $subscription"
 elif [[ $target == trace ]]; then
-    srcargs="-r validator/traces/$subscription -- $devices"
+    srcargs="-r $subscription -- $devices"
 else
     echo Unsupported target $target
     false

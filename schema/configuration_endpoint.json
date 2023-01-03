@@ -21,6 +21,10 @@
     "hostname": {
       "type": "string"
     },
+    "error": {
+      "description": "Error message container for capturing errors during parsing/handling",
+      "type": "string"
+    },
     "port": {
       "type": "integer",
       "default": 8883
@@ -36,6 +40,16 @@
       "description": "Prefix for message topics",
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9]+$"
+    },
+    "sub_topic": {
+      "description": "Topic for message subscriptions",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9#]+$"
+    },
+    "send_topic": {
+      "description": "Topic for sending messages",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
     "auth_provider": {
       "type": "object",
@@ -62,9 +76,11 @@
         }
       }
     },
-    "nonce": {
+    "generation": {
+      "description": "The timestamp of the endpoint generation",
       "type": "string",
-      "pattern": "^[0-9A-Za-z=\\-/:]{1,}$"
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
     }
   },
   "required": [

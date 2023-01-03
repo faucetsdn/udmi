@@ -7,6 +7,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
+UDMI_ALT_REGISTRY=ZZ-REDIRECT-NA
 
 if [[ $1 == '-v' ]]; then
     log_level=DEBUG
@@ -51,6 +52,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "project_id": "$project_id",
   "site_model": "$site_path",
   "device_id": "$device_id",
+  "alt_registry": "$UDMI_ALT_REGISTRY",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "udmi_version": "$udmi_version",

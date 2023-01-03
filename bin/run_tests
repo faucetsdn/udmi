@@ -1,0 +1,51 @@
+#!/bin/bash -e
+
+function usage() {
+  >&2 cat << EOF
+
+$0 [step]
+
+where [step] is one of:
+  install_dependencies
+  code_checks
+  schema_tests
+  trace_tests
+  registrar_tests
+  all_tests
+EOF
+  false
+}
+
+case "$1" in
+  install_dependencies)
+    bin/setup_base
+    bin/clone_model
+    sudo ln -fs $PWD/bin/udmi /usr/local/bin/
+    ;;
+  code_checks)
+    bin/gencode check
+    pubber/bin/build check
+    validator/bin/build check
+    bin/test_pylint
+    bin/test_locate
+    ;;
+  schema_tests)
+    bin/test_schema
+    ;;
+  trace_tests)
+    bin/test_trace simple
+    ;;
+  registrar_tests)
+    bin/test_registrar
+    bin/test_sites
+    ;;
+  all_tests)
+    bin/run_tests code_checks
+    bin/run_tests schema_tests
+    bin/run_tests trace_tests
+    bin/run_tests registrar_tests
+    ;;
+  *)
+    usage
+    ;;
+esac

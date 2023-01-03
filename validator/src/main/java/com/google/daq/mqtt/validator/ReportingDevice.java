@@ -1,8 +1,13 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -22,9 +28,11 @@ import udmi.schema.PointsetState;
  */
 public class ReportingDevice {
 
-  public static final String DETAIL_SEPARATOR = "; ";
-  private static final long THRESHOLD_SEC = 3600;
+  private static final char DETAIL_SEPARATOR_CHAR = ';';
+  private static final char DETAIL_REPLACE_CHAR = ',';
+  private static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
   private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
+  private static final long THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
@@ -32,6 +40,7 @@ public class ReportingDevice {
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
+  private final List<Entry> messageEntries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
   private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
   private ReportingPointset reportingPointset;
@@ -51,15 +60,17 @@ public class ReportingDevice {
   /**
    * Make a status Entry corresponding to a single exception.
    *
-   * @param error exception to summarize
+   * @param error    exception to summarize
+   * @param category entry category
+   * @param detail   entry detail
    * @return Entry summarizing the exception
    */
-  private static Entry makeEntry(Exception error) {
+  private static Entry makeEntry(Exception error, String category, String detail) {
     Entry entry = new Entry();
     entry.message = Common.getExceptionMessage(error);
-    String detail = getExceptionDetail(error);
-    entry.detail = entry.message.equals(detail) ? null : detail;
-    entry.category = "validation.error.simple";
+    entry.detail = detail == null ? getExceptionDetail(error) : detail;
+    assertTrue("valid entry category", Category.LEVEL.containsKey(category));
+    entry.category = Category.VALIDATION_DEVICE_SCHEMA;
     entry.level = Level.ERROR.value();
     entry.timestamp = getTimestamp();
     return entry;
@@ -97,7 +108,8 @@ public class ReportingDevice {
   }
 
   private static String replaceCategoryMissing(String message) {
-    return message.startsWith(CATEGORY_MISSING_MESSAGE) ? CATEGORY_MISSING_REPLACEMENT : message;
+    int index = message.indexOf(CATEGORY_MISSING_MESSAGE);
+    return index < 0 ? message : message.substring(0, index) + CATEGORY_MISSING_REPLACEMENT;
   }
 
   /**
@@ -116,7 +128,7 @@ public class ReportingDevice {
     }
 
     Entry entry = new Entry();
-    entry.category = "validation.error.multiple";
+    entry.category = Category.VALIDATION_DEVICE_MULTIPLE;
     entry.message = "Multiple validation errors";
     entry.detail = DETAIL_JOINER
         .join(entries.stream()
@@ -129,7 +141,7 @@ public class ReportingDevice {
   }
 
   private static String makeEntrySummary(Entry entry) {
-    return String.format("%s:%s (%s)", entry.category, entry.message, entry.level);
+    return entry.message.replace(DETAIL_SEPARATOR_CHAR, DETAIL_REPLACE_CHAR);
   }
 
   static void setMockNow(Instant now) {
@@ -167,11 +179,11 @@ public class ReportingDevice {
   /**
    * Validate a message against specific message-type expectations (outside of base schema).
    *
-   * @param message   Message to validate
-   * @param timestamp message timestamp string (rather than pull from typed object)
+   * @param message    Message to validate
+   * @param timestamp  message timestamp string (rather than pull from typed object)
+   * @param attributes message attributes
    */
-  public void validateMessageType(Object message, Date timestamp) {
-    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
+  public void validateMessageType(Object message, Date timestamp, Map<String, String> attributes) {
     if (reportingPointset == null) {
       return;
     }
@@ -185,18 +197,25 @@ public class ReportingDevice {
     }
 
     missingPoints = metadataDiff.missingPoints;
-    if (!missingPoints.isEmpty()) {
-      addError(pointValidationError("missing points", missingPoints));
+    if (missingPoints != null && !missingPoints.isEmpty()) {
+      addError(pointValidationError("missing points", missingPoints), attributes,
+          Category.VALIDATION_DEVICE_CONTENT);
     }
 
     extraPoints = metadataDiff.extraPoints;
     if (!extraPoints.isEmpty()) {
-      addError(pointValidationError("extra points", extraPoints));
+      addError(pointValidationError("extra points", extraPoints), attributes,
+          Category.VALIDATION_DEVICE_CONTENT);
     }
+  }
 
-    if (metadataDiff.errors != null) {
-      metadataDiff.errors.forEach(this::addEntry);
-    }
+  /**
+   * Update the last seen timestamp for this device.
+   *
+   * @param timestamp timestamp for last seen update
+   */
+  public void updateLastSeen(Date timestamp) {
+    lastSeen = (timestamp != null && timestamp.after(lastSeen)) ? timestamp : lastSeen;
   }
 
   private Exception pointValidationError(String description, Set<String> points) {
@@ -205,30 +224,43 @@ public class ReportingDevice {
   }
 
   private void addEntry(Entry entry) {
+    // entries collects everything, and is garbage-collected by time
     entries.add(entry);
+
+    // newEntries collects everything on a per-message basis
+    messageEntries.add(entry);
   }
 
   /**
    * Add a validation error to this device.
    *
-   * @param error Exception to add
+   * @param error      Exception to add
+   * @param attributes attributes of message causing error
+   * @param category   error category
    */
-  public void addError(Exception error) {
-    addEntry(makeEntry(error));
+  void addError(Exception error, Map<String, String> attributes, String category) {
+    String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
+    addError(error, category,
+        String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
+  }
+
+  void addError(Exception error, String category, String detail) {
+    addEntry(makeEntry(error, category, detail));
   }
 
   /**
    * Get the error Entries associated with this device.
    *
-   * @param threshold date threshold beyond which to ignore (null for all)
+   * @param now current time for thresholding, or null for everything
    * @return Entry list or errors.
    */
-  public List<Entry> getErrors(Date threshold) {
-    if (threshold == null) {
+  public List<Entry> getErrors(Date now) {
+    if (now == null) {
       return entries;
     }
     return entries.stream()
-        .filter(entry -> !entry.timestamp.before(threshold))
+        .filter(entry -> !entry.timestamp.before(getThreshold(now.toInstant())))
         .collect(Collectors.toList());
   }
 
@@ -274,12 +306,22 @@ public class ReportingDevice {
     return previous == null || previous.before(getThreshold(now));
   }
 
+  public Date getLastSeen() {
+    return lastSeen;
+  }
+
+  public void clearMessageEntries() {
+    messageEntries.clear();
+  }
+
+  public List<Entry> getMessageEntries() {
+    return messageEntries;
+  }
+
   /**
    * Encapsulation of metadata differences.
    */
   public static class MetadataDiff {
-
-    public List<Entry> errors;
     public Set<String> extraPoints;
     public Set<String> missingPoints;
   }

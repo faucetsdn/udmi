@@ -65,17 +65,21 @@ cat <<EOF > out/endpoint.json
 EOF
 
 base64=$(base64 -w 0 out/endpoint.json)
+sha256=$(openssl sha256 < out/endpoint.json | awk '{print $2}')
 
 cat <<EOF > out/blobs.json
 {
   "system": {
-    "mode": "active"
+    "operation": {
+      "mode": "active"
+    }
   },
   "blobset": {
     "blobs": {
       "_iot_endpoint_config": {
         "phase": "final",
-        "base64": "$base64"
+        "url": "data:application/json;base64,$base64",
+        "sha256": "$sha256"
       }
     }
   }
@@ -84,7 +88,7 @@ EOF
 
 # Merge JSON files together into new redirect config
 jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $out_base/redirect_config.json
-jq '.system.mode = "restart"' $out_base/redirect_config.json > $out_base/restart_config.json
+jq '.system.operation.mode = "restart"' $out_base/redirect_config.json > $out_base/restart_config.json
 
 echo New redirection config:
 cat /tmp/${device_id}_config.json
@@ -105,7 +109,7 @@ sleep 20
 # Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 echo Setting last_start time to $now_date for pubber shutdown...
-jq ".system.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
+jq ".system.operation.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
 echo bin/reset_config $site_path $project_id $device_id shutdown_config.json
 bin/reset_config $site_path $project_id $device_id shutdown_config.json
 

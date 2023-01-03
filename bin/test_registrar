@@ -15,12 +15,25 @@ echo
 
 clean_devices=$(fgrep 'Z"' ${TEST_SITE}/registration_summary.json | wc -l)
 EXPECTED_CLEAN=3  # AHU-1 has a bad site location, so does not match as clean.
-exit_status=0
+exit_status=clean
 
 echo Found ${clean_devices} clean devices.
-[ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=1
+[ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
 
 device_files=$(ls -d ${TEST_SITE}/devices/*)
+
+# Individual tests for generated config values
+echo
+echo Testing generated_config...
+error_file=`mktemp` && rm $error_file
+generated_config=sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+[[ "Degrees-Celsius" == $(jq -r .pointset.points.filter_differential_pressure_sensor.units $generated_config) ]] || (echo Units mismatch; touch $error_file)
+if [[ -f $error_file ]]; then
+    echo Errors found testing generated config.
+    exit_status=generated_config
+fi
+echo Done with generated_config test.
+echo
 
 # Test site_metadata settings for system.location.site.
 site=$(jq -r .system.location.site < ${TEST_SITE}/site_metadata.json)
@@ -46,7 +59,7 @@ function check_norm {
 
 sm_devices=$(check_norm)
 echo Devices with correct site_metadata: ${sm_devices}
-[ "${sm_devices}" == "${device_files}" ] || exit_status=2
+[ "${sm_devices}" == "${device_files}" ] || exit_status=site_metadata
 
 mv ${TEST_SITE}/site_metadata.json ${TEST_SITE}/_site_metadata.json
 
@@ -55,9 +68,9 @@ bin/registrar ${TEST_SITE}
 base_devices=sites/udmi_site_model/devices/AHU-1
 sm_devices=$(check_norm)
 echo Devices with correct no-defaults site_metadata: ${sm_devices}
-[ "${sm_devices}" == "${base_devices}" ] || exit_status=3
+[ "${sm_devices}" == "${base_devices}" ] || exit_status=no_defaults
 
 mv ${TEST_SITE}/_site_metadata.json ${TEST_SITE}/site_metadata.json
 
-echo Done with registrar tests, exit code $exit_status
-exit $exit_status
+echo Done with registrar tests, results are $exit_status
+[[ $exit_status == clean ]]

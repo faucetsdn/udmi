@@ -49,7 +49,7 @@ public class Entry {
      * 
      */
     @JsonProperty("category")
-    public Object category;
+    public String category;
     /**
      * Timestamp the condition was triggered, or most recently updated
      * (Required)

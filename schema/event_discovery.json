@@ -35,7 +35,7 @@
       "type": "string"
     },
     "families": {
-      "description": "Address family results for a scan. Not included for device enumeration messages.",
+      "description": "Address family discovery results.",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, FamilyDiscoveryEvent>",
@@ -46,12 +46,22 @@
       }
     },
     "uniqs": {
-      "description": "Collection of data points available for this device.",
+      "description": "Collection of unique data points available for this device.",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, PointEnumerationEvent>",
       "patternProperties": {
         "^[-_.:/a-zA-Z0-9]+$": {
           "$ref": "file:event_discovery_point.json#"
+        }
+      }
+    },
+    "features": {
+      "description": "UDMI Features Supported by this device",
+      "additionalProperties": false,
+      "existingJavaType": "com.google.udmi.util.Features",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object"
         }
       }
     },

@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,6 +75,7 @@ public class MqttPublisher implements Publisher {
   private static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String EVENT_MARK_PREFIX = "events/";
   private static final Map<String, AtomicInteger> EVENT_SERIAL = new HashMap<>();
+  private static final String GCP_CLIENT_PREFIX = "projects/";
 
   private final Semaphore connectionLock = new Semaphore(1);
 
@@ -113,8 +115,8 @@ public class MqttPublisher implements Publisher {
   }
 
   private boolean isGcpIotCore(PubberConfiguration configuration) {
-    return configuration.endpoint.auth_provider == null
-        || configuration.endpoint.auth_provider.jwt != null;
+    return configuration.endpoint.client_id != null && configuration.endpoint.client_id.startsWith(
+        GCP_CLIENT_PREFIX);
   }
 
   private String getClientId(String deviceId) {
@@ -178,7 +180,7 @@ public class MqttPublisher implements Publisher {
     try {
       String payload = OBJECT_MAPPER.writeValueAsString(data);
       debug("Sending message to " + topicSuffix);
-      sendMessage(deviceId, getMessageTopic(deviceId, topicSuffix), payload.getBytes());
+      sendMessage(deviceId, getSendTopic(deviceId, topicSuffix), payload.getBytes());
       if (callback != null) {
         callback.run();
       }
@@ -195,6 +197,11 @@ public class MqttPublisher implements Publisher {
         close();
       }
     }
+  }
+
+  private String getSendTopic(String deviceId, String topicSuffix) {
+    return Objects.requireNonNullElseGet(configuration.endpoint.send_topic,
+        () -> getMessageTopic(deviceId, topicSuffix));
   }
 
   private void closeMqttClient(String deviceId) {
@@ -382,8 +389,13 @@ public class MqttPublisher implements Publisher {
     boolean noConfigAck = (configuration.options.noConfigAck != null
         && configuration.options.noConfigAck);
     int configQos = noConfigAck ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
-    subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
+    if (configuration.endpoint.sub_topic == null) {
+      subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
+      subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
+    } else {
+      subscribeTopic(client, configuration.endpoint.sub_topic, configQos);
+    }
+
     info("Updates subscribed");
   }
 
@@ -598,7 +610,9 @@ public class MqttPublisher implements Publisher {
         Class<Object> type = handlersType.get(handlerKey);
         if (handler == null) {
           error("Missing handler", messageType, "receive",
-              new RuntimeException("No registered handler for " + handlerKey));
+              new RuntimeException("No registered handler for topic " + topic));
+          handlersType.put(handlerKey, Object.class);
+          handlers.put(handlerKey, this::ignoringHandler);
           return;
         }
         success("Received config", messageType, "receive");
@@ -617,6 +631,10 @@ public class MqttPublisher implements Publisher {
         success("Parsed message", messageType, "parse");
         handler.accept(payload);
       }
+    }
+
+    private void ignoringHandler(Object message) {
+      // Do nothing, just ignore everything.
     }
   }
 }

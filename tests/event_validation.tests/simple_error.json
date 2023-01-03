@@ -6,7 +6,7 @@
   "status": {
     "message": "Failed schema validation",
     "detail": "The field x.y was unexpected on line 232 of the message.\nThis is by following the logic train x.y.z in the overall flow of the sytem.\nRabbits are really interesting creatures and make great pets.\nOh yah, and there was a missing field too.",
-    "category": "validation.device.result",
+    "category": "validation.device.receive",
     "timestamp": "2018-08-26T21:39:30.364Z",
     "level": 600
   },

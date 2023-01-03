@@ -1,0 +1,12 @@
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "projects/google.com:phred-autopush/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1",
+      "hostname": "us-central1-mqtt.clearblade.com"
+    },
+    "sitePath": "sites/udmi_site_model/",
+    "deviceId": "AHU-1",
+    "projectId": "bos-peringknife-dev",
+    "serialNo": "54321",
+    "options": {}
+}

@@ -1,11 +1,10 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
+
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
@@ -20,8 +19,11 @@ public abstract class Common {
   public static final String STATE_QUERY_TOPIC = "query/state";
   public static final String TIMESTAMP_PROPERTY_KEY = "timestamp";
   public static final String VERSION_PROPERTY_KEY = "version";
+  public static final String SUBTYPE_PROPERTY_KEY = "subType";
+  public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
+  public static final String EXCEPTION_KEY = "exception";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
 
   /**
@@ -59,21 +61,6 @@ public abstract class Common {
     }
     return null;
   }
-
-  /**
-   * Get a string of the java strack trace.
-   *
-   * @param e stack to trace
-   * @return stack trace string
-   */
-  public static String stackTraceString(Throwable e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
-    }
-    return outputStream.toString();
-  }
-
 
   public static String getExceptionMessage(Throwable exception) {
     String message = exception.getMessage();

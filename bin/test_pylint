@@ -1,0 +1,19 @@
+#!/bin/bash -e
+#
+# Run pylint on all the detected python files and compare against the expected list.
+#
+
+dirs="bin/ etc/ misc/"
+files1=$(fgrep -l /python3 -r $dirs)
+files2=$(fgrep -l "env python3" -r $dirs)
+files3=$(find $dirs -name \*.py)
+files=$(ls $files1 $files2 $files3 | sort | uniq | fgrep -v \~)
+
+echo scanning: $files
+
+source venv/bin/activate
+
+for file in $files; do
+    [[ $file == $0 ]] && continue
+    pylint $file
+done

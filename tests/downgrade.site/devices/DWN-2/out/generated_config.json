@@ -1,9 +1,10 @@
 {
   "timestamp" : "2020-05-01T13:39:07Z",
-  "version" : "1.4.0",
+  "version" : "1.4.1",
   "system" : {
     "min_loglevel" : 300,
-    "metrics_rate_sec" : 600
+    "metrics_rate_sec" : 600,
+    "operation" : { }
   },
   "localnet" : {
     "families" : {
@@ -15,11 +16,15 @@
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value"
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
       },
-      "filter_differential_pressure" : { },
+      "filter_differential_pressure" : {
+        "units" : "Bars"
+      },
       "filter_differential_pressure_sensor" : {
-        "ref" : "AV12.present_value"
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
       }
     }
   }

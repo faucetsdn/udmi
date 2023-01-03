@@ -1,16 +1,23 @@
 #!/bin/bash -e
 
-if [[ $1 == check ]]; then
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "check" ]]; then
     check=check
     shift
-fi
+  elif [[ "$1" == "covg" ]]; then
+    covg=jacocoTestReport
+    shift
+  else
+    break
+  fi
+done
 
 rundir=$(dirname $0)
 cd $rundir/..
 
 newest=$(ls -rt `find src/ ../gencode/java -type f` | tail -n 1)
 jarfile=build/libs/pubber-1.0-SNAPSHOT-all.jar
-if [[ -z $check && -f $jarfile && $jarfile -nt $newest ]]; then
+if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     echo $jarfile up to date, skipping build.
     exit 0
 fi
@@ -18,7 +25,7 @@ fi
 echo Building pubber in $PWD
 
 rm -rf build
-./gradlew shadow $check
+./gradlew shadow $check $covg
 
 ls -l $jarfile
 

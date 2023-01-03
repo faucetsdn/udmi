@@ -1,11 +1,16 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,16 +37,19 @@ public class MessageReadingClient implements MessagePublisher {
           .setDateFormat(new ISO8601DateFormat())
           .setSerializationInclusion(Include.NON_NULL);
   private static final Pattern filenamePattern = Pattern.compile("[0-9]+_([a-z]+)_([a-z]+)\\.json");
+  private static final String TRACE_FILE_SUFFIX = ".json";
+  public static final String MSG_SOURCE = "msgSource";
   private final File messageDir;
   private final String registryId;
-  int messageCount;
-
-  boolean isActive = true;
-  Map<String, List<String>> deviceMessageLists = new HashMap<>();
-  Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
-  Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
-  Map<String, String> deviceNextTimestamp = new HashMap<>();
+  private final Map<String, List<String>> deviceMessageLists = new HashMap<>();
+  private final Map<String, Map<String, Object>> deviceMessages = new HashMap<>();
+  private final Map<String, Map<String, String>> deviceAttributes = new HashMap<>();
+  private final Map<String, String> deviceNextTimestamp = new HashMap<>();
+  private final Map<String, String> deviceLastTimestamp = new HashMap<>();
   private final List<OutputBundle> outputMessages = new ArrayList<>();
+  int messageCount;
+  private boolean isActive;
+  private String lastValidTimestamp;
 
   /**
    * Create a new client.
@@ -61,34 +68,50 @@ public class MessageReadingClient implements MessagePublisher {
 
   private void prepDevice(String deviceId) {
     File deviceDir = new File(messageDir, deviceId);
-    List<String> messages = Arrays.stream(Objects.requireNonNull(deviceDir.list())).sorted()
+    List<String> messages = Arrays.stream(Objects.requireNonNull(deviceDir.list()))
+        .filter(filename -> filename.endsWith(TRACE_FILE_SUFFIX))
+        .sorted()
         .collect(Collectors.toList());
     deviceMessageLists.put(deviceId, messages);
     prepNextMessage(deviceId);
   }
 
-  @SuppressWarnings("unchecked")
   private void prepNextMessage(String deviceId) {
     try {
-      File deviceDir = new File(messageDir, deviceId);
       if (deviceMessageLists.get(deviceId).isEmpty()) {
         return;
       }
       String msgName = deviceMessageLists.get(deviceId).remove(0);
-      File msgFile = new File(deviceDir, msgName);
-      Map<String, Object> msgObj = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
+      Map<String, String> attributes = makeAttributes(deviceId, msgName);
+      deviceAttributes.put(deviceId, attributes);
+      Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
       deviceMessages.put(deviceId, msgObj);
-      deviceAttributes.put(deviceId, makeAttributes(deviceId, msgName));
+      if (!msgObj.containsKey("timestamp")) {
+        msgObj.put("timestamp", deviceLastTimestamp.get(deviceId));
+      }
       String timestamp = Objects.requireNonNull((String) msgObj.get("timestamp"));
       deviceNextTimestamp.put(deviceId, timestamp);
+    } finally {
+      isActive = !deviceMessages.isEmpty();
+    }
+  }
+
+  private Map<String, Object> getMessageObject(String deviceId, String msgName) {
+    try {
+      File deviceDir = new File(messageDir, deviceId);
+      File msgFile = new File(deviceDir, msgName);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
+      return treeMap;
     } catch (Exception e) {
-      throw new RuntimeException("While handling next message for " + deviceId, e);
+      return new ErrorContainer(e, msgName, lastValidTimestamp);
     }
   }
 
   private Map<String, String> makeAttributes(String deviceId, String msgName) {
     try {
       Map<String, String> attributes = new HashMap<>();
+      attributes.put(MSG_SOURCE, msgName);
       attributes.put("deviceId", deviceId);
       attributes.put("deviceNumId", getNumId(deviceId));
       attributes.put("projectId", PLAYBACK_PROJECT_ID);
@@ -96,8 +119,8 @@ public class MessageReadingClient implements MessagePublisher {
 
       Matcher matcher = filenamePattern.matcher(msgName);
       if (matcher.matches()) {
-        attributes.put("subType", matcher.group(1));
-        attributes.put("subFolder", matcher.group(2));
+        attributes.put(SUBTYPE_PROPERTY_KEY, matcher.group(1));
+        attributes.put(SUBFOLDER_PROPERTY_KEY, matcher.group(2));
       } else {
         throw new RuntimeException("Malformed filename " + msgName);
       }
@@ -145,21 +168,21 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
-    String deviceId = getNextDevice();
-    Map<String, Object> message = deviceMessages.remove(deviceId);
-    Map<String, String> attributes = deviceAttributes.remove(deviceId);
-    String timestamp = deviceNextTimestamp.remove(deviceId);
-    System.out.printf("Replay %s for %s%n", timestamp, deviceId);
+  public Validator.MessageBundle takeNextMessage() {
+    final String deviceId = getNextDevice();
+    final Map<String, Object> message = deviceMessages.remove(deviceId);
+    final Map<String, String> attributes = deviceAttributes.remove(deviceId);
+    lastValidTimestamp = deviceNextTimestamp.remove(deviceId);
+    deviceLastTimestamp.put(deviceId, lastValidTimestamp);
+    prepNextMessage(deviceId);
+    String messageName = attributes.get(MSG_SOURCE);
+    System.out.printf("Replay %s %s for %s%n", messageName, lastValidTimestamp, deviceId);
     messageCount++;
-    try {
-      validator.accept(message, attributes);
-      prepNextMessage(deviceId);
-    } finally {
-      if (deviceMessages.isEmpty()) {
-        isActive = false;
-      }
-    }
+    MessageBundle bundle = new MessageBundle();
+    bundle.message = message;
+    bundle.attributes = attributes;
+    bundle.timestamp = lastValidTimestamp;
+    return bundle;
   }
 
   private String getNextDevice() {

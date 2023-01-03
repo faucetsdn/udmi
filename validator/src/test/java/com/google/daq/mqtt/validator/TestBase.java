@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.time.Instant;
 import java.util.Date;
@@ -103,7 +104,7 @@ public class TestBase {
     attributes.put("subFolder", subFolder);
     attributes.put("subType", subType);
     attributes.put("deviceNumId", TestCommon.DEVICE_NUM_ID);
-    attributes.put("projectId", TestCommon.PROJECT_ID);
+    attributes.put("projectId", SiteModel.MOCK_PROJECT);
     return attributes;
   }
 }

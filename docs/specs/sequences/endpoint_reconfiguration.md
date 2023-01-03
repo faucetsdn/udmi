@@ -83,8 +83,9 @@ Config message to initiate Reconfiguration (sequence #1 in diagrams above)
     "blobs": {
       "_iot_endpoint_config": {
         "phase": "final",
-        "content_type": "application/json",
-        "base64": "ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzL2Jvcy1zbm9yay1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiLAogICJob3N0bmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIgp9"
+        "url": "data:application/json;base64,ewogICJwcm90b2NvbCI6ICJtcXR0IiwKICAiY2xpZW50X2lkIjogInByb2plY3RzL2Jvcy1zbm9yay1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiLAogICJob3N0bmFtZSI6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIgp9",
+        "sha256": "c8a25e6ecf487f0a2ff85845c9bc59fb81e1dd4eaa08d7ff7d55bd924447e015",
+        "generation": "2022-07-13T12:00:00.000Z"
       }
     }
   },
@@ -107,7 +108,7 @@ a successful reconfiguration
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:10.000Z",
   "system": {
     "hardware": {
@@ -119,7 +120,9 @@ a successful reconfiguration
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {
@@ -135,7 +138,7 @@ This is an example of the state message sent to the original endpoint after a fa
 <!--example:state/endpoint_reconfiguration_failed.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:11.000Z",
   "system": {
     "hardware": {
@@ -147,7 +150,9 @@ This is an example of the state message sent to the original endpoint after a fa
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {

@@ -1,11 +1,16 @@
 package com.google.bos.iot.core.proxy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.validator.Validator;
+import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,8 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.BiConsumer;
+import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -34,32 +38,32 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
 
-  private final BlockingQueue<MessageBundle> messages = new LinkedBlockingDeque<>();
+  private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
   private final MqttPublisher mqttPublisher;
   private final String subscriptionId;
-  private final String siteName;
+  private final String registryId;
   private final String projectId;
   private boolean active;
 
   /**
    * Create a new reflector instance.
    *
-   * @param projectId target project
    * @param iotConfig configuration file
-   * @param keyFile   auth key file
    */
-  public IotReflectorClient(String projectId, ExecutionConfiguration iotConfig, String keyFile) {
+  public IotReflectorClient(ExecutionConfiguration iotConfig) {
     final byte[] keyBytes;
+    checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
-      keyBytes = getFileBytes(keyFile);
+      keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
-      throw new RuntimeException("While loading key file " + new File(keyFile).getAbsolutePath(),
+      throw new RuntimeException(
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(),
           e);
     }
 
-    siteName = iotConfig.registry_id;
-    this.projectId = projectId;
+    registryId = iotConfig.registry_id;
+    projectId = iotConfig.project_id;
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
@@ -68,7 +72,7 @@ public class IotReflectorClient implements MessagePublisher {
 
     try {
       mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,
-          siteName, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
+          registryId, keyBytes, IOT_KEY_ALGORITHM, this::messageHandler, this::errorHandler);
     } catch (Exception e) {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }
@@ -98,10 +102,10 @@ public class IotReflectorClient implements MessagePublisher {
         return;
       }
     } catch (Exception e) {
-      asMap = new ErrorContainer(e, topic, payload);
+      asMap = new ErrorContainer(e, payload, JsonUtil.getTimestamp());
     }
 
-    MessageBundle messageBundle = new MessageBundle();
+    Validator.MessageBundle messageBundle = new Validator.MessageBundle();
     messageBundle.attributes = attributes;
     messageBundle.message = asMap;
 
@@ -111,10 +115,10 @@ public class IotReflectorClient implements MessagePublisher {
   private String parseMessageTopic(String topic, Map<String, String> attributes) {
     String[] parts = topic.substring(1).split("/");
     assert "devices".equals(parts[0]);
-    assert siteName.equals(parts[1]);
+    assert registryId.equals(parts[1]);
     String messageCategory = parts[2];
     attributes.put("category", messageCategory);
-    attributes.put("deviceRegistryId", siteName);
+    attributes.put("deviceRegistryId", registryId);
     if (messageCategory.equals("commands")) {
       assert "devices".equals(parts[3]);
       attributes.put("deviceId", parts[4]);
@@ -154,19 +158,18 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public Validator.MessageBundle takeNextMessage() {
     try {
-      MessageBundle message = messages.take();
-      validator.accept(message.message, message.attributes);
+      return messages.take();
     } catch (Exception e) {
-      throw new RuntimeException("While processing message on subscription " + subscriptionId, e);
+      throw new RuntimeException("While taking next message", e);
     }
   }
 
   @Override
   public void publish(String deviceId, String topic, String data) {
     String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
-    mqttPublisher.publish(siteName, reflectorTopic, data);
+    mqttPublisher.publish(registryId, reflectorTopic, data);
   }
 
   @Override
@@ -176,7 +179,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   public void setReflectorState(String stateData) {
-    mqttPublisher.publish(siteName, "state", stateData);
+    mqttPublisher.publish(registryId, "state", stateData);
   }
 
   static class MessageBundle {
@@ -185,12 +188,4 @@ public class IotReflectorClient implements MessagePublisher {
     Map<String, String> attributes;
   }
 
-  static class ErrorContainer extends TreeMap<String, Object> {
-
-    ErrorContainer(Exception e, String topic, String message) {
-      put("exception", e.toString());
-      put("topic", topic);
-      put("message", message);
-    }
-  }
 }

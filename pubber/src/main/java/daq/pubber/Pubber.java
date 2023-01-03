@@ -17,9 +17,12 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
@@ -32,12 +35,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -67,6 +73,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
+import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -74,8 +81,11 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
+import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
+import udmi.schema.Operation;
+import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -86,10 +96,10 @@ import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
+import udmi.schema.StateSystemHardware;
+import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemConfig;
-import udmi.schema.SystemConfig.SystemMode;
 import udmi.schema.SystemEvent;
-import udmi.schema.SystemHardware;
 import udmi.schema.SystemState;
 
 /**
@@ -102,7 +112,8 @@ public class Pubber {
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   public static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   public static final String PUBBER_LOG_CATEGORY = "device.log";
-  private static final String UDMI_VERSION = "1.4.0";
+  public static final String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  static final String UDMI_VERSION = "1.4.1";
   private static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
   private static final String HOSTNAME = System.getenv("HOSTNAME");
   private static final int MIN_REPORT_MS = 200;
@@ -120,7 +131,6 @@ public class Pubber {
       ExtraPointsetEvent.class, getEventsSuffix("pointset"),
       DiscoveryEvent.class, getEventsSuffix("discovery")
   );
-
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -144,18 +154,19 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   private final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
-  private final State deviceState = new State();
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
   private final Set<AbstractPoint> allPoints = new HashSet<>();
   private final AtomicBoolean stateDirty = new AtomicBoolean();
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
-  private Config deviceConfig = new Config();
+  private final List<Entry> logentries = new ArrayList<>();
+  Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -170,6 +181,7 @@ public class Pubber {
   private PrintStream logPrintWriter;
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
+  private int systemEventCount;
 
   /**
    * Start an instance from a configuration file.
@@ -252,7 +264,7 @@ public class Pubber {
     LOG.info("Done with main");
   }
 
-  private static void singularPubber(String[] args) throws InterruptedException {
+  static Pubber singularPubber(String[] args) throws InterruptedException {
     Pubber pubber = null;
     try {
       if (args.length == 1) {
@@ -269,11 +281,12 @@ public class Pubber {
         return true;
       });
     } catch (Exception e) {
-      new RuntimeException("While starting singular pubber", e).printStackTrace();
       if (pubber != null) {
         pubber.terminate();
       }
+      throw new RuntimeException("While starting singular pubber", e);
     }
+    return pubber;
   }
 
   private static void swarmPubber(String[] args) throws InterruptedException {
@@ -321,6 +334,31 @@ public class Pubber {
     return new Date();
   }
 
+  static String acquireBlobData(String url, String sha256) {
+    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
+      throw new RuntimeException("URL encoding not supported: " + url);
+    }
+    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    String dataSha256 = GeneralUtils.sha256(dataBytes);
+    if (!dataSha256.equals(sha256)) {
+      throw new RuntimeException("Blob data hash mismatch");
+    }
+    return new String(dataBytes);
+  }
+
+  static void augmentDeviceMessage(Object message) {
+    try {
+      Field version = message.getClass().getField("version");
+      version.set(message, UDMI_VERSION);
+      Field timestamp = message.getClass().getField("timestamp");
+      if (timestamp.get(message) == null) {
+        timestamp.set(message, getCurrentTimestamp());
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException("While augmenting device message", e);
+    }
+  }
+
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     boolean writable = point.writable != null && point.writable;
     if (BOOLEAN_UNITS.contains(point.units)) {
@@ -349,8 +387,9 @@ public class Pubber {
 
   private void initializeDevice() {
     deviceState.system = new SystemState();
-    deviceState.system.hardware = new SystemHardware();
-    deviceState.system.last_start = DEVICE_START_TIME;
+    deviceState.system.operation = new StateSystemOperation();
+    deviceState.system.operation.last_start = DEVICE_START_TIME;
+    deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
     devicePoints.points = new HashMap<>();
@@ -360,6 +399,10 @@ public class Pubber {
       siteModel.initialize();
       if (configuration.endpoint == null) {
         configuration.endpoint = siteModel.makeEndpointConfig(configuration.projectId, deviceId);
+      }
+      if (!siteModel.allDeviceIds().contains(configuration.deviceId)) {
+        throw new IllegalArgumentException(
+            "Device ID " + configuration.deviceId + " not found in site model");
       }
       processDeviceMetadata(siteModel.getMetadata(configuration.deviceId));
     } else if (pubSubClient != null) {
@@ -372,8 +415,8 @@ public class Pubber {
         configuration.deviceId, configuration.serialNo, configuration.macAddr,
         configuration.gatewayId, optionsString(configuration.options)));
 
-    deviceState.system.operational = true;
-    deviceState.system.mode = SystemMode.INITIAL;
+    deviceState.system.operation.operational = true;
+    deviceState.system.operation.mode = SystemMode.INITIAL;
     deviceState.system.serial_no = configuration.serialNo;
     deviceState.system.hardware.make = "BOS";
     deviceState.system.hardware.model = "pubber";
@@ -395,7 +438,7 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
-    markStateDirty(0);
+    markStateDirty();
   }
 
   private void initializePersistentStore() {
@@ -406,6 +449,7 @@ public class Pubber {
         persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
             : new DevicePersistent();
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
+    deviceState.system.operation.restart_count = persistentData.restart_count;
     writePersistentStore();
   }
 
@@ -419,11 +463,8 @@ public class Pubber {
         new File(siteModel.getDeviceWorkingDir(deviceId), PERSISTENT_STORE_FILE);
   }
 
-  private void publishDirtyState() {
-    if (stateDirty.get()) {
-      System.err.println("Publishing dirty state block");
-      markStateDirty(0);
-    }
+  private void markStateDirty() {
+    markStateDirty(0);
   }
 
   private void markStateDirty(long delayMs) {
@@ -434,6 +475,13 @@ public class Pubber {
       } catch (Exception e) {
         System.err.println("Rejecting state publish after " + delayMs + " " + e);
       }
+    }
+  }
+
+  private void publishDirtyState() {
+    if (stateDirty.get()) {
+      debug("Publishing dirty state block");
+      markStateDirty(0);
     }
   }
 
@@ -542,20 +590,22 @@ public class Pubber {
       updatePoints();
       deferredConfigActions();
       sendDevicePoints();
-      sendSystemMetrics();
+      sendSystemEvent();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }
   }
 
-  private void sendSystemMetrics() {
+  private void sendSystemEvent() {
     SystemEvent systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
-    systemEvent.metrics.restart_count = persistentData.restart_count;
     Runtime runtime = Runtime.getRuntime();
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+    systemEvent.event_count = systemEventCount++;
+    systemEvent.logentries = ImmutableList.copyOf(logentries);
+    logentries.clear();
     publishDeviceMessage(systemEvent);
   }
 
@@ -571,26 +621,25 @@ public class Pubber {
   }
 
   private void maybeRestartSystem() {
-    SystemConfig systemConfig = deviceConfig.system;
-    if (systemConfig == null) {
-      return;
-    }
-    if (SystemMode.ACTIVE.equals(deviceState.system.mode)
-        && SystemMode.RESTART.equals(systemConfig.mode)) {
+    SystemConfig system = Optional.ofNullable(deviceConfig.system).orElseGet(SystemConfig::new);
+    Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
+    if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
+        && SystemMode.RESTART.equals(operation.mode)) {
       restartSystem(true);
     }
-    if (SystemMode.ACTIVE.equals(systemConfig.mode)) {
-      deviceState.system.mode = SystemMode.ACTIVE;
+    if (SystemMode.ACTIVE.equals(operation.mode)) {
+      deviceState.system.operation.mode = SystemMode.ACTIVE;
+      markStateDirty();
     }
-    if (systemConfig.last_start != null && DEVICE_START_TIME.before(systemConfig.last_start)) {
+    if (operation.last_start != null && DEVICE_START_TIME.before(operation.last_start)) {
       System.err.printf("Device start time %s before last config start %s, terminating.",
-          isoConvert(DEVICE_START_TIME), isoConvert(systemConfig.last_start));
+          isoConvert(DEVICE_START_TIME), isoConvert(operation.last_start));
       restartSystem(false);
     }
   }
 
   private void restartSystem(boolean restart) {
-    deviceState.system.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
     try {
       publishSynchronousState();
     } catch (Exception e) {
@@ -634,9 +683,9 @@ public class Pubber {
     }
   }
 
-  private void terminate() {
+  void terminate() {
     warn("Terminating");
-    deviceState.system.mode = SystemMode.SHUTDOWN;
+    deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
     stop();
     captureExceptions("executor flush", this::stopExecutor);
@@ -846,8 +895,7 @@ public class Pubber {
       info("Config handler");
       File configOut = new File(outDir, traceTimestamp("config") + ".json");
       toJsonFile(configOut, config);
-      debug(String.format("Config update%s", getTestingTag(config)),
-          toJsonString(config));
+      debug(String.format("Config update%s", getTestingTag(config)), toJsonString(config));
       processConfigUpdate(config);
       configLatch.countDown();
       publisherConfigLog("apply", null);
@@ -874,24 +922,24 @@ public class Pubber {
     maybeRestartExecutor(actualInterval);
   }
 
-  private void extractEndpointBlobConfig() {
+  EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
-      return;
+      return null;
     }
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
       if (extractedEndpoint != null) {
-        // TODO: Refactor extractConfigBlob() to get any blob meta parameters like nonce.
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          extractedEndpoint.nonce =
-              deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).nonce;
+          BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
+          extractedEndpoint.generation = config.generation;
         }
       }
     } catch (Exception e) {
       throw new RuntimeException("While extracting endpoint blob config", e);
     }
+    return extractedEndpoint;
   }
 
   private void removeBlobsetBlobState(SystemBlobsets blobId) {
@@ -902,10 +950,10 @@ public class Pubber {
     if (deviceState.blobset.blobs.isEmpty()) {
       deviceState.blobset = null;
     }
-    markStateDirty(0);
+    markStateDirty();
   }
 
-  private void maybeRedirectEndpoint() {
+  void maybeRedirectEndpoint() {
     String redirectRegistry = configuration.options.redirectRegistry;
     String currentSignature = toJsonString(configuration.endpoint);
     String extractedSignature =
@@ -925,12 +973,29 @@ public class Pubber {
       return; // No need to redirect anything!
     }
 
+    if (extractedEndpoint != null) {
+      if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
+        notice("Starting new endpoint generation");
+        endpointState.phase = null;
+        endpointState.status = null;
+        endpointState.generation = extractedEndpoint.generation;
+      }
+
+      if (extractedEndpoint.error != null) {
+        attemptedEndpoint = extractedSignature;
+        endpointState.phase = BlobPhase.FINAL;
+        Exception applyError = new RuntimeException(extractedEndpoint.error);
+        endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
+        publishSynchronousState();
+        return;
+      }
+    }
+
     info("New config blob endpoint detected");
 
     try {
       attemptedEndpoint = extractedSignature;
       endpointState.phase = BlobPhase.APPLY;
-      endpointState.status = null;
       publishSynchronousState();
       resetConnection(extractedSignature);
       endpointState.phase = BlobPhase.FINAL;
@@ -995,54 +1060,71 @@ public class Pubber {
   }
 
   private String extractConfigBlob(String blobName) {
+    // TODO: Refactor to get any blob meta parameters.
     try {
       if (deviceConfig == null || deviceConfig.blobset == null
           || deviceConfig.blobset.blobs == null) {
         return null;
       }
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(blobName);
-      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)
-          && blobBlobsetConfig.base64 != null) {
-        return new String(Base64.getDecoder().decode(blobBlobsetConfig.base64));
+      if (blobBlobsetConfig != null && BlobPhase.FINAL.equals(blobBlobsetConfig.phase)) {
+        return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
       }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("While extracting config blob " + blobName, e);
+      EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+      endpointConfiguration.error = e.toString();
+      return JsonUtil.stringify(endpointConfiguration);
     }
   }
 
-  private void updateDiscoveryConfig(DiscoveryConfig discovery) {
-    DiscoveryConfig discoveryConfig = discovery == null ? new DiscoveryConfig() : discovery;
+  private void updateDiscoveryConfig(DiscoveryConfig config) {
+    if (config == null) {
+      deviceState.discovery = null;
+      return;
+    }
     if (deviceState.discovery == null) {
       deviceState.discovery = new DiscoveryState();
     }
-    updateDiscoveryEnumeration(discoveryConfig.enumeration);
-    updateDiscoveryScan(discoveryConfig.families);
-    if (deviceState.discovery.families == null && deviceState.discovery.enumeration == null) {
-      deviceState.discovery = null;
-    }
+    updateDiscoveryEnumeration(config);
+    updateDiscoveryScan(config.families);
   }
 
-  private void updateDiscoveryEnumeration(FamilyDiscoveryConfig enumeration) {
-    if (enumeration == null) {
+  private void updateDiscoveryEnumeration(DiscoveryConfig config) {
+    Date enumerationGeneration = config.generation;
+    if (enumerationGeneration == null) {
+      deviceState.discovery.generation = null;
       return;
     }
-    if (deviceState.discovery.enumeration == null) {
-      deviceState.discovery.enumeration = new FamilyDiscoveryState();
-      deviceState.discovery.enumeration.generation = DEVICE_START_TIME;
-    }
-    Date enumerationGeneration = enumeration.generation;
-    if (enumerationGeneration == null
-        || !enumerationGeneration.after(deviceState.discovery.enumeration.generation)) {
+    if (deviceState.discovery.generation != null
+        && !enumerationGeneration.after(deviceState.discovery.generation)) {
       return;
     }
-    deviceState.discovery.enumeration = new FamilyDiscoveryState();
-    deviceState.discovery.enumeration.generation = enumerationGeneration;
+    deviceState.discovery.generation = enumerationGeneration;
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvent discoveryEvent = new DiscoveryEvent();
     discoveryEvent.generation = enumerationGeneration;
-    discoveryEvent.uniqs = enumeratePoints(configuration.deviceId);
+    Enumerate enumerate = config.enumerate;
+    discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
+    discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
+    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
     publishDeviceMessage(discoveryEvent);
+  }
+
+  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+    LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
+    return localnet == null ? null : localnet.families.keySet().stream()
+        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
+  }
+
+  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
+    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
+    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
+    return familyDiscoveryEvent;
+  }
+
+  private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
+    return isTrue(() -> condition) ? supplier.get() : null;
   }
 
   private Map<String, PointEnumerationEvent> enumeratePoints(String deviceId) {
@@ -1324,9 +1406,7 @@ public class Pubber {
 
   private void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
-      SystemEvent systemEvent = getSystemEvent();
-      systemEvent.logentries.add(report);
-      publishDeviceMessage(systemEvent);
+      logentries.add(report);
     }
   }
 
@@ -1334,7 +1414,7 @@ public class Pubber {
     if (stateLock.tryAcquire()) {
       try {
         long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-        warn(String.format("State update defer %dms", delay));
+        debug(String.format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
         } else {
@@ -1431,19 +1511,6 @@ public class Pubber {
     return messageBase + (TRUE.equals(configuration.options.messageTrace) ? ("_" + timestamp) : "");
   }
 
-  private void augmentDeviceMessage(Object message) {
-    try {
-      Field version = message.getClass().getField("version");
-      assert version.get(message) == null;
-      version.set(message, UDMI_VERSION);
-      Field timestamp = message.getClass().getField("timestamp");
-      assert timestamp.get(message) == null;
-      timestamp.set(message, getCurrentTimestamp());
-    } catch (Exception e) {
-      throw new RuntimeException("While augmenting device message", e);
-    }
-  }
-
   private boolean publisherActive() {
     return deviceTarget != null && deviceTarget.isActive();
   }
@@ -1477,7 +1544,8 @@ public class Pubber {
   }
 
   private void localLog(Entry entry) {
-    String message = String.format("Entry %s %s %s %s%s", Level.fromValue(entry.level).name(),
+    String message = String.format("Entry %s%s %s %s %s%s", Level.fromValue(entry.level).name(),
+        shouldLogLevel(entry.level) ? "" : "*",
         entry.category, entry.message, isoConvert(entry.timestamp), getTestingTag(deviceConfig));
     localLog(message, Level.fromValue(entry.level), isoConvert(entry.timestamp), null);
   }

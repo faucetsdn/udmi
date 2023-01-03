@@ -1,26 +1,30 @@
 #!/bin/bash -e
 
+# This version is used to automatically check that the deployed cloud functions are suitable for any bit
+# of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range.
+FUNCTIONS_VERSION=1
+
 if (( $# < 1 )); then
     echo Usage: $0 PROJECT_ID [options]
     false
 fi
 
 ROOT=$(realpath $(dirname $0)/..)
-cd $ROOT/udms
+cd $ROOT/udmis
 
 PROJECT=$1
 shift
 
-RUNTIME=nodejs12
+RUNTIME=nodejs16
 SOURCE=functions/
 
 version=`git describe --dirty`
 echo Deploying version $version to $PROJECT
-echo "const udmi_deploy_version = '$version';" > public/deploy_version.js
 
 cat <<EOF > functions/version.js
 module.exports = {
-  udmis: '$version'
+  udmis: '$version',
+  functions: $FUNCTIONS_VERSION
 }
 EOF
 

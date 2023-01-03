@@ -5,12 +5,13 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Create a data sink that writes to local files.
@@ -106,7 +107,8 @@ public class FileDataSink implements MessagePublisher {
   }
 
   @Override
-  public void processMessage(BiConsumer<Map<String, Object>, Map<String, String>> validator) {
+  public MessageBundle takeNextMessage() {
     throw new RuntimeException("Not implemented for file data sink");
   }
+
 }

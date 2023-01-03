@@ -1,3 +1,7 @@
+"""
+Mirrors a pub/sub topic to another pub/sub topic by consuming a subscription
+and republishing all messages
+"""
 import sys
 import argparse
 
@@ -8,12 +12,12 @@ from google.cloud import pubsub_v1
 messages_processed = 0
 
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
-    global messages_processed
-    publisher.publish(topic_path, message.data, **message.attributes)
-    messages_processed += 1
-    if messages_processed % 100 == 0:
-      print(f'{messages_processed} messages processed')
-    message.ack()
+  global messages_processed
+  publisher.publish(topic_path, message.data, **message.attributes)
+  messages_processed += 1
+  if messages_processed % 100 == 0:
+    print(f'{messages_processed} messages processed')
+  message.ack()
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
@@ -26,27 +30,34 @@ def parse_command_line_args():
 args = parse_command_line_args()
 
 try:
-    credentials, project_id = auth.default()
+  credentials, project_id = auth.default()
+# pylint: disable-next=broad-except
 except Exception as e:
-    print(e)
-    sys.exit()
+  print(e)
+  sys.exit()
 
-sub_client = pubsub_v1.SubscriberClient(credentials=credentials)
+subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
 publisher = pubsub_v1.PublisherClient(credentials=credentials)
 
-topic_path = publisher.topic_path(args.target_project, args.target_topic)
-future = sub_client.subscribe(f"projects/{args.source_project}/subscriptions/{args.source_subscription}", subscribe_callback)
-print("Listening to pubsub, please wait ...")
+topic_path = publisher.topic_path(args.target_project,
+  args.target_topic)
+
+subscription = subscriber.subscription_path(args.source_project,
+  args.source_subscription)
+
+future = subscriber.subscribe(subscription, subscribe_callback)
+print('Listening to pubsub, please wait ...')
 
 while True:
-    try:
-        future.result(timeout=5)
-    except (futures.CancelledError, KeyboardInterrupt):
-        future.cancel()
-        future.result()
-        break
-    except Exception as ex: 
-        print(f"PubSub subscription failed with error: {ex}")
-        future.cancel()
-        future.result()
-        break
+  try:
+    future.result(timeout=5)
+  except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
+    future.cancel()
+    future.result()
+    break
+  # pylint: disable-next=broad-except
+  except Exception as ex:
+    print(f'PubSub subscription failed with error: {ex}')
+    future.cancel()
+    future.result()
+    break

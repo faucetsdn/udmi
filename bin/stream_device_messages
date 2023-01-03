@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 """
 Live stream a GCP Pub/Sub Subscription, and filter messages to a given device
-in a site 
-
-Usage:
-  bin/stream_device_messages SITE_PATH PROJECT_ID SUBSCRIPTION_NAME DEVICE_ID [DEVICE_ID ...]
+in a site
 
 Note:
   - DEVICE_ID and SITE_PATH are case sensitive
-  - Cannot be used with any concurrent invocations of this tool or other 
+  - Cannot be used with any concurrent invocations of this tool or other
     use of the subscription (e.g. using bin/validator with a subscription)
 """
 
@@ -17,6 +14,7 @@ import sys
 import argparse
 import os
 
+from concurrent import futures
 from datetime import datetime, timezone
 from google import auth
 from google.cloud import pubsub_v1
@@ -40,12 +38,14 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message.ack()
     return
 
-  print(f'{message.publish_time}: {message.attributes.get("deviceId")} {message_type} \n---')
+  print(f'{message.publish_time}: {message.attributes.get("deviceId")}'
+        f'{message_type} \n---')
 
   # Try to pretty-print messages
   try:
     message_json = json.loads(message.data)
     payload = json.dumps(message_json, indent=4)
+  # pylint: disable-next=broad-except
   except Exception:
     payload = message.data.decode('utf-8')
 
@@ -64,23 +64,24 @@ def parse_command_line_args():
 args = parse_command_line_args()
 device_ids = args.device_ids
 site_path = args.site_path
-
-with open(os.path.join(site_path, 'cloud_iot_config.json'), encoding="utf-8") as f:
+cloud_iot_config_path = os.path.join(site_path, 'cloud_iot_config.json')
+with open(cloud_iot_config_path, encoding='utf-8') as f:
   cloud_iot_config = json.load(f)
 
 registry_id = cloud_iot_config['registry_id']
 
 if not registry_id:
-  print("Registry ID not set")
+  print('Registry ID not set in cloud_iot_config')
   sys.exit(1)
 
 for device_id in device_ids:
   if not os.path.exists(os.path.join(site_path,'devices', device_id)):
     print(f'Device {device_id} not found in site model')
     sys.exit(1)
-  
+
 try:
   credentials, project_id = auth.default()
+# pylint: disable-next=broad-except
 except Exception as e:
   print(e)
   sys.exit(1)
@@ -99,14 +100,16 @@ print(f'Seeking subscription to {time_now}')
 response = subscriber.seek(request=request)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
-print(f'Subscribing to messages from {",".join(device_ids)} in registry {registry_id}')
+print(f'Subscribing to messages from'
+      f'{",".join(device_ids)} in registry {registry_id}')
 
 while True:
   try:
     future.result(timeout=5)
-  except KeyboardInterrupt:
+  except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
     future.cancel()
     future.result()
     break
+  # pylint: disable-next=broad-except
   except Exception:
     continue

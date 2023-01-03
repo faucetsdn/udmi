@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:10.000Z",
   "system": {
     "hardware": {
@@ -11,7 +11,9 @@
     },
     "serial_no": "000000",
     "last_config": "2022-07-11T00:00:10.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset" : {
     "blobs" : {

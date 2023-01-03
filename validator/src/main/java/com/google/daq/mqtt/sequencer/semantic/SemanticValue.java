@@ -53,6 +53,28 @@ public interface SemanticValue {
   String getDescription();
 
   /**
+   * Convert the potentially semantic object to just the value component.
+   *
+   * @param target input string to actualize
+   * @return actual string
+   */
+  static Object getValue(Object target) {
+    return target instanceof String ? stringValue((String) target) : target;
+  }
+
+  /**
+   * Convert the potentially semantic string to just the value of the string.
+   *
+   * @param target target string to convert
+   * @return value part of the string
+   */
+  static String stringValue(String target) {
+    return isSemanticString(target)
+        ? target.substring(target.indexOf(AFTER_MARKER) + AFTER_MARKER.length())
+        : target;
+  }
+
+  /**
    * Remove the description tag from any embedded strings, returning the actual string to be used
    * (w/o semantic descriptions).
    *

@@ -1,4 +1,4 @@
 
 ## valid_serial_no
 
-1. Check that received serial no matches
+1. Wait for received serial number matches
