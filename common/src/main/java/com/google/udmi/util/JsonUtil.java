@@ -102,7 +102,7 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert the pojo to a mapped representaiton.
+   * Convert the pojo to a mapped representation.
    *
    * @param message input object to convert
    * @return object-as-map
@@ -110,6 +110,18 @@ public abstract class JsonUtil {
   public static Map<String, Object> toMap(Object message) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = convertTo(TreeMap.class, message);
+    return map;
+  }
+
+  /**
+   * Convert the given input file to a mapped representation.
+   *
+   * @param inputFile input file to convert to a map
+   * @return object-as-map
+   */
+  public static Map<String, Object> toMap(File inputFile) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = convertTo(TreeMap.class, loadFile(TreeMap.class, inputFile));
     return map;
   }
 

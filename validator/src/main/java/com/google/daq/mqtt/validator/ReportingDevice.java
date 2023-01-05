@@ -108,7 +108,8 @@ public class ReportingDevice {
   }
 
   private static String replaceCategoryMissing(String message) {
-    return message.startsWith(CATEGORY_MISSING_MESSAGE) ? CATEGORY_MISSING_REPLACEMENT : message;
+    int index = message.indexOf(CATEGORY_MISSING_MESSAGE);
+    return index < 0 ? message : message.substring(0, index) + CATEGORY_MISSING_REPLACEMENT;
   }
 
   /**

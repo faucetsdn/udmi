@@ -1,4 +1,4 @@
 3 schema violations found
-  ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"
-  ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "FCUs_02_NW_12"
+  /deviceId: ECMA 262 regex "^[A-Z]{2,6}-[0-9]{1,6}$" does not match input string "FCUs_02_NW_12"
+  /deviceNumId: ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"
   object has missing required properties (["projectId","subFolder"])

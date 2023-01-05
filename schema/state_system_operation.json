@@ -1,0 +1,29 @@
+{
+  "$udmi_version": "1.4.1",
+  "title": "StateSystemOperation",
+  "description": "A collection of state fields that describes the system operation",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "operational": {
+      "description": "Operational status of the device.",
+      "type": "boolean"
+    },
+    "last_start": {
+      "description": "Last time the system started up.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "restart_count": {
+      "description": "Number of system restarts",
+      "type": "integer"
+    },
+    "mode": {
+      "$ref": "file:common.json#/definitions/mode"
+    }
+  },
+  "required": [
+    "operational"
+  ]
+}

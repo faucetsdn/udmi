@@ -1,11 +1,10 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
+
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
@@ -62,21 +61,6 @@ public abstract class Common {
     }
     return null;
   }
-
-  /**
-   * Get a string of the java strack trace.
-   *
-   * @param e stack to trace
-   * @return stack trace string
-   */
-  public static String stackTraceString(Throwable e) {
-    OutputStream outputStream = new ByteArrayOutputStream();
-    try (PrintStream ps = new PrintStream(outputStream)) {
-      e.printStackTrace(ps);
-    }
-    return outputStream.toString();
-  }
-
 
   public static String getExceptionMessage(Throwable exception) {
     String message = exception.getMessage();

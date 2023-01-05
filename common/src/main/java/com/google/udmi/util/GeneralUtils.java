@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.hash.Hashing;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -132,5 +135,19 @@ public class GeneralUtils {
 
   public static String encodeBase64(byte[] payload) {
     return Base64.getEncoder().encodeToString(payload);
+  }
+
+  /**
+   * Get a string of the java stack trace.
+   *
+   * @param e stack to trace
+   * @return stack trace string
+   */
+  public static String stackTraceString(Throwable e) {
+    OutputStream outputStream = new ByteArrayOutputStream();
+    try (PrintStream ps = new PrintStream(outputStream)) {
+      e.printStackTrace(ps);
+    }
+    return outputStream.toString();
   }
 }

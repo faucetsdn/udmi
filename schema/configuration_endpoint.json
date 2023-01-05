@@ -41,6 +41,16 @@
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9]+$"
     },
+    "sub_topic": {
+      "description": "Topic for message subscriptions",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9#]+$"
+    },
+    "send_topic": {
+      "description": "Topic for sending messages",
+      "type": "string",
+      "pattern": "^[-_/a-zA-Z0-9#]+$"
+    },
     "auth_provider": {
       "type": "object",
       "additionalProperties": false,
