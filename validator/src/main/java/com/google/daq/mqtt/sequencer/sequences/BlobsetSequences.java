@@ -113,6 +113,97 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
+  private void deviceRestart() {
+    // Prepare for the restart.
+    final Date dateZero = new Date(0);
+    untilTrue("last_start is not zero",
+        () -> deviceState.system.operation.last_start.after(dateZero));
+
+    final Integer initialCount = deviceState.system.operation.restart_count;
+    checkThat("initial count is greater than 0", () -> initialCount > 0);
+
+    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
+
+    untilTrue("system mode is ACTIVE",
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
+
+    final Date last_config = deviceState.system.last_config;
+    final Date last_start = deviceConfig.system.operation.last_start;
+
+    // Send the restart mode.
+    deviceConfig.system.operation.mode = SystemMode.RESTART;
+    updateConfig();
+
+    // Wait for the device to go through the correct states as it restarts.
+    untilTrue("system mode is INITIAL",
+        () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
+
+    checkThat("restart count increased by one",
+        () -> deviceState.system.operation.restart_count == initialCount + 1);
+
+    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
+    updateConfig();
+
+    untilTrue("system mode is ACTIVE",
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
+
+    // Capture error from last_start unexpectedly changing due to restart condition.
+    try {
+      untilTrue("last_config is newer than previous last_config before abort",
+          () -> deviceState.system.last_config.after(last_config));
+    } catch (AbortMessageLoop e) {
+      info("Squelching aborted message loop: " + e.getMessage());
+    }
+
+    untilTrue("last_config is newer than previous last_config after abort",
+        () -> deviceState.system.last_config.after(last_config));
+
+    // jrand
+    if (!isAlternateClient()) {
+      untilTrue("last_start is newer than previous last_start",
+          () -> deviceConfig.system.operation.last_start.after(last_start));
+    } else {
+      untilTrue("last_start is same as previous last_start",
+          this::stateMatchesConfigTimestamp);
+    }
+  }
+
+  private void deviceRedirectAlternate() {
+    if (altRegistry == null) {
+      throw new SkipTest("No alternate registry defined");
+    }
+    // Phase one: initiate connection to alternate registry.
+    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
+    untilSuccessfulRedirect(BlobPhase.APPLY);
+    mirrorDeviceConfig();
+
+    withAlternateClient(() -> {
+      // Phase two: verify connection to alternate registry.
+      untilSuccessfulRedirect(BlobPhase.FINAL);
+      untilTrue("alternate last_config matches config timestamp",
+          this::stateMatchesConfigTimestamp);
+      untilClearedRedirect();
+    });
+  }
+
+  private void deviceRedirectInitialRegistry() {
+    withAlternateClient(() -> {
+      // Phase three: initiate connection back to initial registry.
+      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
+      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+      untilSuccessfulRedirect(BlobPhase.APPLY);
+      mirrorDeviceConfig();
+    });
+
+    // Phase four: verify restoration of initial registry connection.
+    whileDoing("restoring main connection", () -> {
+      untilSuccessfulRedirect(BlobPhase.FINAL);
+      untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+      untilClearedRedirect();
+    });
+  }
+
   @Test
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_connection_error() {
@@ -200,50 +291,25 @@ public class BlobsetSequences extends SequenceBase {
   @Description("Restart and connect to same endpoint and expect it returns.")
   @FeatureStage(PREVIEW)
   public void system_mode_restart() {
-    // Prepare for the restart.
-    final Date dateZero = new Date(0);
-    untilTrue("last_start is not zero",
-        () -> deviceState.system.operation.last_start.after(dateZero));
+    deviceRestart();
+  }
 
-    final Integer initialCount = deviceState.system.operation.restart_count;
-    checkThat("initial count is greater than 0", () -> initialCount > 0);
-
-    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
-
-    untilTrue("system mode is ACTIVE",
-        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
-
-    final Date last_config = deviceState.system.last_config;
-    final Date last_start = deviceConfig.system.operation.last_start;
-
-    // Send the restart mode.
-    deviceConfig.system.operation.mode = SystemMode.RESTART;
-
-    // Wait for the device to go through the correct states as it restarts.
-    untilTrue("system mode is INITIAL",
-        () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
-
-    checkThat("restart count increased by one",
-        () -> deviceState.system.operation.restart_count == initialCount + 1);
-
-    deviceConfig.system.operation.mode = SystemMode.ACTIVE;
-
-    untilTrue("system mode is ACTIVE",
-        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
-
-    // Capture error from last_start unexpectedly changing due to restart condition.
-    try {
-      untilTrue("last_config is newer than previous last_config before abort",
-          () -> deviceState.system.last_config.after(last_config));
-    } catch (AbortMessageLoop e) {
-      info("Squelching aborted message loop: " + e.getMessage());
-    }
-
-    untilTrue("last_config is newer than previous last_config after abort",
-        () -> deviceState.system.last_config.after(last_config));
-
-    untilTrue("last_start is newer than previous last_start",
-        () -> deviceConfig.system.operation.last_start.after(last_start));
+  @Test
+  @Description("Reconnect the device to a new endpoint, restart, make sure it returns")
+  @FeatureStage(PREVIEW)
+  public void endpoint_redirect_and_restart() {
+    // First, redirect to new endpoint.
+    info("================================== P 1");
+    deviceRedirectAlternate();
+    // Then restart like system_mode_restart.
+    info("================================== P 2");
+    withAlternateClient(() -> {
+      info("================================== P 2.5");
+      deviceRestart();
+    });
+    // Then verify it can return to the initial registry.
+    info("================================== P 3");
+    deviceRedirectInitialRegistry();
   }
 
 }

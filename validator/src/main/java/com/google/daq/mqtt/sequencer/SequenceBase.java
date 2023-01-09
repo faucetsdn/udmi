@@ -1195,6 +1195,10 @@ public class SequenceBase {
         .collect(Collectors.toList());
   }
 
+  protected boolean isAlternateClient() {
+    return useAlternateClient;
+  }
+
   protected void withAlternateClient(Runnable evaluator) {
     assert !useAlternateClient;
     assert deviceConfig.system.testing.endpoint_type == null;
