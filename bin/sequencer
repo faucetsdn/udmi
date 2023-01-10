@@ -33,7 +33,6 @@ serial_no=${1:-//}
 shift || true
 
 test_names="$@"
-test_names="endpoint_redirect_and_restart"
 udmi_version=`git describe --always --dirty`
 
 cd $ROOT_DIR
