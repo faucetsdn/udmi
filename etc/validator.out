@@ -1,11 +1,9 @@
-sites/udmi_site_model/out/devices/AHU-1/config.json
 sites/udmi_site_model/out/devices/AHU-1/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/event_system.json
 sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-1/state.json
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
-sites/udmi_site_model/out/devices/AHU-22/config.json
 sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
 sites/udmi_site_model/out/devices/AHU-22/persistent_data.json
