@@ -1,10 +1,13 @@
 import { handleUdmiEvent } from '../index';
-import * as MongoDAO from '../dao/mongo/MongoDAO';
-import UdmiEventHandler from '../UdmiEventHandler';
+import UdmiEventHandler from '../udmi/UdmiEventHandler';
 import { InvalidEventError } from '../InvalidEventError';
 import { SYSTEM_MODEL_EVENT } from './dataUtils';
+import * as deviceDaoProvider from '../device/DeviceDAO';
+import * as deviceValidaitonDaoProvider from '../device/DeviceValidationDAO';
+import * as siteDaoProvider from '../site/SiteDAO';
+import * as siteValidationDaoProvider from '../site/SiteValidationDAO';
 
-jest.mock('../UdmiEventHandler');
+jest.mock('../udmi/UdmiEventHandler');
 
 describe('index', () => {
   let deviceDAOSpy;
@@ -18,10 +21,12 @@ describe('index', () => {
     jest.clearAllMocks();
 
     // arrange
-    deviceDAOSpy = jest.spyOn(MongoDAO, 'getDeviceDAO').mockImplementation(jest.fn());
-    siteDAOSpy = jest.spyOn(MongoDAO, 'getSiteDAO').mockImplementation(jest.fn());
-    siteValidationDAOSpy = jest.spyOn(MongoDAO, 'getSiteValidationDAO').mockImplementation(jest.fn());
-    deviceValidationDAOSpy = jest.spyOn(MongoDAO, 'getDeviceValidationDAO').mockImplementation(jest.fn());
+    deviceDAOSpy = jest.spyOn(deviceDaoProvider, 'getDeviceDAO').mockImplementation(jest.fn());
+    siteDAOSpy = jest.spyOn(siteDaoProvider, 'getSiteDAO').mockImplementation(jest.fn());
+    siteValidationDAOSpy = jest.spyOn(siteValidationDaoProvider, 'getSiteValidationDAO').mockImplementation(jest.fn());
+    deviceValidationDAOSpy = jest
+      .spyOn(deviceValidaitonDaoProvider, 'getDeviceValidationDAO')
+      .mockImplementation(jest.fn());
     handleUdmiEventSpy = jest.spyOn(UdmiEventHandler.prototype, 'handleUdmiEvent').mockImplementation(mockHandleEvent);
   });
 

@@ -1,4 +1,4 @@
-import { Error, Status } from '../../model/UdmiEvent';
+import { Error, Status } from '../../udmi/UdmiEvent';
 import { Validation, ValidationBuilder } from '../../model/Validation';
 
 describe('Validation.ValidationBuilder', () => {
@@ -51,6 +51,7 @@ describe('Validation.ValidationBuilder', () => {
 
     const expectedValidation: Validation = {
       timestamp: '2022-08-03T17:28:49Z',
+      last_updated: null,
       version: '1.0',
       status,
       category: 'some-category',

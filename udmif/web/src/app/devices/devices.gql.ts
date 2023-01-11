@@ -4,6 +4,7 @@ export const GET_DEVICES = gql`
   query GetDevices($searchOptions: SearchOptions) {
     devices(searchOptions: $searchOptions) {
       devices {
+        uuid
         id
         name
         make
