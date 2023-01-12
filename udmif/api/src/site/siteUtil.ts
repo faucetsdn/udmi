@@ -15,3 +15,7 @@ export const getErrorDevicesCount = (site: Site): number => {
 export const getTotalDevicesCount = (site: Site): number => {
   return getCorrectDevicesCount(site) + getMissingDevicesCount(site) + getErrorDevicesCount(site);
 };
+
+export const getExtraDevicesCount = (site: Site): number => {
+  return site.validation?.summary?.extra_devices?.length ?? 0;
+};

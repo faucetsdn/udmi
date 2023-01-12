@@ -27,6 +27,7 @@ describe('DeviceService', () => {
   it('should return the device', () => {
     const mockDeviceResponse: DeviceQueryResponse = {
       device: {
+        uuid: 'uuid-123',
         id: '123',
         name: 'device one',
         make: 'Mitr',

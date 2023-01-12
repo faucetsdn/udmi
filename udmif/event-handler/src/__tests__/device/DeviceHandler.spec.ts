@@ -3,8 +3,6 @@ import { DeviceHandler } from '../../device/DeviceHandler';
 import { DEVICE_VALIDATION_EVENT, POINTSET_STATE_EVENT, SYSTEM_MODEL_EVENT } from '../dataUtils';
 import { getMock, insertMock, mockDAO, upsertMock } from '../MockDAO';
 
-const AHU_ID: string = 'AHU-1';
-
 describe('DeviceHandler', () => {
   let deviceHandler: Handler;
 

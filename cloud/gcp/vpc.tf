@@ -13,3 +13,11 @@ resource "google_compute_subnetwork" "subnet" {
   network       = google_compute_network.vpc[count.index].name
   ip_cidr_range = var.ip_cidr_range
 }
+
+# serverless VPC
+resource "google_vpc_access_connector" "connector" {
+  name          = "udmi-cf-sql-vpc"
+  ip_cidr_range = "10.9.0.0/28"
+  network       = "private-network"
+  max_throughput = 300
+} 

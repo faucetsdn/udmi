@@ -1,4 +1,5 @@
 interface DeviceModel {
+  uuid: string;
   id: string;
   name: string;
   make: string;

@@ -10,4 +10,6 @@ gcloud functions deploy udmif_event_handler \
       --entry-point=handleUdmiEvent \
       --region=$REGION \
       --trigger-topic=udmi_target \
-      --set-env-vars=MONGO_DATABASE=$MONGO_DATABASE,MONGO_PROTOCOL=$MONGO_PROTOCOL,MONGO_USER=$MONGO_USER,MONGO_PWD=$MONGO_PWD,MONGO_HOST=$MONGO_HOST
+      --vpc-connector=udmi-cf-sql-vpc \
+      --ingress-settings=internal-only \
+      --set-env-vars=POSTGRESQL_INSTANCE_HOST=$POSTGRESQL_INSTANCE_HOST,POSTGRESQL_PORT=$POSTGRESQL_PORT,POSTGRESQL_USER=$POSTGRESQL_USER,POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD,POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE

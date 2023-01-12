@@ -6,6 +6,7 @@ export function createDevices(count: number): Device[] {
   const devices: Device[] = [];
   let n = 1;
   while (n <= count) {
+    const uuid = '00000000-0000-0000-0000-000000000' + pad(n);
     const id = '00000000-0000-0000-0000-000000000' + pad(n);
     const name = n % 2 === 0 ? `CDS-${n}` : `AHU-${n}`;
     const make: string = `make-${n}`;
@@ -16,12 +17,12 @@ export function createDevices(count: number): Device[] {
     const operational: boolean = n % 3 === 0 ? false : true;
     const serialNumber: string = `serialNo-${n}`;
     const firmware: string = `v-${n}`;
-    const tags: string[] = [];
     const validation: any = deviceMessage;
 
     const points: Point[] = createPoints(5);
 
     devices.push({
+      uuid,
       id,
       name,
       make,
@@ -32,7 +33,6 @@ export function createDevices(count: number): Device[] {
       operational,
       serialNumber,
       firmware,
-      tags,
       points,
       validation,
     });

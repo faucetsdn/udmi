@@ -1,12 +1,9 @@
-import { UdmiEvent } from '../../model/UdmiEvent';
 import { Handler } from '../../Handler';
 import { SiteHandler } from '../../site/SiteHandler';
 import { SITE_VALIDATION_EVENT } from '../dataUtils';
 import { insertMock, mockDAO, upsertMock } from '../MockDAO';
 
 describe('SiteHandler', () => {
-  const event: UdmiEvent = SITE_VALIDATION_EVENT;
-
   let siteHandler: Handler;
 
   beforeEach(() => {
@@ -16,7 +13,7 @@ describe('SiteHandler', () => {
 
   test('Calling handleUdmiEvent invokes upsert', async () => {
     // arrange and act
-    await siteHandler.handle(event);
+    await siteHandler.handle(SITE_VALIDATION_EVENT);
 
     // assert
     expect(upsertMock).toHaveBeenCalled();
