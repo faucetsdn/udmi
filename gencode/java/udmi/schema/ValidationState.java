@@ -20,7 +20,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
+    "tools",
     "last_updated",
+    "start_time",
     "status",
     "summary",
     "devices"
@@ -43,6 +45,13 @@ public class ValidationState {
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
+     * Version of the tools for this run
+     * 
+     */
+    @JsonProperty("tools")
+    @JsonPropertyDescription("Version of the tools for this run")
+    public java.lang.String tools;
+    /**
      * Last time this validation report was updated
      * (Required)
      * 
@@ -50,6 +59,13 @@ public class ValidationState {
     @JsonProperty("last_updated")
     @JsonPropertyDescription("Last time this validation report was updated")
     public Date last_updated;
+    /**
+     * timestamp of when the validation report was started
+     * 
+     */
+    @JsonProperty("start_time")
+    @JsonPropertyDescription("timestamp of when the validation report was started")
+    public Date start_time;
     /**
      * Entry
      * <p>
@@ -79,9 +95,11 @@ public class ValidationState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.summary == null)? 0 :this.summary.hashCode()));
+        result = ((result* 31)+((this.start_time == null)? 0 :this.start_time.hashCode()));
         result = ((result* 31)+((this.last_updated == null)? 0 :this.last_updated.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.tools == null)? 0 :this.tools.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -96,7 +114,7 @@ public class ValidationState {
             return false;
         }
         ValidationState rhs = ((ValidationState) other);
-        return (((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.start_time == rhs.start_time)||((this.start_time!= null)&&this.start_time.equals(rhs.start_time))))&&((this.last_updated == rhs.last_updated)||((this.last_updated!= null)&&this.last_updated.equals(rhs.last_updated))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.tools == rhs.tools)||((this.tools!= null)&&this.tools.equals(rhs.tools))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

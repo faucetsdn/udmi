@@ -3,10 +3,9 @@
 source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
 
 [[ $udmi_project != null ]] || (echo project_id not defined && false)
-[[ $udmi_feed != null ]] || (echo feed_name not defined && false)
 [[ $udmi_length != null ]] || (echo run_length not defined && false)
 
-cmd="timeout ${udmi_length}s $UDMI_ROOT/bin/validator $site_model $udmi_project $udmi_subscription"
+cmd="timeout ${udmi_length}s $UDMI_ROOT/bin/validator $site_model $udmi_project"
 echo $cmd
 $cmd || true
 

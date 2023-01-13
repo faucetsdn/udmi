@@ -9,11 +9,11 @@ import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -129,6 +129,7 @@ public class Validator {
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
+  private static final Date START_TIME = new Date();
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -383,7 +384,9 @@ public class Validator {
       return;
     }
     sendInitializationQuery();
+    System.err.println("Running udmi tools version " + UDMI_TOOLS);
     System.err.println("Entering message loop on " + client.getSubscriptionId());
+    processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
@@ -743,6 +746,8 @@ public class Validator {
     report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
+    report.tools = UDMI_TOOLS;
+    report.start_time = START_TIME;
     return report;
   }
 

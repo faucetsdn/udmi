@@ -11,10 +11,9 @@ fi
 udmi_device=$(jq -r .device_id $udmi_profile)
 udmi_project=$(jq -r .project_id $udmi_profile)
 udmi_serial=$(jq -r .serial_no $udmi_profile)
-udmi_feed=$(jq -r .feed_name $udmi_profile)
 udmi_length=$(jq -r .run_length $udmi_profile)
 
-while getopts "d:p:x:f:l:" opt; do
+while getopts "d:p:x:l:" opt; do
     case $opt in
         d)
             udmi_device=${OPTARG}
@@ -25,14 +24,11 @@ while getopts "d:p:x:f:l:" opt; do
         x)
             udmi_serial=${OPTARG}
             ;;
-        f)
-            udmi_feed=${OPTARG}
-            ;;
         l)
             udmi_length=${OPTARG}
             ;;
         \?)
-            echo "Usage: [-d device] [-p project] [-x serial] [-f feed] [-l length]"
+            echo "Usage: [-d device] [-p project] [-x serial] [-l length]"
             false
             ;;
     esac

@@ -14,3 +14,8 @@ function find_site_model_root {
         cd ..
     done
 }
+
+
+export UDMI_TOOLS=$(cd $UDMI_ROOT; git describe)
+
+UDMI_JARCMD="java -jar $UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar"
