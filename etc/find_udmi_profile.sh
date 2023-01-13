@@ -59,10 +59,18 @@ else
     shift
     if [[ -n ${site_model} ]]; then
         udmi_profile=${site_model}/.udmi/profile_${profile_name}.json
-    else
+        alt_profile="or $udmi_profile"
+    fi
+    if [[ ! -f ${udmi_profile} ]]; then
         udmi_profile=~/.udmi/profile_${profile_name}.json
     fi
-    echo Using named udmi profile $udmi_profile
+    if [[ ! -f ${udmi_profile} ]]; then
+        udmi_profile=
+        echo Missing named udmi profile $udmi_profile $alt_profile
+        false
+    else
+        echo Using named udmi profile $udmi_profile
+    fi
 fi
 
 udmi_profile=$(realpath --relative-base $PWD ${udmi_profile})
@@ -73,8 +81,10 @@ if [[ -n $profile_site_model ]]; then
     echo Using extracted site model $site_model
 elif [[ -n $site_model ]]; then
     echo Using implicit site model $site_model
+fi
+
+if [[ -n $site_model ]]; then
+    site_model=$(realpath --relative-base $PWD ${site_model})
 else
     echo No implicit or explicit site model found.
-    false
 fi
-site_model=$(realpath --relative-base $PWD ${site_model})

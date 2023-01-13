@@ -3,11 +3,17 @@
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
 
+trial_run=
+if [[ $1 == trial ]]; then
+    trial_run=true
+    shift
+fi
+
 failures=$(mktemp)
 working=$(mktemp)
 
 function test_locate {
-    udmi locate $2 2&>1 || true > $working
+    udmi locate $2 > $working 2>&1 || true
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
     if [[ -n $4 ]]; then
@@ -27,6 +33,14 @@ function test_locate {
         echo "  site_model expected:" $expected_site was $site_model >> $failures
     fi
     echo $result $1
+    if [[ -n $trial_run && $result != PASS ]]; then
+        echo ======================
+        cat $working
+        echo ======================
+        cat $failures
+        echo ======================
+        return 1
+    fi
 }
 
 # Make sure udmi is in the path.
@@ -41,6 +55,11 @@ cat <<EOF > $PROFILE_TEMPLATE
   "site_model": "$ROOT/$SITE_PATH"
 }
 EOF
+
+if [[ -n $trial_run ]]; then
+    echo Cleaning config directories...
+    rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
+fi
 
 [[ ! -d $ROOT/$SITE_PATH ]] && (echo $ROOT/$SITE_PATH not found, check your setup. && false)
 [[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
@@ -62,7 +81,7 @@ test_locate user_missing bar "" ""
 echo Remove user default profile...
 rm -f $HOME/.udmi/default_profile.json
 
-test_locate default_missing "" "" ""
+test_locate default_missing "" .udmi/default_profile.json ""
 
 echo Create empty user default profile...
 echo {} > $HOME/.udmi/default_profile.json
@@ -77,12 +96,12 @@ cp $PROFILE_TEMPLATE .udmi/
 cp $PROFILE_TEMPLATE .udmi/profile_bar.json
 
 test_locate site_default "" .udmi/default_profile.json $SITE_PATH
-test_locate site_missing foo "" $SITE_PATH
+test_locate site_missing foo /home/peringknife/.udmi/profile_foo.json $SITE_PATH
 test_locate site_profile bar .udmi/profile_bar.json $SITE_PATH
-test_locate site_nothing baz "" $SITE_PATH
+test_locate site_nothing baz "" ""
 
 echo Cleanup .udmi directories...
-rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
+#rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
 
 if [[ -n $(cat $failures) ]]; then
     echo Test failures:
