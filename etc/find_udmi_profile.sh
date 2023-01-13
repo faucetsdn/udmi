@@ -71,11 +71,9 @@ profile_site_model=$(find_or_extract $udmi_profile)
 if [[ -n $profile_site_model ]]; then
     site_model=$profile_site_model
     echo Using extracted site model $site_model
-else
+elif [[ -n $site_model ]]; then
     echo Using implicit site model $site_model
-fi
-
-if [[ -z $site_model ]]; then
+else
     echo No implicit or explicit site model found.
     false
 fi
