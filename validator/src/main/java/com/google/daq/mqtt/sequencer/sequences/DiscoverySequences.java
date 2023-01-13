@@ -1,11 +1,13 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.daq.mqtt.sequencer.FeatureStage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -17,12 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 
@@ -36,33 +40,107 @@ public class DiscoverySequences extends SequenceBase {
   private HashMap<String, Date> previousGenerations;
   private Set<String> families;
 
-  @Test(timeout = TWO_MINUTES_MS)
-  public void self_enumeration() {
-    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
-      throw new SkipTest("No metadata pointset points defined");
-    }
-    untilUntrue("enumeration not active", () -> deviceState.discovery.enumeration.active);
-    Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
+  private DiscoveryEvent runEnumeration(Enumerate enumerate) {
     deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.enumeration = new FamilyDiscoveryConfig();
-    deviceConfig.discovery.enumeration.generation =
-        SemanticDate.describe("generation start time", startTime);
-    info("Starting enumeration at " + JsonUtil.getTimestamp(startTime));
-    untilTrue("enumeration generation",
-        () -> deviceState.discovery.enumeration.generation.equals(startTime)
-    );
-    untilUntrue("enumeration still not active", () -> deviceState.discovery.enumeration.active);
+    deviceConfig.discovery.enumerate = enumerate;
+    untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
+
+    Date startTime = SemanticDate.describe("generation start time", CleanDateFormat.cleanDate());
+    deviceConfig.discovery.generation = startTime;
+    info("Starting empty enumeration at " + JsonUtil.getTimestamp(startTime));
+    untilTrue("matching enumeration generation",
+        () -> deviceState.discovery.generation.equals(startTime));
+
+    deviceConfig.discovery.generation = null;
+    untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);
+
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
     List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
         .collect(Collectors.toList());
-    assertEquals("a single discovery event received", enumEvents.size(), 1);
+    assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
     info("Received discovery generation " + JsonUtil.getTimestamp(event.generation));
     assertEquals("matching event generation", startTime, event.generation);
-    int discoveredPoints = event.uniqs == null ? 0 : event.uniqs.size();
-    assertEquals("discovered points count", deviceMetadata.pointset.points.size(),
-        discoveredPoints);
+    return event;
+  }
+
+  private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
+    if (isTrue(enumerate.families)) {
+      Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
+          .map(localnet -> localnet.families.keySet()).orElse(null);
+      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
+      checkThat("family enumeration matches", () -> Objects.equals(models, events));
+    } else {
+      checkThat("no family enumeration", () -> event.families == null);
+    }
+
+    if (isTrue(enumerate.features)) {
+      checkThat("features enumerated", () -> event.features != null);
+    } else {
+      checkThat("no feature enumeration", () -> event.features == null);
+    }
+
+    if (isTrue(enumerate.uniqs)) {
+      int expectedSize = Optional.ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
+          .orElse(0);
+      checkThat("points enumerated " + expectedSize, () -> event.uniqs.size() == expectedSize);
+    } else {
+      checkThat("no point enumeration", () -> event.uniqs == null);
+    }
+  }
+
+  private boolean isTrue(Boolean condition) {
+    return Optional.ofNullable(condition).orElse(false);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void empty_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @FeatureStage(ALPHA)
+  public void pointset_enumeration() {
+    if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
+      throw new SkipTest("No metadata pointset points defined");
+    }
+    Enumerate enumerate = new Enumerate();
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void feature_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.features = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void family_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
+  }
+
+  @Test
+  @FeatureStage(ALPHA)
+  public void multi_enumeration() {
+    Enumerate enumerate = new Enumerate();
+    enumerate.families = true;
+    enumerate.features = true;
+    enumerate.uniqs = true;
+    DiscoveryEvent event = runEnumeration(enumerate);
+    checkSelfEnumeration(event, enumerate);
   }
 
   @Test(timeout = TWO_MINUTES_MS)

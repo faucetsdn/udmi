@@ -109,6 +109,45 @@ variable "create_vpc" {
   description = "Indicates if we use the default vpc or create a new one."
 }
 
+## Postgresql variables
+variable "instance_name" {
+  type = string
+  description = "The name of the DB instance"
+}
+variable "database_version" {
+  type = string
+  description = "DB Server version to use"
+}
+variable "region" {
+  type = string
+  description = "The region the instance will sit in."
+}
+variable "tier" {
+  type = string
+  description = "custom machine type to use"
+}
+variable "deletion_protection" {
+  type = bool
+  default = true
+  description = "Whether or not to allow Terraform to destroy the instance"
+}
+variable "environment" {
+  type = string
+  description = "user label of the instace"
+}
+variable "db_name" {
+  type = string
+  description = "database name in GCP"
+}
+variable "db_user" {
+  type = string
+  description = "Postgresql db user name in GCP"
+}
+variable "password" {
+  type = string
+  description = "Postgresql db password in GCP"
+}
+
 ## Mongodb variables
 variable "public_key" {
   type        = string

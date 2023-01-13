@@ -15,6 +15,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
+import com.google.daq.mqtt.sequencer.FeatureStage;
+import com.google.daq.mqtt.sequencer.FeatureStage.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.util.SamplingRange;
@@ -37,6 +39,11 @@ public class ConfigSequences extends SequenceBase {
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
+  private boolean hasInterestingStatus() {
+    return deviceState.system.status != null
+        && deviceState.system.status.level >= Level.WARNING.value();
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
@@ -45,6 +52,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the min log-level config is honored by the device.")
+  @FeatureStage(Stage.BETA)
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
@@ -99,7 +107,7 @@ public class ConfigSequences extends SequenceBase {
     // The last_config should not be updated to not reflect the broken config.
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
-    assertTrue("system operational", deviceState.system.operational);
+    assertTrue("system operational", deviceState.system.operation.operational);
     untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
@@ -109,7 +117,7 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("last_config updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
-    assertTrue("system operational", deviceState.system.operational);
+    assertTrue("system operational", deviceState.system.operation.operational);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
@@ -120,13 +128,13 @@ public class ConfigSequences extends SequenceBase {
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
-    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasInterestingSystemStatus(false);
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
-    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -136,7 +144,7 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("last_config updated again",
         () -> !deviceState.system.last_config.equals(updatedConfig)
     );
-    untilTrue("system operational", () -> deviceState.system.operational);
+    untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasInterestingSystemStatus(false);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);

@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(realpath $(dirname $(readlink -f $0))/..)
+
+commands=$(cd $UDMI_ROOT/bin; ls udmi-*)
+commands=$(echo ${commands//udmi-/})
+
+function show_help {
+  echo udmi sub-command [options]
+  echo "  sub-command is (usually) something like: $commands"
+}
+if [[ -z $1 ]]; then
+  show_help
+  false
+fi
+
+subcmd=udmi-$1
+shift
+
+pathcmd=$(which $subcmd || true)
+if [[ -z $pathcmd ]]; then
+  pathcmd=$UDMI_ROOT/bin/$subcmd
+fi
+
+$pathcmd "$@"

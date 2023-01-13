@@ -29,13 +29,18 @@ Some caveats:
 <!-- START GENERATED, do not edit anything after this line! -->
 * [broken_config](#broken_config): Check that the device correctly handles a broken (non-json) config message.
 * [device_config_acked](#device_config_acked): Check that the device MQTT-acknowledges a sent config.
+* [empty_enumeration](#empty_enumeration)
 * [endpoint_connection_bad_hash](#endpoint_connection_bad_hash): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry): Check repeated endpoint with same information gets retried.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
+* [family_enumeration](#family_enumeration)
+* [feature_enumeration](#feature_enumeration)
+* [multi_enumeration](#multi_enumeration)
 * [periodic_scan](#periodic_scan)
+* [pointset_enumeration](#pointset_enumeration)
 * [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
 * [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
 * [self_enumeration](#self_enumeration)
@@ -64,7 +69,6 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Force reset config
 1. Check that no interesting system status
 1. Update config before last_config updated:
-    * Add `system.last_start` = `device reported`
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config updated
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
@@ -76,6 +80,21 @@ Check that the device correctly handles a broken (non-json) config message.
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
+
+## empty_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": {  } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that no feature enumeration
+1. Check that no point enumeration
 
 ## endpoint_connection_bad_hash
 
@@ -123,8 +142,6 @@ Check connection to an alternate project.
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
 1. Wait for blobset phase is apply and stateStatus is null
 1. Check that no interesting system status
-1. Update config before blobset phase is final and stateStatus is null:
-    * Add `system.testing.endpoint_type` = `alternate`
 1. Wait for blobset phase is final and stateStatus is null
 1. Check that no interesting system status
 1. Wait for alternate last_config matches config timestamp
@@ -135,8 +152,6 @@ Check connection to an alternate project.
     * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` }
 1. Wait for blobset phase is apply and stateStatus is null
 1. Check that no interesting system status
-1. Update config before blobset phase is final and stateStatus is null:
-    * Remove `system.testing.endpoint_type`
 1. Wait for blobset phase is final and stateStatus is null
 1. Check that no interesting system status
 1. Wait for restored last_config matches config timestamp
@@ -178,6 +193,51 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
+## family_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "families": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration matches
+1. Check that no feature enumeration
+1. Check that no point enumeration
+
+## feature_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "features": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that features enumerated
+1. Check that no point enumeration
+
+## multi_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration matches
+1. Check that features enumerated
+1. Check that points enumerated 3
+
 ## periodic_scan
 
 1. Update config before all scans not active:
@@ -186,6 +246,21 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config before scan iterations:
     * Add `discovery.families.virtual` = { "generation": `family generation`, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
+
+## pointset_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "uniqs": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration
+1. Check that no feature enumeration
+1. Check that points enumerated 3
 
 ## pointset_publish_interval
 
@@ -212,14 +287,6 @@ device publishes pointset events at a rate of no more than config sample_rate_se
     * Add `pointset.sample_limit_sec` = `1`
 1. Wait for receive at least 5 pointset events
 1. Check that time period between successive pointset events is between 1 and 5 seconds
-
-## self_enumeration
-
-1. Wait for enumeration not active
-1. Update config before enumeration generation:
-    * Add `discovery` = { "enumeration": { "generation": `generation start time` } }
-1. Wait for enumeration generation
-1. Wait for enumeration still not active
 
 ## single_scan
 
@@ -257,21 +324,23 @@ Check that the min log-level config is honored by the device.
 Restart and connect to same endpoint and expect it returns.
 
 1. Wait for last_start is not zero
-1. Update config before deviceState.system.mode == ACTIVE:
-    * Add `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
-1. Update config before deviceState.system.mode == INITIAL:
-    * Set `system.mode` = `restart`
-1. Wait for deviceState.system.mode == INITIAL
-1. Update config before deviceState.system.mode == ACTIVE:
-    * Set `system.mode` = `active`
-1. Wait for deviceState.system.mode == ACTIVE
+1. Check that initial count is greater than 0
+1. Update config before system mode is ACTIVE:
+    * Add `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
+1. Update config before system mode is INITIAL:
+    * Set `system.operation.mode` = `restart`
+1. Wait for system mode is INITIAL
+1. Check that restart count increased by one
+1. Update config before system mode is ACTIVE:
+    * Set `system.operation.mode` = `active`
+1. Wait for system mode is ACTIVE
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 
 ## valid_serial_no
 
-1. Wait for received serial no matches
+1. Wait for received serial number matches
 
 ## writeback_failure
 

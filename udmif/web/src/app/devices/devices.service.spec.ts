@@ -29,6 +29,7 @@ describe('DevicesService', () => {
       devices: {
         devices: [
           {
+            uuid: 'uuid-123',
             id: '123',
             name: 'device one',
             make: 'Mitr',

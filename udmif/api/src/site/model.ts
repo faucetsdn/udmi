@@ -19,17 +19,19 @@ export interface Site {
   validation?: SiteValidation;
 }
 
+export type Status = {
+  message: string;
+  detail?: string;
+  category: string;
+  timestamp: string;
+  level: number;
+};
+
 export type SiteValidation = {
   timestamp?: string;
   version?: string;
   last_updated: string;
-  status?: {
-    message: string;
-    detail?: string;
-    category: string;
-    timestamp: string;
-    level: number;
-  };
+  status?: Status;
   summary: {
     correct_devices?: string[];
     extra_devices?: string[];

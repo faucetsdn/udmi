@@ -1,4 +1,4 @@
-import { Error, Status } from './UdmiEvent';
+import { Error, PointSet, Status, Summary } from '../udmi/UdmiEvent';
 import { InvalidEventError } from '../InvalidEventError';
 
 /**
@@ -20,18 +20,23 @@ import { InvalidEventError } from '../InvalidEventError';
     },
  */
 export interface Validation {
-  timestamp: string;
   version: string;
+  timestamp: string;
+  last_updated: string;
   category?: string;
   message?: string;
   detail?: string;
+  devices?: any;
   errors?: Error[];
+  pointset?: PointSet[];
+  summary?: Summary;
   status?: Status;
 }
 
 export class ValidationBuilder {
-  private _timestamp: string = null;
   private _version: string = null;
+  private _timestamp: string = null;
+  private _last_updated: string = null;
   private _category: string = null;
   private _message: string = null;
   private _detail: string = null;
@@ -43,6 +48,13 @@ export class ValidationBuilder {
       throw new InvalidEventError('Validation timestamp can not be empty');
     }
     this._timestamp = timestamp;
+    return this;
+  }
+
+  last_updated(last_updated: string): ValidationBuilder {
+    if (last_updated) {
+      this._last_updated = last_updated;
+    }
     return this;
   }
 
@@ -95,6 +107,7 @@ export class ValidationBuilder {
 
     return {
       timestamp: this._timestamp,
+      last_updated: this._last_updated,
       version: this._version,
       category: this._category,
       status: this._status,

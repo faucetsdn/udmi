@@ -108,7 +108,7 @@ a successful reconfiguration
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:10.000Z",
   "system": {
     "hardware": {
@@ -120,7 +120,9 @@ a successful reconfiguration
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {
@@ -136,7 +138,7 @@ This is an example of the state message sent to the original endpoint after a fa
 <!--example:state/endpoint_reconfiguration_failed.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2022-07-13T12:00:11.000Z",
   "system": {
     "hardware": {
@@ -148,7 +150,9 @@ This is an example of the state message sent to the original endpoint after a fa
     },
     "serial_no": "000000",
     "last_config": "2022-07-13T12:00:00.000Z",
-    "operational": true
+    "operation": {
+      "operational": true
+    }
   },
   "blobset": {
     "blobs": {

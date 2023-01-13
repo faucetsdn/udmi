@@ -1,7 +1,7 @@
 import { buildPoint, createDevice, getDeviceKey, getDeviceValidation } from '../../device/DeviceDocumentUtils';
 import { Device, DeviceValidation } from '../../device/model/Device';
 import { CONFIG, MODEL, POINTSET_SUB_FOLDER, STATE, SYSTEM_SUB_FOLDER } from '../../EventUtils';
-import { UdmiEvent } from '../../model/UdmiEvent';
+import { UdmiEvent } from '../../udmi/UdmiEvent';
 import { Point } from '../../device/model/Point';
 import { Validation } from '../../model/Validation';
 import { createEvent, DEVICE_VALIDATION_EVENT } from '../dataUtils';
@@ -29,29 +29,30 @@ const AHU_ID: string = 'AHU-1';
 const AHU_REGISTRY_ID: string = 'reg-1';
 
 describe('DeviceDocumentUtils.createDevice.default', () => {
-  const tags: string[] = [];
+  const points: Point[] = [];
 
   test('creates a default device document', () => {
     const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: {} };
-    const expectedDevice: Device = { name, site, id, tags };
+    const expectedDevice: Device = { name, site, id, points };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 
   test('creates a default device document with a timestamp', () => {
     const timestamp: string = '2022-04-25T17:06:12.454Z';
     const inputEvent: UdmiEvent = { attributes: { ...BASIC_SYSTEM_ATTRIBUTES }, data: { timestamp } };
-    const expectedDevice: Device = { name, site, id, lastPayload: timestamp, tags };
+    const expectedDevice: Device = { name, site, id, lastPayload: timestamp, points };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
 
 describe('DeviceDocumentUtils.createDevice.system', () => {
   const tags: string[] = [];
+  const points: Point[] = [];
 
   test('creates a device document with system state', () => {
     const make: string = 'make-a';
     const model: string = 'model-a';
-    const operational: string = 'true';
+    const operational: boolean = true;
     const serialNumber: string = 'serial-no';
     const firmware: string = 'v1';
     const lastPayload: string = '2022-03-21T13:19:32Z';
@@ -77,7 +78,7 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
       operational,
       serialNumber,
       firmware,
-      tags,
+      points,
       lastPayload,
       lastStateSaved,
       lastStateUpdated,
@@ -96,7 +97,7 @@ describe('DeviceDocumentUtils.createDevice.system', () => {
         timestamp: '2022-03-21T13:19:32Z',
       },
     };
-    const expectedDevice: Device = { name, section, site, id, tags, lastPayload };
+    const expectedDevice: Device = { name, section, site, id, points, lastPayload };
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
   });
 });
@@ -135,7 +136,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, undefined)).toEqual(expectedDevice);
@@ -162,7 +163,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -194,7 +195,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, units: 'Degrees-Celsius', meta: { code: fdps, units: 'Degrees-Celsius' }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -224,7 +225,6 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       name,
       site,
       id,
-      tags: [],
       points: expectedPoints,
       lastPayload: timestamp,
       lastTelemetrySaved: today,
@@ -253,7 +253,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdpsp, id: fdpsp, meta: { code: fdpsp }, state },
       { name: fdps, id: fdps, meta: { code: fdps }, state },
     ];
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints };
+    const expectedDevice: Device = { name, site, id, points: expectedPoints };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -283,7 +283,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, tags: [], points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -339,6 +339,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
     const inputEvent: UdmiEvent = DEVICE_VALIDATION_EVENT;
     const expectedValidations: Validation = {
       timestamp: '2022-08-03T17:28:49Z',
+      last_updated: '2022-08-03T17:28:49Z',
       version: '1.3.14',
       category: 'category-x',
       status: {
@@ -366,7 +367,7 @@ describe('DeviceDocumentUtils.createDeviceDocument.validation', () => {
       ],
     };
 
-    const expectedDevice: Device = { name, site, id, tags: [], validation: expectedValidations };
+    const expectedDevice: Device = { name, site, id, validation: expectedValidations, points: [] };
 
     // act and assert
     expect(createDevice(inputEvent, [])).toEqual(expectedDevice);
@@ -385,7 +386,7 @@ describe('getDeviceValidationDocument', () => {
     const expectedValidation = {
       timestamp: new Date(inputEvent.data.timestamp),
       deviceKey: { name: 'name', site: 'string' },
-      data: inputEvent.data,
+      message: inputEvent.data,
     };
     // assert
     expect(validation).toEqual(expectedValidation);

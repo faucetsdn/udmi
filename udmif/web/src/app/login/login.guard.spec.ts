@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
 import { LoginGuard } from './login.guard';
@@ -9,16 +9,21 @@ import { DevicesComponent } from '../devices/devices.component';
 describe('LoginGuard', () => {
   let guard: LoginGuard;
   let mockAuthService: jasmine.SpyObj<AuthService>;
-  let route: ActivatedRouteSnapshot;
+  let mockRouter: jasmine.SpyObj<Router>;
+  let route: ActivatedRouteSnapshot = { queryParams: {} } as ActivatedRouteSnapshot;
   let state: RouterStateSnapshot;
 
   beforeEach(() => {
+    mockRouter = jasmine.createSpyObj(Router, ['navigateByUrl']);
     mockAuthService = jasmine.createSpyObj(AuthService, ['isLoggedIn$']);
     mockAuthService.isLoggedIn$ = new BehaviorSubject<boolean | null>(null);
 
     TestBed.configureTestingModule({
       imports: [RouterTestingModule.withRoutes([{ path: 'devices', component: DevicesComponent }])],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: Router, useValue: mockRouter },
+      ],
     });
     guard = TestBed.inject(LoginGuard);
   });
@@ -27,13 +32,21 @@ describe('LoginGuard', () => {
     expect(guard).toBeTruthy();
   });
 
-  it('should redirect to the devices screen when logged in', () => {
+  it('should redirect to the attempted screen when logged in', () => {
+    const returnUrl = '%2Fsites';
     mockAuthService.isLoggedIn$.next(true);
-    guard.canActivate(route, state).subscribe((res) => expect(res).toEqual(false));
+    route.queryParams['returnUrl'] = returnUrl;
+    guard.canActivate(route, state).subscribe((res) => {
+      expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(returnUrl);
+      expect(res).toEqual(false);
+    });
   });
 
   it('should proceed when not logged in', () => {
     mockAuthService.isLoggedIn$.next(false);
-    guard.canActivate(route, state).subscribe((res) => expect(res).toEqual(true));
+    guard.canActivate(route, state).subscribe((res) => {
+      expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
+      expect(res).toEqual(true);
+    });
   });
 });

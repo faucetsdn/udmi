@@ -48,6 +48,8 @@ def nested_key_extract(key, obj):
   return values
 
 def strip_extension(file):
+  # returns a tuple and only first variable is needed
+  # pylint: disable-next=unused-variable
   root, ext = os.path.splitext(file)
   return root
 
@@ -63,6 +65,7 @@ def file_from_json_ref(ref):
   try:
     m = re.match(r'^file:([A-Za-z_0-9/\\\.]*\.json)#?.*$', ref)
     return m.group(1)
+  # pylint: disable-next=broad-except
   except Exception:
     return None
 
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     root_schemas.append(schema_file)
     if schema_file in IGNORE_LIST:
       continue
-    with open(file_path) as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
       schema_json = json.load(f)
     refs = nested_key_extract('$ref', schema_json)
     refs = [file_from_json_ref(ref) for ref in refs]
@@ -90,6 +93,7 @@ if __name__ == '__main__':
     try:
       if single_ref not in ALWAYS_ROOT:
         root_schemas.remove(single_ref)
+    # pylint: disable-next=broad-except
     except Exception:
       pass
 

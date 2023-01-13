@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+""" Generate HTML documentation for JSON Schema """
 import sys
 
 from json_schema_for_humans.generate import generate_from_filename
 from json_schema_for_humans.generation_configuration import GenerationConfiguration
 
-config = GenerationConfiguration(copy_css=True, 
+config = GenerationConfiguration(copy_css=True,
                                  expand_buttons=True,
                                  minify=False,
                                  link_to_reused_ref=False,

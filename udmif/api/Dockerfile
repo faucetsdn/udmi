@@ -9,6 +9,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY tsconfig.json .
 COPY src src
+COPY knexfile.ts .
 
 RUN npm install
 

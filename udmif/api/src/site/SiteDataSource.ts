@@ -1,5 +1,5 @@
 import { GraphQLDataSource } from 'apollo-datasource-graphql/dist/GraphQLDataSource';
-import { Site, SitesResponse } from './model';
+import { Site, SitesResponse, SiteValidation, Status } from './model';
 import { DAO } from '../dao/DAO';
 import {
   ValidatedDistinctSearchOptions,
@@ -35,5 +35,14 @@ export class SiteDataSource extends GraphQLDataSource {
 
   async getSite(name: string): Promise<Site> {
     return this.siteDAO.getOne({ name });
+  }
+
+  async getSiteValidation(name: string): Promise<SiteValidation> {
+    return (await this.siteDAO.getOne({ name })).validation;
+  }
+
+  async getSiteDeviceStatus(name: string, deviceName: string): Promise<Status> {
+    const devices = (await this.getSiteValidation(name)).devices;
+    return !devices ? null : devices[deviceName]?.status;
   }
 }
