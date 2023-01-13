@@ -43,6 +43,11 @@ if [[ -z $1 || $1 =~ ^- ]]; then
         udmi_profile=~/.udmi/default_profile.json
         echo Using user default udmi profile $udmi_profile
     fi
+    if [[ ! -f ${udmi_profile} ]]; then
+        echo Creating empty default profile ${udmi_profile}
+        mkdir -p $(dirname ${udmi_profile})
+        echo {} > ${udmi_profile}
+    fi
 elif [[ $1 =~ .json$ ]]; then
     # Explicit .json file
     udmi_profile=$1
@@ -60,11 +65,6 @@ else
     echo Using named udmi profile $udmi_profile
 fi
 
-if [[ ! -f ${udmi_profile} ]]; then
-    echo Creating empty profile ${udmi_profile}
-    mkdir -p $(dirname ${udmi_profile})
-    echo {} > ${udmi_profile}
-fi
 udmi_profile=$(realpath --relative-base $PWD ${udmi_profile})
 
 profile_site_model=$(find_or_extract $udmi_profile)

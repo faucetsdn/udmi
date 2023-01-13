@@ -11,21 +11,21 @@ fi
 udmi_device=$(jq -r .device_id $udmi_profile)
 udmi_project=$(jq -r .project_id $udmi_profile)
 udmi_serial=$(jq -r .serial_no $udmi_profile)
-udmi_length=$(jq -r .run_length $udmi_profile)
+udmi_runsec=$(jq -r .run_sec $udmi_profile)
 
-while getopts "d:p:x:l:" opt; do
+while getopts "p:d:x:l:" opt; do
     case $opt in
-        d)
-            udmi_device=${OPTARG}
-            ;;
         p)
             udmi_project=${OPTARG}
+            ;;
+        d)
+            udmi_device=${OPTARG}
             ;;
         x)
             udmi_serial=${OPTARG}
             ;;
         l)
-            udmi_length=${OPTARG}
+            udmi_runsec=${OPTARG}
             ;;
         \?)
             echo "Usage: [-d device] [-p project] [-x serial] [-l length]"
@@ -35,3 +35,15 @@ while getopts "d:p:x:l:" opt; do
 done
 
 shift $((OPTIND-1))
+
+function udmi_help {
+    echo
+    echo $*
+    echo
+    echo 'Common udmi paramaeters (command line option):'
+    echo '  project_id (-p): the cloud project id'
+    echo '  device_id (-d): the device id to test/validate'
+    echo '  serial_no (-x): the device serial number for test'
+    echo '  run_sec (-l): the test run length in seconds'
+    false
+}

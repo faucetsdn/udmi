@@ -2,13 +2,13 @@
 
 source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
 
-[[ $udmi_project != null ]] || (echo project_id not defined && false)
-[[ $udmi_length != null ]] || (echo run_length not defined && false)
+[[ $udmi_project != null ]] || udmi_help project_id not defined
+[[ $udmi_runsec != null ]] || udmi_help run_sec not defined
 
 SUMMARY_FILE=out/validation_report.json
 rm -f $SUMMARY_FILE
 
-cmd="timeout ${udmi_length}s $UDMI_ROOT/bin/validator $site_model $udmi_project"
+cmd="timeout ${udmi_runsec}s $UDMI_ROOT/bin/validator $site_model $udmi_project"
 echo $cmd
 result=0
 $cmd || result=$?
