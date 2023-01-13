@@ -5,6 +5,8 @@ import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.Common;
 import com.google.udmi.util.SiteModel;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,6 +33,7 @@ public class SequenceRunner {
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
+  PrintStream githubStepSummaryFile;
 
   /**
    * Thundercats are go.
@@ -116,6 +119,29 @@ public class SequenceRunner {
     return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
   }
 
+  private void openGithubStepSummary() {
+    String filename = System.getenv("GITHUB_STEP_SUMMARY");
+    if (filename != null) {
+      try {
+        githubStepSummaryFile = new PrintStream(filename);
+      } catch (FileNotFoundException e) {
+        return;
+      }
+    }
+  }
+
+  private void closeGithubStepSummary() {
+    if (githubStepSummaryFile != null) {
+      githubStepSummaryFile.close();
+    }
+  }
+
+  private void outputGithubStepSummary(String name, String condition) {
+    if (githubStepSummaryFile != null) {
+      githubStepSummaryFile.println("| " + name + " | " + condition + "|\n");
+    }
+  }
+
   private void process(List<String> targetMethods) {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
@@ -161,10 +187,15 @@ public class SequenceRunner {
       throw new RuntimeException("No tests were executed!");
     }
 
+    openGithubStepSummary();
+
     allTests.forEach(testName -> {
       String result = failures.contains(testName) ? "FAIL" : "PASS";
       System.err.printf("%s %s%n", result, testName);
+      outputGithubStepSummary(testName, result);
     });
+
+    closeGithubStepSummary();
   }
 
 }
