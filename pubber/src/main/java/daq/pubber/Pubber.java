@@ -351,9 +351,7 @@ public class Pubber {
       Field version = message.getClass().getField("version");
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
-      if (timestamp.get(message) == null) {
-        timestamp.set(message, getCurrentTimestamp());
-      }
+      timestamp.set(message, getCurrentTimestamp());
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
