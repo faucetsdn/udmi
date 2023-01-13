@@ -1,5 +1,5 @@
 import { EVENT, POINTSET_SUB_FOLDER, STATE, VALIDATION_SUB_FOLDER } from '../EventUtils';
-import { UdmiEvent } from '../model/UdmiEvent';
+import { UdmiEvent } from '../udmi/UdmiEvent';
 
 export function createEvent(attributes: any, data: object = {}): UdmiEvent {
   return { attributes, data };
@@ -29,6 +29,18 @@ export const SYSTEM_MODEL_EVENT = {
   messageId: '4498812851299125',
   publishTime: '2022-04-25T17:05:33.162Z',
 };
+
+export const EMPTY_SITE_VALIDATION_EVENT: UdmiEvent = createEvent(
+  {
+    deviceId: '_validator',
+    deviceRegistryId: 'reg-1',
+    subFolder: VALIDATION_SUB_FOLDER,
+  },
+  {
+    version: '1.3.14',
+    timestamp: '2018-08-26T21:39:29.364Z',
+  }
+);
 
 export const SITE_VALIDATION_EVENT: UdmiEvent = createEvent(
   {
@@ -73,6 +85,7 @@ export const DEVICE_VALIDATION_EVENT: UdmiEvent = {
   },
   data: {
     timestamp: '2022-08-03T17:28:49Z',
+    last_updated: '2022-08-03T17:28:49Z',
     version: '1.3.14',
     status: {
       timestamp: '2022-08-03T17:28:49Z',

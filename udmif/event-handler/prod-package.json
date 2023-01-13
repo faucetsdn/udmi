@@ -6,7 +6,8 @@
   "main": "index.js",
   "license": "ISC",
   "dependencies": {
-    "mongodb": "^4.4.1"
+    "knex": "^2.3.0",
+    "pg": "^8.8.0"
   },
   "scripts": {
     "start": "functions-framework --source=dist/ --target=handleUdmiEvent --signature-type=event",

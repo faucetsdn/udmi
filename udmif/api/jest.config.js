@@ -13,7 +13,6 @@ module.exports = {
     "cobertura",
     "lcov"
   ],
-  preset: "@shelf/jest-mongodb",
   // testEnvironment: "node",
   testRegex: '(/__tests__/spec.ts|(\\.|/)(test|spec))\\.tsx?$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

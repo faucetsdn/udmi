@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PipesModule } from '../common/pipes/pipes.module';
 import { MatIconModule } from '@angular/material/icon';
 import { DeviceErrorsModule } from '../device-errors/device-errors.module';
+import { LevelIndicatorModule } from '../level-indicator/level-indicator.module';
 
 @NgModule({
   declarations: [DevicesComponent],
@@ -24,6 +25,7 @@ import { DeviceErrorsModule } from '../device-errors/device-errors.module';
     PipesModule,
     MatIconModule,
     DeviceErrorsModule,
+    LevelIndicatorModule,
   ],
 })
 export class DevicesModule {}
