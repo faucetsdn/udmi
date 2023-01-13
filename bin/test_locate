@@ -1,5 +1,14 @@
 #!/bin/bash -e
 
+function locate_help {
+    echo To clean config directories and stop-at-first-failure, use:
+    echo
+    echo $0 trial
+    echo
+    false
+}
+
+
 ROOT=$(realpath $(dirname $0)/..)
 cd $ROOT
 
@@ -62,8 +71,8 @@ if [[ -n $trial_run ]]; then
 fi
 
 [[ ! -d $ROOT/$SITE_PATH ]] && (echo $ROOT/$SITE_PATH not found, check your setup. && false)
-[[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists, remove before testing && false)
-[[ -d $ROOT/$SITE_PATH/.udmi ]] && (echo $ROOT/$SITE_PATH/.udmi exists, remove before testing && false)
+[[ -d $HOME/.udmi ]] && (echo $HOME/.udmi exists; locate_help)
+[[ -d $ROOT/$SITE_PATH/.udmi ]] && (echo $ROOT/$SITE_PATH/.udmi exists; locate_help)
 
 rm -rf   $HOME/.udmi $ROOT/$SITE_PATH/.udmi
 mkdir -p $HOME/.udmi $ROOT/$SITE_PATH/.udmi
@@ -96,12 +105,12 @@ cp $PROFILE_TEMPLATE .udmi/
 cp $PROFILE_TEMPLATE .udmi/profile_bar.json
 
 test_locate site_default "" .udmi/default_profile.json $SITE_PATH
-test_locate site_missing foo /home/peringknife/.udmi/profile_foo.json $SITE_PATH
+test_locate site_missing foo $HOME/.udmi/profile_foo.json $SITE_PATH
 test_locate site_profile bar .udmi/profile_bar.json $SITE_PATH
 test_locate site_nothing baz "" ""
 
 echo Cleanup .udmi directories...
-#rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
+rm -rf $HOME/.udmi $ROOT/$SITE_PATH/.udmi
 
 if [[ -n $(cat $failures) ]]; then
     echo Test failures:
