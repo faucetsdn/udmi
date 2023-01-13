@@ -2,10 +2,11 @@
 
 source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
 
+[[ $udmi_site != null ]] || udmi_help site_model not defined
 [[ $udmi_project != null ]] || udmi_help project_id not defined
 [[ $udmi_device != null ]] || udmi_help device_id not defined
 [[ $udmi_serial != null ]] || udmi_help serial_id not defined
 
-cmd="$UDMI_ROOT/bin/pubber $site_model $udmi_project $udmi_device $udmi_serial $*"
+cmd="$UDMI_ROOT/bin/pubber $udmi_site $udmi_project $udmi_device $udmi_serial $*"
 echo $cmd
 $cmd

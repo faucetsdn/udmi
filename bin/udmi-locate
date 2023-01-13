@@ -3,4 +3,4 @@
 source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
 
 echo profile: ${udmi_profile}
-echo site_model: ${site_model}
+echo site_model: ${udmi_site}

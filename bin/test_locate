@@ -25,10 +25,10 @@ function test_locate {
     udmi locate $2 > $working 2>&1 || true
     profile=$(echo $(fgrep profile: $working | cut -d: -f2))
     site_model=$(echo $(fgrep site_model: $working | cut -d: -f2))
-    if [[ -n $4 ]]; then
+    if [[ -n $4 && $4 != null ]]; then
         expected_site=$(realpath --relative-base $PWD $ROOT/$4)
     else
-        expected_site=
+        expected_site=$4
     fi
     if [[ $profile == $3 && $site_model == $expected_site ]]; then
         result=PASS
@@ -90,12 +90,12 @@ test_locate user_missing bar "" ""
 echo Remove user default profile...
 rm -f $HOME/.udmi/default_profile.json
 
-test_locate default_missing "" .udmi/default_profile.json ""
+test_locate default_missing "" .udmi/default_profile.json null
 
 echo Create empty user default profile...
 echo {} > $HOME/.udmi/default_profile.json
 
-test_locate default_empty "" .udmi/default_profile.json ""
+test_locate default_empty "" .udmi/default_profile.json null
 
 cd $ROOT/$SITE_PATH
 echo Testing from $PWD
