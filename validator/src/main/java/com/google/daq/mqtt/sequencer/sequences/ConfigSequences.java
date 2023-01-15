@@ -161,6 +161,7 @@ public class ConfigSequences extends SequenceBase {
    * Skip if: initial interval < 5s (too fast for automated test)
    */
   @Test(timeout = THREE_MINUTES_MS)
+  @FeatureStage(ALPHA)
   @Description("device publishes pointset events at a rate of no more than config sample_rate_sec")
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;
@@ -219,6 +220,7 @@ public class ConfigSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Description("test sample rate and sample limit sec")
+  @FeatureStage(ALPHA)
   public void pointset_publish_interval() {
     // Test two narrow non-intersecting windows
 
