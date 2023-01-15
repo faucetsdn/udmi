@@ -43,7 +43,6 @@ Some caveats:
 * [pointset_enumeration](#pointset_enumeration)
 * [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
 * [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
-* [self_enumeration](#self_enumeration)
 * [single_scan](#single_scan)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
