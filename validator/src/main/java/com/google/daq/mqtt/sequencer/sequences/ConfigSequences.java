@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.PREVIEW;
+import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
