@@ -1,0 +1,33 @@
+{
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "system" : {
+    "last_config" : "2022-11-29T14:25:23Z",
+    "operational" : true,
+    "mode" : "initial",
+    "last_start" : "2022-11-29T14:02:57Z",
+    "serial_no" : "123",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2022-11-29T14:25:23Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2022-11-29T14:25:23Z",
+  "version" : "1.4.0"
+}

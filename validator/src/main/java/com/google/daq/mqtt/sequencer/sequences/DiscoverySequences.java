@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -101,7 +102,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test
+  @Test(timeout = TWO_MINUTES_MS)
   @FeatureStage(ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
@@ -142,7 +143,7 @@ public class DiscoverySequences extends SequenceBase {
     checkSelfEnumeration(event, enumerate);
   }
 
-  @Test
+  @Test(timeout = TWO_MINUTES_MS)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -183,7 +184,7 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  @Test
+  @Test(timeout = TWO_MINUTES_MS)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();

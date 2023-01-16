@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
+
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import java.util.List;
 import java.util.Objects;
@@ -96,12 +98,12 @@ public class WritebackSequences extends PointsetBase {
     return targetModel;
   }
 
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   public void writeback_invalid() {
     testTargetState(INVALID_STATE);
   }
 
-  @Test
+  @Test(timeout = NINETY_SECONDS_MS)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
   }
