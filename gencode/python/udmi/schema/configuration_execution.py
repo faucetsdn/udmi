@@ -17,6 +17,7 @@ class ExecutionConfiguration:
     self.serial_no = None
     self.log_level = None
     self.udmi_version = None
+    self.udmi_root = None
     self.alt_project = None
     self.alt_registry = None
     self.block_unknown = None
@@ -38,6 +39,7 @@ class ExecutionConfiguration:
     result.serial_no = source.get('serial_no')
     result.log_level = source.get('log_level')
     result.udmi_version = source.get('udmi_version')
+    result.udmi_root = source.get('udmi_root')
     result.alt_project = source.get('alt_project')
     result.alt_registry = source.get('alt_registry')
     result.block_unknown = source.get('block_unknown')
@@ -85,6 +87,8 @@ class ExecutionConfiguration:
       result['log_level'] = self.log_level # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.udmi_root:
+      result['udmi_root'] = self.udmi_root # 5
     if self.alt_project:
       result['alt_project'] = self.alt_project # 5
     if self.alt_registry:

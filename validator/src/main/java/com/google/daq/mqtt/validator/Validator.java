@@ -331,7 +331,9 @@ public class Validator {
    * @param schemaPath schema specification directory
    */
   public void setSchemaSpec(String schemaPath) {
-    File schemaFile = new File(schemaPath).getAbsoluteFile();
+    File schemaPart = new File(schemaPath);
+    boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
+    File schemaFile = rawPath ? schemaPart : new File(new File(config.udmi_root), schemaPath);
     if (schemaFile.isFile()) {
       schemaRoot = schemaFile.getParentFile();
       schemaSpec = schemaFile.getName();

@@ -43,6 +43,9 @@
     "udmi_version": {
       "type": "string"
     },
+    "udmi_root": {
+      "type": "string"
+    },
     "alt_project": {
       "type": "string"
     },

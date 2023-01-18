@@ -11,12 +11,15 @@ echo $udmi_site
 SUMMARY_FILE=out/validation_report.json
 rm -f $SUMMARY_FILE
 
+$UDMI_ROOT/validator/bin/build
+
 echo Writing config to $CONFIG_FILE
 cat <<EOF > $CONFIG_FILE
 {
   "project_id": "$udmi_project",
   "site_model": "$udmi_site",
   "log_level": "$udmi_loglevel",
+  "udmi_root": "$UDMI_ROOT",
   "udmi_version": "$udmi_version",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }

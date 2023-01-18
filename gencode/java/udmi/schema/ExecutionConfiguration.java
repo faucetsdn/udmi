@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "serial_no",
     "log_level",
     "udmi_version",
+    "udmi_root",
     "alt_project",
     "alt_registry",
     "block_unknown"
@@ -58,6 +59,8 @@ public class ExecutionConfiguration {
     public String log_level;
     @JsonProperty("udmi_version")
     public String udmi_version;
+    @JsonProperty("udmi_root")
+    public String udmi_root;
     @JsonProperty("alt_project")
     public String alt_project;
     @JsonProperty("alt_registry")
@@ -81,6 +84,7 @@ public class ExecutionConfiguration {
         result = ((result* 31)+((this.site_name == null)? 0 :this.site_name.hashCode()));
         result = ((result* 31)+((this.update_topic == null)? 0 :this.update_topic.hashCode()));
         result = ((result* 31)+((this.project_id == null)? 0 :this.project_id.hashCode()));
+        result = ((result* 31)+((this.udmi_root == null)? 0 :this.udmi_root.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.reflect_region == null)? 0 :this.reflect_region.hashCode()));
         return result;
@@ -95,7 +99,7 @@ public class ExecutionConfiguration {
             return false;
         }
         ExecutionConfiguration rhs = ((ExecutionConfiguration) other);
-        return ((((((((((((((((this.alt_registry == rhs.alt_registry)||((this.alt_registry!= null)&&this.alt_registry.equals(rhs.alt_registry)))&&((this.block_unknown == rhs.block_unknown)||((this.block_unknown!= null)&&this.block_unknown.equals(rhs.block_unknown))))&&((this.cloud_region == rhs.cloud_region)||((this.cloud_region!= null)&&this.cloud_region.equals(rhs.cloud_region))))&&((this.device_id == rhs.device_id)||((this.device_id!= null)&&this.device_id.equals(rhs.device_id))))&&((this.key_file == rhs.key_file)||((this.key_file!= null)&&this.key_file.equals(rhs.key_file))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.alt_project == rhs.alt_project)||((this.alt_project!= null)&&this.alt_project.equals(rhs.alt_project))))&&((this.log_level == rhs.log_level)||((this.log_level!= null)&&this.log_level.equals(rhs.log_level))))&&((this.site_model == rhs.site_model)||((this.site_model!= null)&&this.site_model.equals(rhs.site_model))))&&((this.registry_id == rhs.registry_id)||((this.registry_id!= null)&&this.registry_id.equals(rhs.registry_id))))&&((this.site_name == rhs.site_name)||((this.site_name!= null)&&this.site_name.equals(rhs.site_name))))&&((this.update_topic == rhs.update_topic)||((this.update_topic!= null)&&this.update_topic.equals(rhs.update_topic))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.reflect_region == rhs.reflect_region)||((this.reflect_region!= null)&&this.reflect_region.equals(rhs.reflect_region))));
+        return (((((((((((((((((this.alt_registry == rhs.alt_registry)||((this.alt_registry!= null)&&this.alt_registry.equals(rhs.alt_registry)))&&((this.block_unknown == rhs.block_unknown)||((this.block_unknown!= null)&&this.block_unknown.equals(rhs.block_unknown))))&&((this.cloud_region == rhs.cloud_region)||((this.cloud_region!= null)&&this.cloud_region.equals(rhs.cloud_region))))&&((this.device_id == rhs.device_id)||((this.device_id!= null)&&this.device_id.equals(rhs.device_id))))&&((this.key_file == rhs.key_file)||((this.key_file!= null)&&this.key_file.equals(rhs.key_file))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.alt_project == rhs.alt_project)||((this.alt_project!= null)&&this.alt_project.equals(rhs.alt_project))))&&((this.log_level == rhs.log_level)||((this.log_level!= null)&&this.log_level.equals(rhs.log_level))))&&((this.site_model == rhs.site_model)||((this.site_model!= null)&&this.site_model.equals(rhs.site_model))))&&((this.registry_id == rhs.registry_id)||((this.registry_id!= null)&&this.registry_id.equals(rhs.registry_id))))&&((this.site_name == rhs.site_name)||((this.site_name!= null)&&this.site_name.equals(rhs.site_name))))&&((this.update_topic == rhs.update_topic)||((this.update_topic!= null)&&this.update_topic.equals(rhs.update_topic))))&&((this.project_id == rhs.project_id)||((this.project_id!= null)&&this.project_id.equals(rhs.project_id))))&&((this.udmi_root == rhs.udmi_root)||((this.udmi_root!= null)&&this.udmi_root.equals(rhs.udmi_root))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.reflect_region == rhs.reflect_region)||((this.reflect_region!= null)&&this.reflect_region.equals(rhs.reflect_region))));
     }
 
 }
