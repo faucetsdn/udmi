@@ -20,6 +20,7 @@ cat <<EOF > $CONFIG_FILE
   "site_model": "$udmi_site",
   "log_level": "$udmi_loglevel",
   "udmi_root": "$UDMI_ROOT",
+  "message_feed": "$udmi_feed",
   "udmi_version": "$udmi_version",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }

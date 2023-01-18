@@ -208,7 +208,6 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -239,9 +238,22 @@ public class Validator {
     return argList;
   }
 
+  private void validatePubSub(String instName) {
+    cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
+    String registryId = getRegistryId();
+    String updateTopic = cloudIotManager.getUpdateTopic();
+    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
+    if (updateTopic != null) {
+      dataSinks.add(client);
+    }
+  }
+
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExecutionConfiguration(profilePath);
     setSiteDir(config.site_model);
+    if (!Strings.isNullOrEmpty(config.message_feed)) {
+      validatePubSub(config.message_feed);
+    }
   }
 
   MessageReadingClient getMessageReadingClient() {
@@ -359,15 +371,6 @@ public class Validator {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
     return schemaMap;
-  }
-
-  private void validatePubSub(String instName) {
-    String registryId = getRegistryId();
-    String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
-    if (updateTopic != null) {
-      dataSinks.add(client);
-    }
   }
 
   private String getRegistryId() {

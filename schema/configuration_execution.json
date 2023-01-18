@@ -19,6 +19,9 @@
     "update_topic": {
       "type": "string"
     },
+    "message_feed": {
+      "type": "string"
+    },
     "reflect_region": {
       "type": "string"
     },

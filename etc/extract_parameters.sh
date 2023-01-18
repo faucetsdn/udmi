@@ -13,8 +13,9 @@ udmi_project=$(jq -r .project_id $udmi_profile)
 udmi_serial=$(jq -r .serial_no $udmi_profile)
 udmi_runsec=$(jq -r .run_sec $udmi_profile)
 udmi_keyfile=$(jq -r .key_file $udmi_profile)
+udmi_feed=$(jq -r .message_feed $udmi_profile)
 
-while getopts "p:d:x:l:s:k:" opt; do
+while getopts "p:d:x:l:s:k:f:" opt; do
     case $opt in
         p)
             udmi_project=${OPTARG}
@@ -34,8 +35,11 @@ while getopts "p:d:x:l:s:k:" opt; do
         k)
             udmi_keyfile=${OPTARG}
             ;;
+        f)
+            udmi_feed=${OPTARG}
+            ;;
         \?)
-            echo "Usage: [-p project] [-s site] [-d device] [-x serial] [-l length] [-k key_file]"
+            echo "Usage: [-p project] [-s site] [-d device] [-x serial] [-l length] [-k key_file] [-f message_feed]"
             false
             ;;
     esac
@@ -53,5 +57,7 @@ function udmi_help {
     echo '  device_id (-d): the device id to test/validate'
     echo '  serial_no (-x): the device serial number for test'
     echo '  run_sec (-l): the test run length in seconds'
+    echo '  key_file (-k): reflector device private key file'
+    echo '  message_feed (-f): PubSub cloud feed subscription'
     false
 }
