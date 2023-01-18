@@ -12,8 +12,9 @@ udmi_device=$(jq -r .device_id $udmi_profile)
 udmi_project=$(jq -r .project_id $udmi_profile)
 udmi_serial=$(jq -r .serial_no $udmi_profile)
 udmi_runsec=$(jq -r .run_sec $udmi_profile)
+udmi_keyfile=$(jq -r .key_file $udmi_profile)
 
-while getopts "p:d:x:l:s:" opt; do
+while getopts "p:d:x:l:s:k:" opt; do
     case $opt in
         p)
             udmi_project=${OPTARG}
@@ -30,8 +31,11 @@ while getopts "p:d:x:l:s:" opt; do
         l)
             udmi_runsec=${OPTARG}
             ;;
+        k)
+            udmi_keyfile=${OPTARG}
+            ;;
         \?)
-            echo "Usage: [-p project] [-s site] [-d device] [-x serial] [-l length]"
+            echo "Usage: [-p project] [-s site] [-d device] [-x serial] [-l length] [-k key_file]"
             false
             ;;
     esac
