@@ -1,0 +1,10 @@
+{
+  "last_start" : "2022-11-29T14:02:57Z",
+  "metrics_rate_sec" : 600,
+  "min_loglevel" : 200,
+  "testing" : {
+    "sequence_name" : "pointset_publish_interval"
+  },
+  "timestamp" : "2022-11-29T14:25:21.255Z",
+  "version" : "1.3.14-93-g714f5f4-dirty"
+}
