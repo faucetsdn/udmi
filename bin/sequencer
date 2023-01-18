@@ -7,7 +7,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
-UDMI_ALT_REGISTRY=ZZ-REDIRECT-NA
+UDMI_ALT_REGISTRY=ZZ-TRI-FECTA-ALT-REGISTRY
 
 if [[ $1 == '-v' ]]; then
     log_level=DEBUG
