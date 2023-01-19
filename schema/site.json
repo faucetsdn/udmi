@@ -1,0 +1,43 @@
+{
+    "$udmi_version": "1.4.0",
+    "title": "Site",
+    "description": "Information about the ",
+    "$section": "Messages",
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "required": [
+      "timestamp",
+      "version"
+    ],
+    "properties": {
+      "timestamp": {
+        "description": "RFC 3339 timestamp the site metadata was last updated",
+        "type": "string",
+        "format": "date-time",
+        "examples": ["2019-01-17T14:02:29.364Z"]
+      },
+      "version": {
+        "description": "Version of the UDMI schema",
+        "type": "string"
+      },
+      "id": {
+        "description": "Identifier for the site or building",
+        "type": "string",
+        "examples": ["UK-LON-ABC", "US-NYC-HUD1"]
+      },
+      "name": {
+        "description": "Name of the site or building",
+        "type": "string",
+        "examples": ["Cheesegrater", "Tech Central"]
+      },
+      "location": {
+        "$ref": "file:site_location.json#"
+      },
+      "origin": {
+        "$ref": "file:site_origin.json#"
+      }
+      
+    }
+  }
+  

@@ -1,0 +1,27 @@
+{
+  "$udmi_version": "1.4.0",
+  "title": "Site Location",
+  "description": "Locaition of the site origin datum point to which all x/y/z coordinates are relative to",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "lat": {
+      "description": "Latitude of the site origin datum point in WGS84 coordinates",
+      "type": "number"
+    },
+    "long": {
+      "description": "Longitude of the site origin datum point in WGS84 coordinates",
+      "type": "number"
+    },
+    "alt": {
+      "description": "Altitude of the site origin datum point in meters",
+      "type": "number"
+    },
+    "orientation": {
+      "description": "Orientation of site measured clockwise from North",
+      "type": "number"
+    }
+  }
+}
+

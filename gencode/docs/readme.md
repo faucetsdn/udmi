@@ -11,6 +11,7 @@
 * [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit enumeration
 * [**event_pointset**](event_pointset.html) - A set of points reporting telemetry data. [Pointset Event Documentation](../../docs/messages/pointset.md#telemetry)
 * [**event_system**](event_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
+* [**site**](site.html) - Information about the 
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
 
 ## Site Model
@@ -32,5 +33,6 @@
 * [**properties**](properties.html)
 * [**reflect_config**](reflect_config.html) - Config for a reflector client
 * [**reflect_state**](reflect_state.html) - State of a reflector client
+* [**site_cloud**](site_cloud.html) - Locaition of the site origin datum point to which all x/y/z coordinates are relative to
 * [**state_mapping**](state_mapping.html) - State for [mapping](../../docs/specs/mapping.md)
 * [**state_validation**](state_validation.html) - Validation state summary
