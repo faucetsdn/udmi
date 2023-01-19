@@ -6,6 +6,7 @@ RESULT pass endpoint_connection_error Sequence complete
 RESULT pass endpoint_connection_retry Sequence complete
 RESULT pass endpoint_connection_success_alternate Sequence complete
 RESULT pass endpoint_connection_success_reconnect Sequence complete
+RESULT pass endpoint_redirect_and_restart PREVIEW Sequence complete
 RESULT pass extra_config Sequence complete
 RESULT pass family_enumeration ALPHA Sequence complete
 RESULT pass feature_enumeration ALPHA Sequence complete
