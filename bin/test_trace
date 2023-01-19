@@ -13,6 +13,9 @@ trace_in=validator/traces/${trace_name}.in
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
+# Use a static/constant value to make output stable.
+export UDMI_TOOLS=test_trace
+
 rm -rf $site_out
 validator/bin/validate -- schema trace $trace_in $site_model
 
