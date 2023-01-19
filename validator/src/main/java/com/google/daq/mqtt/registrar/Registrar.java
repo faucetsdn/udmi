@@ -67,7 +67,7 @@ public class Registrar {
   private static final String SCHEMA_SUFFIX = ".json";
   private static final String REGISTRATION_SUMMARY_JSON = "registration_summary.json";
   private static final String SCHEMA_NAME = "UDMI";
-  private static final String SITE_METADATA_JSON = "site_metadata.json";
+  private static final String SITE_DEFAULTS_JSON = "site_defaults.json";
   private static final String SWARM_SUBFOLDER = "swarm";
   private static final long PROCESSING_TIMEOUT_MIN = 60;
   private static final int RUNNER_THREADS = 25;
@@ -709,7 +709,7 @@ public class Registrar {
       return;
     }
 
-    File siteMetadataFile = new File(siteDir, SITE_METADATA_JSON);
+    File siteMetadataFile = new File(siteDir, SITE_DEFAULTS_JSON);
     try (InputStream targetStream = new FileInputStream(siteMetadataFile)) {
       // At this time, do not validate the Metadata schema because, by its nature of being
       // a partial overlay on each device Metadata, this Metadata will likely be incomplete
@@ -718,14 +718,14 @@ public class Registrar {
     } catch (FileNotFoundException e) {
       return;
     } catch (Exception e) {
-      throw new RuntimeException("While validating " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While validating " + SITE_DEFAULTS_JSON, e);
     }
 
     try {
-      System.err.printf("Loading " + SITE_METADATA_JSON + "\n");
+      System.err.printf("Loading " + SITE_DEFAULTS_JSON + "\n");
       this.siteMetadata = OBJECT_MAPPER.readValue(siteMetadataFile, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + SITE_METADATA_JSON, e);
+      throw new RuntimeException("While loading " + SITE_DEFAULTS_JSON, e);
     }
   }
 
