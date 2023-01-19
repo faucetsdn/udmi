@@ -12,6 +12,8 @@ RESULT pass feature_enumeration ALPHA Sequence complete
 RESULT pass multi_enumeration ALPHA Sequence complete
 RESULT pass periodic_scan Sequence complete
 RESULT pass pointset_enumeration ALPHA Sequence complete
+RESULT pass pointset_publish_interval ALPHA Sequence complete
+RESULT pass pointset_sample_rate ALPHA Sequence complete
 RESULT pass single_scan Sequence complete
 RESULT pass system_last_update Sequence complete
 RESULT pass system_min_loglevel BETA Sequence complete

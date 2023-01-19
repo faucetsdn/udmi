@@ -134,6 +134,6 @@ public class PubberTest extends TestBase {
     testMessage.timestamp = new Date(1241);
     Pubber.augmentDeviceMessage(testMessage);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
-    assertEquals(testMessage.timestamp, new Date(1241));
+    assertNotEquals(testMessage.timestamp, new Date(1241));
   }
 }

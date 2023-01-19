@@ -41,6 +41,8 @@ Some caveats:
 * [multi_enumeration](#multi_enumeration)
 * [periodic_scan](#periodic_scan)
 * [pointset_enumeration](#pointset_enumeration)
+* [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
+* [pointset_sample_rate](#pointset_sample_rate): device publishes pointset events at a rate of no more than config sample_rate_sec
 * [single_scan](#single_scan)
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 * [system_min_loglevel](#system_min_loglevel): Check that the min log-level config is honored by the device.
@@ -258,6 +260,32 @@ Check that the device correctly handles an extra out-of-schema field
 1. Check that no family enumeration
 1. Check that no feature enumeration
 1. Check that points enumerated 3
+
+## pointset_publish_interval
+
+test sample rate and sample limit sec
+
+1. Update config before receive at least 4 pointset events:
+    * Add `pointset.sample_rate_sec` = `8`
+    * Add `pointset.sample_limit_sec` = `5`
+1. Wait for receive at least 4 pointset events
+1. Check that time period between successive pointset events is between 5 and 8 seconds
+1. Update config before receive at least 4 pointset events:
+    * Set `pointset.sample_rate_sec` = `18`
+    * Set `pointset.sample_limit_sec` = `15`
+1. Wait for receive at least 4 pointset events
+1. Check that time period between successive pointset events is between 15 and 18 seconds
+
+## pointset_sample_rate
+
+device publishes pointset events at a rate of no more than config sample_rate_sec
+
+1. Wait for measure initial sample rate
+1. Update config before receive at least 5 pointset events:
+    * Add `pointset.sample_rate_sec` = `5`
+    * Add `pointset.sample_limit_sec` = `1`
+1. Wait for receive at least 5 pointset events
+1. Check that time period between successive pointset events is between 1 and 5 seconds
 
 ## single_scan
 

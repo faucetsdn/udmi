@@ -1,0 +1,15 @@
+{
+  "sample_limit_sec" : 12,
+  "sample_rate_sec" : 15,
+  "points" : {
+    "filter_alarm_pressure_status" : {
+      "ref" : "BV11.present_value"
+    },
+    "filter_differential_pressure_setpoint" : {
+      "set_value" : 98
+    },
+    "filter_differential_pressure_sensor" : {
+      "ref" : "AV12.present_value"
+    }
+  }
+}

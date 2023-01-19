@@ -1,0 +1,109 @@
+2022-11-29T14:24:45Z WARNING device.log State update defer -1178144ms
+2022-11-29T14:24:45Z INFO device.log update state 2022-11-29T14:24:45Z last_config 2022-11-29T14:05:02Z
+2022-11-29T14:24:45Z WARNING device.log State update defer 1991ms
+2022-11-29T14:24:45Z INFO device.log 2022-11-29T14:24:45Z received config 2022-11-29T14:24:44Z
+2022-11-29T14:24:45Z WARNING device.log State update defer 1990ms
+2022-11-29T14:24:45Z NOTICE system.config.apply success
+2022-11-29T14:24:45Z INFO device.log Config handler
+2022-11-29T14:24:45Z WARNING device.log State update defer 1999ms
+2022-11-29T14:24:47Z WARNING device.log State update defer -1ms
+2022-11-29T14:24:47Z INFO device.log update state 2022-11-29T14:24:47Z last_config 2022-11-29T14:24:44Z
+2022-11-29T14:24:47Z WARNING device.log State update defer 1429ms
+2022-11-29T14:24:47Z NOTICE system.config.apply success
+2022-11-29T14:24:47Z WARNING device.log State update defer 1436ms
+2022-11-29T14:24:47Z INFO device.log 2022-11-29T14:24:47Z received config 2022-11-29T14:24:47Z
+2022-11-29T14:24:47Z INFO device.log Config handler
+2022-11-29T14:24:47Z WARNING device.log State update defer 1429ms
+2022-11-29T14:24:48Z WARNING device.log State update defer 441ms
+2022-11-29T14:24:48Z WARNING device.log State update defer 437ms
+2022-11-29T14:24:48Z WARNING device.log State update defer 426ms
+2022-11-29T14:24:48Z INFO device.log 2022-11-29T14:24:48Z received config 2022-11-29T14:24:48Z
+2022-11-29T14:24:48Z WARNING device.log State update defer 427ms
+2022-11-29T14:24:48Z INFO device.log Config handler
+2022-11-29T14:24:49Z WARNING device.log State update defer 0ms
+2022-11-29T14:24:49Z INFO device.log update state 2022-11-29T14:24:49Z last_config 2022-11-29T14:24:48Z
+2022-11-29T14:24:50Z INFO device.log Config handler
+2022-11-29T14:24:50Z WARNING device.log State update defer 1450ms
+2022-11-29T14:24:50Z WARNING device.log State update defer 1444ms
+2022-11-29T14:24:50Z INFO device.log 2022-11-29T14:24:50Z received config 2022-11-29T14:24:48Z
+2022-11-29T14:24:50Z NOTICE system.config.apply success
+2022-11-29T14:24:50Z WARNING device.log State update defer 1452ms
+2022-11-29T14:24:47Z WARNING device.log State update defer 1433ms
+2022-11-29T14:24:51Z INFO device.log update state 2022-11-29T14:24:51Z last_config 2022-11-29T14:24:48Z
+2022-11-29T14:24:51Z WARNING device.log State update defer -1ms
+2022-11-29T14:24:48Z NOTICE system.config.apply success
+2022-11-29T14:24:50Z WARNING device.log State update defer 1443ms
+2022-11-29T14:24:53Z INFO device.log update state 2022-11-29T14:24:53Z last_config 2022-11-29T14:24:48Z
+2022-11-29T14:24:53Z WARNING device.log State update defer -20ms
+2022-11-29T14:24:53Z NOTICE system.config.apply success
+2022-11-29T14:24:53Z INFO device.log Config handler
+2022-11-29T14:24:53Z WARNING device.log State update defer 1999ms
+2022-11-29T14:24:53Z WARNING device.log State update defer 1991ms
+2022-11-29T14:24:53Z INFO device.log 2022-11-29T14:24:53Z received config 2022-11-29T14:24:53Z
+2022-11-29T14:24:53Z WARNING device.log State update defer 1992ms
+2022-11-29T14:24:54Z NOTICE system.config.apply success
+2022-11-29T14:24:54Z WARNING device.log State update defer 966ms
+2022-11-29T14:24:54Z WARNING device.log State update defer 972ms
+2022-11-29T14:24:54Z INFO device.log 2022-11-29T14:24:54Z received config 2022-11-29T14:24:53Z
+2022-11-29T14:24:54Z WARNING device.log State update defer 967ms
+2022-11-29T14:24:54Z INFO device.log Config handler
+2022-11-29T14:24:54Z WARNING device.log State update defer 973ms
+2022-11-29T14:24:55Z WARNING device.log State update defer 0ms
+2022-11-29T14:24:55Z INFO device.log update state 2022-11-29T14:24:55Z last_config 2022-11-29T14:24:53Z
+2022-11-29T14:24:56Z WARNING device.log State update defer 1074ms
+2022-11-29T14:24:56Z INFO device.log Starting executor with send message delay 8000
+2022-11-29T14:24:56Z WARNING device.log State update defer 1073ms
+2022-11-29T14:24:56Z NOTICE system.config.apply success
+2022-11-29T14:24:56Z INFO device.log Config handler
+2022-11-29T14:24:56Z WARNING device.log State update defer 1068ms
+2022-11-29T14:24:56Z INFO device.log 2022-11-29T14:24:56Z received config 2022-11-29T14:24:54Z
+2022-11-29T14:24:56Z WARNING device.log State update defer 1069ms
+2022-11-29T14:24:57Z INFO device.log update state 2022-11-29T14:24:57Z last_config 2022-11-29T14:24:54Z
+2022-11-29T14:24:57Z WARNING device.log State update defer 0ms
+2022-11-29T14:25:21Z WARNING device.log State update defer -21384ms
+2022-11-29T14:25:21Z INFO device.log update state 2022-11-29T14:25:21Z last_config 2022-11-29T14:24:54Z
+2022-11-29T14:25:21Z WARNING device.log State update defer 1990ms
+2022-11-29T14:25:21Z WARNING device.log State update defer 1999ms
+2022-11-29T14:25:21Z INFO device.log Config handler
+2022-11-29T14:25:21Z INFO device.log 2022-11-29T14:25:21Z received config 2022-11-29T14:25:21Z
+2022-11-29T14:25:21Z NOTICE system.config.apply success
+2022-11-29T14:25:21Z WARNING device.log State update defer 1992ms
+2022-11-29T14:25:23Z INFO device.log 2022-11-29T14:25:23Z received config 2022-11-29T14:25:23Z
+2022-11-29T14:25:23Z INFO device.log Config handler
+2022-11-29T14:25:23Z NOTICE system.config.apply success
+2022-11-29T14:25:23Z WARNING device.log State update defer 137ms
+2022-11-29T14:25:23Z WARNING device.log State update defer 131ms
+2022-11-29T14:25:23Z INFO device.log Starting executor with send message delay 15000
+2022-11-29T14:25:23Z WARNING device.log State update defer 132ms
+2022-11-29T14:25:23Z WARNING device.log State update defer 136ms
+2022-11-29T14:25:23Z INFO device.log update state 2022-11-29T14:25:23Z last_config 2022-11-29T14:25:23Z
+2022-11-29T14:25:23Z WARNING device.log State update defer -1ms
+2022-11-29T14:25:38Z INFO device.log 2022-11-29T14:25:38Z sending test message #130
+2022-11-29T14:26:24Z INFO device.log update state 2022-11-29T14:26:24Z last_config 2022-11-29T14:25:23Z
+2022-11-29T14:26:24Z WARNING device.log State update defer -58403ms
+2022-11-29T14:26:24Z INFO device.log Config handler
+2022-11-29T14:26:24Z WARNING device.log State update defer 1994ms
+2022-11-29T14:26:24Z NOTICE system.config.apply success
+2022-11-29T14:26:24Z WARNING device.log State update defer 1993ms
+2022-11-29T14:26:24Z WARNING device.log State update defer 2000ms
+2022-11-29T14:26:24Z INFO device.log Starting executor with send message delay 10000
+2022-11-29T14:26:24Z INFO device.log 2022-11-29T14:26:24Z received config 2022-11-29T14:26:23Z
+2022-11-29T14:26:26Z WARNING device.log State update defer -1ms
+2022-11-29T14:26:26Z INFO device.log update state 2022-11-29T14:26:26Z last_config 2022-11-29T14:26:23Z
+2022-11-29T14:26:26Z WARNING device.log State update defer 1883ms
+2022-11-29T14:26:26Z WARNING device.log State update defer 1885ms
+2022-11-29T14:26:26Z NOTICE system.config.apply success
+2022-11-29T14:26:26Z WARNING device.log State update defer 1884ms
+2022-11-29T14:26:26Z INFO device.log 2022-11-29T14:26:26Z received config 2022-11-29T14:26:23Z
+2022-11-29T14:26:28Z WARNING device.log State update defer 0ms
+2022-11-29T14:26:28Z INFO device.log update state 2022-11-29T14:26:28Z last_config 2022-11-29T14:26:23Z
+2022-11-29T14:26:26Z WARNING device.log State update defer 1883ms
+2022-11-29T14:26:29Z WARNING device.log State update defer 1358ms
+2022-11-29T14:26:29Z INFO device.log 2022-11-29T14:26:29Z received config 2022-11-29T14:26:28Z
+2022-11-29T14:26:29Z WARNING device.log State update defer 1364ms
+2022-11-29T14:26:29Z INFO device.log Config handler
+2022-11-29T14:26:29Z WARNING device.log State update defer 1365ms
+2022-11-29T14:26:29Z NOTICE system.config.apply success
+2022-11-29T14:26:29Z WARNING device.log State update defer 1360ms
+2022-11-29T14:26:26Z INFO device.log Config handler
+2022-11-29T14:26:30Z INFO sequencer Sequence complete
