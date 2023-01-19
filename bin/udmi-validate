@@ -8,6 +8,8 @@ echo $udmi_site
 [[ $udmi_site != null ]] || udmi_help site_model not defined
 [[ $udmi_project != null ]] || udmi_help project_id not defined
 
+[[ $udmi_feed != null ]] || udmi_feed=
+
 SUMMARY_FILE=out/validation_report.json
 rm -f $SUMMARY_FILE
 
