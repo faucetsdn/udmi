@@ -52,10 +52,10 @@ from .persistent_device import DevicePersistent
 from .properties import Properties
 from .reflect_config import ReflectorConfig
 from .reflect_state import ReflectorState
-from .site import Site
 from .site_cloud import SiteLocation
-from .site_location import SiteLocation
-from .site_origin import SiteLocation
+from .site_metadata import Site
+from .site_metadata_location import SiteLocation
+from .site_metadata_origin import SiteLocation
 from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState

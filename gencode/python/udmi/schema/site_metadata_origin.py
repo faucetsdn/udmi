@@ -1,22 +1,24 @@
-"""Generated class for site_location.json"""
+"""Generated class for site_metadata_origin.json"""
 
 
 class SiteLocation:
   """Generated schema class"""
 
   def __init__(self):
-    self.address = None
     self.lat = None
     self.long = None
+    self.alt = None
+    self.orientation = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = SiteLocation()
-    result.address = source.get('address')
     result.lat = source.get('lat')
     result.long = source.get('long')
+    result.alt = source.get('alt')
+    result.orientation = source.get('orientation')
     return result
 
   @staticmethod
@@ -37,10 +39,12 @@ class SiteLocation:
 
   def to_dict(self):
     result = {}
-    if self.address:
-      result['address'] = self.address # 5
     if self.lat:
       result['lat'] = self.lat # 5
     if self.long:
       result['long'] = self.long # 5
+    if self.alt:
+      result['alt'] = self.alt # 5
+    if self.orientation:
+      result['orientation'] = self.orientation # 5
     return result

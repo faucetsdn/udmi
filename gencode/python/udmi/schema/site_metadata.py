@@ -1,6 +1,6 @@
-"""Generated class for site.json"""
-from .site_location import SiteLocation
-from .site_origin import SiteLocation
+"""Generated class for site_metadata.json"""
+from .site_metadata_location import SiteLocation
+from .site_metadata_origin import SiteLocation
 
 
 class Site:

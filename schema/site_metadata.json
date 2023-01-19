@@ -32,10 +32,10 @@
         "examples": ["Cheesegrater", "Tech Central"]
       },
       "location": {
-        "$ref": "file:site_location.json#"
+        "$ref": "file:site_metadata_location.json#"
       },
       "origin": {
-        "$ref": "file:site_origin.json#"
+        "$ref": "file:site_metadata_origin.json#"
       }
       
     }

@@ -11,7 +11,7 @@
 * [**event_discovery**](event_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit enumeration
 * [**event_pointset**](event_pointset.html) - A set of points reporting telemetry data. [Pointset Event Documentation](../../docs/messages/pointset.md#telemetry)
 * [**event_system**](event_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
-* [**site**](site.html) - Information about the 
+* [**site_metadata**](site_metadata.html) - Information about the 
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
 
 ## Site Model
