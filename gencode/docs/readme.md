@@ -24,6 +24,7 @@
 * [**command_discovery**](command_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning
 * [**command_mapping**](command_mapping.html) - [Mapping command](../../docs/specs/mapping.md) for provisioning
 * [**config_mapping**](config_mapping.html) - Configuration for [mapping](../../docs/specs/mapping.md)
+* [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance
 * [**event**](event.html) - Container object for all event schemas, not directly used.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration

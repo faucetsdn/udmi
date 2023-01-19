@@ -36,9 +36,6 @@
       },
       "origin": {
         "$ref": "file:site_metadata_origin.json#"
-      },
-      "cloud": {
-        "$ref": "file:configuration_execution.json#"
       }
     }
   }

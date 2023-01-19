@@ -1,7 +1,6 @@
 """Generated class for site_metadata.json"""
 from .site_metadata_location import SiteMetadataLocation
 from .site_metadata_origin import SiteMetadataOrigin
-from .configuration_execution import ExecutionConfiguration
 
 
 class SiteMetadata:
@@ -14,7 +13,6 @@ class SiteMetadata:
     self.name = None
     self.location = None
     self.origin = None
-    self.cloud = None
 
   @staticmethod
   def from_dict(source):
@@ -27,7 +25,6 @@ class SiteMetadata:
     result.name = source.get('name')
     result.location = SiteMetadataLocation.from_dict(source.get('location'))
     result.origin = SiteMetadataOrigin.from_dict(source.get('origin'))
-    result.cloud = ExecutionConfiguration.from_dict(source.get('cloud'))
     return result
 
   @staticmethod
@@ -60,6 +57,4 @@ class SiteMetadata:
       result['location'] = self.location.to_dict() # 4
     if self.origin:
       result['origin'] = self.origin.to_dict() # 4
-    if self.cloud:
-      result['cloud'] = self.cloud.to_dict() # 4
     return result
