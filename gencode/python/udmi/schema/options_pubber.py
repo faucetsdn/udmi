@@ -5,6 +5,7 @@ class PubberOptions:
   """Generated schema class"""
 
   def __init__(self):
+    self.fixedSampleRate = None
     self.noHardware = None
     self.noConfigAck = None
     self.messageTrace = None
@@ -21,6 +22,7 @@ class PubberOptions:
     if not source:
       return None
     result = PubberOptions()
+    result.fixedSampleRate = source.get('fixedSampleRate')
     result.noHardware = source.get('noHardware')
     result.noConfigAck = source.get('noConfigAck')
     result.messageTrace = source.get('messageTrace')
@@ -51,6 +53,8 @@ class PubberOptions:
 
   def to_dict(self):
     result = {}
+    if self.fixedSampleRate:
+      result['fixedSampleRate'] = self.fixedSampleRate # 5
     if self.noHardware:
       result['noHardware'] = self.noHardware # 5
     if self.noConfigAck:

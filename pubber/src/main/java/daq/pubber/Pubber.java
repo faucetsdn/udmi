@@ -351,9 +351,7 @@ public class Pubber {
       Field version = message.getClass().getField("version");
       version.set(message, UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
-      if (timestamp.get(message) == null) {
-        timestamp.set(message, getCurrentTimestamp());
-      }
+      timestamp.set(message, getCurrentTimestamp());
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
@@ -911,15 +909,17 @@ public class Pubber {
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
-      actualInterval = updateSystemConfig(config.pointset);
-      updatePointsetConfig(config.pointset);
+      actualInterval = updatePointsetConfig(config.pointset);
+      updatePointsetPointsConfig(config.pointset);
       updateDiscoveryConfig(config.discovery);
       extractEndpointBlobConfig();
     } else {
       info(getTimestamp() + " defaulting empty config");
       actualInterval = DEFAULT_REPORT_SEC * 1000;
     }
-    maybeRestartExecutor(actualInterval);
+    int useInterval = configuration.options.fixedSampleRate == null
+        ? actualInterval : configuration.options.fixedSampleRate * 1000;
+    maybeRestartExecutor(useInterval);
   }
 
   EndpointConfiguration extractEndpointBlobConfig() {
@@ -1348,7 +1348,7 @@ public class Pubber {
     }
   }
 
-  private void updatePointsetConfig(PointsetConfig pointsetConfig) {
+  private void updatePointsetPointsConfig(PointsetConfig pointsetConfig) {
     PointsetConfig useConfig = pointsetConfig != null ? pointsetConfig : new PointsetConfig();
     Map<String, PointPointsetConfig> points =
         useConfig.points != null ? useConfig.points : new HashMap<>();
@@ -1365,7 +1365,7 @@ public class Pubber {
     updateState(point);
   }
 
-  private int updateSystemConfig(PointsetConfig pointsetConfig) {
+  private int updatePointsetConfig(PointsetConfig pointsetConfig) {
     final int actualInterval;
     boolean hasSampleRate = pointsetConfig != null && pointsetConfig.sample_rate_sec != null;
     int reportInterval = hasSampleRate ? pointsetConfig.sample_rate_sec : DEFAULT_REPORT_SEC;

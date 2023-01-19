@@ -1,0 +1,27 @@
+{
+  "timestamp" : "2022-11-29T13:51:03Z",
+  "version" : "@@@cloud udmi version###1.3.14-93-g714f5f4-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 600,
+    "last_start" : "2022-11-29T13:50:18Z",
+    "testing" : {
+      "sequence_name" : "pointset_sample_rate"
+    }
+  },
+  "pointset" : {
+    "sample_limit_sec" : 1,
+    "sample_rate_sec" : 5,
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value"
+      }
+    }
+  }
+}
