@@ -9,7 +9,7 @@ class ExecutionConfiguration:
     self.cloud_region = None
     self.site_name = None
     self.update_topic = None
-    self.message_feed = None
+    self.feed_name = None
     self.reflect_region = None
     self.site_model = None
     self.device_id = None
@@ -32,7 +32,7 @@ class ExecutionConfiguration:
     result.cloud_region = source.get('cloud_region')
     result.site_name = source.get('site_name')
     result.update_topic = source.get('update_topic')
-    result.message_feed = source.get('message_feed')
+    result.feed_name = source.get('feed_name')
     result.reflect_region = source.get('reflect_region')
     result.site_model = source.get('site_model')
     result.device_id = source.get('device_id')
@@ -73,8 +73,8 @@ class ExecutionConfiguration:
       result['site_name'] = self.site_name # 5
     if self.update_topic:
       result['update_topic'] = self.update_topic # 5
-    if self.message_feed:
-      result['message_feed'] = self.message_feed # 5
+    if self.feed_name:
+      result['feed_name'] = self.feed_name # 5
     if self.reflect_region:
       result['reflect_region'] = self.reflect_region # 5
     if self.site_model:

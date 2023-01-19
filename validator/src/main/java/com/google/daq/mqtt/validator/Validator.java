@@ -251,8 +251,8 @@ public class Validator {
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExecutionConfiguration(profilePath);
     setSiteDir(config.site_model);
-    if (!Strings.isNullOrEmpty(config.message_feed)) {
-      validatePubSub(config.message_feed);
+    if (!Strings.isNullOrEmpty(config.feed_name)) {
+      validatePubSub(config.feed_name);
     }
   }
 

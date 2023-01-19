@@ -19,7 +19,7 @@
     "update_topic": {
       "type": "string"
     },
-    "message_feed": {
+    "feed_name": {
       "type": "string"
     },
     "reflect_region": {
