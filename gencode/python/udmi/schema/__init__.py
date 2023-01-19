@@ -52,7 +52,6 @@ from .persistent_device import DevicePersistent
 from .properties import Properties
 from .reflect_config import ReflectorConfig
 from .reflect_state import ReflectorState
-from .site_cloud import SiteLocation
 from .site_metadata import SiteMetadata
 from .site_metadata_location import SiteMetadataLocation
 from .site_metadata_origin import SiteMetadataOrigin
