@@ -218,6 +218,7 @@ class SystemModel:
     self.location = None
     self.hardware = None
     self.software = None
+    self.serial_no = None
     self.physical_tag = None
     self.aux = None
     self.min_loglevel = None
@@ -230,6 +231,7 @@ class SystemModel:
     result.location = Object327C415D.from_dict(source.get('location'))
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
+    result.serial_no = source.get('serial_no')
     result.physical_tag = Object8FD736D9.from_dict(source.get('physical_tag'))
     result.aux = Object734A44BA.from_dict(source.get('aux'))
     result.min_loglevel = source.get('min_loglevel')
@@ -259,6 +261,8 @@ class SystemModel:
       result['hardware'] = self.hardware.to_dict() # 4
     if self.software:
       result['software'] = self.software # 1
+    if self.serial_no:
+      result['serial_no'] = self.serial_no # 5
     if self.physical_tag:
       result['physical_tag'] = self.physical_tag.to_dict() # 4
     if self.aux:

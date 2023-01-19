@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "location",
     "hardware",
     "software",
+    "serial_no",
     "physical_tag",
     "aux",
     "min_loglevel"
@@ -52,6 +53,13 @@ public class SystemModel {
     @JsonPropertyDescription("A collection of items which can be used to describe version of software running on a device")
     public Map<String, String> software;
     /**
+     * The serial number of the physical device
+     * 
+     */
+    @JsonProperty("serial_no")
+    @JsonPropertyDescription("The serial number of the physical device")
+    public java.lang.String serial_no;
+    /**
      * Information used to print a physical QR code label.
      * (Required)
      * 
@@ -77,6 +85,7 @@ public class SystemModel {
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.physical_tag == null)? 0 :this.physical_tag.hashCode()));
+        result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         return result;
     }
@@ -90,7 +99,7 @@ public class SystemModel {
             return false;
         }
         SystemModel rhs = ((SystemModel) other);
-        return (((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return ((((((((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software)))&&((this.aux == rhs.aux)||((this.aux!= null)&&this.aux.equals(rhs.aux))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.physical_tag == rhs.physical_tag)||((this.physical_tag!= null)&&this.physical_tag.equals(rhs.physical_tag))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }
