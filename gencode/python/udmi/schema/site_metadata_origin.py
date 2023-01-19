@@ -1,7 +1,7 @@
 """Generated class for site_metadata_origin.json"""
 
 
-class SiteLocation:
+class SiteMetadataOrigin:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class SiteLocation:
   def from_dict(source):
     if not source:
       return None
-    result = SiteLocation()
+    result = SiteMetadataOrigin()
     result.lat = source.get('lat')
     result.long = source.get('long')
     result.alt = source.get('alt')
@@ -27,7 +27,7 @@ class SiteLocation:
       return None
     result = {}
     for key in source:
-      result[key] = SiteLocation.from_dict(source[key])
+      result[key] = SiteMetadataOrigin.from_dict(source[key])
     return result
 
   @staticmethod

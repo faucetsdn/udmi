@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Site
+ * Site Metadata
  * <p>
  * Information about the 
  * 
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "origin"
 })
 @Generated("jsonschema2pojo")
-public class Site {
+public class SiteMetadata {
 
     /**
      * RFC 3339 timestamp the site metadata was last updated
@@ -58,23 +58,23 @@ public class Site {
     @JsonPropertyDescription("Name of the site or building")
     public String name;
     /**
-     * Site Location
+     * Site Metadata Location
      * <p>
      * Location of the site or building
      * 
      */
     @JsonProperty("location")
     @JsonPropertyDescription("Location of the site or building")
-    public SiteLocation location;
+    public SiteMetadataLocation location;
     /**
-     * Site Location
+     * Site Metadata Origin
      * <p>
      * Locaition of the site origin datum point to which all x/y/z coordinates are relative to
      * 
      */
     @JsonProperty("origin")
     @JsonPropertyDescription("Locaition of the site origin datum point to which all x/y/z coordinates are relative to")
-    public SiteLocation origin;
+    public SiteMetadataOrigin origin;
 
     @Override
     public int hashCode() {
@@ -93,10 +93,10 @@ public class Site {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Site) == false) {
+        if ((other instanceof SiteMetadata) == false) {
             return false;
         }
-        Site rhs = ((Site) other);
+        SiteMetadata rhs = ((SiteMetadata) other);
         return (((((((this.origin == rhs.origin)||((this.origin!= null)&&this.origin.equals(rhs.origin)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 

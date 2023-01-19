@@ -1,6 +1,6 @@
 {
     "$udmi_version": "1.4.0",
-    "title": "Site",
+    "title": "Site Metadata",
     "description": "Information about the ",
     "$section": "Messages",
     "type": "object",

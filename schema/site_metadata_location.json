@@ -1,6 +1,6 @@
 {
   "$udmi_version": "1.4.0",
-  "title": "Site Location",
+  "title": "Site Metadata Location",
   "description": "Location of the site or building",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
