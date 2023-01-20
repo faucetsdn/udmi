@@ -26,7 +26,6 @@ Reconnect the device to a new endpoint, restart, make sure it returns
 1. Update config:
     * Set `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
-1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is same as previous last_start
 1. Update config before blobset phase is apply and stateStatus is null:
