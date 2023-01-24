@@ -117,6 +117,8 @@ jobs:
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out
           diff -u /tmp/sequencer.out etc/sequencer.out
+          # Revisit these types of comparisons when we have standardized
+          # test run environment.
           #diff -u /tmp/generated.md docs/specs/sequences/generated.md
           #ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ | xargs -I% diff -u \
           #    sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
