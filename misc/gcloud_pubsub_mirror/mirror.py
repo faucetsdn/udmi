@@ -11,6 +11,9 @@ from google.cloud import pubsub_v1
 
 messages_processed = 0
 
+def is_file_project(target: str) -> bool:
+  return target == '//'
+  
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
   global messages_processed
   publisher.publish(topic_path, message.data, **message.attributes)
@@ -19,6 +22,9 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     print(f'{messages_processed} messages processed')
   message.ack()
 
+def file_publisher():
+  return None
+  
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('source_project', type=str)
@@ -37,13 +43,15 @@ except Exception as e:
   sys.exit()
 
 subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
-publisher = pubsub_v1.PublisherClient(credentials=credentials)
 
-topic_path = publisher.topic_path(args.target_project,
-  args.target_topic)
+if is_file_project(args.target_project):
+  publisher = file_publisher()
+  topcic_path = args.target_topic
+else:
+  publisher = pubsub_v1.PublisherClient(credentials=credentials)
+  topic_path = publisher.topic_path(args.target_project, args.target_topic)
 
-subscription = subscriber.subscription_path(args.source_project,
-  args.source_subscription)
+subscription = subscriber.subscription_path(args.source_project, args.source_subscription)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
 print('Listening to pubsub, please wait ...')
