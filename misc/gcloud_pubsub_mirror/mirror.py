@@ -17,7 +17,7 @@ messages_processed = 0
 
 def is_file_project(target: str) -> bool:
   return target == '//'
-  
+
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
   global messages_processed
   publish(message)
@@ -30,15 +30,19 @@ def topic_publisher(publisher, topic_path, message):
   publisher.publish(topic_path, message.data, **message.attributes)
 
 def file_publisher(path: str, message):
-  file_path = path + '/' + message.publish_time.isoformat() + '.json'
-  print('Writing ' + file_path)
+  timestamp = message.publish_time.isoformat()
+  file_path = f'{path}/{timestamp}.json'
+
   message_dict = {
     "data": str(base64.b64encode(message.data)),
+    "timestamp": timestamp,
     "attributes": dict(message.attributes)
   }
+
+  print('Writing ' + file_path)
   with open(file_path, "w") as outfile:
     outfile.write(json.dumps(message_dict, indent=2))
-  
+
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('source_project', type=str)
