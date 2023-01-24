@@ -2,10 +2,14 @@
 Mirrors a pub/sub topic to another pub/sub topic by consuming a subscription
 and republishing all messages
 """
-import sys
+
 import argparse
+import base64
+import json
+import sys
 
 from concurrent import futures
+from functools import partial
 from google import auth
 from google.cloud import pubsub_v1
 
@@ -16,14 +20,24 @@ def is_file_project(target: str) -> bool:
   
 def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
   global messages_processed
-  publisher.publish(topic_path, message.data, **message.attributes)
+  publish(message)
   messages_processed += 1
   if messages_processed % 100 == 0:
     print(f'{messages_processed} messages processed')
   message.ack()
 
-def file_publisher():
-  return None
+def topic_publisher(publisher, topic_path, message):
+  publisher.publish(topic_path, message.data, **message.attributes)
+
+def file_publisher(path: str, message):
+  file_path = path + '/' + message.publish_time.isoformat() + '.json'
+  print('Writing ' + file_path)
+  message_dict = {
+    "data": str(base64.b64encode(message.data)),
+    "attributes": dict(message.attributes)
+  }
+  with open(file_path, "w") as outfile:
+    outfile.write(json.dumps(message_dict, indent=2))
   
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
@@ -45,11 +59,11 @@ except Exception as e:
 subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
 
 if is_file_project(args.target_project):
-  publisher = file_publisher()
-  topcic_path = args.target_topic
+  publish = partial(file_publisher, args.target_topic)
 else:
   publisher = pubsub_v1.PublisherClient(credentials=credentials)
   topic_path = publisher.topic_path(args.target_project, args.target_topic)
+  publish = partial(topic_publisher, publisher, topic_path)
 
 subscription = subscriber.subscription_path(args.source_project, args.source_subscription)
 
@@ -60,6 +74,7 @@ while True:
   try:
     future.result(timeout=5)
   except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
+    print('Ending PubSub loop due to normal termination')
     future.cancel()
     future.result()
     break
