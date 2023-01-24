@@ -483,7 +483,8 @@ public class SequenceBase {
     String category = getCategory(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score, message);
+    String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score,
+        message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);

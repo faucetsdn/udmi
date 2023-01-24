@@ -12,12 +12,21 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface Feature {
   String IMPLICIT_CATEGORY = "";
-  Stage DEFAULT_STAGE = Stage.ALPHA;
+  Stage DEFAULT_STAGE = Stage.REQUIRED;
   int DEFAULT_SCORE = 5;
 
+  /**
+   * Defines the category for this feature, as defined by a named attribute.
+   *
+   * @return feature category using named attribute
+   */
   String category() default IMPLICIT_CATEGORY;
 
-  // Implicit category value for shorthand.
+  /**
+   * Defines the category for this feature, as defined by an implicit attribute.
+   *
+   * @return feature category using implicit argument
+   */
   String value() default IMPLICIT_CATEGORY;
 
   /**
@@ -25,8 +34,13 @@ public @interface Feature {
    *
    * @return annotated release stage of this test
    */
-  Stage stage() default Stage.ALPHA;
+  Stage stage() default Stage.REQUIRED;
 
+  /**
+   * Defines the feature score for this test, in AU.
+   *
+   * @return feature score value
+   */
   int score() default DEFAULT_SCORE;
 
   /**
