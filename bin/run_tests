@@ -1,19 +1,5 @@
 #!/bin/bash -e
 
-function summary() {
-  if [[ ! -z "$GITHUB_STEP_SUMMARY" ]]; then
-    echo "$*" >> $GITHUB_STEP_SUMMARY
-  fi
-}
-
-function summaryrun() {
-  local cmd="$*"
-  ( $@ ) 
-  rc="$?"
-  summary "| $cmd | $rc |"
-  return $rc
-} 
-
 function usage() {
   >&2 cat << EOF
 
@@ -30,38 +16,28 @@ EOF
   false
 }
 
-#
-# main
-#
-
-testname="$1"
-
-summary "# $0"
-summary "## $testname"
-summary "| Test | Exit status |"
-
-case "$testname" in
+case "$1" in
   install_dependencies)
-    summaryrun bin/setup_base
-    summaryrun bin/clone_model
+    bin/setup_base
+    bin/clone_model
     sudo ln -fs $PWD/bin/udmi /usr/local/bin/
     ;;
   code_checks)
-    summaryrun bin/gencode check
-    summaryrun pubber/bin/build check
-    summaryrun validator/bin/build check
-    summaryrun bin/test_pylint
-    summaryrun bin/test_locate
+    bin/gencode check
+    pubber/bin/build check
+    validator/bin/build check
+    bin/test_pylint
+    bin/test_locate
     ;;
   schema_tests)
-    summaryrun bin/test_schema
+    bin/test_schema
     ;;
   trace_tests)
-    summaryrun bin/test_trace simple
+    bin/test_trace simple
     ;;
   registrar_tests)
-    summaryrun bin/test_registrar
-    summaryrun bin/test_sites
+    bin/test_registrar
+    bin/test_sites
     ;;
   all_tests)
     bin/run_tests code_checks
