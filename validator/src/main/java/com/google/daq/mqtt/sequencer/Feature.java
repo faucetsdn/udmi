@@ -6,18 +6,28 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Release stage for a particular feature test.
+ * Feature designation for line-item tests.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface FeatureStage {
+public @interface Feature {
+  String IMPLICIT_CATEGORY = "";
+  Stage DEFAULT_STAGE = Stage.ALPHA;
+  int DEFAULT_SCORE = 5;
+
+  String category() default IMPLICIT_CATEGORY;
+
+  // Implicit category value for shorthand.
+  String value() default IMPLICIT_CATEGORY;
 
   /**
    * Default value is REQUIRED which should be the end-state for all tests.
    *
    * @return annotated release stage of this test
    */
-  Stage value() default Stage.REQUIRED;
+  Stage stage() default Stage.ALPHA;
+
+  int score() default DEFAULT_SCORE;
 
   /**
    * Enum of allowed stages.

@@ -88,4 +88,10 @@ generated=docs/specs/sequences/generated.md
 cp $generated /tmp/  # Save for test/comparison later
 bin/gencode_seq
 
+echo Comparing /tmp/sequencer.out with etc/sequencer.out
+diff -u /tmp/sequencer.out etc/sequencer.out
+
+echo Comparing /tmp/generated.md with docs/specs/sequences/generated.md
+diff -u /tmp/generated.md docs/specs/sequences/generated.md
+
 echo Done with base test_sequencer run.
