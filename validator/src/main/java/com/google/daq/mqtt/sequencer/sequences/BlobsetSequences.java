@@ -299,16 +299,12 @@ public class BlobsetSequences extends SequenceBase {
   @FeatureStage(PREVIEW)
   public void endpoint_redirect_and_restart() {
     // First, redirect to new endpoint.
-    info("================================== P 1");
     deviceRedirectAlternate();
     // Then restart like system_mode_restart.
-    info("================================== P 2");
     withAlternateClient(() -> {
-      info("================================== P 2.5");
       deviceRestart();
     });
     // Then verify it can return to the initial registry.
-    info("================================== P 3");
     deviceRedirectInitialRegistry();
   }
 
