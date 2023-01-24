@@ -103,7 +103,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA)
+  @Feature(category = "enumeration.pointset", stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
@@ -115,7 +115,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA)
+  @Feature(category = "enumeration.features", stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -124,7 +124,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA)
+  @Feature(category = "enumeration.families", stage = ALPHA)
   public void family_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
