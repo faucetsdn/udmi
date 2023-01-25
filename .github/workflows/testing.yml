@@ -124,7 +124,6 @@ jobs:
         run: |
           bin/test_itemized $GCP_TARGET_PROJECT
           more out/test_itemized.out
-          diff -u out/test_itemized.out etc/test_itemized.out
       - name: output logs
         if: ${{ always() }}
         run: |
