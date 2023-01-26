@@ -53,7 +53,7 @@ def file_publisher(path: str, message):
   file_path = f'{path}/{timepath}'
   os.makedirs(file_path, exist_ok = True)
 
-  file_name = f'{file_path}/{timestamp}.json'
+  file_name = f'{file_path}/{timestamp}_{message.message_id}.json'
 
   message_dict = {
     "data": base64.b64encode(message.data).decode('utf-8'),
@@ -61,12 +61,9 @@ def file_publisher(path: str, message):
     "attributes": dict(message.attributes)
   }
 
-  if not os.path.exists(file_name):
-    print('Writing ' + file_name)
-    with open(file_name, "w") as outfile:
-      outfile.write(json.dumps(message_dict, indent=2))
-  else:
-    print('Skipping ' + file_name)
+  print('Writing ' + file_name)
+  with open(file_name, "w") as outfile:
+    outfile.write(json.dumps(message_dict, indent=2))
 
 def load_messages(path: str):
   print('Processing ' + path)
