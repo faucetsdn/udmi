@@ -23,8 +23,12 @@ ssl_domains = ["web.udmi.mydomain.com", "api.udmi.mydomain.com"]
 
 #GKE an other related variables
 
-#MongoDB Atlas
-atlas_org_id    = "YourAtlasOrgId"
-public_key      = "YourAtlasPublicKey"
-private_key     = "YourAtlasPrivateKey@"
-db_password     = "YourUdmiDbpassword"
+## Postgresql variable
+instance_name    = "PostgreSQLInstaceName"
+database_version = "PostgreSQLserverVersion"
+region           = "@GCP_PROJECT_REGION@"
+tier             = "TheMachineType"
+environment      = "InstanceEnvforLabel"
+db_name          = "DataBaseName"
+db_user          = "DataBaseUser"
+password         = "DataBasePassword"

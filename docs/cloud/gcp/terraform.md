@@ -16,13 +16,14 @@ There are some pre-requisites that need to be satisfied in order to use this ter
 5. Create a Standard type storage bucket setup with a unique name. example: `udmi-terraform-state-bucket`. You should disable public access and ensure your service account has access to it.
 6. [Generate a JSON key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for the terraform service account, download it and store it in the [`udmi/cloud/auth`](../../../cloud/gcp/auth) folder with the name `credentials.json`\
 7. [Create a UDMI group for your organisation](https://cloud.google.com/iam/docs/groups-in-cloud-console). This group name should be provided in various locations. 
-8. [Create a mongoDB account](https://www.mongodb.com/atlas/database). This is our current persistence layer for UDMIF.
-9. [create a mongoDB API key with Project Creator permissions](https://www.mongodb.com/docs/atlas/configure-api-access/#std-label-create-org-api-key). Those keys are used by terraform to create the DB cluster and databases.
-10. [Enable the following APIS manually](https://cloud.google.com/endpoints/docs/openapi/enable-api). Cloud Resource Manager API and Service Usage API.
+8. [Enable the following APIS manually](https://cloud.google.com/endpoints/docs/openapi/enable-api). Cloud Resource Manager API and Service Usage API.
 
 NOTE: There is currently a limitation in the terraform code that requires the project name and id to be the same.
 TODO: create a gcloud based shell script to automatically does all activities listed above.
 TODO: add cloud functions generation via terraform configuration.
+
+## PostgreSQL
+To setup PostgreSQL copy the `terraform.tfvars.template` file to `terraform.tfvars` and update postges instance details then apply terraform. This will create Postgres instance in default VPC.
 
 ## Getting started
 
