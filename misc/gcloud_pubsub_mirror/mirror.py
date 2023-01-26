@@ -4,6 +4,7 @@ and republishing all messages
 """
 
 import argparse
+import datetime
 import base64
 import json
 import os
@@ -15,6 +16,7 @@ from google import auth
 from google.cloud import pubsub_v1
 
 messages_processed = 0
+messages = False
 
 def is_file_project(target: str) -> bool:
   return target == '//'
@@ -31,15 +33,17 @@ def topic_publisher(publisher, topic_path, message):
   publisher.publish(topic_path, message.data, **message.attributes)
 
 def file_publisher(path: str, message):
-  timestamp = message.publish_time.isoformat().replace('000+00:00', '') + 'Z'
+  fullstamp = message.publish_time.isoformat() + 'Z'
+  timestamp = fullstamp.replace('+00:00Z', 'Z').replace('000Z', 'Z')
   timepath = timestamp[0: timestamp.rindex(':')].replace(':', '/')
   file_path = f'{path}/{timepath}'
   os.makedirs(file_path, exist_ok = True)
+
   file_name = f'{file_path}/{timestamp}.json'
 
   message_dict = {
-    "data": str(base64.b64encode(message.data)),
-    "timestamp": timestamp,
+    "data": base64.b64encode(message.data).decode('utf-8'),
+    "publish_time": timestamp,
     "attributes": dict(message.attributes)
   }
 
@@ -59,10 +63,25 @@ def load_messages(path: str):
   else:
     raise Exception('Unknown file ' + path)
 
+class Message:
+  pass
+
+def noop_ack():
+  pass
+
 def file_reader(messages, callback):
-  print('reading messages')
-  for path in messages:
-    callback(path)
+  global has_messages
+  message = next(messages, None)
+  if not message:
+    has_messages = False
+    return
+  obj = Message()
+  obj.data = base64.b64decode(message['data'])
+  publish_time = message['publish_time'].replace('Z', '')
+  obj.publish_time = datetime.datetime.fromisoformat(publish_time)
+  obj.attributes = message['attributes']
+  obj.ack = noop_ack
+  callback(obj)
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
@@ -76,7 +95,7 @@ args = parse_command_line_args()
 
 try:
   print('authenticating user')
-  # credentials, project_id = auth.default()
+  credentials, project_id = auth.default()
 # pylint: disable-next=broad-except
 except Exception as e:
   print(e)
@@ -86,13 +105,14 @@ if is_file_project(args.source_project):
   messages = load_messages(args.source_subscription)
   get_messages = partial(file_reader, messages, subscribe_callback)
   future = None
+  has_messages = True
 else:
   subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
   subscription = subscriber.subscription_path(args.source_project, args.source_subscription)
   future = subscriber.subscribe(subscription, subscribe_callback)
   print('Listening to pubsub, please wait ...')
   get_messages = partial(future.result, timeout=10)
-  messages = True
+  has_messages = True
 
 if is_file_project(args.target_project):
   publish = partial(file_publisher, args.target_topic)
@@ -102,7 +122,7 @@ else:
   publish = partial(topic_publisher, publisher, topic_path)
 
 
-while messages:
+while has_messages:
   try:
     get_messages()
   except (futures.CancelledError, KeyboardInterrupt, futures.TimeoutError):
