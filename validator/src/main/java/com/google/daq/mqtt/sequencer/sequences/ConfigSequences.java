@@ -1,8 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.PREVIEW;
-import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -17,8 +15,7 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.daq.mqtt.sequencer.FeatureStage;
-import com.google.daq.mqtt.sequencer.FeatureStage.Stage;
+import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.util.SamplingRange;
@@ -54,7 +51,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the min log-level config is honored by the device.")
-  @FeatureStage(Stage.BETA)
+  @Feature()
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
@@ -163,7 +160,7 @@ public class ConfigSequences extends SequenceBase {
    * Skip if: initial interval < 5s (too fast for automated test)
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @FeatureStage(ALPHA)
+  @Feature(stage = ALPHA)
   @Description("device publishes pointset events at a rate of no more than config sample_rate_sec")
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;
@@ -222,7 +219,7 @@ public class ConfigSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Description("test sample rate and sample limit sec")
-  @FeatureStage(ALPHA)
+  @Feature(stage = ALPHA)
   public void pointset_publish_interval() {
     // Test two narrow non-intersecting windows
 
