@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.PREVIEW;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.REQUIRED;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -198,7 +198,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = PREVIEW)
+  @Feature(stage = REQUIRED)
   public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);

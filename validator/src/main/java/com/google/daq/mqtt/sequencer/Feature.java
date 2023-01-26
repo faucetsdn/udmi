@@ -10,7 +10,8 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface Feature {
+public @interface
+Feature {
   String IMPLICIT_CATEGORY = "";
   Stage DEFAULT_STAGE = Stage.REQUIRED;
   int DEFAULT_SCORE = 5;
@@ -48,8 +49,6 @@ public @interface Feature {
    */
   enum Stage {
     ALPHA,
-    BETA,
-    PREVIEW,
     REQUIRED
   }
 }

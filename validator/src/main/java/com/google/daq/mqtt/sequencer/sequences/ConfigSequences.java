@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -52,7 +51,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that the min log-level config is honored by the device.")
-  @Feature(stage = BETA)
+  @Feature()
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
