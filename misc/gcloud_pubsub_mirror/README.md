@@ -11,5 +11,5 @@ Republishes GCP Pub/Sub messages from one subscription into another project verb
 
 To capture file traces, try:
 ```
-while true; do venv/bin/python3 misc/gcloud_pubsub_mirror/mirror.py project-name subscription-name // output-folder; done
+while true; do venv/bin/python3 misc/gcloud_pubsub_mirror/mirror.py ${project_id} ${subscription_id} // out/; done
 ```
