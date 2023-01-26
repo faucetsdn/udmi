@@ -4,15 +4,6 @@
 
 This project is a GCP Cloud function written in Typescript that uses Google Cloud Functions Infrastructure to allow faster development.
 
-## MongoDB
----
-
-In order to properly run the cloud function, it requires MongoDB to be up and running.  Following the instruction linked below.
-
-[Installing MongoDB](https://www.mongodb.com/docs/manual/administration/install-community/)
-
-You will need to configure the connection parameters in your runDev.sh file if they are different from a standard install.
-
 ## PostgreSQL
 ---
 
