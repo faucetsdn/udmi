@@ -7,7 +7,6 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Bucket.BLOBSET_BLOB_FETCH;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

@@ -66,6 +66,7 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runners.model.TestTimedOutException;
+import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -480,7 +481,7 @@ public class SequenceBase {
       String message) {
     String methodName = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
-    String category = getCategory(feature);
+    Bucket category = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
     String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score,
@@ -494,19 +495,19 @@ public class SequenceBase {
     }
   }
 
-  private String getCategory(Feature feature) {
+  private Bucket getBucket(Feature feature) {
     if (feature == null) {
-      return UNKNOWN_CATEGORY;
+      return Bucket.UNKNOWN_DEFAULT;
     }
-    String value = feature.value();
-    String category = feature.bucket();
-    if (!Strings.isNullOrEmpty(value) && !Strings.isNullOrEmpty(category)) {
-      throw new RuntimeException("Both value and category defined for feature");
+    Bucket implicit = feature.value();
+    Bucket explicit = feature.bucket();
+    if (implicit != null && explicit != null) {
+      throw new RuntimeException("Both implicit and explicit buckets defined for feature");
     }
-    if (Strings.isNullOrEmpty(value) && Strings.isNullOrEmpty(category)) {
-      return UNKNOWN_CATEGORY;
+    if (implicit == null && explicit == null) {
+      return Bucket.UNKNOWN_DEFAULT;
     }
-    return Strings.isNullOrEmpty(value) ? category : value;
+    return implicit == null ? explicit : implicit;
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
