@@ -31,6 +31,11 @@ cat <<EOF > $udmi_profile
 }
 EOF
 
+pubber/bin/build
+validator/bin/build
+
+bin/reset_config $SITE_PATH $PROJECT_ID $DEVICE_ID
+
 while read -u 7 action test_name remainder; do
     if [[ $action != TEST ]]; then
         continue;
@@ -60,9 +65,12 @@ while read -u 7 action test_name remainder; do
 
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}')
 
-    result=$(grep -E -m 1 "RESULT [a-z]+ $test_name " $SEQUENCER_OUT)
+    result=$(grep -E -m 1 "RESULT [a-z]+ [a-z.]+ $test_name " $SEQUENCER_OUT)
     echo ${result/*sequencer RESULT/RESULT} >> $RESULTS_OUT
 
     sleep 2
 
 done 7< $GOLDEN_FILE
+
+echo Comparing diff $RESULTS_OUT $GOLDEN_FILE
+diff -u out/test_itemized.out etc/test_itemized.out

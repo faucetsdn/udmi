@@ -1,6 +1,8 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.4.0",
+  "tools" : "test_trace",
+  "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
     "correct_devices" : [ "AHU-1", "GAT-123" ],
     "extra_devices" : [ ],

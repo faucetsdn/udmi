@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.REQUIRED;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
@@ -92,14 +92,14 @@ public class SequenceBase {
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
   public static final String RESULT_SKIP = "skip";
-  public static final String RESULT_FORMAT = "RESULT %s %s%s %s";
+  public static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
-  public static final int NORM_TIMEOUT_MS = 180 * 1000;
+  public static final int NORM_TIMEOUT_MS = 300 * 1000;
   public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String RESULT_LOG_FILE = "RESULT.log";
@@ -134,6 +134,7 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private static final String UNKNOWN_CATEGORY = "unknown";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -467,7 +468,7 @@ public class SequenceBase {
   }
 
   @Test
-  @FeatureStage(REQUIRED)
+  @Feature(stage = REQUIRED)
   public void valid_serial_no() {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
@@ -478,9 +479,12 @@ public class SequenceBase {
   private void recordResult(String result, org.junit.runner.Description description,
       String message) {
     String methodName = description.getMethodName();
-    FeatureStage stage = description.getAnnotation(FeatureStage.class);
-    String suffix = (stage == null || stage.value() == REQUIRED) ? "" : (" " + stage.value());
-    String resultString = String.format(RESULT_FORMAT, result, methodName, suffix, message);
+    Feature feature = description.getAnnotation(Feature.class);
+    String category = getCategory(feature);
+    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+    String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score,
+        message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);
@@ -488,6 +492,21 @@ public class SequenceBase {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
     }
+  }
+
+  private String getCategory(Feature feature) {
+    if (feature == null) {
+      return UNKNOWN_CATEGORY;
+    }
+    String value = feature.value();
+    String category = feature.category();
+    if (!Strings.isNullOrEmpty(value) && !Strings.isNullOrEmpty(category)) {
+      throw new RuntimeException("Both value and category defined for feature");
+    }
+    if (Strings.isNullOrEmpty(value) && Strings.isNullOrEmpty(category)) {
+      return UNKNOWN_CATEGORY;
+    }
+    return Strings.isNullOrEmpty(value) ? category : value;
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {

@@ -19,6 +19,9 @@
     "update_topic": {
       "type": "string"
     },
+    "feed_name": {
+      "type": "string"
+    },
     "reflect_region": {
       "type": "string"
     },
@@ -41,6 +44,9 @@
       "type": "string"
     },
     "udmi_version": {
+      "type": "string"
+    },
+    "udmi_root": {
       "type": "string"
     },
     "alt_project": {

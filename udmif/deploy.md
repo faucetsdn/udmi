@@ -76,11 +76,11 @@ example:
 ```
 #run from the event-handler folder.
 export REGION=us-central1
-export MONGO_DATABASE=udmi
-export MONGO_PROTOCOL=mongodb+srv
-export MONGO_USER=someUser
-export MONGO_PWD=somePassword
-export MONGO_HOST="something.somewhere.mongodb.net/?retryWrites=true&w=majority&authSource=admin"
+export POSTGRESQL_DATABASE=udmi
+export POSTGRESQL_PORT =5432
+export POSTGRESQL_USER=someUser
+export POSTGRESQL_PASSWORD=somePassword
+export POSTGRESQL_INSTANCE_HOST=privateIP
 
 #Authentication with GCP"
 gcloud config set project udmi

@@ -33,6 +33,10 @@ else
     done
 fi
 
+test_out_base=sites/udmi_site_model/out/devices/AHU-1/tests
+mkdir -p $test_out_base
+all_tests=$(ls -1 $test_out_base)
+
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
@@ -87,5 +91,16 @@ fi
 generated=docs/specs/sequences/generated.md
 cp $generated /tmp/  # Save for test/comparison later
 bin/gencode_seq
+
+echo Comparing diff /tmp/sequencer.out etc/sequencer.out
+diff -u /tmp/sequencer.out etc/sequencer.out
+
+echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
+diff -u /tmp/generated.md docs/specs/sequences/generated.md
+
+generated_sequences=$test_out_base/%/sequence.md
+expected_sequences=validator/sequences/%/sequence.md
+echo Comparing diff $generated_sequences $expected_sequences
+echo $all_tests | xargs -I% diff -u $generated_sequences $expected_sequences
 
 echo Done with base test_sequencer run.

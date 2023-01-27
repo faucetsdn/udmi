@@ -16,8 +16,17 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "tools": {
+      "description": "Version of the tools for this run",
+      "type": "string"
+    },
     "last_updated": {
       "description": "Last time this validation report was updated",
+      "format": "date-time",
+      "type": "string"
+    },
+    "start_time": {
+      "description": "timestamp of when the validation report was started",
       "format": "date-time",
       "type": "string"
     },
