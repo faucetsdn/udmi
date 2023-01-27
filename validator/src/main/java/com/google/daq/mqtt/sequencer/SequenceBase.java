@@ -482,10 +482,10 @@ public class SequenceBase {
       String message) {
     String methodName = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
-    Bucket category = getBucket(feature);
+    String bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score,
+    String resultString = String.format(RESULT_FORMAT, result, bucket, methodName, stage, score,
         message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
@@ -506,7 +506,7 @@ public class SequenceBase {
       throw new RuntimeException("Both implicit and explicit buckets defined for feature");
     }
     if (implicit == UNKNOWN_DEFAULT && explicit == UNKNOWN_DEFAULT) {
-      return UNKNOWN_DEFAULT;
+      return UNKNOWN_DEFAULT.name();
     }
     return (implicit == UNKNOWN_DEFAULT ? explicit : implicit).name();
   }
