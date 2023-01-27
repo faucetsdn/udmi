@@ -11,6 +11,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -495,19 +496,19 @@ public class SequenceBase {
     }
   }
 
-  private Bucket getBucket(Feature feature) {
+  private String getBucket(Feature feature) {
     if (feature == null) {
-      return Bucket.UNKNOWN_DEFAULT;
+      return UNKNOWN_DEFAULT.name();
     }
     Bucket implicit = feature.value();
     Bucket explicit = feature.bucket();
-    if (implicit != null && explicit != null) {
+    if (implicit != UNKNOWN_DEFAULT && explicit != UNKNOWN_DEFAULT) {
       throw new RuntimeException("Both implicit and explicit buckets defined for feature");
     }
-    if (implicit == null && explicit == null) {
-      return Bucket.UNKNOWN_DEFAULT;
+    if (implicit == UNKNOWN_DEFAULT && explicit == UNKNOWN_DEFAULT) {
+      return UNKNOWN_DEFAULT;
     }
-    return implicit == null ? explicit : implicit;
+    return (implicit == UNKNOWN_DEFAULT ? explicit : implicit).name();
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
