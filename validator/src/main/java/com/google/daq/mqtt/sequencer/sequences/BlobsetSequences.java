@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Bucket.BLOBSET_BLOB_FETCH;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -198,7 +199,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = REQUIRED)
+  @Feature(stage = REQUIRED, category = BLOBSET_BLOB_FETCH)
   public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);

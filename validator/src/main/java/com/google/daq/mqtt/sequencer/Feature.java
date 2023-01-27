@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import udmi.schema.Bucket;
 
 /**
  * Feature designation for line-item tests.
@@ -12,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface
 Feature {
-  String IMPLICIT_CATEGORY = "";
+  Bucket IMPLICIT_DEFAULT = Bucket.BLOBSET_BLOB;
   Stage DEFAULT_STAGE = Stage.REQUIRED;
   int DEFAULT_SCORE = 5;
 
@@ -21,14 +22,14 @@ Feature {
    *
    * @return feature category using named attribute
    */
-  String category() default IMPLICIT_CATEGORY;
+  Bucket category() default IMPLICIT_DEFAULT;
 
   /**
    * Defines the category for this feature, as defined by an implicit attribute.
    *
    * @return feature category using implicit argument
    */
-  String value() default IMPLICIT_CATEGORY;
+  String value() default IMPLICIT_DEFAULT;
 
   /**
    * Default value is REQUIRED which should be the end-state for all tests.
