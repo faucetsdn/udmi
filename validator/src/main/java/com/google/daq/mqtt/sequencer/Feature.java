@@ -17,16 +17,16 @@ Feature {
   int DEFAULT_SCORE = 5;
 
   /**
-   * Defines the category for this feature, as defined by a named attribute.
+   * Defines the bucket for this feature, as defined by a named attribute.
    *
-   * @return feature category using named attribute
+   * @return feature bucket using named attribute
    */
-  Bucket category() default Bucket.UNKNOWN_DEFAULT;
+  Bucket bucket() default Bucket.UNKNOWN_DEFAULT;
 
   /**
-   * Defines the category for this feature, as defined by an implicit attribute.
+   * Defines the bucket for this feature, as defined by an implicit attribute.
    *
-   * @return feature category using implicit argument
+   * @return feature bucket using implicit argument
    */
   Bucket value() default Bucket.UNKNOWN_DEFAULT;
 

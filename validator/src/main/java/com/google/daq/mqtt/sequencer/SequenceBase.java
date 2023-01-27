@@ -499,7 +499,7 @@ public class SequenceBase {
       return UNKNOWN_CATEGORY;
     }
     String value = feature.value();
-    String category = feature.category();
+    String category = feature.bucket();
     if (!Strings.isNullOrEmpty(value) && !Strings.isNullOrEmpty(category)) {
       throw new RuntimeException("Both value and category defined for feature");
     }
