@@ -58,7 +58,9 @@ class ValidationState:
   def __init__(self):
     self.timestamp = None
     self.version = None
+    self.tools = None
     self.last_updated = None
+    self.start_time = None
     self.status = None
     self.summary = None
     self.devices = None
@@ -70,7 +72,9 @@ class ValidationState:
     result = ValidationState()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
+    result.tools = source.get('tools')
     result.last_updated = source.get('last_updated')
+    result.start_time = source.get('start_time')
     result.status = Entry.from_dict(source.get('status'))
     result.summary = ValidationSummary.from_dict(source.get('summary'))
     result.devices = DeviceValidationEvent.map_from(source.get('devices'))
@@ -98,8 +102,12 @@ class ValidationState:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
+    if self.tools:
+      result['tools'] = self.tools # 5
     if self.last_updated:
       result['last_updated'] = self.last_updated # 5
+    if self.start_time:
+      result['start_time'] = self.start_time # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
     if self.summary:

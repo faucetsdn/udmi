@@ -1,13 +1,13 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.ALPHA;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.daq.mqtt.sequencer.FeatureStage;
+import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -95,7 +95,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @FeatureStage(ALPHA)
+  @Feature(category = "enumeration", stage = ALPHA)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -103,7 +103,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @FeatureStage(ALPHA)
+  @Feature(category = "enumeration.pointset", stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
@@ -115,7 +115,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @FeatureStage(ALPHA)
+  @Feature(category = "enumeration.features", stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -124,7 +124,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @FeatureStage(ALPHA)
+  @Feature(category = "enumeration.families", stage = ALPHA)
   public void family_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -133,7 +133,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @FeatureStage(ALPHA)
+  @Feature(stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -185,6 +185,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature("discovery.scan")
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();

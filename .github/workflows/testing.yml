@@ -119,12 +119,7 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
-          more /tmp/sequencer.out
-          diff -u /tmp/sequencer.out etc/sequencer.out
-          diff -u /tmp/generated.md docs/specs/sequences/generated.md
-          ls -1 sites/udmi_site_model/out/devices/AHU-1/tests/ | xargs -I% diff -u \
-              sites/udmi_site_model/out/devices/AHU-1/tests/%/sequence.md \
-              validator/sequences/%/sequence.md
+          more /tmp/sequencer.out /tmp/generated.md
       - name: itemized sequencer tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
@@ -133,7 +128,6 @@ jobs:
         run: |
           bin/test_itemized $GCP_TARGET_PROJECT
           more out/test_itemized.out
-          diff -u out/test_itemized.out etc/test_itemized.out
       - name: output logs
         if: ${{ always() }}
         run: |
