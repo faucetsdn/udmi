@@ -13,7 +13,6 @@ import udmi.schema.Bucket;
 @Target({ElementType.METHOD})
 public @interface
 Feature {
-  Bucket IMPLICIT_DEFAULT = Bucket.BLOBSET_BLOB;
   Stage DEFAULT_STAGE = Stage.REQUIRED;
   int DEFAULT_SCORE = 5;
 
@@ -22,14 +21,14 @@ Feature {
    *
    * @return feature category using named attribute
    */
-  Bucket category() default IMPLICIT_DEFAULT;
+  Bucket category() default Bucket.UNKNOWN_DEFAULT;
 
   /**
    * Defines the category for this feature, as defined by an implicit attribute.
    *
    * @return feature category using implicit argument
    */
-  String value() default IMPLICIT_DEFAULT;
+  Bucket value() default Bucket.UNKNOWN_DEFAULT;
 
   /**
    * Default value is REQUIRED which should be the end-state for all tests.

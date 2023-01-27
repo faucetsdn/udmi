@@ -70,8 +70,9 @@ def write_java_buckets(out, indent, buckets):
     desc = bucket[1]
     const = target.replace('.', '_').upper()
     out.write(JAVA_DESCRIPTION % (indent, desc))
-    separator = ','
-    out.write(JAVA_TARGET % (indent, const, target, separator))
+    out.write(JAVA_TARGET % (indent, const, target, ','))
+  out.write(JAVA_DESCRIPTION % (indent, 'unknown default value'))
+  out.write(JAVA_TARGET % (indent, 'UNKNOWN_DEFAULT', 'unknown', ';'))
 
 
 def main():

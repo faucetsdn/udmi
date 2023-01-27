@@ -147,7 +147,10 @@ public enum Bucket {
     VALIDATION_SUMMARY("validation.summary"),
 
     // (**INFO**) The validation summary report.
-    VALIDATION_SUMMARY_REPORT("validation.summary.report");
+    VALIDATION_SUMMARY_REPORT("validation.summary.report"),
+
+    // unknown default value
+    UNKNOWN_DEFAULT("unknown");
     
     private final String value;
 
