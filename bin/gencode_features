@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+""" Gencode generator for features """
+import re
+import os
+
+GENCODE_MARKER = '@@ '
+FEATURE_MARKER = '* '
+WILDCARD_REGEX = r' *\* _\?\?\?_: (.*)'
+WILDCARD_SUFFIX = r'.[a-z]+(_[a-z]+)*'
+
+FEATURE_REGEX = r' *\* _([a-z]+)_: (.*)'
+JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
+DEVICE_PREFIX = 'device'
+
+JAVA_DESCRIPTION = '\n%s// %s\n'
+JAVA_TARGET = '%spublic static final String %s = "%s";\n'
+
+doc_in = os.path.join('docs/specs/features.md')
+java_in = os.path.join('etc/Feature.java')
+java_out = os.path.join('gencode/java/udmi/schema/Feature.java')
+
+def read_features():
+  features = []
+  prefix = []
+  previous = -1
+  group = None
+  with open(doc_in, 'r', encoding='utf-8') as doc:
+    while line := doc.readline():
+      indent = line.find(FEATURE_MARKER)//2
+      wildcard = re.match(WILDCARD_REGEX, line)
+      if wildcard:
+        entry = (group + WILDCARD_SUFFIX, 'INFO', wildcard.group(1))
+        features.append(entry)
+        continue
+      match = re.match(FEATURE_REGEX, line)
+      if indent < 0 or not match:
+        continue
+      if indent < previous:
+        for _ in range(indent, previous):
+          # pylint: disable-next=unused-variable
+          rem = prefix.pop(len(prefix) - 1)
+      elif indent > previous:
+        if group:
+          prefix.append(group)
+      previous = indent
+      group = match.group(1)
+      feature = '.'.join(prefix + [group])
+      description = match.group(2)
+      entry = (feature, description)
+      features.append(entry)
+  return features
+
+def write_java_out(features):
+  os.makedirs(os.path.dirname(java_out), exist_ok=True)
+  with open(java_in, 'r', encoding='utf-8') as inp:
+    with open(java_out, 'w', encoding='utf-8') as out:
+      while line := inp.readline():
+        index = line.find(GENCODE_MARKER)
+        if index >= 0:
+          indent = line[0:index]
+          write_java_features(out, indent, features)
+        else:
+          out.write(line)
+
+def write_java_features(out, indent, features):
+  for feature in features:
+    target = feature[0]
+    if target.startswith(DEVICE_PREFIX):
+      continue
+    desc = feature[1]
+    const = target.replace('.', '_').upper()
+    out.write(JAVA_DESCRIPTION % (indent, desc))
+    out.write(JAVA_TARGET % (indent, const, target))
+
+
+def main():
+  features = read_features()
+  write_java_out(features)
+
+if __name__ == '__main__':
+  main()
+
+
