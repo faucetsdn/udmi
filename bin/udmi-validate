@@ -1,0 +1,60 @@
+#!/bin/bash -e
+
+source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
+
+CONFIG_FILE=/tmp/validator_config.json
+
+echo $udmi_site
+[[ $udmi_site != null ]] || udmi_help site_model not defined
+[[ $udmi_project != null ]] || udmi_help project_id not defined
+
+[[ $udmi_feed != null ]] || udmi_feed=
+
+SUMMARY_FILE=out/validation_report.json
+rm -f $SUMMARY_FILE
+
+$UDMI_ROOT/validator/bin/build
+
+echo Writing config to $CONFIG_FILE
+cat <<EOF > $CONFIG_FILE
+{
+  "project_id": "$udmi_project",
+  "site_model": "$udmi_site",
+  "log_level": "$udmi_loglevel",
+  "udmi_root": "$UDMI_ROOT",
+  "feed_name": "$udmi_feed",
+  "udmi_version": "$udmi_version",
+  "key_file": "$site_path/validator/rsa_private.pkcs8"
+}
+EOF
+
+JAVA_CMD="java -cp $UDMI_JAR com.google.daq.mqtt.validator.Validator"
+
+cmd="$JAVA_CMD $CONFIG_FILE"
+if [[ $udmi_runsec != null ]]; then
+    cmd="timeout ${udmi_runsec}s $cmd"
+fi
+
+echo $cmd
+result=0
+$cmd || result=$?
+
+if [[ $result != 124 ]]; then
+    echo abnormal termination not due to timeout.
+    false
+fi
+
+[[ -f $SUMMARY_FILE ]] || (echo missing summary file $SUMMARY_FILE && false)
+
+mkdir -p out/devices
+
+error_files=$(find out/devices/ -name \*.out)
+echo
+if [[ -n $error_files ]]; then
+    echo Device validation error files:
+    find out/devices/ -name \*.out
+else
+    echo No device validation errors found.
+fi
+echo
+echo Report summary in $SUMMARY_FILE
