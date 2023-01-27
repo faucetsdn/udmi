@@ -9,6 +9,7 @@ class ExecutionConfiguration:
     self.cloud_region = None
     self.site_name = None
     self.update_topic = None
+    self.feed_name = None
     self.reflect_region = None
     self.site_model = None
     self.device_id = None
@@ -17,6 +18,7 @@ class ExecutionConfiguration:
     self.serial_no = None
     self.log_level = None
     self.udmi_version = None
+    self.udmi_root = None
     self.alt_project = None
     self.alt_registry = None
     self.block_unknown = None
@@ -30,6 +32,7 @@ class ExecutionConfiguration:
     result.cloud_region = source.get('cloud_region')
     result.site_name = source.get('site_name')
     result.update_topic = source.get('update_topic')
+    result.feed_name = source.get('feed_name')
     result.reflect_region = source.get('reflect_region')
     result.site_model = source.get('site_model')
     result.device_id = source.get('device_id')
@@ -38,6 +41,7 @@ class ExecutionConfiguration:
     result.serial_no = source.get('serial_no')
     result.log_level = source.get('log_level')
     result.udmi_version = source.get('udmi_version')
+    result.udmi_root = source.get('udmi_root')
     result.alt_project = source.get('alt_project')
     result.alt_registry = source.get('alt_registry')
     result.block_unknown = source.get('block_unknown')
@@ -69,6 +73,8 @@ class ExecutionConfiguration:
       result['site_name'] = self.site_name # 5
     if self.update_topic:
       result['update_topic'] = self.update_topic # 5
+    if self.feed_name:
+      result['feed_name'] = self.feed_name # 5
     if self.reflect_region:
       result['reflect_region'] = self.reflect_region # 5
     if self.site_model:
@@ -85,6 +91,8 @@ class ExecutionConfiguration:
       result['log_level'] = self.log_level # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.udmi_root:
+      result['udmi_root'] = self.udmi_root # 5
     if self.alt_project:
       result['alt_project'] = self.alt_project # 5
     if self.alt_registry:
