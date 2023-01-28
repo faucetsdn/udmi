@@ -28,18 +28,19 @@
 
 Site topology for `ZZ-ABC-ATLANTAS`
 ```mermaid
+%%{wrap}%%
 flowchart LR
-  D1[DEV-1]
-  D3[DEV-3]
-  LG[ALG-1]
-  D4[DEV-4]
-  D2[DEV-2]
-  IG[GAT-1]
-  BN([bacnet-10])
-  MB([modbus])
-  IP([localnet])
-  IN([internet])
-  CP[Cloud Provider]
+  D1[DEV-01<br/>0x827323]
+  D3[DEV-03]
+  LG[ALG-01<br/>0x712387<br/>192.168.1.1]
+  D4[DEV-04<br/>0x281799<br/>192.168.1.2]
+  D2[DEV-02<br/>0x92a344<br/>reg-9]
+  IG[GAT-01<br/>0xa982b7<br/>reg-master]
+  BN([bacnet-10<br/>0x??????])
+  MB([modbus<br/>reg-???])
+  IP([localnet<br/>192.168.x.x])
+  IN([internet<br/>IOT-ID])
+  CP[Cloud Provider<br/>endpoint url:<br/>project_id/<br/>registry/ZZ-ABC-ATLANTAS/<br/>_IOT-ID_]
   D1 --> BN
   D4 --> BN
   LG --> BN
@@ -65,6 +66,10 @@ flowchart LR
       * baud: _9600_
   * `localnet`
     * family: _ipv4_
+* gateway devices
+  * 'GAT-1'
+    * network: 'bacnet-10'
+      * address: _0xa982b7_
 * proxy devices
   * `DEV-1`
     * gateway: `GAT-1`
@@ -76,7 +81,7 @@ flowchart LR
     * network: `bacnet-10`
       * address: _0x92a344_
     * network: `modbus`
-      * address: _9_
+      * address: _reg-9_
   * `ALG-1`
     * gateway: `GAT-1`
     * netowrk: `bacnet-10`
