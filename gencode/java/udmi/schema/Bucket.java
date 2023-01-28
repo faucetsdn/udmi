@@ -32,6 +32,12 @@ public enum Bucket {
     // Handling on-prem discovery flow
     ENDPOINT_CONFIG("endpoint.config"),
 
+    // Basic system operations
+    SYSTEM("system"),
+
+    // System mode testing
+    SYSTEM_MODE("system.mode"),
+
     // unknown default value
     UNKNOWN_DEFAULT("unknown");
     

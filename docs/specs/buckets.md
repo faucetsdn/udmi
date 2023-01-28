@@ -16,4 +16,5 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
   * _scan_: (**INFO**) Relating to scanning a particular address family
 * _endpoint_: Handling on-prem discovery flow
   * _config_: Handling on-prem discovery flow
-
+* _system_: Basic system operations
+  * _mode_: System mode testing
