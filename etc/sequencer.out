@@ -16,8 +16,8 @@ RESULT pass unknown pointset_publish_interval ALPHA 5 Sequence complete
 RESULT pass unknown pointset_sample_rate ALPHA 5 Sequence complete
 RESULT pass unknown single_scan REQUIRED 5 Sequence complete
 RESULT pass unknown system_last_update REQUIRED 5 Sequence complete
-RESULT pass unknown system_min_loglevel BETA 5 Sequence complete
-RESULT pass unknown system_mode_restart PREVIEW 5 Sequence complete
+RESULT pass unknown system_min_loglevel REQUIRED 5 Sequence complete
+RESULT pass unknown system_mode_restart REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
