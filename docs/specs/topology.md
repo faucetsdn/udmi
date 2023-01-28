@@ -35,13 +35,14 @@ flowchart LR
   D4[DEV-4]
   LG[ALG-1]
   IG[GAT-1]
-  BN[(bacnet-10)]
-  MB[(modbus)]
-  IP[(localnet)]
-  IN[(internet)]
+  BN([bacnet-10)]
+  MB([modbus)]
+  IP([localnet])
+  IN([internet])
   CP[Cloud Provider]
   D1 --> BN
   D2 --> MB
+  D2 --> BN
   D3 --> IN
   D4 --> IP
   LG --> BN
@@ -72,6 +73,8 @@ flowchart LR
     * network: `modbus`
   * `DEV-2`
     * gateway: `GAT-1`
+    * network: `bacnet-10`
+      * address: _0x92a344_
     * network: `modbus`
       * address: _9_
   * `ALG-1`
