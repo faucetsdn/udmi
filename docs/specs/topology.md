@@ -30,28 +30,28 @@ Site topology for `ZZ-ABC-ATLANTAS`
 ```mermaid
 flowchart LR
   D1[DEV-1]
-  D2[DEV-2]
   D3[DEV-3]
-  D4[DEV-4]
   LG[ALG-1]
+  D4[DEV-4]
+  D2[DEV-2]
   IG[GAT-1]
-  BN([bacnet-10)]
-  MB([modbus)]
+  BN([bacnet-10])
+  MB([modbus])
   IP([localnet])
   IN([internet])
   CP[Cloud Provider]
   D1 --> BN
-  D2 --> MB
+  D4 --> BN
+  LG --> BN
   D2 --> BN
+  D2 --> MB
   D3 --> IN
   D4 --> IP
-  LG --> BN
   IG --> IN
   BN --> IG
   MB --> IG
   IN --> CP
   IP --> LG
-  D4 --> BN
 ```
 
 * network IDs
