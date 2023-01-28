@@ -34,60 +34,73 @@ flowchart LR
   D4[DEV-4]
   LG[ALG-1]
   IG[GAT-1]
-  CP[GCP]
-  D1 -- bacnet-10 --> IG
-  D2 -- modbus --> IG
-  D3 -- inet --> CP
-  D4 -- snazzle --> LG
-  LG -- bacnet-10 --> IG
-  IG -- inet --> CP
+  BN(bacnet-10)
+  NB(modbus)
+  IP(localnet)
+  IN(internet)
+  CP[Cloud Provider]
+  D1 --> BN
+  D2 --> MB
+  D3 --> IN
+  D4 --> IP
+  LG --> IG
+  IG --> IN
+  BN --> IG
+  MB --> IG
+  IN --> CP
+  IP --> LG
+  D4 --> BN
 ```
 
 * network IDs
   * `bacnet-10`
-    * family: `bacnet`
+    * family: _bacnet_
     * properties:
-      * network-number: `10`
+      * network-number: _10_
   * `modbus`
-    * family: `modbus`
+    * family: _modbus_
     * properties:
-      * baud: `9600`
-  * `snazzle`
-    * family: `ipv4`
+      * baud: _9600_
+  * `localnet`
+    * family: _ipv4_
 * proxy devices
-  * DEV-1
-    * gateway: GAT-1
-    * network: bacnet-10
-    * address: 0x827323
-  * DEV-2
-    * gateway: GAT-1
-    * network: modbus
-    * address: 9
-  * ALG-1
-    * gateway: GAT-1
-    * netowrk: bacnet-10
-    * address: 0x712387
-  * DEV-4
-    * gateway: ALG-1
-    * network: snazzle
-    * address: 192.168.1.2
+  * `DEV-1`
+    * gateway: `GAT-1`
+    * network: `bacnet-10`
+      * address: _0x827323_
+  * `DEV-2`
+    * gateway: `GAT-1`
+    * network: `modbus`
+      * address: _9_
+  * `ALG-1`
+    * gateway: `GAT-1`
+    * netowrk: `bacnet-10`
+      * address: _0x712387_
+    * network: `localnet`
+      * address: _192.168.1.1_
+  * `DEV-4`
+    * gateway: `ALG-1`
+    * network: `bacnet-10`
+      * address: _0x281799_
+    * network: `localnet`
+      * address: _192.168.1.2_
 * logical devices
-  * DEV-1
-    * points
+  * `DEV-1`
+    * points (_ref_ to `GAT-1`)
       * abstract_air_handler
         * ref: AV10.present_value
       * fixator_resonant_structure
         * ref: BV2.present_value
-  * DEV-2
-    * points
+  * `DEV-2`
+    * points (_ref_ to `GAT-1`)
       * abstract_air_handler
         * ref: 10
       * fixator_resonant_structure
         * ref: 21
-  * DEV-3
+  * `DEV-3`
     * points
       * master_frambibulator
-  * DEV-4
+  * `DEV-4` (_ref_ to `ALG-1`)
     * points
       * figurating_flambing
-        * ref: `points.json#.points.figurating_flambing.present_value`
+        * ref: points.json#.points.figurating_flambing.present_value
