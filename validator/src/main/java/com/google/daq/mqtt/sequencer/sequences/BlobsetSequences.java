@@ -5,8 +5,6 @@ import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
-import static udmi.schema.Bucket.ENDPOINT_CONFIG;
-import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
@@ -23,7 +21,6 @@ import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
-import udmi.schema.Bucket;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
