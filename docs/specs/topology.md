@@ -34,16 +34,16 @@ flowchart LR
   D4[DEV-4]
   LG[ALG-1]
   IG[GAT-1]
-  BN(bacnet-10)
-  NB(modbus)
-  IP(localnet)
-  IN(internet)
+  BN[(bacnet-10)]
+  MB[(modbus)]
+  IP[(localnet)]
+  IN[(internet)]
   CP[Cloud Provider]
   D1 --> BN
   D2 --> MB
   D3 --> IN
   D4 --> IP
-  LG --> IG
+  LG --> BN
   IG --> IN
   BN --> IG
   MB --> IG
@@ -68,6 +68,7 @@ flowchart LR
     * gateway: `GAT-1`
     * network: `bacnet-10`
       * address: _0x827323_
+    * network: `modbus`
   * `DEV-2`
     * gateway: `GAT-1`
     * network: `modbus`
@@ -86,13 +87,13 @@ flowchart LR
       * address: _192.168.1.2_
 * logical devices
   * `DEV-1`
-    * points (_ref_ to `GAT-1`)
+    * points (_ref_ for `GAT-1` on `bacnet-10`)
       * abstract_air_handler
         * ref: AV10.present_value
       * fixator_resonant_structure
         * ref: BV2.present_value
   * `DEV-2`
-    * points (_ref_ to `GAT-1`)
+    * points (_ref_ for `GAT-1` on `modbus`)
       * abstract_air_handler
         * ref: 10
       * fixator_resonant_structure
@@ -100,7 +101,7 @@ flowchart LR
   * `DEV-3`
     * points
       * master_frambibulator
-  * `DEV-4` (_ref_ to `ALG-1`)
+  * `DEV-4` (_ref_ for `ALG-1` on `localnet`)
     * points
       * figurating_flambing
         * ref: points.json#.points.figurating_flambing.present_value
