@@ -20,6 +20,7 @@
 ## System Modeling
 - [Metadata](metadata.md)
 - [Site Model](site_model.md)
+- [Topology](topology.md)
 - [Onboarding](onboarding.md)
   - [Discovery](discovery.md)
   - [Mapping](mapping.md)
