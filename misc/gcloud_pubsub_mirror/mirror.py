@@ -30,20 +30,20 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     print(f'{messages_processed} messages processed')
   message.ack()
 
-def get_publish_callback(publish_future: pubsub_v1.publisher.futures.Future):
-  global publish_futures
+def get_publish_callback():
   def callback(publish_future: pubsub_v1.publisher.futures.Future) -> None:
     try:
       # Wait 60 seconds for the publish call to succeed.
       publish_future.result(timeout=60)
     except futures.TimeoutError:
-      print(f"Publish timed out.")
+      print('Publish timed out.')
   return callback
 
-def topic_publisher(publisher, topic_path, message):
-  print('Publishing', topic_path, message.publish_time)
-  publish_future = publisher.publish(topic_path, message.data, **message.attributes)
-  publish_future.add_done_callback(get_publish_callback(publish_future))
+def topic_publisher(pubsub_sink, topic, message):
+  print('Publishing', topic, message.publish_time)
+  publish_future = pubsub_sink.publish(topic, message.data,
+                                       **message.attributes)
+  publish_future.add_done_callback(get_publish_callback())
   publish_futures.append(publish_future)
 
 def file_publisher(path: str, message):
@@ -56,19 +56,19 @@ def file_publisher(path: str, message):
   file_name = f'{file_path}/{timestamp}_{message.message_id}.json'
 
   message_dict = {
-    "data": base64.b64encode(message.data).decode('utf-8'),
-    "publish_time": timestamp,
-    "attributes": dict(message.attributes)
+    'data': base64.b64encode(message.data).decode('utf-8'),
+    'publish_time': timestamp,
+    'attributes': dict(message.attributes)
   }
 
   print('Writing ' + file_name)
-  with open(file_name, "w") as outfile:
+  with open(file_name, 'w', encoding='utf-8') as outfile:
     outfile.write(json.dumps(message_dict, indent=2))
 
 def load_messages(path: str):
   print('Processing ' + path)
   if os.path.isfile(path):
-    with open(path, 'r') as json_file:
+    with open(path, 'r', encoding='utf-8') as json_file:
       yield json.load(json_file)
   elif os.path.isdir(path):
     dirs = sorted(os.listdir(path))
@@ -83,9 +83,9 @@ class Message:
 def noop_ack():
   pass
 
-def file_reader(messages, callback):
+def file_reader(message_generator, callback):
   global has_messages
-  message = next(messages, None)
+  message = next(message_generator, None)
   if not message:
     has_messages = False
     return
@@ -122,7 +122,8 @@ if is_file_project(args.source_project):
   has_messages = True
 else:
   subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
-  subscription = subscriber.subscription_path(args.source_project, args.source_subscription)
+  subscription = subscriber.subscription_path(args.source_project,
+                                              args.source_subscription)
   future = subscriber.subscribe(subscription, subscribe_callback)
   print('Listening to pubsub, please wait ...')
   get_messages = partial(future.result, timeout=10)
