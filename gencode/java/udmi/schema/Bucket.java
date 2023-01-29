@@ -8,34 +8,34 @@ import java.util.Map;
 
 public enum Bucket {
 
-    // Basic platform property enumeration
+    // Basic device property enumeration capability
     ENUMERATION("enumeration"),
 
-    // Conditions specific to an entire address family (e.g. bacnet)
+    // Enumerating available points of a device
     ENUMERATION_POINTSET("enumeration.pointset"),
 
-    // Conditions specific to an entire address family (e.g. bacnet)
+    // Enumerating the features a device supports
     ENUMERATION_FEATURES("enumeration.features"),
 
-    // Conditions specific to an entire address family (e.g. bacnet)
+    // Enumerating the network families of the device
     ENUMERATION_FAMILIES("enumeration.families"),
 
-    // Handling on-prem discovery flow
+    // Automated discovery capabilities
     DISCOVERY("discovery"),
 
-    // (**INFO**) Relating to scanning a particular address family
+    // Scanning a network for devices
     DISCOVERY_SCAN("discovery.scan"),
 
-    // Handling on-prem discovery flow
+    // IoT connection endpoint management
     ENDPOINT("endpoint"),
 
-    // Handling on-prem discovery flow
+    // Endpoint configuration updates
     ENDPOINT_CONFIG("endpoint.config"),
 
     // Basic system operations
     SYSTEM("system"),
 
-    // System mode testing
+    // System mode
     SYSTEM_MODE("system.mode"),
 
     // unknown default value
