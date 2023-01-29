@@ -30,29 +30,29 @@ Site topology for `ZZ-ABC-ATLANTAS`
 ```mermaid
 %%{wrap}%%
 flowchart LR
-  D1[DEV-01<br/>0x827323]
-  D3[DEV-03]
-  LG[ALG-01<br/>0x712387<br/>192.168.1.1]
-  D4[DEV-04<br/>0x281799<br/>192.168.1.2]
-  D2[DEV-02<br/>0x92a344<br/>reg-9]
-  IG[GAT-01<br/>0xa982b7<br/>reg-master]
-  BN([bacnet-10<br/>0x??????])
-  MB([modbus<br/>reg-???])
-  IP([localnet<br/>192.168.x.x])
-  IN([internet<br/>IOT-ID])
-  CP[Cloud Provider<br/>endpoint url:<br/>project_id/<br/>registry/ZZ-ABC-ATLANTAS/<br/>_IOT-ID_]
-  D1 --> BN
-  D4 --> BN
-  LG --> BN
+  D2[<u>DEV-02</u><br/>0x827323]
+  D1[<u>DEV-01</u>]
+  LG[<u>ALG-01</u><br/>0x712387<br/>plc-master]
+  D3[<u>DEV-03</u><br/>0x281799<br/>plc-9]
+  D4[<u>DEV-04</u><br/>0x92a344<br/>192.168.1.2]
+  IG[<u>GAT-01</u><br/>0xa982b7<br/>192.168.1.1]
+  BN([<i>bacnet-10</i><br/>0x??????])
+  MB([<i>modbus</i><br/>plc-???])
+  IP([<i>upnp</i><br/>192.168.x.x])
+  IN([<i>internet</i><br/>IOT-ID])
+  CP[<b>Cloud Provider</b><br/>endpoint url:<br/>project_id/<br/>registry/ZZ-ABC-ATLANTAS/<br/><u>IOT-ID</u>]
   D2 --> BN
-  D2 --> MB
-  D3 --> IN
+  D3 --> BN
+  LG --> BN
+  D4 --> BN
   D4 --> IP
+  D1 --> IN
+  D3 --> MB
   IG --> IN
   BN --> IG
-  MB --> IG
+  IP --> IG
   IN --> CP
-  IP --> LG
+  MB --> LG
 ```
 
 * network IDs
@@ -64,53 +64,53 @@ flowchart LR
     * family: _modbus_
     * properties:
       * baud: _9600_
-  * `localnet`
-    * family: _ipv4_
+  * `upnp`
+    * family: _upnp_
+* direct devices
+  * `DEV-1`
 * gateway devices
   * 'GAT-1'
     * network: 'bacnet-10'
       * address: _0xa982b7_
 * proxy devices
-  * `DEV-1`
+  * `DEV-2`
     * gateway: `GAT-1`
     * network: `bacnet-10`
       * address: _0x827323_
+  * `DEV-3`
+    * gateway: `GAT-1`
+    * network: `bacnet-10`
+      * address: _0x281799_
     * network: `modbus`
-  * `DEV-2`
+      * address: _plc-9_
+  * `DEV-4`
     * gateway: `GAT-1`
     * network: `bacnet-10`
       * address: _0x92a344_
-    * network: `modbus`
-      * address: _reg-9_
+    * network: `upnp`
+      * address: _192.168.1.2_
   * `ALG-1`
-    * gateway: `GAT-1`
     * netowrk: `bacnet-10`
       * address: _0x712387_
-    * network: `localnet`
-      * address: _192.168.1.1_
-  * `DEV-4`
-    * gateway: `ALG-1`
-    * network: `bacnet-10`
-      * address: _0x281799_
-    * network: `localnet`
-      * address: _192.168.1.2_
-* logical devices
+    * network: `modbus`
+      * address: _plc-master_
+* logical representation
   * `DEV-1`
     * points (_ref_ for `GAT-1` on `bacnet-10`)
       * abstract_air_handler
-        * ref: AV10.present_value
+        * ref: _AV10.present_value_
       * fixator_resonant_structure
-        * ref: BV2.present_value
+        * ref: _BV2.present_value_
   * `DEV-2`
     * points (_ref_ for `GAT-1` on `modbus`)
       * abstract_air_handler
-        * ref: 10
+        * ref: _reg-10_
       * fixator_resonant_structure
-        * ref: 21
+        * ref: _reg-21_
   * `DEV-3`
     * points
       * master_frambibulator
-  * `DEV-4` (_ref_ for `ALG-1` on `localnet`)
+  * `DEV-4` (_ref_ for `ALG-1` on `upnp`)
     * points
       * figurating_flambing
-        * ref: points.json#.points.figurating_flambing.present_value
+        * ref: _points.json#.points.figurating\_flambing.present\_value_
