@@ -4,17 +4,17 @@
 
 ## Terminology
 
-* *local networks*: grouped communication patterns for on-prem systems
+* **local networks**: grouped communication patterns for on-prem systems
   * _family_: network property that defines things about the network (e.g. that an address should be of the form XXX.XXX.XXX.XXX)
-  * *properties*: parameterization of the network, meanings defined by the network family
-* *iot devices*: devices that have a representation in the cloud model
-  * _networks_: optional list of local networks the device connects to
-  * *direct devices*: devices that have a direct (e.g.) MQTT connection without an interviening gateway
-    * credentials: connection parameters for connecting to the intended cloud endpoint
-  * *proxy devices*: devices that are proxied through a gateway to connect to the cloud
+  * _properties_: parameterization of the network, meanings defined by the network _family_
+* **iot devices**: devices that have a representation in the cloud model
+  * _networks_: optional list of _local networks_ the device connects to
+  * **direct devices**: devices that have a direct (e.g.) MQTT connection without an interviening gateway
+    * _credentials_: connection parameters for connecting to the intended cloud endpoint
+  * **proxy devices**: devices that are proxied through a gateway to connect to the cloud
     * _gateway_: which gateway the device is proxied through
     * _through_: if mulitiple networks are present, indicates which one is used for proxying
-* *pointset mapping*: how devices represent the mapping from the semantic cloud names to on-prem local network references
+* **pointset mapping**: how devices represent the mapping from the semantic cloud names to on-prem local network references
   * _ref_: point-to-source mapping, format defined by the network type of the indicated gateway (only for proxy devices)
 
 ## Example Topology
