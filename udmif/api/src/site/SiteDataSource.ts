@@ -38,11 +38,12 @@ export class SiteDataSource extends GraphQLDataSource {
   }
 
   async getSiteValidation(name: string): Promise<SiteValidation> {
-    return (await this.siteDAO.getOne({ name })).validation;
+    const site = await this.siteDAO.getOne({ name });
+    return site ? site.validation : null;
   }
 
   async getSiteDeviceStatus(name: string, deviceName: string): Promise<Status> {
     const devices = (await this.getSiteValidation(name)).devices;
-    return !devices ? null : devices[deviceName]?.status;
+    return devices ? devices[deviceName]?.status : null;
   }
 }
