@@ -5,9 +5,16 @@
 ## Terminology
 
 * local networks
+  * properties
 * direct devices
+  * networks
+  * credentials
 * proxy devices
+  * gateway
+  * networks
+  * through
 * pointset mapping
+  * ref
 
 ## Example Topology
 
