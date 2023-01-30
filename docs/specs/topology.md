@@ -18,7 +18,7 @@
 
 ## Example Topology
 
-Example site topology:
+Example `ZZ-ABC-ATL` site topology:
 ```mermaid
 %%{wrap}%%
 flowchart LR
@@ -32,21 +32,22 @@ flowchart LR
   MB([<i>modbus</i><br/>plc-???])
   IP([<i>upnp</i><br/>192.168.x.x])
   IN([<i>internet</i>])
-  CP[<b>Cloud Provider</b><br/>endpoint_url:???<br/>project_id/???<br/>registry/ZZ-ABC-ATLANTAS/<br/><u>IOT-ID</u>]
-  D2 --> BN
-  D4 --> IP
+  CP[<b>Cloud Provider</b><br/>endpoint_url:???<br/>project_id/<i>???</i><br/>registry/<i>ZZ-ABC-ATL</i><br/>device/<i><u>IOT-ID</u></i>]
+  D2 ==> BN
+  D4 ==> IP
   D3 --> IP
-  LG --> BN
+  LG ==> BN
   D4 --> BN
-  D1 --> IN
-  D3 --> MB
-  IG --> IN
-  BN --> IG
-  IP --> IG
-  IN --> CP
-  MB --> LG
+  D1 ==> IN
+  D3 ==> MB
+  IG ==> IN
+  BN ==> IG
+  IP ==> IG
+  IN ==> CP
+  MB ==> LG
 ```
 
+The corresponding `encoded information` provides all the details necessary to define the topology:
 * local networks
   * `bacnet-10`: family _bacnet_, network-number _10_
   * `modbus`: family _modbus_, baud _9600_
@@ -77,13 +78,13 @@ flowchart LR
     * points
       * _master\_frambibulator_
   * `DEV-02`
-    * points (_ref_ for `GAT-01` on `bacnet-10`)
+    * points (for `GAT-01`/`bacnet-10`)
       * _abstract\_air\_handler_: ref _AV10.present_value_
       * _fixator\_resonant\_structure_: ref _BV2.present_value_
   * `DEV-03`
-    * points (_ref_ for `ALG-01` on `modbus`)
-      * _abstract\_air\_handler_: ref _reg-10_
-      * _fixator\_resonant\_structure_: ref _reg-21_
-  * `DEV-04` (_ref_ for `ALG-01` on `upnp`)
-    * points
+    * points (for `ALG-01`/`modbus`)
+      * _reticulating\_reticulator_: ref _reg-10_
+      * _running\_rabbit\_speed_: ref _reg-21_
+  * `DEV-04`
+    * points (for `GAT-01`/`upnp`)
       * _figurating\_flambing_: ref _points.json#.points.figurating\_flambing.present\_value_
