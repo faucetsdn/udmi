@@ -33,18 +33,18 @@ flowchart LR
   IP([<i>upnp</i><br/>192.168.x.x])
   IN([<i>internet</i>])
   CP[<b>Cloud Provider</b><br/>endpoint_url:???<br/>project_id/<i>???</i><br/>registry/<i>ZZ-ABC-ATL</i><br/>device/<i><u>IOT-ID</u></i>]
-  D2 ==> BN
-  D4 ==> IP
-  D3 --> IP
-  LG ==> BN
-  D4 --> BN
-  D1 ==> IN
-  D3 ==> MB
-  IG ==> IN
-  BN ==> IG
-  IP ==> IG
-  IN ==> CP
-  MB ==> LG
+  D2 --> BN
+  D4 --> IP
+  D3 -.-> IP
+  LG --> BN
+  D4 -.-> BN
+  D1 --> IN
+  D3 --> MB
+  IG --> IN
+  BN --> IG
+  IP --> IG
+  IN --> CP
+  MB --> LG
 ```
 
 The corresponding `encoded information` provides all the details necessary to define the topology:
