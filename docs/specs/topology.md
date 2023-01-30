@@ -19,7 +19,10 @@
 
 ## Example Topology
 
-Example `ZZ-ABC-ATL` site topology:
+Example `ZZ-ABC-ATL` site topology. The solid lines form a communication tree, where there is exactly one path to the root (cloud).
+Dashed lines indicate "alternate" connections that might exist due to various on-prem redundancies. Specifically, if a node
+is connected to multiple networks there there is _one_ primary connection, and the others would be represented as dotted lines.
+
 ```mermaid
 %%{wrap}%%
 flowchart LR
@@ -30,7 +33,7 @@ flowchart LR
   D4[<u>DEV-04</u><br/>0x92a344<br/>192.168.1.2]
   IG[<u>GAT-01</u><br/>0xa982b7<br/>192.168.1.1]
   BN([<i>bacnet-10</i><br/>0x??????])
-  MB([<i>modbus</i><br/>plc-???])
+  MB([<i>modbus-alg-01</i><br/>plc-???])
   IP([<i>upnp</i><br/>192.168.x.x])
   IN([<i>internet</i>])
   CP[<b>Cloud Provider</b><br/>endpoint_url:???<br/>project_id/<i>???</i><br/>registry/<i>ZZ-ABC-ATL</i><br/>device/<i><u>IOT-ID</u></i>]
@@ -51,7 +54,7 @@ flowchart LR
 The corresponding `encoded information` provides all the details necessary to define the topology:
 * local networks
   * `bacnet-10`: family _bacnet_, network-number _10_
-  * `modbus`: family _modbus_, baud _9600_
+  * `modbus-alg-01`: family _modbus_, baud _9600_
   * `upnp`: family _upnp_
 * direct devices
   * `DEV-01`:
@@ -63,8 +66,8 @@ The corresponding `encoded information` provides all the details necessary to de
     * gateway `GAT-01`
     * network `bacnet-10`: address _0x827323_
   * `DEV-03`
-    * gateway `ALG-01` (through `modbus`)
-    * network `modbus`: address _plc-9_
+    * gateway `ALG-01` (through `modbus-alg-01`)
+    * network `modbus-alg-01`: address _plc-9_
     * network `upnp`: address _192.168.1.3_
   * `DEV-04`
     * gateway `GAT-01` (through `upnp`)
@@ -73,19 +76,19 @@ The corresponding `encoded information` provides all the details necessary to de
   * `ALG-01`
     * gateway `GAT-01` (through `bacnet-10`)
     * netowrk `bacnet-10`: address _0x712387_
-    * network `modbus`: address _plc-master_
+    * network `modbus-alg-01`: address _plc-master_
 * pointset mapping
   * `DEV-01`
     * points
       * _master\_frambibulator_
   * `DEV-02`
-    * points (for `GAT-01`/`bacnet-10`)
+    * points (meaningful to `GAT-01`)
       * _abstract\_air\_handler_: ref _AV10.present_value_
       * _fixator\_resonant\_structure_: ref _BV2.present_value_
   * `DEV-03`
-    * points (for `ALG-01`/`modbus`)
+    * points (meaningful to `ALG-01`)
       * _reticulating\_reticulator_: ref _reg-10_
       * _running\_rabbit\_speed_: ref _reg-21_
   * `DEV-04`
-    * points (for `GAT-01`/`upnp`)
+    * points (meaningful to `GAT-01`)
       * _figurating\_flambing_: ref _points.json#.points.figurating\_flambing.present\_value_
