@@ -4,17 +4,18 @@
 
 ## Terminology
 
-* local networks
-  * properties
-* direct devices
-  * networks
-  * credentials
-* proxy devices
-  * gateway
-  * networks
-  * through
-* pointset mapping
-  * ref
+* local networks: grouped communication patterns for on-prem systems
+  * family: network property that defines things about the network (e.g. that an address should be of the form XXX.XXX.XXX.XXX)
+  * properties: parameterization of the network, meanings defined by the network family
+* iot devices: devices that have a representation in the cloud model
+  * networks: optional list of local networks the device connects to
+  * direct devices: devices that have a direct (e.g.) MQTT connection without an interviening gateway
+    * credentials: connection parameters for connecting to the intended cloud endpoint
+  * proxy devices: devices that are proxied through a gateway to connect to the cloud
+    * gateway: which gateway the device is proxied through
+    * through: if mulitiple networks are present, indicates which one is used for proxying
+* pointset mapping: how devices represent the mapping from the semantic cloud names to on-prem local network references
+  * ref: point-to-source mapping, format defined by the network type of the indicated gateway (only for proxy devices)
 
 ## Example Topology
 
@@ -33,18 +34,18 @@ flowchart LR
   IP([<i>upnp</i><br/>192.168.x.x])
   IN([<i>internet</i>])
   CP[<b>Cloud Provider</b><br/>endpoint_url:???<br/>project_id/<i>???</i><br/>registry/<i>ZZ-ABC-ATL</i><br/>device/<i><u>IOT-ID</u></i>]
-  D2 ==> BN
-  D4 ==> IP
-  D3 --> IP
-  LG ==> BN
-  D4 --> BN
-  D1 ==> IN
-  D3 ==> MB
-  IG ==> IN
-  BN ==> IG
-  IP ==> IG
-  IN ==> CP
-  MB ==> LG
+  D2 --> BN
+  D4 --> IP
+  D3 -.-> IP
+  LG --> BN
+  D4 -.-> BN
+  D1 --> IN
+  D3 --> MB
+  IG --> IN
+  BN --> IG
+  IP --> IG
+  IN --> CP
+  MB --> LG
 ```
 
 The corresponding `encoded information` provides all the details necessary to define the topology:
