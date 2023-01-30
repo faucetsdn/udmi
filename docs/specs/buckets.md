@@ -1,5 +1,7 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Buckets](#)
 
+<!-- This file is consumed by the automatic generator script bin/gencode_buckets -->
+
 # Buckets
 
 Device feature buckets group multiple sequence tests together into logical
