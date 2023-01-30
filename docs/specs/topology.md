@@ -56,63 +56,41 @@ flowchart LR
 ```
 
 * network IDs
-  * `bacnet-10`
-    * family: _bacnet_
-    * properties:
-      * network-number: _10_
-  * `modbus`
-    * family: _modbus_
-    * properties:
-      * baud: _9600_
-  * `upnp`
-    * family: _upnp_
+  * `bacnet-10`: family: _bacnet_, network-number: _10_
+  * `modbus`: family: _modbus_, baud: _9600_
+  * `upnp`: family: _upnp_
 * mqtt devices
-  * `DEV-1`
-  * 'GAT-1'
-    * network: 'bacnet-10'
-      * address: _0xa982b7_
-    * network: `upnp`
-      * address: _192.168.1.1_
+  * `DEV-01`:
+  * `GAT-01`:
+    * network `bacnet-10`: address _0xa982b7_
+    * network `upnp`: address: _192.168.1.1_
 * proxy devices
-  * `DEV-2`
-    * gateway: `GAT-1`
-    * network: `bacnet-10`
-      * address: _0x827323_
-  * `DEV-3`
-    * gateway: `ALG-1`
-    * network: `modbus`
-      * address: _plc-9_
-    * network: `ipnp`
-      * address: _192.168.1.3_
-  * `DEV-4`
-    * gateway: `GAT-1`
-    * network: `bacnet-10`
-      * address: _0x92a344_
-    * network: `upnp`
-      * address: _192.168.1.2_
-  * `ALG-1`
-    * gateway: `GAT-1`
-    * netowrk: `bacnet-10`
-      * address: _0x712387_
-    * network: `modbus`
-      * address: _plc-master_
+  * `DEV-02`
+    * gateway `GAT-01`
+    * network `bacnet-10`: address _0x827323_
+  * `DEV-03`
+    * gateway `ALG-01`
+    * network `modbus`: address _plc-9_
+    * network `ipnp`: address _192.168.1.3_
+  * `DEV-04`
+    * gateway `GAT-01`
+    * network `bacnet-10`: address _0x92a344_
+    * network `upnp`: address _192.168.1.2_
+  * `ALG-01`
+    * gateway `GAT-01`
+    * netowrk `bacnet-10`: address _0x712387_
+    * network `modbus`: address _plc-master_
 * pointset mapping
-  * `DEV-1`
+  * `DEV-01`
+    * points: _master\_frambibulator_
+  * `DEV-02`
+    * points (_ref_ for `GAT-01` on `bacnet-10`)
+      * abstract_air_handler: ref _AV10.present_value_
+      * fixator_resonant_structure: ref _BV2.present_value_
+  * `DEV-03`
+    * points (_ref_ for `ALG-01` on `modbus`)
+      * abstract_air_handler: ref _reg-10_
+      * fixator_resonant_structure: ref _reg-21_
+  * `DEV-04` (_ref_ for `ALG-01` on `upnp`)
     * points
-      * master_frambibulator
-  * `DEV-2`
-    * points (_ref_ for `GAT-1` on `bacnet-10`)
-      * abstract_air_handler
-        * ref: _AV10.present_value_
-      * fixator_resonant_structure
-        * ref: _BV2.present_value_
-  * `DEV-3`
-    * points (_ref_ for `ALG-1` on `modbus`)
-      * abstract_air_handler
-        * ref: _reg-10_
-      * fixator_resonant_structure
-        * ref: _reg-21_
-  * `DEV-4` (_ref_ for `ALG-1` on `upnp`)
-    * points
-      * figurating_flambing
-        * ref: _points.json#.points.figurating\_flambing.present\_value_
+      * figurating_flambing: ref _points.json#.points.figurating\_flambing.present\_value_
