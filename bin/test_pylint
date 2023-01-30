@@ -4,8 +4,8 @@
 #
 
 dirs="bin/ etc/ misc/"
-files1=$(fgrep -l /python3 -r $dirs)
-files2=$(fgrep -l "env python3" -r $dirs)
+files1=$(egrep -l '#!/.*python3' -r $dirs)
+files2=$(fgrep -l 'env python3' -r $dirs)
 files3=$(find $dirs -name \*.py)
 files=$(ls $files1 $files2 $files3 | sort | uniq | fgrep -v \~)
 
