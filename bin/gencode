@@ -19,8 +19,8 @@ fi
 venv_pip3=$(bin/which_venv_pip3)
 
 $venv_pip3 freeze > $tmpfile
-if ! diff etc/requirements.txt $tmpfile; then
-    echo etc/requirements.txt differences found
+if ! diff $tmpfile etc/requirements.txt; then
+    echo venv sanity check failed: diff $tmpfile etc/requirements.txt
     echo please run bin/setup_base
     false
 fi
