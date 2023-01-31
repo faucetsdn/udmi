@@ -13,16 +13,16 @@ DEVICE_PREFIX = 'device'
 JAVA_DESCRIPTION = '\n%s// %s\n'
 JAVA_TARGET = '%s%s("%s")%s\n'
 
-doc_in = os.path.join('docs/specs/buckets.md')
-java_in = os.path.join('etc/Bucket.java')
-java_out = os.path.join('gencode/java/udmi/schema/Bucket.java')
+DOCS_IN = 'docs/specs/buckets.md'
+JAVA_IN = 'etc/Bucket.java'
+JAVA_OUT = 'gencode/java/udmi/schema/Bucket.java'
 
-def read_buckets():
+def read_buckets(docs_in):
   buckets = []
   prefix = []
   previous = -1
   group = None
-  with open(doc_in, 'r', encoding='utf-8') as doc:
+  with open(docs_in, 'r', encoding='utf-8') as doc:
     while line := doc.readline():
       indent = line.find(BUCKET_MARKER)//2
       match = re.match(BUCKET_REGEX, line)
@@ -43,7 +43,7 @@ def read_buckets():
       buckets.append(entry)
   return buckets
 
-def write_java_out(buckets):
+def write_java_out(buckets, java_in, java_out):
   os.makedirs(os.path.dirname(java_out), exist_ok=True)
   with open(java_in, 'r', encoding='utf-8') as inp:
     with open(java_out, 'w', encoding='utf-8') as out:
@@ -69,8 +69,8 @@ def write_java_buckets(out, indent, buckets):
 
 
 def main():
-  buckets = read_buckets()
-  write_java_out(buckets)
+  buckets = read_buckets(DOCS_IN)
+  write_java_out(buckets, JAVA_IN, JAVA_OUT)
 
 if __name__ == '__main__':
   main()
