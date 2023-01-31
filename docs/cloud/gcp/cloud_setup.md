@@ -16,7 +16,7 @@
     *   Set the default _Cloud Pub/Sub topic_ for the registry to the topic `udmi_target`
     *   Set the _Device state topic_ (may be hidden under _Advanced Options_) to `udmi_state`
 4.  Install the Google Cloud SDK in order to be able to use some of the tools included,
-    such as the registrar tool
+    such as the `registrar` tool
     *   Follow the guidance on [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
         installation documentation
     *   Once installed, configure the

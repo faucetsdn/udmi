@@ -51,7 +51,7 @@ graph LR
 
 The UDMI reflector setup is designed to allow an external (to the GCP project) _utility_ to interact
 with the system through a channel authenticated as an IoT Device. This is functionally equivalent
-to an _agent_ connected over PubSub, but has a different authenticaiton/connection paradigm. Specifically,
+to an _agent_ connected over PubSub, but has a different authentication/connection paradigm. Specifically,
 a PubSub connection will rely on a GCP-based IAM auth to provide access to PubSub resources,
 while a _reflector_ connection relies on a device-specific credential and connects over MQTT.
 

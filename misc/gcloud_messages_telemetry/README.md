@@ -1,4 +1,4 @@
-# GCloud Messages and Telemetry to BigQuery
+# Messages and Telemetry to BigQuery
 
 Saves a record of all messages into BigQuery, as well as telemetry into a narrow data structure
 

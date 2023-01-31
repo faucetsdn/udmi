@@ -83,6 +83,7 @@ QoS
 buildingsiot
 UI
 terraform
+terraformed
 mydomain
 hostname
 GCR
@@ -90,10 +91,28 @@ yaml
 GKE
 kube
 kubectl
-transpiles
+transpile
 JS
 txt
 macos
 runDev
 GCS
+APIs
+enablement
+IAM
+md
+udmif
+provisioner
+invoker
+OIDC
+cron
+GiB
+CloudRun
+logentry
+postfix
+downlink
+uplink
+directionality
+backoff
+designator
 

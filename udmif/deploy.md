@@ -70,7 +70,7 @@ Deploy the ingress using the following command. Please note that you must update
 
 #### Deploy `eventHandler` cloud function.
 
-The event handler cloud function is deployed with a script that leverages gCloud to create the function. The script is named [deploy.sh] (event-handler/deploy.sh) located in the event-handler folder. Please ensure you set the required environment variables before running the script. You also need to ensure your credential.json file is available at the proper [location](../cloud/gcp/auth/) that your project ID is set.
+The event handler cloud function is deployed with a script that leverages gcloud to create the function. The script is named [deploy.sh] (event-handler/deploy.sh) located in the event-handler folder. Please ensure you set the required environment variables before running the script. You also need to ensure your credential.json file is available at the proper [location](../cloud/gcp/auth/) that your project ID is set.
 
 example:
 ```
