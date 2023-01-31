@@ -57,7 +57,7 @@ All these situations are conceptually about _management_ of devices, which is co
 different than the _control_ or _operation_. These concepts are similar to the _management_,
 _control_, and _data_ planes of
 [Software Defined Networks](https://queue.acm.org/detail.cfm?id=2560327).
-Once operational, the system should be able to operate completely autonomoulsy from the
+Once operational, the system should be able to operate completely autonomously from the
 management capabilities, which are only required to diagnose or tweak system behavior.
 
 ## Design Philosophy
@@ -76,7 +76,7 @@ to implement, and more ambiguity. Strive towards having only _one_ way of doing 
 very large structures or high-bandwidth streams.
 * <b>Property Names:</b>Uses <em>snake_case</em> convention for property names.
 * <b>Resource Names:</b> Overall structure (when flattened to paths), follows the
-[API Resource Names guidline](https://cloud.google.com/apis/design/resource_names).
+[API Resource Names guidelines](https://cloud.google.com/apis/design/resource_names).
 
 ## Subsystem Blocks
 

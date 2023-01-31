@@ -12,3 +12,14 @@ Schemas
 udmi
 UDMI
 validator
+RPC
+anagement
+evice
+niversal
+nterface
+prem
+Prem
+testability
+Kubernetes
+underspecified
+MQTT
