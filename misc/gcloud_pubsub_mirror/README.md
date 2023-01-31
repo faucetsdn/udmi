@@ -1,4 +1,4 @@
-# PubSub Mirror
+# GCP PubSub Mirror
 
 Republishes GCP Pub/Sub messages from one subscription into another project verbatim
 

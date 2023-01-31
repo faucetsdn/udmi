@@ -1,4 +1,4 @@
-# Messages and Telemetry to BigQuery
+# GCP Messages and Telemetry to BigQuery
 
 Saves a record of all messages into BigQuery, as well as telemetry into a narrow data structure
 

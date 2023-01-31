@@ -25,7 +25,7 @@
     *   Select the project your registry resides in using
         `gcloud config set project <YOUR_PROJECT_ID>`
 5.  Ensure the authenticated user has at minimum the following IAM permissions
-    in order to use the the validator and registar tools
+    in order to use the the `validator` and `registrar` tools
     *   IoT Core Provisioner
     *   Pub/Sub Editor
 6.  Install [Cloud Functions](functions.md)

@@ -115,4 +115,11 @@ uplink
 directionality
 backoff
 designator
-
+Github
+subdirectory
+pointname
+comms
+encoding
+centric
+iot
+ETHMAC

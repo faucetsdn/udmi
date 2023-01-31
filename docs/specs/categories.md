@@ -4,7 +4,7 @@
 
 # Entry Error Categories
 
-Categories are assembled in a hierarical fashion to represent the intended level
+Categories are assembled in a hierarchical fashion to represent the intended level
 of detail (more specific is better). E.g. a complete system config parsing message
 would be categorized as `system.config.parse`, while a system config entry of
 unspecified category would be just `system.config`. Defined categories come with

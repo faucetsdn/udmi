@@ -25,7 +25,7 @@ The overall discovery sequence involves multiple components that work together t
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
 * **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Pipeline**: Ultimate recepient of pointset information, The thing that cares about 'temperature' in a room.
+* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
 
 (The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
 
