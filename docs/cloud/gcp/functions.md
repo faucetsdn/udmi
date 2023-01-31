@@ -4,7 +4,7 @@
 
 ## Deploy
 
-Run `dashboard/deploy_dashboard_gcloud`
+Run `udmis/deploy_udmis_gcloud ${project_id}`
 
 ## Basic Architecture
 
@@ -20,14 +20,14 @@ External Components
   a dedicated _site registry_.
 
 Cloud Topics/Functions
-* _udmi__target_: Core tap point for all transactions.
-* _udmi__state_: Simple shunt for adding attributes to state messages.
-* _udmi__config_: Configuration update handling.
+* _udmi\_target_: Core tap point for all transactions.
+* _udmi\_state_: Simple shunt for adding attributes to state messages.
+* _udmi\_config_: Configuration update handling.
 
 ```mermaid
 graph LR
     %%{wrap}%%
-    I[<b>IoT Core</b><br><i>site registry</i>]
+    I[<b>IoT Core</b><br>registries/<i>site_name</i><br>devices/<i>device_name</i>]
     T[topic/function:<br>udmi_target]
     C[topic/function:<br>udmi_config]
     S[topic/function:<br>udmi_state]
@@ -38,34 +38,23 @@ graph LR
     I -.-> |state| S
     S -.-> T
 
-    C --> |config| I
+    C --> I
 
     T --> J
     J --> A
-    A -.-> C
+    A -.-> |config| C
+    C -.-> T
 ```
+(solid lines are direct API calls, dashed lines are PubSub messages)
 
 ## Reflector Architecture
 
-The UDMI reflector setup is designed to allow an external entity to interact with the system
-through a channel authenticated as an IoT Device. This is functionally equivalent to an _agent_,
-but has a different authenticaiton/connection paradigm. Specifically, an _agent_ connection
-will rely on a GCP-based IAM auth to provide access to PubSub resources, while a _reflector_
-connection relies on a device-specific credential and connects over MQTT.
+The UDMI reflector setup is designed to allow an external (to the GCP project) _utility_ to interact
+with the system through a channel authenticated as an IoT Device. This is functionally equivalent
+to an _agent_ connected over PubSub, but has a different authenticaiton/connection paradigm. Specifically,
+a PubSub connection will rely on a GCP-based IAM auth to provide access to PubSub resources,
+while a _reflector_ connection relies on a device-specific credential and connects over MQTT.
 
-The flowchard for _reflector_ based interactions is the same as for the functions, with the
-addition of a _reflector_ IoT Core registry and _udmi__reflect_ topic/function.
-
-```mermaid
-graph LR
-    %%{wrap}%%
-    I[<b>IoT Core</b><br><i>site registry</i>]
-    X[<b>IoT Core</b><br><i>reflector registry</i>]
-    T[topic/function:<br>udmi_target]
-    C[topic/function:<br>udmi_config]
-    S[topic/function:<br>udmi_state]
-    R[topic/function:<br>udmi_reflect]
-
-    X --> R
-
-```
+Utilities connect to the `UDMS-REFLECT` IoT Core registry, backed by the _udmi__reflect_ topic/function.
+The 'device' within the `UDMS-REFLECT` registry is actually the _site\_name_ of the site (so not
+an actual device), corresponding to the IoT Core _registry_ containing the actual device connections.
