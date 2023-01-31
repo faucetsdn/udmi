@@ -23,9 +23,6 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "device_num_id": {
-      "type": "integer"
-    },
     "translation": {
       "$ref": "file:equipment_translation.json"
     }
