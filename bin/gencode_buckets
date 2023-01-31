@@ -5,8 +5,6 @@ import os
 
 GENCODE_MARKER = '@@ '
 BUCKET_MARKER = '* '
-WILDCARD_REGEX = r' *\* _\?\?\?_: (.*)'
-WILDCARD_SUFFIX = r'.[a-z]+(_[a-z]+)*'
 
 BUCKET_REGEX = r' *\* _([a-z]+)_: (.*)'
 JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
@@ -27,11 +25,6 @@ def read_buckets():
   with open(doc_in, 'r', encoding='utf-8') as doc:
     while line := doc.readline():
       indent = line.find(BUCKET_MARKER)//2
-      wildcard = re.match(WILDCARD_REGEX, line)
-      if wildcard:
-        entry = (group + WILDCARD_SUFFIX, 'INFO', wildcard.group(1))
-        buckets.append(entry)
-        continue
       match = re.match(BUCKET_REGEX, line)
       if indent < 0 or not match:
         continue
