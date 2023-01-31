@@ -6,6 +6,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static udmi.schema.Bucket.DISCOVERY_SCAN;
+import static udmi.schema.Bucket.ENUMERATION;
+import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
+import static udmi.schema.Bucket.ENUMERATION_FEATURES;
+import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -95,7 +100,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(category = "enumeration", stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void empty_enumeration() {
     Enumerate enumerate = new Enumerate();
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -103,7 +108,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(category = "enumeration.pointset", stage = ALPHA)
+  @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   public void pointset_enumeration() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       throw new SkipTest("No metadata pointset points defined");
@@ -115,7 +120,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(category = "enumeration.features", stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -124,7 +129,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(category = "enumeration.families", stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
   public void family_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -185,7 +190,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature("discovery.scan")
+  @Feature(DISCOVERY_SCAN)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();

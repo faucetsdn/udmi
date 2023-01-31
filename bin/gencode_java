@@ -10,6 +10,7 @@ rm -rf gencode/java codegen/java
 mkdir -p codegen gencode
 
 bin/gencode_categories
+bin/gencode_buckets
 
 OUTDIR=$ROOT_DIR/gencode/java
 cd codegen
