@@ -3,6 +3,7 @@ RESULT pass enumeration empty_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.features feature_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5 Sequence complete
+RESULT pass system.mode system_mode_restart REQUIRED 5 Sequence complete
 RESULT pass unknown broken_config REQUIRED 5 Sequence complete
 RESULT pass unknown device_config_acked REQUIRED 5 Sequence complete
 RESULT pass unknown endpoint_connection_bad_hash REQUIRED 5 Sequence complete
@@ -17,7 +18,6 @@ RESULT pass unknown pointset_sample_rate ALPHA 5 Sequence complete
 RESULT pass unknown single_scan REQUIRED 5 Sequence complete
 RESULT pass unknown system_last_update REQUIRED 5 Sequence complete
 RESULT pass unknown system_min_loglevel REQUIRED 5 Sequence complete
-RESULT pass unknown system_mode_restart REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
 RESULT pass unknown valid_serial_no REQUIRED 5 Sequence complete
