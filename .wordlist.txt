@@ -77,3 +77,6 @@ underspecified
 validator
 writeback
 Writeback
+keygen
+PUBACK's
+QoS

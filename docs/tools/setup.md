@@ -14,12 +14,12 @@ As a minimum, to run or deploy the included tools, the following software will n
 to be installed on your development system if it's not already there.
 
 *   _JDK v11_
-*   _coreutils_
-*   _jq_
+*   `coreutils`
+*   `jq`
 
 ## Cloud Prerequisites
 
-The tooling requires the he [UDMIS infrasutrcture](../cloud/gcp/udmis.md) to be deployed onto the target GCP project. 
+The tooling requires the he [UDMIS infrastructure](../cloud/gcp/udmis.md) to be deployed onto the target GCP project. 
 
 [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) is required for GCP command-line utilities ('gcloud') 
 ## UDMI Site Model Workflow

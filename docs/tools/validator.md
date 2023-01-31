@@ -2,7 +2,7 @@
 
 # Validator Setup
 
-The `validator` is a sub-component of DAQ that can be used to validate JSON files or stream
+The `validator` is a UDMI utility that can be used to validate JSON files or stream
 against a schema defined by the standard [JSON Schema](https://json-schema.org/) format along
 with additional constraints stipulated by the UDMI standard.
 
@@ -15,14 +15,15 @@ See the [setup docs](setup.md) for common setup required for running this tool.
 
 ## PubSub Stream Validation
 
-PubSub stream validation works against a live data stream pulled from a pre-existing subscription.
+PubSub stream validation works against a live data stream pulled from a preexisting subscription.
 `bin/validator` takes three arguments:
 * `SITE_PATH`: A [site model](../specs/site_model.md) definition directory.
 * `PROJECT_ID`: The GCP project ID to validate against.
 * `SUBSCRIPTION_ID`: A GCP PubSub subscription (manually setup by a GCP project admin).
 
-This program will endlessly consume messages from the given PubSub subsubscription and validate the messages,
+This program will endlessly consume messages from the given PubSub subscription and validate the messages,
 writing the results in a `out/validation_report.json` summary file. For example:
+```
 <pre>
 ~/udmi$ <b>timeout 5m bin/validator  ../sites/zz-sin-fins/ udmi-testing username-debug</b>
 ...
@@ -30,6 +31,7 @@ writing the results in a `out/validation_report.json` summary file. For example:
 udmi$ <b>ls -l out/validation_report.json</b>
 -rw-r--r-- 1 username primarygroup 168311 Jan 28 00:32 out/validation_report.json
 </pre>
+```
 
 ## Regression Testing
 
@@ -85,7 +87,7 @@ total 24
 ## Advanced Usage
 
 There's other options available for validation, but they aren't completely documented. The `bin/validator`
-script interally calls `validator/bin/validate` with a number of additional arguments/options. Notably,
+script internally calls `validator/bin/validate` with a number of additional arguments/options. Notably,
 there is an alternative to PubSub stream validation that uses a shadow registry for GCP exchanges (easier
 authentication).
 
@@ -130,7 +132,7 @@ identify the problem.
 Caused by: java.io.IOException: The Application Default Credentials are not available. They are available if running in Google Compute Engine. Otherwise, the environment variable GOOGLE_APPLICATION_CREDENTIALS must be defined pointing to a file defining the credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.
 ```
 - Ensure GCP Cloud SDK has correctly been setup. For further guidance refer to [GCP Cloud Documentation](https://cloud.google.com/docs/authentication/production)
-- Ensure the validator tools are not running under sudo 
+- Ensure the validator tools are not running under `sudo`
 
 ```
 Processing device #1/12: XXX-1/event_unknown
@@ -139,7 +141,7 @@ Unknown schema subFolder 'event_unknown' for XXX-1
 - Ensure the subscription used for the validator is to the `udmi_target` topic,
   and not the `udmi_state` topic or any others
 
-**Missing messages** _or_ **messages not appearing in validators**
+**Missing messages** _or_ **messages not appearing in validator output**
 - Ensure the cloud functions are running with a service account with [sufficient
   permissions](../cloud/gcp/cloud_setup.md)  
 - Ensure subscribing to the right topic

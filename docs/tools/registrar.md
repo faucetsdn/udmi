@@ -19,7 +19,7 @@ source control as a site-specific repo.
 * Existing devices that are not listed in the site config are blocked (as per
 Cloud IoT device setting).
 * Devices not found in the target registry are automatically created.
-* Existing device registy entries are unblocked and updated with the new configuration.
+* Existing device registry entries are unblocked and updated with the new configuration.
 * Various intermediate and summary files are written to the site directory. Typically,
 these can be safely committed to source control as they are deterministic.
 
@@ -28,7 +28,7 @@ these can be safely committed to source control as they are deterministic.
 The expected model of a device is defined by a [device metadata](../specs/metadata.md) file,
 along with a public key for that device (required for communication with the cloud).
 Devices (that aren't proxied by a gateway) that do not auto-generate a public key
-can use the [bin/keygen](keygen.md) utility to create a proper public/private key pair.
+can use the [`bin/keygen`](keygen.md) utility to create a proper public/private key pair.
 
 ## Tool Execution
 
@@ -113,7 +113,7 @@ Expected workflow to configure a registry using Registrar:
 * `Registry`: Target Cloud IoT Core registry
 * `Repo`: Remote site configuration repo
 
-All operations are manaul except those involving the `Registrar` tool.
+All operations are manual except those involving the `Registrar` tool.
 
 <pre>
 +---------+                +-------+                 +-----------+                 +-----------+ +-------+
