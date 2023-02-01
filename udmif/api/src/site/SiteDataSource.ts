@@ -8,10 +8,14 @@ import {
   SearchOptions,
 } from '../common/model';
 import { validateSearchOptions, validateDistinctSearchOptions } from '../common/SearchOptionsValidator';
+import DataLoader from 'dataloader';
 
 export class SiteDataSource extends GraphQLDataSource {
+  private sitesDataLoader: DataLoader<string, Site>;
+
   constructor(private siteDAO: DAO<Site>) {
     super();
+    this.sitesDataLoader = new DataLoader(async (siteNames) => this.batchLoadSitesByName(siteNames));
   }
 
   public initialize(config): void {
@@ -34,16 +38,27 @@ export class SiteDataSource extends GraphQLDataSource {
   }
 
   async getSite(name: string): Promise<Site> {
-    return this.siteDAO.getOne({ name });
+    return this.sitesDataLoader.load(name);
   }
 
   async getSiteValidation(name: string): Promise<SiteValidation> {
-    const site = await this.siteDAO.getOne({ name });
+    const site = await this.getSite(name);
     return site ? site.validation : null;
   }
 
   async getSiteDeviceStatus(name: string, deviceName: string): Promise<Status> {
     const devices = (await this.getSiteValidation(name)).devices;
     return devices ? devices[deviceName]?.status : null;
+  }
+
+  private async batchLoadSitesByName(names: readonly string[]): Promise<Site[]> {
+    const returnedSites = await this.siteDAO.getAllIn('name', names);
+
+    return await Promise.all(
+      names.map((name) => {
+        const site = returnedSites.find((site) => site.name === name);
+        return site ? site : null;
+      })
+    );
   }
 }

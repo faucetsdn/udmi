@@ -19,6 +19,10 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
       .offset(searchOptions.offset);
   }
 
+  async getAllIn(field: string, values: readonly string[]): Promise<Type[]> {
+    return this.getTable().select().whereIn(field, values);
+  }
+
   async getOne(filterQuery: any): Promise<Type> {
     return this.getTable()
       .where(filterQuery)
