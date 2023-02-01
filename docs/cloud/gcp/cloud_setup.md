@@ -28,3 +28,4 @@
     in order to use the the validator and registar tools
     *   IoT Core Provisioner
     *   Pub/Sub Editor
+6.  Install [Cloud Functions](functions.md)

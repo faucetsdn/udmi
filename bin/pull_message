@@ -4,6 +4,7 @@
 #   while true; do bin/pull_message PROJECT_ID; done
 #
 
+ROOT=$(realpath $(dirname $0)/..)
 subscription=$USER-debug
 out_file=/tmp/captured.json
 
@@ -21,13 +22,19 @@ subType=$(jq -r '.[0].message.attributes.subType' $out_file 2> /dev/null)
 subFolder=$(jq -r '.[0].message.attributes.subFolder' $out_file 2> /dev/null)
 deviceId=$(jq -r '.[0].message.attributes.deviceId' $out_file 2> /dev/null)
 timestamp=$(jq -r '.[0].message.data' $out_file 2>/dev/null | base64 --decode | jq -r .timestamp 2> /dev/null) || true
+data=$(jq -r .[0].message.data /tmp/captured.json  | base64 --decode)
+
+out_folder=$ROOT/out/devices/$deviceId
+mkdir -p $out_folder
 
 if [[ $subType == null ]]; then
     subType=event
 fi
 
 if [[ $subFolder != null ]]; then
-    echo $subFolder $subType for $deviceId at $timestamp
+    echo $subFolder $subType $deviceId $timestamp
+    out_file=$out_folder/${timestamp}_${subFolder}_${subType}.json
+    echo $data | jq . > $out_file
 else
     echo No matching messages found.
 fi
