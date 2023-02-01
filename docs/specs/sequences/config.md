@@ -17,8 +17,9 @@
 
 ![State and config](images/state.png)
 
-Generated using <https://sequencediagram.org>
 ```
+Generated using <https://sequencediagram.org>
+
 participant Device
 participant Broker
 participantspacing 5
@@ -44,7 +45,7 @@ Device->Broker: **STATE**
 
 ## Erroneous Config Handling
 
-A device should be capable of interpreting erroneous messages without distrupting operation. There are
+A device should be capable of interpreting erroneous messages without disrupting operation. There are
 three types of errors which may be encountered when interpreting config messages:
 * Hard-errors
 * Soft-errors

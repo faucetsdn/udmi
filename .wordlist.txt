@@ -48,7 +48,7 @@ GCS
 GiB
 Github
 GitLab
-gitttools
+gittools
 GKE
 googlegroups
 GraphQL
@@ -128,6 +128,7 @@ transpiles
 txt
 udmi
 UDMI
+UDMI's
 udmif
 UDMIF
 UDMIS
@@ -138,3 +139,9 @@ validator
 writeback
 Writeback
 yaml
+modbus
+parsers
+sha
+url
+stateStatus
+uniqs

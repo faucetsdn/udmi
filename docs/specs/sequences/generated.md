@@ -2,7 +2,7 @@
 
 # Generated sequences
 
-These are the exact sequences being checked by the sequence tool. They are programaticaly generated
+These are the exact sequences being checked by the sequence tool. They are programmatically generated
 so maybe a bit cryptic, but they accurately represent the specific steps required for each test.
 
 <!--

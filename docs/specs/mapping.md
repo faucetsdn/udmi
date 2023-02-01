@@ -7,7 +7,7 @@ end-to-end process to take an "unknown" device and ensure that it's properly int
 
 At a high-level, the process involves different message subgroups that handle slightly different
 scopes of device data:
-* **(Native)**: Device communicaiton using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
+* **(Native)**: Device communication using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
 * **[Discovery](discovery.md)**: Messages relating to the discovery (and provisioning) of devices (e.g. messy BACnet info)
 * **[Mapping](mapping.md)**: Messages relating to a 'resolved' device type and ID (e.g. the device is an `AHU` called `AHU-1`)
 * **[Pointset](../messages/pointset.md)**: Messages relating to actual data flow (e.g. temperature reading), essentially the interesting stuff
@@ -18,8 +18,8 @@ scopes of device data:
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Mapper**: Mapping engine that uses hueristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
-* **Pipeline**: Ultimate recepient of pointset information, The thing that cares about 'temperature' in a room.
+* **Mapper**: Mapping engine that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
+* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
 
 ```mermaid
 sequenceDiagram
@@ -63,7 +63,7 @@ sequenceDiagram
 
 ## Example Test Setup
 
-A standlone test-setup can be used to emulate all the requiste parts of the system.
+A standalone test-setup can be used to emulate all the requisite parts of the system.
 
 Cloud PubSub subscriptions (the defaults) on the `udmi_target` topic (need to be manually added):
 * `mapping-agent`: Used by the agent to coordinate on-prem discovery and mapping engine activities.
@@ -74,7 +74,7 @@ Local environment setup (e.g.):
 
 ### Mock Device and Spotter
 
-The `pubber` reference provides for both ther `device` and `spotter` bits of functionality (`AHU-1` in this case).
+The `pubber` reference provides for both the `device` and `spotter` bits of functionality (`AHU-1` in this case).
 
 ```
 $ bin/pubber sites/udmi_site_model/ $project_id AHU-1 832172
