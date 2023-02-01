@@ -57,4 +57,6 @@ while a _reflector_ connection relies on a device-specific credential and connec
 
 Utilities connect to the `UDMS-REFLECT` IoT Core registry, backed by the _udmi__reflect_ topic/function.
 The 'device' within the `UDMS-REFLECT` registry is actually the _site\_name_ of the site (so not
-an actual device), corresponding to the IoT Core _registry_ containing the actual device connections.
+an actual device), corresponding to the IoT Core _registry_ containing the actual device connections. The
+(undocumented) reflector API allows for all the basic device-oriented operations { _config_, _state_, _events_,
+_commands } as well as some meta-functions like querying the version of running UDMIS functions.
