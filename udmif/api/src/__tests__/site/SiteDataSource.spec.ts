@@ -1,15 +1,17 @@
 import { Site } from '../../site/model';
-import { SiteDAO } from '../../site/SiteDao';
 import { SiteDataSource } from '../../site/SiteDataSource';
 import { DAO } from '../../dao/DAO';
 import { ValidatedDistinctSearchOptions, ValidatedSearchOptions } from '../../common/model';
-import { validate } from 'graphql';
 
 const getOne = jest.fn();
+const getAllIn = jest.fn();
 
 class TestDao implements DAO<Site> {
   async getAll(searchOptions: ValidatedSearchOptions): Promise<Site[]> {
     return [];
+  }
+  async getAllIn(field: string, value: readonly string[]): Promise<Site[]> {
+    return getAllIn();
   }
   async getOne(filterQuery: any): Promise<Site> {
     return getOne();
@@ -29,11 +31,13 @@ describe('SiteDataSource', () => {
   let siteDataSource: SiteDataSource;
 
   beforeEach(() => {
+    jest.restoreAllMocks();
     const siteDAO: DAO<Site> = new TestDao();
     siteDataSource = new SiteDataSource(siteDAO);
   });
 
   test('getSiteValidation returns null if site is not found', async () => {
+    getAllIn.mockReturnValueOnce([]);
     await expect(siteDataSource.getSiteValidation('random')).resolves.toBe(null);
   });
 
@@ -46,7 +50,7 @@ describe('SiteDataSource', () => {
         devices: [],
       },
     };
-    getOne.mockReturnValueOnce(site);
+    getAllIn.mockReturnValueOnce([site]);
 
     await expect(siteDataSource.getSiteValidation('site1')).resolves.toBe(site.validation);
   });
