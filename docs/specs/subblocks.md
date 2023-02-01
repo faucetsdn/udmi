@@ -19,7 +19,7 @@ at the PubSub _message envelope_), has several basic _subTypes_ that manifest th
 different sources:
 
 * **Model**: Model-based description of this device. Unlike the other messages, this exists
-  independent of any actual physical device, and will be injected by the syste through something
+  independent of any actual physical device, and will be injected by the system through something
   like the `registrar` tool. The _model_ is typically also refleced in a _site\_model_ as a
   static set of files somewhere.
 * **Event**: Streaming telemetry. This is essentially a raw feed from the device itself,
@@ -76,9 +76,9 @@ for doing things like a BACnet discovery sequence.
 
 ## Audit
 
-_Audit_ covers an external "black box" audit of a system for vunerabilities or other characteristics.
+_Audit_ covers an external "black box" audit of a system for vulnerabilities or other characteristics.
 E.g., doing a port-scan of a device to see what network ports are open would be part of a network
-exposure autit.
+exposure audit.
 
 * **Model**
 * **Event**

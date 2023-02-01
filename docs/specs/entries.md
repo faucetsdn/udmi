@@ -32,6 +32,6 @@ specific categories will have guiding principles (e.g. prepend point _message_ w
 
 ## Detail
 
-The entry _detail_ is use for specifically diagnosing the error. E.g. a complete stack-trace or parsing
+The entry _detail_ is use for specifically diaganosing the error. E.g. a complete stack-trace or parsing
 message that details exactly where the error occured. This would be used for detailed debugging by
 a domain expert.

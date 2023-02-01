@@ -9,11 +9,11 @@
   * _properties_: parameterization of the network, meanings defined by the network _family_
 * **iot devices**: devices that have a representation in the cloud model
   * _networks_: optional list of _local networks_ the device connects to
-  * **direct devices**: devices that have a direct (e.g.) MQTT connection without an interviening gateway
+  * **direct devices**: devices that have a direct (e.g.) MQTT connection without an intervening gateway
     * _credentials_: connection parameters for connecting to the intended cloud endpoint
   * **proxy devices**: devices that are proxied through a gateway to connect to the cloud
     * _gateway_: which gateway the device is proxied through
-    * _through_: if mulitiple networks are present, indicates which one is used for proxying
+    * _through_: if multiple networks are present, indicates which one is used for proxying
 * **pointset mapping**: how devices represent the mapping from the semantic cloud names to on-prem local network references
   * _ref_: point-to-source mapping, format defined by the network type of the indicated gateway (only for proxy devices)
 
