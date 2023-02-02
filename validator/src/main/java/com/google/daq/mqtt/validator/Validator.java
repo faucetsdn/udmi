@@ -386,7 +386,7 @@ public class Validator {
     return config.registry_id;
   }
 
-  Private void validateReflector() {
+  private void validateReflector() {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
