@@ -38,7 +38,7 @@ a configuration block that details which _proxy devices_ the gateway should prox
 receiving a configuration block for each proxied device. Any attach errors are
 indicated in the gateway _status_ block and sent along as a _logentry_ event.
 5. (_explicit_ only) The proxied device's _config_ block specifies any local
-connection parameters for the proxied device, e.g. the BacNET device id.
+connection parameters for the proxied device, e.g. the BACnet device id.
 6. The gateway proxies communication to/from the device, translating between
 native (e.g. BACnet) communications and UDMI-based messages.
 

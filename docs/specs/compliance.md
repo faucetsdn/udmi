@@ -21,7 +21,7 @@ individual features and buckets. This aids in assessing levels or completeness o
 device and can be used for defining requirements.
 
 *   **Native UDMI**
-    *   _`Payloads`_ - Native configuration of UDMI payloads - not dependant on manual creation of MQTT message structures
+    *   _`Payloads`_ - Native configuration of UDMI payloads - not dependent on manual creation of MQTT message structures
 *   **Connection**
     *   _`MQTT 3.1.1 support`_ - Device supports MQTT 3.1.1
     *   _`MQTT/TLS Support`_ - Device supports connection to an MQTT broker with TLS encryption and at least TLS v1.2
