@@ -16,7 +16,7 @@ For GitHub Actions CI testing, setting the `SEQUENCER_OPTS` secret to `-vv` will
 ## Sequencer Output
 
 If properly enabled, the _nonce_ will show up in the sequencer output, in this case for the specific _system_
-config sub-folder:
+config subFolder:
 ```
  2022-10-05T21:30:58Z TRACE sequencer received config_system_2022-10-05T21:30:58.072Z:
  {
@@ -30,7 +30,7 @@ config sub-folder:
    "timestamp" : "2022-10-05T21:30:58.072Z",
    "version" : "1.3.14-85-g61f475b7"
  }
- ```
+```
  
 And then should immediately be followed by a "promoted" update, where the _system_ update is incorporated
 into the complete _config_ update:
@@ -54,8 +54,8 @@ into the complete _config_ update:
 
 ## Cloud Functions
 
-The _config_ updates themselves are processed by some cloud functions. The _udmi__reflect_ function receives the sequencer
-messags, and the _udmi__config_ function handles the config update itself. The logs of these can be searched for the specific
+The _config_ updates themselves are processed by some cloud functions. The _udmi\_reflect_ function receives the sequencer
+messages, and the _udmi\_config_ function handles the config update itself. The logs of these can be searched for the specific
 _nonce_ to show a more detailed accounting of what is going on:
 ```
 ~/udmi$ gcloud --project=$project_id functions logs read udmi_reflect --sort-by=time_utc --limit=1000 | fgrep 1665005451790
@@ -83,7 +83,7 @@ WARNING  udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:54.748  Warning, estimatin
 D        udmi_reflect  igx30b2gw5gg  2022-10-05 21:30:57.004  Function execution took 2960 ms. Finished with status: ok
 ```
 
-The same logic can be applied to the _udmi__config_ function, but there's a lot more entries in those logs, so you may need to add a specific _end-time_ filter:
+The same logic can be applied to the _udmi\_config_ function, but there's a lot more entries in those logs, so you may need to add a specific _end-time_ filter:
 ```
 ~/udmi$ gcloud --project=$project_id functions logs read udmi_config --sort-by=time_utc --limit=1000 --end-time=2022-10-05T21:31:57.004 | fgrep 1665005451790
          udmi_config  u1az18rg4bh8  2022-10-05 21:30:58.072  Config message ZZ-TRI-FECTA AHU-1 system 1665005451790 {"min_loglevel":200,"metrics_rate_sec":600,"testing":{"sequence_name":"reset_config"},"extra_field":"reset_config","debug_config_nonce":1665005451790}
@@ -96,7 +96,7 @@ The same logic can be applied to the _udmi__config_ function, but there's a lot 
 ## subFolder Updates
 
 For config blocks that have multiple sub-folders, there will be a _nonce_ for each and also at the top
-level. The top-level one indicates which subfolder was added most recently. Although nominally a timestamp,
+level. The top-level one indicates which subFolder was added most recently. Although nominally a timestamp,
 the numerical ordering of the _nonce_ is not reliable as a source of information.
 ```
  2022-10-05T21:31:03Z TRACE sequencer received config_update_2022-10-05T21:31:02.950Z:
