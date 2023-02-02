@@ -13,7 +13,7 @@ import udmi.schema.Bucket;
 @Target({ElementType.METHOD})
 public @interface
 Feature {
-  Stage DEFAULT_STAGE = Stage.REQUIRED;
+  Stage DEFAULT_STAGE = Stage.ALPHA;
   int DEFAULT_SCORE = 5;
 
   /**
@@ -35,7 +35,7 @@ Feature {
    *
    * @return annotated release stage of this test
    */
-  Stage stage() default Stage.REQUIRED;
+  Stage stage() default Stage.ALPHA;
 
   /**
    * Defines the feature score for this test, in AU.
@@ -49,6 +49,7 @@ Feature {
    */
   enum Stage {
     ALPHA,
-    REQUIRED
+    BETA,
+    STABLE
   }
 }
