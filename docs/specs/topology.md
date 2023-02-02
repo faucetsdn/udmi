@@ -59,36 +59,36 @@ The corresponding `encoded information` provides all the details necessary to de
 * direct devices
   * `DEV-01`:
   * `GAT-01`:
-    * network `bacnet-10`: address _0xa982b7_
-    * network `upnp`: address _192.168.1.1_
+    * network `bacnet-10`: address `_0xa982b7_`
+    * network `upnp`: address `_192.168.1.1_`
 * proxy devices
   * `DEV-02`
     * gateway `GAT-01`
-    * network `bacnet-10`: address _0x827323_
+    * network `bacnet-10`: address `_0x827323_`
   * `DEV-03`
     * gateway `ALG-01` (through `modbus-alg-01`)
-    * network `modbus-alg-01`: address _plc-9_
-    * network `upnp`: address _192.168.1.3_
+    * network `modbus-alg-01`: address `_plc-9_`
+    * network `upnp`: address `_192.168.1.3_`
   * `DEV-04`
     * gateway `GAT-01` (through `upnp`)
-    * network `bacnet-10`: address _0x92a344_
-    * network `upnp`: address _192.168.1.2_
+    * network `bacnet-10`: address `_0x92a344_`
+    * network `upnp`: address `_192.168.1.2_`
   * `ALG-01`
     * gateway `GAT-01` (through `bacnet-10`)
-    * netowrk `bacnet-10`: address _0x712387_
-    * network `modbus-alg-01`: address _plc-master_
+    * netowrk `bacnet-10`: address `_0x712387_`
+    * network `modbus-alg-01`: address `_plc-master_`
 * pointset mapping
   * `DEV-01`
     * points
-      * _master\_frambibulator_
+      * `_master\_frambibulator_`
   * `DEV-02`
     * points (meaningful to `GAT-01`)
-      * _abstract\_air\_handler_: ref _AV10.present_value_
-      * _fixator\_resonant\_structure_: ref _BV2.present_value_
+      * `_abstract\_air\_handler_`: ref `_AV10.present_value_`
+      * `_fixating_resonant\_structure_`: ref `_BV2.present_value_`
   * `DEV-03`
     * points (meaningful to `ALG-01`)
-      * _reticulating\_reticulator_: ref _reg-10_
-      * _running\_rabbit\_speed_: ref _reg-21_
+      * `_reticulating\_reticulator_`: ref `_reg-10_`
+      * `_running\_rabbit\_speed_`: ref `_reg-21_`
   * `DEV-04`
     * points (meaningful to `GAT-01`)
-      * _figurating\_flambing_: ref _points.json#.points.figurating\_flambing.present\_value_
+      * `_figure\_flambing_`: ref `_points.json#.points.figure\_flambing.present\_value_`
