@@ -73,7 +73,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
+bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out

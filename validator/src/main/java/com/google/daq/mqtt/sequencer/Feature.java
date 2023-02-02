@@ -53,7 +53,7 @@ Feature {
     STABLE;
 
     public boolean processGiven(Stage beta) {
-      return beta.compareTo(this) >= 0;
+      return this.compareTo(beta) >= 0;
     }
   }
 }

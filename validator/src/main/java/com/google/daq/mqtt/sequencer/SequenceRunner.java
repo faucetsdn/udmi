@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import joptsimple.internal.Strings;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -30,10 +31,12 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
+  public static final Stage DEFAULT_STABILITY = Stage.BETA;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
+  private List<String> targets = List.of();
 
   /**
    * Thundercats are go.
@@ -52,7 +55,8 @@ public class SequenceRunner {
    */
   public static int processResult(List<String> targets) {
     SequenceRunner sequenceRunner = new SequenceRunner();
-    sequenceRunner.process(targets);
+    sequenceRunner.setTargets(targets);
+    sequenceRunner.process();
     return sequenceRunner.resultCode();
   }
 
@@ -60,7 +64,7 @@ public class SequenceRunner {
     executionConfiguration = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     SequenceBase.setDeviceId(config.device_id);
-    sequenceRunner.process(List.of());
+    sequenceRunner.process();
     return sequenceRunner;
   }
 
@@ -119,19 +123,19 @@ public class SequenceRunner {
     return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
   }
 
-  private void process(List<String> targetMethods) {
+  private void process() {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     SequenceBase.ensureValidatorConfig();
     String deviceId = SequenceBase.validatorConfig.device_id;
-    Set<String> remainingMethods = new HashSet<>(targetMethods);
+    Set<String> remainingMethods = new HashSet<>(targets);
     int runCount = 0;
     for (String className : sequenceClasses) {
       Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
-      List<String> runMethods = getRunMethods(clazz, targetMethods);
+      List<String> runMethods = getRunMethods(clazz);
       for (String method : runMethods) {
         System.err.println("Running " + clazz + "#" + method);
         requests.add(Request.method(clazz, method));
@@ -161,11 +165,10 @@ public class SequenceRunner {
     });
   }
 
-  private List<String> getRunMethods(Class<?> clazz, List<String> targetMethods) {
+  private List<String> getRunMethods(Class<?> clazz) {
     return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
-        .filter(methodName -> targetMethods.isEmpty() || targetMethods.contains(methodName))
-        .collect(
-            Collectors.toList());
+        .filter(methodName -> targets.isEmpty() || targets.contains(methodName))
+        .collect(Collectors.toList());
   }
 
   private boolean shouldProcessMethod(Method method) {
@@ -175,6 +178,15 @@ public class SequenceRunner {
     }
     Feature annotation = method.getAnnotation(Feature.class);
     Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
-    return stage.processGiven(Stage.ALPHA);
+    return stage.processGiven(getDesiredStability());
+  }
+
+  private Stage getDesiredStability() {
+    String stability = SequenceBase.validatorConfig.stability;
+    return Strings.isNullOrEmpty(stability) ? DEFAULT_STABILITY : Stage.valueOf(stability);
+  }
+
+  public void setTargets(List<String> targets) {
+    this.targets = targets;
   }
 }

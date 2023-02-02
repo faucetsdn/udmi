@@ -43,6 +43,9 @@
     "log_level": {
       "type": "string"
     },
+    "stability": {
+      "type": "string"
+    },
     "udmi_version": {
       "type": "string"
     },
