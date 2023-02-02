@@ -39,7 +39,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
-import com.google.daq.mqtt.util.PubSubUdmiClient;
+import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
@@ -105,7 +105,7 @@ public class Validator {
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
-  public static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
+  private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String STATE_POINTSET = "state_pointset";
@@ -371,15 +371,6 @@ public class Validator {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
     return schemaMap;
-  }
-
-  private void validatePubSub(String instName) {
-    String registryId = getRegistryId();
-    String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubUdmiClient(config.project_id, registryId, instName, updateTopic);
-    if (updateTopic != null) {
-      dataSinks.add(client);
-    }
   }
 
   private String getRegistryId() {
