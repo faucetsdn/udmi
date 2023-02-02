@@ -145,3 +145,9 @@ sha
 url
 stateStatus
 uniqs
+transactional
+CoAP
+dependant
+JWT
+unwritable
+etags

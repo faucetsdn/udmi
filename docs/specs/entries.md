@@ -27,11 +27,11 @@ are designed to be automatically categorized and processed by backend systems.
 
 The entry _message_ is a single sentence of human-readable output describing what went wrong.
 This will likely be directly exposed to a system operator to give them high-level information on
-how to triage, diganose, or rectify the situation. Exact messages are not prescribed, although some
+how to triage, diagnose, or rectify the situation. Exact messages are not prescribed, although some
 specific categories will have guiding principles (e.g. prepend point _message_ with "Point _pointname_").
 
 ## Detail
 
-The entry _detail_ is use for specifically diaganosing the error. E.g. a complete stack-trace or parsing
-message that details exactly where the error occured. This would be used for detailed debugging by
+The entry _detail_ is use for specifically diagnosing the error. E.g. a complete stack-trace or parsing
+message that details exactly where the error occurred. This would be used for detailed debugging by
 a domain expert.

@@ -13,7 +13,6 @@ technology stack for compliant IoT devices.
   * Connected to a specific Cloud IoT Registry designated for each site-specific project.
 * Utilizes the MQTT Topic table listed below.
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
-* Passes the [DAQ Validation Tool](../tools/validator.md) for all requirements.
 
 # MQTT Topic Suffix Table
 
@@ -53,7 +52,7 @@ can be housed in a different cloud project from the backend applications.
 
 When using the
 [GCP Cloud IoT Core MQTT Bridge](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
-there are multiple ways the subschema used during validation is chosen.
+there are multiple ways the specific schema used during validation is chosen.
 * All messages have their attributes validated against the `.../attributes.json` schema. These attributes are
 automatically defined server-side by the MQTT Client ID and Topic, and are not explicitly included in any message payload.
 * A [device event message](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)

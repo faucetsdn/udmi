@@ -142,6 +142,3 @@ validate conformance to the schema.
 
 The [registrar](../tools/registrar.md#tool-execution) tool can be used to validate
 [metadata](metadata.md) and [site models](site_model.md).
-
-[DAQ](https://github.com/faucetsdn/daq) can be used to run some automated [UDMI
-tests](https://github.com/faucetsdn/daq/blob/master/docs/cloud_tests.md) on devices

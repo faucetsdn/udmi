@@ -40,7 +40,7 @@ indicated in the gateway _status_ block and sent along as a _logentry_ event.
 5. (_explicit_ only) The proxied device's _config_ block specifies any local
 connection parameters for the proxied device, e.g. the BacNET device id.
 6. The gateway proxies communication to/from the device, translating between
-native (e.g. BacNET) communications and UDMI-based messages.
+native (e.g. BACnet) communications and UDMI-based messages.
 
 ### config
 
@@ -83,7 +83,7 @@ communications, it would be indicated here.
 
 Proxy devices are those that have a logical cloud device entry (in a registry),
 and are associated (bound) to a particular gateway. On-prem, the device
-itself talks a local protocol (e.g. BacNET), but does not have a direct
+itself talks a local protocol (e.g. BACnet), but does not have a direct
 cloud connection.
 
 ### config
@@ -93,7 +93,7 @@ cloud connection.
 Proxy device [_config_](../messages/config.md) contain a special
 [🧬`localnet` block](../../gencode/docs/config.html#localnet) section that
 specifies information required by the gateway to contact the local device.
-E.g., the fact that a device is 'BacNET' and also the device's BacNET object
+E.g., the fact that a device is 'BACnet' and also the device's BACnet object
 ID. Based on this, the gateway can communicate with the target device and proxy
 all other messages.
 
