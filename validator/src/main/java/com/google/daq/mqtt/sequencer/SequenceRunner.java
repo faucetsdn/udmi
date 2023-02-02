@@ -167,14 +167,21 @@ public class SequenceRunner {
 
   private List<String> getRunMethods(Class<?> clazz) {
     return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
-        .filter(methodName -> targets.isEmpty() || targets.contains(methodName))
-        .collect(Collectors.toList());
+        .filter(this::isTargetMethod).collect(Collectors.toList());
+  }
+
+  private boolean isTargetMethod(String methodName) {
+    return targets.isEmpty() || targets.contains(methodName);
   }
 
   private boolean shouldProcessMethod(Method method) {
     Test test = method.getAnnotation(Test.class);
     if (test == null) {
       return false;
+    }
+    // If the target is explicitly indicated, then we should test it regardless of annotation.
+    if (targets.contains(method.getName())) {
+      return true;
     }
     Feature annotation = method.getAnnotation(Feature.class);
     Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
