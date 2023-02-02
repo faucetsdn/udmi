@@ -50,6 +50,10 @@ Feature {
   enum Stage {
     ALPHA,
     BETA,
-    STABLE
+    STABLE;
+
+    public boolean processGiven(Stage beta) {
+      return beta.compareTo(this) >= 0;
+    }
   }
 }

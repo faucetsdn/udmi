@@ -2,9 +2,11 @@ package com.google.daq.mqtt.sequencer;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.Common;
 import com.google.udmi.util.SiteModel;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
@@ -128,20 +131,11 @@ public class SequenceRunner {
     for (String className : sequenceClasses) {
       Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
-      if (!targetMethods.isEmpty()) {
-        for (String method : targetMethods) {
-          try {
-            clazz.getMethod(method);
-          } catch (Exception e) {
-            continue;
-          }
-          System.err.println("Running " + clazz + "#" + method);
-          requests.add(Request.method(clazz, method));
-          remainingMethods.remove(method);
-        }
-      } else {
-        System.err.println("Running " + clazz + " (all tests)");
-        requests.add(Request.aClass(clazz));
+      List<String> runMethods = getRunMethods(clazz, targetMethods);
+      for (String method : runMethods) {
+        System.err.println("Running " + clazz + "#" + method);
+        requests.add(Request.method(clazz, method));
+        remainingMethods.remove(method);
       }
       for (Request request : requests) {
         Result result = new JUnitCore().run(request);
@@ -167,4 +161,20 @@ public class SequenceRunner {
     });
   }
 
+  private List<String> getRunMethods(Class<?> clazz, List<String> targetMethods) {
+    return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
+        .filter(methodName -> targetMethods.isEmpty() || targetMethods.contains(methodName))
+        .collect(
+            Collectors.toList());
+  }
+
+  private boolean shouldProcessMethod(Method method) {
+    Test test = method.getAnnotation(Test.class);
+    if (test == null) {
+      return false;
+    }
+    Feature annotation = method.getAnnotation(Feature.class);
+    Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return stage.processGiven(Stage.ALPHA);
+  }
 }
