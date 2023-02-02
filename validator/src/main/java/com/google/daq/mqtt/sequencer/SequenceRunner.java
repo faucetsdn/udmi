@@ -137,7 +137,7 @@ public class SequenceRunner {
       List<Request> requests = new ArrayList<>();
       List<String> runMethods = getRunMethods(clazz);
       for (String method : runMethods) {
-        System.err.println("Running " + clazz + "#" + method);
+        System.err.println("Running target " + clazz.getName() + "#" + method);
         requests.add(Request.method(clazz, method));
         remainingMethods.remove(method);
       }

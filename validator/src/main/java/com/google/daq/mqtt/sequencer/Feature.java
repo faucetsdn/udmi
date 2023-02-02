@@ -52,8 +52,8 @@ Feature {
     BETA,
     STABLE;
 
-    public boolean processGiven(Stage beta) {
-      return this.compareTo(beta) >= 0;
+    public boolean processGiven(Stage level) {
+      return this.compareTo(level) >= 0;
     }
   }
 }
