@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import udmi.schema.Bucket;
 
 /**
  * Feature designation for line-item tests.
@@ -12,30 +13,29 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface
 Feature {
-  String IMPLICIT_CATEGORY = "";
-  Stage DEFAULT_STAGE = Stage.REQUIRED;
+  Stage DEFAULT_STAGE = Stage.ALPHA;
   int DEFAULT_SCORE = 5;
 
   /**
-   * Defines the category for this feature, as defined by a named attribute.
+   * Defines the bucket for this feature, as defined by a named attribute.
    *
-   * @return feature category using named attribute
+   * @return feature bucket using named attribute
    */
-  String category() default IMPLICIT_CATEGORY;
+  Bucket bucket() default Bucket.UNKNOWN_DEFAULT;
 
   /**
-   * Defines the category for this feature, as defined by an implicit attribute.
+   * Defines the bucket for this feature, as defined by an implicit attribute.
    *
-   * @return feature category using implicit argument
+   * @return feature bucket using implicit argument
    */
-  String value() default IMPLICIT_CATEGORY;
+  Bucket value() default Bucket.UNKNOWN_DEFAULT;
 
   /**
    * Default value is REQUIRED which should be the end-state for all tests.
    *
    * @return annotated release stage of this test
    */
-  Stage stage() default Stage.REQUIRED;
+  Stage stage() default Stage.ALPHA;
 
   /**
    * Defines the feature score for this test, in AU.
@@ -49,6 +49,7 @@ Feature {
    */
   enum Stage {
     ALPHA,
-    REQUIRED
+    BETA,
+    STABLE
   }
 }

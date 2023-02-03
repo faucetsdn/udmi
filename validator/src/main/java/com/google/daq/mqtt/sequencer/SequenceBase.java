@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.REQUIRED;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
@@ -11,6 +11,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -66,6 +67,7 @@ import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
 import org.junit.runners.model.TestTimedOutException;
+import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -468,7 +470,7 @@ public class SequenceBase {
   }
 
   @Test
-  @Feature(stage = REQUIRED)
+  @Feature(stage = STABLE)
   public void valid_serial_no() {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
@@ -480,11 +482,11 @@ public class SequenceBase {
       String message) {
     String methodName = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
-    String category = getCategory(feature);
+    Bucket bucket = getBucket(feature);
     String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
-    String resultString = String.format(RESULT_FORMAT, result, category, methodName, stage, score,
-        message);
+    String resultString = String.format(RESULT_FORMAT, result, bucket.value(), methodName, stage,
+        score, message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);
@@ -494,19 +496,19 @@ public class SequenceBase {
     }
   }
 
-  private String getCategory(Feature feature) {
+  private Bucket getBucket(Feature feature) {
     if (feature == null) {
-      return UNKNOWN_CATEGORY;
+      return UNKNOWN_DEFAULT;
     }
-    String value = feature.value();
-    String category = feature.category();
-    if (!Strings.isNullOrEmpty(value) && !Strings.isNullOrEmpty(category)) {
-      throw new RuntimeException("Both value and category defined for feature");
+    Bucket implicit = feature.value();
+    Bucket explicit = feature.bucket();
+    if (implicit != UNKNOWN_DEFAULT && explicit != UNKNOWN_DEFAULT) {
+      throw new RuntimeException("Both implicit and explicit buckets defined for feature");
     }
-    if (Strings.isNullOrEmpty(value) && Strings.isNullOrEmpty(category)) {
-      return UNKNOWN_CATEGORY;
+    if (implicit == UNKNOWN_DEFAULT && explicit == UNKNOWN_DEFAULT) {
+      return UNKNOWN_DEFAULT;
     }
-    return Strings.isNullOrEmpty(value) ? category : value;
+    return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {

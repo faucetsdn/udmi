@@ -20,8 +20,8 @@ RESULTS_OUT=out/test_itemized.out
 GOLDEN_FILE=etc/test_itemized.out
 
 rm -f $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
-touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
 mkdir -p out
+touch $RESULTS_OUT $SEQUENCER_OUT $PUBBER_OUT
 
 cat <<EOF > $udmi_profile
 {
