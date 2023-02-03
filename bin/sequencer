@@ -8,10 +8,10 @@ ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
 UDMI_ALT_REGISTRY=ZZ-REDIRECT-NA
-stability=BETA
+feature_stage=BETA
 
 if [[ $1 == '-a' ]]; then
-    stability=ALPHA
+    feature_stage=ALPHA
     shift
 fi
 
@@ -61,7 +61,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "alt_registry": "$UDMI_ALT_REGISTRY",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
-  "stability": "$stability",
+  "feature_stage": "$feature_stage",
   "udmi_version": "$udmi_version",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }

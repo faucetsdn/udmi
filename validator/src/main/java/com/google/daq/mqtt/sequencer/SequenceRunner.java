@@ -31,7 +31,7 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  public static final Stage DEFAULT_STABILITY = Stage.BETA;
+  public static final Stage DEFAULT_FEATURE_STAGE = Stage.BETA;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
@@ -185,12 +185,12 @@ public class SequenceRunner {
     }
     Feature annotation = method.getAnnotation(Feature.class);
     Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
-    return stage.processGiven(getDesiredStability());
+    return stage.processGiven(getFeatureStageLevel());
   }
 
-  private Stage getDesiredStability() {
-    String stability = SequenceBase.validatorConfig.stability;
-    return Strings.isNullOrEmpty(stability) ? DEFAULT_STABILITY : Stage.valueOf(stability);
+  private Stage getFeatureStageLevel() {
+    String stage = SequenceBase.validatorConfig.feature_stage;
+    return Strings.isNullOrEmpty(stage) ? DEFAULT_FEATURE_STAGE : Stage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {
