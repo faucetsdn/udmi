@@ -1,15 +1,15 @@
 //
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
 // where {device_id} is that of the discovery node. The
-// discovered {device_id} should be taken from the provided families.
+// discovered {device_id} should be taken from the provided networks.
 //
 {
   "version": "1.4.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T22:00:13Z",
-  "scan_family": "ipv6",
+  "scan_network": "ipv6",
   "scan_id": "FE80::D05C:1A90:DD9E:A582",
-  "families": {
+  "networks": {
     "ipv4": {
       "id": "192.168.1.2"
     },

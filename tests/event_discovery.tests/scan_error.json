@@ -1,14 +1,14 @@
 //
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
 // where {device_id} is that of the discovery node. The
-// discovered {device_id} should be taken from the provided families.
+// discovered {device_id} should be taken from the provided networks.
 //
 {
   "version": "1.4.0",
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
-  "scan_family": "bacnet",
-  "families": {
+  "scan_network": "bacnet",
+  "networks": {
     "ipv4": {
       "id": "192.168.1.2"
     },

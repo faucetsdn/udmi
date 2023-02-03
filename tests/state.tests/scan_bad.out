@@ -1,2 +1,2 @@
 1 schema violations found
-  /discovery/families: object instance has properties which are not allowed by the schema: ["BACnet"]
+  /discovery/networks: object instance has properties which are not allowed by the schema: ["BACnet"]

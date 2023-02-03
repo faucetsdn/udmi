@@ -24,7 +24,7 @@
     "min_loglevel": 300
   },
   "localnet": {
-    "families": {
+    "networks": {
       "virtual": {
         "id": "0x65"
       }

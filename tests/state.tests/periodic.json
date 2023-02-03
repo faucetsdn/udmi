@@ -18,7 +18,7 @@
     "operational": true
   },
   "discovery": {
-    "families": {
+    "networks": {
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z",
         "active": true

@@ -7,7 +7,7 @@
     "operation" : { }
   },
   "localnet" : {
-    "families" : {
+    "networks" : {
       "virtual" : {
         "id" : "0x65"
       }

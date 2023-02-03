@@ -20,7 +20,7 @@
     }
   },
   "discovery": {
-    "families": {
+    "networks": {
       "BACnet": {
         "active": true
       }

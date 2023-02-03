@@ -20,7 +20,7 @@
     { "pattern": "^pointset\\.point\\.overridden$" },
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
-    { "pattern": "^discovery\\.family\\.scan$" },
+    { "pattern": "^discovery\\.network\\.scan$" },
     { "pattern": "^discovery\\.device\\.enumerate$" },
     { "pattern": "^discovery\\.point\\.describe$" },
     { "pattern": "^mapping\\.device\\.apply$" },

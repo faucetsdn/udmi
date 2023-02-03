@@ -11,13 +11,13 @@
       "type": "string",
       "format": "date-time"
     },
-    "families": {
-      "description": "Discovery protocol families",
+    "networks": {
+      "description": "Discovery protocol networks",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryState>",
+      "existingJavaType": "java.util.HashMap<String, NetworkDiscoveryState>",
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {
-          "$ref": "file:state_discovery_family.json"
+          "$ref": "file:state_discovery_network.json"
         }
       }
     }

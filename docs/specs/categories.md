@@ -35,8 +35,8 @@ implicit expected `level` values, indicated by '(**LEVEL**)' in the hierarchy be
     * _failure_: (**ERROR**) The system failed to read/write the point
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
 * _discovery_: Handling on-prem discovery flow
-  * _family_: Conditions specific to an entire address family (e.g. bacnet)
-    * _scan_: (**INFO**) Relating to scanning a particular address family
+  * _network_: Conditions specific to network enumeration
+    * _scan_: (**INFO**) Relating to network scanning
   * _device_: Conditions specific to device scanning
     * _enumerate_: (**INFO**) Handling point enumeration for a given device
   * _point_: Conditions specific to point enumeration

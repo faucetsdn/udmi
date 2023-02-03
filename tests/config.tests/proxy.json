@@ -5,7 +5,7 @@
     "min_loglevel": 500
   },
   "localnet": {
-    "families": {
+    "networks": {
       "bacnet": {
         "id": "78ce19"
       }

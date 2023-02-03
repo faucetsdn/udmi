@@ -20,12 +20,12 @@
     }
   },
   "discovery": {
-    "families": {
+    "networks": {
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z",
         "status": {
           "message": "Timeout during scan",
-          "category": "discovery.family.scan",
+          "category": "discovery.network.scan",
           "timestamp": "2018-08-26T21:39:28.364Z",
           "level": 600
         }

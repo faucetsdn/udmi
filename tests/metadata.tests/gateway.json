@@ -32,7 +32,7 @@
     }
   },
   "localnet": {
-    "families": {
+    "networks": {
       "bacnet": {
         "id": "0x991132ec"
       }

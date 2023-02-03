@@ -1,5 +1,5 @@
 4 schema violations found
   /gateway/proxy_ids/0: ECMA 262 regex "^[A-Z]{3}-[1-9][0-9]{0,2}$" does not match input string "TRHC-26"
-  /localnet: object has missing required properties (["families"])
+  /localnet: object has missing required properties (["networks"])
   /localnet: object instance has properties which are not allowed by the schema: ["subsystem"]
   object has missing required properties (["version"])

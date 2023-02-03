@@ -15,7 +15,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "families": {
+        "networks": {
           "type": "boolean"
         },
         "uniqs": {
@@ -26,13 +26,13 @@
         }
       }
     },
-    "families": {
-      "description": "Address family config for a scan. Not included for device enumeration messages.",
-      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
+    "networks": {
+      "description": "Address network config for a scan. Not included for device enumeration messages.",
+      "existingJavaType": "java.util.HashMap<String, NetworkDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {
-          "$ref": "file:config_discovery_family.json"
+          "$ref": "file:config_discovery_network.json"
         }
       }
     }

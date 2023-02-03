@@ -22,7 +22,7 @@
     }
   },
   "localnet": {
-    "families": {
+    "networks": {
       "bacnet": {
         "id": "82eecd"
       }
@@ -37,7 +37,7 @@
     }
   },
   "gateway": {
-    "family": "bacnet",
+    "network": "bacnet",
     "gateway_id": "LTGW-123"
   }
 }

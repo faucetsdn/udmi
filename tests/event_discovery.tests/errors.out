@@ -1,6 +1,6 @@
 5 schema violations found
-  /families/bacnet/id: ECMA 262 regex "^[-_.:0-9A-Z]+$" does not match input string "92E*A09"
-  /families: object instance has properties which are not allowed by the schema: ["ip_v4","mac"]
+  /networks/bacnet/id: ECMA 262 regex "^[-_.:0-9A-Z]+$" does not match input string "92E*A09"
+  /networks: object instance has properties which are not allowed by the schema: ["ip_v4","mac"]
   /uniqs/bad_entity_name_: object instance has properties which are not allowed by the schema: ["present_value"]
   object has missing required properties (["generation"])
   object instance has properties which are not allowed by the schema: ["id","points"]

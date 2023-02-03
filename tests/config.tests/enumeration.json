@@ -8,7 +8,7 @@
   "discovery": {
     "generation": "2018-08-26T21:37:12Z",
     "enumerate": {
-      "families": true,
+      "networks": true,
       "features": true,
       "uniqs": false
     }

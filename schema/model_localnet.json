@@ -6,17 +6,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "families": {
+    "networks": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetModel>",
+      "existingJavaType": "java.util.HashMap<String, NetworkLocalnetModel>",
       "patternProperties": {
         "^[a-z0-9-]+$": {
-          "$ref": "file:model_localnet_family.json"
+          "$ref": "file:model_localnet_network.json"
         }
       }
     }
   },
   "required": [
-    "families"
+    "networks"
   ]
 }

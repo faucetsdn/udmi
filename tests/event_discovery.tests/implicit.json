@@ -4,15 +4,15 @@
 //
 // Sent on MQTT topic: /devices/{device_id}/events/discovery
 // where {device_id} is that of the scanning node. The {device_id}
-// of the enumerated node is provided by families.iot.id in the message payload.
+// of the enumerated node is provided by networks.iot.id in the message payload.
 //
 {
   "version": "1.4.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T21:37:12Z",
-  "scan_family": "bacnet",
+  "scan_network": "bacnet",
   "scan_id": "92EA09",
-  "families": {
+  "networks": {
     "iot": {
       "id": "AHU-1"
     },

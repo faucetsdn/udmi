@@ -26,22 +26,22 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
-    "scan_family": {
-      "description": "The primary scan discovery address family",
+    "scan_network": {
+      "description": "The primary discovery scan network",
       "type": "string"
     },
     "scan_id": {
-      "description": "The primary id of the device (for scan_family)",
+      "description": "The primary id of the device (on scan_network)",
       "type": "string"
     },
-    "families": {
-      "description": "Address family discovery results.",
+    "networks": {
+      "description": "Discovery results by network",
       "type": "object",
       "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FamilyDiscoveryEvent>",
+      "existingJavaType": "java.util.Map<String, NetworkDiscoveryEvent>",
       "patternProperties": {
         "^iot|bacnet|ipv4|ipv6|ethmac$": {
-          "$ref": "file:event_discovery_family.json"
+          "$ref": "file:event_discovery_network.json"
         }
       }
     },
