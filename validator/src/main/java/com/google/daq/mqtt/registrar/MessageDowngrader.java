@@ -41,6 +41,7 @@ public class MessageDowngrader {
     major = Integer.parseInt(parts[0]);
     minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
     patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
+    message.set(VERSION_PROPERTY_KEY, versionNode);
 
     if (parts.length >= 4) {
       throw new IllegalArgumentException("Unexpected version " + version);
@@ -58,7 +59,6 @@ public class MessageDowngrader {
       return;
     }
 
-    setMessageVersion("1.4.0");
     downgrade_localnet_1_4_0();
     downgrade_system_1_4_0();
 
@@ -70,12 +70,7 @@ public class MessageDowngrader {
       return;
     }
 
-    setMessageVersion("1.3.13");
     downgrade_localnet_1_3_13();
-  }
-
-  private void setMessageVersion(String x) {
-    message.set(VERSION_PROPERTY_KEY, new TextNode(x));
   }
 
   private void downgrade_system_1_4_0() {

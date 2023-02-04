@@ -23,9 +23,7 @@ public class MessageDowngraderTest {
 
   private static final String STATE_SCHEMA = "state";
   private static final String CONFIG_SCHEMA = "config";
-  private static final String FUTURE_VERSION = "2.2.2";
-  private static final String LOCALNET_CONFIG_FILE = "src/test/configs/localnet.json";
-  private static final String OLD_VERSION = "1";
+  private static final String SIMPLE_TEST_FILE = "src/test/configs/localnet.json";
 
   @Test(expected = IllegalArgumentException.class)
   public void stateFail() {
@@ -34,11 +32,11 @@ public class MessageDowngraderTest {
 
   @Test
   public void noMolestar() {
-    JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
-    JsonNode version = simpleConfig.get("version");
+    JsonNode simpleConfig = getSimpleTestConfig();
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(new TextNode(FUTURE_VERSION));
-    assertEquals("version node", version, simpleConfig.get("version"));
+    TextNode versionNode = new TextNode("2.2.2");
+    downgrader.downgrade(versionNode);
+    assertEquals("version node", versionNode, simpleConfig.get("version"));
     assertTrue("networks", simpleConfig.get("localnet").has("networks"));
     assertFalse("networks", simpleConfig.get("localnet").has("families"));
     assertFalse("networks", simpleConfig.get("localnet").has("subsystem"));
@@ -47,7 +45,7 @@ public class MessageDowngraderTest {
 
   @Test
   public void version_1_3_13() {
-    JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
+    JsonNode simpleConfig = getSimpleTestConfig();
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
     TextNode targetVersion = new TextNode("1.3.13");
     downgrader.downgrade(targetVersion);
@@ -58,16 +56,17 @@ public class MessageDowngraderTest {
 
   @Test
   public void version_1() {
-    JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
+    JsonNode simpleConfig = getSimpleTestConfig();
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(new TextNode("1"));
-    assertEquals("version node",  new TextNode("1.3.13"), simpleConfig.get("version"));
+    TextNode targetVersion = new TextNode("1");
+    downgrader.downgrade(targetVersion);
+    assertEquals("version node", targetVersion, simpleConfig.get("version"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
     assertFalse("subsystem", simpleConfig.get("system").has("operation"));
   }
 
-  private JsonNode getSimpleTestConfig(String filename) {
-    File configFile = new File(filename);
+  private JsonNode getSimpleTestConfig() {
+    File configFile = new File(SIMPLE_TEST_FILE);
     try {
       return OBJECT_MAPPER.readTree(configFile);
     } catch (Exception e) {

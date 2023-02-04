@@ -1,13 +1,15 @@
 {
   "Credential" : {
     "DWN-1" : "While loading credentials for local device DWN-1",
-    "DWN-2" : "While loading credentials for local device DWN-2"
+    "DWN-2" : "While loading credentials for local device DWN-2",
+    "DWN-3" : "While loading credentials for local device DWN-3"
   },
   "Files" : {
     "DWN-1" : "devices/DWN-1",
-    "DWN-2" : "devices/DWN-2"
+    "DWN-2" : "devices/DWN-2",
+    "DWN-3" : "devices/DWN-3"
   },
   "Version" : {
-    "main" : "1.4.0-195-gdfe40886"
+    "main" : "1.4.0-130-g8356062c"
   }
 }
