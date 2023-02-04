@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.registrar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,7 +25,6 @@ public class MessageDowngraderTest {
   private static final String CONFIG_SCHEMA = "config";
   private static final String FUTURE_VERSION = "2.2.2";
   private static final String LOCALNET_CONFIG_FILE = "src/test/configs/localnet.json";
-  private static final String LOCALNET_VERSION = "1.3.14";
   private static final String OLD_VERSION = "1";
 
   @Test(expected = IllegalArgumentException.class)
@@ -35,21 +35,35 @@ public class MessageDowngraderTest {
   @Test
   public void noMolestar() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
+    JsonNode version = simpleConfig.get("version");
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
     downgrader.downgrade(new TextNode(FUTURE_VERSION));
-    assertEquals("version node", simpleConfig.get("version"), new TextNode(LOCALNET_VERSION));
+    assertEquals("version node", version, simpleConfig.get("version"));
     assertTrue("networks", simpleConfig.get("localnet").has("networks"));
-    assertTrue("subsystem", !simpleConfig.get("localnet").has("subsystem"));
+    assertFalse("networks", simpleConfig.get("localnet").has("families"));
+    assertFalse("networks", simpleConfig.get("localnet").has("subsystem"));
+    assertTrue("subsystem", simpleConfig.get("system").has("operation"));
   }
 
   @Test
-  public void networks() {
+  public void version_1_3_13() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(new TextNode(OLD_VERSION));
-    assertEquals("version node", simpleConfig.get("version"), new TextNode(OLD_VERSION));
-    assertTrue("networks", !simpleConfig.get("localnet").has("networks"));
+    TextNode targetVersion = new TextNode("1.3.13");
+    downgrader.downgrade(targetVersion);
+    assertEquals("version node", targetVersion, simpleConfig.get("version"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
+    assertFalse("subsystem", simpleConfig.get("system").has("operation"));
+  }
+
+  @Test
+  public void version_1() {
+    JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
+    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
+    downgrader.downgrade(new TextNode("1"));
+    assertEquals("version node",  new TextNode("1.3.13"), simpleConfig.get("version"));
+    assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
+    assertFalse("subsystem", simpleConfig.get("system").has("operation"));
   }
 
   private JsonNode getSimpleTestConfig(String filename) {

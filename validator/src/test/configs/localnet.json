@@ -1,8 +1,13 @@
 {
   "timestamp" : "2020-05-01T13:39:07Z",
-  "version" : "1.3.14",
+  "version" : "1.4.1",
+  "system": {
+    "operation": {
+      "mode": "restart"
+    }
+  },
   "localnet" : {
-    "families" : {
+    "networks" : {
       "virtual" : {
         "id" : "0x65"
       }
