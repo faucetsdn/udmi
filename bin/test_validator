@@ -36,6 +36,9 @@ cp $site_path/devices/AHU-1/rsa_private.pkcs8 $site_path/validator/rsa_private.p
 validator/bin/build
 pubber/bin/build
 
+# Make sure all necessary generated files are up-to-date...
+bin/registrar $site_path
+
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
 bin/reset_config $site_path $project_id $device_id
 bin/reset_config $site_path $project_id $proxy_id
