@@ -38,17 +38,17 @@ public class MessageDowngraderTest {
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
     downgrader.downgrade(new TextNode(FUTURE_VERSION));
     assertEquals("version node", simpleConfig.get("version"), new TextNode(LOCALNET_VERSION));
-    assertTrue("families", simpleConfig.get("localnet").has("families"));
+    assertTrue("networks", simpleConfig.get("localnet").has("networks"));
     assertTrue("subsystem", !simpleConfig.get("localnet").has("subsystem"));
   }
 
   @Test
-  public void families() {
+  public void networks() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
     downgrader.downgrade(new TextNode(OLD_VERSION));
     assertEquals("version node", simpleConfig.get("version"), new TextNode(OLD_VERSION));
-    assertTrue("families", !simpleConfig.get("localnet").has("families"));
+    assertTrue("networks", !simpleConfig.get("localnet").has("networks"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
   }
 

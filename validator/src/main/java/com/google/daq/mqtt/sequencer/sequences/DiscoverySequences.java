@@ -9,8 +9,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
-import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
+import static udmi.schema.Bucket.ENUMERATION_NETWORKS;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -33,8 +33,8 @@ import org.junit.Test;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
-import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.NetworkDiscoveryConfig;
+import udmi.schema.NetworkDiscoveryState;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -44,7 +44,7 @@ public class DiscoverySequences extends SequenceBase {
   public static final int SCAN_START_DELAY_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
   private HashMap<String, Date> previousGenerations;
-  private Set<String> families;
+  private Set<String> networks;
 
   private DiscoveryEvent runEnumeration(Enumerate enumerate) {
     deviceConfig.discovery = new DiscoveryConfig();
@@ -72,13 +72,13 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
-    if (isTrue(enumerate.families)) {
+    if (isTrue(enumerate.networks)) {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
-          .map(localnet -> localnet.families.keySet()).orElse(null);
-      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      checkThat("family enumeration matches", () -> Objects.equals(models, events));
+          .map(localnet -> localnet.networks.keySet()).orElse(null);
+      Set<String> events = Optional.ofNullable(event.networks).map(Map::keySet).orElse(null);
+      checkThat("network enumeration matches", () -> Objects.equals(models, events));
     } else {
-      checkThat("no family enumeration", () -> event.families == null);
+      checkThat("no network enumeration", () -> event.networks == null);
     }
 
     if (isTrue(enumerate.features)) {
@@ -130,10 +130,10 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
-  public void family_enumeration() {
+  @Feature(bucket = ENUMERATION_NETWORKS, stage = ALPHA)
+  public void network_enumeration() {
     Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
+    enumerate.networks = true;
     DiscoveryEvent event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -142,7 +142,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
-    enumerate.families = true;
+    enumerate.networks = true;
     enumerate.features = true;
     enumerate.uniqs = true;
     DiscoveryEvent event = runEnumeration(enumerate);
@@ -157,27 +157,28 @@ public class DiscoverySequences extends SequenceBase {
     boolean shouldEnumerate = true;
     scheduleScan(startTime, null, shouldEnumerate);
     untilTrue("scheduled scan start",
-        () -> families.stream().anyMatch(familyScanActivated(startTime))
-            || families.stream()
-            .anyMatch(family -> !stateGenerationSame(family, previousGenerations))
+        () -> networks.stream().anyMatch(networkScanActivated(startTime))
+            || networks.stream()
+            .anyMatch(network -> !stateGenerationSame(network, previousGenerations))
             || !deviceState.timestamp.before(startTime));
     if (deviceState.timestamp.before(startTime)) {
       warning("scan started before activation: " + deviceState.timestamp + " < " + startTime);
       assertFalse("premature activation",
-          families.stream().anyMatch(familyScanActivated(startTime)));
+          networks.stream().anyMatch(networkScanActivated(startTime)));
       assertFalse("premature generation",
-          families.stream().anyMatch(family -> !stateGenerationSame(family, previousGenerations)));
+          networks.stream()
+              .anyMatch(network -> !stateGenerationSame(network, previousGenerations)));
       fail("unknown reason");
     }
-    untilTrue("scan activation", () -> families.stream().allMatch(familyScanActivated(startTime)));
-    untilTrue("scan completed", () -> families.stream().allMatch(familyScanComplete(startTime)));
+    untilTrue("scan activation", () -> networks.stream().allMatch(networkScanActivated(startTime)));
+    untilTrue("scan completed", () -> networks.stream().allMatch(networkScanComplete(startTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(
         DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    Set<String> eventFamilies = receivedEvents.stream()
-        .flatMap(event -> event.families.keySet().stream())
+    Set<String> eventNetworks = receivedEvents.stream()
+        .flatMap(event -> event.networks.keySet().stream())
         .collect(Collectors.toSet());
-    assertTrue("all requested families present", eventFamilies.containsAll(families));
+    assertTrue("all requested networks present", eventNetworks.containsAll(networks));
   }
 
   private void checkEnumeration(List<DiscoveryEvent> receivedEvents, boolean shouldEnumerate) {
@@ -199,67 +200,69 @@ public class DiscoverySequences extends SequenceBase {
     scheduleScan(startTime, SCAN_START_DELAY_SEC, shouldEnumerate);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY_SEC * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
-    String oneFamily = families.iterator().next();
-    Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
+    String oneNetwork = networks.iterator().next();
+    Date finishTime = deviceState.discovery.networks.get(oneNetwork).generation;
     assertTrue("premature termination",
-        families.stream().noneMatch(familyScanComplete(finishTime)));
+        networks.stream().noneMatch(networkScanComplete(finishTime)));
     List<DiscoveryEvent> receivedEvents = popReceivedEvents(DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-    int expected = SCAN_ITERATIONS * families.size();
+    int expected = SCAN_ITERATIONS * networks.size();
     int received = receivedEvents.size();
     assertTrue("number responses received", received >= expected && received <= expected + 1);
   }
 
   private void initializeDiscovery() {
-    families = catchToNull(() -> deviceMetadata.discovery.families.keySet());
-    if (families == null || families.isEmpty()) {
-      throw new SkipTest("No discovery families configured");
+    networks = catchToNull(() -> deviceMetadata.discovery.networks.keySet());
+    if (networks == null || networks.isEmpty()) {
+      throw new SkipTest("No discovery networks configured");
     }
     deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.families = new HashMap<>();
-    untilTrue("all scans not active", () -> families.stream().noneMatch(familyScanActivated(null)));
+    deviceConfig.discovery.networks = new HashMap<>();
+    untilTrue("all scans not active",
+        () -> networks.stream().noneMatch(networkScanActivated(null)));
     previousGenerations = new HashMap<>();
-    families.forEach(family -> previousGenerations.put(family, getStateFamilyGeneration(family)));
+    networks.forEach(
+        network -> previousGenerations.put(network, getStateNetworkGeneration(network)));
   }
 
   private void scheduleScan(Date startTime, Integer scanIntervalSec, boolean enumerate) {
     info("Scan start scheduled for " + startTime);
-    families.forEach(family -> {
-      getConfigFamily(family).generation = SemanticDate.describe("family generation", startTime);
-      getConfigFamily(family).enumerate = enumerate;
-      getConfigFamily(family).scan_interval_sec = scanIntervalSec;
+    networks.forEach(network -> {
+      getConfigNetwork(network).generation = SemanticDate.describe("network generation", startTime);
+      getConfigNetwork(network).enumerate = enumerate;
+      getConfigNetwork(network).scan_interval_sec = scanIntervalSec;
     });
     popReceivedEvents(DiscoveryEvent.class);  // Clear out any previously received events
   }
 
-  private FamilyDiscoveryConfig getConfigFamily(String family) {
-    return deviceConfig.discovery.families.computeIfAbsent(family,
-        adding -> new FamilyDiscoveryConfig());
+  private NetworkDiscoveryConfig getConfigNetwork(String network) {
+    return deviceConfig.discovery.networks.computeIfAbsent(network,
+        adding -> new NetworkDiscoveryConfig());
   }
 
-  private Date getStateFamilyGeneration(String family) {
-    return catchToNull(() -> getStateFamily(family).generation);
+  private Date getStateNetworkGeneration(String network) {
+    return catchToNull(() -> getStateNetwork(network).generation);
   }
 
-  private boolean stateGenerationSame(String family, Map<String, Date> previousGenerations) {
-    return Objects.equals(previousGenerations.get(family), getStateFamilyGeneration(family));
+  private boolean stateGenerationSame(String network, Map<String, Date> previousGenerations) {
+    return Objects.equals(previousGenerations.get(network), getStateNetworkGeneration(network));
   }
 
-  private FamilyDiscoveryState getStateFamily(String family) {
-    return deviceState.discovery.families.get(family);
+  private NetworkDiscoveryState getStateNetwork(String network) {
+    return deviceState.discovery.networks.get(network);
   }
 
-  private Predicate<String> familyScanActive(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active
-        && CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
+  private Predicate<String> networkScanActive(Date startTime) {
+    return network -> catchToFalse(() -> getStateNetwork(network).active
+        && CleanDateFormat.dateEquals(getStateNetwork(network).generation, startTime));
   }
 
-  private Predicate<String> familyScanActivated(Date startTime) {
-    return family -> catchToFalse(() -> getStateFamily(family).active
-        || CleanDateFormat.dateEquals(getStateFamily(family).generation, startTime));
+  private Predicate<String> networkScanActivated(Date startTime) {
+    return network -> catchToFalse(() -> getStateNetwork(network).active
+        || CleanDateFormat.dateEquals(getStateNetwork(network).generation, startTime));
   }
 
-  private Predicate<? super String> familyScanComplete(Date startTime) {
-    return familyScanActivated(startTime).and(familyScanActive(startTime).negate());
+  private Predicate<? super String> networkScanComplete(Date startTime) {
+    return networkScanActivated(startTime).and(networkScanActive(startTime).negate());
   }
 }

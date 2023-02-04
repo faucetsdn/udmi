@@ -582,7 +582,7 @@ class LocalDevice {
 
   private LocalnetConfig getDeviceLocalnetConfig() {
     LocalnetConfig localnetConfig = new LocalnetConfig();
-    localnetConfig.families = metadata.localnet.families;
+    localnetConfig.networks = metadata.localnet.networks;
     return localnetConfig;
   }
 

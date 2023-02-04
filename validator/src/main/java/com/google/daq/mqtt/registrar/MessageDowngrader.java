@@ -79,9 +79,9 @@ public class MessageDowngrader {
     if (localnet == null) {
       return;
     }
-    JsonNode families = localnet.remove("families");
-    if (families != null) {
-      localnet.set("subsystem", families);
+    JsonNode networks = localnet.remove("networks");
+    if (networks != null) {
+      localnet.set("subsystem", networks);
     }
   }
 }

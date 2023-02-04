@@ -131,6 +131,9 @@ public class MessageUpgrader {
     if (STATE_SCHEMA.equals(schemaName)) {
       upgrade_1_4_1_state();
     }
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgrade_1_4_1_metadata();
+    }
   }
 
   private void upgrade_1_4_1_state() {
@@ -143,6 +146,17 @@ public class MessageUpgrader {
         system.set("operation", operation);
         operation.set("operational", operational);
       }
+    }
+  }
+
+  private void upgrade_1_4_1_metadata() {
+    ObjectNode localnet = (ObjectNode) message.get("localnet");
+    if (localnet == null) {
+      return;
+    }
+    ObjectNode subsystem = (ObjectNode) localnet.remove("families");
+    if (subsystem != null) {
+      localnet.set("networks", subsystem);
     }
   }
 
