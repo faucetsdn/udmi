@@ -1,15 +1,12 @@
 {
   "Clean" : {
-    "AHU-1" : "2020-05-01T13:39:07Z",
-    "GAT-123" : "2020-05-01T13:39:07Z"
+    "AHU-1" : "2020-05-01T13:39:07Z"
   },
-  "Envelope" : {
-    "AHU-22" : "While validating envelope"
-  },
-  "Files" : {
-    "AHU-22" : "devices/AHU-22"
+  "Validating" : {
+    "AHU-22" : "1 schema violations found",
+    "GAT-123" : "1 schema violations found"
   },
   "Version" : {
-    "main" : "unknown"
+    "main" : "1.4.0-137-g67cca0af"
   }
 }

@@ -1,13 +1,12 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.0",
-  "hash": "78bde820",
+  "hash": "a5dfd451",
   "cloud": {
     "auth_type": "ES256"
   },
   "system": {
     "location": {
-      "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
     },
     "physical_tag": {
