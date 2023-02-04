@@ -26,7 +26,7 @@ device_files=$(ls -d ${TEST_SITE}/devices/*)
 echo
 echo Testing generated_config...
 error_file=`mktemp` && rm $error_file
-generated_config=sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+generated_config=${TEST_SITE}/devices/AHU-1/out/generated_config.json
 [[ "Degrees-Celsius" == $(jq -r .pointset.points.filter_differential_pressure_sensor.units $generated_config) ]] || (echo Units mismatch; touch $error_file)
 if [[ -f $error_file ]]; then
     echo Errors found testing generated config.
