@@ -1,6 +1,6 @@
-Exceptions for DWN-2
-  While loading credentials for local device DWN-2
+Exceptions for DWN-3
+  While loading credentials for local device DWN-3
     Found 0 credentials
-  devices/DWN-2
+  devices/DWN-3
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
     Extra out files: [exceptions.txt]

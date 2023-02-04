@@ -1,5 +1,5 @@
 Credential
-java.lang.RuntimeException: While loading credentials for local device DWN-2
+java.lang.RuntimeException: While loading credentials for local device DWN-3
 Caused by: java.lang.RuntimeException: Found 0 credentials
 Files
-com.google.daq.mqtt.util.ExceptionMap: devices/DWN-2
+com.google.daq.mqtt.util.ExceptionMap: devices/DWN-3
