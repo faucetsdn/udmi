@@ -11,7 +11,7 @@ These are used to label individual line-item tests.
 * _enumeration_: Basic device property enumeration capability
   * _pointset_: Enumerating available points of a device
   * _features_: Enumerating the features a device supports
-  * _families_: Enumerating the network families of the device
+  * _networks_: Enumerating the networks of the device
 * _discovery_: Automated discovery capabilities
   * _scan_: Scanning a network for devices
 * _endpoint_: IoT connection endpoint management

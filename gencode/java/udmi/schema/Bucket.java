@@ -17,8 +17,8 @@ public enum Bucket {
     // Enumerating the features a device supports
     ENUMERATION_FEATURES("enumeration.features"),
 
-    // Enumerating the network families of the device
-    ENUMERATION_FAMILIES("enumeration.families"),
+    // Enumerating the networks of the device
+    ENUMERATION_NETWORKS("enumeration.networks"),
 
     // Automated discovery capabilities
     DISCOVERY("discovery"),
