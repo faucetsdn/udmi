@@ -1,0 +1,18 @@
+{
+  "timestamp" : "2020-05-01T13:39:07Z",
+  "version" : 1,
+  "system" : {
+    "min_loglevel" : 300,
+    "metrics_rate_sec" : 600
+  },
+  "gateway" : {
+    "proxy_ids" : [ "SNS-4", "AHU-22" ]
+  },
+  "pointset" : {
+    "points" : {
+      "globulating_globar" : {
+        "units" : "Bars"
+      }
+    }
+  }
+}
