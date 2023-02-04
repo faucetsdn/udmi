@@ -7,7 +7,8 @@ $0 [step]
 
 where [step] is one of:
   install_dependencies
-  code_checks
+  code_tests
+  locate_tests
   schema_tests
   trace_tests
   registrar_tests
@@ -22,14 +23,16 @@ case "$1" in
     bin/clone_model
     sudo ln -fs $PWD/bin/udmi /usr/local/bin/
     ;;
-  code_checks)
-    bin/gencode check
+  code_tests)
     pubber/bin/build check
     validator/bin/build check
     bin/test_pylint
+    ;;
+  locate_tests)
     bin/test_locate
     ;;
   schema_tests)
+    bin/gencode check
     bin/test_schema
     ;;
   trace_tests)
@@ -40,7 +43,8 @@ case "$1" in
     bin/test_sites
     ;;
   all_tests)
-    bin/run_tests code_checks
+    bin/run_tests code_tests
+    bin/run_tests locate_tests
     bin/run_tests schema_tests
     bin/run_tests trace_tests
     bin/run_tests registrar_tests
