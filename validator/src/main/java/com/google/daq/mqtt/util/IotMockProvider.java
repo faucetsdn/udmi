@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class IotMockProvider implements IotProvider {
 
   public static final String MOCK_DEVICE_ID = "MOCK-1";
+  public static final String MOCK_SITE_MODEL = "src/test/site";
   private final SiteModel siteModel;
   private List<MockAction> mockActions = new ArrayList<>();
   public static final String BLOCK_DEVICE_ACTION = "block";
@@ -24,7 +25,7 @@ public class IotMockProvider implements IotProvider {
   public static final String CONFIG_DEVICE_ACTION = "config";
 
   IotMockProvider(String projectId, String registryId, String cloudRegion) {
-    siteModel = new SiteModel("../sites/udmi_site_model");
+    siteModel = new SiteModel(MOCK_SITE_MODEL);
     siteModel.initialize();
   }
 

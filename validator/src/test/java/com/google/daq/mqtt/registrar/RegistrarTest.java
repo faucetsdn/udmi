@@ -35,15 +35,6 @@ public class RegistrarTest {
     fail(summary.get("Validating").toString());
   }
 
-  private void assertErrorSummaryValidateFailure(Map<String, Map<String, String>> summary) {
-    if ((summary == null) || (summary.get("Validating") == null)) {
-      fail("Error summary for Validating key is null");
-    }
-    if (summary.get("Validating").size() == 0) {
-      fail("Error summary for Validating key is size 0");
-    }
-  }
-
   private Registrar getRegistrar(List<String> args) {
     try {
       Registrar registrar = new Registrar();
@@ -70,7 +61,13 @@ public class RegistrarTest {
   public void metadataValidateFailureTest() {
     Registrar registrar = getRegistrar(ImmutableList.of("-t"));
     registrar.execute();
-    assertErrorSummaryValidateFailure(registrar.getLastErrorSummary());
+    Map<String, Map<String, String>> summary = registrar.getLastErrorSummary();
+    if ((summary == null) || (summary.get("Validating") == null)) {
+      fail("Error summary for Validating key is null");
+    }
+    if (summary.get("Validating").size() == 0) {
+      fail("Error summary for Validating key is size 0");
+    }
   }
 
   @Test
@@ -93,7 +90,7 @@ public class RegistrarTest {
     blockActions.forEach(action -> assertEquals("device blocked " + action.deviceId,
         action.deviceId.equals(MOCK_DEVICE_ID), action.data));
     List<MockAction> updateActions = filterActions(mockActions, UPDATE_DEVICE_ACTION);
-    assertEquals("Devices updated", 4, updateActions.size());
+    assertEquals("Devices updated", 3, updateActions.size());
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);
     assertEquals("bind actions", 2, bindActions.size());

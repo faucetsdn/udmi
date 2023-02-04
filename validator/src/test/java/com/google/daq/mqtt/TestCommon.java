@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.udmi.util.SiteModel;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
@@ -27,7 +28,7 @@ public class TestCommon {
   public static final String REGISTRY_ID = "ZZ-TRI-FECTA";
   public static final String TOOL_ROOT = "..";
   public static final String SCHEMA_SPEC = TOOL_ROOT + "/schema";
-  public static final String SITE_DIR = TOOL_ROOT + "/sites/udmi_site_model";
+  public static final String SITE_DIR = IotMockProvider.MOCK_SITE_MODEL;
   public static final String LOG_LEVEL = Level.DEBUG.name();
   public static final String KEY_FILE = SITE_DIR + "/validator/rsa_private.pkcs8";
 

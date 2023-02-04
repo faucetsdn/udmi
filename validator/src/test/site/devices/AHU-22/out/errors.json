@@ -1,0 +1,5 @@
+Exceptions for AHU-22
+  While validating envelope
+    system.location.site ZZ-TRI-FECTA-ALT does not match expected ZZ-TRI-FECTA
+  devices/AHU-22
+    Extra out files: [exceptions.txt]
