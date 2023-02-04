@@ -1243,7 +1243,8 @@ public class Pubber {
         && networkDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
-        NetworkLocalnetModel networkLocalnetModel = getnetworkLocalnetModel(network, targetMetadata);
+        NetworkLocalnetModel networkLocalnetModel = getnetworkLocalnetModel(network,
+            targetMetadata);
         if (networkLocalnetModel != null && networkLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
@@ -1289,15 +1290,15 @@ public class Pubber {
 
   private void discoveryScanComplete(String network, Date scanGeneration) {
     try {
-      NetworkDiscoveryState NetworkDiscoveryState = getNetworkDiscoveryState(network);
-      if (scanGeneration.equals(NetworkDiscoveryState.generation)) {
+      NetworkDiscoveryState networkDiscoveryState = getNetworkDiscoveryState(network);
+      if (scanGeneration.equals(networkDiscoveryState.generation)) {
         int interval = getScanInterval(network);
         if (interval > 0) {
           Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
           scheduleFuture(newGeneration, () -> checkDiscoveryScan(network, newGeneration));
         } else {
           info("Discovery scan stopping " + network + " from " + isoConvert(scanGeneration));
-          NetworkDiscoveryState.active = false;
+          networkDiscoveryState.active = false;
           publishAsynchronousState();
         }
       }
