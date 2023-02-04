@@ -1,5 +1,5 @@
 
-## system_min_loglevel
+## system_min_loglevel (ALPHA)
 
 Check that the min log-level config is honored by the device.
 

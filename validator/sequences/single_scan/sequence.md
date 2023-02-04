@@ -1,5 +1,5 @@
 
-## single_scan
+## single_scan (ALPHA)
 
 1. Update config before all scans not active:
     * Add `discovery` = { "families": {  } }

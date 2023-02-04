@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Discovery Config
+ * Network Discovery Config
  * <p>
  * Configuration for [discovery](../docs/specs/discovery.md)
  * 
@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "enumerate"
 })
 @Generated("jsonschema2pojo")
-public class FamilyDiscoveryConfig {
+public class NetworkDiscoveryConfig {
 
     /**
      * Generational marker for controlling discovery
@@ -70,10 +70,10 @@ public class FamilyDiscoveryConfig {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyDiscoveryConfig) == false) {
+        if ((other instanceof NetworkDiscoveryConfig) == false) {
             return false;
         }
-        FamilyDiscoveryConfig rhs = ((FamilyDiscoveryConfig) other);
+        NetworkDiscoveryConfig rhs = ((NetworkDiscoveryConfig) other);
         return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.enumerate == rhs.enumerate)||((this.enumerate!= null)&&this.enumerate.equals(rhs.enumerate))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))));
     }
 

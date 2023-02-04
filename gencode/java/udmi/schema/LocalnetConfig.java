@@ -15,25 +15,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "families"
+    "networks"
 })
 @Generated("jsonschema2pojo")
 public class LocalnetConfig {
 
     /**
-     * Family Reference
+     * Network Reference
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("families")
-    public Object families;
+    @JsonProperty("networks")
+    public Object networks;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
 
@@ -46,7 +46,7 @@ public class LocalnetConfig {
             return false;
         }
         LocalnetConfig rhs = ((LocalnetConfig) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        return ((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks)));
     }
 
 }

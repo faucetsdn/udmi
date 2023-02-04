@@ -6,7 +6,7 @@ class GatewayModel:
 
   def __init__(self):
     self.gateway_id = None
-    self.family = None
+    self.network = None
     self.proxy_ids = None
 
   @staticmethod
@@ -15,7 +15,7 @@ class GatewayModel:
       return None
     result = GatewayModel()
     result.gateway_id = source.get('gateway_id')
-    result.family = source.get('family')
+    result.network = source.get('network')
     result.proxy_ids = source.get('proxy_ids')
     return result
 
@@ -39,8 +39,8 @@ class GatewayModel:
     result = {}
     if self.gateway_id:
       result['gateway_id'] = self.gateway_id # 5
-    if self.family:
-      result['family'] = self.family # 5
+    if self.network:
+      result['network'] = self.network # 5
     if self.proxy_ids:
       result['proxy_ids'] = self.proxy_ids # 1
     return result

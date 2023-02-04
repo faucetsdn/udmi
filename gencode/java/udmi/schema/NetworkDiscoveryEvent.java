@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Discovery Event
+ * Network Discovery Event
  * <p>
- * Discovery information for an individual protocol family.
+ * Discovery information for an individual network.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,15 +19,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "id"
 })
 @Generated("jsonschema2pojo")
-public class FamilyDiscoveryEvent {
+public class NetworkDiscoveryEvent {
 
     /**
-     * Device id in the namespace of the given family
+     * Device id in the namespace of the given network
      * (Required)
      * 
      */
     @JsonProperty("id")
-    @JsonPropertyDescription("Device id in the namespace of the given family")
+    @JsonPropertyDescription("Device id in the namespace of the given network")
     public String id;
 
     @Override
@@ -42,10 +42,10 @@ public class FamilyDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyDiscoveryEvent) == false) {
+        if ((other instanceof NetworkDiscoveryEvent) == false) {
             return false;
         }
-        FamilyDiscoveryEvent rhs = ((FamilyDiscoveryEvent) other);
+        NetworkDiscoveryEvent rhs = ((NetworkDiscoveryEvent) other);
         return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
     }
 

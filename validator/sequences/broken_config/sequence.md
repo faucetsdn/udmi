@@ -1,5 +1,5 @@
 
-## broken_config
+## broken_config (ALPHA)
 
 Check that the device correctly handles a broken (non-json) config message.
 

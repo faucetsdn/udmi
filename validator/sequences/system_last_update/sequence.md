@@ -1,5 +1,5 @@
 
-## system_last_update
+## system_last_update (ALPHA)
 
 Check that last_update state is correctly set in response to a config update.
 

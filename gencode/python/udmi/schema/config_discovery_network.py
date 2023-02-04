@@ -1,7 +1,7 @@
-"""Generated class for config_discovery_family.json"""
+"""Generated class for config_discovery_network.json"""
 
 
-class FamilyDiscoveryConfig:
+class NetworkDiscoveryConfig:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class FamilyDiscoveryConfig:
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryConfig()
+    result = NetworkDiscoveryConfig()
     result.generation = source.get('generation')
     result.scan_interval_sec = source.get('scan_interval_sec')
     result.scan_duration_sec = source.get('scan_duration_sec')
@@ -27,7 +27,7 @@ class FamilyDiscoveryConfig:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryConfig.from_dict(source[key])
+      result[key] = NetworkDiscoveryConfig.from_dict(source[key])
     return result
 
   @staticmethod

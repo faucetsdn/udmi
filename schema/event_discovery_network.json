@@ -1,15 +1,15 @@
 {
   "$udmi_version": "1.4.0",
-  "title": "Family Discovery Event",
+  "title": "Network Discovery Event",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "description": "Discovery information for an individual protocol family.",
+  "description": "Discovery information for an individual network.",
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[-_.:0-9A-Z]+$",
-      "description": "Device id in the namespace of the given family"
+      "description": "Device id in the namespace of the given network"
     }
   },
   "required": [

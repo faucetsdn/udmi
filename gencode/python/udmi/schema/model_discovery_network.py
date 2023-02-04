@@ -1,7 +1,7 @@
-"""Generated class for model_discovery_family.json"""
+"""Generated class for model_discovery_network.json"""
 
 
-class FamilyDiscoveryTestingModel:
+class NetworkDiscoveryTestingModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class FamilyDiscoveryTestingModel:
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryTestingModel()
+    result = NetworkDiscoveryTestingModel()
     return result
 
   @staticmethod
@@ -20,7 +20,7 @@ class FamilyDiscoveryTestingModel:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryTestingModel.from_dict(source[key])
+      result[key] = NetworkDiscoveryTestingModel.from_dict(source[key])
     return result
 
   @staticmethod

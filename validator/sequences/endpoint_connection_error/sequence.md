@@ -1,5 +1,5 @@
 
-## endpoint_connection_error
+## endpoint_connection_error (ALPHA)
 
 Push endpoint config message to device that results in a connection error.
 

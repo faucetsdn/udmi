@@ -1,6 +1,6 @@
 {
   "$udmi_version": "1.4.0",
-  "title": "Family Localnet Model",
+  "title": "Network Localnet Model",
   "type": "object",
   "description": "The type of network",
   "examples": ["bacnet", "modbus"],

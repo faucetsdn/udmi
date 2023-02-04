@@ -76,14 +76,14 @@ import udmi.schema.Entry;
 import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
-import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryEvent;
-import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
+import udmi.schema.NetworkDiscoveryConfig;
+import udmi.schema.NetworkDiscoveryEvent;
+import udmi.schema.NetworkDiscoveryState;
+import udmi.schema.NetworkLocalnetModel;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PointEnumerationEvent;
@@ -1087,7 +1087,7 @@ public class Pubber {
       deviceState.discovery = new DiscoveryState();
     }
     updateDiscoveryEnumeration(config);
-    updateDiscoveryScan(config.families);
+    updateDiscoveryScan(config.networks);
   }
 
   private void updateDiscoveryEnumeration(DiscoveryConfig config) {
@@ -1107,20 +1107,20 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
+    discoveryEvent.networks = ifTrue(enumerate.networks, this::enumeratenetworks);
     publishDeviceMessage(discoveryEvent);
   }
 
-  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+  private Map<String, NetworkDiscoveryEvent> enumeratenetworks() {
     LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
-    return localnet == null ? null : localnet.families.keySet().stream()
-        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
+    return localnet == null ? null : localnet.networks.keySet().stream()
+        .collect(toMap(key -> key, this::makeNetworkDiscoveryEvent));
   }
 
-  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
-    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
-    return familyDiscoveryEvent;
+  private NetworkDiscoveryEvent makeNetworkDiscoveryEvent(String networkId) {
+    NetworkDiscoveryEvent networkDiscoveryEvent = new NetworkDiscoveryEvent();
+    networkDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.networks.get(networkId).id;
+    return networkDiscoveryEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
@@ -1147,36 +1147,36 @@ public class Pubber {
     return pointEnumerationEvent;
   }
 
-  private void updateDiscoveryScan(HashMap<String, FamilyDiscoveryConfig> familiesRaw) {
-    HashMap<String, FamilyDiscoveryConfig> families =
-        familiesRaw == null ? new HashMap<>() : familiesRaw;
-    if (deviceState.discovery.families == null) {
-      deviceState.discovery.families = new HashMap<>();
+  private void updateDiscoveryScan(HashMap<String, NetworkDiscoveryConfig> networksRaw) {
+    HashMap<String, NetworkDiscoveryConfig> networks =
+        networksRaw == null ? new HashMap<>() : networksRaw;
+    if (deviceState.discovery.networks == null) {
+      deviceState.discovery.networks = new HashMap<>();
     }
 
-    deviceState.discovery.families.keySet().forEach(family -> {
-      if (!families.containsKey(family)) {
-        FamilyDiscoveryState familyDiscoveryState = deviceState.discovery.families.get(family);
-        if (familyDiscoveryState.generation != null) {
-          info("Clearing scheduled discovery family " + family);
-          familyDiscoveryState.generation = null;
-          familyDiscoveryState.active = null;
+    deviceState.discovery.networks.keySet().forEach(network -> {
+      if (!networks.containsKey(network)) {
+        NetworkDiscoveryState networkDiscoveryState = deviceState.discovery.networks.get(network);
+        if (networkDiscoveryState.generation != null) {
+          info("Clearing scheduled discovery network " + network);
+          networkDiscoveryState.generation = null;
+          networkDiscoveryState.active = null;
         }
       }
     });
-    families.keySet().forEach(family -> {
-      FamilyDiscoveryConfig familyDiscoveryConfig = families.get(family);
-      Date configGeneration = familyDiscoveryConfig.generation;
+    networks.keySet().forEach(network -> {
+      NetworkDiscoveryConfig networkDiscoveryConfig = networks.get(network);
+      Date configGeneration = networkDiscoveryConfig.generation;
       if (configGeneration == null) {
-        deviceState.discovery.families.remove(family);
+        deviceState.discovery.networks.remove(network);
         return;
       }
 
-      Date previousGeneration = getFamilyDiscoveryState(family).generation;
+      Date previousGeneration = getNetworkDiscoveryState(network).generation;
       Date baseGeneration = previousGeneration == null ? DEVICE_START_TIME : previousGeneration;
       final Date startGeneration;
       if (configGeneration.before(baseGeneration)) {
-        int interval = getScanInterval(family);
+        int interval = getScanInterval(network);
         if (interval > 0) {
           long deltaSec = (baseGeneration.getTime() - configGeneration.getTime() + 999) / 1000;
           long intervals = (deltaSec + interval - 1) / interval;
@@ -1189,18 +1189,18 @@ public class Pubber {
         startGeneration = configGeneration;
       }
 
-      info("Discovery scan generation " + family + " is " + isoConvert(startGeneration));
-      scheduleFuture(startGeneration, () -> checkDiscoveryScan(family, startGeneration));
+      info("Discovery scan generation " + network + " is " + isoConvert(startGeneration));
+      scheduleFuture(startGeneration, () -> checkDiscoveryScan(network, startGeneration));
     });
 
-    if (deviceState.discovery.families.isEmpty()) {
-      deviceState.discovery.families = null;
+    if (deviceState.discovery.networks.isEmpty()) {
+      deviceState.discovery.networks = null;
     }
   }
 
-  private FamilyDiscoveryState getFamilyDiscoveryState(String family) {
-    return deviceState.discovery.families.computeIfAbsent(
-        family, key -> new FamilyDiscoveryState());
+  private NetworkDiscoveryState getNetworkDiscoveryState(String network) {
+    return deviceState.discovery.networks.computeIfAbsent(
+        network, key -> new NetworkDiscoveryState());
   }
 
   private long scheduleFuture(Date futureTime, Runnable futureTask) {
@@ -1213,54 +1213,54 @@ public class Pubber {
     return delay;
   }
 
-  private void checkDiscoveryScan(String family, Date scanGeneration) {
+  private void checkDiscoveryScan(String network, Date scanGeneration) {
     try {
-      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (familyDiscoveryState.generation == null
-          || familyDiscoveryState.generation.before(scanGeneration)) {
-        scheduleDiscoveryScan(family, scanGeneration);
+      NetworkDiscoveryState networkDiscoveryState = getNetworkDiscoveryState(network);
+      if (networkDiscoveryState.generation == null
+          || networkDiscoveryState.generation.before(scanGeneration)) {
+        scheduleDiscoveryScan(network, scanGeneration);
       }
     } catch (Exception e) {
       throw new RuntimeException("While checking for discovery scan start", e);
     }
   }
 
-  private void scheduleDiscoveryScan(String family, Date scanGeneration) {
-    info("Discovery scan starting " + family + " as " + isoConvert(scanGeneration));
+  private void scheduleDiscoveryScan(String network, Date scanGeneration) {
+    info("Discovery scan starting " + network + " as " + isoConvert(scanGeneration));
     Date stopTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC));
-    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
-    familyDiscoveryState.generation = scanGeneration;
-    familyDiscoveryState.active = true;
+    NetworkDiscoveryState networkDiscoveryState = getNetworkDiscoveryState(network);
+    scheduleFuture(stopTime, () -> discoveryScanComplete(network, scanGeneration));
+    networkDiscoveryState.generation = scanGeneration;
+    networkDiscoveryState.active = true;
     publishAsynchronousState();
     Date sendTime = Date.from(Instant.now().plusSeconds(SCAN_DURATION_SEC / 2));
-    scheduleFuture(sendTime, () -> sendDiscoveryEvent(family, scanGeneration));
+    scheduleFuture(sendTime, () -> sendDiscoveryEvent(network, scanGeneration));
   }
 
-  private void sendDiscoveryEvent(String family, Date scanGeneration) {
-    FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    if (scanGeneration.equals(familyDiscoveryState.generation)
-        && familyDiscoveryState.active) {
+  private void sendDiscoveryEvent(String network, Date scanGeneration) {
+    NetworkDiscoveryState networkDiscoveryState = getNetworkDiscoveryState(network);
+    if (scanGeneration.equals(networkDiscoveryState.generation)
+        && networkDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
-        FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-        if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
+        NetworkLocalnetModel networkLocalnetModel = getnetworkLocalnetModel(network, targetMetadata);
+        if (networkLocalnetModel != null && networkLocalnetModel.id != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
-          discoveryEvent.scan_family = family;
+          discoveryEvent.scan_network = network;
           discoveryEvent.scan_id = deviceId;
-          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
+          discoveryEvent.networks = targetMetadata.localnet.networks.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
-          discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).id = deviceId;
-          if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
+          discoveryEvent.networks.computeIfAbsent("iot",
+              key -> new NetworkDiscoveryEvent()).id = deviceId;
+          if (isTrue(() -> deviceConfig.discovery.networks.get(network).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
           sentEvents.incrementAndGet();
         }
       });
-      info("Sent " + sentEvents.get() + " discovery events from " + family + " for "
+      info("Sent " + sentEvents.get() + " discovery events from " + network + " for "
           + scanGeneration);
     }
   }
@@ -1273,31 +1273,31 @@ public class Pubber {
     }
   }
 
-  private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
-    FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
+  private NetworkDiscoveryEvent eventForTarget(Map.Entry<String, NetworkLocalnetModel> target) {
+    NetworkDiscoveryEvent event = new NetworkDiscoveryEvent();
     event.id = target.getValue().id;
     return event;
   }
 
-  private FamilyLocalnetModel getFamilyLocalnetModel(String family, Metadata targetMetadata) {
+  private NetworkLocalnetModel getnetworkLocalnetModel(String network, Metadata targetMetadata) {
     try {
-      return targetMetadata.localnet.families.get(family);
+      return targetMetadata.localnet.networks.get(network);
     } catch (Exception e) {
       return null;
     }
   }
 
-  private void discoveryScanComplete(String family, Date scanGeneration) {
+  private void discoveryScanComplete(String network, Date scanGeneration) {
     try {
-      FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-      if (scanGeneration.equals(familyDiscoveryState.generation)) {
-        int interval = getScanInterval(family);
+      NetworkDiscoveryState NetworkDiscoveryState = getNetworkDiscoveryState(network);
+      if (scanGeneration.equals(NetworkDiscoveryState.generation)) {
+        int interval = getScanInterval(network);
         if (interval > 0) {
           Date newGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
-          scheduleFuture(newGeneration, () -> checkDiscoveryScan(family, newGeneration));
+          scheduleFuture(newGeneration, () -> checkDiscoveryScan(network, newGeneration));
         } else {
-          info("Discovery scan stopping " + family + " from " + isoConvert(scanGeneration));
-          familyDiscoveryState.active = false;
+          info("Discovery scan stopping " + network + " from " + isoConvert(scanGeneration));
+          NetworkDiscoveryState.active = false;
           publishAsynchronousState();
         }
       }
@@ -1306,9 +1306,9 @@ public class Pubber {
     }
   }
 
-  private int getScanInterval(String family) {
+  private int getScanInterval(String network) {
     try {
-      return deviceConfig.discovery.families.get(family).scan_interval_sec;
+      return deviceConfig.discovery.networks.get(network).scan_interval_sec;
     } catch (Exception e) {
       return 0;
     }

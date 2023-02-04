@@ -1,6 +1,6 @@
 """Generated class for event_discovery.json"""
 from .common import Entry
-from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_network import NetworkDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 
 
@@ -93,9 +93,9 @@ class DiscoveryEvent:
     self.version = None
     self.generation = None
     self.status = None
-    self.scan_family = None
+    self.scan_network = None
     self.scan_id = None
-    self.families = None
+    self.networks = None
     self.uniqs = None
     self.features = None
     self.system = None
@@ -109,9 +109,9 @@ class DiscoveryEvent:
     result.version = source.get('version')
     result.generation = source.get('generation')
     result.status = Entry.from_dict(source.get('status'))
-    result.scan_family = source.get('scan_family')
+    result.scan_network = source.get('scan_network')
     result.scan_id = source.get('scan_id')
-    result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
+    result.networks = NetworkDiscoveryEvent.map_from(source.get('networks'))
     result.uniqs = PointEnumerationEvent.map_from(source.get('uniqs'))
     result.features = ObjectE6EEEF50.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
@@ -143,12 +143,12 @@ class DiscoveryEvent:
       result['generation'] = self.generation # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.scan_family:
-      result['scan_family'] = self.scan_family # 5
+    if self.scan_network:
+      result['scan_network'] = self.scan_network # 5
     if self.scan_id:
       result['scan_id'] = self.scan_id # 5
-    if self.families:
-      result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
+    if self.networks:
+      result['networks'] = NetworkDiscoveryEvent.expand_dict(self.networks) # 2
     if self.uniqs:
       result['uniqs'] = PointEnumerationEvent.expand_dict(self.uniqs) # 2
     if self.features:

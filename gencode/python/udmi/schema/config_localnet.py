@@ -1,7 +1,7 @@
 """Generated class for config_localnet.json"""
 
 
-class ObjectDF8D24DE:
+class Object5F740D48:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class ObjectDF8D24DE:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectDF8D24DE()
+    result = Object5F740D48()
     result.id = source.get('id')
     return result
 
@@ -21,7 +21,7 @@ class ObjectDF8D24DE:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectDF8D24DE.from_dict(source[key])
+      result[key] = Object5F740D48.from_dict(source[key])
     return result
 
   @staticmethod
@@ -42,14 +42,14 @@ class LocalnetConfig:
   """Generated schema class"""
 
   def __init__(self):
-    self.families = None
+    self.networks = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = LocalnetConfig()
-    result.families = ObjectDF8D24DE.map_from(source.get('families'))
+    result.networks = Object5F740D48.map_from(source.get('networks'))
     return result
 
   @staticmethod
@@ -70,6 +70,6 @@ class LocalnetConfig:
 
   def to_dict(self):
     result = {}
-    if self.families:
-      result['families'] = ObjectDF8D24DE.expand_dict(self.families) # 2
+    if self.networks:
+      result['networks'] = Object5F740D48.expand_dict(self.networks) # 2
     return result

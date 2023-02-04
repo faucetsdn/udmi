@@ -1,7 +1,7 @@
-"""Generated class for event_discovery_family.json"""
+"""Generated class for event_discovery_network.json"""
 
 
-class FamilyDiscoveryEvent:
+class NetworkDiscoveryEvent:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class FamilyDiscoveryEvent:
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryEvent()
+    result = NetworkDiscoveryEvent()
     result.id = source.get('id')
     return result
 
@@ -21,7 +21,7 @@ class FamilyDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryEvent.from_dict(source[key])
+      result[key] = NetworkDiscoveryEvent.from_dict(source[key])
     return result
 
   @staticmethod

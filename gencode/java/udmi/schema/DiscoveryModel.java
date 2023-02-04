@@ -16,18 +16,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "families"
+    "networks"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryModel {
 
-    @JsonProperty("families")
-    public HashMap<String, FamilyDiscoveryTestingModel> families;
+    @JsonProperty("networks")
+    public HashMap<String, NetworkDiscoveryTestingModel> networks;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
 
@@ -40,7 +40,7 @@ public class DiscoveryModel {
             return false;
         }
         DiscoveryModel rhs = ((DiscoveryModel) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        return ((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks)));
     }
 
 }

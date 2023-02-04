@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Discovery State
+ * Network Discovery State
  * <p>
  * State for [discovery](../docs/specs/discovery.md)
  * 
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "status"
 })
 @Generated("jsonschema2pojo")
-public class FamilyDiscoveryState {
+public class NetworkDiscoveryState {
 
     /**
      * Generational marker for reporting discovery
@@ -61,10 +61,10 @@ public class FamilyDiscoveryState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyDiscoveryState) == false) {
+        if ((other instanceof NetworkDiscoveryState) == false) {
             return false;
         }
-        FamilyDiscoveryState rhs = ((FamilyDiscoveryState) other);
+        NetworkDiscoveryState rhs = ((NetworkDiscoveryState) other);
         return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.active == rhs.active)||((this.active!= null)&&this.active.equals(rhs.active))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 

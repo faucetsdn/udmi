@@ -1,5 +1,5 @@
 
-## pointset_enumeration
+## pointset_enumeration (ALPHA)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "uniqs": `true` } }

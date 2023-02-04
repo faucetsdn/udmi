@@ -1,5 +1,5 @@
 
-## multi_enumeration
+## multi_enumeration (ALPHA)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }

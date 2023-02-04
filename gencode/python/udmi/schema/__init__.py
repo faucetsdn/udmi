@@ -8,7 +8,7 @@ from .config import Config
 from .config_blobset import BlobsetConfig
 from .config_blobset_blob import BlobBlobsetConfig
 from .config_discovery import DiscoveryConfig
-from .config_discovery_family import FamilyDiscoveryConfig
+from .config_discovery_network import NetworkDiscoveryConfig
 from .config_gateway import GatewayConfig
 from .config_localnet import LocalnetConfig
 from .config_mapping import MappingConfig
@@ -24,7 +24,7 @@ from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
-from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_network import NetworkDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
@@ -37,10 +37,10 @@ from .event_validation_device import DeviceValidationEvent
 from .metadata import Metadata
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
-from .model_discovery_family import FamilyDiscoveryTestingModel
+from .model_discovery_network import NetworkDiscoveryTestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
-from .model_localnet_family import FamilyLocalnetModel
+from .model_localnet_network import NetworkLocalnetModel
 from .model_pointset import PointsetModel
 from .model_pointset_point import PointPointsetModel
 from .model_system import SystemModel
@@ -56,7 +56,7 @@ from .state import State
 from .state_blobset import BlobsetState
 from .state_blobset_blob import BlobBlobsetState
 from .state_discovery import DiscoveryState
-from .state_discovery_family import FamilyDiscoveryState
+from .state_discovery_network import NetworkDiscoveryState
 from .state_gateway import GatewayState
 from .state_mapping import MappingState
 from .state_mapping_device import DeviceMappingState

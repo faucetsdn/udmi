@@ -1,8 +1,8 @@
-"""Generated class for state_discovery_family.json"""
+"""Generated class for state_discovery_network.json"""
 from .common import Entry
 
 
-class FamilyDiscoveryState:
+class NetworkDiscoveryState:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class FamilyDiscoveryState:
   def from_dict(source):
     if not source:
       return None
-    result = FamilyDiscoveryState()
+    result = NetworkDiscoveryState()
     result.generation = source.get('generation')
     result.active = source.get('active')
     result.status = Entry.from_dict(source.get('status'))
@@ -26,7 +26,7 @@ class FamilyDiscoveryState:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyDiscoveryState.from_dict(source[key])
+      result[key] = NetworkDiscoveryState.from_dict(source[key])
     return result
 
   @staticmethod

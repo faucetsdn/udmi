@@ -1,5 +1,5 @@
 """Generated class for state_discovery.json"""
-from .state_discovery_family import FamilyDiscoveryState
+from .state_discovery_network import NetworkDiscoveryState
 
 
 class DiscoveryState:
@@ -7,7 +7,7 @@ class DiscoveryState:
 
   def __init__(self):
     self.generation = None
-    self.families = None
+    self.networks = None
 
   @staticmethod
   def from_dict(source):
@@ -15,7 +15,7 @@ class DiscoveryState:
       return None
     result = DiscoveryState()
     result.generation = source.get('generation')
-    result.families = FamilyDiscoveryState.map_from(source.get('families'))
+    result.networks = NetworkDiscoveryState.map_from(source.get('networks'))
     return result
 
   @staticmethod
@@ -38,6 +38,6 @@ class DiscoveryState:
     result = {}
     if self.generation:
       result['generation'] = self.generation # 5
-    if self.families:
-      result['families'] = FamilyDiscoveryState.expand_dict(self.families) # 2
+    if self.networks:
+      result['networks'] = NetworkDiscoveryState.expand_dict(self.networks) # 2
     return result

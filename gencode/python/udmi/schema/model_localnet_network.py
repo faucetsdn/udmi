@@ -1,7 +1,7 @@
-"""Generated class for model_localnet_family.json"""
+"""Generated class for model_localnet_network.json"""
 
 
-class FamilyLocalnetModel:
+class NetworkLocalnetModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -11,7 +11,7 @@ class FamilyLocalnetModel:
   def from_dict(source):
     if not source:
       return None
-    result = FamilyLocalnetModel()
+    result = NetworkLocalnetModel()
     result.id = source.get('id')
     return result
 
@@ -21,7 +21,7 @@ class FamilyLocalnetModel:
       return None
     result = {}
     for key in source:
-      result[key] = FamilyLocalnetModel.from_dict(source[key])
+      result[key] = NetworkLocalnetModel.from_dict(source[key])
     return result
 
   @staticmethod

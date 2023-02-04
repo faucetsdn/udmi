@@ -1,11 +1,11 @@
 """Generated class for config_discovery.json"""
 
 
-class ObjectB9C13F4B:
+class ObjectFE47166E:
   """Generated schema class"""
 
   def __init__(self):
-    self.families = None
+    self.networks = None
     self.uniqs = None
     self.features = None
 
@@ -13,8 +13,8 @@ class ObjectB9C13F4B:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectB9C13F4B()
-    result.families = source.get('families')
+    result = ObjectFE47166E()
+    result.networks = source.get('networks')
     result.uniqs = source.get('uniqs')
     result.features = source.get('features')
     return result
@@ -25,7 +25,7 @@ class ObjectB9C13F4B:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectB9C13F4B.from_dict(source[key])
+      result[key] = ObjectFE47166E.from_dict(source[key])
     return result
 
   @staticmethod
@@ -37,14 +37,14 @@ class ObjectB9C13F4B:
 
   def to_dict(self):
     result = {}
-    if self.families:
-      result['families'] = self.families # 5
+    if self.networks:
+      result['networks'] = self.networks # 5
     if self.uniqs:
       result['uniqs'] = self.uniqs # 5
     if self.features:
       result['features'] = self.features # 5
     return result
-from .config_discovery_family import FamilyDiscoveryConfig
+from .config_discovery_network import NetworkDiscoveryConfig
 
 
 class DiscoveryConfig:
@@ -53,7 +53,7 @@ class DiscoveryConfig:
   def __init__(self):
     self.generation = None
     self.enumerate = None
-    self.families = None
+    self.networks = None
 
   @staticmethod
   def from_dict(source):
@@ -61,8 +61,8 @@ class DiscoveryConfig:
       return None
     result = DiscoveryConfig()
     result.generation = source.get('generation')
-    result.enumerate = ObjectB9C13F4B.from_dict(source.get('enumerate'))
-    result.families = FamilyDiscoveryConfig.map_from(source.get('families'))
+    result.enumerate = ObjectFE47166E.from_dict(source.get('enumerate'))
+    result.networks = NetworkDiscoveryConfig.map_from(source.get('networks'))
     return result
 
   @staticmethod
@@ -87,6 +87,6 @@ class DiscoveryConfig:
       result['generation'] = self.generation # 5
     if self.enumerate:
       result['enumerate'] = self.enumerate.to_dict() # 4
-    if self.families:
-      result['families'] = FamilyDiscoveryConfig.expand_dict(self.families) # 2
+    if self.networks:
+      result['networks'] = NetworkDiscoveryConfig.expand_dict(self.networks) # 2
     return result

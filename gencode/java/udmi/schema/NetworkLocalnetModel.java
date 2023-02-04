@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Family Localnet Model
+ * Network Localnet Model
  * <p>
  * The type of network
  * 
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "id"
 })
 @Generated("jsonschema2pojo")
-public class FamilyLocalnetModel {
+public class NetworkLocalnetModel {
 
     /**
      * The address of a device on the local network
@@ -42,10 +42,10 @@ public class FamilyLocalnetModel {
         if (other == this) {
             return true;
         }
-        if ((other instanceof FamilyLocalnetModel) == false) {
+        if ((other instanceof NetworkLocalnetModel) == false) {
             return false;
         }
-        FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
+        NetworkLocalnetModel rhs = ((NetworkLocalnetModel) other);
         return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
     }
 

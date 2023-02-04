@@ -1,5 +1,5 @@
 
-## family_enumeration
+## family_enumeration (ALPHA)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "families": `true` } }

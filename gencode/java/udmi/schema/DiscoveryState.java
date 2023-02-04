@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "generation",
-    "families"
+    "networks"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryState {
@@ -32,18 +32,18 @@ public class DiscoveryState {
     @JsonPropertyDescription("Generational marker for enumeration")
     public Date generation;
     /**
-     * Discovery protocol families
+     * Discovery protocol networks
      * 
      */
-    @JsonProperty("families")
-    @JsonPropertyDescription("Discovery protocol families")
-    public HashMap<String, FamilyDiscoveryState> families;
+    @JsonProperty("networks")
+    @JsonPropertyDescription("Discovery protocol networks")
+    public HashMap<String, NetworkDiscoveryState> networks;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
 
@@ -56,7 +56,7 @@ public class DiscoveryState {
             return false;
         }
         DiscoveryState rhs = ((DiscoveryState) other);
-        return (((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
+        return (((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
     }
 
 }

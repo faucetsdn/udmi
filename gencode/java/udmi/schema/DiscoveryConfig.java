@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "generation",
     "enumerate",
-    "families"
+    "networks"
 })
 @Generated("jsonschema2pojo")
 public class DiscoveryConfig {
@@ -35,19 +35,19 @@ public class DiscoveryConfig {
     @JsonProperty("enumerate")
     public Enumerate enumerate;
     /**
-     * Address family config for a scan. Not included for device enumeration messages.
+     * Address network config for a scan. Not included for device enumeration messages.
      * 
      */
-    @JsonProperty("families")
-    @JsonPropertyDescription("Address family config for a scan. Not included for device enumeration messages.")
-    public HashMap<String, FamilyDiscoveryConfig> families;
+    @JsonProperty("networks")
+    @JsonPropertyDescription("Address network config for a scan. Not included for device enumeration messages.")
+    public HashMap<String, NetworkDiscoveryConfig> networks;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.enumerate == null)? 0 :this.enumerate.hashCode()));
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
 
@@ -60,7 +60,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerate == rhs.enumerate)||((this.enumerate!= null)&&this.enumerate.equals(rhs.enumerate))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
+        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerate == rhs.enumerate)||((this.enumerate!= null)&&this.enumerate.equals(rhs.enumerate))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
     }
 
 }

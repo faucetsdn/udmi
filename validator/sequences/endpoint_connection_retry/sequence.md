@@ -1,5 +1,5 @@
 
-## endpoint_connection_retry
+## endpoint_connection_retry (ALPHA)
 
 Check repeated endpoint with same information gets retried.
 
