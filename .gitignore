@@ -30,7 +30,8 @@ pubber.out*
 /sequencer.out
 __pycache__/
 /tests/downgrade.site/devices/*/out/
-
+/validator/src/test/site/out/
+/validator/src/test/site/devices/*/out/
 .vscode
 
 #Terraform authentication and template files.
