@@ -4,7 +4,6 @@ import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Downgrade a message to a previous UDMI schema version.
@@ -15,14 +14,17 @@ public class MessageDowngrader {
   private int major;
   private int minor;
   private int patch;
+  private String deviceId;
 
   /**
    * Create message downgrader.
    *
+   * @param deviceId    device id for downgrading
    * @param schemaName  schema to downgrade
    * @param messageJson message json
    */
-  public MessageDowngrader(String schemaName, JsonNode messageJson) {
+  public MessageDowngrader(String deviceId, String schemaName, JsonNode messageJson) {
+    this.deviceId = deviceId;
     if (!"config".equals(schemaName)) {
       throw new IllegalArgumentException("Can only downgrade config messages");
     }
@@ -32,16 +34,23 @@ public class MessageDowngrader {
   /**
    * Downgrade a message to a target version.
    *
-   * @param versionNode target downgrade version (as a JsonNode)
+   * @param newVersion target downgrade version (as a JsonNode)
    */
-  public void downgrade(JsonNode versionNode) {
-    final String version = convertVersion(versionNode);
+  public void downgrade(JsonNode newVersion) {
+    final String version = convertVersion(newVersion);
     String[] components = version.split("-", 2);
     String[] parts = components[0].split("\\.", 4);
     major = Integer.parseInt(parts[0]);
     minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
     patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
-    message.set(VERSION_PROPERTY_KEY, versionNode);
+    JsonNode oldVersion = message.get(VERSION_PROPERTY_KEY);
+    message.set(VERSION_PROPERTY_KEY, newVersion);
+
+    if (oldVersion.equals(newVersion)) {
+      return;
+    }
+
+    System.err.printf("Downgrading %s config from %s to %s%n", deviceId, oldVersion, newVersion);
 
     if (parts.length >= 4) {
       throw new IllegalArgumentException("Unexpected version " + version);
@@ -55,7 +64,7 @@ public class MessageDowngrader {
       return;
     }
 
-    if (major == 1 && minor == 3 && patch > 13) {
+    if (major == 1 && minor == 4 && patch > 0) {
       return;
     }
 

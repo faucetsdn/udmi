@@ -550,7 +550,7 @@ class LocalDevice {
   private String deviceConfigString() {
     try {
       JsonNode configJson = OBJECT_MAPPER.valueToTree(deviceConfigObject());
-      new MessageDowngrader("config", configJson).downgrade(baseVersion);
+      new MessageDowngrader(deviceId, "config", configJson).downgrade(baseVersion);
       return OBJECT_MAPPER.writeValueAsString(configJson);
     } catch (Exception e) {
       throw new RuntimeException("While converting device config", e);

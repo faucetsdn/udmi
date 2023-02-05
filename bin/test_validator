@@ -26,7 +26,7 @@ echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
 
-rm -rf $site_path/out/devices
+rm -rf $site_path/out/devices $site_path/devices/*/out
 
 # Prepare auth key used by reflector
 mkdir -p $site_path/validator
