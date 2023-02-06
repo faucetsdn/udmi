@@ -3,11 +3,10 @@
   "version" : "1.3.14",
   "system" : {
     "min_loglevel" : 300,
-    "metrics_rate_sec" : 600,
-    "operation" : { }
+    "metrics_rate_sec" : 600
   },
   "localnet" : {
-    "networks" : {
+    "families" : {
       "virtual" : {
         "id" : "0x65"
       }
