@@ -17,7 +17,9 @@ import udmi.schema.ExecutionConfiguration;
 public class SequenceRunnerTest {
 
   private static final String TEST_DEVICE = "AHU-1";
-  private static final int MODEL_DEVICE_COUNT = 4;
+
+  // Number of devices in the testing site model (validator/src/test/site)
+  private static final int MODEL_DEVICE_COUNT = 3;
 
   // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate.
   // Only tracks tests marked as non-ALPHA.

@@ -8,6 +8,8 @@ bin/clone_model
 
 TEST_SITE=validator/src/test/site
 
+rm -f ${TEST_SITE}/devices/*/out/metadata_norm.json
+
 bin/registrar ${TEST_SITE}
 
 cat "${TEST_SITE}/registration_summary.json"
@@ -19,9 +21,6 @@ exit_status=clean
 
 echo Found ${clean_devices} clean devices, expect $EXPECTED_CLEAN.
 [ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
-
-device_files=$(ls -d ${TEST_SITE}/devices/*)
-rm -f ${TEST_SITE}/devices/*/out/metadata_norm.json
 
 # Individual tests for generated config values
 echo
@@ -59,6 +58,7 @@ function check_norm {
     return 0
 }
 
+device_files=$(ls -d ${TEST_SITE}/devices/*)
 sm_devices=$(check_norm)
 echo "Devices with correct site_metadata:" ${sm_devices}
 echo "Expecting:                         " ${device_files}
