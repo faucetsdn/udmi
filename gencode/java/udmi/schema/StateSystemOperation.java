@@ -2,11 +2,15 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Generated;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -55,7 +59,7 @@ public class StateSystemOperation {
      */
     @JsonProperty("mode")
     @JsonPropertyDescription("Operating mode for the device. Default is 'active'.")
-    public udmi.schema.Operation.SystemMode mode;
+    public StateSystemOperation.SystemMode mode;
 
     @Override
     public int hashCode() {
@@ -77,6 +81,55 @@ public class StateSystemOperation {
         }
         StateSystemOperation rhs = ((StateSystemOperation) other);
         return (((((this.mode == rhs.mode)||((this.mode!= null)&&this.mode.equals(rhs.mode)))&&((this.operational == rhs.operational)||((this.operational!= null)&&this.operational.equals(rhs.operational))))&&((this.restart_count == rhs.restart_count)||((this.restart_count!= null)&&this.restart_count.equals(rhs.restart_count))))&&((this.last_start == rhs.last_start)||((this.last_start!= null)&&this.last_start.equals(rhs.last_start))));
+    }
+
+
+    /**
+     * System Mode
+     * <p>
+     * Operating mode for the device. Default is 'active'.
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum SystemMode {
+
+        INITIAL("initial"),
+        ACTIVE("active"),
+        RESTART("restart"),
+        SHUTDOWN("shutdown");
+        private final String value;
+        private final static Map<String, StateSystemOperation.SystemMode> CONSTANTS = new HashMap<String, StateSystemOperation.SystemMode>();
+
+        static {
+            for (StateSystemOperation.SystemMode c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        SystemMode(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static StateSystemOperation.SystemMode fromValue(String value) {
+            StateSystemOperation.SystemMode constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 }

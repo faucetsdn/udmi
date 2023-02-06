@@ -29,17 +29,16 @@ cd $ROOT_DIR/schema
 
 find . -name \*~ | xargs -r rm
 
-JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
+JOPTS="-fe .json -d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
-$JARBIN $JOPTS --source . --target $OUTDIR
+for file in *.json; do
+    echo Generating java src for $file
+    $JARBIN $JOPTS --source $file --target $OUTDIR
+done
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying shared constants $ROOT_DIR/etc/*.java
 cp -n $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/
-
-echo Cleaning up __ classes...
-find $OUTDIR -name \*__\*.java | xargs rm
-fgrep -l __ -r $OUTDIR | xargs -n 1 sed -E -i s/__[0-9]+//
 
 cd $ROOT_DIR
 find gencode/java -type f | sort
