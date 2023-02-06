@@ -43,7 +43,7 @@
     "log_level": {
       "type": "string"
     },
-    "feature_stage": {
+    "min_stage": {
       "type": "string"
     },
     "udmi_version": {
