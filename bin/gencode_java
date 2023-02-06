@@ -26,14 +26,16 @@ fi
 
 ls -l $JARBIN
 cd $ROOT_DIR/schema
+schema_roots=$($ROOT_DIR/bin/gencode_root_schemas .)
 
 find . -name \*~ | xargs -r rm
 
 JOPTS="-fe .json -d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
-for file in *.json; do
-    echo Generating java src for $file
-    $JARBIN $JOPTS --source $file --target $OUTDIR
+for schema in $schema_roots; do
+    echo Generating java src for $schema.json
+    $JARBIN $JOPTS --source $schema.json --target $OUTDIR
+    find ../gencode/ -name Operation.java || true
 done
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
