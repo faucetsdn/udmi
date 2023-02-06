@@ -1,7 +1,7 @@
 RESULT pass discovery.scan periodic_scan ALPHA 5 Sequence complete
 RESULT pass enumeration empty_enumeration ALPHA 5 Sequence complete
-RESULT pass enumeration.families family_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.features feature_enumeration BETA 5 Sequence complete
+RESULT pass enumeration.networks network_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5 Sequence complete
 RESULT pass system.mode system_mode_restart STABLE 5 Sequence complete
 RESULT pass unknown broken_config ALPHA 5 Sequence complete
