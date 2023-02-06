@@ -2,9 +2,11 @@ package com.google.daq.mqtt.sequencer;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.Common;
 import com.google.udmi.util.SiteModel;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,6 +16,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import joptsimple.internal.Strings;
+import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
@@ -27,10 +31,12 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
+  public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
+  private List<String> targets = List.of();
 
   /**
    * Thundercats are go.
@@ -49,7 +55,8 @@ public class SequenceRunner {
    */
   public static int processResult(List<String> targets) {
     SequenceRunner sequenceRunner = new SequenceRunner();
-    sequenceRunner.process(targets);
+    sequenceRunner.setTargets(targets);
+    sequenceRunner.process();
     return sequenceRunner.resultCode();
   }
 
@@ -57,7 +64,7 @@ public class SequenceRunner {
     executionConfiguration = config;
     SequenceRunner sequenceRunner = new SequenceRunner();
     SequenceBase.setDeviceId(config.device_id);
-    sequenceRunner.process(List.of());
+    sequenceRunner.process();
     return sequenceRunner;
   }
 
@@ -116,32 +123,23 @@ public class SequenceRunner {
     return failures.isEmpty() ? EXIT_STATUS_SUCCESS : EXIST_STATUS_FAILURE;
   }
 
-  private void process(List<String> targetMethods) {
+  private void process() {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     SequenceBase.ensureValidatorConfig();
     String deviceId = SequenceBase.validatorConfig.device_id;
-    Set<String> remainingMethods = new HashSet<>(targetMethods);
+    Set<String> remainingMethods = new HashSet<>(targets);
     int runCount = 0;
     for (String className : sequenceClasses) {
       Class<?> clazz = Common.classForName(className);
       List<Request> requests = new ArrayList<>();
-      if (!targetMethods.isEmpty()) {
-        for (String method : targetMethods) {
-          try {
-            clazz.getMethod(method);
-          } catch (Exception e) {
-            continue;
-          }
-          System.err.println("Running " + clazz + "#" + method);
-          requests.add(Request.method(clazz, method));
-          remainingMethods.remove(method);
-        }
-      } else {
-        System.err.println("Running " + clazz + " (all tests)");
-        requests.add(Request.aClass(clazz));
+      List<String> runMethods = getRunMethods(clazz);
+      for (String method : runMethods) {
+        System.err.println("Running target " + clazz.getName() + "#" + method);
+        requests.add(Request.method(clazz, method));
+        remainingMethods.remove(method);
       }
       for (Request request : requests) {
         Result result = new JUnitCore().run(request);
@@ -167,4 +165,35 @@ public class SequenceRunner {
     });
   }
 
+  private List<String> getRunMethods(Class<?> clazz) {
+    return Arrays.stream(clazz.getMethods()).filter(this::shouldProcessMethod).map(Method::getName)
+        .filter(this::isTargetMethod).collect(Collectors.toList());
+  }
+
+  private boolean isTargetMethod(String methodName) {
+    return targets.isEmpty() || targets.contains(methodName);
+  }
+
+  private boolean shouldProcessMethod(Method method) {
+    Test test = method.getAnnotation(Test.class);
+    if (test == null) {
+      return false;
+    }
+    // If the target is explicitly indicated, then we should test it regardless of annotation.
+    if (targets.contains(method.getName())) {
+      return true;
+    }
+    Feature annotation = method.getAnnotation(Feature.class);
+    Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return stage.processGiven(getFeatureMinStage());
+  }
+
+  private Stage getFeatureMinStage() {
+    String stage = SequenceBase.validatorConfig.min_stage;
+    return Strings.isNullOrEmpty(stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(stage);
+  }
+
+  public void setTargets(List<String> targets) {
+    this.targets = targets;
+  }
 }
