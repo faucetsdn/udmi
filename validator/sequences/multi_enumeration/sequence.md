@@ -1,8 +1,8 @@
 
-## multi_enumeration (ALPHA)
+## multi_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "networks": `true` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -10,6 +10,6 @@
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that family enumeration matches
+1. Check that network enumeration matches
 1. Check that features enumerated
 1. Check that points enumerated 3

@@ -1,5 +1,5 @@
 
-## endpoint_connection_success_reconnect (ALPHA)
+## endpoint_connection_success_reconnect
 
 Check a successful reconnect to the same endpoint.
 

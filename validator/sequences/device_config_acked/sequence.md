@@ -1,5 +1,5 @@
 
-## device_config_acked (ALPHA)
+## device_config_acked
 
 Check that the device MQTT-acknowledges a sent config.
 

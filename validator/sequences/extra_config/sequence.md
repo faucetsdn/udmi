@@ -1,5 +1,5 @@
 
-## extra_config (ALPHA)
+## extra_config
 
 Check that the device correctly handles an extra out-of-schema field
 

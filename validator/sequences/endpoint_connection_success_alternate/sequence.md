@@ -1,5 +1,5 @@
 
-## endpoint_connection_success_alternate (ALPHA)
+## endpoint_connection_success_alternate
 
 Check connection to an alternate project.
 

@@ -36,9 +36,9 @@ Some caveats:
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect): Check a successful reconnect to the same endpoint.
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
-* [family_enumeration](#family_enumeration)
 * [feature_enumeration](#feature_enumeration)
 * [multi_enumeration](#multi_enumeration)
+* [network_enumeration](#network_enumeration)
 * [periodic_scan](#periodic_scan)
 * [pointset_enumeration](#pointset_enumeration)
 * [pointset_publish_interval](#pointset_publish_interval): test sample rate and sample limit sec
@@ -52,7 +52,7 @@ Some caveats:
 * [writeback_invalid](#writeback_invalid)
 * [writeback_success](#writeback_success)
 
-## broken_config (ALPHA)
+## broken_config
 
 Check that the device correctly handles a broken (non-json) config message.
 
@@ -74,13 +74,13 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Check that log category `system.config.receive` level `DEBUG` not logged
 1. Check that log category `system.config.parse` level `DEBUG` not logged
 
-## device_config_acked (ALPHA)
+## device_config_acked
 
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
 
-## empty_enumeration (ALPHA)
+## empty_enumeration
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": {  } }
@@ -91,11 +91,11 @@ Check that the device MQTT-acknowledges a sent config.
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no network enumeration
 1. Check that no feature enumeration
 1. Check that no point enumeration
 
-## endpoint_connection_bad_hash (ALPHA)
+## endpoint_connection_bad_hash
 
 Failed connection because of bad hash.
 
@@ -104,7 +104,7 @@ Failed connection because of bad hash.
 1. Wait for blobset status is ERROR
 1. Check that no interesting system status
 
-## endpoint_connection_error (ALPHA)
+## endpoint_connection_error
 
 Push endpoint config message to device that results in a connection error.
 
@@ -116,7 +116,7 @@ Push endpoint config message to device that results in a connection error.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
-## endpoint_connection_retry (ALPHA)
+## endpoint_connection_retry
 
 Check repeated endpoint with same information gets retried.
 
@@ -132,7 +132,7 @@ Check repeated endpoint with same information gets retried.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
-## endpoint_connection_success_alternate (ALPHA)
+## endpoint_connection_success_alternate
 
 Check connection to an alternate project.
 
@@ -158,7 +158,7 @@ Check connection to an alternate project.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
-## endpoint_connection_success_reconnect (ALPHA)
+## endpoint_connection_success_reconnect
 
 Check a successful reconnect to the same endpoint.
 
@@ -170,7 +170,7 @@ Check a successful reconnect to the same endpoint.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
-## extra_config (ALPHA)
+## extra_config
 
 Check that the device correctly handles an extra out-of-schema field
 
@@ -192,22 +192,7 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for log category `system.config.parse` level `DEBUG` was logged
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
-## family_enumeration (ALPHA)
-
-1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "families": `true` } }
-1. Wait for enumeration not active
-1. Update config before matching enumeration generation:
-    * Add `discovery.generation` = `generation start time`
-1. Wait for matching enumeration generation
-1. Update config before cleared enumeration generation:
-    * Remove `discovery.generation`
-1. Wait for cleared enumeration generation
-1. Check that family enumeration matches
-1. Check that no feature enumeration
-1. Check that no point enumeration
-
-## feature_enumeration (BETA)
+## feature_enumeration
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
@@ -218,14 +203,14 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no network enumeration
 1. Check that features enumerated
 1. Check that no point enumeration
 
-## multi_enumeration (ALPHA)
+## multi_enumeration
 
 1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "families": `true` } }
+    * Add `discovery` = { "enumerate": { "features": `true`, "uniqs": `true`, "networks": `true` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation:
     * Add `discovery.generation` = `generation start time`
@@ -233,20 +218,35 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that family enumeration matches
+1. Check that network enumeration matches
 1. Check that features enumerated
 1. Check that points enumerated 3
 
-## periodic_scan (ALPHA)
+## network_enumeration
+
+1. Update config before enumeration not active:
+    * Add `discovery` = { "enumerate": { "networks": `true` } }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that network enumeration matches
+1. Check that no feature enumeration
+1. Check that no point enumeration
+
+## periodic_scan
 
 1. Update config before all scans not active:
-    * Add `discovery` = { "families": {  } }
+    * Add `discovery` = { "networks": {  } }
 1. Wait for all scans not active
 1. Update config before scan iterations:
-    * Add `discovery.families.virtual` = { "generation": `family generation`, "scan_interval_sec": `10`, "enumerate": `true` }
+    * Add `discovery.networks.virtual` = { "generation": `network generation`, "scan_interval_sec": `10`, "enumerate": `true` }
 1. Wait for scan iterations
 
-## pointset_enumeration (ALPHA)
+## pointset_enumeration
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "uniqs": `true` } }
@@ -257,11 +257,11 @@ Check that the device correctly handles an extra out-of-schema field
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no family enumeration
+1. Check that no network enumeration
 1. Check that no feature enumeration
 1. Check that points enumerated 3
 
-## pointset_publish_interval (ALPHA)
+## pointset_publish_interval
 
 test sample rate and sample limit sec
 
@@ -276,7 +276,7 @@ test sample rate and sample limit sec
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 15 and 18 seconds
 
-## pointset_sample_rate (ALPHA)
+## pointset_sample_rate
 
 device publishes pointset events at a rate of no more than config sample_rate_sec
 
@@ -285,26 +285,26 @@ device publishes pointset events at a rate of no more than config sample_rate_se
     * Add `pointset.sample_rate_sec` = `5`
     * Add `pointset.sample_limit_sec` = `1`
 1. Wait for receive at least 5 pointset events
-1. Test failed: Failed check that time period between successive pointset events is between 1 and 5 seconds
+1. Check that time period between successive pointset events is between 1 and 5 seconds
 
-## single_scan (ALPHA)
+## single_scan
 
 1. Update config before all scans not active:
-    * Add `discovery` = { "families": {  } }
+    * Add `discovery` = { "networks": {  } }
 1. Wait for all scans not active
 1. Update config before scheduled scan start:
-    * Add `discovery.families.virtual` = { "generation": `family generation`, "enumerate": `true` }
+    * Add `discovery.networks.virtual` = { "generation": `network generation`, "enumerate": `true` }
 1. Wait for scheduled scan start
 1. Wait for scan activation
 1. Wait for scan completed
 
-## system_last_update (ALPHA)
+## system_last_update
 
 Check that last_update state is correctly set in response to a config update.
 
 1. Wait for state last_config matches config timestamp
 
-## system_min_loglevel (ALPHA)
+## system_min_loglevel
 
 Check that the min log-level config is honored by the device.
 
@@ -318,7 +318,7 @@ Check that the min log-level config is honored by the device.
     * Set `system.min_loglevel` = `200`
 1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
-## system_mode_restart (STABLE)
+## system_mode_restart
 
 Restart and connect to same endpoint and expect it returns.
 
@@ -337,25 +337,25 @@ Restart and connect to same endpoint and expect it returns.
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 
-## valid_serial_no (STABLE)
+## valid_serial_no
 
 1. Wait for received serial number matches
 
-## writeback_failure (ALPHA)
+## writeback_failure
 
 1. Wait for point filter_alarm_pressure_status to have value_state default (null)
 1. Update config before point filter_alarm_pressure_status to have value_state failure:
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
 1. Wait for point filter_alarm_pressure_status to have value_state failure
 
-## writeback_invalid (ALPHA)
+## writeback_invalid
 
 1. Wait for point filter_differential_pressure_sensor to have value_state default (null)
 1. Update config before point filter_differential_pressure_sensor to have value_state invalid:
     * Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
 1. Wait for point filter_differential_pressure_sensor to have value_state invalid
 
-## writeback_success (ALPHA)
+## writeback_success
 
 1. Update config before point filter_differential_pressure_setpoint to have value_state default (null):
     * Remove `pointset.points.filter_differential_pressure_setpoint.set_value`
@@ -363,4 +363,4 @@ Restart and connect to same endpoint and expect it returns.
 1. Update config before point filter_differential_pressure_setpoint to have value_state applied:
     * Add `pointset.points.filter_differential_pressure_setpoint.set_value` = `60`
 1. Wait for point filter_differential_pressure_setpoint to have value_state applied
-1. Test failed: timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
+1. Wait for point `filter_differential_pressure_setpoint` to have present_value `60`
