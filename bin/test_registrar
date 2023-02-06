@@ -21,6 +21,7 @@ echo Found ${clean_devices} clean devices, expect $EXPECTED_CLEAN.
 [ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
 
 device_files=$(ls -d ${TEST_SITE}/devices/*)
+rm -f ${TEST_SITE}/devices/*/out/metadata_norm.json
 
 # Individual tests for generated config values
 echo
@@ -41,16 +42,18 @@ echo Nominal site is ${site}
 
 function check_norm {
     for name in ${device_files}; do
-        supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
-        # If no site value is supplied in per-device metadata, expect default.
-        if [[ "${supplied_site}" == "null" ]]; then
-            jq -e ".system.location.site == \"${site}\"" \
-               ${name}/out/metadata_norm.json > /dev/null \
-                && echo $name
-        else
-            jq -e ".system.location.site == \"${supplied_site}\"" \
-               ${name}/out/metadata_norm.json > /dev/null \
-                && echo $name
+        if [[ -f ${name}/out/metadata_norm.json ]]; then
+            supplied_site=$(jq -r ".system.location.site" < ${name}/metadata.json)
+            # If no site value is supplied in per-device metadata, expect default.
+            if [[ "${supplied_site}" == "null" ]]; then
+                jq -e ".system.location.site == \"${site}\"" \
+                   ${name}/out/metadata_norm.json > /dev/null \
+                    && echo $name
+            else
+                jq -e ".system.location.site == \"${supplied_site}\"" \
+                   ${name}/out/metadata_norm.json > /dev/null \
+                    && echo $name
+            fi
         fi
     done
     return 0
