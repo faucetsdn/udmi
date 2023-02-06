@@ -203,6 +203,15 @@ public class SiteModel {
   }
 
   /**
+   * Get the reflect region name
+   *
+   * @return reflect region
+   */
+  public String getReflectRegion() {
+    return executionConfiguration.reflect_region;
+  }
+
+  /**
    * Get the cloud region for this model.
    *
    * @return cloud region

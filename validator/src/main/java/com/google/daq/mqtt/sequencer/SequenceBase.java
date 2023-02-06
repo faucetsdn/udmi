@@ -207,6 +207,8 @@ public class SequenceBase {
             .orElse(model.getCloudRegion());
         validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
             .orElse(model.getRegistryId());
+        validatorConfig.reflect_region = Optional.ofNullable(validatorConfig.reflect_region)
+            .orElse(model.getReflectRegion());
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
       }
