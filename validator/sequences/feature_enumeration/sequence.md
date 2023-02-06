@@ -1,5 +1,5 @@
 
-## feature_enumeration
+## feature_enumeration (BETA)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
@@ -10,6 +10,6 @@
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that no network enumeration
+1. Check that no family enumeration
 1. Check that features enumerated
 1. Check that no point enumeration
