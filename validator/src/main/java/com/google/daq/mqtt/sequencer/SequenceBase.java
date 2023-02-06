@@ -10,6 +10,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 
@@ -20,6 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
@@ -40,6 +42,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -60,12 +63,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
+import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
 import udmi.schema.Config;
@@ -173,6 +178,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
+  private Stage testStage;
   private long testStartTimeMs;
   private File testDir;
   private PrintWriter sequencerLog;
@@ -344,13 +350,18 @@ public class SequenceBase {
 
   private void writeSequenceMdHeader() {
     String block = testDescription == null ? "" : String.format("%s\n\n", testDescription);
-    sequenceMd.printf("\n## %s\n\n%s", testName, block);
+    sequenceMd.printf("\n## %s (%s)\n\n%s", testName, testStage.name(), block);
     sequenceMd.flush();
   }
 
   private String getTestDescription(org.junit.runner.Description description) {
     Description annotation = description.getAnnotation(Description.class);
     return annotation == null ? null : annotation.value();
+  }
+
+  private Stage getTestStage(org.junit.runner.Description description) {
+    Feature annotation = description.getAnnotation(Feature.class);
+    return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
   }
 
   private void resetDeviceConfig() {
@@ -1293,7 +1304,7 @@ public class SequenceBase {
   class SequenceTestWatcher extends TestWatcher {
 
     @Override
-    protected void starting(org.junit.runner.Description description) {
+    protected void starting(@NotNull org.junit.runner.Description description) {
       try {
         setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
@@ -1301,15 +1312,16 @@ public class SequenceBase {
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
+        testStage = getTestStage(description);
 
         testStartTimeMs = System.currentTimeMillis();
 
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
-        systemLog = new PrintWriter(new FileOutputStream(new File(testDir, SYSTEM_LOG)));
-        sequencerLog = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCER_LOG)));
-        sequenceMd = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCE_MD)));
+        systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
+        sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
+        sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
         writeSequenceMdHeader();
 
         notice("starting test " + testName);
