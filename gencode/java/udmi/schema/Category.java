@@ -70,6 +70,11 @@ public class Category {
     public static final Level SYSTEM_AUTH_FAIL_LEVEL = WARNING;
     static { LEVEL.put(SYSTEM_AUTH_FAIL, WARNING); }
 
+    // Category for normal operating state (also default).
+    public static final String POINTSET_POINT_NOMINAL = "pointset.point.nominal";
+    public static final Level POINTSET_POINT_NOMINAL_LEVEL = INFO;
+    static { LEVEL.put(POINTSET_POINT_NOMINAL, INFO); }
+
     // The `set_value` for a point has been applied
     public static final String POINTSET_POINT_APPLIED = "pointset.point.applied";
     public static final Level POINTSET_POINT_APPLIED_LEVEL = INFO;

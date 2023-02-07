@@ -17,7 +17,7 @@ The 'pubber swarm' capability relies on four major components:
 ## Create/identify GCP project
 
   * Set project location if/as necessary for your organization
-  * Docs assume GCP_PROJECT env varaible is set appropriately, e.g.
+  * Docs assume GCP_PROJECT env variable is set appropriately, e.g.
   `export GCP_PROJECT=udmi-swarm-example`
 
 ## Setup IoT Core Registry

@@ -7,7 +7,7 @@ it involves running the provisioning agent on a local-network web-server that is
 configured to connect to an (already created) cloud instance.  There are three main
 components to the flow:
 
-* `Device`: IoT device that needs to be provisionined in the cloud.
+* `Device`: IoT device that needs to be provisioned in the cloud.
 * `Cloud`: IoT cloud instance that is the ultimate connection endpoint.
 * `Agent`: The provisioning agent that receives provision requests and does the needful.
 
@@ -37,11 +37,12 @@ To accomplish there, there are four main steps:
      | Connect     |               |
      |------------>|               |
      |             |               |
+
 ```
 
+```
 https://textart.io/sequence#
 
-```
 object Device Cloud Agent
 Device->Agent: Request
 Agent->Cloud: Provision
