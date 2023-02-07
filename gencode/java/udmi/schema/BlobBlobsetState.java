@@ -2,15 +2,11 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import javax.annotation.processing.Generated;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -37,7 +33,7 @@ public class BlobBlobsetState {
      */
     @JsonProperty("phase")
     @JsonPropertyDescription("Phase for the management of a configuration blob.")
-    public BlobBlobsetState.BlobPhase phase;
+    public udmi.schema.BlobBlobsetConfig.BlobPhase phase;
     /**
      * Entry
      * <p>
@@ -73,53 +69,6 @@ public class BlobBlobsetState {
         }
         BlobBlobsetState rhs = ((BlobBlobsetState) other);
         return ((((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase)))&&((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
-    }
-
-
-    /**
-     * BlobPhase
-     * <p>
-     * Phase for the management of a configuration blob.
-     * 
-     */
-    @Generated("jsonschema2pojo")
-    public enum BlobPhase {
-
-        APPLY("apply"),
-        FINAL("final");
-        private final String value;
-        private final static Map<String, BlobBlobsetState.BlobPhase> CONSTANTS = new HashMap<String, BlobBlobsetState.BlobPhase>();
-
-        static {
-            for (BlobBlobsetState.BlobPhase c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        BlobPhase(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static BlobBlobsetState.BlobPhase fromValue(String value) {
-            BlobBlobsetState.BlobPhase constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 }
