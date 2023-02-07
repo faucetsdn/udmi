@@ -1,5 +1,7 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Categories](#)
 
+<!-- This file is consumed by the automatic generator script bin/gencode_categories -->
+
 # Entry Error Categories
 
 Categories are assembled in a hierarical fashion to represent the intended level

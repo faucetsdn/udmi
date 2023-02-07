@@ -9,11 +9,11 @@ import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -129,6 +129,7 @@ public class Validator {
   private static final String VALIDATION_EVENT_TOPIC = "validation/event";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
+  private static final Date START_TIME = new Date();
   private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -207,7 +208,6 @@ public class Validator {
             setSchemaSpec(removeNextArg(argList));
             break;
           case "-t":
-            cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
             validatePubSub(removeNextArg(argList));
             break;
           case "-f":
@@ -238,9 +238,22 @@ public class Validator {
     return argList;
   }
 
+  private void validatePubSub(String instName) {
+    cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model));
+    String registryId = getRegistryId();
+    String updateTopic = cloudIotManager.getUpdateTopic();
+    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
+    if (updateTopic != null) {
+      dataSinks.add(client);
+    }
+  }
+
   private void processProfile(File profilePath) {
     config = ConfigUtil.readExecutionConfiguration(profilePath);
     setSiteDir(config.site_model);
+    if (!Strings.isNullOrEmpty(config.feed_name)) {
+      validatePubSub(config.feed_name);
+    }
   }
 
   MessageReadingClient getMessageReadingClient() {
@@ -330,9 +343,11 @@ public class Validator {
    * @param schemaPath schema specification directory
    */
   public void setSchemaSpec(String schemaPath) {
-    File schemaFile = new File(schemaPath).getAbsoluteFile();
+    File schemaPart = new File(schemaPath);
+    boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
+    File schemaFile = rawPath ? schemaPart : new File(new File(config.udmi_root), schemaPath);
     if (schemaFile.isFile()) {
-      schemaRoot = schemaFile.getParentFile();
+      schemaRoot = Optional.ofNullable(schemaFile.getParentFile()).orElse(new File("."));
       schemaSpec = schemaFile.getName();
     } else if (schemaFile.isDirectory()) {
       schemaRoot = schemaFile;
@@ -358,15 +373,6 @@ public class Validator {
     return schemaMap;
   }
 
-  private void validatePubSub(String instName) {
-    String registryId = getRegistryId();
-    String updateTopic = cloudIotManager.getUpdateTopic();
-    client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
-    if (updateTopic != null) {
-      dataSinks.add(client);
-    }
-  }
-
   private String getRegistryId() {
     return config.registry_id;
   }
@@ -383,7 +389,9 @@ public class Validator {
       return;
     }
     sendInitializationQuery();
+    System.err.println("Running udmi tools version " + UDMI_TOOLS);
     System.err.println("Entering message loop on " + client.getSubscriptionId());
+    processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
             REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
@@ -743,6 +751,8 @@ public class Validator {
     report.timestamp = new Date();
     report.summary = summary;
     report.devices = devices;
+    report.tools = UDMI_TOOLS;
+    report.start_time = START_TIME;
     return report;
   }
 

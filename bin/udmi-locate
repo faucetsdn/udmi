@@ -1,10 +1,6 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(realpath $(dirname $(readlink -f $0))/..)
-
-source $UDMI_ROOT/etc/shell_common.sh
-
-source $UDMI_ROOT/etc/find_udmi_profile.sh
+source $(realpath $(dirname $(readlink -f $0))/..)/etc/udmi_preamble.sh
 
 echo profile: ${udmi_profile}
-echo site_model: ${site_model}
+echo site_model: ${udmi_site}

@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+""" Gencode generator for buckets """
+import re
+import os
+
+GENCODE_MARKER = '@@ '
+BUCKET_MARKER = '* '
+
+BUCKET_REGEX = r' *\* _([a-z]+)_: (.*)'
+JSON_FORMAT = '%s%s{ "pattern": "^%s$" }'
+DEVICE_PREFIX = 'device'
+
+JAVA_DESCRIPTION = '\n%s// %s\n'
+JAVA_TARGET = '%s%s("%s")%s\n'
+
+DOCS_IN = 'docs/specs/buckets.md'
+JAVA_IN = 'etc/Bucket.java'
+JAVA_OUT = 'gencode/java/udmi/schema/Bucket.java'
+
+def read_buckets(docs_in):
+  buckets = []
+  prefix = []
+  previous = -1
+  group = None
+  with open(docs_in, 'r', encoding='utf-8') as doc:
+    while line := doc.readline():
+      indent = line.find(BUCKET_MARKER)//2
+      match = re.match(BUCKET_REGEX, line)
+      if indent < 0 or not match:
+        continue
+      if indent < previous:
+        for _ in range(indent, previous):
+          # pylint: disable-next=unused-variable
+          rem = prefix.pop(len(prefix) - 1)
+      elif indent > previous:
+        if group:
+          prefix.append(group)
+      previous = indent
+      group = match.group(1)
+      bucket = '.'.join(prefix + [group])
+      description = match.group(2)
+      entry = (bucket, description)
+      buckets.append(entry)
+  return buckets
+
+def write_java_out(buckets, java_in, java_out):
+  os.makedirs(os.path.dirname(java_out), exist_ok=True)
+  with open(java_in, 'r', encoding='utf-8') as inp:
+    with open(java_out, 'w', encoding='utf-8') as out:
+      while line := inp.readline():
+        index = line.find(GENCODE_MARKER)
+        if index >= 0:
+          indent = line[0:index]
+          write_java_buckets(out, indent, buckets)
+        else:
+          out.write(line)
+
+def write_java_buckets(out, indent, buckets):
+  for bucket in buckets:
+    target = bucket[0]
+    if target.startswith(DEVICE_PREFIX):
+      continue
+    desc = bucket[1]
+    const = target.replace('.', '_').upper()
+    out.write(JAVA_DESCRIPTION % (indent, desc))
+    out.write(JAVA_TARGET % (indent, const, target, ','))
+  out.write(JAVA_DESCRIPTION % (indent, 'unknown default value'))
+  out.write(JAVA_TARGET % (indent, 'UNKNOWN_DEFAULT', 'unknown', ';'))
+
+
+def main():
+  buckets = read_buckets(DOCS_IN)
+  write_java_out(buckets, JAVA_IN, JAVA_OUT)
+
+if __name__ == '__main__':
+  main()
+
+

@@ -16,8 +16,11 @@ if [[ -d $prefix ]]; then
 
   # Clear out existing generated sequences
   sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
-  
+
   sequences=$(cd $prefix; find . -name sequence.md | sort)
+  to_add=
+
+  echo "Generating table of contents:"
 
   # Generate table of contents
   for sequence in $sequences; do
@@ -28,18 +31,21 @@ if [[ -d $prefix ]]; then
       echo "  $name: Invalid or missing header."
       continue
     fi
-    description=": $(sed -n -n '/^1\./q;p' $prefix/$sequence | fgrep -v \#\# | xargs echo)"
-    echo "* [${name}](#${name})${description%: }" >> $SEQUENCE_MD
-  done
-
-  # Add in specific test sequences
-  for sequence in $sequences; do
-    directory=${sequence%/sequence.md}
-    name=${directory##.*/}
-    header=$(fgrep \#\# $prefix/$sequence) || true
-    if [[ -z $header ]]; then
+    if [[ $header == *\(ALPHA\)* ]]; then
+      echo "  $name: Skipping alpha test."
       continue
     fi
+    description=": $(sed -n -n '/^1\./q;p' $prefix/$sequence | fgrep -v \#\# | xargs echo)"
+    echo "* [${name}](#${name})${description%: }" >> $SEQUENCE_MD
+    to_add+=" $sequence"
+  done
+
+  echo "Processing sequences:"
+
+  # Add in specific test sequences
+  for sequence in $to_add; do
+    directory=${sequence%/sequence.md}
+    name=${directory##.*/}
     echo "  $name"
     cat $prefix/$sequence >> $SEQUENCE_MD
     mkdir -p validator/sequences/$directory

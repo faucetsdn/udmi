@@ -19,6 +19,9 @@
     "update_topic": {
       "type": "string"
     },
+    "feed_name": {
+      "type": "string"
+    },
     "reflect_region": {
       "type": "string"
     },
@@ -40,7 +43,13 @@
     "log_level": {
       "type": "string"
     },
+    "min_stage": {
+      "type": "string"
+    },
     "udmi_version": {
+      "type": "string"
+    },
+    "udmi_root": {
       "type": "string"
     },
     "alt_project": {

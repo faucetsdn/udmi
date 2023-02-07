@@ -19,8 +19,9 @@ public class SequenceRunnerTest {
   private static final String TEST_DEVICE = "AHU-1";
   private static final int MODEL_DEVICE_COUNT = 4;
 
-  // Minimum number of tests allowed. This is a "low water mark" to be increased as appropriate.
-  private static final int TEST_COUNT_MIN = 15;
+  // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate.
+  // Only tracks tests marked as non-ALPHA.
+  private static final int TEST_COUNT_MIN = 3;
   private static final int TEST_COUNT_MAX = TEST_COUNT_MIN * 2;
   private static final int SITE_COUNT_MAX = TEST_COUNT_MAX * MODEL_DEVICE_COUNT;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;

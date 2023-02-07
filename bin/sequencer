@@ -9,6 +9,13 @@ TEST_LOG=/tmp/test_log.txt
 log_level=INFO
 UDMI_ALT_REGISTRY=ZZ-TRI-FECTA-ALT-REGISTRY
 
+min_stage=BETA
+
+if [[ $1 == '-a' ]]; then
+    min_stage=ALPHA
+    shift
+fi
+
 if [[ $1 == '-v' ]]; then
     log_level=DEBUG
     shift
@@ -55,6 +62,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "alt_registry": "$UDMI_ALT_REGISTRY",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
+  "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",
   "key_file": "$site_path/validator/rsa_private.pkcs8"
 }

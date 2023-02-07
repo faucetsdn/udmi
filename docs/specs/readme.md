@@ -4,6 +4,8 @@
 
 ## Device Compliance
 - [UDMI Compliance](compliance.md)
+- [Error Categories](categories.md)
+- [Feature Buckets](buckets.md)
 
 ## Device 
 - [Messages](../messages/)

@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.REQUIRED;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
@@ -10,7 +10,9 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -19,13 +21,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
-import com.google.daq.mqtt.util.TimePeriodConstants;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -40,6 +42,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -60,13 +63,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
+import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
+import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Entry;
@@ -93,7 +99,7 @@ public class SequenceBase {
   public static final String RESULT_FAIL = "fail";
   public static final String RESULT_PASS = "pass";
   public static final String RESULT_SKIP = "skip";
-  public static final String RESULT_FORMAT = "RESULT %s %s%s %s";
+  public static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
   public static final String SEQUENCER_CATEGORY = "sequencer";
@@ -135,6 +141,7 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private static final String UNKNOWN_CATEGORY = "unknown";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -171,6 +178,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
+  private Stage testStage;
   private long testStartTimeMs;
   private File testDir;
   private PrintWriter sequencerLog;
@@ -342,13 +350,18 @@ public class SequenceBase {
 
   private void writeSequenceMdHeader() {
     String block = testDescription == null ? "" : String.format("%s\n\n", testDescription);
-    sequenceMd.printf("\n## %s\n\n%s", testName, block);
+    sequenceMd.printf("\n## %s (%s)\n\n%s", testName, testStage.name(), block);
     sequenceMd.flush();
   }
 
   private String getTestDescription(org.junit.runner.Description description) {
     Description annotation = description.getAnnotation(Description.class);
     return annotation == null ? null : annotation.value();
+  }
+
+  private Stage getTestStage(org.junit.runner.Description description) {
+    Feature annotation = description.getAnnotation(Feature.class);
+    return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
   }
 
   private void resetDeviceConfig() {
@@ -468,7 +481,7 @@ public class SequenceBase {
   }
 
   @Test
-  @FeatureStage(REQUIRED)
+  @Feature(stage = STABLE)
   public void valid_serial_no() {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");
@@ -479,9 +492,12 @@ public class SequenceBase {
   private void recordResult(String result, org.junit.runner.Description description,
       String message) {
     String methodName = description.getMethodName();
-    FeatureStage stage = description.getAnnotation(FeatureStage.class);
-    String suffix = (stage == null || stage.value() == REQUIRED) ? "" : (" " + stage.value());
-    String resultString = String.format(RESULT_FORMAT, result, methodName, suffix, message);
+    Feature feature = description.getAnnotation(Feature.class);
+    Bucket bucket = getBucket(feature);
+    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    int score = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
+    String resultString = String.format(RESULT_FORMAT, result, bucket.value(), methodName, stage,
+        score, message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
       log.print(resultString);
@@ -489,6 +505,21 @@ public class SequenceBase {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
     }
+  }
+
+  private Bucket getBucket(Feature feature) {
+    if (feature == null) {
+      return UNKNOWN_DEFAULT;
+    }
+    Bucket implicit = feature.value();
+    Bucket explicit = feature.bucket();
+    if (implicit != UNKNOWN_DEFAULT && explicit != UNKNOWN_DEFAULT) {
+      throw new RuntimeException("Both implicit and explicit buckets defined for feature");
+    }
+    if (implicit == UNKNOWN_DEFAULT && explicit == UNKNOWN_DEFAULT) {
+      return UNKNOWN_DEFAULT;
+    }
+    return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
   private void recordRawMessage(Map<String, Object> message, Map<String, String> attributes) {
@@ -1277,7 +1308,7 @@ public class SequenceBase {
   class SequenceTestWatcher extends TestWatcher {
 
     @Override
-    protected void starting(org.junit.runner.Description description) {
+    protected void starting(@NotNull org.junit.runner.Description description) {
       try {
         setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
@@ -1285,15 +1316,16 @@ public class SequenceBase {
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
+        testStage = getTestStage(description);
 
         testStartTimeMs = System.currentTimeMillis();
 
         testDir = new File(new File(deviceOutputDir, TESTS_OUT_DIR), testName);
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
-        systemLog = new PrintWriter(new FileOutputStream(new File(testDir, SYSTEM_LOG)));
-        sequencerLog = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCER_LOG)));
-        sequenceMd = new PrintWriter(new FileOutputStream(new File(testDir, SEQUENCE_MD)));
+        systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
+        sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
+        sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
         writeSequenceMdHeader();
 
         notice("starting test " + testName);

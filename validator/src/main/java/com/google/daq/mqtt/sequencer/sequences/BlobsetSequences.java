@@ -1,13 +1,14 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.FeatureStage.Stage.PREVIEW;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
+import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
-import com.google.daq.mqtt.sequencer.FeatureStage;
+import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -288,7 +289,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
-  @FeatureStage(PREVIEW)
+  @Feature(stage = STABLE, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
     deviceRestart();
   }

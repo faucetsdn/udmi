@@ -1,5 +1,5 @@
 
-## system_mode_restart
+## system_mode_restart (STABLE)
 
 Restart and connect to same endpoint and expect it returns.
 

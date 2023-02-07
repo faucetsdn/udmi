@@ -33,6 +33,10 @@ else
     done
 fi
 
+test_out_base=sites/udmi_site_model/out/devices/AHU-1/tests
+mkdir -p $test_out_base
+all_tests=$(ls -1 $test_out_base)
+
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
 
@@ -69,7 +73,7 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
+bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
@@ -87,5 +91,16 @@ fi
 generated=docs/specs/sequences/generated.md
 cp $generated /tmp/  # Save for test/comparison later
 bin/gencode_seq
+
+echo Comparing diff /tmp/sequencer.out etc/sequencer.out
+diff -u /tmp/sequencer.out etc/sequencer.out
+
+echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
+diff -u /tmp/generated.md docs/specs/sequences/generated.md
+
+generated_sequences=$test_out_base/%/sequence.md
+expected_sequences=validator/sequences/%/sequence.md
+echo Comparing diff $generated_sequences $expected_sequences
+echo $all_tests | xargs -I% diff -u $generated_sequences $expected_sequences
 
 echo Done with base test_sequencer run.
