@@ -45,12 +45,15 @@ etags
 ethmac
 ETHMAC
 evice
+faucetsdn
 fieldbus
 gcloud
 GCP
 GCR
 GCS
+gencode
 GiB
+github
 Github
 GitLab
 gittools
@@ -63,6 +66,7 @@ https
 IAM
 idToken
 invoker
+io
 iot
 IoT
 ipv
