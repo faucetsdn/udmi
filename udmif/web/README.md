@@ -39,7 +39,7 @@ cp src/env.template.js src/.env.js
 ---
 When adding a new env variable, it will need to be added in a few places.
 - `env.template.js`, this is the config file which GitLab will use to inject it's private values during the build. These variables must be added to the CI.
-- `env.js`, this is your personal config file, this file is not comitted to the repo and is the one used during development. It is used in the `index.html` file.
+- `env.js`, this is your personal config file, this file is not committed to the repo and is the one used during development. It is used in the `index.html` file.
 - `env.service.ts`, this is the service which exposes the env variables for use in Angular. They should be initialized in here with some default value, and will be overridden by the ones set by `env.js`.
 - `docker-entrypoint.sh`, this is the file which invokes the replacement of the GitLab CI variables into the `env.template.js` file. It outputs the `env.js` file.
 

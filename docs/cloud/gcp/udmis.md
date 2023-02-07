@@ -10,4 +10,4 @@ UDMIS (Universal Device Management Interface Services) is a cloud infrastructure
 
 Note: `gcloud` must be installed locally, and authenticated with normal credentials `gcloud auth login`
 
-A `--service_account="SERVICE_ACCOUNT"` argument can be provided to deploy cloud functions with the given service account if the cloud environment does not permit use of the App Engine default service accountœ
+A `--service_account="SERVICE_ACCOUNT"` argument can be provided to deploy cloud functions with the given service account if the cloud environment does not permit use of the App Engine default service account.

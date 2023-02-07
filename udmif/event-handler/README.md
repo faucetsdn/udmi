@@ -59,7 +59,7 @@ curl -d "@sample.json" \
   http://localhost:8080
 ```
 
-There are pre-canned curl messages in the sample_messages/canned-curl-messages.txt file.
+There are canned curl messages in the sample_messages/canned-curl-messages.txt file.
 
 ## Unit Tests
 ---

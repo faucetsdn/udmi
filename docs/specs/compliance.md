@@ -21,14 +21,14 @@ individual features and buckets. This aids in assessing levels or completeness o
 device and can be used for defining requirements.
 
 *   **Native UDMI**
-    *   _`Payloads`_ - Native configuration of UDMI payloads - not dependant on manual creation of MQTT message structures
+    *   _`Payloads`_ - Native configuration of UDMI payloads - not dependent on manual creation of MQTT message structures
 *   **Connection**
     *   _`MQTT 3.1.1 support`_ - Device supports MQTT 3.1.1
-    *   _`MQTT/TLS Support`_ - Device supports connection to an MQTT broker with TLS encryption and at least TLS v1.2 
+    *   _`MQTT/TLS Support`_ - Device supports connection to an MQTT broker with TLS encryption and at least TLS v1.2
     *   _`Server certificate validation`_ - Device validates MQTT broker server certificates
     *   _`Maintains Connection`_ - The device can connect and sustain a connection to the MQTT broker
-    *   _`Network resumption reconnection`_ - Device reconnects to MQTT broker when connection is lost, or reattempts connection if connection attempts are unsuccesful
-    *   _`Exponential backoff`_ - Device reconnects to MQTT broker when connection is lost, or reattempts connection if connection attempts are unsuccesful
+    *   _`Network resumption reconnection`_ - Device reconnects to MQTT broker when connection is lost, or reattempts connection if connection attempts are unsuccessful
+    *   _`Exponential backoff`_ - Device reconnects to MQTT broker when connection is lost, or reattempts connection if connection attempts are unsuccessful
     *   **Authentication**
         *   _`JWT `_ - Device is able to authenticate to an MQTT bridge using JWT credentials in the password and renew
 *   **Endpoint**
@@ -36,7 +36,7 @@ device and can be used for defining requirements.
     *   _`Configurable private keys`_ - Possible to upload private keys onto the device for MQTT authentication
     *   _`Device generated keys`_ - Possible to generate private/public key pair on the device and to download the public key
     *   _`Client certificate rotation`_ - Device can rotate between multiple private keys to use for MQTT broker connection
-    *   _`Endpoint remote configuration `_ - Device can be remotely reconfigured to a different GCP Project/MQTT Broker 
+    *   _`Endpoint remote configuration `_ - Device can be remotely reconfigured to a different GCP Project/MQTT Broker
     *   **Reconfiguration**
         *   _`Hostname`_ - The device implements UDMI endpoint reconfiguration, and can receive a new hostname for the MQTT endpoint configuration
         *   _`Port`_ - The device implements UDMI endpoint reconfiguration, and can receive a new port for the MQTT endpoint configuration
@@ -45,12 +45,12 @@ device and can be used for defining requirements.
         *   _`Comit new endpoint`_ - The device commits new endpoint configuration to permanent memory and uses the new configuration after a reboot
     *   **Config**
         *   _`Config subscription`_ - Device subscribes to the config topic
-        *   _`Config PUBACK`_ - Device subscribes to the config topic with a QoS 1 and always publishes PUBACKs to the broker 
-        *   _`Config message parsing`_ - Config messages are parsed with expected behaviour, including when there are erroneous fields
+        *   _`Config PUBACK`_ - Device subscribes to the config topic with a QoS 1 and always publishes PUBACKs to the broker
+        *   _`Config message parsing`_ - Config messages are parsed with expected behavior, including when there are erroneous fields
         *   _`State after configuration`_ - Device publishes state messages after receiving a config message
         *   _`Last Update`_ - system.last_update field in state messages matches timestamp of last config message
-        *   _`Broken config handling`_ - The device remains functional when receiving a config messages which is invalid at a core level (e.g. invalid JSON, missing fields required fields such as top level timestamp), retaining the previous config 
-        *   _`Extra field in config handling`_ - The device remains functional when config messages contains fields which are not recognised by the device
+        *   _`Broken config handling`_ - The device remains functional when receiving a config messages which is invalid at a core level (e.g. invalid JSON, missing fields required fields such as top level timestamp), retaining the previous config
+        *   _`Extra field in config handling`_ - The device remains functional when config messages contains fields which are not recognized by the device
         *   **Logging**
             *   _`Config Receive`_ - Device publishes a logentry when it receives a config update
             *   _`Config Parse`_ - Device publishes a logentry when it parses a config update
@@ -58,12 +58,12 @@ device and can be used for defining requirements.
     *   **State**
         *   _`Schema`_ - State message payload schema conforms with schema for state messages
         *   _`Rate Limiting`_ - Device publishes state no more than 1 state update per second
-        *   _`Hardware`_ - Hardware block is included and the contents match the physical hardware 
+        *   _`Hardware`_ - Hardware block is included and the contents match the physical hardware
         *   _`Software`_ - Software block in state messages is included, with keys and values automatically generated by the device matching the software versions installed
         *   _`Serial Number`_ - Serial number is included and matches physical hardware
 *   **Pointset**
     *   **Config**
-        *   _`Datapoint mapping`_ - Mapping of UDMI data points to device-internal data points is through config messages 
+        *   _`Datapoint mapping`_ - Mapping of UDMI data points to device-internal data points is through config messages
         *   _`Pointset definition`_ - Device pointset (data points for which the device publishes data) is configured from config message
     *   **Pointset Event**
         *   _`Publish`_ - Publishes pointset event messages
@@ -82,7 +82,7 @@ device and can be used for defining requirements.
     *   **Config**
         *   _`Minimum loglevel `_ - Configurable min log level for filtering published status/logging information
     *   **Logging**
-        *   _`Buffered`_ - Device buffers messages, including those whilst the device is offline or before the UDMI application is initialised
+        *   _`Buffered`_ - Device buffers messages, including those whilst the device is offline or before the UDMI application is initialized
         *   _`system/logentry`_ - Device publishes log entries to system/log entry
         *   _`logentry schema`_ - Log entries are valid according to the schema
         *   **Log Entries**
@@ -107,12 +107,12 @@ device and can be used for defining requirements.
         *   _`Point state applied`_ - point state in state message set to applied
         *   _`Point value updated`_ - point value updated in telemetry
     *   **Overridden points**
-        *   _`Point state overridden`_ - point state in state message set to overridden 
+        *   _`Point state overridden`_ - point state in state message set to overridden
         *   _`status pointset.point.overridden`_ - point status for failure to apply
-        *   _`Active overidden detection`_ - Actively detects when a point is overidden 
-    *   **Unsuccesful Writeback**
+        *   _`Active overridden detection`_ - Actively detects when a point is overridden
+    *   **Unsuccessful Writeback**
         *   _`Invalid Value`_ - Point state set to invalid when writeback fails and the device knows it was because the device was invalid (e.g. out of acceptable range, type)
-        *   _`Unsuccesful value state`_ - Point state set to invalid or failure for unsuccesful writeback (e.g. out of range or unwriteable)
+        *   _`Unsuccessful value state`_ - Point state set to invalid or failure for unsuccessful writeback (e.g. out of range or unwriteable)
         *   _`Status Field`_ - point status for invalid writeback
     *   **State etag**
         *   _`State etags`_ - Device implements state etags and rejects config updates with invalid etags
@@ -132,7 +132,7 @@ device and can be used for defining requirements.
     *   **Enumeration**
         *   **Self enumeration**
     *   **Protocols**
-        *   _`IP `_ - Supports scanning IP 
+        *   _`IP `_ - Supports scanning IP
         *   _`Bacnet`_ - Supports scanning bacnet
 
 ## Testing
@@ -140,8 +140,5 @@ device and can be used for defining requirements.
 The [validator](../tools/validator.md) and [sequencer](../tools/sequencer.md) tools can be used to
 validate conformance to the schema.
 
-The [registar](../tools/registrar.md#tool-execution) tool can be used to validate
+The [registrar](../tools/registrar.md#tool-execution) tool can be used to validate
 [metadata](metadata.md) and [site models](site_model.md).
-
-[DAQ](https://github.com/faucetsdn/daq) can be used to run some automated [UDMI
-tests](https://github.com/faucetsdn/daq/blob/master/docs/cloud_tests.md) on devices

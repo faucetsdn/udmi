@@ -10,6 +10,7 @@ class MappingCommand:
     self.timestamp = None
     self.version = None
     self.guid = None
+    self.device_num_id = None
     self.status = None
     self.translation = None
 
@@ -21,6 +22,7 @@ class MappingCommand:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.guid = source.get('guid')
+    result.device_num_id = source.get('device_num_id')
     result.status = Entry.from_dict(source.get('status'))
     result.translation = BuildingTranslation.map_from(source.get('translation'))
     return result
@@ -49,6 +51,8 @@ class MappingCommand:
       result['version'] = self.version # 5
     if self.guid:
       result['guid'] = self.guid # 5
+    if self.device_num_id:
+      result['device_num_id'] = self.device_num_id # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
     if self.translation:

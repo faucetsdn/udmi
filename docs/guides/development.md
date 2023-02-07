@@ -1,6 +1,6 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Guides**](./) / [Development](#)
 
-# Development 
+# Development
 
 ## Schema Documentation
 
@@ -18,7 +18,7 @@ New schema files should automatically receive an entry in the index
 `gencode/docs/readme.md` file if they are not referenced by any other schema
 file. If a schema file is referenced by another schema file, but should still
 have an entry in the index page, then the name should be added to the  to the
-`ALWAYS_ROOT` list in `bin/gencode_root_schemas`. 
+`ALWAYS_ROOT` list in `bin/gencode_root_schemas`.
 
 Entries in the index `gencode/docs/readme.md` page sectioned according to the
 value of `$section` in the schema file. The section must also exist in the
@@ -29,25 +29,25 @@ section
 ## Releases
 
 The `bin/upgrade_version` tool updates :
-* the `$udmi_version` field in schema files, 
-* the version in `version` of of manually curated payloads in `tests/*.tests` 
+* the `$udmi_version` field in schema files,
+* the version in `version` of of manually curated payloads in `tests/*.tests`
 * documentation inline message examples.
 * the `UDMI_VERSION` constant in specific JAVA files.
 
 File in the `tests` directory must be listed in `etc/upversion.txt`. Only files
-which are preceded by a `y` in `upversion.txt` will have their version upgraded. Comments are supported after the file path, e.g. 
+which are preceded by a `y` in `upversion.txt` will have their version upgraded. Comments are supported after the file path, e.g.
 `y tests/state.tests/makemodel_upgrade.json tests message upgrade from v1`
 
 `bin/upgrade_version` carries out several checks on files which must be cleared before an update.
 
-`bin/upgrade_version` does not update any generated files (e.g. for CI testing). 
+`bin/upgrade_version` does not update any generated files (e.g. for CI testing).
 
 The following files need to be update:
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out/devices`
   into `validator/traces/simple.out/devices`
 * After `bin/test_validator`, `/tmp/validator.out` into `/etc/validator.out` (reset any changes to sites/udmi_site_model before running)
-* After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory (note these files are ignored by git, but must still be comitted)
-
+* After `bin/test_registrar && bin/test_sites`, the `out` directory for each device in `tests/downgrade.site/devices/` into the `expected` subdirectory
+  (note these files are ignored by git, but must still be committed)
 
 ## Configuring Cloud CI Tests
 
@@ -56,14 +56,15 @@ registry which mirrors the [example site model](https://github.com/faucetsdn/udm
 A Github secret must also configured to point to the GCP project
 
 They key steps to setup the dedicated project are as follows:
-1.  Setup up a GCP Project and IoT Core Registry. The 
-    [cloud setup](../cloud/gcp/cloud_setup.md) and [UDMIS (cloud functions) setup](../cloud/gcp/udmis.md) documents give guidance on this. If GCP Cloud SDK and re-authentication may be required. The registry name and cloud
-    region are as follows:
-    -   **Registry Name**: ZZ-TRI-FECTA
+1.  Setup up a GCP Project and IoT Core Registry. The
+    [cloud setup](../cloud/gcp/cloud_setup.md) and [UDMIS (cloud functions) setup](../cloud/gcp/udmis.md)
+    documents give guidance on this. If GCP Cloud SDK and re-authentication may be required. The registry name
+    and cloud region are as follows:
+    -   **Registry Name**: `ZZ-TRI-FECTA`
     -   **Cloud Region**: us-central1
-2.  Setup the site model by cloning the 
-    [example site model](https://github.com/faucetsdn/udmi_site_model) 
-    in the udmi root directory and running the [registrar](../tools/registrar.md) 
+2.  Setup the site model by cloning the
+    [example site model](https://github.com/faucetsdn/udmi_site_model)
+    in the udmi root directory and running the [registrar](../tools/registrar.md)
     tool to configure the site model in the IoT Core Registry.
     -   `git clone https://github.com/faucetsdn/udmi_site_model.git`
     -   `bin/registar <GCP_PROJECT_ID> udmi_site_model`
@@ -72,14 +73,14 @@ They key steps to setup the dedicated project are as follows:
     [`udmi_site_model/devices/AHU-1/rsa_public.pem`](https://raw.githubusercontent.com/faucetsdn/udmi_site_model/master/devices/AHU-1/rsa_public.pem).
     A `validator_config.json` configuration file is not needed (this is
     generated automatically during the CI test)
-    -   The registry name is **ZZ-TRI-FECTA**. 
-4.  A Github Secret needs to be added to the project. This is accessed from the
-    Project's _Settings_ page. The secret is as follows:
-        -   **Name**: GCP_TARGET_PROJECT
-        -   **Value**: _GCP Project ID_
+    -   The registry name is `ZZ-TRI-FECTA`.
+4.  A Github Secret needs to be added to the project, accessed from the
+    project's _Settings_ page. Note that in the test log output, the GCP Project ID will be
+    presented as rot13 text since GitHub otherwise redacts the secret from the logs.
+    -   **Name**: GCP_TARGET_PROJECT
+    -   **Value**: _GCP Project ID_
 5.  Enable Github Actions
 
-The workflow can be tested with an empty commit 
-(`git commit --allow-empty -m "Blank commit to trigger CI"; git push`). 
+The workflow can be tested with an empty commit
+(`git commit --allow-empty -m "Blank commit to trigger CI"; git push`).
 On an unmodified branch, these tests should pass if correctly configured
-

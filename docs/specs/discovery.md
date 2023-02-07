@@ -19,6 +19,36 @@ Backend services will receive a streaming set of
 [_discovery enumeration messages_](../../tests/event_discovery.tests/enumeration.json) that
 follow the appropriate [_discovery event schema_](../../gencode/docs/event_discovery.html).
 
+## Sequence Diagram
+
+The overall discovery sequence involves multiple components that work together to provide the overall flow:
+* **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
+* **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
+* **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
+
+(The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
+
+```mermaid
+sequenceDiagram
+  %%{wrap}%%
+  participant Devices
+  participant Spotter
+  participant Agent as Agent<br/>(w/ Mapping)
+  participant Pipeline
+  Note over Devices, Agent: Discovery Start
+  activate Agent
+  Agent->>Spotter: DISCOVERY CONFIG<br/>()
+  loop
+    Devices-->Spotter: fieldbus
+    Spotter->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
+  end
+  Note over Agent: Provisioning<br/>& Mapping
+  Agent ->> Pipeline: (config device)
+  deactivate Agent
+  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id, points)<br/><pointset>
+```
+
 ## Scanning
 
 _Scanning_ is the process of scanning a network and identifying the various

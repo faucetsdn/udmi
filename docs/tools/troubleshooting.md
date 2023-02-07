@@ -2,15 +2,13 @@
 
 # Troubleshooting
 
-## Cloud IoT Core Dashboard
-
-### Site Registry
+## Site Registry
 
 * udmi_target
 * udmi_state
 * device-under-test
 
-### UDMI-REFLECT Registry
+## UDMI-REFLECT Registry
 
 * udmi_reflect
 * (no state)
@@ -30,6 +28,3 @@
 * udmi_state
 * udmi_config
 * udmi_update
-
-## Firestore
-

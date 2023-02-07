@@ -38,7 +38,7 @@ The following parameters are currently supported from the CLI:
 * `noHardware`: Omits the `system.hardware` field from state messages (will
   trigger validation error, missing required field)
 * `noConfigAck`: Subscribes to the `config` topic with a QoS of 0, therefore
-  will not send PUBACK's for config messages
+  will not send PUBACKs for config messages
 * `messageTrace`: More verbose output of captured messages (to `pubber/out/`)
 
 More advanced options can be set by by calling pubber directly with the path a
