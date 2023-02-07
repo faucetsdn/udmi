@@ -31,7 +31,7 @@ Depending on the system, this might encompass a number of different network prot
 * [_start state_](../../../tests/state.tests/discovery.json): Indicates the device is actively
   scanning, with `generation` should match that of _config_, and the `active` as `true`.
 * [_discovery event_](../../../tests/event_discovery.tests/discovery.json): Streaming results
-  for scanned devices (keyed by matchhing `generation` field): one _event_ for each unique device scanned.
+  for scanned devices (keyed by matching `generation` field): one _event_ for each unique device scanned.
 * [_stop state_](../../../tests/state.tests/scan_stop.json): Once complete, the _active_ field is `false`
   (or removed). Ideally the `generation` field would remain to indicate the last scan performed.
 
@@ -65,7 +65,7 @@ or transient BACnet traffic.
 * [_discovery event_](../../../tests/event_discovery.tests/continuous.json): Events as per normal, except no `generation`.
 
 For this case, there is no _stop state_ message since the scan never stops: The process silently stops when the
-`scan_interval_sec` parameter is removed from the config. Addionally, the `scan_interval_sec` field indicates the
+`scan_interval_sec` parameter is removed from the config. Additionally, the `scan_interval_sec` field indicates the
 duration within which a scan result for a given device should _not_ be repeated. E.g., if a device is passively
 detected every _30 sec_, but the scan interval is _60 sec_, then the result would only be reported for
 (approximately) every other detection.
@@ -83,7 +83,7 @@ and can be explicitly directed to enumerate itself. This also applies to all dir
 * [_discovery event_](../../../tests/event_discovery.tests/enumeration.json): The results do not have a `family` block,
   rather, the device id is determined from the envelope's `deviceId` field.
 
-With self enumeration there is no specific _stop state_, as the system deterministally sends a single device's
+With self enumeration there is no specific _stop state_, as the system deterministically sends a single device's
 _discovery event_ corresponding to the _config_ trigger.
 
 ## Scan Enumeration
@@ -105,7 +105,7 @@ There's different ways to report errors, depending on the scope of the error.
 
 * [_scan error_](../../../tests/state.tests/scan_error.json): Exemplifies how a device should report an error
 potentially affecting all _devices_ or points during a scan.
-* [_self error_](../../../tests/state.tests/enumeration.json): Detils status while processing _self_ enumeration
+* [_self error_](../../../tests/state.tests/enumeration.json): Details status while processing _self_ enumeration
   that potentially affects all _points_.
 * [_point error_](../../../tests/event_discovery.tests/point_error.json): Details how an _individual_ point error
   should be reported during (_self_ or _scan_) enumeration.

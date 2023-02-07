@@ -9,7 +9,7 @@ UDMI world.
 
 ## Abstract Framing
 
-Abstractly, the goal is to connect on-prem devces with their cloud-based
+Abstractly, the goal is to connect on-prem devices with their cloud-based
 representations. In between there's various bits of _stuff_ that facilitate
 that connection.
 
@@ -84,7 +84,7 @@ On-prem              Cloud
 
 ### Gateway (singleton)
 
-The degenerate case of a singleton (only one device) system could stil use
+The degenerate case of a singleton (only one device) system could still use
 a _gateway_ construct; however, this is ultimately less elegant since there is extra
 configuration and overhead required. In this case, the _adapter_ model
 is preferred as it's overall more clean (but a _gateway_ would still be functionally

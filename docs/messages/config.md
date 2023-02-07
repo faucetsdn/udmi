@@ -28,7 +28,7 @@ should not be sent. See note below for a description of the level value.
 * `sample_rate_sec`: Sampling rate for the system, which should proactively send an
 update (e.g. _pointset_, _logentry_, _discover_ message) at this interval.
 * `sample_limit_sec`: Minimum time between sample updates. Updates that happen faster than this time
-(e.g. due to _cov_ events) should be coalesced so that only the most recent update is sent.
+(e.g. due to `cov` events) should be coalesced so that only the most recent update is sent.
 
 #### Point
 

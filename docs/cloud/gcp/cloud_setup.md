@@ -16,7 +16,7 @@
     *   Set the default _Cloud Pub/Sub topic_ for the registry to the topic `udmi_target`
     *   Set the _Device state topic_ (may be hidden under _Advanced Options_) to `udmi_state`
 4.  Install the Google Cloud SDK in order to be able to use some of the tools included,
-    such as the registrar tool
+    such as the `registrar` tool
     *   Follow the guidance on [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
         installation documentation
     *   Once installed, configure the
@@ -25,7 +25,7 @@
     *   Select the project your registry resides in using
         `gcloud config set project <YOUR_PROJECT_ID>`
 5.  Ensure the authenticated user has at minimum the following IAM permissions
-    in order to use the the validator and registar tools
+    in order to use the the `validator` and `registrar` tools
     *   IoT Core Provisioner
     *   Pub/Sub Editor
 6.  Install [Cloud Functions](functions.md)

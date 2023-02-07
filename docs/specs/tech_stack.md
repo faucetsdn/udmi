@@ -13,7 +13,6 @@ technology stack for compliant IoT devices.
   * Connected to a specific Cloud IoT Registry designated for each site-specific project.
 * Utilizes the MQTT Topic table listed below.
 * JSON encoding following the core schema definition, specifying the semantic structure of the data.
-* Passes the [DAQ Validation Tool](../tools/validator.md) for all requirements.
 
 # MQTT Topic Suffix Table
 
@@ -34,7 +33,7 @@ Any backend system (in a GCP project) should adhere to the following guidelines:
   * The _state_ and _event_ messages are published to a topic configured through the IoT Core registry.
   * If necessary, any _config_ or _command_ messages should go through a PubSub topic, and then converted to the requisite Cloud IoT
   config write using a simple cloud function.
-* To make data persistent, it can be written to a back-end database, e.g. Firestore. See the `udmi_target` and
+* To make data persistent, it can be written to a back-end database. See the `udmi_target` and
   `udmi_state` [example cloud functions](../../udmis/functions/index.js) for details.
 * A similar function called `device_config` shows how PubSub can be used to update the Cloud IoT configuration.
 
@@ -53,7 +52,7 @@ can be housed in a different cloud project from the backend applications.
 
 When using the
 [GCP Cloud IoT Core MQTT Bridge](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)
-there are multiple ways the subschema used during validation is chosen.
+there are multiple ways the specific schema used during validation is chosen.
 * All messages have their attributes validated against the `.../attributes.json` schema. These attributes are
 automatically defined server-side by the MQTT Client ID and Topic, and are not explicitly included in any message payload.
 * A [device event message](https://cloud.google.com/iot/docs/how-tos/mqtt-bridge#publishing_telemetry_events)

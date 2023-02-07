@@ -3,7 +3,7 @@
 # Sequencer Setup
 
 The UDMI _sequencer_ tool monitors a sequence of messages from a device's stream and
-validates that the composition of sequential messsages is compliant with the UDMI Schema
+validates that the composition of sequential messages is compliant with the UDMI Schema
 
 1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/udmis.md) to your GCP project
 2.  Add a new GCP IoT Core registry with a registry ID of `UDMS-REFLECT`.
@@ -11,9 +11,9 @@ validates that the composition of sequential messsages is compliant with the UDM
     *   This serves as a _reflector_ of the MAIN IoT registry combining all messages
         published into a single stream.
 3.  Create credentials for a reflector 'device' (there is no actual, physical device):
-    *   On your local machine, run `mkdir validator` in the indended _site_model_ directory.
+    *   On your local machine, run `mkdir validator` in the intended _site_model_ directory.
     *   Run `bin/keygen RS256 validator` to create a public and private key.
-3.  Add a new device to the `UDMS-REFLECT` registry with the followong configuration:
+3.  Add a new device to the `UDMS-REFLECT` registry with the following configuration:
     *   device_id: Use the `<Registry ID>` as defined in Site Model for the devices to be tested.
     *   auth_key: Use the public key you just created from `validator/rsa_public.pem`
 
