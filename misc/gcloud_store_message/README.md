@@ -1,4 +1,4 @@
-# GCloud Store Messages
+# GCP Store Messages
 
 Saves a copy of all messages published by a device into GCS
 

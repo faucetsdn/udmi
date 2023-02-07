@@ -91,11 +91,6 @@ Device relationships and how they are modeled
 qualifies device types as meeting a baseline connectivity and security
 requirement by performing a series of predefined tests against a device.
 
-### Prerequisites
-
-* Devices are available for qualification
-* [DAQ tool](https://github.com/faucetsdn/daq/) set up for use 
-
 ### Verification
 
 * Device qualification configuration and reports for the device available.
@@ -104,9 +99,6 @@ requirement by performing a series of predefined tests against a device.
 
 ### Prerequisites
 * Digital building registry is provided 
-
-### Verification
-* ATA validates on-network configuration
 
 ## Device Management
 

@@ -7,21 +7,26 @@
 - [Error Categories](categories.md)
 - [Feature Buckets](buckets.md)
 
-## Device 
+## Device Capabilities
 - [Messages](../messages/)
 - [Connection Models](connecting.md)
-- [Discovery](discovery.md)
 - [IoT Gateway](gateway.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
+- [Categories](categories.md)
 - [Log/Status Entries](entries.md)
+- [System Mode](system_mode.md)
 
-## Device Onboarding, Site Model, Metadata
+## System Modeling
 - [Metadata](metadata.md)
 - [Site Model](site_model.md)
+- [Topology](topology.md)
 - [Onboarding](onboarding.md)
+  - [Discovery](discovery.md)
+  - [Mapping](mapping.md)
+  - [Provisioning](provisioning.md)
 
 ## Cloud Environment
 - [Message Walk](message_walk.md)
