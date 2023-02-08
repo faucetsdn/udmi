@@ -58,10 +58,10 @@
     "features": {
       "description": "UDMI Features Supported by this device",
       "additionalProperties": false,
-      "existingJavaType": "com.google.udmi.util.Features",
+      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
       "patternProperties": {
-        "^[a-z_]+$": {
-          "type": "object"
+        "^[a-z.]+$": {
+          "$ref": "file:event_discovery_feature.json#"
         }
       }
     },

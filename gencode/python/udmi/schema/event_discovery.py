@@ -2,40 +2,7 @@
 from .common import Entry
 from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
-
-
-class ObjectE6EEEF50:
-  """Generated schema class"""
-
-  def __init__(self):
-    pass
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ObjectE6EEEF50()
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ObjectE6EEEF50.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    return result
+from .event_discovery_feature import FeatureEnumerationEvent
 from .ancillary_properties import AncillaryProperties
 from .state_system_hardware import StateSystemHardware
 
@@ -113,7 +80,7 @@ class DiscoveryEvent:
     result.scan_id = source.get('scan_id')
     result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
     result.uniqs = PointEnumerationEvent.map_from(source.get('uniqs'))
-    result.features = ObjectE6EEEF50.map_from(source.get('features'))
+    result.features = FeatureEnumerationEvent.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
     return result
 
@@ -152,7 +119,7 @@ class DiscoveryEvent:
     if self.uniqs:
       result['uniqs'] = PointEnumerationEvent.expand_dict(self.uniqs) # 2
     if self.features:
-      result['features'] = ObjectE6EEEF50.expand_dict(self.features) # 2
+      result['features'] = FeatureEnumerationEvent.expand_dict(self.features) # 2
     if self.system:
       result['system'] = self.system.to_dict() # 4
     return result

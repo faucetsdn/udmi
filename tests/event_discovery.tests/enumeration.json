@@ -83,13 +83,5 @@
         ]
       }
     }
-  },
-  "features": {
-    "some": {
-      "arbitrary": {
-        "feature": {
-        }
-      }
-    }
   }
 }
