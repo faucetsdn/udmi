@@ -40,8 +40,10 @@ public enum Bucket {
 
     // unknown default value
     UNKNOWN_DEFAULT("unknown");
-    
+
     private final String value;
+
+    private static final Map<String, Bucket> allValues = new HashMap<>();
 
     Bucket(String value) {
         this.value = value;
@@ -50,4 +52,13 @@ public enum Bucket {
     public String value() {
     return this.value;
   }
+
+    public static boolean contains(String key) {
+      if (allValues.isEmpty()) {
+        for (Bucket bucket : values()) {
+          allValues.put(bucket.value, bucket);
+        }
+      }
+      return allValues.containsKey(key);
+    }
 }

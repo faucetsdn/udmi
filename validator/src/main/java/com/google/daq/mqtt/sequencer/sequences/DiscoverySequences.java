@@ -29,7 +29,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
+import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
@@ -83,6 +85,9 @@ public class DiscoverySequences extends SequenceBase {
 
     if (isTrue(enumerate.features)) {
       checkThat("features enumerated", () -> event.features != null);
+      Set<String> features = event.features.keySet();
+      Set<String> valid = features.stream().filter(Bucket::contains).collect(Collectors.toSet());
+      checkThat("all valid feature names", () -> valid.equals(features));
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
