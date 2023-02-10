@@ -13,12 +13,11 @@ import udmi.schema.FeatureEnumerationEvent.Stage;
 public abstract class SupportedFeatures {
 
   private static final Stack<FeatureEnumerationEvent> mapStack = new Stack<>();
-  private static final Stack<String> fullName = new Stack<>();
 
   static {
     mapStack.push(new FeatureEnumerationEvent());
     bucket("enumeration", Stage.STABLE, () -> {
-          bucket("feature");
+          bucket("features");
           bucket("pointset", Stage.BETA);
           bucket("families", Stage.ALPHA);
         }
@@ -39,17 +38,14 @@ public abstract class SupportedFeatures {
 
   private static void bucket(String name, Stage stage, Runnable value) {
     FeatureEnumerationEvent container = mapStack.peek();
-    String currentName = fullName.isEmpty() ? "" : fullName.peek();
     container.features = Optional.ofNullable(container.features).orElseGet(HashMap::new);
     FeatureEnumerationEvent features = container.features.computeIfAbsent(name,
         key -> new FeatureEnumerationEvent());
     features.stage = stage;
     if (value != null) {
       mapStack.push(features);
-      fullName.push(currentName + "." + name);
       value.run();
       mapStack.pop();
-      fullName.pop();
     }
   }
 }
