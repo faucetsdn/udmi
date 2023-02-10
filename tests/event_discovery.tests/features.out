@@ -1,2 +1,0 @@
-1 schema violations found
-  /features/discovery.scan/networks: object instance has properties which are not allowed by the schema: ["enp0s31f6","wlp0s20f3"]
