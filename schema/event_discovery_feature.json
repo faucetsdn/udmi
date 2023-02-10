@@ -16,17 +16,19 @@
       ]
     },
     "features": {
-      "$ref": "file:event_discovery_feature.json#/definitions/features"
+      "$comment": "Make Java happy because the json_for_humans generation doesn't handle recursion",
+      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
+      "type": "object"
     }
   },
-  "definitions": {
+  "$defs": {
     "features": {
       "description": "Map of device features",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
       "patternProperties": {
         "^[a-z.]+$": {
-          "$ref": "file:event_discovery_feature.json#"
+          "$ref": "#"
         }
       }
     }

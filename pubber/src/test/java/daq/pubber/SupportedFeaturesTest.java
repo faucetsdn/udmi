@@ -1,4 +1,5 @@
 package daq.pubber;
+
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -8,6 +9,9 @@ import udmi.schema.Bucket;
 import udmi.schema.FeatureEnumerationEvent;
 import udmi.schema.FeatureEnumerationEvent.Stage;
 
+/**
+ * Unit tests to make sure supported feature generation is working properly.
+ */
 public class SupportedFeaturesTest {
 
   @Test

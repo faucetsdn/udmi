@@ -34,11 +34,10 @@ public class FeatureEnumerationEvent {
     @JsonPropertyDescription("Feature implementation stage")
     public FeatureEnumerationEvent.Stage stage;
     /**
-     * Map of device features
+     * Make Java happy because the json_for_humans generation doesn't handle recursion
      * 
      */
     @JsonProperty("features")
-    @JsonPropertyDescription("Map of device features")
     public Map<String, FeatureEnumerationEvent> features;
 
     @Override

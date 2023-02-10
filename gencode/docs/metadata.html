@@ -23,12 +23,12 @@
     <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p><a href="../../docs/specs/metadata.md">Metadata</a> is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by <code>metadata.json</code></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiontimestamp">
     <div class="card">
         <div class="card-header" id="headingtimestamp">
@@ -50,15 +50,15 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 timestamp the message was generated</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
 </pre></div>
@@ -91,12 +91,12 @@
     <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Version of the UDMI schema</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -125,12 +125,12 @@
     <a href="#description" onclick="anchorLink('description')">description</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Generic human-readable text describing the device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -159,12 +159,12 @@
     <a href="#hash" onclick="anchorLink('hash')">hash</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Automatically generated field that contains the hash of file contents.</p>
 </span><span class="pattern-value" id="hash_pattern">Must match regular expression: <code>^[0-9a-z]{8}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -195,12 +195,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordioncloud_auth_type">
     <div class="card">
         <div class="card-header" id="headingcloud_auth_type">
@@ -232,15 +232,15 @@
     <a href="#cloud_auth_type" onclick="anchorLink('cloud_auth_type')">auth_type</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <span class="description"><p>The key type used for cloud communication.</p>
 </span><div class="enum-value" id="cloud_auth_type_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"ES256"</li><li class="list-group-item enum-item">"ES256_X509"</li><li class="list-group-item enum-item">"RS256"</li><li class="list-group-item enum-item">"RS256_X509"</li></ul>
-                </div>
-            
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"ES256"</li><li class="list-group-item enum-item">"ES256_X509"</li><li class="list-group-item enum-item">"RS256"</li><li class="list-group-item enum-item">"RS256_X509"</li></ul>
+            </div>
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -276,12 +276,12 @@
     <a href="#cloud_device_key" onclick="anchorLink('cloud_device_key')">device_key</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Whether the device authenticates via a private key. Typically false for devices which are proxied for by an IoT core gateway</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -317,12 +317,12 @@
     <a href="#cloud_is_gateway" onclick="anchorLink('cloud_is_gateway')">is_gateway</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>If the device functions as an IoT Gateway, proxying for other devices using a single logical connection</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -357,12 +357,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_location">
     <div class="card">
         <div class="card-header" id="headingsystem_location">
@@ -394,12 +394,12 @@
     <a href="#system_location" onclick="anchorLink('system_location')">location</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Properties the expected physical location of the device.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_location_site">
     <div class="card">
         <div class="card-header" id="headingsystem_location_site">
@@ -438,12 +438,12 @@
     <a href="#system_location_site" onclick="anchorLink('system_location_site')">site</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The site name according to the site model in which a device is installed in</p>
 </span><span class="pattern-value" id="system_location_site_pattern">Must match regular expression: <code>^[A-Z]{2}-[A-Z]{3}-[A-Z0-9]{2,9}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="system_location_site_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;US-SFO-XYY&quot;</span>
 </pre></div>
@@ -489,12 +489,12 @@
         </svg>
     <a href="#system_location_section" onclick="anchorLink('system_location_section')">section</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="system_location_section_pattern">Must match regular expression: <code>^[A-Z0-9-]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -536,12 +536,12 @@
         </svg>
     <a href="#system_location_position" onclick="anchorLink('system_location_position')">position</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_location_position_x">
     <div class="card">
         <div class="card-header" id="headingsystem_location_position_x">
@@ -587,12 +587,12 @@
     <a href="#system_location_position_x" onclick="anchorLink('system_location_position_x')">x</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>The <code>x</code> coordinate of the device location in a project specific coordinate system</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -642,12 +642,12 @@
     <a href="#system_location_position_y" onclick="anchorLink('system_location_position_y')">y</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>The <code>y</code> coordinate of the device location in a project specific coordinate system</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -697,12 +697,12 @@
     <a href="#system_location_position_z" onclick="anchorLink('system_location_position_z')">z</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>The <code>z</code> (height) coordinate of the device location in a project specific coordinate system</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -748,12 +748,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_hardware_make">
     <div class="card">
         <div class="card-header" id="headingsystem_hardware_make">
@@ -792,12 +792,12 @@
     <a href="#system_hardware_make" onclick="anchorLink('system_hardware_make')">make</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The manufacturer of the device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="system_hardware_make_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Google&quot;</span>
 </pre></div>
@@ -844,12 +844,12 @@
     <a href="#system_hardware_model" onclick="anchorLink('system_hardware_model')">model</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The model of the device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="system_hardware_model_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;Pixel 5&quot;</span>
 </pre></div>
@@ -900,12 +900,12 @@
     <a href="#system_hardware_sku" onclick="anchorLink('system_hardware_sku')">sku</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="system_hardware_sku_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;GF5KQ&quot;</span>
 </pre></div>
@@ -954,12 +954,12 @@
     <a href="#system_hardware_rev" onclick="anchorLink('system_hardware_rev')">rev</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Hardware revision of the device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="system_hardware_rev_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;A&quot;</span>
 </pre></div>
@@ -1007,12 +1007,12 @@
     <a href="#system_software" onclick="anchorLink('system_software')">software</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>A collection of items which can be used to describe version of software running on a device</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="system_software_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;firmware&quot;</span>
 </pre></div>
@@ -1036,7 +1036,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z_]+$</code></span>
                     <br/>
 
@@ -1063,12 +1063,12 @@
         </svg>
     <a href="#system_software_pattern1" onclick="anchorLink('system_software_pattern1')">^[a-z_]+$</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1108,12 +1108,12 @@
     <a href="#system_physical_tag" onclick="anchorLink('system_physical_tag')">physical_tag</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Information used to print a physical QR code label.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_physical_tag_asset">
     <div class="card">
         <div class="card-header" id="headingsystem_physical_tag_asset">
@@ -1151,12 +1151,12 @@
         </svg>
     <a href="#system_physical_tag_asset" onclick="anchorLink('system_physical_tag_asset')">asset</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_physical_tag_asset_guid">
     <div class="card">
         <div class="card-header" id="headingsystem_physical_tag_asset_guid">
@@ -1201,12 +1201,12 @@
         </svg>
     <a href="#system_physical_tag_asset_guid" onclick="anchorLink('system_physical_tag_asset_guid')">guid</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="system_physical_tag_asset_guid_pattern">Must match regular expression: <code>^[a-z]+://[-0-9a-zA-Z_$]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1255,12 +1255,12 @@
         </svg>
     <a href="#system_physical_tag_asset_site" onclick="anchorLink('system_physical_tag_asset_site')">site</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="system_physical_tag_asset_site_pattern">Must match regular expression: <code>^[A-Z]{2}-[A-Z]{3}-[A-Z0-9]{2,9}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1309,12 +1309,12 @@
         </svg>
     <a href="#system_physical_tag_asset_name" onclick="anchorLink('system_physical_tag_asset_name')">name</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="system_physical_tag_asset_name_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[0-9]{1,6}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1357,12 +1357,12 @@
         </svg>
     <a href="#system_aux" onclick="anchorLink('system_aux')">aux</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionsystem_aux_suffix">
     <div class="card">
         <div class="card-header" id="headingsystem_aux_suffix">
@@ -1400,12 +1400,12 @@
         </svg>
     <a href="#system_aux_suffix" onclick="anchorLink('system_aux_suffix')">suffix</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="system_aux_suffix_pattern">Must match regular expression: <code>^[a-zA-Z0-9-]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1445,12 +1445,12 @@
     <a href="#system_min_loglevel" onclick="anchorLink('system_min_loglevel')">min_loglevel</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 300</span><br/>
 <span class="description"><p>The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.</p>
 </span>
-            
+        
 
-            
-            <p><span class="badge badge-light restriction numeric-restriction" id="system_min_loglevel_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code></span></p>
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="system_min_loglevel_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code></span></p>
 
-            
+        
             </div>
         </div>
     </div>
@@ -1524,15 +1524,15 @@
         </svg>
     <a href="#gateway_oneOf_i0" onclick="anchorLink('gateway_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            <div class="enum-value">
+        <div class="enum-value">
     <h4>The following properties are required:</h4>
     <ul class="list-group"><li class="list-group-item required-property">gateway_id</li></ul>
     </div>
 
-            
-            
+        
+        
 
-            
+        
         </div><div class="tab-pane fade card-body "
              id="tab-pane_gateway_oneOf_i1" role="tabpanel">
             
@@ -1560,22 +1560,22 @@
         </svg>
     <a href="#gateway_oneOf_i1" onclick="anchorLink('gateway_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            <div class="enum-value">
+        <div class="enum-value">
     <h4>The following properties are required:</h4>
     <ul class="list-group"><li class="list-group-item required-property">proxy_ids</li></ul>
     </div>
 
-            
-            
+        
+        
 
-            
+        
         </div></div></div>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiongateway_gateway_id">
     <div class="card">
         <div class="card-header" id="headinggateway_gateway_id">
@@ -1607,12 +1607,12 @@
     <a href="#gateway_gateway_id" onclick="anchorLink('gateway_gateway_id')">gateway_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The device ID of the gateway the device is bound to</p>
 </span><span class="pattern-value" id="gateway_gateway_id_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[0-9]{1,6}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="gateway_gateway_id_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;GAT-100&quot;</span>
 </pre></div>
@@ -1652,12 +1652,12 @@
     <a href="#gateway_family" onclick="anchorLink('gateway_family')">family</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Protocol family used for connecting to the proxy device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1693,12 +1693,12 @@
     <a href="#gateway_proxy_ids" onclick="anchorLink('gateway_proxy_ids')">proxy_ids</a></div><span class="badge badge-dark value-type">Type: array of string</span><br/>
 <span class="description"><p>An array of all the device IDs which are bound to the device</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <h4>Each item of this array must be:</h4>
+        <h4>Each item of this array must be:</h4>
     <div class="card">
         <div class="card-body items-definition" id="gateway_proxy_ids_items">
             
@@ -1726,12 +1726,12 @@
         </svg>
     <a href="#gateway_proxy_ids_items" onclick="anchorLink('gateway_proxy_ids_items')">proxy_ids items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="pattern-value" id="gateway_proxy_ids_items_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[0-9]{1,6}$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
         </div>
     </div><br/>
 <div class="badge badge-secondary">Example:</div>
@@ -1774,12 +1774,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiondiscovery_families">
     <div class="card">
         <div class="card-header" id="headingdiscovery_families">
@@ -1810,12 +1810,12 @@
         </svg>
     <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiondiscovery_families_pattern1">
     <div class="card">
         <div class="card-header" id="headingdiscovery_families_pattern1">
@@ -1831,7 +1831,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
                     <br/>
 
@@ -1860,12 +1860,12 @@
 
 
     
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1904,12 +1904,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionlocalnet_families">
     <div class="card">
         <div class="card-header" id="headinglocalnet_families">
@@ -1940,12 +1940,12 @@
         </svg>
     <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionlocalnet_families_pattern1">
     <div class="card">
         <div class="card-header" id="headinglocalnet_families_pattern1">
@@ -1961,7 +1961,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z0-9-]+$</code></span>
                     <br/>
 
@@ -1991,12 +1991,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="localnet_families_pattern1_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;bacnet&quot;</span>
 </pre></div>
@@ -2048,12 +2048,12 @@
     <a href="#localnet_families_pattern1_id" onclick="anchorLink('localnet_families_pattern1_id')">id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The address of a device on the local network</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="localnet_families_pattern1_id_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;4148893&quot;</span>
 </pre></div>
@@ -2100,12 +2100,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiontesting_targets">
     <div class="card">
         <div class="card-header" id="headingtesting_targets">
@@ -2136,12 +2136,12 @@
         </svg>
     <a href="#testing_targets" onclick="anchorLink('testing_targets')">targets</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiontesting_targets_pattern1">
     <div class="card">
         <div class="card-header" id="headingtesting_targets_pattern1">
@@ -2157,7 +2157,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
                     <br/>
 
@@ -2186,12 +2186,12 @@
 
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiontesting_targets_pattern1_target_point">
     <div class="card">
         <div class="card-header" id="headingtesting_targets_pattern1_target_point">
@@ -2237,12 +2237,12 @@
     <a href="#testing_targets_pattern1_target_point" onclick="anchorLink('testing_targets_pattern1_target_point')">target_point</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Point name used for testing</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2292,12 +2292,12 @@
     <a href="#testing_targets_pattern1_target_value" onclick="anchorLink('testing_targets_pattern1_target_value')">target_value</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Value used for testing</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2340,12 +2340,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionpointset_points">
     <div class="card">
         <div class="card-header" id="headingpointset_points">
@@ -2377,12 +2377,12 @@
     <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Information about a specific point name of the device.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionpointset_points_pattern1">
     <div class="card">
         <div class="card-header" id="headingpointset_points_pattern1">
@@ -2398,7 +2398,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
                     <br/>
 
@@ -2428,12 +2428,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionpointset_points_pattern1_units">
     <div class="card">
         <div class="card-header" id="headingpointset_points_pattern1_units">
@@ -2479,12 +2479,12 @@
     <a href="#pointset_points_pattern1_units" onclick="anchorLink('pointset_points_pattern1_units')">units</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Expected unit configuration for the point</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2534,12 +2534,12 @@
     <a href="#pointset_points_pattern1_writable" onclick="anchorLink('pointset_points_pattern1_writable')">writable</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Indicates if this point is writable (else read-only)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2589,12 +2589,12 @@
     <a href="#pointset_points_pattern1_baseline_value" onclick="anchorLink('pointset_points_pattern1_baseline_value')">baseline_value</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Represents the expected baseline value of the point</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="pointset_points_pattern1_baseline_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">22</span>
 </pre></div>
@@ -2648,12 +2648,12 @@
     <a href="#pointset_points_pattern1_baseline_tolerance" onclick="anchorLink('pointset_points_pattern1_baseline_tolerance')">baseline_tolerance</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>Maximum deviation from <code>baseline_value</code></p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="pointset_points_pattern1_baseline_tolerance_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">2</span>
 </pre></div>
@@ -2707,15 +2707,15 @@
     <a href="#pointset_points_pattern1_baseline_state" onclick="anchorLink('pointset_points_pattern1_baseline_state')">baseline_state</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <span class="description"><p>Expected state when <code>baseline_value</code> is set as the <code>set_value</code> for this point the config message</p>
 </span><div class="enum-value" id="pointset_points_pattern1_baseline_state_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"applied"</li><li class="list-group-item enum-item">"updating"</li><li class="list-group-item enum-item">"overridden"</li><li class="list-group-item enum-item">"invalid"</li><li class="list-group-item enum-item">"failure"</li></ul>
-                </div>
-            
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"applied"</li><li class="list-group-item enum-item">"updating"</li><li class="list-group-item enum-item">"overridden"</li><li class="list-group-item enum-item">"invalid"</li><li class="list-group-item enum-item">"failure"</li></ul>
+            </div>
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2765,12 +2765,12 @@
     <a href="#pointset_points_pattern1_cov_increment" onclick="anchorLink('pointset_points_pattern1_cov_increment')">cov_increment</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>Triggering threshold for partial cov update publishing</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="pointset_points_pattern1_cov_increment_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">1</span>
 </pre></div>
@@ -2824,12 +2824,12 @@
     <a href="#pointset_points_pattern1_ref" onclick="anchorLink('pointset_points_pattern1_ref')">ref</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Mapping for the point to an internal resource (e.g. BACnet object reference)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="pointset_points_pattern1_ref_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;AI3&quot;</span>
 </pre></div>
@@ -2879,12 +2879,12 @@
     <a href="#pointset_sample_limit_sec" onclick="anchorLink('pointset_sample_limit_sec')">sample_limit_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.</p>
 </span>
-            
+        
 
-            
-            <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_limit_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_limit_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
 
-            
+        
             </div>
         </div>
     </div>
@@ -2920,12 +2920,12 @@
     <a href="#pointset_sample_rate_sec" onclick="anchorLink('pointset_sample_rate_sec')">sample_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.</p>
 </span>
-            
+        
 
-            
-            <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_rate_sec_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>86400</code></span></p>
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_rate_sec_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>86400</code></span></p>
 
-            
+        
             </div>
         </div>
     </div>

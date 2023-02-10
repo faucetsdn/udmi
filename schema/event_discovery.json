@@ -56,7 +56,7 @@
       }
     },
     "features": {
-      "$ref": "file:event_discovery_feature.json#/definitions/features"
+      "$ref": "file:event_discovery_feature.json#/$defs/features"
     },
     "system": {
       "title": "System Discovery Event",

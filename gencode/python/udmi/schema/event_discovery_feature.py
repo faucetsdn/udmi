@@ -1,12 +1,42 @@
 """Generated class for event_discovery_feature.json"""
-from .event_discovery_feature import FeatureEnumerationEvent
-from .event_discovery_feature import FeatureEnumerationEvent
+
+
+class Object88890188:
+  """Generated schema class"""
+
+  def __init__(self):
+    pass
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object88890188()
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object88890188.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    return result
 
 
 class FeatureEnumerationEvent:
   """Generated schema class"""
-
-
 
   def __init__(self):
     self.stage = None
@@ -18,7 +48,7 @@ class FeatureEnumerationEvent:
       return None
     result = FeatureEnumerationEvent()
     result.stage = source.get('stage')
-    result.features = FeatureEnumerationEvent.map_from(source.get('features'))
+    result.features = Object88890188.from_dict(source.get('features'))
     return result
 
   @staticmethod
@@ -42,5 +72,5 @@ class FeatureEnumerationEvent:
     if self.stage:
       result['stage'] = self.stage # 5
     if self.features:
-      result['features'] = FeatureEnumerationEvent.expand_dict(self.features) # 2
+      result['features'] = self.features.to_dict() # 4
     return result
