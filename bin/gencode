@@ -26,7 +26,7 @@ if ! diff $tmpfile etc/requirements.txt; then
 fi
 
 bin/gencode_java
-bin/gencode_python gencode/python schema/*.json
+bin/gencode_python
 bin/gencode_docs
 bin/gencode_seq
 

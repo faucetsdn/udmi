@@ -1,10 +1,10 @@
 package udmi.schema;
 
 import static udmi.schema.Level.DEBUG;
-import static udmi.schema.Level.ERROR;
 import static udmi.schema.Level.INFO;
 import static udmi.schema.Level.NOTICE;
 import static udmi.schema.Level.WARNING;
+import static udmi.schema.Level.ERROR;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -85,7 +86,7 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkFeatureEnumeration(event.features);
+      checkFeatureEnumeration(new Stack<>(), event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -99,7 +100,8 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  private void checkFeatureEnumeration(Map<String, FeatureEnumerationEvent> eventFeatures) {
+  private void checkFeatureEnumeration(Stack<String> prefix,
+      Map<String, FeatureEnumerationEvent> eventFeatures) {
     checkThat("features enumerated", () -> eventFeatures != null);
     checkThat("feature enumeration feature is enumerated",
         () -> eventFeatures.containsKey(ENUMERATION_FEATURES.value()));

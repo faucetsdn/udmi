@@ -44,9 +44,7 @@ Some caveats:
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
 1. Check that features enumerated
-1. Check that feature enumeration feature is enumerated
-1. Check that all feature names are valid
-1. Check that no point enumeration
+1. Test failed: Failed check that feature enumeration feature is enumerated
 
 ## system_mode_restart (STABLE)
 

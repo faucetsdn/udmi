@@ -1,11 +1,16 @@
 """Generated class for event_discovery_feature.json"""
+from .event_discovery_feature import FeatureEnumerationEvent
+from .event_discovery_feature import FeatureEnumerationEvent
 
 
 class FeatureEnumerationEvent:
   """Generated schema class"""
 
+
+
   def __init__(self):
     self.stage = None
+    self.features = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +18,7 @@ class FeatureEnumerationEvent:
       return None
     result = FeatureEnumerationEvent()
     result.stage = source.get('stage')
+    result.features = FeatureEnumerationEvent.map_from(source.get('features'))
     return result
 
   @staticmethod
@@ -35,4 +41,6 @@ class FeatureEnumerationEvent:
     result = {}
     if self.stage:
       result['stage'] = self.stage # 5
+    if self.features:
+      result['features'] = FeatureEnumerationEvent.expand_dict(self.features) # 2
     return result

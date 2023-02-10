@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #  pylint: skip-file
 
+import glob
 import hashlib
 import json
 import os
@@ -11,11 +12,8 @@ FILE_PREFIX = 'file:'
 FILE_SPLIT = '#'
 REF_KEY = '$ref'
 SOURCE_KEY = '$source'
-PREFIX = 'udmi/schema'
+OUT_DIR = 'gencode/python/udmi/schema'
 JSON_SUFFIX = '.json'
-
-out_dir = os.path.join(sys.argv[1], PREFIX)
-in_files = sys.argv[2:]
 
 processed = {}
 
@@ -47,11 +45,11 @@ def process_file(source):
     eprint('Processing file', source)
     with open(source) as fd:
       contents = json.load(fd)
+    processed[name] = contents
     contents[SOURCE_KEY] = os.path.relpath(source)
     generate_class(contents)
   except Exception:
-    raise Exception('While processing file %s' % source)
-  processed[name] = contents
+    raise Exception('While processing child file %s' % source)
   return contents
 
 def get_properties(contents):
@@ -162,7 +160,7 @@ def write_fromdict(writer, contents):
       else:
         writer("    result.%s = source.get('%s')" % (property, property))
     except Exception:
-      raise Exception('While processing property %s' % property)
+      raise Exception('While writing from_dict property %s' % property)
   writer('    return result')
 
 def write_todict(writer, contents):
@@ -201,7 +199,7 @@ def write_todict(writer, contents):
       else:
         writer("      result['%s'] = self.%s # 5" % ((property,)*2))
     except Exception:
-      raise Exception('While processing property %s' % property)
+      raise Exception('While writing to_dict property %s' % property)
   writer('    return result')
 
 def write_deps(writer, contents):
@@ -210,13 +208,13 @@ def write_deps(writer, contents):
     try:
       write_dep(writer, contents, contents['properties'][property])
     except Exception:
-      raise Exception('While processing property %s' % property)
+      raise Exception('While writing deps property %s' % property)
   definitions = contents.get('definitions', {})
   for definition in definitions:
     try:
       write_dep(writer, contents, contents['definitions'][definition])
     except Exception:
-      raise Exception('While processing definition %s' % definition)
+      raise Exception('While writing deps definition %s' % definition)
 
 
 def write_dep(writer, contents, depcontent):
@@ -255,7 +253,7 @@ def write_init(writer, contents):
 
 def generate_class(contents):
   file_name = get_file_base(contents, contents) + '.py'
-  full_path = os.path.join(out_dir, file_name)
+  full_path = os.path.join(OUT_DIR, file_name)
   eprint('Generating %s...' % full_path)
   with open(full_path, 'w') as fd:
     writer = lambda line: fd.write(line + '\n')
@@ -263,9 +261,9 @@ def generate_class(contents):
     write_class(writer, contents)
 
 def generate_module(in_files):
-  shutil.rmtree(out_dir)
-  os.makedirs(out_dir, exist_ok=True)
-  full_path = os.path.join(out_dir, '__init__.py')
+  shutil.rmtree(OUT_DIR)
+  os.makedirs(OUT_DIR, exist_ok=True)
+  full_path = os.path.join(OUT_DIR, '__init__.py')
   with open(full_path, 'w') as fd:
     writer = lambda line: fd.write(line + '\n')
     for in_file in in_files:
@@ -274,6 +272,9 @@ def generate_module(in_files):
         contents = process_file(source)
         writer('from .%s import %s' % (get_file_base(contents, contents), get_class_name(contents)))
       except Exception:
-        raise Exception('While processing file %s' % in_file)
+        raise Exception('While processing module file %s' % in_file)
 
-generate_module(in_files)
+def get_input_files():
+  return glob.glob('schema/*.json')
+  
+generate_module(get_input_files())
