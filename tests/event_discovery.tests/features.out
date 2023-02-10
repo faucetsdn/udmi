@@ -1,0 +1,3 @@
+While loading /home/peringknife/udmi/schema/../tests/../tests/event_discovery.tests/features.json
+  Unrecognized token 'fatal': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
+ at [Source: (File); line: 1, column: 7]
