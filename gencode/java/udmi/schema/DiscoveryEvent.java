@@ -93,11 +93,11 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("Collection of unique data points available for this device.")
     public Map<String, PointEnumerationEvent> uniqs;
     /**
-     * UDMI Features Supported by this device
+     * Map of device features
      * 
      */
     @JsonProperty("features")
-    @JsonPropertyDescription("UDMI Features Supported by this device")
+    @JsonPropertyDescription("Map of device features")
     public Map<String, FeatureEnumerationEvent> features;
     /**
      * System Discovery Event

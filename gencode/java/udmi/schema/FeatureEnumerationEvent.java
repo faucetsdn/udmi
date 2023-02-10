@@ -20,7 +20,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "stage"
+    "stage",
+    "features"
 })
 @Generated("jsonschema2pojo")
 public class FeatureEnumerationEvent {
@@ -32,11 +33,19 @@ public class FeatureEnumerationEvent {
     @JsonProperty("stage")
     @JsonPropertyDescription("Feature implementation stage")
     public FeatureEnumerationEvent.Stage stage;
+    /**
+     * Map of device features
+     * 
+     */
+    @JsonProperty("features")
+    @JsonPropertyDescription("Map of device features")
+    public Map<String, FeatureEnumerationEvent> features;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.stage == null)? 0 :this.stage.hashCode()));
+        result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         return result;
     }
 
@@ -49,7 +58,7 @@ public class FeatureEnumerationEvent {
             return false;
         }
         FeatureEnumerationEvent rhs = ((FeatureEnumerationEvent) other);
-        return ((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage)));
+        return (((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))));
     }
 
 
@@ -64,8 +73,8 @@ public class FeatureEnumerationEvent {
         ALPHA("alpha"),
         BETA("beta"),
         STABLE("stable");
-        private final String value;
-        private final static Map<String, FeatureEnumerationEvent.Stage> CONSTANTS = new HashMap<String, FeatureEnumerationEvent.Stage>();
+        private final java.lang.String value;
+        private final static Map<java.lang.String, FeatureEnumerationEvent.Stage> CONSTANTS = new HashMap<java.lang.String, FeatureEnumerationEvent.Stage>();
 
         static {
             for (FeatureEnumerationEvent.Stage c: values()) {
@@ -73,22 +82,22 @@ public class FeatureEnumerationEvent {
             }
         }
 
-        Stage(String value) {
+        Stage(java.lang.String value) {
             this.value = value;
         }
 
         @Override
-        public String toString() {
+        public java.lang.String toString() {
             return this.value;
         }
 
         @JsonValue
-        public String value() {
+        public java.lang.String value() {
             return this.value;
         }
 
         @JsonCreator
-        public static FeatureEnumerationEvent.Stage fromValue(String value) {
+        public static FeatureEnumerationEvent.Stage fromValue(java.lang.String value) {
             FeatureEnumerationEvent.Stage constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);

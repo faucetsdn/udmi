@@ -37,6 +37,7 @@ import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FeatureEnumerationEvent;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -84,10 +85,7 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkThat("features enumerated", () -> event.features != null);
-      Set<String> features = event.features.keySet();
-      Set<String> valid = features.stream().filter(Bucket::contains).collect(Collectors.toSet());
-      checkThat("all valid feature names", () -> valid.equals(features));
+      checkFeatureEnumeration(event.features);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -99,6 +97,15 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
+  }
+
+  private void checkFeatureEnumeration(Map<String, FeatureEnumerationEvent> eventFeatures) {
+    checkThat("features enumerated", () -> eventFeatures != null);
+    checkThat("feature enumeration feature is enumerated",
+        () -> eventFeatures.containsKey(ENUMERATION_FEATURES.value()));
+    Set<String> features = eventFeatures.keySet();
+    Set<String> valid = features.stream().filter(Bucket::contains).collect(Collectors.toSet());
+    checkThat("all feature names are valid", () -> valid.equals(features));
   }
 
   private boolean isTrue(Boolean condition) {

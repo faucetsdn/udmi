@@ -14,6 +14,21 @@
         "beta",
         "stable"
       ]
+    },
+    "features": {
+      "$ref": "file:event_discovery_feature.json#/definitions/features"
+    }
+  },
+  "definitions": {
+    "features": {
+      "description": "Map of device features",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
+      "patternProperties": {
+        "^[a-z.]+$": {
+          "$ref": "file:event_discovery_feature.json#"
+        }
+      }
     }
   }
 }

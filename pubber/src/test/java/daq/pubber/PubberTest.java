@@ -61,8 +61,7 @@ public class PubberTest extends TestBase {
     pubber.deviceConfig.blobset.blobs = new HashMap<>();
     pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
-    EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
-    return endpointConfiguration;
+    return pubber.extractEndpointBlobConfig();
   }
 
   /**

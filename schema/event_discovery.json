@@ -56,14 +56,7 @@
       }
     },
     "features": {
-      "description": "UDMI Features Supported by this device",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
-      "patternProperties": {
-        "^[a-z.]+$": {
-          "$ref": "file:event_discovery_feature.json#"
-        }
-      }
+      "$ref": "file:event_discovery_feature.json#/definitions/features"
     },
     "system": {
       "title": "System Discovery Event",
