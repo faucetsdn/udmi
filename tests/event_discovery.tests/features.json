@@ -1,18 +1,4 @@
-//
-// Sent on MQTT topic: /devices/{device_id}/events/discovery
-// where {device_id} is that of the enumerated node.
-//
-{
-  "version": "1.4.0",
-  "timestamp": "2018-08-26T21:42:12.237Z",
-  "generation": "2018-08-26T21:37:12Z",
-  "features": {
-    "endpoint.config": {
-      "stage": "alpha"
-    },
-    "discovery.scan": {
-      "stage": "beta"
-    },
-    "enumeration.features": {}
-  }
-}
+fatal: URI "#" is not absolute
+    level: "fatal"
+    uri: "#"
+
