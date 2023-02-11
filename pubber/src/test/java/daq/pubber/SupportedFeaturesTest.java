@@ -2,6 +2,8 @@ package daq.pubber;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Bucket.ENUMERATION;
+import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
 import java.util.Map;
 import org.junit.Test;
@@ -16,16 +18,16 @@ public class SupportedFeaturesTest {
 
   @Test
   public void basicFeatureEnumeration() {
-    Map<String, FeatureEnumerationEvent> features = SupportedFeatures.getFeatures();
-    validateNames("", features);
-    FeatureEnumerationEvent enumeration = features.get("enumeration");
-    FeatureEnumerationEvent enumerationFeatures = enumeration.features.get("features");
-    assertTrue("features are enumerated", enumerationFeatures.stage == Stage.STABLE);
+    Map<String, FeatureEnumerationEvent> featureMap = SupportedFeatures.getFeatures();
+    validateNames("", featureMap);
+    FeatureEnumerationEvent enumeration = featureMap.get(ENUMERATION.key());
+    FeatureEnumerationEvent features = enumeration.features.get(ENUMERATION_FEATURES.key());
+    assertTrue("features are enumerated", features.stage == Stage.STABLE);
   }
 
   private void validateNames(String prefix, Map<String, FeatureEnumerationEvent> features) {
     features.forEach((key, value) -> {
-      assertNotEquals("Stage should not be missing", Stage.MISSING, value.stage);
+      assertNotEquals("Stage should not be MISSING", Stage.MISSING, value.stage);
       String fullName = prefix + (prefix.length() > 0 ? "." : "") + key;
       assertTrue("Invalid feature name: " + fullName, Bucket.contains(fullName));
       if (value.features != null) {

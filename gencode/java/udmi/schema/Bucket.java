@@ -61,4 +61,13 @@ public enum Bucket {
       }
       return allValues.containsKey(key);
     }
+
+    /**
+     * Return just the trailing part of th full bucket name. So from
+     * "endpoint.mods.gcp" it would return just "gcp", used as a map key.
+     */
+    public String key() {
+        return value.substring(value.lastIndexOf(".") + 1);
+    }
+
 }

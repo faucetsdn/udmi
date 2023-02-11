@@ -1,5 +1,10 @@
 package daq.pubber;
 
+import static udmi.schema.Bucket.ENUMERATION;
+import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
+import static udmi.schema.Bucket.ENUMERATION_FEATURES;
+import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,10 +21,10 @@ public abstract class SupportedFeatures {
 
   static {
     mapStack.push(new FeatureEnumerationEvent());
-    bucket("enumeration", Stage.STABLE, () -> {
-          bucket("features");
-          bucket("pointset", Stage.BETA);
-          bucket("families", Stage.ALPHA);
+    bucket(ENUMERATION.key(), Stage.STABLE, () -> {
+          bucket(ENUMERATION_FEATURES.key());
+          bucket(ENUMERATION_POINTSET.key(), Stage.BETA);
+          bucket(ENUMERATION_FAMILIES.key(), Stage.ALPHA);
         }
     );
   }
