@@ -1,7 +1,7 @@
 RESULT pass discovery.scan periodic_scan ALPHA 5 Sequence complete
 RESULT pass enumeration empty_enumeration ALPHA 5 Sequence complete
 RESULT pass enumeration.families family_enumeration ALPHA 5 Sequence complete
-RESULT pass enumeration.features feature_enumeration BETA 5 Sequence complete
+RESULT fail enumeration.features feature_enumeration BETA 5 Failed check that feature enumeration feature is enumerated
 RESULT pass enumeration.pointset pointset_enumeration ALPHA 5 Sequence complete
 RESULT pass system.mode system_mode_restart STABLE 5 Sequence complete
 RESULT pass unknown broken_config ALPHA 5 Sequence complete
@@ -12,7 +12,7 @@ RESULT pass unknown endpoint_connection_retry ALPHA 5 Sequence complete
 RESULT pass unknown endpoint_connection_success_alternate ALPHA 5 Sequence complete
 RESULT pass unknown endpoint_connection_success_reconnect ALPHA 5 Sequence complete
 RESULT pass unknown extra_config ALPHA 5 Sequence complete
-RESULT pass unknown multi_enumeration ALPHA 5 Sequence complete
+RESULT fail unknown multi_enumeration ALPHA 5 Failed check that feature enumeration feature is enumerated
 RESULT pass unknown pointset_publish_interval ALPHA 5 Sequence complete
 RESULT pass unknown pointset_sample_rate ALPHA 5 Sequence complete
 RESULT pass unknown single_scan ALPHA 5 Sequence complete
