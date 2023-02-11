@@ -275,6 +275,8 @@ def generate_module(in_files):
         raise Exception('While processing module file %s' % in_file)
 
 def get_input_files():
-  return glob.glob('schema/*.json')
+  files = glob.glob('schema/*.json')
+  files.sort()
+  return files
   
 generate_module(get_input_files())
