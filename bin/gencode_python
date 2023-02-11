@@ -240,7 +240,7 @@ def write_definitions(writer, contents):
       class_name = get_class_name(definitions[definition])
       writer('  %s = %s' % (class_name, class_name))
   writer('')
-    
+
 def write_init(writer, contents):
   writer('')
   write_definitions(writer, contents)
@@ -278,5 +278,5 @@ def get_input_files():
   files = glob.glob('schema/*.json')
   files.sort()
   return files
-  
+
 generate_module(get_input_files())

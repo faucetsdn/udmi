@@ -38,8 +38,7 @@ if [[ -n $check ]]; then
 
     files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
-    diff /tmp/__init__.py gencode/python/udmi/schema/__init__.py
-    echo "diff /tmp/gencode.hash .gencode_hash.txt"
+    echo Checking gencode hash: diff /tmp/gencode.hash .gencode_hash.txt
     diff /tmp/gencode.hash .gencode_hash.txt
 else
     echo Updating gencode hash...
