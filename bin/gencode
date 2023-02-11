@@ -25,6 +25,8 @@ if ! diff $tmpfile etc/requirements.txt; then
     false
 fi
 
+cp gencode/python/udmi/schema/__init__.py /tmp/__init__.py
+
 bin/gencode_java
 bin/gencode_python
 bin/gencode_docs
@@ -34,9 +36,10 @@ if [[ -n $check ]]; then
     echo Checking gencode docs links...
     bin/gencode_docs_checklinks
 
-    echo "Checking gencode hash (dynamic/static)..."
     files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
+    diff /tmp/__init__.py gencode/python/udmi/schema/__init__.py
+    echo "diff /tmp/gencode.hash .gencode_hash.txt"
     diff /tmp/gencode.hash .gencode_hash.txt
 else
     echo Updating gencode hash...
