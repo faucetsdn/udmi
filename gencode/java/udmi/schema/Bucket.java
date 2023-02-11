@@ -8,66 +8,73 @@ import java.util.Map;
 
 public enum Bucket {
 
-    // Basic device property enumeration capability
-    ENUMERATION("enumeration"),
+  // Basic device property enumeration capability
+  ENUMERATION("enumeration"),
 
-    // Enumerating available points of a device
-    ENUMERATION_POINTSET("enumeration.pointset"),
+  // Enumerating available points of a device
+  ENUMERATION_POINTSET("enumeration.pointset"),
 
-    // Enumerating the features a device supports
-    ENUMERATION_FEATURES("enumeration.features"),
+  // Enumerating the features a device supports
+  ENUMERATION_FEATURES("enumeration.features"),
 
-    // Enumerating the network families of the device
-    ENUMERATION_FAMILIES("enumeration.families"),
+  // Enumerating the network families of the device
+  ENUMERATION_FAMILIES("enumeration.families"),
 
-    // Automated discovery capabilities
-    DISCOVERY("discovery"),
+  // Automated discovery capabilities
+  DISCOVERY("discovery"),
 
-    // Scanning a network for devices
-    DISCOVERY_SCAN("discovery.scan"),
+  // Scanning a network for devices
+  DISCOVERY_SCAN("discovery.scan"),
 
-    // IoT connection endpoint management
-    ENDPOINT("endpoint"),
+  // IoT connection endpoint management
+  ENDPOINT("endpoint"),
 
-    // Endpoint configuration updates
-    ENDPOINT_CONFIG("endpoint.config"),
+  // Endpoint configuration updates
+  ENDPOINT_CONFIG("endpoint.config"),
 
-    // Basic system operations
-    SYSTEM("system"),
+  // Basic system operations
+  SYSTEM("system"),
 
-    // System mode
-    SYSTEM_MODE("system.mode"),
+  // System mode
+  SYSTEM_MODE("system.mode"),
 
-    // unknown default value
-    UNKNOWN_DEFAULT("unknown");
+  // unknown default value
+  UNKNOWN_DEFAULT("unknown");
 
-    private final String value;
+  private final String value;
 
-    private static final Map<String, Bucket> allValues = new HashMap<>();
+  private static final Map<String, Bucket> allValues = new HashMap<>();
 
-    Bucket(String value) {
-        this.value = value;
-    }
+  Bucket(String value) {
+    this.value = value;
+  }
 
-    public String value() {
+  public String value() {
     return this.value;
   }
 
-    public static boolean contains(String key) {
-      if (allValues.isEmpty()) {
-        for (Bucket bucket : values()) {
-          allValues.put(bucket.value, bucket);
-        }
+  public static boolean contains(String key) {
+    return ensureValueMap().containsKey(key);
+  }
+
+  public static Bucket fromValue(String key) {
+    return ensureValueMap().get(key);
+  }
+
+  private static Map<String, Bucket> ensureValueMap() {
+    if (allValues.isEmpty()) {
+      for (Bucket bucket : values()) {
+        allValues.put(bucket.value, bucket);
       }
-      return allValues.containsKey(key);
     }
+    return allValues;
+  }
 
-    /**
-     * Return just the trailing part of th full bucket name. So from
-     * "endpoint.mods.gcp" it would return just "gcp", used as a map key.
-     */
-    public String key() {
-        return value.substring(value.lastIndexOf(".") + 1);
-    }
-
+  /**
+   * Return just the trailing part of th full bucket name. So from
+   * "endpoint.mods.gcp" it would return just "gcp", used as a map key.
+   */
+  public String key() {
+    return value.substring(value.lastIndexOf(".") + 1);
+  }
 }

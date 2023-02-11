@@ -14,6 +14,7 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 
 import com.google.daq.mqtt.sequencer.Feature;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -22,6 +23,7 @@ import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +32,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
@@ -102,12 +103,22 @@ public class DiscoverySequences extends SequenceBase {
 
   private void checkFeatureEnumeration(Stack<String> prefix,
       Map<String, FeatureEnumerationEvent> eventFeatures) {
-    checkThat("features enumerated", () -> eventFeatures != null);
+    Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", eventFeatures);
     checkThat("feature enumeration feature is enumerated",
-        () -> eventFeatures.containsKey(ENUMERATION_FEATURES.value()));
-    Set<String> features = eventFeatures.keySet();
-    Set<String> valid = features.stream().filter(Bucket::contains).collect(Collectors.toSet());
-    checkThat("all feature names are valid", () -> valid.equals(features));
+        () -> bucketStageMap.containsKey(ENUMERATION_FEATURES));
+  }
+
+  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix, Map<String, FeatureEnumerationEvent> eventFeatures) {
+    Map<Bucket, Stage> buckets = new HashMap<>();
+    eventFeatures.forEach((key, value) -> {
+      String fullBucket = prefix + "." + key;
+      Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
+      buckets.put(bucket, Stage.valueOf(value.stage.value().toUpperCase()));
+      if (value.features != null) {
+        buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
+      }
+    });
+    return buckets;
   }
 
   private boolean isTrue(Boolean condition) {

@@ -28,8 +28,6 @@ Some caveats:
 
 <!-- START GENERATED, do not edit anything after this line! -->
 * [feature_enumeration](#feature_enumeration)
-* [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
-* [valid_serial_no](#valid_serial_no)
 
 ## feature_enumeration (BETA)
 
@@ -43,28 +41,5 @@ Some caveats:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that features enumerated
-1. Test failed: Failed check that feature enumeration feature is enumerated
-
-## system_mode_restart (STABLE)
-
-Restart and connect to same endpoint and expect it returns.
-
-1. Wait for last_start is not zero
-1. Check that initial count is greater than 0
-1. Update config before system mode is ACTIVE:
-    * Add `system.operation.mode` = `active`
-1. Wait for system mode is ACTIVE
-1. Update config before system mode is INITIAL:
-    * Set `system.operation.mode` = `restart`
-1. Wait for system mode is INITIAL
-1. Check that restart count increased by one
-1. Update config before system mode is ACTIVE:
-    * Set `system.operation.mode` = `active`
-1. Wait for system mode is ACTIVE
-1. Wait for last_config is newer than previous last_config after abort
-1. Wait for last_start is newer than previous last_start
-
-## valid_serial_no (STABLE)
-
-1. Wait for received serial number matches
+1. Check that feature enumeration feature is enumerated
+1. Check that no point enumeration
