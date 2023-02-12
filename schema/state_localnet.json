@@ -1,23 +1,21 @@
 {
   "$udmi_version": "1.4.0",
-  "title": "Network Discovery Event",
+  "title": "Localnet State",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "description": "Discovery information for an individual network.",
   "properties": {
-    "networks": {
-      "type": "object",
+    "families": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, DiscoveredNetwork>",
+      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetState>",
       "patternProperties": {
         "^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:discovered_network.json"
+          "$ref": "file:state_localnet_family.json"
         }
       }
     }
   },
   "required": [
-    "networks"
+    "families"
   ]
 }

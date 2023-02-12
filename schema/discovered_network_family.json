@@ -1,0 +1,13 @@
+{
+  "title": "Discovered Network Family",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "addr": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    }
+  }
+}

@@ -9,30 +9,25 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Network Discovery Event
+ * Discovered Network
  * <p>
- * Discovery information for an individual network.
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "networks"
+    "families"
 })
 @Generated("jsonschema2pojo")
-public class NetworkDiscoveryEvent {
+public class DiscoveredNetwork {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("networks")
-    public HashMap<String, DiscoveredNetwork> networks;
+    @JsonProperty("families")
+    public HashMap<String, DiscoveredNetworkFamily> families;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
 
@@ -41,11 +36,11 @@ public class NetworkDiscoveryEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof NetworkDiscoveryEvent) == false) {
+        if ((other instanceof DiscoveredNetwork) == false) {
             return false;
         }
-        NetworkDiscoveryEvent rhs = ((NetworkDiscoveryEvent) other);
-        return ((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks)));
+        DiscoveredNetwork rhs = ((DiscoveredNetwork) other);
+        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
     }
 
 }

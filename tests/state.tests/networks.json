@@ -25,7 +25,7 @@
     }
   },
   "localnet": {
-    "families" {
+    "families": {
       "ipv4": {
         "addr": "192.168.8.3"
       },

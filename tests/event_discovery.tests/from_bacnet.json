@@ -107,11 +107,6 @@
       }
     }
   },
-  "networks": {
-    "iot": {
-      "id": "5005"
-    }
-  },
   "scan_network": "iot",
   "scan_id": "5005",
   "version": "1.4.0",

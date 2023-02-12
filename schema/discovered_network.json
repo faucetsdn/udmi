@@ -1,0 +1,15 @@
+{
+  "title": "Discovered Network",
+  "properties": {
+    "families": {
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, DiscoveredNetworkFamily>",
+      "patternProperties": {
+        "^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:discovered_network_family.json"
+        }
+      }
+    }
+  }
+}

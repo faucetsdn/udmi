@@ -25,7 +25,7 @@ import com.google.udmi.util.Features;
     "status",
     "scan_network",
     "scan_id",
-    "networks",
+    "localnet",
     "uniqs",
     "features",
     "system"
@@ -80,12 +80,12 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("The primary id of the device (on scan_network)")
     public java.lang.String scan_id;
     /**
-     * Discovery results by network
+     * Enumeration of attached networks
      * 
      */
-    @JsonProperty("networks")
-    @JsonPropertyDescription("Discovery results by network")
-    public Map<String, NetworkDiscoveryEvent> networks;
+    @JsonProperty("localnet")
+    @JsonPropertyDescription("Enumeration of attached networks")
+    public Map<String, NetworkDiscoveryEvent> localnet;
     /**
      * Collection of unique data points available for this device.
      * 
@@ -103,10 +103,11 @@ public class DiscoveryEvent {
     /**
      * System Discovery Event
      * <p>
-     * 
+     * Information about a node discovered on the network
      * 
      */
     @JsonProperty("system")
+    @JsonPropertyDescription("Information about a node discovered on the network")
     public SystemDiscoveryEvent system;
 
     @Override
@@ -118,8 +119,8 @@ public class DiscoveryEvent {
         result = ((result* 31)+((this.scan_network == null)? 0 :this.scan_network.hashCode()));
         result = ((result* 31)+((this.uniqs == null)? 0 :this.uniqs.hashCode()));
         result = ((result* 31)+((this.scan_id == null)? 0 :this.scan_id.hashCode()));
-        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.localnet == null)? 0 :this.localnet.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -134,7 +135,7 @@ public class DiscoveryEvent {
             return false;
         }
         DiscoveryEvent rhs = ((DiscoveryEvent) other);
-        return (((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_network == rhs.scan_network)||((this.scan_network!= null)&&this.scan_network.equals(rhs.scan_network))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_id == rhs.scan_id)||((this.scan_id!= null)&&this.scan_id.equals(rhs.scan_id))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.scan_network == rhs.scan_network)||((this.scan_network!= null)&&this.scan_network.equals(rhs.scan_network))))&&((this.uniqs == rhs.uniqs)||((this.uniqs!= null)&&this.uniqs.equals(rhs.uniqs))))&&((this.scan_id == rhs.scan_id)||((this.scan_id!= null)&&this.scan_id.equals(rhs.scan_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

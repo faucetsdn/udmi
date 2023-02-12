@@ -95,7 +95,7 @@ class DiscoveryEvent:
     self.status = None
     self.scan_network = None
     self.scan_id = None
-    self.networks = None
+    self.localnet = None
     self.uniqs = None
     self.features = None
     self.system = None
@@ -111,7 +111,7 @@ class DiscoveryEvent:
     result.status = Entry.from_dict(source.get('status'))
     result.scan_network = source.get('scan_network')
     result.scan_id = source.get('scan_id')
-    result.networks = NetworkDiscoveryEvent.map_from(source.get('networks'))
+    result.localnet = NetworkDiscoveryEvent.map_from(source.get('localnet'))
     result.uniqs = PointEnumerationEvent.map_from(source.get('uniqs'))
     result.features = ObjectE6EEEF50.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
@@ -147,8 +147,8 @@ class DiscoveryEvent:
       result['scan_network'] = self.scan_network # 5
     if self.scan_id:
       result['scan_id'] = self.scan_id # 5
-    if self.networks:
-      result['networks'] = NetworkDiscoveryEvent.expand_dict(self.networks) # 2
+    if self.localnet:
+      result['localnet'] = NetworkDiscoveryEvent.expand_dict(self.localnet) # 2
     if self.uniqs:
       result['uniqs'] = PointEnumerationEvent.expand_dict(self.uniqs) # 2
     if self.features:

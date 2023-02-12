@@ -75,10 +75,10 @@ public class DiscoverySequences extends SequenceBase {
     if (isTrue(enumerate.networks)) {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.networks.keySet()).orElse(null);
-      Set<String> events = Optional.ofNullable(event.networks).map(Map::keySet).orElse(null);
+      Set<String> events = Optional.ofNullable(event.localnet).map(Map::keySet).orElse(null);
       checkThat("network enumeration matches", () -> Objects.equals(models, events));
     } else {
-      checkThat("no network enumeration", () -> event.networks == null);
+      checkThat("no network enumeration", () -> event.localnet == null);
     }
 
     if (isTrue(enumerate.features)) {
@@ -176,7 +176,7 @@ public class DiscoverySequences extends SequenceBase {
         DiscoveryEvent.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
     Set<String> eventNetworks = receivedEvents.stream()
-        .flatMap(event -> event.networks.keySet().stream())
+        .flatMap(event -> event.localnet.keySet().stream())
         .collect(Collectors.toSet());
     assertTrue("all requested networks present", eventNetworks.containsAll(networks));
   }

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * System Discovery Event
  * <p>
- * 
+ * Information about a node discovered on the network
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

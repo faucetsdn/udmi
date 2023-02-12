@@ -1,18 +1,18 @@
-"""Generated class for event_discovery_network.json"""
+"""Generated class for state_localnet.json"""
 
 
-class NetworkDiscoveryEvent:
+class LocalnetState:
   """Generated schema class"""
 
   def __init__(self):
-    self.networks = None
+    self.families = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = NetworkDiscoveryEvent()
-    result.networks = source.get('networks')
+    result = LocalnetState()
+    result.families = source.get('families')
     return result
 
   @staticmethod
@@ -21,7 +21,7 @@ class NetworkDiscoveryEvent:
       return None
     result = {}
     for key in source:
-      result[key] = NetworkDiscoveryEvent.from_dict(source[key])
+      result[key] = LocalnetState.from_dict(source[key])
     return result
 
   @staticmethod
@@ -33,6 +33,6 @@ class NetworkDiscoveryEvent:
 
   def to_dict(self):
     result = {}
-    if self.networks:
-      result['networks'] = self.networks # 1
+    if self.families:
+      result['families'] = self.families # 1
     return result

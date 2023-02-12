@@ -1,75 +1,38 @@
 {
   "version": "1.4.1",
   "timestamp": "2018-08-26T21:39:29.364Z",
-  "system": {
-    "hardware": {
-      "make": "ACME",
-      "model": "Bird Trap"
-    },
-    "software": {
-      "firmware": "3.2a"
-    },
-    "serial_no": "182732142",
-    "last_config": "2018-08-26T21:49:29.364Z",
-    "operation": {
-      "operational": true,
-      "last_start": "2018-08-25T21:49:29.364Z",
-      "mode": "active",
-      "restart_count": 121
-    },
-    "status": {
-      "message": "Tickity Boo",
-      "category": "system.config.apply",
-      "timestamp": "2018-08-26T21:39:30.364Z",
-      "level": 600
-    }
-  },
   "localnet": {
     "networks" : {
-      "ipv4": {
-        "faimly": "ipv4",
-        "addr": "192.168.8.3",
-        "subnet": "/24"
-      }
-    },
-    "enp0s31f6": {
-        "families" {
+      "enp0s31f6": {
+        "families": {
           "ether": {
             "addr": "8c:8c:aa:50:bc:72"
           },
           "ipv4": {
-            "addr": "192.168.8.3/24"
+            "addr": "192.168.8.3",
+            "scope": "192.168.0.0/16"
           },
           "ipv6": {
             "addr": "fe80::11a9:496f:6596:b455/64"
-          },
+          }
         }
       },
       "wlp0s20f3": {
-        "families" {
+        "families": {
           "ether": {
             "addr": "40:1c:83:ca:77:54"
           },
           "ipv4": {
-            "addr": "192.168.8.10/24"
+            "addr": "192.168.8.10",
+            "scope": "192.168.0.0/16"
           },
           "ipv6": {
             "addr": "fe80::9ff8:8149:40f:a232/64"
           }
         }
       },
-      "docker0": {
-        "families" {
-          "ether": {
-            "addr": "02:42:4e:92:55:37"
-          },
-          "ipv4": {
-            "addr": "192.168.9.1/24"
-          }
-        }
-      },
       "enx0050b6ed5f77": {
-        "families" {
+        "families": {
           "ether": {
             "addr": "00:50:b6:ed:5f:77"
           }

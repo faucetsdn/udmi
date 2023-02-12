@@ -34,8 +34,8 @@
       "description": "The primary id of the device (on scan_network)",
       "type": "string"
     },
-    "networks": {
-      "description": "Discovery results by network",
+    "localnet": {
+      "description": "Enumeration of attached networks",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, NetworkDiscoveryEvent>",
@@ -67,6 +67,7 @@
     },
     "system": {
       "title": "System Discovery Event",
+      "description": "Information about a node discovered on the network",
       "type": "object",
       "additionalProperties": false,
       "properties": {

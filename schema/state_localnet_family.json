@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "title": "Family Localnet State",
+  "properties": {
+    "addr": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    }
+  }
+}
