@@ -12,23 +12,6 @@
   "generation": "2018-08-26T21:37:12Z",
   "scan_network": "bacnet",
   "scan_id": "92EA09",
-  "networks": {
-    "iot": {
-      "id": "AHU-1"
-    },
-    "bacnet": {
-      "id": "92EA09"
-    },
-    "ipv4": {
-      "id": "192.168.1.2"
-    },
-    "ipv6": {
-      "id": "FE80::D05C:1A90:DD9E:A582"
-    },
-    "ethmac": {
-      "id": "0E:93:32:11:04:82"
-    }
-  },
   "uniqs": {
     "sup_flow_actual_avo_1": {
       "units": "percent",
