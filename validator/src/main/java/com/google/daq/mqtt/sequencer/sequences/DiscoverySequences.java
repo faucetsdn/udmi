@@ -108,7 +108,8 @@ public class DiscoverySequences extends SequenceBase {
         () -> bucketStageMap.containsKey(ENUMERATION_FEATURES));
   }
 
-  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix, Map<String, FeatureEnumerationEvent> eventFeatures) {
+  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix,
+      Map<String, FeatureEnumerationEvent> eventFeatures) {
     Map<Bucket, Stage> buckets = new HashMap<>();
     eventFeatures.forEach((key, value) -> {
       String fullBucket = prefix + "." + key;
