@@ -169,15 +169,18 @@ public class BlobsetSequences extends SequenceBase {
     if (altRegistry == null) {
       throw new SkipTest("No alternate registry defined");
     }
+    clearOtherConfig();
+
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
+    mirrorToOtherConfig();
     untilSuccessfulRedirect(BlobPhase.APPLY);
-    mirrorDeviceConfig();
 
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
       untilSuccessfulRedirect(BlobPhase.FINAL);
+      clearOtherConfig();  // Clears out the original config so it can't be re-used.
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
@@ -185,13 +188,14 @@ public class BlobsetSequences extends SequenceBase {
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+      mirrorToOtherConfig();
       untilSuccessfulRedirect(BlobPhase.APPLY);
-      mirrorDeviceConfig();
     });
 
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
+      clearOtherConfig();  // Clears out the alternate config so we don't get confused.
       untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
     });

@@ -42,7 +42,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -70,7 +69,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
-import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
 import udmi.schema.Config;
@@ -1242,8 +1240,16 @@ public class SequenceBase {
     }
   }
 
-  protected void mirrorDeviceConfig() {
-    String receivedConfig = actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+  protected void mirrorToOtherConfig() {
+    updateConfig("mirroring config");
+    updateMirrorConfig(actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE))));
+  }
+
+  protected void clearOtherConfig() {
+    updateMirrorConfig("{}");
+  }
+
+  private void updateMirrorConfig(String receivedConfig) {
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
     // There's a race condition if the mirror command gets delayed, so chill for a bit.
