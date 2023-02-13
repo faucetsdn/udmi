@@ -28,7 +28,7 @@
       "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
       "patternProperties": {
         "^[a-z.]+$": {
-          "$ref": "#"
+          "$ref": "file:event_discovery_feature.json"
         }
       }
     }

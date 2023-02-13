@@ -25,8 +25,6 @@ if ! diff $tmpfile etc/requirements.txt; then
     false
 fi
 
-cp gencode/python/udmi/schema/__init__.py /tmp/__init__.py
-
 bin/gencode_java
 bin/gencode_python
 bin/gencode_docs
