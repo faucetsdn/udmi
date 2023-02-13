@@ -125,7 +125,7 @@ jobs:
           UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
-          bin/test_sequencer $GCP_TARGET_PROJECT endpoint_redirect_and_restart
+          bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out /tmp/generated.md
       - name: itemized sequencer tests
         env:
