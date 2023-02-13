@@ -11,5 +11,5 @@
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that feature enumeration feature is enumerated
+1. Check that feature enumeration feature is stable
 1. Check that no point enumeration
