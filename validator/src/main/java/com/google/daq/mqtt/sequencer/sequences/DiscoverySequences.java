@@ -23,13 +23,11 @@ import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -87,7 +85,9 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkFeatureEnumeration(new Stack<>(), event.features);
+      Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", event.features);
+      checkThat("feature enumeration feature is stable",
+          () -> bucketStageMap.get(ENUMERATION_FEATURES) == Stage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -99,13 +99,6 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
-  }
-
-  private void checkFeatureEnumeration(Stack<String> prefix,
-      Map<String, FeatureEnumerationEvent> eventFeatures) {
-    Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", eventFeatures);
-    checkThat("feature enumeration feature is enumerated",
-        () -> bucketStageMap.containsKey(ENUMERATION_FEATURES));
   }
 
   private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix,
