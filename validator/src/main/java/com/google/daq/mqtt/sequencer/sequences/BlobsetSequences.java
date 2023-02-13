@@ -313,13 +313,19 @@ public class BlobsetSequences extends SequenceBase {
         () -> deviceState.system.last_config.after(last_config));
 
     // jrand
+    if (isAlternateClient()) {
+      info("deviceConfig.system.operation.last_start = " + deviceConfig.system.operation.last_start);
+      info("last_start = " + last_start);
+    }/*
     if (!isAlternateClient()) {
       untilTrue("last_start is newer than previous last_start",
           () -> deviceConfig.system.operation.last_start.after(last_start));
     } else {
       untilTrue("last_start is same as previous last_start",
           this::stateMatchesConfigTimestamp);
-    }
+    }*/
+     untilTrue("last_start is newer than previous last_start",
+          () -> deviceConfig.system.operation.last_start.after(last_start));
   }
 
   private void deviceRedirectInitialRegistry() {
