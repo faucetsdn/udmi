@@ -13,6 +13,9 @@
     "noConfigAck": {
       "type": "boolean"
     },
+    "noPersist": {
+      "type": "boolean"
+    },
     "messageTrace": {
       "type": "boolean"
     },
