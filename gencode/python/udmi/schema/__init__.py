@@ -58,6 +58,8 @@ from .state_blobset_blob import BlobBlobsetState
 from .state_discovery import DiscoveryState
 from .state_discovery_family import FamilyDiscoveryState
 from .state_gateway import GatewayState
+from .state_localnet import LocalnetState
+from .state_localnet_family import FamilyLocalnetState
 from .state_mapping import MappingState
 from .state_mapping_device import DeviceMappingState
 from .state_pointset import PointsetState

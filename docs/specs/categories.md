@@ -38,6 +38,8 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _overridden_: (**WARNING**) The reported value has been overridden locally
     * _failure_: (**ERROR**) The system failed to read/write the point
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
+* _localnet_: Aspects of working with various local networks
+  * _network_: (**INFO**) Aspecs of a specific network
 * _discovery_: Handling on-prem discovery flow
   * _family_: Conditions specific to an entire address family (e.g. bacnet)
     * _scan_: (**INFO**) Relating to scanning a particular address family
