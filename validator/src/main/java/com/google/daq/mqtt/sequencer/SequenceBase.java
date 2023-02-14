@@ -1240,6 +1240,12 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Mirrors the current config to the "other" config, where the current and
+   * other configs are defined by the useAlternateClient flag. This call is used
+   * to warm-up the new config before a switch, so that when the client is switched,
+   * it is ready with the right (up to date) config contents.
+   */
   protected void mirrorToOtherConfig() {
     updateConfig("mirroring config " + useAlternateClient);
     Config target = (Config) receivedUpdates.get(CONFIG_SUBTYPE);
@@ -1248,6 +1254,11 @@ public class SequenceBase {
     updateMirrorConfig(actualize(stringify(target)));
   }
 
+  /**
+   * Clears out the "other" (not current) config, so that it can't be inadvertantly used
+   * for something. This is the simple version of the endpoint going down (actually turning
+   * down the endpoint would be a lot more work).
+   */
   protected void clearOtherConfig() {
     updateMirrorConfig("{}");
   }
