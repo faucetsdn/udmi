@@ -263,7 +263,7 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
-    mirrorDeviceConfig();
+    mirrorToOtherConfig();
 
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
@@ -341,7 +341,7 @@ public class BlobsetSequences extends SequenceBase {
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
       untilSuccessfulRedirect(BlobPhase.APPLY);
-      mirrorDeviceConfig();
+      mirrorToOtherConfig();
     });
 
     // Phase four: verify restoration of initial registry connection.
