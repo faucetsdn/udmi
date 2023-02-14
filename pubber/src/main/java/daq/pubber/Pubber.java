@@ -443,7 +443,7 @@ public class Pubber {
   private void initializePersistentStore() {
     Preconditions.checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
-    if (FALSE.equals(configuration.options.noPersist)) {
+    if (TRUE.equals(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
       persistentData = new DevicePersistent();
     } else {
