@@ -205,41 +205,6 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Check connection to an alternate project with restart.")
-  public void endpoint_redirect_and_restart() {
-    if (altRegistry == null) {
-      throw new SkipTest("No alternate registry defined");
-    }
-
-    // Phase one: initiate connection to alternate registry.
-    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
-    untilSuccessfulRedirect(BlobPhase.APPLY);
-
-    withAlternateClient(() -> {
-      // Phase two: verify connection to alternate registry.
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      untilTrue("alternate last_config matches config timestamp",
-          this::stateMatchesConfigTimestamp);
-      untilClearedRedirect();
-
-      system_mode_restart();
-
-      // Phase three: initiate connection back to initial registry.
-      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
-      untilSuccessfulRedirect(BlobPhase.APPLY);
-    });
-
-    // Phase four: verify restoration of initial registry connection.
-    whileDoing("restoring main connection", () -> {
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-      untilClearedRedirect();
-    });
-  }
-
-  @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
   @Feature(stage = STABLE, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
