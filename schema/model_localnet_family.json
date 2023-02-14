@@ -7,13 +7,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "id": {
+    "addr": {
       "type": "string",
       "description": "The address of a device on the local network",
-      "examples": ["4148893"]
+      "examples": ["0x414889"]
     }
   },
   "required": [
-    "id"
+    "addr"
   ]
 }
