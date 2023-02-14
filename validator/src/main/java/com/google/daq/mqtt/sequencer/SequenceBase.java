@@ -42,7 +42,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -70,7 +69,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
-import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
 import udmi.schema.Config;
@@ -1242,8 +1240,38 @@ public class SequenceBase {
     }
   }
 
-  protected void mirrorDeviceConfig() {
-    String receivedConfig = actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+  /**
+   * Mirrors the current config to the "other" config, where the current and
+   * other configs are defined by the useAlternateClient flag. This call is used
+   * to warm-up the new config before a switch, so that when the client is switched,
+   * it is ready with the right (up to date) config contents.
+   */
+  protected void mirrorToOtherConfig() {
+    // First make sure the current config is up-to-date with any local changes.
+    updateConfig("mirroring config " + useAlternateClient);
+
+    // Grab the as-reported current config, to get a copy of the actual values uesd.
+    Config target = (Config) receivedUpdates.get(CONFIG_SUBTYPE);
+
+    // Modify the config with the alternate endpoint_type, prefetching the actual change.
+    target.system.testing.endpoint_type = useAlternateClient ? null : "alternate";
+
+    // Now update the other config with the tweaked version, in prep for the actual switch.
+    updateMirrorConfig(actualize(stringify(target)));
+  }
+
+  /**
+   * Clears out the "other" (not current) config, so that it can't be inadvertantly used
+   * for something. This is the simple version of the endpoint going down (actually turning
+   * down the endpoint would be a lot more work).
+   */
+  protected void clearOtherConfig() {
+    // No need to be fancy here, just clear out the other config with an empty blob.
+    updateMirrorConfig("{}");
+  }
+
+  private void updateMirrorConfig(String receivedConfig) {
+    assert altClient != null;
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
     // There's a race condition if the mirror command gets delayed, so chill for a bit.
