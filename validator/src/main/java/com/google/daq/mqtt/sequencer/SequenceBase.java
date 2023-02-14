@@ -1247,10 +1247,16 @@ public class SequenceBase {
    * it is ready with the right (up to date) config contents.
    */
   protected void mirrorToOtherConfig() {
+    // First make sure the current config is up-to-date with any local changes.
     updateConfig("mirroring config " + useAlternateClient);
+
+    // Grab the as-reported current config, to get a copy of the actual values uesd.
     Config target = (Config) receivedUpdates.get(CONFIG_SUBTYPE);
-    // Since this is updating the mirror, use the opposite of what it would be locally.
+
+    // Modify the config with the alternate endpoint_type, prefetching the actual change.
     target.system.testing.endpoint_type = useAlternateClient ? null : "alternate";
+
+    // Now update the other config with the tweaked version, in prep for the actual switch.
     updateMirrorConfig(actualize(stringify(target)));
   }
 
@@ -1260,10 +1266,12 @@ public class SequenceBase {
    * down the endpoint would be a lot more work).
    */
   protected void clearOtherConfig() {
+    // No need to be fancy here, just clear out the other config with an empty blob.
     updateMirrorConfig("{}");
   }
 
   private void updateMirrorConfig(String receivedConfig) {
+    assert altClient != null;
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
     // There's a race condition if the mirror command gets delayed, so chill for a bit.
