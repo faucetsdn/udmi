@@ -18,3 +18,6 @@ These are used to label individual line-item tests.
   * _config_: Endpoint configuration updates
 * _system_: Basic system operations
   * _mode_: System mode
+* _pointset_: Point telemetry capabilities
+* _writeback_: Writeback capabilities
+* _gateway_: UDMI Gateway capabilities
