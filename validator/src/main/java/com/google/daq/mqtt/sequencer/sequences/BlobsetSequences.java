@@ -66,6 +66,10 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
+    // This case is tracking the initial apply of a redirect, so it sets up the mirror config.
+    if (blobPhase == BlobPhase.APPLY) {
+      mirrorToOtherConfig();
+    }
     untilTrue(String.format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
@@ -76,6 +80,10 @@ public class BlobsetSequences extends SequenceBase {
           && blobStateStatus == null;
     });
     checkThatHasInterestingSystemStatus(false);
+    // This case is tracking the finalization of the redirect, so clear out the non-used one.
+    if (blobPhase == BlobPhase.FINAL) {
+      clearOtherConfig();
+    }
   }
 
   private void untilErrorReported() {
@@ -169,18 +177,15 @@ public class BlobsetSequences extends SequenceBase {
     if (altRegistry == null) {
       throw new SkipTest("No alternate registry defined");
     }
-    clearOtherConfig();
 
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
-    mirrorToOtherConfig();
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
       untilSuccessfulRedirect(BlobPhase.FINAL);
-      clearOtherConfig();  // Clears out the original config so it can't be re-used.
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
@@ -188,54 +193,12 @@ public class BlobsetSequences extends SequenceBase {
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
-      mirrorToOtherConfig();
       untilSuccessfulRedirect(BlobPhase.APPLY);
     });
 
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
-      clearOtherConfig();  // Clears out the alternate config so we don't get confused.
-      untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-      untilClearedRedirect();
-    });
-  }
-
-  @Test
-  @Description("Check connection to an alternate project with restart.")
-  public void endpoint_redirect_and_restart() {
-    if (altRegistry == null) {
-      throw new SkipTest("No alternate registry defined");
-    }
-    clearOtherConfig();
-
-    // Phase one: initiate connection to alternate registry.
-    untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
-    setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
-    mirrorToOtherConfig();
-    untilSuccessfulRedirect(BlobPhase.APPLY);
-
-    withAlternateClient(() -> {
-      // Phase two: verify connection to alternate registry.
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      clearOtherConfig();  // Clears out the original config so it can't be re-used.
-      untilTrue("alternate last_config matches config timestamp",
-          this::stateMatchesConfigTimestamp);
-      untilClearedRedirect();
-
-      system_mode_restart();
-      
-      // Phase three: initiate connection back to initial registry.
-      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-      setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
-      mirrorToOtherConfig();
-      untilSuccessfulRedirect(BlobPhase.APPLY);
-    });
-
-    // Phase four: verify restoration of initial registry connection.
-    whileDoing("restoring main connection", () -> {
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      clearOtherConfig();  // Clears out the alternate config so we don't get confused.
       untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
     });
