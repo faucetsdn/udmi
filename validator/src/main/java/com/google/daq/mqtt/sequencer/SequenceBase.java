@@ -1241,8 +1241,11 @@ public class SequenceBase {
   }
 
   protected void mirrorToOtherConfig() {
-    updateConfig("mirroring config");
-    updateMirrorConfig(actualize(stringify(receivedUpdates.get(CONFIG_SUBTYPE))));
+    updateConfig("mirroring config " + useAlternateClient);
+    Config target = (Config) receivedUpdates.get(CONFIG_SUBTYPE);
+    // Since this is updating the mirror, use the opposite of what it would be locally.
+    target.system.testing.endpoint_type = useAlternateClient ? null : "alternate";
+    updateMirrorConfig(actualize(stringify(target)));
   }
 
   protected void clearOtherConfig() {
