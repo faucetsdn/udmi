@@ -912,6 +912,10 @@ public class Pubber {
   private void processConfigUpdate(Config config) {
     final int actualInterval;
     if (config != null) {
+      if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
+        error("Empty config system block and configured to restart on bad config!");
+        restartSystem(true);
+      }
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
