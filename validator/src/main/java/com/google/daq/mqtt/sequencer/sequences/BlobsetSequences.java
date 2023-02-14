@@ -66,6 +66,10 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
+    // This case is tracking the initial apply of a redirect, so it sets up the mirror config.
+    if (blobPhase == BlobPhase.APPLY) {
+      mirrorToOtherConfig();
+    }
     untilTrue(String.format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
@@ -76,6 +80,10 @@ public class BlobsetSequences extends SequenceBase {
           && blobStateStatus == null;
     });
     checkThatHasInterestingSystemStatus(false);
+    // This case is tracking the finalization of the redirect, so clear out the non-used one.
+    if (blobPhase == BlobPhase.FINAL) {
+      clearOtherConfig();
+    }
   }
 
   private void untilErrorReported() {
@@ -169,11 +177,11 @@ public class BlobsetSequences extends SequenceBase {
     if (altRegistry == null) {
       throw new SkipTest("No alternate registry defined");
     }
+
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
-    mirrorDeviceConfig();
 
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
@@ -186,7 +194,6 @@ public class BlobsetSequences extends SequenceBase {
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
       untilSuccessfulRedirect(BlobPhase.APPLY);
-      mirrorDeviceConfig();
     });
 
     // Phase four: verify restoration of initial registry connection.
