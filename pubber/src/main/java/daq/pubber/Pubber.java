@@ -849,6 +849,10 @@ public class Pubber {
   private void publisherHandler(String type, String phase, Throwable cause) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
+      if (TRUE.equals(configuration.options.barfConfig)) {
+        error("Restarting system because of restart-on-error configuration setting");
+        restartSystem(true);
+      }
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
     Entry report = entryFromException(category, cause);

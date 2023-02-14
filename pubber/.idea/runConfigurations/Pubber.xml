@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Pubber" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="Pubber" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="daq.pubber.Pubber" />
     <module name="pubber" />
-    <option name="PROGRAM_PARAMETERS" value="bos-peringknife-dev sites/udmi_site_model AHU-12 54335" />
+    <option name="PROGRAM_PARAMETERS" value="/tmp/pubber_config.json" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>
