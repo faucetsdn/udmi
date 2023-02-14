@@ -1,3 +1,5 @@
 TEST writeback_success noWriteback RESULT fail unknown writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST writeback_success noPointState RESULT fail unknown writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST pointset_sample_rate fixedSampleRate=10 RESULT fail unknown pointset_sample_rate ALPHA 5 Failed check that time period between successive pointset events is between 1 and 5 seconds
+TEST system_mode_restart noPersist RESULT fail system.mode system_mode_restart STABLE 5 Failed check that restart count increased by one
+TEST broken_config barfConfig RESULT fail unknown broken_config ALPHA 5 timeout waiting for log category `system.config.receive` level `DEBUG` was logged
