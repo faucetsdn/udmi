@@ -23,7 +23,7 @@ import org.junit.Test;
 import udmi.schema.PointsetEvent;
 
 /**
- * Validate pointset related functionality
+ * Validate pointset related functionality.
  */
 public class PointsetSequences extends SequenceBase {
 
@@ -170,7 +170,7 @@ public class PointsetSequences extends SequenceBase {
     }
     
     checkThat(samplingMessagesCheckMessage(sampleRange),
-      () -> sampleRange.doesIntersect(intervals)
+        () -> sampleRange.doesIntersect(intervals)
     );
 
   }
