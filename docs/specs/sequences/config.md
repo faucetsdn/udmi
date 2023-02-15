@@ -2,7 +2,8 @@
 
 # Config & State Sequence
 
-* The [`state`](../../messages/state.md) and [`config`](../../messages/config.md) messages work together to represent a transactional state between the cloud and device.
+* The [`state`](../../messages/state.md) and [`config`](../../messages/config.md) messages work together to represent
+  a transactional state between the cloud and device.
 * When any `config` is received, a `state` update should be generated with a corresponding last_update.
 * The state message should be sent within 5 seconds
   * If additional processing is required, then the `updating` flag should be set `true`.
@@ -13,12 +14,13 @@
   * There is an update from internal logic
 * Other [sequences](./) such as [writeback](writeback.md) may have specific behaviors relating to
   state messages
-* A device should of continuously operating when recieving an erroneous config message. The
+* A device should of continuously operating when receiving an erroneous config message. The
 
 ![State and config](images/state.png)
 
-Generated using <https://sequencediagram.org>
 ```
+Generated using <https://sequencediagram.org>
+
 participant Device
 participant Broker
 participantspacing 5
@@ -44,7 +46,7 @@ Device->Broker: **STATE**
 
 ## Erroneous Config Handling
 
-A device should be capable of interpreting erroneous messages without distrupting operation. There are
+A device should be capable of interpreting erroneous messages without disrupting operation. There are
 three types of errors which may be encountered when interpreting config messages:
 * Hard-errors
 * Soft-errors

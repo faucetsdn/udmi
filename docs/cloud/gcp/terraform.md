@@ -6,17 +6,17 @@ The files in the [`cloud`](../../cloud) folder enable the creation of Cloud infr
 
 At the moment only Google Cloud Platform (GCP) is supported.
 
-## Pre-requisites
+## Prerequisites
 
-There are some pre-requisites that need to be satisfied in order to use this terraform configuration to setup UDMI infrastructure in a GCP cloud project:
+There are some prerequisites that need to be satisfied in order to use this terraform configuration to setup UDMI infrastructure in a GCP cloud project:
 
 1. A working installation of [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/gcp-get-started)
 2. An [existing project on GCP](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 4. [Create a service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) for terraform with Owner role
 5. Create a Standard type storage bucket setup with a unique name. example: `udmi-terraform-state-bucket`. You should disable public access and ensure your service account has access to it.
 6. [Generate a JSON key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for the terraform service account, download it and store it in the [`udmi/cloud/auth`](../../../cloud/gcp/auth) folder with the name `credentials.json`\
-7. [Create a UDMI group for your organisation](https://cloud.google.com/iam/docs/groups-in-cloud-console). This group name should be provided in various locations. 
-8. [Enable the following APIS manually](https://cloud.google.com/endpoints/docs/openapi/enable-api). Cloud Resource Manager API and Service Usage API.
+7. [Create a UDMI group for your organization](https://cloud.google.com/iam/docs/groups-in-cloud-console). This group name should be provided in various locations. 
+8. [Enable the following APIs manually](https://cloud.google.com/endpoints/docs/openapi/enable-api). Cloud Resource Manager API and Service Usage API.
 
 NOTE: There is currently a limitation in the terraform code that requires the project name and id to be the same.
 TODO: create a gcloud based shell script to automatically does all activities listed above.
@@ -35,7 +35,7 @@ cp main.tf.template main.tf
 Edit them according to the project settings and according to the UDMI site you need to create and group permissions you want to attribute to it.
 
 The next steps are to initialize the required terraform backend, provider and modules and 
-to import the project and the bucket previously created to the terraform state: (Note, you only need to do the imports once, unless you remove their associated states from beeing tracked.
+to import the project and the bucket previously created to the terraform state: (Note, you only need to do the imports once, unless you remove their associated states from being tracked.
 
 ```
 terraform init
@@ -43,7 +43,7 @@ terraform import google_project.udmi-project ${GCP_PROJECT_NAME}
 terraform import google_storage_bucket.tf-bucket ${UDMI_TERRAFORM_BUCKET_NAME}
 ```
 
-where ${GCP_PROJECT_NAME} is the name of the GCP project created in the pre-requisite step 2 and ${UDMI_TERRAFORM_BUCKET_NAME} is the name of the terraform state bucket created in step 3.
+where ${GCP_PROJECT_NAME} is the name of the GCP project created in the prerequisite step 2 and ${UDMI_TERRAFORM_BUCKET_NAME} is the name of the terraform state bucket created in step 3.
 
 The next step is to check that the planned tasks are correct:
 
@@ -59,9 +59,9 @@ terraform apply
 
 ### Troubleshooting
 
-- If you need to reset your infrastructure by using *terraform destroy* (use with caution), you should first remove the tf_bucket and project resources from being tracked in the terraform state:
+- If you need to reset your infrastructure by using *terraform destroy* (use with caution), you should first remove the `tf_bucket` and project resources from being tracked in the terraform state:
     ```
     terraform state rm google_project.udmi-project
     terraform state rm google_storage_bucket.tf-bucket
     ```
-- If you run into API enablement issues or other issues, you can retry the *plan* and *apply* terraform commands. If you still have issues, you can look at api.tf for a list of APIs that must be enabled and enable them manually.
+- If you run into API enablement issues or other issues, you can retry the *plan* and *apply* terraform commands. If you still have issues, you can look at `api.tf` for a list of APIs that must be enabled and enable them manually.

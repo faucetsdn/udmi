@@ -1,7 +1,7 @@
 //
 // This message represents an output from the mapper for the mapping of a particular device.
 //
-// Note that the building and device id are included as part of the message envelope.
+// Note that the building and device_id are included as part of the message envelope.
 //
 {
   "version": "1.4.0",

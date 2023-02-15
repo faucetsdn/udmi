@@ -1,4 +1,4 @@
-# GCloud IoT Connection Logs
+# GCP IoT Connection Logs
 
 Stores all device connections and disconnection from IoT Core into BigQuery
 

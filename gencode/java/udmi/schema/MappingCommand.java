@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "timestamp",
     "version",
     "guid",
+    "device_num_id",
     "status",
     "translation"
 })
@@ -49,6 +50,13 @@ public class MappingCommand {
     @JsonPropertyDescription("device guid")
     public java.lang.String guid;
     /**
+     * numerical id assigned to this device
+     * 
+     */
+    @JsonProperty("device_num_id")
+    @JsonPropertyDescription("numerical id assigned to this device")
+    public Double device_num_id;
+    /**
      * Entry
      * <p>
      * 
@@ -69,6 +77,7 @@ public class MappingCommand {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.device_num_id == null)? 0 :this.device_num_id.hashCode()));
         result = ((result* 31)+((this.translation == null)? 0 :this.translation.hashCode()));
         result = ((result* 31)+((this.guid == null)? 0 :this.guid.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
@@ -86,7 +95,7 @@ public class MappingCommand {
             return false;
         }
         MappingCommand rhs = ((MappingCommand) other);
-        return ((((((this.translation == rhs.translation)||((this.translation!= null)&&this.translation.equals(rhs.translation)))&&((this.guid == rhs.guid)||((this.guid!= null)&&this.guid.equals(rhs.guid))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((this.device_num_id == rhs.device_num_id)||((this.device_num_id!= null)&&this.device_num_id.equals(rhs.device_num_id)))&&((this.translation == rhs.translation)||((this.translation!= null)&&this.translation.equals(rhs.translation))))&&((this.guid == rhs.guid)||((this.guid!= null)&&this.guid.equals(rhs.guid))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

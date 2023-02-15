@@ -20,6 +20,10 @@
       "description": "device guid",
       "type": "string"
     },
+    "device_num_id": {
+      "description": "numerical id assigned to this device",
+      "type": "number"
+    },
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },

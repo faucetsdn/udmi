@@ -50,10 +50,9 @@ The first set of [Cloud Functions](https://cloud.google.com/functions/docs/) han
 from a device. The [source code](../../udmis/functions/) for these functions can be published
 to the cloud project by the `udmis/deploy_udmis_gcloud` command (see below).
 
-* __udmi\_target__: Processes incoming device _event_ messages and writes them to the designated
-location in the Firestore database. 
+* __udmi\_target__: Central handling of all messages.
 * __udmi\_state__: Processes incoming device _state_ messages and re-writes them to the _udmi\_target_
-topic, and also shards them out by subsystem to various sub-parts of Firestore.
+topic.
 
 ## Validator
 

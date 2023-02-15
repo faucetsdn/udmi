@@ -6,8 +6,9 @@ This file documents UDMI's specification for cloud to device control i.e. writeb
 
 ![Basic writeback sequence diagram](images/writeback-basic.png)
 
-Generated using <https://sequencediagram.org>
 ```
+Generated using <https://sequencediagram.org>
+
 participant Device
 participant Broker
 entryspacing 0.1

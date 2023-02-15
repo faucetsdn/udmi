@@ -43,13 +43,13 @@ handled automatically by `git-branch-create`:
 * `git config branch.$branch.description "SOME WORDS HERE"` as a reminder of what the branch is for.
 * `git config branch.$branch.parent $main` to set the parent (local) branch that $branch should track.
 
-# Decyphering Tool Output
+# Deciphering Tool Output
 
 ## git branch-status
 
 The `branch-status` utility only works with local information (so it's fast) and gives a view of
 the current state of the repo. It does _not_ automatically sync with any designated remote, so can
-show out-of-date info if it hsan't been updated in a while (e.g. by running `branch-update`).
+show out-of-date info if it hasn't been updated in a while (e.g. by running `branch-update`).
 
 * `ahead X`: Branch is X commits ahead of its upstream/parent.
 * `behind X`: Branch is X commits behind its upstream/parent.
@@ -107,7 +107,7 @@ suggest deleting an origin branch if it's identical to the `$main` branch, or if
 hasn't been merged in quite some time. The output can just be cut-and-pasted into a terminal
 window to perform the operations.
 
-To ignore the prune commentaty for upstream remotes (e.g. a coworker's repo), set an appropriate
+To ignore the prune commentary for upstream remotes (e.g. a coworker's repo), set an appropriate
 configuration value `remote.${remote}.upstream=ignore`.
 
 ```

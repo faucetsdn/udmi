@@ -13,6 +13,12 @@
     "noConfigAck": {
       "type": "boolean"
     },
+    "noPersist": {
+      "type": "boolean"
+    },
+    "barfConfig": {
+      "type": "boolean"
+    },
     "messageTrace": {
       "type": "boolean"
     },
