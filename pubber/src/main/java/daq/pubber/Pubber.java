@@ -1133,7 +1133,7 @@ public class Pubber {
 
   private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
     FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
+    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).addr;
     return familyDiscoveryEvent;
   }
 
@@ -1258,7 +1258,7 @@ public class Pubber {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-        if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
+        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
@@ -1289,7 +1289,7 @@ public class Pubber {
 
   private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
-    event.id = target.getValue().id;
+    event.id = target.getValue().addr;
     return event;
   }
 
