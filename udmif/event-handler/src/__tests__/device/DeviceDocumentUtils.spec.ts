@@ -136,7 +136,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = getExpectedDevice(expectedPoints, timestamp);
 
     // act and assert
     expect(createDevice(inputEvent, undefined)).toEqual(expectedDevice);
@@ -163,7 +163,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = getExpectedDevice(expectedPoints, timestamp);
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -227,8 +227,6 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       id,
       points: expectedPoints,
       lastPayload: timestamp,
-      lastTelemetrySaved: today,
-      lastTelemetryUpdated: timestamp,
     };
 
     // act and assert
@@ -283,7 +281,7 @@ describe('DeviceDocumentUtils.createDevice.pointset', () => {
       { name: fdps, id: fdps, value: '82', meta: { code: fdps }, state },
     ];
 
-    const expectedDevice: Device = { name, site, id, points: expectedPoints, lastPayload: timestamp };
+    const expectedDevice: Device = getExpectedDevice(expectedPoints, timestamp);
 
     // act and assert
     expect(createDevice(inputEvent, existingPoints)).toEqual(expectedDevice);
@@ -420,3 +418,15 @@ describe('getDeviceValidationDocument', () => {
     }).toThrowError('An invalid site was submitted');
   });
 });
+
+function getExpectedDevice(expectedPoints: Point[], timestamp: string): Device {
+  return {
+    name,
+    site,
+    id,
+    points: expectedPoints,
+    lastPayload: timestamp,
+    lastTelemetrySaved: today,
+    lastTelemetryUpdated: timestamp,
+  };
+}

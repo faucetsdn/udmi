@@ -1,5 +1,5 @@
 import { DeviceBuilder, Device, DeviceKey, DeviceValidation } from './model/Device';
-import { isPointsetSubType, isSubType, isSystemSubType, isValidationSubType, STATE } from '../EventUtils';
+import { EVENT, isPointsetSubType, isSubType, isSystemSubType, isValidationSubType, STATE } from '../EventUtils';
 import { PointsetEvent, SystemEvent, UdmiEvent, ValidationEvent } from '../udmi/UdmiEvent';
 import { PointBuilder, Point } from './model/Point';
 import { Validation, ValidationBuilder } from '../model/Validation';
@@ -99,8 +99,10 @@ function buildDeviceDocumentFromPointset(
   return deviceBuilder
     .points(points)
     .lastPayload(udmiEvent.data.timestamp)
-    .lastTelemetryUpdated(isSubType(udmiEvent, STATE) ? udmiEvent.data.timestamp : null)
-    .lastTelemetrySaved(isSubType(udmiEvent, STATE) ? getNow() : null)
+    .lastTelemetryUpdated(
+      isSubType(udmiEvent, EVENT) || !udmiEvent.attributes.subType ? udmiEvent.data.timestamp : null
+    )
+    .lastTelemetrySaved(isSubType(udmiEvent, EVENT) || !udmiEvent.attributes.subType ? getNow() : null)
     .build();
 }
 
