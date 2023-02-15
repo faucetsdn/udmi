@@ -173,7 +173,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Check connection to an alternate project.")
-  public void endpoint_connection_success_alternate() {
+  public void endpoint_connection_success_restart() {
     if (altRegistry == null) {
       throw new SkipTest("No alternate registry defined");
     }
@@ -189,6 +189,9 @@ public class BlobsetSequences extends SequenceBase {
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
+
+      // Phase two.five: restart the system to make sure the change sticks.
+      check_system_restart();
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
@@ -208,6 +211,10 @@ public class BlobsetSequences extends SequenceBase {
   @Description("Restart and connect to same endpoint and expect it returns.")
   @Feature(stage = STABLE, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
+    check_system_restart();
+  }
+
+  private void check_system_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero",
