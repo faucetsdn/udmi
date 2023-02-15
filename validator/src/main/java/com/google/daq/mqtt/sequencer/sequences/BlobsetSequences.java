@@ -173,7 +173,17 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Check connection to an alternate project.")
+  public void endpoint_connection_success_alternate() {
+    check_endpoint_connection_success(false);
+  }
+
+  @Test
+  @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_restart() {
+    check_endpoint_connection_success(true);
+  }
+
+  private void check_endpoint_connection_success(boolean doRestart) {
     if (altRegistry == null) {
       throw new SkipTest("No alternate registry defined");
     }
@@ -190,8 +200,10 @@ public class BlobsetSequences extends SequenceBase {
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
 
-      // Phase two.five: restart the system to make sure the change sticks.
-      check_system_restart();
+      if (doRestart) {
+        // Phase two.five: restart the system to make sure the change sticks.
+        check_system_restart();
+      }
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
