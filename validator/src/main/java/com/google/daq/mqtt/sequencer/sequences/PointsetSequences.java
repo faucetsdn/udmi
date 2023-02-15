@@ -27,6 +27,8 @@ import udmi.schema.PointsetEvent;
  */
 public class PointsetSequences extends SequenceBase {
 
+  private static String NO_POINTSET_CONFIG = "no pointset declared in config";
+
   /**
    * Tests sample_rate_min by measuring the initial interval between the last two messages received,
    * then setting the config.pointset.sample_rate_min to match half the initial interval
@@ -44,7 +46,7 @@ public class PointsetSequences extends SequenceBase {
     Integer defaultSampleRate = 10;
 
     if (deviceConfig.pointset == null) {
-      throw new SkipTest("device pointset not in config");
+      throw new SkipTest(NO_POINTSET_CONFIG);
     }
 
     // Clear received events because this could contain messages from a previous sample rate test
@@ -104,7 +106,7 @@ public class PointsetSequences extends SequenceBase {
   public void pointset_publish_interval() {
     
     if (deviceConfig.pointset == null) {
-      throw new SkipTest("device pointset not in config");
+      throw new SkipTest(NO_POINTSET_CONFIG);
     }
 
     // Test two narrow non-intersecting windows
