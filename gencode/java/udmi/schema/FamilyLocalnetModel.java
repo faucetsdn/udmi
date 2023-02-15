@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id"
+    "addr"
 })
 @Generated("jsonschema2pojo")
 public class FamilyLocalnetModel {
@@ -26,14 +26,14 @@ public class FamilyLocalnetModel {
      * (Required)
      * 
      */
-    @JsonProperty("id")
+    @JsonProperty("addr")
     @JsonPropertyDescription("The address of a device on the local network")
-    public String id;
+    public String addr;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
+        result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
         return result;
     }
 
@@ -46,7 +46,7 @@ public class FamilyLocalnetModel {
             return false;
         }
         FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
-        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
+        return ((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)));
     }
 
 }
