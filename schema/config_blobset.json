@@ -13,7 +13,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, BlobBlobsetConfig>",
       "patternProperties": {
-        "^(_firmware_update|_ota_module_loader|_iot_endpoint_config|[a-z][0-9A-Za-z_]+)$": {
+        "^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:config_blobset_blob.json#"
         }
       }
