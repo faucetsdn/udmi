@@ -8,6 +8,12 @@ import java.util.Map;
 
 public enum Bucket {
 
+    // IoT connection endpoint management
+    ENDPOINT("endpoint"),
+
+    // Endpoint configuration updates
+    ENDPOINT_CONFIG("endpoint.config"),
+
     // Basic device property enumeration capability
     ENUMERATION("enumeration"),
 
@@ -26,17 +32,20 @@ public enum Bucket {
     // Scanning a network for devices
     DISCOVERY_SCAN("discovery.scan"),
 
-    // IoT connection endpoint management
-    ENDPOINT("endpoint"),
+    // UDMI gateway capabilities
+    GATEWAY("gateway"),
 
-    // Endpoint configuration updates
-    ENDPOINT_CONFIG("endpoint.config"),
+    // Pointset and telemetry capabilities
+    POINTSET("pointset"),
 
     // Basic system operations
     SYSTEM("system"),
 
     // System mode
     SYSTEM_MODE("system.mode"),
+
+    // Writeback related operations
+    WRITEBACK("writeback"),
 
     // unknown default value
     UNKNOWN_DEFAULT("unknown");
