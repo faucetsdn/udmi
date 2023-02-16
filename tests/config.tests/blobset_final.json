@@ -8,6 +8,12 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "generation": "2022-07-13T12:00:00.000Z"
       },
+      "_ota_module_loader": {
+        "phase": "final",
+        "url": "https://manuf.com/path/otafile.zip",
+        "sha256": "ce242bbc815de7c9345e61727f199da7f2f422a2a357e2a4bbc70972d10c6763",
+        "generation": "2023-02-16T12:00:00.000Z"
+      },
       "_firmware_update": {
         "phase": "final",
         "url": "https://manuf.com/path/file.zip",
