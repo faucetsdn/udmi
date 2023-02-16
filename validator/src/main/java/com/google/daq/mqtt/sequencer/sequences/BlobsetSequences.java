@@ -1,10 +1,14 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
+import static udmi.schema.Bucket.ENDPOINT;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 
@@ -122,7 +126,7 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
-  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
@@ -130,7 +134,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check repeated endpoint with same information gets retried.")
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
@@ -146,7 +150,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check a successful reconnect to the same endpoint.")
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
@@ -154,7 +158,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Failed connection because of bad hash.")
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
@@ -171,7 +175,7 @@ public class BlobsetSequences extends SequenceBase {
     checkThatHasInterestingSystemStatus(false);
   }
 
-  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     if (altRegistry == null) {
@@ -206,7 +210,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Description("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = STABLE, bucket = SYSTEM_MODE)
+  @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);

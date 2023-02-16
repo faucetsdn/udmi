@@ -1,7 +1,12 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.NINETY_SECONDS_MS;
+import static udmi.schema.Bucket.SYSTEM;
+import static udmi.schema.Bucket.WRITEBACK;
 
+import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import java.util.List;
 import java.util.Objects;
@@ -75,6 +80,7 @@ public class WritebackSequences extends PointsetBase {
   }
 
   @Test(timeout = 90000)
+  @Feature(stage = BETA, bucket = WRITEBACK)
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
     untilTrue(expectedPresentValue(targetModel), () -> presentValueIs(targetModel));
@@ -99,11 +105,13 @@ public class WritebackSequences extends PointsetBase {
   }
 
   @Test(timeout = NINETY_SECONDS_MS)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_invalid() {
     testTargetState(INVALID_STATE);
   }
 
   @Test(timeout = NINETY_SECONDS_MS)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
   }

@@ -149,7 +149,7 @@ public class SequenceBase {
   static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
-  private static String serialNo;
+  protected static String serialNo;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -182,7 +182,7 @@ public class SequenceBase {
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
   private PrintWriter systemLog;
-  private String lastSerialNo;
+  protected String lastSerialNo;
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
@@ -478,15 +478,6 @@ public class SequenceBase {
     } finally {
       debug("wait for config sync result " + configReady(true));
     }
-  }
-
-  @Test
-  @Feature(stage = STABLE)
-  public void valid_serial_no() {
-    if (serialNo == null) {
-      throw new SkipTest("No test serial number provided");
-    }
-    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, org.junit.runner.Description description,

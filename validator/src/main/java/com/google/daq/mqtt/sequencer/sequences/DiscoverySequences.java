@@ -121,7 +121,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = BETA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;

@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -8,6 +9,8 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Bucket.ENDPOINT;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
@@ -41,14 +44,15 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = BETA, bucket = SYSTEM)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
   @Description("Check that the min log-level config is honored by the device.")
-  @Feature()
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
@@ -72,12 +76,14 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = BETA, bucket = SYSTEM)
   @Description("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
@@ -120,6 +126,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
   @Description("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
