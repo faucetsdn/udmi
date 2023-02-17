@@ -46,8 +46,8 @@ const iotClient = new iot.v1.DeviceManagerClient({
 
 const registry_promise = getRegistryRegions();
 
-function currentTimestamp() {
-  return new Date().toJSON();
+function currentTimestamp(target) {
+  return (target > 0 ? new Date(target) : new Date()).toJSON();
 }
 
 function recordMessage(attributes, message) {
@@ -279,7 +279,9 @@ function process_state_update(attributes, msgObject) {
 
   // Check both potential locations for last_start, can be cleaned-up post release.
   const stateStart = msgObject.system &&
-        (msgObject.system.last_start || msgObject.system.operation.last_start);
+        (msgObject.system.last_start ||
+         msgObject.system.operation.last_start ||
+         currentTimestamp(1));
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp()));
 
@@ -352,7 +354,7 @@ function parse_old_config(configStr, resetConfig) {
     const configLastStart = config.system &&
           (config.system.last_start ||
            (config.system.operation && config.system.operation.last_start));
-    console.warn('Resetting config bock', configLastStart);
+    console.warn('Resetting config block', configLastStart);
 
     // Preserve the original structure of the config message for backwards compatibility.
     if (config.system && config.system.operation) {
