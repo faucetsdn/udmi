@@ -278,10 +278,9 @@ function process_state_update(attributes, msgObject) {
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   // Check both potential locations for last_start, can be cleaned-up post release.
-  const stateStart = msgObject.system &&
-        (msgObject.system.last_start ||
-         msgObject.system.operation.last_start ||
-         currentTimestamp(1));
+  const system = msgObject.system;
+  const stateStart = system &&
+        (system.last_start || system.operation.last_start || currentTimestamp(1));
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp()));
 
@@ -377,14 +376,16 @@ function parse_old_config(configStr, resetConfig) {
 }
 
 function update_last_start(config, stateStart) {
-  const configLastStart = config.system &&
-        (config.system.last_start ||
-         (config.system.operation && config.system.operation.last_start));
+  if (!config.system) {
+    return false;
+  }
+  const configLastStart = config.system.last_start ||
+        (config.system.operation && config.system.operation.last_start);
   const stateNonce = Date.now();
   const shouldUpdate = stateStart && (!configLastStart || (stateStart > configLastStart));
   console.log('State update last state/config', stateStart, configLastStart, shouldUpdate, stateNonce);
   // Preserve the existing structure of the config message to maintain backwards compatability.
-  if (config.system && config.system.operation) {
+  if (config.system.operation) {
     config.system.operation.last_start = stateStart;
   } else {
     config.system.last_start = stateStart;
