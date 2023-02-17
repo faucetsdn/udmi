@@ -16,6 +16,9 @@
     "noPersist": {
       "type": "boolean"
     },
+    "noLastStart": {
+      "type": "boolean"
+    },
     "barfConfig": {
       "type": "boolean"
     },
