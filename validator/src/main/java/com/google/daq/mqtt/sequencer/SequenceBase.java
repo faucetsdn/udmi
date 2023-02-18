@@ -372,8 +372,9 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     setExtraField(null);
     sanitizeConfig(deviceConfig);
-    deviceConfig.system = ofNullable(deviceConfig.system).orElse(new SystemConfig());
     deviceConfig.system.min_loglevel = Level.INFO.value();
+    deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
+        new Date(0));
   }
 
   private Config sanitizeConfig(Config config) {
@@ -732,14 +733,15 @@ public class SequenceBase {
   private boolean localConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
-      String header = String.format("Update config%s:", suffix);
-      debug(header + " " + getTimestamp(deviceConfig.timestamp));
+      String header = String.format("Update config%s: ", suffix);
+      debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<String> allDiffs = configDiffEngine.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
         filteredDiffs.forEach(this::recordBullet);
+        filteredDiffs.forEach(change -> trace(header + change));
         sequenceMd.flush();
       }
       boolean somethingChanged = extraFieldChanged || !allDiffs.isEmpty();
@@ -906,7 +908,7 @@ public class SequenceBase {
 
   private void recordSequence(String step) {
     if (recordSequence) {
-      sequenceMd.println("1. " + step);
+      sequenceMd.println("1. " + step.trim());
       sequenceMd.flush();
     }
   }

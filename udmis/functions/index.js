@@ -325,19 +325,15 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
   attributes.subType = CONFIG_TYPE;
 
-  const promises = recordMessage(attributes, msgObject);
-  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
-
-  if (useFirestore) {
-    console.info('Deferring to firestore trigger for IoT Core modification.');
-  } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp()));
-  }
-
-  return Promise.all(promises);
+  return modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp()).then(
+    () => {
+      const promises = recordMessage(attributes, msgObject);
+      promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
+      return promises;
+    });
 });
 
-function parse_old_config(configStr, resetConfig) {
+function parse_old_config(configStr, resetConfig, deviceId) {
   let config = {};
   try {
     config = JSON.parse(configStr || "{}");
@@ -353,13 +349,13 @@ function parse_old_config(configStr, resetConfig) {
     const configLastStart = config.system &&
           (config.system.last_start ||
            (config.system.operation && config.system.operation.last_start));
-    console.warn('Resetting config block', configLastStart);
+    console.warn('Resetting config block', deviceId, configLastStart);
 
     // Preserve the original structure of the config message for backwards compatibility.
     if (config.system && config.system.operation) {
       config = {
         system: {
-          "operation": {
+          operation: {
             last_start: configLastStart
           }
         }
@@ -372,6 +368,7 @@ function parse_old_config(configStr, resetConfig) {
       }
     }
   }
+
   return config;
 }
 
@@ -403,7 +400,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   const nonce = subContents && subContents.debug_config_nonce;
 
   if (subFolder == 'last_start') {
-    newConfig = parse_old_config(oldConfig, false);
+    newConfig = parse_old_config(oldConfig, false, deviceId);
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
@@ -412,7 +409,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig = subContents;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
-    newConfig = parse_old_config(oldConfig, resetConfig);
+    newConfig = parse_old_config(oldConfig, resetConfig, deviceId);
     if (newConfig === null) {
       return;
     }
@@ -421,6 +418,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig.timestamp = currentTimestamp();
 
     console.log('Config modify', subFolder, version, startTime, nonce);
+
     if (subContents) {
       delete subContents.version;
       delete subContents.timestamp;
@@ -441,9 +439,12 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     deviceId: deviceId,
     deviceRegistryId: registryId
   };
+
   return update_device_config(newConfig, attributes, version)
-    .then(() => {
+    .then(mungedConfig => {
       console.log('Config accepted', subFolder, version, startTime, nonce);
+      console.log('Config block', deviceId, JSON.stringify(newConfig));
+      console.log('Config munged', deviceId, JSON.stringify(mungedConfig));
     }).catch(e => {
       console.log('Config rejected', subFolder, version, startTime, nonce);
       return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
@@ -508,7 +509,8 @@ function update_device_config(message, attributes, preVersion) {
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString, nonce));
+    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString, nonce))
+    .then(() => msgString);
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {
