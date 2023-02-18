@@ -171,6 +171,7 @@ public class SequenceBase {
   protected boolean configAcked;
   private String extraField;
   private boolean extraFieldChanged;
+  private boolean lastStartChanged;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
@@ -292,8 +293,8 @@ public class SequenceBase {
     reflectorState.setup = new SetupReflectorState();
     reflectorState.setup.user = System.getenv("USER");
     try {
-      System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+      System.err.printf("Setting state version %s timestamp %s%n", udmiVersion,
+          getTimestamp(REFLECTOR_STATE_TIMESTAMP));
       client.setReflectorState(stringify(reflectorState));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -327,14 +328,26 @@ public class SequenceBase {
   }
 
   /**
-   * Set the extra field test capability for device config.
+   * Set the extra field test capability for device config. Used for change tracking.
    *
    * @param extraField value for the extra field
    */
   public void setExtraField(String extraField) {
-    extraFieldChanged = !Objects.equals(this.extraField, extraField);
-    debug("Setting extra_field changed " + extraFieldChanged + " to " + extraField);
+    extraFieldChanged |= !Objects.equals(this.extraField, extraField);
+    debug("Setting extraFieldChanged " + extraFieldChanged + " because " + extraField);
     this.extraField = extraField;
+  }
+
+  /**
+   * Set the last_start field. Used for change tracking..
+   *
+   * @param lastStart last start value to use
+   */
+  public void setLastStart(Date lastStart) {
+    lastStartChanged |= !stringify(deviceConfig.system.operation.last_start).equals(
+        stringify(lastStart));
+    debug("Setting lastStartChanged " + lastStartChanged + " because " + lastStart);
+    deviceConfig.system.operation.last_start = lastStart;
   }
 
   private void withRecordSequence(boolean value, Runnable operation) {
@@ -366,10 +379,9 @@ public class SequenceBase {
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
     sanitizeConfig(deviceConfig);
+    deviceConfig.system.min_loglevel = Level.INFO.value();
     setExtraField(null);
-    SystemConfig system = deviceConfig.system;
-    system.min_loglevel = Level.INFO.value();
-    system.operation.last_start = SemanticDate.describe("device reported", new Date(0));
+    setLastStart(SemanticDate.describe("device reported", new Date(0)));
   }
 
   private Config sanitizeConfig(Config config) {
@@ -516,8 +528,7 @@ public class SequenceBase {
     }
     String subType = attributes.get("subType");
     String subFolder = attributes.get("subFolder");
-    String timestamp =
-        message == null ? getTimestamp() : (String) message.get("timestamp");
+    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
     String messageBase = String.format("%s_%s", subType, subFolder);
     if (traceLogLevel()) {
       messageBase = messageBase + "_" + timestamp;
@@ -626,9 +637,7 @@ public class SequenceBase {
       throw new RuntimeException("log entry timestamp is null");
     }
     String messageStr = String.format("%s %s %s %s", getTimestamp(logEntry.timestamp),
-        Level.fromValue(logEntry.level),
-        logEntry.category,
-        logEntry.message);
+        Level.fromValue(logEntry.level), logEntry.category, logEntry.message);
 
     printWriter.println(messageStr);
     printWriter.flush();
@@ -669,8 +678,8 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     boolean computedConfigChange = localConfigChange(reason);
     if (computedConfigChange != updated) {
-      notice("cachedMessageData " + cachedMessageData);
-      notice("cachedSentBlock " + cachedSentBlock);
+      trace("cachedSentBlock " + cachedSentBlock);
+      trace("cachedMessageData " + cachedMessageData);
       throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
     if (updated) {
@@ -685,8 +694,8 @@ public class SequenceBase {
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
       if (updated) {
-        cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
+        cachedMessageData = messageData;
         final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
@@ -731,10 +740,15 @@ public class SequenceBase {
         filteredDiffs.forEach(change -> trace(header + change));
         sequenceMd.flush();
       }
-      boolean somethingChanged = extraFieldChanged || !allDiffs.isEmpty();
+      boolean somethingChanged = extraFieldChanged || lastStartChanged || !allDiffs.isEmpty();
       if (extraFieldChanged) {
-        debug("Device config extra_field changed: " + extraField);
+        trace("Device config extra_field changed: " + extraField);
         extraFieldChanged = false;
+      }
+      if (lastStartChanged) {
+        trace("Device config last_start changed: " + deviceConfig.system.operation.last_start);
+        trace("Setting lastStartChanged false");
+        lastStartChanged = false;
       }
       return somethingChanged;
     } catch (Exception e) {
@@ -1049,16 +1063,13 @@ public class SequenceBase {
         Config config = (Config) converted;
         updateDeviceConfig(config);
         debug("Updated config with timestamp " + getTimestamp(config.timestamp));
-        info(String.format("Updated config #%03d:\n%s", updateCount,
-            stringify(converted)));
+        info(String.format("Updated config #%03d:\n%s", updateCount, stringify(converted)));
       } else if (converted instanceof AugmentedState) {
-        info(String.format("Updated state #%03d:\n%s", updateCount,
-            stringify(converted)));
+        info(String.format("Updated state #%03d:\n%s", updateCount, stringify(converted)));
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
-        debug("Updated state has last_config " + getTimestamp(
-            deviceState.system.last_config));
+        debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
       } else {
         error("Unknown update type " + converted.getClass().getSimpleName());
       }
@@ -1072,8 +1083,7 @@ public class SequenceBase {
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
     if (config.system != null && config.system.operation != null) {
-      deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
-          config.system.operation.last_start);
+      setLastStart(SemanticDate.describe("device reported", config.system.operation.last_start));
     }
     sanitizeConfig(deviceConfig);
   }
@@ -1148,8 +1158,8 @@ public class SequenceBase {
    * Filter out any testing-oriented messages, since they should not impact behavior.
    */
   private List<String> filterTesting(List<String> allDiffs) {
-    return allDiffs.stream()
-        .filter(message -> !message.contains(SYSTEM_TESTING_MARKER)).collect(Collectors.toList());
+    return allDiffs.stream().filter(message -> !message.contains(SYSTEM_TESTING_MARKER))
+        .collect(Collectors.toList());
   }
 
   protected void trace(String message) {
@@ -1231,10 +1241,10 @@ public class SequenceBase {
   }
 
   /**
-   * Mirrors the current config to the "other" config, where the current and
-   * other configs are defined by the useAlternateClient flag. This call is used
-   * to warm-up the new config before a switch, so that when the client is switched,
-   * it is ready with the right (up to date) config contents.
+   * Mirrors the current config to the "other" config, where the current and other configs are
+   * defined by the useAlternateClient flag. This call is used to warm-up the new config before a
+   * switch, so that when the client is switched, it is ready with the right (up to date) config
+   * contents.
    */
   protected void mirrorToOtherConfig() {
     // First make sure the current config is up-to-date with any local changes.
@@ -1251,9 +1261,9 @@ public class SequenceBase {
   }
 
   /**
-   * Clears out the "other" (not current) config, so that it can't be inadvertantly used
-   * for something. This is the simple version of the endpoint going down (actually turning
-   * down the endpoint would be a lot more work).
+   * Clears out the "other" (not current) config, so that it can't be inadvertantly used for
+   * something. This is the simple version of the endpoint going down (actually turning down the
+   * endpoint would be a lot more work).
    */
   protected void clearOtherConfig() {
     // No need to be fancy here, just clear out the other config with an empty blob.
