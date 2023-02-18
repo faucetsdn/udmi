@@ -139,7 +139,7 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final String UNKNOWN_CATEGORY = "unknown";
+  private static final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -161,7 +161,6 @@ public class SequenceBase {
   private final Map<SubFolder, String> receivedState = new HashMap<>();
   private final Map<SubFolder, List<Map<String, Object>>> receivedEvents = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
-  private final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
   @Rule
@@ -333,9 +332,9 @@ public class SequenceBase {
    * @param extraField value for the extra field
    */
   public void setExtraField(String extraField) {
-    debug("Setting extra_field to " + extraField);
+    extraFieldChanged = !Objects.equals(this.extraField, extraField);
+    debug("Setting extra_field changed " + extraFieldChanged + " to " + extraField);
     this.extraField = extraField;
-    extraFieldChanged = true;
   }
 
   private void withRecordSequence(boolean value, Runnable operation) {
@@ -364,17 +363,13 @@ public class SequenceBase {
     return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
   }
 
-  private void resetDeviceConfig() {
-    resetDeviceConfig(false);
-  }
-
   private void resetDeviceConfig(boolean clean) {
     deviceConfig = clean ? new Config() : readGeneratedConfig();
-    setExtraField(null);
     sanitizeConfig(deviceConfig);
-    deviceConfig.system.min_loglevel = Level.INFO.value();
-    deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
-        new Date(0));
+    setExtraField(null);
+    SystemConfig system = deviceConfig.system;
+    system.min_loglevel = Level.INFO.value();
+    system.operation.last_start = SemanticDate.describe("device reported", new Date(0));
   }
 
   private Config sanitizeConfig(Config config) {
@@ -387,22 +382,13 @@ public class SequenceBase {
     if (config.system == null) {
       config.system = new SystemConfig();
     }
-
     if (config.system.operation == null) {
       config.system.operation = new Operation();
     }
-    if (config.system.operation.last_start == null) {
-      config.system.operation.last_start = catchToNull(
-          () -> deviceState.system.operation.last_start);
-    }
-    if (!(config.system.operation.last_start instanceof SemanticDate)) {
-      config.system.operation.last_start = SemanticDate.describe("device reported",
-          config.system.operation.last_start);
-    }
     if (config.system.testing == null) {
-      deviceConfig.system.testing = new TestingSystemConfig();
+      config.system.testing = new TestingSystemConfig();
     }
-    deviceConfig.system.testing.sequence_name = testName;
+    config.system.testing.sequence_name = testName;
     return config;
   }
 
@@ -459,12 +445,13 @@ public class SequenceBase {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
         resetDeviceConfig(true);
-        sentConfig.clear();
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
+        sentConfig.clear();
+        configDiffEngine.computeChanges(deviceConfig);
         updateConfig();
       }
-      resetDeviceConfig();
+      resetDeviceConfig(false);
       updateConfig();
       debug("Done with reset_config");
       resetRequired = false;
@@ -1085,7 +1072,8 @@ public class SequenceBase {
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
     if (config.system != null && config.system.operation != null) {
-      deviceConfig.system.operation.last_start = config.system.operation.last_start;
+      deviceConfig.system.operation.last_start = SemanticDate.describe("device reported",
+          config.system.operation.last_start);
     }
     sanitizeConfig(deviceConfig);
   }
