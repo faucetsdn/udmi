@@ -187,8 +187,6 @@ public class SequenceBase {
   private boolean recordSequence;
   private int previousEventCount;
   private String configExceptionTimestamp;
-  private String cachedMessageData;
-  private String cachedSentBlock;
   private boolean useAlternateClient;
 
   static void ensureValidatorConfig() {
@@ -346,7 +344,7 @@ public class SequenceBase {
   public void setLastStart(Date lastStart) {
     lastStartChanged |= !stringify(deviceConfig.system.operation.last_start).equals(
         stringify(lastStart));
-    debug("Setting lastStartChanged " + lastStartChanged + " because " + lastStart);
+    debug("Setting lastStartChanged " + lastStartChanged + " because " + stringify(lastStart));
     deviceConfig.system.operation.last_start = lastStart;
   }
 
@@ -381,7 +379,7 @@ public class SequenceBase {
     sanitizeConfig(deviceConfig);
     deviceConfig.system.min_loglevel = Level.INFO.value();
     setExtraField(null);
-    setLastStart(SemanticDate.describe("device reported", new Date(0)));
+    setLastStart(SemanticDate.describe("device reported", new Date(1)));
   }
 
   private Config sanitizeConfig(Config config) {
@@ -668,8 +666,6 @@ public class SequenceBase {
     safeSleep(ONE_SECOND_MS);
     Instant configStart = CleanDateFormat.clean(Instant.now());
 
-    cachedMessageData = null;
-    cachedSentBlock = null;
     boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -678,8 +674,6 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
     boolean computedConfigChange = localConfigChange(reason);
     if (computedConfigChange != updated) {
-      trace("cachedSentBlock " + cachedSentBlock);
-      trace("cachedMessageData " + cachedMessageData);
       throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
     if (updated) {
@@ -693,9 +687,8 @@ public class SequenceBase {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
+      trace("updated check config_" + subBlock + ": " + sentBlockConfig);
       if (updated) {
-        cachedSentBlock = sentBlockConfig;
-        cachedMessageData = messageData;
         final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
         String topic = subBlock + "/config";
@@ -703,8 +696,7 @@ public class SequenceBase {
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-      } else {
-        trace("unchanged config_" + subBlock + ": " + messageData);
+        trace("updated update config_" + subBlock + ": " + messageData);
       }
       return updated;
     } catch (Exception e) {
@@ -746,7 +738,8 @@ public class SequenceBase {
         extraFieldChanged = false;
       }
       if (lastStartChanged) {
-        trace("Device config last_start changed: " + deviceConfig.system.operation.last_start);
+        trace("Device config last_start changed: " + stringify(
+            deviceConfig.system.operation.last_start));
         trace("Setting lastStartChanged false");
         lastStartChanged = false;
       }

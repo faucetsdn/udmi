@@ -1,4 +1,4 @@
 
 ## valid_serial_no (STABLE)
 
-1. Wait for received serial number matches
+1. Test failed: Unexpected config change! updated=false
