@@ -45,6 +45,7 @@ import java.lang.annotation.Target;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -344,7 +345,9 @@ public class SequenceBase {
   public void setLastStart(Date lastStart) {
     lastStartChanged |= !stringify(deviceConfig.system.operation.last_start).equals(
         stringify(lastStart));
-    debug("Setting lastStartChanged " + lastStartChanged + " because " + stringify(lastStart));
+//    lastStartChanged |= !Objects.equals(deviceConfig.system.operation.last_start, lastStart);
+    debug(
+        "Setting lastStartChanged " + lastStartChanged + ", last_start " + getTimestamp(lastStart));
     deviceConfig.system.operation.last_start = lastStart;
   }
 
@@ -574,9 +577,9 @@ public class SequenceBase {
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
         logSystemEvent(messageBase, message);
       } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
-        trace(prefix + messageBase + postfix);
+        trace(prefix + messageBase, postfix);
       } else {
-        debug(prefix + messageBase + postfix);
+        debug(prefix + messageBase, postfix);
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
@@ -687,7 +690,7 @@ public class SequenceBase {
       String messageData = stringify(data);
       String sentBlockConfig = sentConfig.computeIfAbsent(subBlock, key -> "null");
       boolean updated = !messageData.equals(sentBlockConfig);
-      trace("updated check config_" + subBlock + ": " + sentBlockConfig);
+      trace("updated check config_" + subBlock, sentBlockConfig);
       if (updated) {
         final Object tracedObject = augmentConfigTrace(data);
         String augmentedMessage = actualize(stringify(tracedObject));
@@ -696,7 +699,6 @@ public class SequenceBase {
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        trace("updated update config_" + subBlock + ": " + messageData);
       }
       return updated;
     } catch (Exception e) {
@@ -738,9 +740,8 @@ public class SequenceBase {
         extraFieldChanged = false;
       }
       if (lastStartChanged) {
-        trace("Device config last_start changed: " + stringify(
+        trace("Setting lastStartChanged false, last_start " + getTimestamp(
             deviceConfig.system.operation.last_start));
-        trace("Setting lastStartChanged false");
         lastStartChanged = false;
       }
       return somethingChanged;
@@ -1056,9 +1057,9 @@ public class SequenceBase {
         Config config = (Config) converted;
         updateDeviceConfig(config);
         debug("Updated config with timestamp " + getTimestamp(config.timestamp));
-        info(String.format("Updated config #%03d:\n%s", updateCount, stringify(converted)));
+        info(String.format("Updated config #%03d", updateCount), stringify(converted));
       } else if (converted instanceof AugmentedState) {
-        info(String.format("Updated state #%03d:\n%s", updateCount, stringify(converted)));
+        info(String.format("Updated state #%03d", updateCount), stringify(converted));
         deviceState = (State) converted;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
@@ -1076,6 +1077,7 @@ public class SequenceBase {
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
     if (config.system != null && config.system.operation != null) {
+      trace("updatedDeviceConfig last_start " + getTimestamp(config.system.operation.last_start));
       setLastStart(SemanticDate.describe("device reported", config.system.operation.last_start));
     }
     sanitizeConfig(deviceConfig);
@@ -1115,30 +1117,30 @@ public class SequenceBase {
 
   private boolean configReady(boolean debugOut) {
     try {
-      Consumer<String> output = debugOut ? this::debug : this::trace;
+      Level logLevel = debugOut ? Level.DEBUG : Level.TRACE;
       Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
       if (!(receivedConfig instanceof Config)) {
-        output.accept("no valid received config");
+        log("no valid received config", logLevel);
         return false;
       }
       if (configExceptionTimestamp != null) {
-        output.accept("Received config exception at " + configExceptionTimestamp);
+        log("Received config exception at " + configExceptionTimestamp, logLevel);
         return true;
       }
       // Config isn't properly sync'd until this is filled in, else there are race-conditions.
       if (deviceConfig.system.operation.last_start == null) {
-        output.accept("Missing config ready last_start field");
+        log("Missing config ready last_start field", logLevel);
         return false;
       }
       List<String> differences = filterTesting(
           configDiffEngine.diff(sanitizeConfig((Config) receivedConfig), deviceConfig));
       boolean configReady = differences.isEmpty();
-      output.accept("testing valid received config " + configReady);
+      log("testing valid received config " + configReady, logLevel);
       if (!configReady) {
-        output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-        output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        output.accept(
-            "final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
+        log("+-", logLevel, Joiner.on("\n").join(differences));
+        log("final deviceConfig", logLevel, JsonUtil.stringify(deviceConfig));
+        log("final receivedConfig", logLevel,
+            JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
       }
       return configReady;
     } catch (Exception e) {
@@ -1155,12 +1157,24 @@ public class SequenceBase {
         .collect(Collectors.toList());
   }
 
+  private void trace(String message, String parts) {
+    log(message, Level.TRACE, parts);
+  }
+
   protected void trace(String message) {
     log(message, Level.TRACE);
   }
 
+  private void debug(String message, String parts) {
+    log(message, Level.DEBUG, parts);
+  }
+
   protected void debug(String message) {
     log(message, Level.DEBUG);
+  }
+
+  private void info(String message, String parts) {
+    log(message, Level.INFO, parts);
   }
 
   protected void info(String message) {
@@ -1177,6 +1191,10 @@ public class SequenceBase {
 
   protected void error(String message) {
     log(message, Level.ERROR);
+  }
+
+  private void log(String message, Level level, String parts) {
+    Arrays.stream(parts.split("\\n")).forEach(part -> log(message + ": " + part, level));
   }
 
   private void log(String message, Level level) {
