@@ -2,7 +2,7 @@
 
 # This version is used to automatically check that the deployed cloud functions are suitable for any bit
 # of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range.
-FUNCTIONS_VERSION=1
+FUNCTIONS_VERSION=2
 
 if (( $# < 1 )); then
     echo Usage: $0 PROJECT_ID [options]
