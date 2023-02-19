@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "setup"
+    "udmis"
 })
 @Generated("jsonschema2pojo")
 public class ReflectorConfig {
@@ -44,15 +44,15 @@ public class ReflectorConfig {
      * 
      * 
      */
-    @JsonProperty("setup")
-    public SetupReflectorConfig setup;
+    @JsonProperty("udmis")
+    public SetupReflectorConfig udmis;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
+        result = ((result* 31)+((this.udmis == null)? 0 :this.udmis.hashCode()));
         return result;
     }
 
@@ -65,7 +65,7 @@ public class ReflectorConfig {
             return false;
         }
         ReflectorConfig rhs = ((ReflectorConfig) other);
-        return ((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version)))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.udmis == rhs.udmis)||((this.udmis!= null)&&this.udmis.equals(rhs.udmis))));
     }
 
 }

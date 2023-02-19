@@ -83,6 +83,7 @@ import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
+import udmi.schema.SetupReflectorConfig;
 import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -133,8 +134,8 @@ public class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
-  private static final int MIN_CLOUD_FUNC_VER = 1;
-  private static final int MAX_CLOUD_FUNC_VER = 1;
+  private static final int FUNCTIONS_VERSION_BETA = 2; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 2; // Version required for alpha execution.
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
@@ -190,6 +191,7 @@ public class SequenceBase {
   private String cachedMessageData;
   private String cachedSentBlock;
   private boolean useAlternateClient;
+  private boolean udmisInstallValid;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -424,6 +426,8 @@ public class SequenceBase {
     waitingCondition.clear();
     waitingCondition.push("starting test wrapper");
     assert reflector().isActive();
+
+    whileDoing("usmis synchronization", () -> messageEvaluateLoop(() -> !udmisInstallValid));
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
@@ -976,24 +980,40 @@ public class SequenceBase {
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
     ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
-    Date lastState = reflectorConfig.setup.last_state;
-    if (CleanDateFormat.dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP)) {
-      info("Received matching state/config timestamp " + getTimestamp(lastState));
-
-      info("Cloud UDMI version " + reflectorConfig.version);
+    debug("Received reflectorConfig: " + stringify(reflectorConfig));
+    SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
+    Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
+    info("Checking against state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+    udmisInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
+    if (udmisInstallValid) {
+      info("UDMIS version " + reflectorConfig.version);
       if (!udmiVersion.equals(reflectorConfig.version)) {
         warning("Local/cloud UDMI version mismatch!");
       }
 
-      int funcVer = Optional.ofNullable(reflectorConfig.setup.functions).orElse(0);
-      info("Cloud functions version " + funcVer);
-      if (funcVer < MIN_CLOUD_FUNC_VER || funcVer > MAX_CLOUD_FUNC_VER) {
-        throw new RuntimeException("Unsupported cloud function version, please redeploy");
+      info("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
+          udmisInfo.deployed_at));
+
+      int required = getRequiredFunctionsVersion();
+      String baseError = String.format("Required udmis functions version %d not allowed", required);
+      if (required < udmisInfo.functions_min) {
+        throw new RuntimeException(
+            String.format("%s, min supported %s. Please update the local install.", baseError,
+                udmisInfo.functions_min));
+      }
+      if (required > udmisInfo.functions_max) {
+        throw new RuntimeException(
+            String.format("%s, max supported %s. Please update the UDMIS install..",
+                baseError, udmisInfo.functions_max));
       }
     } else {
-      info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
-      debug("Received reflectorConfig: " + stringify(reflectorConfig));
+      info("Ignoring mismatching config timestamp " + getTimestamp(lastState));
     }
+  }
+
+  private int getRequiredFunctionsVersion() {
+    return Stage.ALPHA.processGiven(SequenceRunner.getFeatureMinStage()) ? FUNCTIONS_VERSION_ALPHA
+        : FUNCTIONS_VERSION_BETA;
   }
 
   private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
@@ -1079,6 +1099,10 @@ public class SequenceBase {
   }
 
   private void updateDeviceConfig(Config config) {
+    if (deviceConfig == null) {
+      return;
+    }
+
     // These parameters are set by the cloud functions, so explicitly set to maintain parity.
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
@@ -1241,10 +1265,10 @@ public class SequenceBase {
   }
 
   /**
-   * Mirrors the current config to the "other" config, where the current and
-   * other configs are defined by the useAlternateClient flag. This call is used
-   * to warm-up the new config before a switch, so that when the client is switched,
-   * it is ready with the right (up to date) config contents.
+   * Mirrors the current config to the "other" config, where the current and other configs are
+   * defined by the useAlternateClient flag. This call is used to warm-up the new config before a
+   * switch, so that when the client is switched, it is ready with the right (up to date) config
+   * contents.
    */
   protected void mirrorToOtherConfig() {
     // First make sure the current config is up-to-date with any local changes.
@@ -1261,9 +1285,9 @@ public class SequenceBase {
   }
 
   /**
-   * Clears out the "other" (not current) config, so that it can't be inadvertantly used
-   * for something. This is the simple version of the endpoint going down (actually turning
-   * down the endpoint would be a lot more work).
+   * Clears out the "other" (not current) config, so that it can't be inadvertantly used for
+   * something. This is the simple version of the endpoint going down (actually turning down the
+   * endpoint would be a lot more work).
    */
   protected void clearOtherConfig() {
     // No need to be fancy here, just clear out the other config with an empty blob.

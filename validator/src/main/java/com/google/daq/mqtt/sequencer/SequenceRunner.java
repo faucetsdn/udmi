@@ -188,7 +188,7 @@ public class SequenceRunner {
     return stage.processGiven(getFeatureMinStage());
   }
 
-  private Stage getFeatureMinStage() {
+  static Stage getFeatureMinStage() {
     String stage = SequenceBase.validatorConfig.min_stage;
     return Strings.isNullOrEmpty(stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(stage);
   }
