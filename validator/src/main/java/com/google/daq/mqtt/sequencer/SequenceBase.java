@@ -141,6 +141,7 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final String UNKNOWN_CATEGORY = "unknown";
+  private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -191,7 +192,6 @@ public class SequenceBase {
   private String cachedMessageData;
   private String cachedSentBlock;
   private boolean useAlternateClient;
-  private boolean udmisInstallValid;
 
   static void ensureValidatorConfig() {
     if (validatorConfig != null) {
@@ -427,7 +427,7 @@ public class SequenceBase {
     waitingCondition.push("starting test wrapper");
     assert reflector().isActive();
 
-    whileDoing("usmis synchronization", () -> messageEvaluateLoop(() -> !udmisInstallValid));
+    whileDoing("udmis synchronization", () -> messageEvaluateLoop(() -> !udmisInstallValid));
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
@@ -980,10 +980,10 @@ public class SequenceBase {
 
   private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
     ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
-    debug("Received reflectorConfig: " + stringify(reflectorConfig));
+    debug("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
     SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
     Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
-    info("Checking against state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+    info("UDMIS matching state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
     udmisInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
     if (udmisInstallValid) {
       info("UDMIS version " + reflectorConfig.version);
@@ -995,7 +995,7 @@ public class SequenceBase {
           udmisInfo.deployed_at));
 
       int required = getRequiredFunctionsVersion();
-      String baseError = String.format("Required udmis functions version %d not allowed", required);
+      String baseError = String.format("UDMIS functions version %d not allowed", required);
       if (required < udmisInfo.functions_min) {
         throw new RuntimeException(
             String.format("%s, min supported %s. Please update the local install.", baseError,
@@ -1007,7 +1007,7 @@ public class SequenceBase {
                 baseError, udmisInfo.functions_max));
       }
     } else {
-      info("Ignoring mismatching config timestamp " + getTimestamp(lastState));
+      info("UDMIS ignoring mismatching config timestamp " + getTimestamp(lastState));
     }
   }
 
