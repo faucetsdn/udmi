@@ -572,8 +572,7 @@ public class SequenceBase {
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
       boolean traceMessage =
           traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
-      String postfix =
-          traceMessage ? (message == null ? ": (null)" : ":\n" + stringify(message)) : "";
+      String postfix = traceMessage ? (message == null ? "(null)" : stringify(message)) : "";
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
         logSystemEvent(messageBase, message);
       } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
@@ -680,7 +679,7 @@ public class SequenceBase {
       throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
     if (updated) {
-      safeSleep(ONE_SECOND_MS);
+      safeSleep(ONE_SECOND_MS * 10);
       waitForConfigSync(configStart);
     }
   }
@@ -989,7 +988,7 @@ public class SequenceBase {
       }
     } else {
       info("Ignoring mismatch state/config timestamp " + getTimestamp(lastState));
-      debug("Received reflectorConfig: " + stringify(reflectorConfig));
+      debug("Received reflectorConfig", stringify(reflectorConfig));
     }
   }
 
@@ -1021,9 +1020,11 @@ public class SequenceBase {
     switch (subType) {
       case CONFIG:
         // These are echos of sent config messages, so do nothing.
+        trace("Ignoring partial config update");
         break;
       case STATE:
         // State updates are handled as a monolithic block with a state reflector update.
+        trace("Ignoring partial state update");
         break;
       case EVENT:
         handleEventMessage(subFolder, message);
