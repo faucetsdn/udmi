@@ -47,6 +47,7 @@
         "event",
         "command",
         "state",
+        "query",
         "config",
         "model"
       ]

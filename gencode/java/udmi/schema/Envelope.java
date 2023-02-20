@@ -148,6 +148,7 @@ public class Envelope {
         EVENT("event"),
         COMMAND("command"),
         STATE("state"),
+        QUERY("query"),
         CONFIG("config"),
         MODEL("model");
         private final String value;

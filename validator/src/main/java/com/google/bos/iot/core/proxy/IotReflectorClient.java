@@ -175,7 +175,7 @@ public class IotReflectorClient implements MessagePublisher {
   public void publish(String deviceId, String topic, String data) {
     Envelope envelope = new Envelope();
     envelope.deviceId = deviceId;
-    String[] parts = topic.split("\\", 2);
+    String[] parts = topic.split("/", 2);
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
     envelope.payload = GeneralUtils.encodeBase64(data);
