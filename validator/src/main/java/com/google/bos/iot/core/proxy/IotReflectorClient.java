@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.nio.file.Files;
@@ -21,6 +22,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -37,6 +41,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String WAS_BASE_64 = "wasBase64";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
+  public static final String UDMI_TOPIC = "udmi";
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
@@ -168,8 +173,13 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public void publish(String deviceId, String topic, String data) {
-    String reflectorTopic = String.format("events/devices/%s/%s", deviceId, topic);
-    mqttPublisher.publish(registryId, reflectorTopic, data);
+    Envelope envelope = new Envelope();
+    envelope.deviceId = deviceId;
+    String[] parts = topic.split("\\", 2);
+    envelope.subFolder = SubFolder.fromValue(parts[0]);
+    envelope.subType = SubType.fromValue(parts[1]);
+    envelope.payload = GeneralUtils.encodeBase64(data);
+    mqttPublisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
   }
 
   @Override
