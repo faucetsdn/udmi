@@ -169,27 +169,11 @@ function getRegistryRegions() {
   }).catch(console.error);
 }
 
-
-function unpack_udmi_envelope(attributes, msgObject) {
-  console.log('unpack_udmi_envelope in', attributes, msgObject);
-  envelope = {};
-  console.log('unpack_udmi_envelope out', envelope);
-  return envelope;
-}
-
-function unpack_udmi_payload(payload) {
-  console.log('unpack_udmi_payload in', payload);
-  const msgString = Buffer.from(payload, 'base64').toString();
-  const msgObject = JSON.parse(msgString);
-  console.log('unpack_udmi_payload out', msgObject);
-  return msgObject;
-}
-
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
-  let attributes = event.attributes;
+  const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
-  let msgObject = JSON.parse(msgString);
+  const msgObject = JSON.parse(msgString);
 
   if (!attributes.subFolder) {
     return udmi_reflector_state(attributes, msgObject);
@@ -198,34 +182,35 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   console.log('Reflect message', attributes);
 
   if (attributes.subFolder != 'udmi') {
-    console.log('Unexpected subFolder');
+    console.error('Unexpected subFolder', attributes.subFolder);
     return;
   }
 
-  attributes = unpack_udmi_envelope(attributes, msgObject);
-  msgObject = unpack_udmi_payload(msgObject.payload);
-  
-  const nonce = msgObject && msgObject.debug_config_nonce;
-  const parts = attributes.subFolder.split('/');
-  attributes.deviceRegistryId = attributes.deviceId;
-  attributes.deviceId = parts[1];
-  attributes.subFolder = parts[2];
-  attributes.subType = parts[3];
-  console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType,
-              attributes.subFolder, nonce);
+  const envelope = {};
+  envelope.deviceRegistryId = msgObject.deviceRegistryId;
+  envelope.deviceId = msgObject.deviceId;
+  envelope.subFolder = msgObject.subFolder;
+  envelope.subType = msgObject.subType;
+
+  const payloadString = Buffer.from(msgObject.payload, 'base64').toString();
+  const payload = JSON.parse(payloadString);
+  const nonce = payload && payload.debug_config_nonce;
+
+  console.log('Reflect', nonce, envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
+              envelope.subFolder);
 
   return registry_promise.then(() => {
-    attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
-    if (!attributes.cloudRegion) {
-      console.log('No cloud region found for target registry', attributes.deviceRegistryId);
+    envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
+    if (!envelope.cloudRegion) {
+      console.log('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
-    if (attributes.subFolder == QUERY_FOLDER) {
-      return udmi_query_event(attributes, msgObject);
+    if (envelope.subFolder == QUERY_FOLDER) {
+      return udmi_query_event(envelope, payload);
     }
-    const targetFunction = attributes.subType == 'event' ? 'target' : attributes.subType;
+    const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
-    return publishPubsubMessage(target, attributes, msgObject);
+    return publishPubsubMessage(target, envelope, payload);
   });
 });
 
