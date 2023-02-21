@@ -13,25 +13,24 @@ if (!process.env.GCLOUD_PROJECT) {
 const version = require('./version');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { PubSub } = require(`@google-cloud/pubsub`);
+const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 const iot = require('@google-cloud/iot');
 
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
-const UDMI_VERSION = version.udmis;
-const UDMI_FUNCTIONS = version.functions;
+const UDMI_VERSION = version.udmi_version;
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 const UPDATE_FOLDER = 'update';
 const QUERY_FOLDER = 'query';
-const SETUP_FOLDER = 'setup';
+const UDMIS_FOLDER = 'udmis';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-console.log('Using UDMI version ' + UDMI_VERSION);
-console.log('Using functions ver ' + UDMI_FUNCTIONS);
+console.log(`UDMI version ${UDMI_VERSION}, functions ${version.functions_min}:${version.functions_max}`);
+console.log(`Deployed by ${version.deployed_by} at ${version.deployed_at}`);
 
 if (useFirestore) {
   admin.initializeApp(functions.config().firebase);
@@ -199,12 +198,10 @@ function udmi_reflector_state(attributes, msgObject) {
   console.log('Processing reflector state change', attributes, msgObject);
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
-  const subContents = {
-    'functions': UDMI_FUNCTIONS,
-    'last_state': msgObject.timestamp
-  };
+  const subContents = Object.assign({}, version);
+  subContents.last_state = msgObject.timestamp;
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, SETUP_FOLDER, subContents, startTime);
+  return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
 }
 
 function udmi_query_event(attributes, msgObject) {

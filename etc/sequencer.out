@@ -22,6 +22,7 @@ RESULT pass unknown valid_serial_no STABLE 5 Sequence complete
 RESULT pass unknown valid_serial_no STABLE 5 Sequence complete
 RESULT pass unknown valid_serial_no STABLE 5 Sequence complete
 RESULT pass unknown valid_serial_no STABLE 5 Sequence complete
+RESULT pass unknown valid_serial_no STABLE 5 Sequence complete
 RESULT pass unknown writeback_failure ALPHA 5 Sequence complete
 RESULT pass unknown writeback_invalid ALPHA 5 Sequence complete
 RESULT pass unknown writeback_success ALPHA 5 Sequence complete
