@@ -982,7 +982,7 @@ public class SequenceBase {
     debug("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
     SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
     Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
-    info("UDMIS matching state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+    info("UDMIS matching against expected state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
     udmisInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
     if (udmisInstallValid) {
       info("UDMIS version " + reflectorConfig.version);

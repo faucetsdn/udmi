@@ -35,11 +35,6 @@ public class ConfigSequences extends SequenceBase {
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
-  private boolean hasInterestingStatus() {
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
-  }
-
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {

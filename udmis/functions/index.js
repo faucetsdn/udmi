@@ -28,11 +28,13 @@ const iot = require('@google-cloud/iot');
 
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const UDMI_VERSION = version.udmi_version;
+
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
+const QUERY_TYPE = 'query';
+
 const UPDATE_FOLDER = 'update';
-const QUERY_FOLDER = 'query';
 const UDMIS_FOLDER = 'udmis';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
@@ -176,7 +178,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const msgObject = JSON.parse(msgString);
 
   if (!attributes.subFolder) {
-    return udmi_reflector_state(attributes, msgObject);
+    return udmi_process_reflector_state(attributes, msgObject);
   }
 
   console.log('Reflect message', attributes);
@@ -187,6 +189,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   }
 
   const envelope = {};
+  envelope.projectId = attributes.projectId;
   envelope.deviceRegistryId = msgObject.deviceRegistryId;
   envelope.deviceId = msgObject.deviceId;
   envelope.subFolder = msgObject.subFolder;
@@ -205,7 +208,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
       console.log('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
-    if (envelope.subFolder == QUERY_FOLDER) {
+    if (envelope.subType == QUERY_TYPE) {
       return udmi_query_event(envelope, payload);
     }
     const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
@@ -214,7 +217,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   });
 });
 
-function udmi_reflector_state(attributes, msgObject) {
+function udmi_process_reflector_state(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
@@ -222,23 +225,21 @@ function udmi_reflector_state(attributes, msgObject) {
   subContents.functions_min = FUNCTIONS_VERSION_MIN;
   subContents.functions_max = FUNCTIONS_VERSION_MAX;
   const startTime = currentTimestamp();
-  console.log('Processing reflector state reply', attributes, subContents);
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
 }
 
 function udmi_query_event(attributes, msgObject) {
-  const subType = attributes.subType;
-  if (subType == STATE_TYPE) {
-    return udmi_query_states(attributes);
+  const subFolder = attributes.subFolder;
+  if (subFolder != UPDATE_FOLDER) {
+    throw 'Unknown query folder ' + subFolder;
   }
-  throw 'Unknown query type ' + attributes.subType;
-}
 
-function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
   const cloudRegion = attributes.cloudRegion;
   const deviceId = attributes.deviceId;
+
+  console.log('formattedName', projectId, cloudRegion, registryId, deviceId);
 
   const formattedName = iotClient.devicePath(
     projectId,
@@ -247,7 +248,7 @@ function udmi_query_states(attributes) {
     deviceId
   );
 
-  console.log('iot query states', formattedName)
+  console.log('iot query state', formattedName)
 
   const request = {
     name: formattedName
