@@ -80,7 +80,8 @@ public class WritebackSequences extends PointsetBase {
   }
 
   @Test(timeout = 90000)
-  @Feature(stage = BETA, bucket = WRITEBACK)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
+  @Description("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
     untilTrue(expectedPresentValue(targetModel), () -> presentValueIs(targetModel));

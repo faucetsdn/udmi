@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -44,7 +45,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = STABLE, bucket = SYSTEM)
   @Description("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
@@ -76,7 +77,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = BETA, bucket = SYSTEM)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
   @Description("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
