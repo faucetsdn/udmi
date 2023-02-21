@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
@@ -12,6 +13,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -149,7 +151,7 @@ public class SequenceBase {
   static ExecutionConfiguration validatorConfig;
   private static String udmiVersion;
   private static String siteModel;
-  protected static String serialNo;
+  private static String serialNo;
   private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
@@ -182,7 +184,7 @@ public class SequenceBase {
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
   private PrintWriter systemLog;
-  protected String lastSerialNo;
+  private String lastSerialNo;
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
@@ -478,6 +480,15 @@ public class SequenceBase {
     } finally {
       debug("wait for config sync result " + configReady(true));
     }
+  }
+
+  @Test
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  public void valid_serial_no() {
+    if (serialNo == null) {
+      throw new SkipTest("No test serial number provided");
+    }
+    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
   private void recordResult(String result, org.junit.runner.Description description,

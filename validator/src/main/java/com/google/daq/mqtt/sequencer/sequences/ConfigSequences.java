@@ -127,7 +127,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Feature(stage = BETA, bucket = SYSTEM)
   @Description("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();

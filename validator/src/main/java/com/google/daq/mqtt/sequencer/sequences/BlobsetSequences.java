@@ -128,6 +128,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Push endpoint config message to device that results in a connection error.")
+  @Test
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
@@ -136,6 +137,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check repeated endpoint with same information gets retried.")
+  @Test
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
@@ -152,6 +154,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check a successful reconnect to the same endpoint.")
+  @Test
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
     untilSuccessfulRedirect(BlobPhase.FINAL);
@@ -160,6 +163,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Failed connection because of bad hash.")
+  @Test
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
     untilTrue("blobset status is ERROR", () -> {
@@ -175,6 +179,7 @@ public class BlobsetSequences extends SequenceBase {
     checkThatHasInterestingSystemStatus(false);
   }
 
+  @Test
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
