@@ -32,6 +32,8 @@ public class SequenceRunner {
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
   public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
+  static final boolean RUNNING_ALPHA = Stage.ALPHA.processGiven(
+      getFeatureMinStage());
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
@@ -189,7 +191,7 @@ public class SequenceRunner {
   }
 
   static Stage getFeatureMinStage() {
-    String stage = SequenceBase.validatorConfig.min_stage;
+    String stage = executionConfiguration.min_stage;
     return Strings.isNullOrEmpty(stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(stage);
   }
 

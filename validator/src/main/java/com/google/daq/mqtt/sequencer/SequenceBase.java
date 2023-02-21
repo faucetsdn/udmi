@@ -135,7 +135,7 @@ public class SequenceBase {
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
   private static final int FUNCTIONS_VERSION_BETA = 2; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 2; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
@@ -1012,8 +1012,7 @@ public class SequenceBase {
   }
 
   private int getRequiredFunctionsVersion() {
-    return Stage.ALPHA.processGiven(SequenceRunner.getFeatureMinStage()) ? FUNCTIONS_VERSION_ALPHA
-        : FUNCTIONS_VERSION_BETA;
+    return SequenceRunner.RUNNING_ALPHA ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
   private void processCommand(Map<String, Object> message, Map<String, String> attributes) {

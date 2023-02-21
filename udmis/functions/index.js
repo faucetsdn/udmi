@@ -1,6 +1,15 @@
 /**
- * Simple function to ingest test results event from DAQ.
+ * Function suite to handle UDMIS messages using cloud functions.
  */
+
+/**
+ * These version markers are used to automatically check that the deployed cloud functions are suitable for any bit
+ * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
+ * indicate the MIN/MAX versions supported, while the client determines what is required.
+ */
+
+const FUNCTIONS_VERSION_MIN = 3;
+const FUNCTIONS_VERSION_MAX = 3;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -29,7 +38,7 @@ const UDMIS_FOLDER = 'udmis';
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-console.log(`UDMI version ${UDMI_VERSION}, functions ${version.functions_min}:${version.functions_max}`);
+console.log(`UDMI version ${UDMI_VERSION}, functions ${FUNCTIONS_VERSION_MIN}:${FUNCTIONS_VERSION_MAX}`);
 console.log(`Deployed by ${version.deployed_by} at ${version.deployed_at}`);
 
 if (useFirestore) {
@@ -160,16 +169,42 @@ function getRegistryRegions() {
   }).catch(console.error);
 }
 
+
+function unpack_udmi_envelope(attributes, msgObject) {
+  console.log('unpack_udmi_envelope in', attributes, msgObject);
+  envelope = {};
+  console.log('unpack_udmi_envelope out', envelope);
+  return envelope;
+}
+
+function unpack_udmi_payload(payload) {
+  console.log('unpack_udmi_payload in', payload);
+  const msgString = Buffer.from(payload, 'base64').toString();
+  const msgObject = JSON.parse(msgString);
+  console.log('unpack_udmi_payload out', msgObject);
+  return msgObject;
+}
+
 exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) => {
-  const attributes = event.attributes;
+  let attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
-  const msgObject = JSON.parse(msgString);
+  let msgObject = JSON.parse(msgString);
 
   if (!attributes.subFolder) {
     return udmi_reflector_state(attributes, msgObject);
   }
 
+  console.log('Reflect message', attributes);
+
+  if (attributes.subFolder != 'udmi') {
+    console.log('Unexpected subFolder');
+    return;
+  }
+
+  attributes = unpack_udmi_envelope(attributes, msgObject);
+  msgObject = unpack_udmi_payload(msgObject.payload);
+  
   const nonce = msgObject && msgObject.debug_config_nonce;
   const parts = attributes.subFolder.split('/');
   attributes.deviceRegistryId = attributes.deviceId;
@@ -200,6 +235,8 @@ function udmi_reflector_state(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
   subContents.last_state = msgObject.timestamp;
+  subContents.functions_min = FUNCTIONS_VERSION_MIN;
+  subContents.functions_max = FUNCTIONS_VERSION_MAX;
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
 }

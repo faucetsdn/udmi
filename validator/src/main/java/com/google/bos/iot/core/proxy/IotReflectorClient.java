@@ -41,7 +41,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String WAS_BASE_64 = "wasBase64";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
-  public static final String UDMI_TOPIC = "udmi";
+  private static final String UDMI_FOLDER = "udmi";
+  private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
