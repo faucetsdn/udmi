@@ -215,7 +215,6 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
 });
 
 function udmi_reflector_state(attributes, msgObject) {
-  console.log('Processing reflector state change', attributes, msgObject);
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
@@ -223,6 +222,7 @@ function udmi_reflector_state(attributes, msgObject) {
   subContents.functions_min = FUNCTIONS_VERSION_MIN;
   subContents.functions_max = FUNCTIONS_VERSION_MAX;
   const startTime = currentTimestamp();
+  console.log('Processing reflector state reply', attributes, subContents);
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
 }
 

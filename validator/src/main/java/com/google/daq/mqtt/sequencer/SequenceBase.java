@@ -134,13 +134,12 @@ public class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
-  private static final int FUNCTIONS_VERSION_BETA = 2; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_BETA = 3; // Version required for beta execution.
   private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final String UNKNOWN_CATEGORY = "unknown";
   private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
@@ -995,7 +994,9 @@ public class SequenceBase {
           udmisInfo.deployed_at));
 
       int required = getRequiredFunctionsVersion();
-      String baseError = String.format("UDMIS functions version %d not allowed", required);
+      info(String.format("UDMIS functions support versions %s:%s (required %s)",
+          udmisInfo.functions_min, udmisInfo.functions_max, required));
+      String baseError = String.format("UDMIS required functions version %d not allowed", required);
       if (required < udmisInfo.functions_min) {
         throw new RuntimeException(
             String.format("%s, min supported %s. Please update the local install.", baseError,
@@ -1003,7 +1004,7 @@ public class SequenceBase {
       }
       if (required > udmisInfo.functions_max) {
         throw new RuntimeException(
-            String.format("%s, max supported %s. Please update the UDMIS install..",
+            String.format("%s, max supported %s. Please update the cloud install..",
                 baseError, udmisInfo.functions_max));
       }
     } else {
@@ -1012,7 +1013,8 @@ public class SequenceBase {
   }
 
   private int getRequiredFunctionsVersion() {
-    return SequenceRunner.RUNNING_ALPHA ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
+    return Stage.ALPHA.processGiven(
+        SequenceRunner.getFeatureMinStage()) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
   private void processCommand(Map<String, Object> message, Map<String, String> attributes) {
