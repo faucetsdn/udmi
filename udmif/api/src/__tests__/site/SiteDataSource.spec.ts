@@ -43,6 +43,7 @@ describe('SiteDataSource', () => {
 
   test('getSiteValidation returns validation object if site is found', async () => {
     const site: Site = {
+      uuid: '00000000-0000-0000-0000-000000000001',
       name: 'site1',
       validation: {
         last_updated: '',

@@ -4,6 +4,7 @@ export const GET_SITES = gql`
   query GetSites($searchOptions: SearchOptions) {
     sites(searchOptions: $searchOptions) {
       sites {
+        uuid
         name
         seenDevicesCount
         totalDevicesCount

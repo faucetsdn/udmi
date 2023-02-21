@@ -22,6 +22,7 @@
   matSort
   (matSortChange)="sortData($event)"
   aria-label="List of devices"
+  [trackBy]="devicesTrackBy"
 >
   <ng-container *ngFor="let column of columns" matColumnDef="{{ column.value }}">
     <ng-container *ngIf="column.isSortable">
