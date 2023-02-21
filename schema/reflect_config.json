@@ -16,12 +16,18 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "setup": {
+    "udmis": {
       "title": "Setup Reflector Config",
       "type": "object",
       "properties": {
-        "functions": {
+        "functions_min": {
           "type": "integer"
+        },
+        "functions_max": {
+          "type": "integer"
+        },
+        "udmi_version": {
+          "type": "string"
         },
         "last_state": {
           "type": "string",
@@ -30,6 +36,9 @@
         "deployed_at": {
           "type": "string",
           "format": "date-time"
+        },
+        "deployed_by": {
+          "type": "string"
         }
       }
     }
