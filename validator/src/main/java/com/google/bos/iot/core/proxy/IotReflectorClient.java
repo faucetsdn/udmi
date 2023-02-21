@@ -1,6 +1,9 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,16 +19,22 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.ReflectorConfig;
+import udmi.schema.ReflectorState;
+import udmi.schema.SetupReflectorConfig;
+import udmi.schema.SetupReflectorState;
 
 /**
  * Publish messages using the iot core reflector.
@@ -43,6 +52,12 @@ public class IotReflectorClient implements MessagePublisher {
   private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
+  private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
+  private final String udmiVersion;
+  private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
+  private final CountDownLatch initializedStateSent = new CountDownLatch(1);
+  private final CountDownLatch validConfigReceived = new CountDownLatch(1);
+  private boolean isInstallValid;
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
 
@@ -70,6 +85,7 @@ public class IotReflectorClient implements MessagePublisher {
 
     registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
+    udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
@@ -83,7 +99,31 @@ public class IotReflectorClient implements MessagePublisher {
       throw new RuntimeException("While connecting MQTT endpoint " + subscriptionId, e);
     }
 
-    active = true;
+    try {
+      initialConfigReceived.await();
+      initializeReflectorState();
+      initializedStateSent.countDown();
+      validConfigReceived.await();
+
+      active = true;
+    } catch (Exception e) {
+      throw new RuntimeException("Interrupted waiting for initial config", e);
+    }
+  }
+
+  private void initializeReflectorState() {
+    ReflectorState reflectorState = new ReflectorState();
+    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
+    reflectorState.version = udmiVersion;
+    reflectorState.setup = new SetupReflectorState();
+    reflectorState.setup.user = System.getenv("USER");
+    try {
+      System.err.printf("Setting state version %s timestamp %s%n",
+          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
+      setReflectorState(stringify(reflectorState));
+    } catch (Exception e) {
+      throw new RuntimeException("Could not set reflector state", e);
+    }
   }
 
   private void messageHandler(String topic, String payload) {
@@ -115,7 +155,65 @@ public class IotReflectorClient implements MessagePublisher {
     messageBundle.attributes = attributes;
     messageBundle.message = asMap;
 
-    messages.offer(messageBundle);
+    if (ensureSyncdCloud(messageBundle)) {
+      messages.offer(messageBundle);
+    }
+  }
+
+  private boolean ensureSyncdCloud(Validator.MessageBundle messageBundle) {
+    if (!"config".equals(messageBundle.attributes.get("category"))) {
+      return isInstallValid;
+    }
+
+    try {
+      initialConfigReceived.countDown();
+      if (initializedStateSent.getCount() > 0) {
+        return false;
+      }
+
+      ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class,
+          messageBundle.message);
+      System.err.println("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
+      SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
+      Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
+      System.err.println("UDMIS matching against expected state timestamp " + getTimestamp(
+          REFLECTOR_STATE_TIMESTAMP));
+      isInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
+      if (isInstallValid) {
+        System.err.println("UDMIS version " + reflectorConfig.version);
+        if (!udmiVersion.equals(reflectorConfig.version)) {
+          System.err.println("UDMIS local/cloud UDMI version mismatch!");
+        }
+
+        System.err.println("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
+            udmisInfo.deployed_at));
+
+        int required = 3; // TODO: Make this a parameter.
+        System.err.println(String.format("UDMIS functions support versions %s:%s (required %s)",
+            udmisInfo.functions_min, udmisInfo.functions_max, required));
+        String baseError = String.format("UDMIS required functions version %d not allowed",
+            required);
+        if (required < udmisInfo.functions_min) {
+          throw new RuntimeException(
+              String.format("%s, min supported %s. Please update the local install.", baseError,
+                  udmisInfo.functions_min));
+        }
+        if (required > udmisInfo.functions_max) {
+          throw new RuntimeException(
+              String.format("%s, max supported %s. Please update the cloud install..",
+                  baseError, udmisInfo.functions_max));
+        }
+        validConfigReceived.countDown();
+      } else {
+        System.err.println(
+            "UDMIS ignoring mismatching config timestamp " + getTimestamp(lastState));
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While waiting for initial config synchronization", e);
+    }
+
+    // Even through setup might be valid, return false to not process this config message.
+    return false;
   }
 
   private String parseMessageTopic(String topic, Map<String, String> attributes) {

@@ -136,11 +136,9 @@ public class SequenceBase {
   private static final long ONE_SECOND_MS = 1000;
   private static final int FUNCTIONS_VERSION_BETA = 3; // Version required for beta execution.
   private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
-  private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -276,30 +274,11 @@ public class SequenceBase {
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
     altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
-    IotReflectorClient client = new IotReflectorClient(altConfiguration);
-    initializeReflectorState(client);
-    return client;
+    return new IotReflectorClient(altConfiguration);
   }
 
   private static MessagePublisher getReflectorClient() {
-    IotReflectorClient client = new IotReflectorClient(validatorConfig);
-    initializeReflectorState(client);
-    return client;
-  }
-
-  private static void initializeReflectorState(IotReflectorClient client) {
-    ReflectorState reflectorState = new ReflectorState();
-    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
-    reflectorState.version = udmiVersion;
-    reflectorState.setup = new SetupReflectorState();
-    reflectorState.setup.user = System.getenv("USER");
-    try {
-      System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, getTimestamp(REFLECTOR_STATE_TIMESTAMP));
-      client.setReflectorState(stringify(reflectorState));
-    } catch (Exception e) {
-      throw new RuntimeException("Could not set reflector state", e);
-    }
+    return new IotReflectorClient(validatorConfig);
   }
 
   static void resetState() {
@@ -425,8 +404,6 @@ public class SequenceBase {
     waitingCondition.clear();
     waitingCondition.push("starting test wrapper");
     assert reflector().isActive();
-
-    whileDoing("udmis synchronization", () -> messageEvaluateLoop(() -> !udmisInstallValid));
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
@@ -939,12 +916,7 @@ public class SequenceBase {
 
   private void processMessage() {
     MessageBundle bundle = nextMessageBundle();
-    String category = bundle.attributes.get("category");
-    if ("commands".equals(category)) {
-      processCommand(bundle.message, bundle.attributes);
-    } else if (CONFIG_SUBTYPE.equals(category)) {
-      processConfig(bundle.message, bundle.attributes);
-    }
+    processCommand(bundle.message, bundle.attributes);
   }
 
   /**
@@ -974,41 +946,6 @@ public class SequenceBase {
         throw new RuntimeException("Message loop no longer for active thread");
       }
       return bundle;
-    }
-  }
-
-  private void processConfig(Map<String, Object> message, Map<String, String> attributes) {
-    ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
-    debug("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
-    SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
-    Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
-    info("UDMIS matching against expected state timestamp " + getTimestamp(REFLECTOR_STATE_TIMESTAMP));
-    udmisInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
-    if (udmisInstallValid) {
-      info("UDMIS version " + reflectorConfig.version);
-      if (!udmiVersion.equals(reflectorConfig.version)) {
-        warning("Local/cloud UDMI version mismatch!");
-      }
-
-      info("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
-          udmisInfo.deployed_at));
-
-      int required = getRequiredFunctionsVersion();
-      info(String.format("UDMIS functions support versions %s:%s (required %s)",
-          udmisInfo.functions_min, udmisInfo.functions_max, required));
-      String baseError = String.format("UDMIS required functions version %d not allowed", required);
-      if (required < udmisInfo.functions_min) {
-        throw new RuntimeException(
-            String.format("%s, min supported %s. Please update the local install.", baseError,
-                udmisInfo.functions_min));
-      }
-      if (required > udmisInfo.functions_max) {
-        throw new RuntimeException(
-            String.format("%s, max supported %s. Please update the cloud install..",
-                baseError, udmisInfo.functions_max));
-      }
-    } else {
-      info("UDMIS ignoring mismatching config timestamp " + getTimestamp(lastState));
     }
   }
 
