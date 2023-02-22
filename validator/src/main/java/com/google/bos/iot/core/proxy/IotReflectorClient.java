@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -89,8 +90,8 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
     udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
-    minStage = Strings.isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE
-        : Stage.valueOf(iotConfig.min_stage);
+    minStage =
+        isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(iotConfig.min_stage);
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
