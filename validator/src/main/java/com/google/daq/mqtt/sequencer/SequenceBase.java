@@ -134,8 +134,6 @@ public class SequenceBase {
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
-  private static final int FUNCTIONS_VERSION_BETA = 3; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
@@ -947,11 +945,6 @@ public class SequenceBase {
       }
       return bundle;
     }
-  }
-
-  private int getRequiredFunctionsVersion() {
-    return Stage.ALPHA.processGiven(
-        SequenceRunner.getFeatureMinStage()) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
   private void processCommand(Map<String, Object> message, Map<String, String> attributes) {

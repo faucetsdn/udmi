@@ -10,6 +10,10 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
+import com.google.common.base.Strings;
+import com.google.daq.mqtt.sequencer.Feature;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
+import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -39,13 +43,12 @@ import udmi.schema.SetupReflectorState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .enable(SerializationFeature.INDENT_OUTPUT)
-      .setSerializationInclusion(Include.NON_NULL);
+  public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
 
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
-  private static final String WAS_BASE_64 = "wasBase64";
+  private static final int FUNCTIONS_VERSION_BETA = 3; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
@@ -56,6 +59,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
   private final CountDownLatch validConfigReceived = new CountDownLatch(1);
+  private final Stage minStage;
   private boolean isInstallValid;
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
@@ -85,6 +89,8 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
     udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
+    minStage = Strings.isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE
+        : Stage.valueOf(iotConfig.min_stage);
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
@@ -148,8 +154,16 @@ public class IotReflectorClient implements MessagePublisher {
         throw new RuntimeException("Unknown message category " + category);
       }
     } catch (Exception e) {
-      handleReceivedMessage(null, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
+      if (isInstallValid) {
+        handleReceivedMessage(null, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
+      } else {
+        throw e;
+      }
     }
+  }
+
+  private int getRequiredFunctionsVersion() {
+    return Stage.ALPHA.processGiven(minStage) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
   private void handleCommandEnvelope(Map<String, Object> asMap) {
@@ -188,8 +202,8 @@ public class IotReflectorClient implements MessagePublisher {
       Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
       System.err.println("UDMIS matching against expected state timestamp " + getTimestamp(
           REFLECTOR_STATE_TIMESTAMP));
-      isInstallValid = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
-      if (isInstallValid) {
+      boolean configMatch = dateEquals(lastState, REFLECTOR_STATE_TIMESTAMP);
+      if (configMatch) {
         System.err.println("UDMIS version " + reflectorConfig.version);
         if (!udmiVersion.equals(reflectorConfig.version)) {
           System.err.println("UDMIS local/cloud UDMI version mismatch!");
@@ -198,21 +212,22 @@ public class IotReflectorClient implements MessagePublisher {
         System.err.println("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
             udmisInfo.deployed_at));
 
-        int required = 3; // TODO: Make this a parameter.
-        System.err.println(String.format("UDMIS functions support versions %s:%s (required %s)",
-            udmisInfo.functions_min, udmisInfo.functions_max, required));
+        int required = getRequiredFunctionsVersion();
+        System.err.printf("UDMIS functions support versions %s:%s (required %s)%n",
+            udmisInfo.functions_min, udmisInfo.functions_max, required);
         String baseError = String.format("UDMIS required functions version %d not allowed",
             required);
         if (required < udmisInfo.functions_min) {
           throw new RuntimeException(
-              String.format("%s, min supported %s. Please update the local install.", baseError,
+              String.format("%s: min supported %s. Please update local UDMI install.", baseError,
                   udmisInfo.functions_min));
         }
         if (required > udmisInfo.functions_max) {
           throw new RuntimeException(
-              String.format("%s, max supported %s. Please update the cloud install..",
+              String.format("%s: max supported %s. Please update cloud UDMIS install.",
                   baseError, udmisInfo.functions_max));
         }
+        isInstallValid = true;
         validConfigReceived.countDown();
       } else {
         System.err.println(

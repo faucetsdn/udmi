@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.Feature.Stage;
@@ -31,7 +32,6 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
   private static final Set<String> allTests = new TreeSet<>();
@@ -190,7 +190,7 @@ public class SequenceRunner {
 
   static Stage getFeatureMinStage() {
     String stage = SequenceBase.validatorConfig.min_stage;
-    return Strings.isNullOrEmpty(stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(stage);
+    return Strings.isNullOrEmpty(stage) ? IotReflectorClient.DEFAULT_MIN_STAGE : Stage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {
