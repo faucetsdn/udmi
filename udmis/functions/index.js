@@ -92,12 +92,33 @@ function recordMessage(attributes, message) {
     }
   }
 
-  const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
-  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
+  promises.push(sendEnvelope(registryId, deviceId, subType, subFolder, message));
 
   return promises;
 }
 
+function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonce) {
+  if (registryId == REFLECT_REGISTRY) {
+    console.log('sendEnvelope squash for', registryId);
+    return;
+  }
+  
+  console.log('sendEnvelope', registryId, deviceId, subType, subFolder);
+
+  const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
+  const base64 = Buffer.from(messageStr).toString('base64');
+  
+  envelope = {
+    deviceRegistryId: registryId,
+    deviceId: deviceId,
+    subType: subType,
+    subFolder: subFolder,
+    payload: base64
+  };
+
+  return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, nonce);
+}
+  
 function sendCommand(registryId, deviceId, subFolder, message) {
   const nonce = message && message.debug_config_nonce;
   return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonce);
@@ -290,8 +311,7 @@ function process_state_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/${STATE_TYPE}/${UPDATE_FOLDER}`;
-  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
+  promises.push(sendEnvelope(registryId, deviceId, STATE_TYPE, UPDATE_FOLDER, msgObject));
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
@@ -521,11 +541,10 @@ function update_device_config(message, attributes, preVersion) {
     versionToUpdate: version,
     binaryData: binaryData
   };
-  const commandFolder = `devices/${deviceId}/${CONFIG_TYPE}/${UPDATE_FOLDER}`;
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString, nonce));
+    .then(() => sendEnvelope(registryId, deviceId, CONFIG_TYPE, UPDATE_FOLDER, msgString, nonce));
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {

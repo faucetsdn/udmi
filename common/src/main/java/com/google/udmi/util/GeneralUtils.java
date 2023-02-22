@@ -137,6 +137,10 @@ public class GeneralUtils {
     return Base64.getEncoder().encodeToString(payload);
   }
 
+  public static String decodeBase64(String payload) {
+    return new String(Base64.getDecoder().decode(payload));
+  }
+
   /**
    * Get a string of the java stack trace.
    *

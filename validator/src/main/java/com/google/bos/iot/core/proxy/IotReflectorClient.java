@@ -2,6 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
@@ -49,10 +50,12 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
   private static final String WAS_BASE_64 = "wasBase64";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
-  private static final Set<String> EXPECTED_CATEGORIES = ImmutableSet.of("commands", "config");
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
+  public static final String CATEGORY_KEY = "category";
+  public static final String CONFIG_CATEGORY = "config";
+  public static final String COMMANDS_CATEGORY = "commands";
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -127,52 +130,65 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void messageHandler(String topic, String payload) {
-    final Map<String, String> attributes = new HashMap<>();
     if (payload.length() == 0) {
       return;
     }
-    TreeMap<String, Object> asMap;
+    final Map<String, String> attributes = new HashMap<>();
+    Map<String, Object> receivedMessage;
     try {
       byte[] rawData = payload.getBytes();
       boolean base64 = rawData[0] != '{';
-      String category = parseMessageTopic(topic, attributes);
 
+      final Map<String, Object> asMap;
       if ("null".equals(payload)) {
-        asMap = null;
+        return;
       } else {
         String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
         attributes.put(WAS_BASE_64, "" + base64);
-        asMap = OBJECT_MAPPER.readValue(data, TreeMap.class);
+        asMap = (Map<String, Object>) JsonUtil.fromString(TreeMap.class, data);
       }
-      if (!EXPECTED_CATEGORIES.contains(category)) {
-        return;
+
+      String category = parseMessageTopic(topic);
+
+      if ("config".equals(category)) {
+        ensureCloudSync(asMap);
+      } else if ("commands".equals(category)) {
+        handleCommandEnvelope(attributes, asMap);
+      } else {
+        throw new RuntimeException("Unknown message category " + category);
       }
     } catch (Exception e) {
-      asMap = new ErrorContainer(e, payload, JsonUtil.getTimestamp());
-    }
-
-    Validator.MessageBundle messageBundle = new Validator.MessageBundle();
-    messageBundle.attributes = attributes;
-    messageBundle.message = asMap;
-
-    if (ensureSyncdCloud(messageBundle)) {
-      messages.offer(messageBundle);
+      handleReceivedMessage(attributes, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
     }
   }
 
-  private boolean ensureSyncdCloud(Validator.MessageBundle messageBundle) {
-    if (!"config".equals(messageBundle.attributes.get("category"))) {
-      return isInstallValid;
-    }
+  private void handleCommandEnvelope(Map<String, String> attributes, Map<String, Object> asMap) {
+    attributes.put("projectId", projectId);
+    attributes.put("deviceRegistryId", registryId);
+    attributes.put("deviceId", (String) asMap.get("deviceId"));
+    attributes.put("subType", (String) asMap.get("subType"));
+    attributes.put("subFolder", (String) asMap.get("subFolder"));
+    attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
+    String payload = GeneralUtils.decodeBase64((String) asMap.get("payload"));
+    handleReceivedMessage(attributes, JsonUtil.asMap(payload));
+  }
 
+  private void handleReceivedMessage(Map<String, String> attributes,
+      Map<String, Object> message) {
+    Validator.MessageBundle messageBundle = new Validator.MessageBundle();
+    messageBundle.attributes = attributes;
+    messageBundle.message = message;
+    messages.offer(messageBundle);
+  }
+
+  private boolean ensureCloudSync(Map<String, Object> message) {
     try {
       initialConfigReceived.countDown();
       if (initializedStateSent.getCount() > 0) {
         return false;
       }
 
-      ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class,
-          messageBundle.message);
+      ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
       System.err.println("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
       SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
       Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
@@ -216,27 +232,13 @@ public class IotReflectorClient implements MessagePublisher {
     return false;
   }
 
-  private String parseMessageTopic(String topic, Map<String, String> attributes) {
-    String[] parts = topic.substring(1).split("/");
+  private String parseMessageTopic(String topic) {
+    String[] parts = topic.substring(1).split("/", 3);
     assert "devices".equals(parts[0]);
     assert registryId.equals(parts[1]);
-    String messageCategory = parts[2];
-    attributes.put("category", messageCategory);
-    attributes.put("deviceRegistryId", registryId);
-    if (messageCategory.equals("commands")) {
-      assert "devices".equals(parts[3]);
-      attributes.put("deviceId", parts[4]);
-      attributes.put("subType", parts[5]);
-      attributes.put("subFolder", parts[6]);
-      attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
-      assert parts.length == 7;
-    } else {
-      assert parts.length == 3;
-    }
-    attributes.put("projectId", projectId);
-    return messageCategory;
+    return parts[2];
   }
-
+  
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
     System.err.println("mqtt client error: " + throwable.getMessage());
     close();
