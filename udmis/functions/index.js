@@ -1,6 +1,15 @@
 /**
- * Simple function to ingest test results event from DAQ.
+ * Function suite to handle UDMIS messages using cloud functions.
  */
+
+/**
+ * These version markers are used to automatically check that the deployed cloud functions are suitable for any bit
+ * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
+ * indicate the MIN/MAX versions supported, while the client determines what is required.
+ */
+
+const FUNCTIONS_VERSION_MIN = 3;
+const FUNCTIONS_VERSION_MAX = 3;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -19,17 +28,19 @@ const iot = require('@google-cloud/iot');
 
 const REFLECT_REGISTRY = 'UDMS-REFLECT';
 const UDMI_VERSION = version.udmi_version;
+
 const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
+const QUERY_TYPE = 'query';
+
 const UPDATE_FOLDER = 'update';
-const QUERY_FOLDER = 'query';
 const UDMIS_FOLDER = 'udmis';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
 
-console.log(`UDMI version ${UDMI_VERSION}, functions ${version.functions_min}:${version.functions_max}`);
+console.log(`UDMI version ${UDMI_VERSION}, functions ${FUNCTIONS_VERSION_MIN}:${FUNCTIONS_VERSION_MAX}`);
 console.log(`Deployed by ${version.deployed_by} at ${version.deployed_at}`);
 
 if (useFirestore) {
@@ -81,15 +92,37 @@ function recordMessage(attributes, message) {
     }
   }
 
-  const commandFolder = `devices/${deviceId}/${subType}/${subFolder}`;
-  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, message));
+  promises.push(sendEnvelope(registryId, deviceId, subType, subFolder, message));
 
   return promises;
 }
 
-function sendCommand(registryId, deviceId, subFolder, message) {
-  const nonce = message && message.debug_config_nonce;
-  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonce);
+function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonceEx) {
+  if (registryId == REFLECT_REGISTRY) {
+    console.log('sendEnvelope squash for', registryId);
+    return;
+  }
+
+  const nonce = nonceEx || (message && message.debug_config_nonce);
+  console.log('sendEnvelope', registryId, deviceId, subType, subFolder, nonce);
+
+  const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
+  const base64 = Buffer.from(messageStr).toString('base64');
+  
+  envelope = {
+    deviceRegistryId: registryId,
+    deviceId: deviceId,
+    subType: subType,
+    subFolder: subFolder,
+    payload: base64
+  };
+
+  return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, nonce);
+}
+  
+function sendCommand(registryId, deviceId, subFolder, message, nonceEx) {
+  const nonce = nonceEx || (message && message.debug_config_nonce);
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonceEx);
 }
 
 function sendCommandStr(registryId, deviceId, subFolder, messageStr, nonce) {
@@ -167,56 +200,68 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const msgObject = JSON.parse(msgString);
 
   if (!attributes.subFolder) {
-    return udmi_reflector_state(attributes, msgObject);
+    return udmi_process_reflector_state(attributes, msgObject);
   }
 
-  const nonce = msgObject && msgObject.debug_config_nonce;
-  const parts = attributes.subFolder.split('/');
-  attributes.deviceRegistryId = attributes.deviceId;
-  attributes.deviceId = parts[1];
-  attributes.subFolder = parts[2];
-  attributes.subType = parts[3];
-  console.log('Reflect', attributes.deviceRegistryId, attributes.deviceId, attributes.subType,
-              attributes.subFolder, nonce);
+  console.log('Reflect message', attributes);
+
+  if (attributes.subFolder != 'udmi') {
+    console.error('Unexpected subFolder', attributes.subFolder);
+    return;
+  }
+
+  const envelope = {};
+  envelope.projectId = attributes.projectId;
+  envelope.deviceRegistryId = msgObject.deviceRegistryId;
+  envelope.deviceId = msgObject.deviceId;
+  envelope.subFolder = msgObject.subFolder;
+  envelope.subType = msgObject.subType;
+
+  const payloadString = Buffer.from(msgObject.payload, 'base64').toString();
+  const payload = JSON.parse(payloadString);
+  const nonce = payload && payload.debug_config_nonce;
+
+  console.log('Reflect', nonce, envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
+              envelope.subFolder);
 
   return registry_promise.then(() => {
-    attributes.cloudRegion = registry_regions[attributes.deviceRegistryId];
-    if (!attributes.cloudRegion) {
-      console.log('No cloud region found for target registry', attributes.deviceRegistryId);
+    envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
+    if (!envelope.cloudRegion) {
+      console.log('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
-    if (attributes.subFolder == QUERY_FOLDER) {
-      return udmi_query_event(attributes, msgObject);
+    if (envelope.subType == QUERY_TYPE) {
+      return udmi_query_event(envelope, payload);
     }
-    const targetFunction = attributes.subType == 'event' ? 'target' : attributes.subType;
+    const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
-    return publishPubsubMessage(target, attributes, msgObject);
+    return publishPubsubMessage(target, envelope, payload);
   });
 });
 
-function udmi_reflector_state(attributes, msgObject) {
-  console.log('Processing reflector state change', attributes, msgObject);
+function udmi_process_reflector_state(attributes, msgObject) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
   subContents.last_state = msgObject.timestamp;
+  subContents.functions_min = FUNCTIONS_VERSION_MIN;
+  subContents.functions_max = FUNCTIONS_VERSION_MAX;
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
 }
 
 function udmi_query_event(attributes, msgObject) {
-  const subType = attributes.subType;
-  if (subType == STATE_TYPE) {
-    return udmi_query_states(attributes);
+  const subFolder = attributes.subFolder;
+  if (subFolder != UPDATE_FOLDER) {
+    throw 'Unknown query folder ' + subFolder;
   }
-  throw 'Unknown query type ' + attributes.subType;
-}
 
-function udmi_query_states(attributes) {
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
   const cloudRegion = attributes.cloudRegion;
   const deviceId = attributes.deviceId;
+
+  console.log('formattedName', projectId, cloudRegion, registryId, deviceId);
 
   const formattedName = iotClient.devicePath(
     projectId,
@@ -225,7 +270,7 @@ function udmi_query_states(attributes) {
     deviceId
   );
 
-  console.log('iot query states', formattedName)
+  console.log('iot query state', formattedName)
 
   const request = {
     name: formattedName
@@ -267,8 +312,7 @@ function process_state_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
 
-  const commandFolder = `devices/${deviceId}/${STATE_TYPE}/${UPDATE_FOLDER}`;
-  promises.push(sendCommand(REFLECT_REGISTRY, registryId, commandFolder, msgObject));
+  promises.push(sendEnvelope(registryId, deviceId, STATE_TYPE, UPDATE_FOLDER, msgObject));
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
@@ -498,11 +542,10 @@ function update_device_config(message, attributes, preVersion) {
     versionToUpdate: version,
     binaryData: binaryData
   };
-  const commandFolder = `devices/${deviceId}/${CONFIG_TYPE}/${UPDATE_FOLDER}`;
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendCommandStr(REFLECT_REGISTRY, registryId, commandFolder, msgString, nonce));
+    .then(() => sendEnvelope(registryId, deviceId, CONFIG_TYPE, UPDATE_FOLDER, msgString, nonce));
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {
