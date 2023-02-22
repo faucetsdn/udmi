@@ -97,13 +97,14 @@ function recordMessage(attributes, message) {
   return promises;
 }
 
-function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonce) {
+function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonceEx) {
   if (registryId == REFLECT_REGISTRY) {
     console.log('sendEnvelope squash for', registryId);
     return;
   }
-  
-  console.log('sendEnvelope', registryId, deviceId, subType, subFolder);
+
+  const nonce = nonceEx || (message && message.debug_config_nonce);
+  console.log('sendEnvelope', registryId, deviceId, subType, subFolder, nonce);
 
   const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
   const base64 = Buffer.from(messageStr).toString('base64');
@@ -119,9 +120,9 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonce) 
   return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, nonce);
 }
   
-function sendCommand(registryId, deviceId, subFolder, message) {
-  const nonce = message && message.debug_config_nonce;
-  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonce);
+function sendCommand(registryId, deviceId, subFolder, message, nonceEx) {
+  const nonce = nonceEx || (message && message.debug_config_nonce);
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonceEx);
 }
 
 function sendCommandStr(registryId, deviceId, subFolder, messageStr, nonce) {
