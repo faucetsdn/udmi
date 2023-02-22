@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -52,7 +53,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -137,6 +140,8 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private static final Set<String> sentNonce = new ConcurrentSkipListSet<>();
+  private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -651,6 +656,7 @@ public class SequenceBase {
 
     cachedMessageData = null;
     cachedSentBlock = null;
+    assert sentNonce.isEmpty();
     boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -664,9 +670,9 @@ public class SequenceBase {
       throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
     }
     if (updated) {
-      safeSleep(ONE_SECOND_MS);
       waitForConfigSync(configStart);
     }
+    assert sentNonce.isEmpty();
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
@@ -677,13 +683,15 @@ public class SequenceBase {
       if (updated) {
         cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
-        final Object tracedObject = augmentConfigTrace(data);
-        String augmentedMessage = actualize(stringify(tracedObject));
+        String nonce = Long.toString(System.currentTimeMillis());
+        Map<String, Object> message = augmentConfigTrace(data, nonce);
+        String augmentedMessage = actualize(stringify(message));
         String topic = subBlock + "/config";
         reflector().publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
-        recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
+        recordRawMessage(message, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
+        sentNonce.add(nonce);
       } else {
         trace("unchanged config_" + subBlock + ": " + messageData);
       }
@@ -693,14 +701,13 @@ public class SequenceBase {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private Object augmentConfigTrace(Object data) {
+  private Map<String, Object> augmentConfigTrace(Object data, String nonce) {
     try {
-      if (data == null || !traceLogLevel()) {
-        return data;
+      if (data == null) {
+        return null;
       }
-      Map<String, Object> map = JsonUtil.convertTo(Map.class, data);
-      map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
+      Map<String, Object> map = asMap(data);
+      map.put(CONFIG_NONCE_KEY, nonce);
       return map;
     } catch (Exception e) {
       throw new RuntimeException("While augmenting data message", e);
@@ -953,8 +960,8 @@ public class SequenceBase {
     String subTypeRaw = attributes.get("subType");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      Object debugConfigNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
-      trace("received command " + attributeMark + " nonce " + debugConfigNonce);
+      Object configNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
+      trace("received command " + attributeMark + " nonce " + configNonce);
     }
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
@@ -996,6 +1003,7 @@ public class SequenceBase {
         return;
       }
       configExceptionTimestamp = null;
+      String nonce = (String) message.get(CONFIG_NONCE_KEY);
       Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
@@ -1010,6 +1018,9 @@ public class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
+        if (nonce != null) {
+          sentNonce.remove(nonce);
+        }
         debug("Updated config with timestamp " + getTimestamp(config.timestamp));
         info(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
@@ -1072,7 +1083,8 @@ public class SequenceBase {
   }
 
   private boolean configReady() {
-    return configReady(false);
+    return sentNonce.isEmpty();
+//    return configReady(false);
   }
 
   private boolean configReady(boolean debugOut) {
