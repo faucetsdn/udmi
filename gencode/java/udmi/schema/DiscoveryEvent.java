@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.udmi.util.Features;
 
 
 /**
@@ -94,12 +93,12 @@ public class DiscoveryEvent {
     @JsonPropertyDescription("Collection of unique data points available for this device.")
     public Map<String, PointEnumerationEvent> uniqs;
     /**
-     * UDMI Features Supported by this device
+     * Map of device features
      * 
      */
     @JsonProperty("features")
-    @JsonPropertyDescription("UDMI Features Supported by this device")
-    public Features features;
+    @JsonPropertyDescription("Map of device features")
+    public Map<String, FeatureEnumerationEvent> features;
     /**
      * System Discovery Event
      * <p>
