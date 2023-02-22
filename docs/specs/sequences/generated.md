@@ -27,6 +27,7 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
+
 * [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
 * [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 
@@ -57,3 +58,4 @@ Check that the device correctly handles an extra out-of-schema field
 Check that last_update state is correctly set in response to a config update.
 
 1. Wait for state last_config matches config timestamp
+

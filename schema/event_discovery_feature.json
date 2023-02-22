@@ -1,0 +1,37 @@
+{
+  "$udmi_version": "1.4.0",
+  "title": "Feature Enumeration Event",
+  "description": "Object representation for for a single feature enumeration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "stage": {
+      "description": "Feature implementation stage",
+      "enum": [
+        "missing",
+        "alpha",
+        "beta",
+        "stable"
+      ]
+    },
+    "features": {
+      "$comment": "Make Java happy because the json_for_humans generation doesn't handle recursion",
+      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "features": {
+      "description": "Map of device features",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FeatureEnumerationEvent>",
+      "patternProperties": {
+        "^[a-z.]+$": {
+          "$ref": "file:event_discovery_feature.json"
+        }
+      }
+    }
+  }
+}
+

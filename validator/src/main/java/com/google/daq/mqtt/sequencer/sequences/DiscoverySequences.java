@@ -14,6 +14,7 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 
 import com.google.daq.mqtt.sequencer.Feature;
+import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -30,11 +31,13 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FeatureEnumerationEvent;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -82,7 +85,9 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      checkThat("features enumerated", () -> event.features != null);
+      Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", event.features);
+      checkThat("feature enumeration feature is stable",
+          () -> bucketStageMap.get(ENUMERATION_FEATURES) == Stage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -94,6 +99,20 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
+  }
+
+  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix,
+      Map<String, FeatureEnumerationEvent> eventFeatures) {
+    Map<Bucket, Stage> buckets = new HashMap<>();
+    eventFeatures.forEach((key, value) -> {
+      String fullBucket = prefix + "." + key;
+      Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
+      buckets.put(bucket, Stage.valueOf(value.stage.value().toUpperCase()));
+      if (value.features != null) {
+        buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
+      }
+    });
+    return buckets;
   }
 
   private boolean isTrue(Boolean condition) {
