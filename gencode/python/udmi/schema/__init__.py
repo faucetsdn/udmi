@@ -24,7 +24,12 @@ from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
+<<<<<<< HEAD
 from .event_discovery_network import NetworkDiscoveryEvent
+=======
+from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_feature import FeatureEnumerationEvent
+>>>>>>> master
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities

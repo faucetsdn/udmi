@@ -6,9 +6,15 @@ cc4bb19794042f88f3a72b197b4d21736e5cebf6ec47ffac560430e9f580181f  gencode/docs/c
 4da8ddd26aed7428171e1cbc6d134b37e30a958d09ce0f255bbb22b130d26f77  gencode/docs/configuration_execution.html
 ce0f308d80dbc76f06c85242c259d5b532ff41b0f30359aa394ef60eed6288ca  gencode/docs/configuration_pubber.html
 0f0355e343cb8197dfbae1481c0eca3a0566d73181bc968e33fd469a1c94d1e6  gencode/docs/envelope.html
+<<<<<<< HEAD
 5f4b86def960304827a3d9995caafbb098db82cd6366ddd84f4514696909d8ac  gencode/docs/event.html
 f1b0408be500f00021679dfe111d5406e2bc8b4fa7e17f4456bf5bd654226e80  gencode/docs/event_discovery.html
 d5a450e39c75146c55c31a9024e0de952dfc60fb3c43100cd7557b3641ec075f  gencode/docs/event_mapping.html
+=======
+0fc4a5351bb8317b99bd9bd556ed54725eddf4ef6d79cbd3603ee701b98ed518  gencode/docs/event.html
+dda8af4af84803c067615435744317b679ec28dd0fc19b5547c509cad9925c56  gencode/docs/event_discovery.html
+7f0048d23d6f5a93d40520e7d5fd4ce4fbe76a7713ae2b2e5256be6dda3effb2  gencode/docs/event_mapping.html
+>>>>>>> master
 71fe25d3b17d1dc87b52c049a3235c20527f73e12ffa53fa4800a15e53f73732  gencode/docs/event_pointset.html
 2db2b8f609961994ad128d2023c2e82ca177c2d03eee9ca83e26035f37422e72  gencode/docs/event_system.html
 69bdd3ecbbe39172f9e1535711be5390ef57cb36dff465de7eb1cda8487b97fb  gencode/docs/event_validation.html
@@ -32,7 +38,11 @@ ce2c747fab0d374987acc51474a52ca5b3d64659d51cffa671d5442b7114339a  gencode/java/u
 c033a4b2c9920a4314801d1fbb7885b375a4bb890344de937ed30baf4f2c08e1  gencode/java/udmi/schema/BlobBlobsetState.java
 b9f903444ab08907e41eb123286434ff3207b1edd01397af3ddefb8475bbdadc  gencode/java/udmi/schema/BlobsetConfig.java
 fcbed49f1af8b791d8c52bcbe18f65521a79d9ac3eb33ec3afd9b342ab2bfc56  gencode/java/udmi/schema/BlobsetState.java
+<<<<<<< HEAD
 f9379c7e99ad70946094d1a906683b3ae3ef76281803de1a2c232a1dd300f3ba  gencode/java/udmi/schema/Bucket.java
+=======
+f2e20bc331ee724327cb2103aaa182c8926db70b9a8c71bd19a4a50770c195ce  gencode/java/udmi/schema/Bucket.java
+>>>>>>> master
 0a4f6bcd5065418c1cdc6c05b900b3de31744847d25b6ab6de7aabb1e724710e  gencode/java/udmi/schema/BuildingTranslation.java
 b2915670aa1f1138cf417befdd0da1409246adecf2eeaff5a6417a77649d131a  gencode/java/udmi/schema/Category.java
 a2eeff86f4302272736d84602e2ca36a64d27c8ef6761cc05ffb8ad17b030d4d  gencode/java/udmi/schema/CloudModel.java
@@ -43,16 +53,32 @@ cf9762392e02b5d04c6498963222cc0c00f7be6c3cd82bde3d063a5eceba2b65  gencode/java/u
 42e1f71656b94a2a47c3bd084e970604fbb953dc50bd74fcced7ea06adf4d2c2  gencode/java/udmi/schema/DevicePersistent.java
 d4a82e132b2d223c4a82384d22455283c0b64aba3100fc210e72f9700b9df2d0  gencode/java/udmi/schema/DeviceValidationEvent.java
 587d67a67431349939dffd37b880c44e798a1eb607d54bd6d8a077bbac668067  gencode/java/udmi/schema/DiscoveryCommand.java
+<<<<<<< HEAD
 a21a82c119ccf319762f76e8f2af32d74ef69fd44e48d8942b562a0718f2bf80  gencode/java/udmi/schema/DiscoveryConfig.java
 c794c447a211353fd8f181a6fe3c7496145f9e63ad1600f03df24c0248edf74d  gencode/java/udmi/schema/DiscoveryEvent.java
 a00a0534ebc931f4cc981182b115b6fdbd25cecfff8ab2518a7829c084844dbb  gencode/java/udmi/schema/DiscoveryModel.java
 47640a42896bbaf7772826653916374d2cf4418c47b2c8a62bfb89e89f6fe3a1  gencode/java/udmi/schema/DiscoveryState.java
+=======
+e809df42a73ed843977e447fa3333140dcdbe7d09b4e88bf1b8fd52fbaf9ae1a  gencode/java/udmi/schema/DiscoveryConfig.java
+6b891a32cdce1edcf320917bc2ea3b93f01761bea5cfcf0597e1c5dedcf1e067  gencode/java/udmi/schema/DiscoveryEvent.java
+04112dd47b0f761131c276c67d3cd8b789d25e6716b5732be9fef14fc6831f1d  gencode/java/udmi/schema/DiscoveryModel.java
+0a11a539707571f79bd82b1958886cecae3209e2daef36dfca885adb4c61a07a  gencode/java/udmi/schema/DiscoveryState.java
+>>>>>>> master
 6b93cd56b76045fa06de08a1506be93f8880c7c837f753e0b27ae8a9ffcd0dac  gencode/java/udmi/schema/EndpointConfiguration.java
 dd2eb479a8e93a851c535c8b40fbd62e152bd60e0473f3b23800ec61f798bed0  gencode/java/udmi/schema/Entry.java
 b968f6002c69add4f22b77bd97a4547b6ac8b13fa65a7fce2e7977a4c7bdebde  gencode/java/udmi/schema/Enumerate.java
 017f8e237efa959b81d72f3dd2e78b915856198ceef02c041c657b30df93b7c2  gencode/java/udmi/schema/Envelope.java
 e9f5c77be81486b6b8c6d88f70f2d50583d8c3fafa2ac09ead80f44b8d5e751e  gencode/java/udmi/schema/Event.java
 3588da3767dc3e51d629b14ecce6f6bb8433beaab787be3d7ba377d60ac372e7  gencode/java/udmi/schema/ExecutionConfiguration.java
+<<<<<<< HEAD
+=======
+2e77a29988e6c17875d3f781be931e3b835bb310639f60d3bb28f24405a86bed  gencode/java/udmi/schema/FamilyDiscoveryConfig.java
+ae4a645f199c8e24b3303463d428ca17af7603ae9ae9238397a6a82e752ab454  gencode/java/udmi/schema/FamilyDiscoveryEvent.java
+5ad9bf328fa1500250ff8bc75f2044b3815c5c11cb368e1cc228ac8ca16639c2  gencode/java/udmi/schema/FamilyDiscoveryState.java
+9959a84eea3e549c142c3edf637c86eb56eca138108ebd51fc2985e45aa41484  gencode/java/udmi/schema/FamilyDiscoveryTestingModel.java
+efb376cd7a80ca74fbf74d3ef3f4101d393341a91d01db36456aa84f6be3d0a5  gencode/java/udmi/schema/FamilyLocalnetModel.java
+c2dd28041f1c856b28de5fdc7ac161f4c6da3abfb22f156d2b51e71116b515db  gencode/java/udmi/schema/FeatureEnumerationEvent.java
+>>>>>>> master
 60a8115ae1acae7c199b63180823198d38ec50d57b48dd85aca1ccc865058f85  gencode/java/udmi/schema/GatewayConfig.java
 3647db34d73a396ac68eca747dcca3b0ee2d1cc61a4099104b33daa73cb9cb16  gencode/java/udmi/schema/GatewayModel.java
 e0e7739046e834c0f0ca6a70b38b4579618899be3162887a0fa7ab60bbff22a5  gencode/java/udmi/schema/GatewayState.java
@@ -110,7 +136,11 @@ ac6f8fd87c8986cce01e872460c15ff6fe71e3816f9bde610acfe25f7d38c8d4  gencode/java/u
 960c3a9ec9e309cd0dbd23c49a722a64e3b360c8771d8e6a4463ee21a44f94a6  gencode/java/udmi/schema/ValidationState.java
 e007ddd1ceeae3603c85110c33e1bb4a418ff9c7a791ca0df25b7ea3caeafd36  gencode/java/udmi/schema/ValidationSummary.java
 b77d953fd22e655c0f10ae32deeaa222769d971f8c38b3379eba45720fb910cc  gencode/java/udmi/schema/VirtualEquipmentLinks.java
+<<<<<<< HEAD
 339456b04783300b7d5d409e0e64d8afd915c006888f6d6c69df8e30240a140e  gencode/python/udmi/schema/__init__.py
+=======
+1b29b1e1c22d4ad378c62f5eb2b1cff1a664fca79a08aad61501857bf41dd89e  gencode/python/udmi/schema/__init__.py
+>>>>>>> master
 4b25dd95f863059b761269f93adcae7049507924a1c6e74d6856849203c179db  gencode/python/udmi/schema/ancillary_properties.py
 dab4f5fca272ec48c2881bca2b6bc43786ada47fa1f6dd935c35f7ce0eb6b0f6  gencode/python/udmi/schema/building_translation.py
 470b688984b89b25fcdfa8e08bd95b0c5d8c551d53a6ab5512503ee39419e6fa  gencode/python/udmi/schema/category.py
@@ -136,8 +166,14 @@ bbaa2d9322d0c92282116c4a28edbb363d01681dc093e6463999f127aa108f51  gencode/python
 998ce105f88686f27b85f3630a396ed04b106f830c133a684ea5c505ca95b1c3  gencode/python/udmi/schema/envelope.py
 ed8ace0196c5e99d20778cb4210aa88cfe44a5e4539af98a1e194b9a71fa538e  gencode/python/udmi/schema/equipment_translation.py
 1eb9019b9d0b4ff7de2df8beb625a4f89292d636ece0c02f160495c537bd6c2c  gencode/python/udmi/schema/event.py
+<<<<<<< HEAD
 ee6d1f9b76ce2e70992bddd0fb291359db922ca357a5db08ad9468c1528b7784  gencode/python/udmi/schema/event_discovery.py
 d73826e748688eaf876dc5f3b057976ebad7bd191ef37f51180b49f9dd05ed0f  gencode/python/udmi/schema/event_discovery_network.py
+=======
+c377e60657bb42ac510d2ea075ae5cb26c3fd9eae18867c7a0b52ff4c0ef3eab  gencode/python/udmi/schema/event_discovery.py
+ad33b91a7fabb4eed7e49c30a983a2106c96330facbe0f376f94d06e2263d6d0  gencode/python/udmi/schema/event_discovery_family.py
+c4275c18624ed7833c2b86c900cead1cf98bef88c6299ce0b03d74a093e73b9a  gencode/python/udmi/schema/event_discovery_feature.py
+>>>>>>> master
 42e6fb6edda2b6aeae5e5b48ae66f87a5daf336bca1e746b1157e8f1ce31d5d5  gencode/python/udmi/schema/event_discovery_point.py
 50bdecfa353d86d04a1ad0ebac5b3625f8fd4ee8a1e2f8e51b29055a37d9685c  gencode/python/udmi/schema/event_mapping.py
 6163270aa726ef29bc9285d224ec5c2611aab5d19f6ed09d711e6c816fc7e467  gencode/python/udmi/schema/event_mapping_entities.py

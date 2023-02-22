@@ -43,7 +43,11 @@ Some caveats:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
+<<<<<<< HEAD
 1. Check that feature enumeration feature is enumerated
+=======
+1. Check that feature enumeration feature is stable
+>>>>>>> master
 1. Check that no point enumeration
 
 ## system_mode_restart (STABLE)
