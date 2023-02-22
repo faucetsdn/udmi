@@ -2,7 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
-import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -21,9 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -53,7 +50,6 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
-  public static final String CATEGORY_KEY = "category";
   public static final String CONFIG_CATEGORY = "config";
   public static final String COMMANDS_CATEGORY = "commands";
   private final String udmiVersion;
@@ -133,36 +129,34 @@ public class IotReflectorClient implements MessagePublisher {
     if (payload.length() == 0) {
       return;
     }
-    final Map<String, String> attributes = new HashMap<>();
-    Map<String, Object> receivedMessage;
     try {
       byte[] rawData = payload.getBytes();
       boolean base64 = rawData[0] != '{';
 
-      final Map<String, Object> asMap;
       if ("null".equals(payload)) {
         return;
-      } else {
-        String data = new String(base64 ? Base64.decodeBase64(rawData) : rawData);
-        attributes.put(WAS_BASE_64, "" + base64);
-        asMap = (Map<String, Object>) JsonUtil.fromString(TreeMap.class, data);
       }
-
+      Map<String, Object> messageMap = asMap(
+          new String(base64 ? Base64.decodeBase64(rawData) : rawData));
       String category = parseMessageTopic(topic);
 
-      if ("config".equals(category)) {
-        ensureCloudSync(asMap);
-      } else if ("commands".equals(category)) {
-        handleCommandEnvelope(attributes, asMap);
+      if (CONFIG_CATEGORY.equals(category)) {
+        ensureCloudSync(messageMap);
+      } else if (COMMANDS_CATEGORY.equals(category)) {
+        handleCommandEnvelope(messageMap);
       } else {
         throw new RuntimeException("Unknown message category " + category);
       }
     } catch (Exception e) {
-      handleReceivedMessage(attributes, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
+      handleReceivedMessage(null, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
     }
   }
 
-  private void handleCommandEnvelope(Map<String, String> attributes, Map<String, Object> asMap) {
+  private void handleCommandEnvelope(Map<String, Object> asMap) {
+    if (!isInstallValid) {
+      return;
+    }
+    Map<String, String> attributes = new TreeMap<>();
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
     attributes.put("deviceId", (String) asMap.get("deviceId"));
@@ -170,7 +164,7 @@ public class IotReflectorClient implements MessagePublisher {
     attributes.put("subFolder", (String) asMap.get("subFolder"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     String payload = GeneralUtils.decodeBase64((String) asMap.get("payload"));
-    handleReceivedMessage(attributes, JsonUtil.asMap(payload));
+    handleReceivedMessage(attributes, asMap(payload));
   }
 
   private void handleReceivedMessage(Map<String, String> attributes,
@@ -238,7 +232,7 @@ public class IotReflectorClient implements MessagePublisher {
     assert registryId.equals(parts[1]);
     return parts[2];
   }
-  
+
   private void errorHandler(MqttPublisher mqttPublisher, Throwable throwable) {
     System.err.println("mqtt client error: " + throwable.getMessage());
     close();
