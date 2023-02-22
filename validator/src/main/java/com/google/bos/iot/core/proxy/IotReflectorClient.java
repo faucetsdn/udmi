@@ -7,14 +7,8 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.common.base.Strings;
-import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.Feature.Stage;
-import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -30,6 +24,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -136,15 +131,15 @@ public class IotReflectorClient implements MessagePublisher {
     if (payload.length() == 0) {
       return;
     }
-    try {
-      byte[] rawData = payload.getBytes();
-      boolean base64 = rawData[0] != '{';
+    byte[] rawData = payload.getBytes();
+    boolean base64 = rawData[0] != '{';
 
-      if ("null".equals(payload)) {
-        return;
-      }
-      Map<String, Object> messageMap = asMap(
-          new String(base64 ? Base64.decodeBase64(rawData) : rawData));
+    if ("null".equals(payload)) {
+      return;
+    }
+    Map<String, Object> messageMap = asMap(
+        new String(base64 ? Base64.decodeBase64(rawData) : rawData));
+    try {
       String category = parseMessageTopic(topic);
 
       if (CONFIG_CATEGORY.equals(category)) {
@@ -156,7 +151,8 @@ public class IotReflectorClient implements MessagePublisher {
       }
     } catch (Exception e) {
       if (isInstallValid) {
-        handleReceivedMessage(null, new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
+        handleReceivedMessage(extractAttributes(messageMap),
+            new ErrorContainer(e, payload, JsonUtil.getTimestamp()));
       } else {
         throw e;
       }
@@ -167,10 +163,17 @@ public class IotReflectorClient implements MessagePublisher {
     return Stage.ALPHA.processGiven(minStage) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
   }
 
-  private void handleCommandEnvelope(Map<String, Object> asMap) {
+  private void handleCommandEnvelope(Map<String, Object> messageMap) {
     if (!isInstallValid) {
       return;
     }
+    Map<String, String> attributes = extractAttributes(messageMap);
+    String payload = GeneralUtils.decodeBase64((String) messageMap.get("payload"));
+    handleReceivedMessage(attributes, asMap(payload));
+  }
+
+  @NotNull
+  private Map<String, String> extractAttributes(Map<String, Object> asMap) {
     Map<String, String> attributes = new TreeMap<>();
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
@@ -178,8 +181,7 @@ public class IotReflectorClient implements MessagePublisher {
     attributes.put("subType", (String) asMap.get("subType"));
     attributes.put("subFolder", (String) asMap.get("subFolder"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
-    String payload = GeneralUtils.decodeBase64((String) asMap.get("payload"));
-    handleReceivedMessage(attributes, asMap(payload));
+    return attributes;
   }
 
   private void handleReceivedMessage(Map<String, String> attributes,
