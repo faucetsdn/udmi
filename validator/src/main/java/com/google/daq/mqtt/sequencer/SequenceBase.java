@@ -84,10 +84,6 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
-import udmi.schema.ReflectorConfig;
-import udmi.schema.ReflectorState;
-import udmi.schema.SetupReflectorConfig;
-import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -140,7 +136,7 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final Set<String> sentNonce = new ConcurrentSkipListSet<>();
+  private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
@@ -656,7 +652,7 @@ public class SequenceBase {
 
     cachedMessageData = null;
     cachedSentBlock = null;
-    assert sentNonce.isEmpty();
+    assert configTransactions.isEmpty();
     boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -672,7 +668,7 @@ public class SequenceBase {
     if (updated) {
       waitForConfigSync(configStart);
     }
-    assert sentNonce.isEmpty();
+    assert configTransactions.isEmpty();
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
@@ -683,15 +679,13 @@ public class SequenceBase {
       if (updated) {
         cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
-        String nonce = Long.toString(System.currentTimeMillis());
-        Map<String, Object> message = augmentConfigTrace(data, nonce);
-        String augmentedMessage = actualize(stringify(message));
+        String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        reflector().publish(getDeviceId(), topic, augmentedMessage);
+        String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
-        recordRawMessage(message, LOCAL_PREFIX + subBlock.value());
+        recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
-        sentNonce.add(nonce);
+        configTransactions.add(transactionId);
       } else {
         trace("unchanged config_" + subBlock + ": " + messageData);
       }
@@ -958,6 +952,7 @@ public class SequenceBase {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
+    String transactionId = attributes.get("transactionId");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
       Object configNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
@@ -969,7 +964,7 @@ public class SequenceBase {
     recordRawMessage(message, attributes);
 
     if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      handleReflectorMessage(subTypeRaw, message);
+      handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw);
     }
@@ -995,7 +990,7 @@ public class SequenceBase {
   }
 
   private synchronized void handleReflectorMessage(String subFolderRaw,
-      Map<String, Object> message) {
+      Map<String, Object> message, String transactionId) {
     try {
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
@@ -1003,7 +998,6 @@ public class SequenceBase {
         return;
       }
       configExceptionTimestamp = null;
-      String nonce = (String) message.get(CONFIG_NONCE_KEY);
       Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
       receivedUpdates.put(subFolderRaw, converted);
       int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
@@ -1018,8 +1012,8 @@ public class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        if (nonce != null) {
-          sentNonce.remove(nonce);
+        if (transactionId != null) {
+          configTransactions.remove(transactionId);
         }
         debug("Updated config with timestamp " + getTimestamp(config.timestamp));
         info(String.format("Updated config #%03d:\n%s", updateCount,
@@ -1083,7 +1077,7 @@ public class SequenceBase {
   }
 
   private boolean configReady() {
-    return sentNonce.isEmpty();
+    return configTransactions.isEmpty();
   }
 
   private boolean configReady(boolean debugOut) {

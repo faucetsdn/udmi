@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
@@ -173,13 +174,14 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @NotNull
-  private Map<String, String> extractAttributes(Map<String, Object> asMap) {
+  private Map<String, String> extractAttributes(Map<String, Object> messageMap) {
     Map<String, String> attributes = new TreeMap<>();
+    Envelope envelope = convertTo(Envelope.class, messageMap);
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
-    attributes.put("deviceId", (String) asMap.get("deviceId"));
-    attributes.put("subType", (String) asMap.get("subType"));
-    attributes.put("subFolder", (String) asMap.get("subFolder"));
+    attributes.put("deviceId", envelope.deviceId);
+    attributes.put("subType", envelope.subType.value());
+    attributes.put("subFolder", envelope.subFolder.value());
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return attributes;
   }
@@ -199,7 +201,7 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
+      ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
       System.err.println("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
       SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
       Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
@@ -285,7 +287,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
@@ -293,7 +295,10 @@ public class IotReflectorClient implements MessagePublisher {
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
     envelope.payload = GeneralUtils.encodeBase64(data);
+    String transactionId = Long.toString(System.currentTimeMillis());
+    envelope.transactionId = transactionId;
     mqttPublisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
+    return transactionId;
   }
 
   @Override

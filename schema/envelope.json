@@ -28,6 +28,9 @@
     "payload": {
       "type": "string"
     },
+    "transactionId": {
+      "type": "string"
+    },
     "subFolder": {
       "enum": [
         "update",
