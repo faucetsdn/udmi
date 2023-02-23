@@ -1084,7 +1084,6 @@ public class SequenceBase {
 
   private boolean configReady() {
     return sentNonce.isEmpty();
-//    return configReady(false);
   }
 
   private boolean configReady(boolean debugOut) {
