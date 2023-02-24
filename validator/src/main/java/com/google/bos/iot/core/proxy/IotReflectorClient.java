@@ -182,6 +182,7 @@ public class IotReflectorClient implements MessagePublisher {
     attributes.put("deviceId", envelope.deviceId);
     attributes.put("subType", envelope.subType.value());
     attributes.put("subFolder", envelope.subFolder.value());
+    attributes.put("transactionId", envelope.transactionId);
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return attributes;
   }

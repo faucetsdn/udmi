@@ -60,7 +60,7 @@ function currentTimestamp() {
   return new Date().toJSON();
 }
 
-function recordMessage(attributes, message) {
+function reflectMessage(attributes, message) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subType = attributes.subType || EVENT_TYPE;
@@ -74,28 +74,9 @@ function recordMessage(attributes, message) {
     message.version = message.version || UDMI_VERSION;
   }
   const event_count = message && message.event_count;
-  console.log('Message record', registryId, deviceId, subType, subFolder, event_count);
+  console.log('Message record', registryId, deviceId, subType, subFolder, event_count, transactionId);
 
-  if (useFirestore) {
-    const reg_doc = firestore.collection('registries').doc(registryId);
-    promises.push(reg_doc.set({
-      'updated': timestamp
-    }, { merge: true }));
-    const dev_doc = reg_doc.collection('devices').doc(deviceId);
-    promises.push(dev_doc.set({
-      'updated': timestamp
-    }, { merge: true }));
-    const config_doc = dev_doc.collection(subType).doc(subFolder);
-    if (message) {
-      promises.push(config_doc.set(message));
-    } else {
-      promises.push(config_doc.delete());
-    }
-  }
-
-  promises.push(sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId));
-
-  return promises;
+  return sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId);
 }
 
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
@@ -114,6 +95,7 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, transac
     deviceId: deviceId,
     subType: subType,
     subFolder: subFolder,
+    transactionId: transactionId,
     payload: base64
   };
 
@@ -136,7 +118,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
   const formattedName =
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
-  console.log('command', subFolder, transactionId, formattedName);
+  console.log('command', subFolder, formattedName, transactionId);
 
   const binaryData = Buffer.from(messageStr);
   const request = {
@@ -162,9 +144,7 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
     return null;
   }
 
-  promises = recordMessage(attributes, msgObject);
-
-  return Promise.all(promises);
+  return reflectMessage(attributes, msgObject);
 });
 
 function getRegistries(region) {
@@ -218,8 +198,8 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   const payloadString = Buffer.from(msgObject.payload, 'base64').toString();
   const payload = JSON.parse(payloadString);
 
-  console.log('Reflect', envelope.transactionId, envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
-              envelope.subFolder);
+  console.log('Reflect', envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
+              envelope.subFolder, envelope.transactionId);
 
   return registry_promise.then(() => {
     envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
@@ -336,11 +316,8 @@ function process_state_update(attributes, msgObject) {
 
 function process_state_block(attributes, subMsg) {
   console.log('Publishing udmi_target', attributes.subType, attributes.subFolder);
-  promises = []
-  promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
-  const new_promises = recordMessage(attributes, subMsg);
-  promises.push(...new_promises);
-  return promises;
+  return reflectMessage(attributes, subMsg).
+    then(() => publishPubsubMessage('udmi_target', attributes, subMsg));
 }
 
 exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
@@ -355,24 +332,18 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
 
   const msgObject = JSON.parse(msgString);
 
-  console.log('Config message', registryId, deviceId, subFolder, msgString);
+  console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
-    console.warn('Config abort', registryId, deviceId, subFolder, msgString);
+    console.warn('Config abort', registryId, deviceId, subFolder, transactionId);
     return null;
   }
 
   attributes.subType = CONFIG_TYPE;
+  const partialUpdate = subFolder != UPDATE_FOLDER;
 
-  const promises = recordMessage(attributes, msgObject);
-  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
-
-  if (useFirestore) {
-    console.info('Deferring to firestore trigger for IoT Core modification.');
-  } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp(), null));
-  }
-
-  return Promise.all(promises);
+  return modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp(), transactionId).
+    then(() => partialUpdate && reflectMessage(attributes, msgObject)).
+    then(() => partialUpdate && publishPubsubMessage('udmi_target', attributes, msgObject));
 });
 
 function parse_old_config(configStr, resetConfig) {
@@ -468,6 +439,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     projectId: PROJECT_ID,
     cloudRegion: registry_regions[registryId],
     deviceId: deviceId,
+    transactionId: transactionId,
     deviceRegistryId: registryId
   };
   return update_device_config(newConfig, attributes, version)
@@ -598,9 +570,13 @@ exports.udmi_update = functions.firestore
 function publishPubsubMessage(topicName, attributes, data) {
   const dataStr = JSON.stringify(data);
   const dataBuffer = Buffer.from(dataStr);
-  var attr_copy = Object.assign({}, attributes);
+  const deviceId = attributes.deviceId;
+  const subType = attributes.subType || EVENT_TYPE;
+  const subFolder = attributes.subFolder || 'unknown';
+  const transactionId = attributes.transactionId;
+  const attr_copy = Object.assign({}, attributes);
 
-  console.log('Message publish', topicName, JSON.stringify(attributes));
+  console.log('Message publish', topicName, deviceId, subType, subFolder, transactionId);
 
   return pubsub
     .topic(topicName)
