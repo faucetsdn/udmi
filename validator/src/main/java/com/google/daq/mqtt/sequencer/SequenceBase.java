@@ -681,8 +681,8 @@ public class SequenceBase {
         cachedSentBlock = sentBlockConfig;
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
         debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
+        final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
         configTransactions.add(transactionId);
