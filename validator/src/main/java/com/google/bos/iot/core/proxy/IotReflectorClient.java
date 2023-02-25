@@ -108,11 +108,12 @@ public class IotReflectorClient implements MessagePublisher {
       initializeReflectorState();
       initializedStateSent.countDown();
       if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-        throw new RuntimeException("Timeout expired after " + CONFIG_TIMEOUT_SEC + "s");
+        throw new RuntimeException("Config sync timeout expired. Checkout UDMIS cloud functions install.");
       }
 
       active = true;
     } catch (Exception e) {
+      mqttPublisher.close();
       throw new RuntimeException("Waiting for initial config", e);
     }
   }
