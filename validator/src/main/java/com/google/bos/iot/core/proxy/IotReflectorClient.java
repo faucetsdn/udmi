@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -50,8 +51,9 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
-  public static final String CONFIG_CATEGORY = "config";
-  public static final String COMMANDS_CATEGORY = "commands";
+  private static final String CONFIG_CATEGORY = "config";
+  private static final String COMMANDS_CATEGORY = "commands";
+  private static final long CONFIG_TIMEOUT_SEC = 10;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -105,11 +107,13 @@ public class IotReflectorClient implements MessagePublisher {
       initialConfigReceived.await();
       initializeReflectorState();
       initializedStateSent.countDown();
-      validConfigReceived.await();
+      if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        throw new RuntimeException("Timeout expired after " + CONFIG_TIMEOUT_SEC + "s");
+      }
 
       active = true;
     } catch (Exception e) {
-      throw new RuntimeException("Interrupted waiting for initial config", e);
+      throw new RuntimeException("Waiting for initial config", e);
     }
   }
 

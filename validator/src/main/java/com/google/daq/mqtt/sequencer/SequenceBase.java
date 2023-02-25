@@ -18,7 +18,6 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,7 +59,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -681,8 +679,8 @@ public class SequenceBase {
         cachedSentBlock = sentBlockConfig;
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
         final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
+        debug(String.format("update %s_%s %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
         configTransactions.add(transactionId);
@@ -966,16 +964,17 @@ public class SequenceBase {
     if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
       handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
-      handleDeviceMessage(message, subFolderRaw, subTypeRaw);
+      handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
     }
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
-      String subTypeRaw) {
+      String subTypeRaw, String transactionId) {
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
+        debug("Received confirmation of individual config transaction " + transactionId);
         // These are echos of sent config messages, so do nothing.
         break;
       case STATE:
@@ -1015,7 +1014,8 @@ public class SequenceBase {
         if (transactionId != null) {
           configTransactions.remove(transactionId);
         }
-        debug("Updated config with timestamp " + getTimestamp(config.timestamp));
+        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp),
+            transactionId));
         info(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
       } else if (converted instanceof AugmentedState) {
@@ -1077,41 +1077,15 @@ public class SequenceBase {
   }
 
   private boolean configReady() {
-    return configTransactions.isEmpty();
+    return configReady(false);
   }
 
   private boolean configReady(boolean debugOut) {
-    try {
-      Consumer<String> output = debugOut ? this::debug : this::trace;
-      Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
-      if (!(receivedConfig instanceof Config)) {
-        output.accept("no valid received config");
-        return false;
-      }
-      if (configExceptionTimestamp != null) {
-        output.accept("Received config exception at " + configExceptionTimestamp);
-        return true;
-      }
-      // Config isn't properly sync'd until this is filled in, else there are race-conditions.
-      if (deviceConfig.system.operation.last_start == null) {
-        output.accept("Missing config ready last_start field");
-        return false;
-      }
-      List<String> differences = filterTesting(
-          configDiffEngine.diff(sanitizeConfig((Config) receivedConfig), deviceConfig));
-      boolean configReady = differences.isEmpty();
-      output.accept("testing valid received config " + configReady);
-      if (!configReady) {
-        output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-        output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        output.accept(
-            "final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
-      }
-      return configReady;
-    } catch (Exception e) {
-      error("While processing waitForConfigSync: " + e.getMessage());
-      throw e;
+    if (debugOut) {
+      configTransactions.forEach(
+          transactionId -> debug("Pending config confirmation for transaction " + transactionId));
     }
+    return configTransactions.isEmpty();
   }
 
   /**
