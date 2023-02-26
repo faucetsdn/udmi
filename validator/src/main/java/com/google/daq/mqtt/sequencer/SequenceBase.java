@@ -83,6 +83,7 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
+import udmi.schema.ReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -275,24 +276,6 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getReflectorClient() {
-    IotReflectorClient client = new IotReflectorClient(validatorConfig);
-    initializeReflectorState(client);
-    return client;
-  }
-
-  private static void initializeReflectorState(IotReflectorClient client) {
-    ReflectorState reflectorState = new ReflectorState();
-    reflectorState.timestamp = REFLECTOR_STATE_TIMESTAMP;
-    reflectorState.version = udmiVersion;
-    reflectorState.setup = new SetupReflectorState();
-    reflectorState.setup.user = System.getenv("USER");
-    try {
-      System.err.printf("Setting state version %s timestamp %s%n", udmiVersion,
-          getTimestamp(REFLECTOR_STATE_TIMESTAMP));
-      client.setReflectorState(stringify(reflectorState));
-    } catch (Exception e) {
-      throw new RuntimeException("Could not set reflector state", e);
-    }
     return new IotReflectorClient(validatorConfig);
   }
 
@@ -341,7 +324,6 @@ public class SequenceBase {
   public void setLastStart(Date lastStart) {
     lastStartChanged |= !stringify(deviceConfig.system.operation.last_start).equals(
         stringify(lastStart));
-//    lastStartChanged |= !Objects.equals(deviceConfig.system.operation.last_start, lastStart);
     debug(
         "Setting lastStartChanged " + lastStartChanged + ", last_start " + getTimestamp(lastStart));
     deviceConfig.system.operation.last_start = lastStart;
@@ -470,8 +452,10 @@ public class SequenceBase {
   private void waitForConfigSync(Instant configUpdateStart) {
     try {
       lastConfigUpdate = configUpdateStart;
-      debug("lastConfigUpdate is " + lastConfigUpdate);
+      debug("lastConfigUpdate started at " + lastConfigUpdate);
       messageEvaluateLoop(this::unacknowledgedConfigs);
+      Duration between = Duration.between(configUpdateStart, CleanDateFormat.clean(Instant.now()));
+      debug(String.format("Configuration sync took %ss", between.getSeconds()));
     } finally {
       debug("wait for config sync result " + unacknowledgedConfigs(true));
     }
@@ -668,22 +652,15 @@ public class SequenceBase {
   }
 
   protected void updateConfig(String reason) {
-    Instant configStart = CleanDateFormat.clean(Instant.now());
-
+    final Instant configStart = CleanDateFormat.clean(Instant.now());
     checkNoPendingConfigTransactions();
-    boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-    updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
-    updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
-    updated |= updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
-    updated |= updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
-    updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    boolean computedConfigChange = localConfigChange(reason);
-    if (computedConfigChange != updated) {
-      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
-    }
-    if (updated) {
-      waitForConfigSync(configStart);
-    }
+    updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+    updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
+    updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
+    updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
+    updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
+    updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
+    waitForConfigSync(configStart);
     checkNoPendingConfigTransactions();
     captureConfigChange(reason);
   }
@@ -741,10 +718,16 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Special tweak to generate a custom system config block that has a field that's not in the
+   * official schema (to explicitly check that condition).
+   *
+   * @param system input system config block
+   * @return augmented config block with special "extraField" included.
+   */
   private AugmentedSystemConfig augmentConfig(SystemConfig system) {
     try {
-      String conversionString = stringify(system);
-      AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(conversionString,
+      AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(stringify(system),
           AugmentedSystemConfig.class);
       debug("system config extra field " + extraField);
       augmentedConfig.extraField = extraField;
