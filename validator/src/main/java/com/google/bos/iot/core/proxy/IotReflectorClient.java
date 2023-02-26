@@ -68,6 +68,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private boolean active;
+  private String prevTransactionId;
 
   /**
    * Create a new reflector instance.
@@ -302,9 +303,23 @@ public class IotReflectorClient implements MessagePublisher {
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
     envelope.payload = GeneralUtils.encodeBase64(data);
-    String transactionId = Long.toString(System.currentTimeMillis());
+    String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     mqttPublisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
+    return transactionId;
+  }
+
+  /**
+   * Get a new unique (not the same as previous one) transaction id.
+   *
+   * @return new unique transaction id
+   */
+  private String getNextTransactionId() {
+    String transactionId;
+    do {
+      transactionId = Long.toString(System.currentTimeMillis());
+    } while (transactionId.equals(prevTransactionId));
+    prevTransactionId = transactionId;
     return transactionId;
   }
 
