@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
@@ -24,6 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -43,14 +45,15 @@ public class IotReflectorClient implements MessagePublisher {
 
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
-  private static final int FUNCTIONS_VERSION_BETA = 3; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 3; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_BETA = 4; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 4; // Version required for alpha execution.
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
   private static final Date REFLECTOR_STATE_TIMESTAMP = new Date();
-  public static final String CONFIG_CATEGORY = "config";
-  public static final String COMMANDS_CATEGORY = "commands";
+  private static final String CONFIG_CATEGORY = "config";
+  private static final String COMMANDS_CATEGORY = "commands";
+  private static final long CONFIG_TIMEOUT_SEC = 10;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -65,6 +68,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String registryId;
   private final String projectId;
   private boolean active;
+  private String prevTransactionId;
 
   /**
    * Create a new reflector instance.
@@ -104,11 +108,15 @@ public class IotReflectorClient implements MessagePublisher {
       initialConfigReceived.await();
       initializeReflectorState();
       initializedStateSent.countDown();
-      validConfigReceived.await();
+      if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        throw new RuntimeException(
+            "Config sync timeout expired. Checkout UDMIS cloud functions install.");
+      }
 
       active = true;
     } catch (Exception e) {
-      throw new RuntimeException("Interrupted waiting for initial config", e);
+      mqttPublisher.close();
+      throw new RuntimeException("Waiting for initial config", e);
     }
   }
 
@@ -173,13 +181,15 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @NotNull
-  private Map<String, String> extractAttributes(Map<String, Object> asMap) {
+  private Map<String, String> extractAttributes(Map<String, Object> messageMap) {
     Map<String, String> attributes = new TreeMap<>();
+    Envelope envelope = convertTo(Envelope.class, messageMap);
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
-    attributes.put("deviceId", (String) asMap.get("deviceId"));
-    attributes.put("subType", (String) asMap.get("subType"));
-    attributes.put("subFolder", (String) asMap.get("subFolder"));
+    attributes.put("deviceId", envelope.deviceId);
+    attributes.put("subType", envelope.subType.value());
+    attributes.put("subFolder", envelope.subFolder.value());
+    attributes.put("transactionId", envelope.transactionId);
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return attributes;
   }
@@ -199,7 +209,7 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      ReflectorConfig reflectorConfig = JsonUtil.convertTo(ReflectorConfig.class, message);
+      ReflectorConfig reflectorConfig = convertTo(ReflectorConfig.class, message);
       System.err.println("UDMIS received reflectorConfig: " + stringify(reflectorConfig));
       SetupReflectorConfig udmisInfo = reflectorConfig.udmis;
       Date lastState = udmisInfo == null ? null : udmisInfo.last_state;
@@ -285,7 +295,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
@@ -293,7 +303,24 @@ public class IotReflectorClient implements MessagePublisher {
     envelope.subFolder = SubFolder.fromValue(parts[0]);
     envelope.subType = SubType.fromValue(parts[1]);
     envelope.payload = GeneralUtils.encodeBase64(data);
+    String transactionId = getNextTransactionId();
+    envelope.transactionId = transactionId;
     mqttPublisher.publish(registryId, UDMI_TOPIC, JsonUtil.stringify(envelope));
+    return transactionId;
+  }
+
+  /**
+   * Get a new unique (not the same as previous one) transaction id.
+   *
+   * @return new unique transaction id
+   */
+  private String getNextTransactionId() {
+    String transactionId;
+    do {
+      transactionId = Long.toString(System.currentTimeMillis());
+    } while (transactionId.equals(prevTransactionId));
+    prevTransactionId = transactionId;
+    return transactionId;
   }
 
   @Override

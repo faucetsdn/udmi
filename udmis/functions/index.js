@@ -8,8 +8,8 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  */
 
-const FUNCTIONS_VERSION_MIN = 3;
-const FUNCTIONS_VERSION_MAX = 3;
+const FUNCTIONS_VERSION_MIN = 4;
+const FUNCTIONS_VERSION_MAX = 4;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -60,11 +60,12 @@ function currentTimestamp() {
   return new Date().toJSON();
 }
 
-function recordMessage(attributes, message) {
+function reflectMessage(attributes, message) {
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subType = attributes.subType || EVENT_TYPE;
   const subFolder = attributes.subFolder || 'unknown';
+  const transactionId = attributes.transactionId;
   const timestamp = (message && message.timestamp) || currentTimestamp();
   const promises = [];
 
@@ -73,38 +74,18 @@ function recordMessage(attributes, message) {
     message.version = message.version || UDMI_VERSION;
   }
   const event_count = message && message.event_count;
-  console.log('Message record', registryId, deviceId, subType, subFolder, event_count);
+  console.log('Message record', registryId, deviceId, subType, subFolder, event_count, transactionId);
 
-  if (useFirestore) {
-    const reg_doc = firestore.collection('registries').doc(registryId);
-    promises.push(reg_doc.set({
-      'updated': timestamp
-    }, { merge: true }));
-    const dev_doc = reg_doc.collection('devices').doc(deviceId);
-    promises.push(dev_doc.set({
-      'updated': timestamp
-    }, { merge: true }));
-    const config_doc = dev_doc.collection(subType).doc(subFolder);
-    if (message) {
-      promises.push(config_doc.set(message));
-    } else {
-      promises.push(config_doc.delete());
-    }
-  }
-
-  promises.push(sendEnvelope(registryId, deviceId, subType, subFolder, message));
-
-  return promises;
+  return sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId);
 }
 
-function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonceEx) {
+function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
   if (registryId == REFLECT_REGISTRY) {
     console.log('sendEnvelope squash for', registryId);
     return;
   }
 
-  const nonce = nonceEx || (message && message.debug_config_nonce);
-  console.log('sendEnvelope', registryId, deviceId, subType, subFolder, nonce);
+  console.log('sendEnvelope', registryId, deviceId, subType, subFolder, transactionId);
 
   const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
   const base64 = Buffer.from(messageStr).toString('base64');
@@ -114,30 +95,30 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, nonceEx
     deviceId: deviceId,
     subType: subType,
     subFolder: subFolder,
+    transactionId: transactionId,
     payload: base64
   };
 
-  return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, nonce);
+  return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, transactionId);
 }
   
-function sendCommand(registryId, deviceId, subFolder, message, nonceEx) {
-  const nonce = nonceEx || (message && message.debug_config_nonce);
-  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), nonceEx);
+function sendCommand(registryId, deviceId, subFolder, message, transactionId) {
+  return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), transactionId);
 }
 
-function sendCommandStr(registryId, deviceId, subFolder, messageStr, nonce) {
+function sendCommandStr(registryId, deviceId, subFolder, messageStr, transactionId) {
   return registry_promise.then(() => {
-    return sendCommandSafe(registryId, deviceId, subFolder, messageStr, nonce);
+    return sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId);
   });
 }
 
-function sendCommandSafe(registryId, deviceId, subFolder, messageStr, nonce) {
+function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactionId) {
   const cloudRegion = registry_regions[registryId];
 
   const formattedName =
         iotClient.devicePath(PROJECT_ID, cloudRegion, registryId, deviceId);
 
-  console.log('command', subFolder, nonce, formattedName);
+  console.log('command', subFolder, formattedName, transactionId);
 
   const binaryData = Buffer.from(messageStr);
   const request = {
@@ -163,9 +144,7 @@ exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) =>
     return null;
   }
 
-  promises = recordMessage(attributes, msgObject);
-
-  return Promise.all(promises);
+  return reflectMessage(attributes, msgObject);
 });
 
 function getRegistries(region) {
@@ -203,8 +182,6 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
     return udmi_process_reflector_state(attributes, msgObject);
   }
 
-  console.log('Reflect message', attributes);
-
   if (attributes.subFolder != 'udmi') {
     console.error('Unexpected subFolder', attributes.subFolder);
     return;
@@ -216,13 +193,13 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   envelope.deviceId = msgObject.deviceId;
   envelope.subFolder = msgObject.subFolder;
   envelope.subType = msgObject.subType;
+  envelope.transactionId = msgObject.transactionId;
 
   const payloadString = Buffer.from(msgObject.payload, 'base64').toString();
   const payload = JSON.parse(payloadString);
-  const nonce = payload && payload.debug_config_nonce;
 
-  console.log('Reflect', nonce, envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
-              envelope.subFolder);
+  console.log('Reflect', envelope.deviceRegistryId, envelope.deviceId, envelope.subType,
+              envelope.subFolder, envelope.transactionId);
 
   return registry_promise.then(() => {
     envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
@@ -247,7 +224,7 @@ function udmi_process_reflector_state(attributes, msgObject) {
   subContents.functions_min = FUNCTIONS_VERSION_MIN;
   subContents.functions_max = FUNCTIONS_VERSION_MAX;
   const startTime = currentTimestamp();
-  return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime);
+  return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
 }
 
 function udmi_query_event(attributes, msgObject) {
@@ -322,7 +299,7 @@ function process_state_update(attributes, msgObject) {
   const stateStart = msgObject.system &&
         (msgObject.system.last_start || msgObject.system.operation.last_start);
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
-                                                   stateStart, currentTimestamp()));
+                                                   stateStart, currentTimestamp(), null));
 
   for (var block in msgObject) {
     let subMsg = msgObject[block];
@@ -339,11 +316,8 @@ function process_state_update(attributes, msgObject) {
 
 function process_state_block(attributes, subMsg) {
   console.log('Publishing udmi_target', attributes.subType, attributes.subFolder);
-  promises = []
-  promises.push(publishPubsubMessage('udmi_target', attributes, subMsg));
-  const new_promises = recordMessage(attributes, subMsg);
-  promises.push(...new_promises);
-  return promises;
+  return reflectMessage(attributes, subMsg).
+    then(() => publishPubsubMessage('udmi_target', attributes, subMsg));
 }
 
 exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) => {
@@ -351,30 +325,25 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subFolder = attributes.subFolder || 'unknown';
+  const transactionId = attributes.transactionId;
   const base64 = event.data;
   const now = Date.now();
   const msgString = Buffer.from(base64, 'base64').toString();
 
   const msgObject = JSON.parse(msgString);
-  const nonce = msgObject && msgObject.debug_config_nonce;
-  console.log('Config message', registryId, deviceId, subFolder, nonce, msgString);
+
+  console.log('Config message', registryId, deviceId, subFolder, transactionId);
   if (!msgString) {
-    console.warn('Config abort', registryId, deviceId, subFolder, msgString);
+    console.warn('Config abort', registryId, deviceId, subFolder, transactionId);
     return null;
   }
 
   attributes.subType = CONFIG_TYPE;
+  const partialUpdate = subFolder != UPDATE_FOLDER;
 
-  const promises = recordMessage(attributes, msgObject);
-  promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
-
-  if (useFirestore) {
-    console.info('Deferring to firestore trigger for IoT Core modification.');
-  } else {
-    promises.push(modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp()));
-  }
-
-  return Promise.all(promises);
+  return modify_device_config(registryId, deviceId, subFolder, msgObject, currentTimestamp(), transactionId).
+    then(() => partialUpdate && reflectMessage(attributes, msgObject)).
+    then(() => partialUpdate && publishPubsubMessage('udmi_target', attributes, msgObject));
 });
 
 function parse_old_config(configStr, resetConfig) {
@@ -419,26 +388,20 @@ function update_last_start(config, stateStart) {
   const configLastStart = config.system &&
         (config.system.last_start ||
          (config.system.operation && config.system.operation.last_start));
-  const stateNonce = Date.now();
   const shouldUpdate = stateStart && (!configLastStart || (stateStart > configLastStart));
-  console.log('State update last state/config', stateStart, configLastStart, shouldUpdate, stateNonce);
+  console.log('State update last state/config', stateStart, configLastStart, shouldUpdate);
   // Preserve the existing structure of the config message to maintain backwards compatability.
   if (config.system && config.system.operation) {
     config.system.operation.last_start = stateStart;
   } else {
     config.system.last_start = stateStart;
   }
-  if (config.debug_config_nonce) {
-    config.debug_config_nonce = stateNonce;
-    config.system.debug_config_nonce = stateNonce;
-  }
   return shouldUpdate;
 }
 
-async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime) {
+async function modify_device_config(registryId, deviceId, subFolder, subContents, startTime, transactionId) {
   const [oldConfig, version] = await get_device_config(registryId, deviceId);
   var newConfig;
-  const nonce = subContents && subContents.debug_config_nonce;
 
   if (subFolder == 'last_start') {
     newConfig = parse_old_config(oldConfig, false);
@@ -446,7 +409,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
       return;
     }
   } else if (subFolder == 'update') {
-    console.log('Config replace version', version, startTime, nonce);
+    console.log('Config replace version', version, startTime, transactionId);
     newConfig = subContents;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
@@ -458,12 +421,11 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig.version = UDMI_VERSION;
     newConfig.timestamp = currentTimestamp();
 
-    console.log('Config modify', subFolder, version, startTime, nonce);
+    console.log('Config modify', subFolder, version, startTime, transactionId);
     if (subContents) {
       delete subContents.version;
       delete subContents.timestamp;
       newConfig[subFolder] = subContents;
-      newConfig.debug_config_nonce = nonce;
     } else {
       if (!newConfig[subFolder]) {
         console.log('Config target already null', subFolder, version, startTime);
@@ -477,14 +439,15 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     projectId: PROJECT_ID,
     cloudRegion: registry_regions[registryId],
     deviceId: deviceId,
+    transactionId: transactionId,
     deviceRegistryId: registryId
   };
   return update_device_config(newConfig, attributes, version)
     .then(() => {
-      console.log('Config accepted', subFolder, version, startTime, nonce);
+      console.log('Config accepted', subFolder, version, startTime, transactionId);
     }).catch(e => {
-      console.log('Config rejected', subFolder, version, startTime, nonce);
-      return modify_device_config(registryId, deviceId, subFolder, subContents, startTime);
+      console.log('Config rejected', subFolder, version, startTime, transactionId);
+      return modify_device_config(registryId, deviceId, subFolder, subContents, startTime, transactionId);
     })
 }
 
@@ -516,6 +479,7 @@ function update_device_config(message, attributes, preVersion) {
   const cloudRegion = attributes.cloudRegion;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
+  const transactionId = attributes.transactionId;
   const version = preVersion || 0;
 
   console.log('Updating config version', version);
@@ -524,7 +488,6 @@ function update_device_config(message, attributes, preVersion) {
   const normalJson = extraField !== 'break_json';
   console.log('Config extra field is ' + extraField + ' ' + normalJson);
 
-  const nonce = message && message.debug_config_nonce;
   const msgString = normalJson ? JSON.stringify(message) :
         '{ broken because extra_field == ' + message.system.extra_field;
   const binaryData = Buffer.from(msgString);
@@ -535,7 +498,7 @@ function update_device_config(message, attributes, preVersion) {
     registryId,
     deviceId
   );
-  console.log('iot modify config version', version, formattedName);
+  console.log('iot modify config version', version, formattedName, transactionId);
 
   const request = {
     name: formattedName,
@@ -545,7 +508,7 @@ function update_device_config(message, attributes, preVersion) {
 
   return iotClient
     .modifyCloudToDeviceConfig(request)
-    .then(() => sendEnvelope(registryId, deviceId, CONFIG_TYPE, UPDATE_FOLDER, msgString, nonce));
+    .then(() => sendEnvelope(registryId, deviceId, CONFIG_TYPE, UPDATE_FOLDER, msgString, transactionId));
 }
 
 function consolidate_config(registryId, deviceId, subFolder) {
@@ -607,9 +570,13 @@ exports.udmi_update = functions.firestore
 function publishPubsubMessage(topicName, attributes, data) {
   const dataStr = JSON.stringify(data);
   const dataBuffer = Buffer.from(dataStr);
-  var attr_copy = Object.assign({}, attributes);
+  const deviceId = attributes.deviceId;
+  const subType = attributes.subType || EVENT_TYPE;
+  const subFolder = attributes.subFolder || 'unknown';
+  const transactionId = attributes.transactionId;
+  const attr_copy = Object.assign({}, attributes);
 
-  console.log('Message publish', topicName, JSON.stringify(attributes));
+  console.log('Message publish', topicName, deviceId, subType, subFolder, transactionId);
 
   return pubsub
     .topic(topicName)

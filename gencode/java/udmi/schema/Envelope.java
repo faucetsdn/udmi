@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "deviceRegistryLocation",
     "projectId",
     "payload",
+    "transactionId",
     "subFolder",
     "subType"
 })
@@ -58,6 +59,8 @@ public class Envelope {
     public String projectId;
     @JsonProperty("payload")
     public String payload;
+    @JsonProperty("transactionId")
+    public String transactionId;
     /**
      * 
      * (Required)
@@ -79,6 +82,7 @@ public class Envelope {
         result = ((result* 31)+((this.subType == null)? 0 :this.subType.hashCode()));
         result = ((result* 31)+((this.deviceId == null)? 0 :this.deviceId.hashCode()));
         result = ((result* 31)+((this.projectId == null)? 0 :this.projectId.hashCode()));
+        result = ((result* 31)+((this.transactionId == null)? 0 :this.transactionId.hashCode()));
         return result;
     }
 
@@ -91,7 +95,7 @@ public class Envelope {
             return false;
         }
         Envelope rhs = ((Envelope) other);
-        return (((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))));
+        return ((((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.transactionId == rhs.transactionId)||((this.transactionId!= null)&&this.transactionId.equals(rhs.transactionId))));
     }
 
     @Generated("jsonschema2pojo")

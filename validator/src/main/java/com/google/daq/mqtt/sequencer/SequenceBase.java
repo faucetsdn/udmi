@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
 import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -52,12 +53,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -81,10 +83,6 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
-import udmi.schema.ReflectorConfig;
-import udmi.schema.ReflectorState;
-import udmi.schema.SetupReflectorConfig;
-import udmi.schema.SetupReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -137,6 +135,8 @@ public class SequenceBase {
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
+  private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private static boolean udmisInstallValid;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -452,9 +452,9 @@ public class SequenceBase {
     try {
       lastConfigUpdate = configUpdateStart;
       debug("lastConfigUpdate is " + lastConfigUpdate);
-      withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
+      messageEvaluateLoop(this::unacknowledgedConfigs);
     } finally {
-      debug("wait for config sync result " + configReady(true));
+      debug("wait for config sync result " + unacknowledgedConfigs(true));
     }
   }
 
@@ -640,33 +640,35 @@ public class SequenceBase {
     configAcked = false;
   }
 
+  private void checkNoPendingConfigTransactions() {
+    if (!configTransactions.isEmpty()) {
+      String transactions = configTransactionsListString();
+      configTransactions.clear();
+      throw new RuntimeException("Unexpected config transactions: " + transactions);
+    }
+  }
+
   protected void updateConfig() {
     updateConfig(null);
   }
 
   protected void updateConfig(String reason) {
-    // Timestamps are quantized to one second, so make sure at least that much time passes.
-    safeSleep(ONE_SECOND_MS);
     Instant configStart = CleanDateFormat.clean(Instant.now());
 
     cachedMessageData = null;
     cachedSentBlock = null;
+    checkNoPendingConfigTransactions();
     boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
     updated |= updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updated |= updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    boolean computedConfigChange = localConfigChange(reason);
-    if (computedConfigChange != updated) {
-      notice("cachedMessageData " + cachedMessageData);
-      notice("cachedSentBlock " + cachedSentBlock);
-      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
-    }
     if (updated) {
-      safeSleep(ONE_SECOND_MS);
       waitForConfigSync(configStart);
     }
+    checkNoPendingConfigTransactions();
+    captureConfigChange(reason);
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
@@ -677,13 +679,13 @@ public class SequenceBase {
       if (updated) {
         cachedMessageData = messageData;
         cachedSentBlock = sentBlockConfig;
-        final Object tracedObject = augmentConfigTrace(data);
-        String augmentedMessage = actualize(stringify(tracedObject));
+        String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
-        reflector().publish(getDeviceId(), topic, augmentedMessage);
-        debug(String.format("update %s_%s", CONFIG_SUBTYPE, subBlock));
-        recordRawMessage(tracedObject, LOCAL_PREFIX + subBlock.value());
+        final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
+        debug(String.format("update %s_%s, id %s", CONFIG_SUBTYPE, subBlock, transactionId));
+        recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
+        configTransactions.add(transactionId);
       } else {
         trace("unchanged config_" + subBlock + ": " + messageData);
       }
@@ -693,21 +695,7 @@ public class SequenceBase {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private Object augmentConfigTrace(Object data) {
-    try {
-      if (data == null || !traceLogLevel()) {
-        return data;
-      }
-      Map<String, Object> map = JsonUtil.convertTo(Map.class, data);
-      map.put(CONFIG_NONCE_KEY, System.currentTimeMillis());
-      return map;
-    } catch (Exception e) {
-      throw new RuntimeException("While augmenting data message", e);
-    }
-  }
-
-  private boolean localConfigChange(String reason) {
+  private boolean captureConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
@@ -951,10 +939,11 @@ public class SequenceBase {
     String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
+    String transactionId = attributes.get("transactionId");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      Object debugConfigNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
-      trace("received command " + attributeMark + " nonce " + debugConfigNonce);
+      Object configNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
+      trace("received command " + attributeMark + " nonce " + configNonce);
     }
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
@@ -962,18 +951,19 @@ public class SequenceBase {
     recordRawMessage(message, attributes);
 
     if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      handleReflectorMessage(subTypeRaw, message);
+      handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
-      handleDeviceMessage(message, subFolderRaw, subTypeRaw);
+      handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
     }
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
-      String subTypeRaw) {
+      String subTypeRaw, String transactionId) {
     SubFolder subFolder = SubFolder.fromValue(subFolderRaw);
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
+        debug("Received confirmation of individual config id " + transactionId);
         // These are echos of sent config messages, so do nothing.
         break;
       case STATE:
@@ -987,18 +977,22 @@ public class SequenceBase {
     }
   }
 
-  private synchronized void handleReflectorMessage(String subFolderRaw,
-      Map<String, Object> message) {
+  private synchronized void handleReflectorMessage(String subTypeRaw,
+      Map<String, Object> message, String transactionId) {
     try {
+      // Do this first to handle all cases of a Config payload, including exceptions.
+      if (CONFIG_SUBTYPE.equals(subTypeRaw) && transactionId != null) {
+        configTransactions.remove(transactionId);
+      }
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
         configExceptionTimestamp = (String) message.get(TIMESTAMP_PROPERTY_KEY);
         return;
       }
       configExceptionTimestamp = null;
-      Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
-      receivedUpdates.put(subFolderRaw, converted);
-      int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
+      Object converted = JsonUtil.convertTo(expectedUpdates.get(subTypeRaw), message);
+      receivedUpdates.put(subTypeRaw, converted);
+      int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
           .incrementAndGet();
       if (converted instanceof Config) {
         String extraField = getExtraField(message);
@@ -1010,7 +1004,8 @@ public class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        debug("Updated config with timestamp " + getTimestamp(config.timestamp));
+        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp),
+            transactionId));
         info(String.format("Updated config #%03d:\n%s", updateCount,
             stringify(converted)));
       } else if (converted instanceof AugmentedState) {
@@ -1071,42 +1066,20 @@ public class SequenceBase {
     }
   }
 
-  private boolean configReady() {
-    return configReady(false);
+  private boolean unacknowledgedConfigs() {
+    return unacknowledgedConfigs(false);
   }
 
-  private boolean configReady(boolean debugOut) {
-    try {
-      Consumer<String> output = debugOut ? this::debug : this::trace;
-      Object receivedConfig = receivedUpdates.get(CONFIG_SUBTYPE);
-      if (!(receivedConfig instanceof Config)) {
-        output.accept("no valid received config");
-        return false;
-      }
-      if (configExceptionTimestamp != null) {
-        output.accept("Received config exception at " + configExceptionTimestamp);
-        return true;
-      }
-      // Config isn't properly sync'd until this is filled in, else there are race-conditions.
-      if (deviceConfig.system.operation.last_start == null) {
-        output.accept("Missing config ready last_start field");
-        return false;
-      }
-      List<String> differences = filterTesting(
-          configDiffEngine.diff(sanitizeConfig((Config) receivedConfig), deviceConfig));
-      boolean configReady = differences.isEmpty();
-      output.accept("testing valid received config " + configReady);
-      if (!configReady) {
-        output.accept("\n+- " + Joiner.on("\n+- ").join(differences));
-        output.accept("final deviceConfig: " + JsonUtil.stringify(deviceConfig));
-        output.accept(
-            "final receivedConfig: " + JsonUtil.stringify(receivedUpdates.get(CONFIG_SUBTYPE)));
-      }
-      return configReady;
-    } catch (Exception e) {
-      error("While processing waitForConfigSync: " + e.getMessage());
-      throw e;
+  private boolean unacknowledgedConfigs(boolean debugOut) {
+    if (debugOut) {
+      debug("Pending config confirmation for transactions: " + configTransactionsListString());
     }
+    return !configTransactions.isEmpty();
+  }
+
+  @NotNull
+  private String configTransactionsListString() {
+    return Joiner.on(' ').join(configTransactions);
   }
 
   /**

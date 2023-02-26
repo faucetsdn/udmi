@@ -463,13 +463,14 @@ public class Validator {
     }
   }
 
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    message.remove(SequenceBase.CONFIG_NONCE_KEY);
+  private String sanitizeMessage(String schemaName, Map<String, Object> message) {
+    String nonce = (String) message.remove(SequenceBase.CONFIG_NONCE_KEY);
     message.values().forEach(this::sanitizeBlock);
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_PROPERTY_KEY);
       message.remove(TIMESTAMP_PROPERTY_KEY);
     }
+    return nonce;
   }
 
   private void sanitizeBlock(Object subBlock) {
