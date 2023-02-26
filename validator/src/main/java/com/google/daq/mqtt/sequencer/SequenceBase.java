@@ -18,6 +18,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -680,7 +681,7 @@ public class SequenceBase {
         String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId = reflector().publish(getDeviceId(), topic, augmentedMessage);
-        debug(String.format("update %s_%s %s", CONFIG_SUBTYPE, subBlock, transactionId));
+        debug(String.format("update %s_%s, id %s", CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, messageData);
         configTransactions.add(transactionId);
@@ -974,7 +975,7 @@ public class SequenceBase {
     SubType subType = SubType.fromValue(subTypeRaw);
     switch (subType) {
       case CONFIG:
-        debug("Received confirmation of individual config transaction " + transactionId);
+        debug("Received confirmation of individual config id " + transactionId);
         // These are echos of sent config messages, so do nothing.
         break;
       case STATE:
@@ -1082,8 +1083,8 @@ public class SequenceBase {
 
   private boolean configReady(boolean debugOut) {
     if (debugOut) {
-      configTransactions.forEach(
-          transactionId -> debug("Pending config confirmation for transaction " + transactionId));
+      debug("Pending config confirmation for transactions: " + Joiner.on(' ')
+          .join(configTransactions));
     }
     return configTransactions.isEmpty();
   }
