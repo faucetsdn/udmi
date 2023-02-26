@@ -83,7 +83,6 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
-import udmi.schema.ReflectorState;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
@@ -169,8 +168,6 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   private String extraField;
-  private boolean extraFieldChanged;
-  private boolean lastStartChanged;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
@@ -311,7 +308,7 @@ public class SequenceBase {
    * @param extraField value for the extra field
    */
   public void setExtraField(String extraField) {
-    extraFieldChanged |= !Objects.equals(this.extraField, extraField);
+    boolean extraFieldChanged = !Objects.equals(this.extraField, extraField);
     debug("Setting extraFieldChanged " + extraFieldChanged + " because " + extraField);
     this.extraField = extraField;
   }
@@ -322,10 +319,9 @@ public class SequenceBase {
    * @param lastStart last start value to use
    */
   public void setLastStart(Date lastStart) {
-    lastStartChanged |= !stringify(deviceConfig.system.operation.last_start).equals(
+    boolean lastStartChanged = !stringify(deviceConfig.system.operation.last_start).equals(
         stringify(lastStart));
-    debug(
-        "Setting lastStartChanged " + lastStartChanged + ", last_start " + getTimestamp(lastStart));
+    debug("lastStartChanged " + lastStartChanged + ", last_start " + getTimestamp(lastStart));
     deviceConfig.system.operation.last_start = lastStart;
   }
 
@@ -453,11 +449,11 @@ public class SequenceBase {
     try {
       lastConfigUpdate = configUpdateStart;
       debug("lastConfigUpdate started at " + lastConfigUpdate);
-      messageEvaluateLoop(this::unacknowledgedConfigs);
+      messageEvaluateLoop(this::configIsNotReady);
       Duration between = Duration.between(configUpdateStart, CleanDateFormat.clean(Instant.now()));
       debug(String.format("Configuration sync took %ss", between.getSeconds()));
     } finally {
-      debug("wait for config sync result " + unacknowledgedConfigs(true));
+      debug("wait for config sync result " + configIsNotReady(true));
     }
   }
 
@@ -688,7 +684,7 @@ public class SequenceBase {
     }
   }
 
-  private boolean captureConfigChange(String reason) {
+  private void captureConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s: ", suffix);
@@ -702,17 +698,6 @@ public class SequenceBase {
         filteredDiffs.forEach(change -> trace(header + change));
         sequenceMd.flush();
       }
-      boolean somethingChanged = extraFieldChanged || lastStartChanged || !allDiffs.isEmpty();
-      if (extraFieldChanged) {
-        trace("Device config extra_field changed: " + extraField);
-        extraFieldChanged = false;
-      }
-      if (lastStartChanged) {
-        trace("Setting lastStartChanged false, last_start " + getTimestamp(
-            deviceConfig.system.operation.last_start));
-        lastStartChanged = false;
-      }
-      return somethingChanged;
     } catch (Exception e) {
       throw new RuntimeException("While recording device config", e);
     }
@@ -770,13 +755,16 @@ public class SequenceBase {
           "Aborting message loop while " + waitingCondition.peek() + " because " + e.getMessage());
       throw e;
     } catch (Exception e) {
-      debug("Suppressing exception: " + e);
-      trace("Suppressed from line " + getTraceString(e));
+      if (traceLogLevel()) {
+        trace("Suppressed " + e + " from " + getExceptionLine(e));
+      } else {
+        debug("Suppressing exception: " + e);
+      }
       return null;
     }
   }
 
-  private String getTraceString(Exception e) {
+  private String getExceptionLine(Exception e) {
     return Common.getExceptionLine(e, SequenceBase.class);
   }
 
@@ -970,7 +958,6 @@ public class SequenceBase {
       case CONFIG:
         debug("Received confirmation of individual config id " + transactionId);
         // These are echos of sent config messages, so do nothing.
-        trace("Ignoring partial config update");
         break;
       case STATE:
         // State updates are handled as a monolithic block with a state reflector update.
@@ -1037,7 +1024,6 @@ public class SequenceBase {
     deviceConfig.timestamp = config.timestamp;
     deviceConfig.version = config.version;
     if (config.system != null && config.system.operation != null) {
-      trace("updatedDeviceConfig last_start " + getTimestamp(config.system.operation.last_start));
       setLastStart(SemanticDate.describe("device reported", config.system.operation.last_start));
     }
     sanitizeConfig(deviceConfig);
@@ -1071,15 +1057,19 @@ public class SequenceBase {
     }
   }
 
-  private boolean unacknowledgedConfigs() {
-    return unacknowledgedConfigs(false);
+  private boolean configIsNotReady() {
+    return configIsNotReady(false);
   }
 
-  private boolean unacknowledgedConfigs(boolean debugOut) {
+  private boolean configIsNotReady(boolean debugOut) {
+    Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
+    Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
+    boolean lastStartSynchronized = stateLast == null || stateLast.equals(configLast);
     if (debugOut) {
-      debug("Pending config confirmation for transactions: " + configTransactionsListString());
+      debug(String.format("lastStartSynchronized %s, pending transactions: %s",
+          lastStartSynchronized, configTransactionsListString()));
     }
-    return !configTransactions.isEmpty();
+    return !(lastStartSynchronized && configTransactions.isEmpty());
   }
 
   @NotNull
