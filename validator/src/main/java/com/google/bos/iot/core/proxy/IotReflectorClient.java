@@ -108,7 +108,8 @@ public class IotReflectorClient implements MessagePublisher {
       initializeReflectorState();
       initializedStateSent.countDown();
       if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-        throw new RuntimeException("Config sync timeout expired. Checkout UDMIS cloud functions install.");
+        throw new RuntimeException(
+            "Config sync timeout expired. Checkout UDMIS cloud functions install.");
       }
 
       active = true;
