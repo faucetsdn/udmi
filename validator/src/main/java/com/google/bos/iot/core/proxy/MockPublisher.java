@@ -21,13 +21,14 @@ public class MockPublisher implements MessagePublisher {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String message) {
+  public String publish(String deviceId, String topic, String message) {
     try {
       Validator.MessageBundle bundle = new Validator.MessageBundle();
       bundle.message = JsonUtil.asMap(message);
       bundle.attributes = new HashMap<>();
       bundle.timestamp = JsonUtil.getTimestamp();
       messages.put(bundle);
+      return null;
     } catch (Exception e) {
       throw new RuntimeException("While publishing mock message", e);
     }

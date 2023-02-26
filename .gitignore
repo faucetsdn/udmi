@@ -30,8 +30,13 @@ pubber.out*
 /sequencer.out
 __pycache__/
 /tests/downgrade.site/devices/*/out/
+<<<<<<< HEAD
 /validator/src/test/site/out/
 /validator/src/test/site/devices/*/out/
+=======
+/udmi_*.log
+
+>>>>>>> master
 .vscode
 
 #Terraform authentication and template files.

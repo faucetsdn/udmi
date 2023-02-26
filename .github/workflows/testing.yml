@@ -29,9 +29,9 @@ jobs:
       - name: bin/run_tests code_tests
         if: ${{ always() }}
         run: bin/run_tests code_tests
-      - name: bin/run_tests locate_tests
+      - name: bin/run_tests util_tests
         if: ${{ always() }}
-        run: bin/run_tests locate_tests
+        run: bin/run_tests util_tests
       - name: bin/run_tests schema_tests
         if: ${{ always() }}
         run: bin/run_tests schema_tests

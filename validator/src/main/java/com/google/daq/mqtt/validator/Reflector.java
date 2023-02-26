@@ -6,7 +6,9 @@ import static com.google.daq.mqtt.util.Common.removeNextArg;
 
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -85,7 +87,13 @@ public class Reflector {
   }
 
   private void reflect(String topic, String data) {
-    client.publish(deviceId, topic, data);
+    String sendId = client.publish(deviceId, topic, data);
+    String recvId;
+    System.err.println("Waiting for return transaction " + sendId);
+    do {
+      MessageBundle messageBundle = client.takeNextMessage();
+      recvId = messageBundle.attributes.get("transactionId");
+    } while (!sendId.equals(recvId));
   }
 
   private void initialize() {
@@ -93,6 +101,7 @@ public class Reflector {
     System.err.println("Loading reflector key file from " + keyFile);
     executionConfiguration.key_file = keyFile;
     executionConfiguration.project_id = projectId;
+    executionConfiguration.udmi_version = Common.getUdmiVersion();
     client = new IotReflectorClient(executionConfiguration);
   }
 
