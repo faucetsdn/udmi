@@ -30,6 +30,7 @@ pubber.out*
 /sequencer.out
 __pycache__/
 /tests/downgrade.site/devices/*/out/
+/udmi_*.log
 
 .vscode
 

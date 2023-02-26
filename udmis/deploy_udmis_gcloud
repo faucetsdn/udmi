@@ -1,11 +1,5 @@
 #!/bin/bash -e
 
-# This version is used to automatically check that the deployed cloud functions are suitable for any bit
-# of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
-# indicate the MIN/MAX versions supported, while the client determines what is required.
-FUNCTIONS_VERSION_MIN=2
-FUNCTIONS_VERSION_MAX=2
-
 if (( $# < 1 )); then
     echo Usage: $0 PROJECT_ID [options]
     false
@@ -23,13 +17,15 @@ SOURCE=functions/
 deployed_by=$USER@$HOSTNAME
 deployed_at=`date --utc --iso=seconds`
 version=`git describe --dirty`
+funchash=`git log -n 1 --oneline udmis/functions/ | awk '{print $1}'`
+funcver=`git decribe $funchash`
+
 echo Deploying version $version to $PROJECT
 
 cat <<EOF > functions/version.js
 module.exports = {
   udmi_version: '$version',
-  functions_min: $FUNCTIONS_VERSION_MIN,
-  functions_max: $FUNCTIONS_VERSION_MAX,
+  udmi_functions: '$funcver',
   deployed_at: '$deployed_at',
   deployed_by: '$deployed_by'
 }
