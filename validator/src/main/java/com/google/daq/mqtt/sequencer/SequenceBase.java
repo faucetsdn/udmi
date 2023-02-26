@@ -642,7 +642,8 @@ public class SequenceBase {
 
   private void checkNoPendingConfigTransactions() {
     if (!configTransactions.isEmpty()) {
-      throw new RuntimeException("Unexpected config transactions: " + configTransactionsListString());
+      throw new RuntimeException(
+          "Unexpected config transactions: " + configTransactionsListString());
     }
   }
 
@@ -662,11 +663,11 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updated |= updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-//    if (computedConfigChange != updated) {
-//      notice("cachedMessageData " + cachedMessageData);
-//      notice("cachedSentBlock " + cachedSentBlock);
-//      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
-//    }
+    //    if (computedConfigChange != updated) {
+    //      notice("cachedMessageData " + cachedMessageData);
+    //      notice("cachedSentBlock " + cachedSentBlock);
+    //      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
+    //    }
     if (updated) {
       waitForConfigSync(configStart);
     }
@@ -695,19 +696,6 @@ public class SequenceBase {
       return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
-    }
-  }
-
-  private Map<String, Object> augmentConfigTrace(Object data, String nonce) {
-    try {
-      if (data == null) {
-        return null;
-      }
-      Map<String, Object> map = asMap(data);
-      map.put(CONFIG_NONCE_KEY, nonce);
-      return map;
-    } catch (Exception e) {
-      throw new RuntimeException("While augmenting data message", e);
     }
   }
 

@@ -22,7 +22,12 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.apache.bcel.Repository;
+import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -64,6 +69,23 @@ public class ConfigSequences extends SequenceBase {
 
     deviceConfig.system.min_loglevel = savedLevel;
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+  }
+
+  @Test
+  public void method_test() {
+    checkIt(() -> deviceState.system.status);
+  }
+
+  private void checkIt(Supplier<?> func) {
+    try {
+      JavaClass supplier = Repository.getRepository().findClass("Supplier");
+      Method method = supplier.getMethod(func.getClass().getMethod("get"));
+      Code code = method.getCode();
+      System.err.println("TAPTAP");
+      System.err.println(code);
+    } catch (Exception e) {
+      throw new RuntimeException("While checking path", e);
+    }
   }
 
   @Test(timeout = TWO_MINUTES_MS)
