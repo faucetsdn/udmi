@@ -452,9 +452,9 @@ public class SequenceBase {
     try {
       lastConfigUpdate = configUpdateStart;
       debug("lastConfigUpdate is " + lastConfigUpdate);
-      withRecordSequence(false, () -> untilTrue("device config sync", this::configReady));
+      messageEvaluateLoop(this::unacknowledgedConfigs);
     } finally {
-      debug("wait for config sync result " + configReady(true));
+      debug("wait for config sync result " + unacknowledgedConfigs(true));
     }
   }
 
@@ -645,13 +645,11 @@ public class SequenceBase {
   }
 
   protected void updateConfig(String reason) {
-    // Timestamps are quantized to one second, so make sure at least that much time passes.
-    safeSleep(ONE_SECOND_MS);
     Instant configStart = CleanDateFormat.clean(Instant.now());
 
     cachedMessageData = null;
     cachedSentBlock = null;
-    assert configTransactions.isEmpty();
+    checkNoPendingConfigTransactions();
     boolean updated = updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updated |= updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updated |= updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
@@ -667,7 +665,13 @@ public class SequenceBase {
     if (updated) {
       waitForConfigSync(configStart);
     }
-    assert configTransactions.isEmpty();
+    checkNoPendingConfigTransactions();
+  }
+
+  private void checkNoPendingConfigTransactions() {
+    if (!configTransactions.isEmpty()) {
+      throw new RuntimeException("Unexpected config transactions: " + configTransactionsListString());
+    }
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
@@ -1077,16 +1081,20 @@ public class SequenceBase {
     }
   }
 
-  private boolean configReady() {
-    return configReady(false);
+  private boolean unacknowledgedConfigs() {
+    return unacknowledgedConfigs(false);
   }
 
-  private boolean configReady(boolean debugOut) {
+  private boolean unacknowledgedConfigs(boolean debugOut) {
     if (debugOut) {
-      debug("Pending config confirmation for transactions: " + Joiner.on(' ')
-          .join(configTransactions));
+      debug("Pending config confirmation for transactions: " + configTransactionsListString());
     }
-    return configTransactions.isEmpty();
+    return !configTransactions.isEmpty();
+  }
+
+  @NotNull
+  private String configTransactionsListString() {
+    return Joiner.on(' ').join(configTransactions);
   }
 
   /**

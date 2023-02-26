@@ -17,11 +17,15 @@ SOURCE=functions/
 deployed_by=$USER@$HOSTNAME
 deployed_at=`date --utc --iso=seconds`
 version=`git describe --dirty`
+funchash=`git log -n 1 --oneline udmis/functions/ | awk '{print $1}'`
+funcver=`git decribe $funchash`
+
 echo Deploying version $version to $PROJECT
 
 cat <<EOF > functions/version.js
 module.exports = {
   udmi_version: '$version',
+  udmi_functions: '$funcver',
   deployed_at: '$deployed_at',
   deployed_by: '$deployed_by'
 }
