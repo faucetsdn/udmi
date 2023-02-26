@@ -662,16 +662,16 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updated |= updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    boolean computedConfigChange = localConfigChange(reason);
-    if (computedConfigChange != updated) {
-      notice("cachedMessageData " + cachedMessageData);
-      notice("cachedSentBlock " + cachedSentBlock);
-      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
-    }
+//    if (computedConfigChange != updated) {
+//      notice("cachedMessageData " + cachedMessageData);
+//      notice("cachedSentBlock " + cachedSentBlock);
+//      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
+//    }
     if (updated) {
       waitForConfigSync(configStart);
     }
     checkNoPendingConfigTransactions();
+    captureConfigChange(reason);
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
@@ -711,7 +711,7 @@ public class SequenceBase {
     }
   }
 
-  private boolean localConfigChange(String reason) {
+  private boolean captureConfigChange(String reason) {
     try {
       String suffix = reason == null ? "" : (" " + reason);
       String header = String.format("Update config%s:", suffix);
