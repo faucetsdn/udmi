@@ -96,7 +96,10 @@ echo Comparing diff /tmp/sequencer.out etc/sequencer.out
 diff -u /tmp/sequencer.out etc/sequencer.out
 
 echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
-diff -u /tmp/generated.md docs/specs/sequences/generated.md
+diff -u /tmp/generated.md docs/specs/sequences/generated.md || (
+    echo Run bin/gencode_seq to regenerate output, if necessary.
+    false
+    )
 
 generated_sequences=$test_out_base/%/sequence.md
 expected_sequences=validator/sequences/%/sequence.md

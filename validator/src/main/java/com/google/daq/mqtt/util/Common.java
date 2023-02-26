@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public abstract class Common {
 
-  public static final String STATE_QUERY_TOPIC = "query/state";
+  public static final String STATE_QUERY_TOPIC = "update/query";
   public static final String TIMESTAMP_PROPERTY_KEY = "timestamp";
   public static final String VERSION_PROPERTY_KEY = "version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";

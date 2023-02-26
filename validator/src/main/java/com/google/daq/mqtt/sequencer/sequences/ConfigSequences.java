@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -17,12 +15,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -34,11 +28,6 @@ public class ConfigSequences extends SequenceBase {
 
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
-
-  private boolean hasInterestingStatus() {
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
-  }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Description("Check that last_update state is correctly set in response to a config update.")
