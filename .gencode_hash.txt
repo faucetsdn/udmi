@@ -4,13 +4,8 @@ f3846531d40263e0c66fe6c2f24153b275aa2fad0ec9071cd27e4c94d853901b  gencode/docs/c
 3c3c69f9044a27a5ec9e7756eea3168784ed307e8c9576f19504f78aff4e9c24  gencode/docs/config_mapping.html
 cc4bb19794042f88f3a72b197b4d21736e5cebf6ec47ffac560430e9f580181f  gencode/docs/configuration_endpoint.html
 4da8ddd26aed7428171e1cbc6d134b37e30a958d09ce0f255bbb22b130d26f77  gencode/docs/configuration_execution.html
-<<<<<<< HEAD
 77c2f116369b449b1d7700e24bcb9e1596b70e9214df27d6a48c39e2217f1bf4  gencode/docs/configuration_pubber.html
-0f0355e343cb8197dfbae1481c0eca3a0566d73181bc968e33fd469a1c94d1e6  gencode/docs/envelope.html
-=======
-ce0f308d80dbc76f06c85242c259d5b532ff41b0f30359aa394ef60eed6288ca  gencode/docs/configuration_pubber.html
 18b056c945aebc33cfd040808472bfa4b35eeada0e089cbb8dcc636a46b2fae7  gencode/docs/envelope.html
->>>>>>> master
 0fc4a5351bb8317b99bd9bd556ed54725eddf4ef6d79cbd3603ee701b98ed518  gencode/docs/event.html
 dda8af4af84803c067615435744317b679ec28dd0fc19b5547c509cad9925c56  gencode/docs/event_discovery.html
 7f0048d23d6f5a93d40520e7d5fd4ce4fbe76a7713ae2b2e5256be6dda3effb2  gencode/docs/event_mapping.html
