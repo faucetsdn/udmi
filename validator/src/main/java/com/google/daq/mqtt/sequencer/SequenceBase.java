@@ -640,6 +640,12 @@ public class SequenceBase {
     configAcked = false;
   }
 
+  private void checkNoPendingConfigTransactions() {
+    if (!configTransactions.isEmpty()) {
+      throw new RuntimeException("Unexpected config transactions: " + configTransactionsListString());
+    }
+  }
+
   protected void updateConfig() {
     updateConfig(null);
   }
@@ -666,12 +672,6 @@ public class SequenceBase {
       waitForConfigSync(configStart);
     }
     checkNoPendingConfigTransactions();
-  }
-
-  private void checkNoPendingConfigTransactions() {
-    if (!configTransactions.isEmpty()) {
-      throw new RuntimeException("Unexpected config transactions: " + configTransactionsListString());
-    }
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
