@@ -977,18 +977,22 @@ public class SequenceBase {
     }
   }
 
-  private synchronized void handleReflectorMessage(String subFolderRaw,
+  private synchronized void handleReflectorMessage(String subTypeRaw,
       Map<String, Object> message, String transactionId) {
     try {
+      // Do this first to handle all cases of a Config payload, including exceptions.
+      if (CONFIG_SUBTYPE.equals(subTypeRaw) && transactionId != null) {
+        configTransactions.remove(transactionId);
+      }
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
         configExceptionTimestamp = (String) message.get(TIMESTAMP_PROPERTY_KEY);
         return;
       }
       configExceptionTimestamp = null;
-      Object converted = JsonUtil.convertTo(expectedUpdates.get(subFolderRaw), message);
-      receivedUpdates.put(subFolderRaw, converted);
-      int updateCount = UPDATE_COUNTS.computeIfAbsent(subFolderRaw, key -> new AtomicInteger())
+      Object converted = JsonUtil.convertTo(expectedUpdates.get(subTypeRaw), message);
+      receivedUpdates.put(subTypeRaw, converted);
+      int updateCount = UPDATE_COUNTS.computeIfAbsent(subTypeRaw, key -> new AtomicInteger())
           .incrementAndGet();
       if (converted instanceof Config) {
         String extraField = getExtraField(message);
@@ -1000,9 +1004,6 @@ public class SequenceBase {
         }
         Config config = (Config) converted;
         updateDeviceConfig(config);
-        if (transactionId != null) {
-          configTransactions.remove(transactionId);
-        }
         debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp),
             transactionId));
         info(String.format("Updated config #%03d:\n%s", updateCount,
