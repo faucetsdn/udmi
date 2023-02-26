@@ -8,8 +8,8 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  */
 
-const FUNCTIONS_VERSION_MIN = 4;
-const FUNCTIONS_VERSION_MAX = 4;
+const FUNCTIONS_VERSION_MIN = 5;
+const FUNCTIONS_VERSION_MAX = 5;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
