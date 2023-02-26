@@ -642,8 +642,9 @@ public class SequenceBase {
 
   private void checkNoPendingConfigTransactions() {
     if (!configTransactions.isEmpty()) {
-      throw new RuntimeException(
-          "Unexpected config transactions: " + configTransactionsListString());
+      String transactions = configTransactionsListString();
+      configTransactions.clear();
+      throw new RuntimeException("Unexpected config transactions: " + transactions);
     }
   }
 
@@ -663,11 +664,6 @@ public class SequenceBase {
     updated |= updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updated |= updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updated |= updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    //    if (computedConfigChange != updated) {
-    //      notice("cachedMessageData " + cachedMessageData);
-    //      notice("cachedSentBlock " + cachedSentBlock);
-    //      throw new AbortMessageLoop("Unexpected config change! updated=" + updated);
-    //    }
     if (updated) {
       waitForConfigSync(configStart);
     }
