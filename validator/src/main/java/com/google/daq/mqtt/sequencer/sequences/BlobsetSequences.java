@@ -188,34 +188,51 @@ public class BlobsetSequences extends SequenceBase {
       throw new SkipTest("No alternate registry defined");
     }
 
+    info("======================================== A");
+
     // Phase one: initiate connection to alternate registry.
     untilTrue("initial last_config matches config timestamp", this::stateMatchesConfigTimestamp);
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
+    info("======================================== B");
+
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
+      info("======================================== C");
       untilSuccessfulRedirect(BlobPhase.FINAL);
+      info("======================================== D");
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
+      info("======================================== E");
       untilClearedRedirect();
 
       if (doRestart) {
         // Phase two.five: restart the system to make sure the change sticks.
+        info("======================================== F");
         check_system_restart();
       }
+
+      info("======================================== G");
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
       setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
+      info("======================================== H");
       untilSuccessfulRedirect(BlobPhase.APPLY);
+      info("======================================== I");
     });
 
+    info("======================================== J");
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
+      info("======================================== K");
       untilSuccessfulRedirect(BlobPhase.FINAL);
+      info("======================================== L");
       untilTrue("restored last_config matches config timestamp", this::stateMatchesConfigTimestamp);
+      info("======================================== M");
       untilClearedRedirect();
+      info("======================================== N");
     });
   }
 
