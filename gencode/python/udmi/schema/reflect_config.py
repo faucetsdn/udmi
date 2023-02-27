@@ -8,6 +8,7 @@ class SetupReflectorConfig:
     self.functions_min = None
     self.functions_max = None
     self.udmi_version = None
+    self.udmi_functions = None
     self.last_state = None
     self.deployed_at = None
     self.deployed_by = None
@@ -20,6 +21,7 @@ class SetupReflectorConfig:
     result.functions_min = source.get('functions_min')
     result.functions_max = source.get('functions_max')
     result.udmi_version = source.get('udmi_version')
+    result.udmi_functions = source.get('udmi_functions')
     result.last_state = source.get('last_state')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
@@ -49,6 +51,8 @@ class SetupReflectorConfig:
       result['functions_max'] = self.functions_max # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.udmi_functions:
+      result['udmi_functions'] = self.udmi_functions # 5
     if self.last_state:
       result['last_state'] = self.last_state # 5
     if self.deployed_at:
