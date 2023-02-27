@@ -37,6 +37,7 @@ function redact_files {
     done
 }
 
+echo
 echo Testing against $subsets
 for subset in $subsets; do
     echo Testing site $subset
@@ -53,5 +54,8 @@ for subset in $subsets; do
 done
 
 echo
+echo Testing simple mock sequencer...
+bin/sequencer tests/downgrade.site/ -- DWN-1 54321 system_mode_restart
 
+echo
 echo Done with site tests
