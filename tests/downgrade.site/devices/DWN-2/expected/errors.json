@@ -1,6 +1,8 @@
 Exceptions for DWN-2
   While loading credentials for local device DWN-2
     Found 0 credentials
+  1 schema violations found
+    object instance has properties which are not allowed by the schema: ["grumpy"]
   devices/DWN-2
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
     Extra out files: [exceptions.txt]

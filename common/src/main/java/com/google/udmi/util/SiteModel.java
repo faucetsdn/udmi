@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -123,10 +125,22 @@ public class SiteModel {
     File deviceDir = getDeviceDir(deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      Map<String, Object> metadataMap = JsonUtil.loadMap(deviceMetadataFile);
+      Metadata metadata = JsonUtil.convertTo(Metadata.class, metadataMap);
+      captureConversionErrors(metadata, metadataMap);
+      return metadata;
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
+    }
+  }
+
+  private void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap) {
+    try {
+      JsonUtil.convertStrict(Metadata.class, metadataMap);
+    } catch (Exception e) {
+      metadata.errors = Optional.ofNullable(metadata.errors).orElseGet(ArrayList::new);
+      metadata.errors.add(e.getMessage());
     }
   }
 

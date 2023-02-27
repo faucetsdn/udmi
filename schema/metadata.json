@@ -31,6 +31,13 @@
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
     },
+    "errors": {
+      "description": "Errors captured during processing or conversion.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "cloud": {
       "$ref": "file:model_cloud.json#"
     },

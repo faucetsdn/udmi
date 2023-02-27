@@ -855,7 +855,7 @@ public class Validator {
     try (OutputStream outputStream = new FileOutputStream(outputFile)) {
       File inputFile = getFullPath(prefix, new File(targetFile));
       copyFileHeader(inputFile, outputStream);
-      Map<String, Object> message = JsonUtil.toMap(inputFile);
+      Map<String, Object> message = JsonUtil.loadMap(inputFile);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       if (upgradeMessage(schemaName, jsonNode)) {

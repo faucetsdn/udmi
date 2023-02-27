@@ -19,13 +19,15 @@ import java.util.TreeMap;
  */
 public abstract class JsonUtil {
 
-  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+  private static final ObjectMapper STRICT_MAPPER = new ObjectMapper()
       .enable(Feature.ALLOW_COMMENTS)
       .enable(SerializationFeature.INDENT_OUTPUT)
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setDateFormat(new CleanDateFormat())
       .setSerializationInclusion(Include.NON_NULL);
+  public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
   public static final String JSON_SUFFIX = ".json";
 
   /**
@@ -90,7 +92,7 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Convert a generic object ot one of a specific class.
+   * Convert a generic object to a specific class.
    *
    * @param targetClass result class
    * @param message     object to convert
@@ -99,6 +101,27 @@ public abstract class JsonUtil {
    */
   public static <T> T convertTo(Class<T> targetClass, Object message) {
     return message == null ? null : fromString(targetClass, stringify(message));
+  }
+
+  /**
+   * Strict conversion of a generic object to a specific class. Will throw an exception
+   * if some basic constraints are violated (e.g. extra fields).
+   *
+   * @param targetClass result class
+   * @param message     object to convert
+   * @param <T>         class parameter
+   * @return converted object
+   */
+  public static <T> T convertStrict(Class<T> targetClass, Object message) {
+    if (message == null) {
+      return null;
+    }
+    try {
+      return STRICT_MAPPER.readValue(stringify(message),
+          checkNotNull(targetClass, "target class"));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+    }
   }
 
   /**
@@ -119,7 +142,7 @@ public abstract class JsonUtil {
    * @param inputFile input file to convert to a map
    * @return object-as-map
    */
-  public static Map<String, Object> toMap(File inputFile) {
+  public static Map<String, Object> loadMap(File inputFile) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = convertTo(TreeMap.class, loadFile(TreeMap.class, inputFile));
     return map;
