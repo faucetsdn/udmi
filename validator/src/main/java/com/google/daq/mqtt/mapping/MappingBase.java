@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.mapping;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.udmi.util.Common.removeNextArg;
 
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.util.MessageHandler.HandlerConsumer;

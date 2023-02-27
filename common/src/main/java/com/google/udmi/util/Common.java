@@ -1,10 +1,12 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
@@ -25,6 +27,9 @@ public abstract class Common {
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
   public static final String EXCEPTION_KEY = "exception";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
+  public static final char DETAIL_SEPARATOR_CHAR = ';';
+  public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
+  public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
 
   /**
    * Remove the next item from the list in an exception-safe way.
@@ -39,7 +44,7 @@ public abstract class Common {
     return argList.remove(0);
   }
 
-  static String capitalize(String str) {
+  public static String capitalize(String str) {
     return (str == null || str.isEmpty()) ? str
         : str.substring(0, 1).toUpperCase() + str.substring(1);
   }
@@ -100,9 +105,37 @@ public abstract class Common {
    */
   public static Class<?> classForName(String className) {
     try {
-      return ConfigSequences.class.getClassLoader().loadClass(className);
+      return Common.class.getClassLoader().loadClass(className);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("Class not found " + className, e);
     }
+  }
+
+  public static String getExceptionDetail(Throwable exception, Class<?> container, Function<Throwable, String> customFilter) {
+    List<String> messages = new ArrayList<>();
+    String previousMessage = null;
+    while (exception != null) {
+      final String useMessage;
+      useMessage = getExceptionMessage(exception, container, customFilter);
+      if (previousMessage == null || !previousMessage.equals(useMessage)) {
+        messages.add(useMessage);
+        previousMessage = useMessage;
+      }
+      exception = exception.getCause();
+    }
+    return DETAIL_JOINER.join(messages);
+  }
+
+  private static String getExceptionMessage(Throwable exception, Class<?> container,
+      Function<Throwable, String> customFilter) {
+    if (customFilter != null) {
+       String customMessage = customFilter.apply(exception);
+       if (customMessage != null) {
+         return customMessage;
+       }
+    }
+    String message = getExceptionMessage(exception);
+    String line = getExceptionLine(exception, container);
+    return message + (line == null ? "" : " @" + line);
   }
 }

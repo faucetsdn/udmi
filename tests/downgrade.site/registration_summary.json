@@ -7,10 +7,7 @@
     "DWN-1" : "devices/DWN-1",
     "DWN-2" : "devices/DWN-2"
   },
-  "Validating" : {
-    "DWN-2" : "1 schema violations found"
-  },
   "Version" : {
-    "main" : "1.4.0-141-ga2255f1f"
+    "main" : "unknown"
   }
 }

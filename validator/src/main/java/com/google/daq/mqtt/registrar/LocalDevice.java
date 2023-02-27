@@ -7,8 +7,8 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
-import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
+import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.asMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -725,6 +725,9 @@ class LocalDevice {
       System.err.println("Deleting (invalid) " + metadataFile.getAbsolutePath());
       metadataFile.delete();
       return;
+    }
+    if (metadata.errors.isEmpty()) {
+      metadata.errors = null;
     }
     metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();

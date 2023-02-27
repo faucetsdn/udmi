@@ -127,7 +127,7 @@ public class SiteModel {
     try {
       Map<String, Object> metadataMap = JsonUtil.loadMap(deviceMetadataFile);
       Metadata metadata = JsonUtil.convertTo(Metadata.class, metadataMap);
-      captureConversionErrors(metadata, metadataMap);
+      captureConversionErrors(metadata, metadataMap, this.getClass());
       return metadata;
     } catch (Exception e) {
       throw new RuntimeException(
@@ -135,12 +135,12 @@ public class SiteModel {
     }
   }
 
-  private void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap) {
+  private void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap,
+      Class<?> container) {
     try {
       JsonUtil.convertStrict(Metadata.class, metadataMap);
     } catch (Exception e) {
-      metadata.errors = Optional.ofNullable(metadata.errors).orElseGet(ArrayList::new);
-      metadata.errors.add(e.getMessage());
+      metadata.errors.add(Common.getExceptionDetail(e, container, null));
     }
   }
 
