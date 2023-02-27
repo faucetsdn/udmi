@@ -27,8 +27,6 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
-<<<<<<< HEAD
-=======
 * [feature_enumeration](#feature_enumeration)
 * [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
 * [valid_serial_no](#valid_serial_no)
@@ -71,4 +69,3 @@ Restart and connect to same endpoint and expect it returns.
 ## valid_serial_no (STABLE)
 
 1. Wait for received serial number matches
->>>>>>> master

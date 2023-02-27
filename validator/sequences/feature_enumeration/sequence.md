@@ -1,9 +1,6 @@
 
 ## feature_enumeration (BETA)
 
-<<<<<<< HEAD
-1. Test failed: Unexpected config change! updated=true
-=======
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }
 1. Wait for enumeration not active
@@ -16,4 +13,3 @@
 1. Check that no family enumeration
 1. Check that feature enumeration feature is stable
 1. Check that no point enumeration
->>>>>>> master
