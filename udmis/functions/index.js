@@ -297,8 +297,7 @@ function process_state_update(attributes, msgObject) {
 
   // Check both potential locations for last_start, can be cleaned-up post release.
   const system = msgObject.system;
-  const stateStart = system &&
-        (system.last_start || system.operation.last_start || currentTimestamp(1));
+  const stateStart = system && (system.operation.last_start || currentTimestamp(1));
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp(), null));
 
@@ -360,23 +359,14 @@ function parse_old_config(configStr, resetConfig, deviceId) {
   }
 
   if (resetConfig) {
-    const configLastStart = config.system &&
-          (config.system.last_start ||
-           (config.system.operation && config.system.operation.last_start));
+    const system = config.system;
+    const configLastStart = system && system.operation && system.operation.last_start;
     console.warn('Resetting config block', deviceId, configLastStart);
 
     // Preserve the original structure of the config message for backwards compatibility.
-    if (config.system && config.system.operation) {
-      config = {
-        system: {
-          operation: {
-            last_start: configLastStart
-          }
-        }
-      }
-    } else {
-      config = {
-        system: {
+    config = {
+      system: {
+        operation: {
           last_start: configLastStart
         }
       }

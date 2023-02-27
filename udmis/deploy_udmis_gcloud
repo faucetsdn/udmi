@@ -23,7 +23,7 @@ funccount=`git diff --name-only -- functions/ | wc -l`
 if [[ $funccount != 0 ]]; then
     funcdirty=-dirty
 fi
-funcver=`git describe $funchash$funcdirty`
+funcver=`git describe $funchash`$funcdirty
 
 echo Deploying version $version to $PROJECT
 
