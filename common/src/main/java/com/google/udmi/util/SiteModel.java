@@ -8,11 +8,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -121,21 +119,29 @@ public class SiteModel {
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
+    return loadDeviceMetadata(sitePath, deviceId, SiteModel.class);
+  }
+
+  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File deviceDir = getDeviceDir(deviceId);
+    File deviceDir = getDeviceDir(sitePath, deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
       Map<String, Object> metadataMap = JsonUtil.loadMap(deviceMetadataFile);
-      Metadata metadata = JsonUtil.convertTo(Metadata.class, metadataMap);
-      captureConversionErrors(metadata, metadataMap, this.getClass());
-      return metadata;
+      return convertDeviceMetadata(metadataMap, container);
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
-  private void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap,
+  public static Metadata convertDeviceMetadata(Map<String, Object> metadataMap, Class<?> container) {
+    Metadata metadata = JsonUtil.convertTo(Metadata.class, metadataMap);
+    captureConversionErrors(metadata, metadataMap, container);
+    return metadata;
+  }
+
+  private static void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap,
       Class<?> container) {
     try {
       JsonUtil.convertStrict(Metadata.class, metadataMap);
@@ -145,9 +151,12 @@ public class SiteModel {
   }
 
   private File getDeviceDir(String deviceId) {
+    return getDeviceDir(sitePath, deviceId);
+  }
+
+  private static File getDeviceDir(String sitePath, String deviceId) {
     File devicesFile = new File(new File(sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
-    return deviceDir;
+    return new File(devicesFile, deviceId);
   }
 
   public Metadata getMetadata(String deviceId) {

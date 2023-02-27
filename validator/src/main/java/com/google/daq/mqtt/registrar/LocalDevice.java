@@ -40,6 +40,7 @@ import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -312,7 +313,7 @@ class LocalDevice {
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-    return JsonUtil.convertTo(Metadata.class, mergedMetadata);
+    return SiteModel.convertDeviceMetadata(JsonUtil.asMap(mergedMetadata), LocalDevice.class);
   }
 
   JsonNode getMergedMetadata(JsonNode instance) {

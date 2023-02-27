@@ -43,6 +43,7 @@ import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -321,9 +322,8 @@ public class Validator {
       for (String device : requireNonNull(devicesDir.list())) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
-          File deviceDir = new File(devicesDir, device);
-          File metadataFile = new File(deviceDir, METADATA_JSON);
-          reportingDevice.setMetadata(OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
+          Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
+          reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
