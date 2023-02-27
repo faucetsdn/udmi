@@ -309,7 +309,7 @@ public class SequenceBase {
    */
   public void setExtraField(String extraField) {
     boolean extraFieldChanged = !Objects.equals(this.extraField, extraField);
-    debug("Setting extraFieldChanged " + extraFieldChanged + " because " + extraField);
+    debug("extraFieldChanged " + extraFieldChanged + " because extra_field " + extraField);
     this.extraField = extraField;
   }
 
@@ -414,7 +414,7 @@ public class SequenceBase {
 
     resetConfig(resetRequired);
 
-    updateConfig();
+    updateConfig("setUp");
 
     untilTrue("device state update", () -> deviceState != null);
     recordSequence = true;
@@ -436,24 +436,22 @@ public class SequenceBase {
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
         configDiffEngine.computeChanges(deviceConfig);
-        updateConfig();
+        updateConfig("full reset");
       }
       resetDeviceConfig(false);
-      updateConfig();
+      updateConfig("soft reset");
       debug("Done with reset_config");
       resetRequired = false;
     });
   }
 
-  private void waitForConfigSync(Instant configUpdateStart) {
+  private void waitForConfigSync() {
     try {
-      lastConfigUpdate = configUpdateStart;
-      debug("lastConfigUpdate started at " + lastConfigUpdate);
-      messageEvaluateLoop(this::configIsNotReady);
-      Duration between = Duration.between(configUpdateStart, CleanDateFormat.clean(Instant.now()));
+      messageEvaluateLoop(this::configIsPending);
+      Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(String.format("Configuration sync took %ss", between.getSeconds()));
     } finally {
-      debug("wait for config sync result " + configIsNotReady(true));
+      debug("wait for config sync result " + configIsPending(true));
     }
   }
 
@@ -635,7 +633,7 @@ public class SequenceBase {
     configAcked = false;
   }
 
-  private void checkNoPendingConfigTransactions() {
+  private void assertConfigIsNotPending() {
     if (!configTransactions.isEmpty()) {
       String transactions = configTransactionsListString();
       configTransactions.clear();
@@ -643,21 +641,21 @@ public class SequenceBase {
     }
   }
 
-  protected void updateConfig() {
-    updateConfig(null);
-  }
-
   protected void updateConfig(String reason) {
-    final Instant configStart = CleanDateFormat.clean(Instant.now());
-    checkNoPendingConfigTransactions();
+    assertConfigIsNotPending();
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
     updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
     updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
     updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
-    waitForConfigSync(configStart);
-    checkNoPendingConfigTransactions();
+    if (configIsPending()) {
+      lastConfigUpdate = CleanDateFormat.clean(Instant.now());
+      String debugReason = reason == null ? "" : (", because " + reason);
+      debug(String.format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
+      waitForConfigSync();
+    }
+    assertConfigIsNotPending();
     captureConfigChange(reason);
   }
 
@@ -830,7 +828,14 @@ public class SequenceBase {
       previousEventCount = eventCount;
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));
     });
-    logEntryQueue.removeIf(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate));
+    List<Entry> toRemove = logEntryQueue.stream()
+        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate))
+        .collect(Collectors.toList());
+    if (!toRemove.isEmpty()) {
+      debug("ignoring log entries before lastConfigUpdate " + lastConfigUpdate);
+    }
+    toRemove.forEach(entry -> debug(" x " + entryMessage(entry)));
+    logEntryQueue.removeAll(toRemove);
   }
 
   protected void whileDoing(String condition, Runnable action) {
@@ -1057,11 +1062,11 @@ public class SequenceBase {
     }
   }
 
-  private boolean configIsNotReady() {
-    return configIsNotReady(false);
+  private boolean configIsPending() {
+    return configIsPending(false);
   }
 
-  private boolean configIsNotReady(boolean debugOut) {
+  private boolean configIsPending(boolean debugOut) {
     Date stateLast = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLast = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynchronized = stateLast == null || stateLast.equals(configLast);
