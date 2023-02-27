@@ -20,16 +20,14 @@ from .config_system_testing import TestingSystemConfig
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_execution import ExecutionConfiguration
 from .configuration_pubber import PubberConfiguration
+from .discovered_network import DiscoveredNetwork
+from .discovered_network_family import DiscoveredNetworkFamily
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
-<<<<<<< HEAD
-from .event_discovery_network import NetworkDiscoveryEvent
-=======
-from .event_discovery_family import FamilyDiscoveryEvent
 from .event_discovery_feature import FeatureEnumerationEvent
->>>>>>> master
+from .event_discovery_network import NetworkDiscoveryEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
@@ -64,6 +62,7 @@ from .state_discovery import DiscoveryState
 from .state_discovery_network import NetworkDiscoveryState
 from .state_gateway import GatewayState
 from .state_localnet import LocalnetState
+from .state_localnet_family import FamilyLocalnetState
 from .state_mapping import MappingState
 from .state_mapping_device import DeviceMappingState
 from .state_pointset import PointsetState

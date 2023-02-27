@@ -8,8 +8,8 @@
  * indicate the MIN/MAX versions supported, while the client determines what is required.
  */
 
-const FUNCTIONS_VERSION_MIN = 4;
-const FUNCTIONS_VERSION_MAX = 4;
+const FUNCTIONS_VERSION_MIN = 5;
+const FUNCTIONS_VERSION_MAX = 5;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -56,8 +56,8 @@ const iotClient = new iot.v1.DeviceManagerClient({
 
 const registry_promise = getRegistryRegions();
 
-function currentTimestamp() {
-  return new Date().toJSON();
+function currentTimestamp(target) {
+  return (target > 0 ? new Date(target) : new Date()).toJSON();
 }
 
 function reflectMessage(attributes, message) {
@@ -296,8 +296,8 @@ function process_state_update(attributes, msgObject) {
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
   // Check both potential locations for last_start, can be cleaned-up post release.
-  const stateStart = msgObject.system &&
-        (msgObject.system.last_start || msgObject.system.operation.last_start);
+  const system = msgObject.system;
+  const stateStart = system && (system.operation.last_start || currentTimestamp(1));
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp(), null));
 
@@ -346,7 +346,7 @@ exports.udmi_config = functions.pubsub.topic('udmi_config').onPublish((event) =>
     then(() => partialUpdate && publishPubsubMessage('udmi_target', attributes, msgObject));
 });
 
-function parse_old_config(configStr, resetConfig) {
+function parse_old_config(configStr, resetConfig, deviceId) {
   let config = {};
   try {
     config = JSON.parse(configStr || "{}");
@@ -359,42 +359,35 @@ function parse_old_config(configStr, resetConfig) {
   }
 
   if (resetConfig) {
-    const configLastStart = config.system &&
-          (config.system.last_start ||
-           (config.system.operation && config.system.operation.last_start));
-    console.warn('Resetting config bock', configLastStart);
+    const system = config.system;
+    const configLastStart = system && system.operation && system.operation.last_start;
+    console.warn('Resetting config block', deviceId, configLastStart);
 
     // Preserve the original structure of the config message for backwards compatibility.
-    if (config.system && config.system.operation) {
-      config = {
-        system: {
-          "operation": {
-            last_start: configLastStart
-          }
-        }
-      }
-    } else {
-      config = {
-        system: {
+    config = {
+      system: {
+        operation: {
           last_start: configLastStart
         }
       }
     }
   }
+
   return config;
 }
 
 function update_last_start(config, stateStart) {
-  const configLastStart = config.system &&
-        (config.system.last_start ||
-         (config.system.operation && config.system.operation.last_start));
+  if (!config.system) {
+    return false;
+  }
+  if (!config.system.operation) {
+    config.system.operation = {};
+  }
+  const configLastStart = config.system.operation.last_start;
   const shouldUpdate = stateStart && (!configLastStart || (stateStart > configLastStart));
   console.log('State update last state/config', stateStart, configLastStart, shouldUpdate);
-  // Preserve the existing structure of the config message to maintain backwards compatability.
-  if (config.system && config.system.operation) {
+  if (shouldUpdate) {
     config.system.operation.last_start = stateStart;
-  } else {
-    config.system.last_start = stateStart;
   }
   return shouldUpdate;
 }
@@ -404,7 +397,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
   var newConfig;
 
   if (subFolder == 'last_start') {
-    newConfig = parse_old_config(oldConfig, false);
+    newConfig = parse_old_config(oldConfig, false, deviceId);
     if (!newConfig || !update_last_start(newConfig, subContents)) {
       return;
     }
@@ -413,7 +406,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig = subContents;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
-    newConfig = parse_old_config(oldConfig, resetConfig);
+    newConfig = parse_old_config(oldConfig, resetConfig, deviceId);
     if (newConfig === null) {
       return;
     }
@@ -442,6 +435,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     transactionId: transactionId,
     deviceRegistryId: registryId
   };
+
   return update_device_config(newConfig, attributes, version)
     .then(() => {
       console.log('Config accepted', subFolder, version, startTime, transactionId);

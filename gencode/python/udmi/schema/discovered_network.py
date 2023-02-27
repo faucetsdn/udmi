@@ -1,8 +1,8 @@
-"""Generated class for state_localnet.json"""
-from .state_localnet_family import FamilyLocalnetState
+"""Generated class for discovered_network.json"""
+from .discovered_network_family import DiscoveredNetworkFamily
 
 
-class LocalnetState:
+class DiscoveredNetwork:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,8 +12,8 @@ class LocalnetState:
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetState()
-    result.families = FamilyLocalnetState.map_from(source.get('families'))
+    result = DiscoveredNetwork()
+    result.families = DiscoveredNetworkFamily.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -22,7 +22,7 @@ class LocalnetState:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetState.from_dict(source[key])
+      result[key] = DiscoveredNetwork.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,5 +35,5 @@ class LocalnetState:
   def to_dict(self):
     result = {}
     if self.families:
-      result['families'] = FamilyLocalnetState.expand_dict(self.families) # 2
+      result['families'] = DiscoveredNetworkFamily.expand_dict(self.families) # 2
     return result
