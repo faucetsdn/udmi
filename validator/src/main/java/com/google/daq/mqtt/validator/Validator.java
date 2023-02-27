@@ -14,7 +14,6 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -313,7 +312,7 @@ public class Validator {
 
   private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
-    List<String> strings = getDevices(devicesDir);
+    List<String> strings = SiteModel.listDevices(devicesDir);
     try {
       for (String device : strings) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
@@ -332,17 +331,6 @@ public class Validator {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
     }
-  }
-
-  private List<String> getDevices(File devicesDir) {
-    if (!devicesDir.exists()) {
-      System.err.println(
-          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
-      return ImmutableList.of();
-    }
-    String[] devices = requireNonNull(devicesDir.list());
-    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
-        .collect(Collectors.toList());
   }
 
   /**

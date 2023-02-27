@@ -25,7 +25,6 @@ import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -33,7 +32,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -565,18 +563,8 @@ public class Registrar {
   }
 
   private List<String> getDeviceList(Set<String> specifiedDevices, File devicesDir) {
-    final String[] devices;
-    if (specifiedDevices == null) {
-      devices = devicesDir.list();
-    } else {
-      devices = devicesDir.list(new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-          return specifiedDevices.contains(name);
-        }
-      });
-    }
-    Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
-    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+    return SiteModel.listDevices(devicesDir).stream()
+        .filter(name -> specifiedDevices == null || specifiedDevices.contains(name))
         .collect(Collectors.toList());
   }
 

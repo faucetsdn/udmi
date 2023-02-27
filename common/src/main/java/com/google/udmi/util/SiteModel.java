@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -8,9 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -100,6 +103,17 @@ public class SiteModel {
     return clientInfo;
   }
 
+  public static List<String> listDevices(File devicesDir) {
+    if (!devicesDir.exists()) {
+      System.err.println(
+          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
+      return ImmutableList.of();
+    }
+    String[] devices = requireNonNull(devicesDir.list());
+    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+        .collect(Collectors.toList());
+  }
+
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
     return makeEndpointConfig(projectId, executionConfiguration, deviceId);
   }
@@ -111,7 +125,7 @@ public class SiteModel {
     return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory).collect(Collectors.toSet());
   }
 
-  public static boolean validDeviceDirectory(String dirName) {
+  private static boolean validDeviceDirectory(String dirName) {
     return !(dirName.startsWith(".") || dirName.endsWith("~"));
   }
 
