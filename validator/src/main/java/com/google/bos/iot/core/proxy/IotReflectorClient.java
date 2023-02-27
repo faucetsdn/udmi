@@ -45,8 +45,8 @@ public class IotReflectorClient implements MessagePublisher {
 
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
-  private static final int FUNCTIONS_VERSION_BETA = 4; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 4; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_BETA = 5; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 5; // Version required for alpha execution.
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
@@ -105,12 +105,15 @@ public class IotReflectorClient implements MessagePublisher {
     }
 
     try {
-      initialConfigReceived.await();
+      System.err.println("Starting initial UDMIS setup process");
+      if (!initialConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        System.err.println("Ignoring initial config received timeout (config likely empty)");
+      }
       initializeReflectorState();
       initializedStateSent.countDown();
       if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException(
-            "Config sync timeout expired. Checkout UDMIS cloud functions install.");
+            "Config sync timeout expired. Investigate UDMIS cloud functions install.");
       }
 
       active = true;

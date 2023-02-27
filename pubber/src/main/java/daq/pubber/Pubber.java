@@ -387,7 +387,9 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
-    deviceState.system.operation.last_start = DEVICE_START_TIME;
+    if (!TRUE.equals(configuration.options.noLastStart)) {
+      deviceState.system.operation.last_start = DEVICE_START_TIME;
+    }
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();

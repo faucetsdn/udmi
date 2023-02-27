@@ -14,11 +14,16 @@ shift
 RUNTIME=nodejs16
 SOURCE=functions/
 
+
 deployed_by=$USER@$HOSTNAME
 deployed_at=`date --utc --iso=seconds`
 version=`git describe --dirty`
-funchash=`git log -n 1 --oneline udmis/functions/ | awk '{print $1}'`
-funcver=`git decribe $funchash`
+funchash=`git log -n 1 --oneline -- functions/ | awk '{print $1}'`
+funccount=`git diff --name-only -- functions/ | wc -l`
+if [[ $funccount != 0 ]]; then
+    funcdirty=-dirty
+fi
+funcver=`git describe $funchash`$funcdirty
 
 echo Deploying version $version to $PROJECT
 

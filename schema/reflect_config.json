@@ -29,6 +29,9 @@
         "udmi_version": {
           "type": "string"
         },
+        "udmi_functions": {
+          "type": "string"
+        },
         "last_state": {
           "type": "string",
           "format": "date-time"

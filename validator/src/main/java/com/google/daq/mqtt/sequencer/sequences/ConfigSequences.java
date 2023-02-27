@@ -51,7 +51,7 @@ public class ConfigSequences extends SequenceBase {
         Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
-    updateConfig();
+    updateConfig("warning loglevel");
     // Nothing to actively wait for, so wait for some amount of time instead.
     safeSleep(CONFIG_THRESHOLD_SEC * 2000);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -70,7 +70,7 @@ public class ConfigSequences extends SequenceBase {
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig();
+    updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
