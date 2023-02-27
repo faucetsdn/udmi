@@ -395,6 +395,9 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
+    if (activeInstance == null) {
+      throw new RuntimeException("Active sequencer instance not setup, aborting");
+    }
     waitingCondition.clear();
     waitingCondition.push("starting test wrapper");
     assert reflector().isActive();
@@ -627,6 +630,9 @@ public class SequenceBase {
    */
   @After
   public void tearDown() {
+    if (activeInstance == null) {
+      return;
+    }
     debug(String.format("stage done %s at %s", waitingCondition.peek(), timeSinceStart()));
     recordMessages = false;
     recordSequence = false;
@@ -1308,6 +1314,9 @@ public class SequenceBase {
 
     @Override
     protected void finished(org.junit.runner.Description description) {
+      if (activeInstance == null) {
+        return;
+      }
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
@@ -1330,6 +1339,9 @@ public class SequenceBase {
 
     @Override
     protected void failed(Throwable e, org.junit.runner.Description description) {
+      if (activeInstance == null) {
+        return;
+      }
       final String message;
       final String type;
       final Level level;
