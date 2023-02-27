@@ -43,6 +43,7 @@ import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -312,13 +313,9 @@ public class Validator {
 
   private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
-    if (!devicesDir.exists()) {
-      System.err.println(
-          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
-      return;
-    }
+    List<String> strings = getDevices(devicesDir);
     try {
-      for (String device : requireNonNull(devicesDir.list())) {
+      for (String device : strings) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
@@ -335,6 +332,17 @@ public class Validator {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
     }
+  }
+
+  private List<String> getDevices(File devicesDir) {
+    if (!devicesDir.exists()) {
+      System.err.println(
+          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
+      return ImmutableList.of();
+    }
+    String[] devices = requireNonNull(devicesDir.list());
+    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+        .collect(Collectors.toList());
   }
 
   /**
