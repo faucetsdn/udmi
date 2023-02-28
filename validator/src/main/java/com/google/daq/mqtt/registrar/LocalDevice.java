@@ -28,7 +28,6 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -44,7 +43,6 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -294,7 +292,6 @@ class LocalDevice {
   }
 
   private Metadata readMetadataWithValidation(boolean validate) {
-    File metadataFile = new File(deviceDir, METADATA_JSON);
     final JsonNode instance;
     try {
       Metadata loadedMetadata = SiteModel.loadDeviceMetadata(siteDir.getPath(), deviceId,
@@ -337,7 +334,7 @@ class LocalDevice {
   }
 
   private Metadata readMetadata() {
-    Metadata deviceMetadata = readMetadataWithValidation(this.validateMetadata);
+    Metadata deviceMetadata = readMetadataWithValidation(validateMetadata);
     if (deviceMetadata != null && deviceMetadata.exception != null) {
       exceptionMap.put(EXCEPTION_CONVERTING, deviceMetadata.exception);
       deviceMetadata.exception = null;

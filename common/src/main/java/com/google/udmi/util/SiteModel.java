@@ -132,6 +132,11 @@ public class SiteModel {
       Metadata metadata = JsonUtil.loadFile(Metadata.class, deviceMetadataFile);
       if (metadata != null) {
         metadata.exception = captureLoadErrors(deviceMetadataFile, container);
+        // Missing arrays are automatically parsed to an empty list, which is not what
+        // we want, so hacky go through and convert an empty list to null.
+        if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+          metadata.gateway.proxy_ids = null;
+        }
       }
       return metadata;
     } catch (Exception e) {
