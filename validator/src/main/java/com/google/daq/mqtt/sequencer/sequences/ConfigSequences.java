@@ -14,7 +14,6 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
-import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
