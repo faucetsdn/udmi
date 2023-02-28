@@ -34,10 +34,18 @@ public class PubberTest extends TestBase {
   private static final String TEST_REDIRECT_HOSTNAME = "mqtt-redirect.google.com";
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
   private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
+  private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT = getEndpointConfigurationRedirect();
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
+  private static final String ENDPOINT_REDIRECT_BLOB = JsonUtil.stringify(TEST_REDIRECT_ENDPOINT);
   private Pubber pubber;
 
   private static EndpointConfiguration getEndpointConfiguration() {
+    EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+    endpointConfiguration.client_id = TEST_DEVICE;
+    return endpointConfiguration;
+  }
+
+  private static EndpointConfiguration getEndpointConfigurationRedirect() {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.hostname = TEST_REDIRECT_HOSTNAME;
     endpointConfiguration.client_id = TEST_DEVICE;
@@ -58,6 +66,19 @@ public class PubberTest extends TestBase {
     BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
     blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_BLOB);
     blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
+    blobBlobsetConfig.phase = BlobPhase.FINAL;
+    pubber.deviceConfig.blobset = new BlobsetConfig();
+    pubber.deviceConfig.blobset.blobs = new HashMap<>();
+    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+
+    EndpointConfiguration endpointConfiguration = pubber.extractEndpointBlobConfig();
+    return endpointConfiguration;
+  }
+
+  private EndpointConfiguration configurePubberRedirect() {
+    BlobBlobsetConfig blobBlobsetConfig = new BlobBlobsetConfig();
+    blobBlobsetConfig.url = DATA_URL_PREFIX + encodeBase64(ENDPOINT_REDIRECT_BLOB);
+    blobBlobsetConfig.sha256 = sha256(ENDPOINT_REDIRECT_BLOB);
     blobBlobsetConfig.phase = BlobPhase.FINAL;
     pubber.deviceConfig.blobset = new BlobsetConfig();
     pubber.deviceConfig.blobset.blobs = new HashMap<>();
@@ -118,7 +139,10 @@ public class PubberTest extends TestBase {
   @Test
   public void redirectEndpoint() {
     configurePubberEndpoint();
-
+    pubber.maybeRedirectEndpoint();
+    assertEquals(null,
+        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    configurePubberRedirect();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
         pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
