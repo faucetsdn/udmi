@@ -448,11 +448,19 @@ public class Pubber {
             : new DevicePersistent();
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
+    if (persistentData.endpoint != null) {
+      info("Loading endpoint from persistent data: " + persistentData.endpoint);
+      configuration.endpoint = persistentData.endpoint;
+      info("Clearing endpoint from persistent data");
+      persistentData.endpoint = null;
+    }
     writePersistentStore();
   }
 
   private void writePersistentStore() {
+    info("====================================== Z1");
     Preconditions.checkState(persistentData != null, "persistent data not defined");
+    info("====================================== Z2 " + getPersistentStore());
     toJsonFile(getPersistentStore(), persistentData);
   }
 
@@ -643,7 +651,8 @@ public class Pubber {
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }
-    int exitCode = restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE;
+    int exitCode = restart ?
+        ( RESTART_EXIT_CODE ) : SHUTDOWN_EXIT_CODE;
     error("Stopping system with extreme prejudice, restart " + restart + " with code " + exitCode);
     System.exit(exitCode);
   }
@@ -922,18 +931,25 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
-  EndpointConfiguration extractEndpointBlobConfig() {
+  EndpointConfiguration extractEndpointBlobConfig() {   // TODO why does this have a return
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
       return null;
     }
     try {
+      info("========================================== A");
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
+      info("========================================== B");
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
+      info("========================================== C");
       if (extractedEndpoint != null) {
+        info("========================================== D");
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
+          info("========================================== E");
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
+          persistentData.endpoint = extractedEndpoint;  // jrand
+          writePersistentStore();  // jrand
         }
       }
     } catch (Exception e) {
