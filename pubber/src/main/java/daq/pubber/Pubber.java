@@ -651,8 +651,7 @@ public class Pubber {
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }
-    int exitCode = restart ?
-        ( RESTART_EXIT_CODE ) : SHUTDOWN_EXIT_CODE;
+    int exitCode = restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE;
     error("Stopping system with extreme prejudice, restart " + restart + " with code " + exitCode);
     System.exit(exitCode);
   }

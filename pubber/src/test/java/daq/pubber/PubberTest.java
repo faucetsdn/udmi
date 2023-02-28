@@ -31,6 +31,7 @@ public class PubberTest extends TestBase {
   private static final String TEST_DEVICE = "AHU-1";
   private static final String SERIAL_NO = "18217398172";
   private static final String TEST_BLOB_DATA = "mary had a little lamb";
+  private static final String TEST_REDIRECT_HOSTNAME = "mqtt-redirect.google.com";
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
   private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
@@ -38,6 +39,7 @@ public class PubberTest extends TestBase {
 
   private static EndpointConfiguration getEndpointConfiguration() {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
+    endpointConfiguration.hostname = TEST_REDIRECT_HOSTNAME;
     endpointConfiguration.client_id = TEST_DEVICE;
     return endpointConfiguration;
   }
