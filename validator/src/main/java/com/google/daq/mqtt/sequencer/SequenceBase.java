@@ -201,6 +201,7 @@ public class SequenceBase {
         validatorConfig = ConfigUtil.readValidatorConfig(configFile);
         SiteModel model = new SiteModel(validatorConfig.site_model);
         model.initialize();
+        reportLoadingErrors(model);
         validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
             .orElse(model.getCloudRegion());
         validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
@@ -210,6 +211,13 @@ public class SequenceBase {
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
       }
+    }
+  }
+
+  private static void reportLoadingErrors(SiteModel model) {
+    Exception exception = model.getMetadata(validatorConfig.device_id).exception;
+    if (exception != null) {
+      System.err.println("Device loading error: " + exception.getMessage());
     }
   }
 

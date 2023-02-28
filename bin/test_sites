@@ -55,7 +55,7 @@ done
 
 echo
 echo Testing simple mock sequencer...
-bin/sequencer tests/downgrade.site/ -- DWN-1 54321 system_mode_restart
+bin/sequencer tests/downgrade.site/ -- DWN-2 54321 system_mode_restart
 
 RESULTLOG=tests/downgrade.site/out/devices/DWN-1/RESULT.log
 echo Checking expected output from $RESULTLOG
