@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -104,27 +105,6 @@ public abstract class JsonUtil {
   }
 
   /**
-   * Strict conversion of a generic object to a specific class. Will throw an exception
-   * if some basic constraints are violated (e.g. extra fields).
-   *
-   * @param targetClass result class
-   * @param message     object to convert
-   * @param <T>         class parameter
-   * @return converted object
-   */
-  public static <T> T convertStrict(Class<T> targetClass, Object message) {
-    if (message == null) {
-      return null;
-    }
-    try {
-      return STRICT_MAPPER.readValue(stringify(message),
-          checkNotNull(targetClass, "target class"));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
-    }
-  }
-
-  /**
    * Convert the pojo to a mapped representation.
    *
    * @param message input object to convert
@@ -176,6 +156,18 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
     }
+  }
+
+  /**
+   * Load file with strict(er) error checking, and return an exception, if any.
+   *
+   * @param clazz class of result
+   * @param file  file to load
+   * @param <T>   type of result
+   * @return converted object
+   */
+  public static <T> T loadStrict(Class<T> clazz, File file) throws IOException {
+    return file.exists() ? STRICT_MAPPER.readValue(file, clazz) : null;
   }
 
   /**

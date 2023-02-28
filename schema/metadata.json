@@ -31,12 +31,10 @@
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
     },
-    "errors": {
-      "description": "Errors captured during processing or conversion.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "exception": {
+      "description": "Exception captured during processing or conversion.",
+      "existingJavaType": "Exception",
+      "type": "object"
     },
     "cloud": {
       "$ref": "file:model_cloud.json#"

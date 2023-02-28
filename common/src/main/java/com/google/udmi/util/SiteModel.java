@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.api.client.json.Json;
 import com.google.common.base.Preconditions;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -127,26 +129,23 @@ public class SiteModel {
     File deviceDir = getDeviceDir(sitePath, deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
-      Map<String, Object> metadataMap = JsonUtil.loadMap(deviceMetadataFile);
-      return convertDeviceMetadata(metadataMap, container);
+      Metadata metadata = JsonUtil.loadFile(Metadata.class, deviceMetadataFile);
+      if (metadata != null) {
+        metadata.exception = captureLoadErrors(deviceMetadataFile, container);
+      }
+      return metadata;
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
-  public static Metadata convertDeviceMetadata(Map<String, Object> metadataMap, Class<?> container) {
-    Metadata metadata = JsonUtil.convertTo(Metadata.class, metadataMap);
-    captureConversionErrors(metadata, metadataMap, container);
-    return metadata;
-  }
-
-  private static void captureConversionErrors(Metadata metadata, Map<String, Object> metadataMap,
-      Class<?> container) {
+  private static Exception captureLoadErrors(File deviceMetadataFile, Class<?> container) {
     try {
-      JsonUtil.convertStrict(Metadata.class, metadataMap);
+      JsonUtil.loadStrict(Metadata.class, deviceMetadataFile);
+      return null;
     } catch (Exception e) {
-      metadata.errors.add(Common.getExceptionDetail(e, container, null));
+      return e;
     }
   }
 

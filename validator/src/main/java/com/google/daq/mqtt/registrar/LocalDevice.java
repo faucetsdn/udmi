@@ -28,6 +28,7 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.api.services.cloudiot.v1.model.DeviceCredential;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -84,6 +85,7 @@ class LocalDevice {
   public static final String INVALID_METADATA_HASH = "INVALID";
   public static final String EXCEPTION_INITIALIZING = "Initializing";
   public static final String EXCEPTION_VALIDATING = "Validating";
+  public static final String EXCEPTION_CONVERTING = "Converting";
   public static final String EXCEPTION_LOADING = "Loading";
   public static final String EXCEPTION_READING = "Reading";
   public static final String EXCEPTION_WRITING = "Writing";
@@ -294,12 +296,14 @@ class LocalDevice {
   private Metadata readMetadataWithValidation(boolean validate) {
     File metadataFile = new File(deviceDir, METADATA_JSON);
     final JsonNode instance;
-    try (InputStream targetStream = new FileInputStream(metadataFile)) {
-      instance = OBJECT_MAPPER.readTree(targetStream);
+    try {
+      Metadata loadedMetadata = SiteModel.loadDeviceMetadata(siteDir.getPath(), deviceId,
+          LocalDevice.class);
+      instance = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
       baseVersion = instance.get(VERSION_PROPERTY_KEY);
       new MessageUpgrader(METADATA_SCHEMA, instance).upgrade(false);
-    } catch (IOException ioException) {
-      exceptionMap.put(EXCEPTION_LOADING, ioException);
+    } catch (Exception exception) {
+      exceptionMap.put(EXCEPTION_LOADING, exception);
       return null;
     }
 
@@ -313,7 +317,7 @@ class LocalDevice {
     } catch (ProcessingException | ValidationException e) {
       exceptionMap.put(EXCEPTION_VALIDATING, e);
     }
-    return SiteModel.convertDeviceMetadata(JsonUtil.asMap(mergedMetadata), LocalDevice.class);
+    return JsonUtil.convertTo(Metadata.class, mergedMetadata);
   }
 
   JsonNode getMergedMetadata(JsonNode instance) {
@@ -333,7 +337,12 @@ class LocalDevice {
   }
 
   private Metadata readMetadata() {
-    return readMetadataWithValidation(this.validateMetadata);
+    Metadata deviceMetadata = readMetadataWithValidation(this.validateMetadata);
+    if (deviceMetadata != null && deviceMetadata.exception != null) {
+      exceptionMap.put(EXCEPTION_CONVERTING, deviceMetadata.exception);
+      deviceMetadata.exception = null;
+    }
+    return deviceMetadata;
   }
 
   private Metadata readNormalized() {
@@ -696,7 +705,7 @@ class LocalDevice {
     File errorsFile = new File(outDir, DEVICE_ERRORS_JSON);
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
-      try (PrintStream printStream = new PrintStream(new FileOutputStream(errorsFile))) {
+      try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
         System.err.println("Updating " + errorsFile);
         errorTree.write(printStream);
       } catch (Exception e) {
@@ -727,9 +736,6 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
-    if (metadata.errors.isEmpty()) {
-      metadata.errors = null;
-    }
     metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();
     String metadataHash = metadataHash();
@@ -739,7 +745,7 @@ class LocalDevice {
     }
     metadata.hash = metadataHash;
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
-    try (OutputStream outputStream = new FileOutputStream(metadataFile)) {
+    try (OutputStream outputStream = Files.newOutputStream(metadataFile.toPath())) {
       // Super annoying, but can't set this on the global static instance.
       JsonGenerator generator =
           OBJECT_MAPPER
@@ -756,7 +762,7 @@ class LocalDevice {
     String config = getSettings().config;
     if (config != null) {
       File configFile = new File(outDir, GENERATED_CONFIG_JSON);
-      try (OutputStream outputStream = new FileOutputStream(configFile)) {
+      try (OutputStream outputStream = Files.newOutputStream(configFile.toPath())) {
         outputStream.write(config.getBytes());
       } catch (Exception e) {
         e.printStackTrace();
