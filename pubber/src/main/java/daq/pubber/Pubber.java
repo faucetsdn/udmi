@@ -167,7 +167,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  Config deviceConfig = new Config();
+  final Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -183,6 +183,7 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
+  private LocalnetManager localnetManager;
 
   /**
    * Start an instance from a configuration file.
@@ -439,6 +440,7 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
+    localnetManager = new LocalnetManager(deviceState, deviceConfig);
     markStateDirty();
   }
 
