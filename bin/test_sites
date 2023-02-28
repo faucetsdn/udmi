@@ -57,7 +57,7 @@ echo
 echo Testing simple mock sequencer...
 bin/sequencer tests/downgrade.site/ -- DWN-2 54321 system_mode_restart
 
-RESULTLOG=tests/downgrade.site/out/devices/DWN-1/RESULT.log
+RESULTLOG=tests/downgrade.site/out/devices/DWN-2/RESULT.log
 echo Checking expected output from $RESULTLOG
 fgrep "RESULT fail system.mode system_mode_restart STABLE 5 null" $RESULTLOG
 
