@@ -312,9 +312,9 @@ public class Validator {
 
   private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
-    List<String> strings = SiteModel.listDevices(devicesDir);
+    List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
-      for (String device : strings) {
+      for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
