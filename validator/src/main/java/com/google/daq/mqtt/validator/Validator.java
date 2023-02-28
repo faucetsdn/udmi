@@ -14,7 +14,6 @@ import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -313,13 +312,9 @@ public class Validator {
 
   private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
-    if (!devicesDir.exists()) {
-      System.err.println(
-          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
-      return;
-    }
+    List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
-      for (String device : requireNonNull(devicesDir.list())) {
+      for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
