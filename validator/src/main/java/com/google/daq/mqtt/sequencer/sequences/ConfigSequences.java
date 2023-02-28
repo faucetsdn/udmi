@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
@@ -13,6 +14,7 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
+import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import java.time.Instant;
@@ -40,8 +42,9 @@ public class ConfigSequences extends SequenceBase {
   @Feature()
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
-    assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
-    assert SYSTEM_CONFIG_APPLY_LEVEL.value() < Level.WARNING.value();
+    checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
+    checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() < Level.WARNING.value(),
+        "invalid config apply level");
 
     final Instant startTime = Instant.now();
     deviceConfig.system.min_loglevel = Level.INFO.value();

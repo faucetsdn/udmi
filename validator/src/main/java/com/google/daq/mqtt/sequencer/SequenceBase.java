@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -152,7 +154,7 @@ public class SequenceBase {
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
-  private static MessagePublisher altClient;
+  protected static MessagePublisher altClient;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
@@ -269,7 +271,15 @@ public class SequenceBase {
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
     altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
-    return new IotReflectorClient(altConfiguration);
+    try {
+      return new IotReflectorClient(altConfiguration);
+    } catch (Exception e) {
+      System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
+      if (traceLogLevel()) {
+        e.printStackTrace();
+      }
+      return null;
+    }
   }
 
   private static MessagePublisher getReflectorClient() {
@@ -400,7 +410,7 @@ public class SequenceBase {
     }
     waitingCondition.clear();
     waitingCondition.push("starting test wrapper");
-    assert reflector().isActive();
+    checkState(reflector().isActive(), "Reflector is not currently active");
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
@@ -588,11 +598,11 @@ public class SequenceBase {
         Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
-  private boolean debugLogLevel() {
+  private static boolean debugLogLevel() {
     return logLevel <= Level.DEBUG.value();
   }
 
-  private boolean traceLogLevel() {
+  private static boolean traceLogLevel() {
     return logLevel <= Level.TRACE.value();
   }
 
@@ -931,7 +941,7 @@ public class SequenceBase {
       MessageBundle bundle = reflector().takeNextMessage();
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
-        assert stashedBundle == null;
+        checkState(stashedBundle == null, "stashed bundle is not null");
         stashedBundle = bundle;
         throw new RuntimeException("Message loop no longer for active thread");
       }
@@ -1178,8 +1188,9 @@ public class SequenceBase {
   }
 
   protected void withAlternateClient(Runnable evaluator) {
-    assert !useAlternateClient;
-    assert deviceConfig.system.testing.endpoint_type == null;
+    checkNotNull(altClient, "Alternate client used but test not skipped");
+    checkState(!useAlternateClient, "Alternate client already in use");
+    checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
       deviceConfig.system.testing.endpoint_type = "alternate";
@@ -1221,7 +1232,7 @@ public class SequenceBase {
   }
 
   private void updateMirrorConfig(String receivedConfig) {
-    assert altClient != null;
+    checkNotNull(altClient, "Alternate client used but test not skipped");
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
     // There's a race condition if the mirror command gets delayed, so chill for a bit.
@@ -1288,7 +1299,7 @@ public class SequenceBase {
       try {
         setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
-        assert reflector().isActive();
+        checkState(reflector().isActive(), "Reflector is not currently active");
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);
