@@ -170,7 +170,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
