@@ -1,5 +1,7 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,10 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -62,9 +67,9 @@ public class SiteModel {
 
   private static ExecutionConfiguration makeExecutionConfiguration(Envelope attributes) {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
-    executionConfiguration.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+    executionConfiguration.registry_id = checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
-    executionConfiguration.cloud_region = Preconditions.checkNotNull(
+    executionConfiguration.cloud_region = checkNotNull(
         attributes.deviceRegistryLocation,
         "deviceRegistryLocation");
     return executionConfiguration;
@@ -98,6 +103,17 @@ public class SiteModel {
     return clientInfo;
   }
 
+  public static List<String> listDevices(File devicesDir) {
+    if (!devicesDir.exists()) {
+      System.err.println(
+          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
+      return ImmutableList.of();
+    }
+    String[] devices = requireNonNull(devicesDir.list());
+    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+        .collect(Collectors.toList());
+  }
+
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
     return makeEndpointConfig(projectId, executionConfiguration, deviceId);
   }
@@ -105,13 +121,18 @@ public class SiteModel {
   private Set<String> getDeviceIds() {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
-    File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
-    return Arrays.stream(files).map(File::getName).collect(Collectors.toSet());
+    File[] files = Objects.requireNonNull(devicesFile.listFiles(), "no files in site devices/");
+    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory).collect(Collectors.toSet());
+  }
+
+  private static boolean validDeviceDirectory(String dirName) {
+    return !(dirName.startsWith(".") || dirName.endsWith("~"));
   }
 
   private void loadAllDeviceMetadata() {
-    allMetadata = getDeviceIds().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
-    allDevices = getDeviceIds().stream().collect(toMap(key -> key, this::newDevice));
+    Set<String> deviceIds = getDeviceIds();
+    allMetadata = deviceIds.stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allDevices = deviceIds.stream().collect(toMap(key -> key, this::newDevice));
   }
 
   private Device newDevice(String deviceId) {

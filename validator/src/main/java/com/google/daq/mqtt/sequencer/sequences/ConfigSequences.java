@@ -21,12 +21,8 @@ import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -38,11 +34,6 @@ public class ConfigSequences extends SequenceBase {
 
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
-
-  private boolean hasInterestingStatus() {
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
-  }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
@@ -67,7 +58,7 @@ public class ConfigSequences extends SequenceBase {
         Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
-    updateConfig();
+    updateConfig("warning loglevel");
     // Nothing to actively wait for, so wait for some amount of time instead.
     safeSleep(CONFIG_THRESHOLD_SEC * 2000);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -88,7 +79,7 @@ public class ConfigSequences extends SequenceBase {
   @Description("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig();
+    updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));

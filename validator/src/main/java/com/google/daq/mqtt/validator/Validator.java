@@ -14,7 +14,6 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
-import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +42,7 @@ import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -312,13 +312,9 @@ public class Validator {
 
   private void initializeExpectedDevices(String siteDir) {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
-    if (!devicesDir.exists()) {
-      System.err.println(
-          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
-      return;
-    }
+    List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
-      for (String device : requireNonNull(devicesDir.list())) {
+      for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
           File deviceDir = new File(devicesDir, device);
@@ -463,13 +459,14 @@ public class Validator {
     }
   }
 
-  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
-    message.remove(SequenceBase.CONFIG_NONCE_KEY);
+  private String sanitizeMessage(String schemaName, Map<String, Object> message) {
+    String nonce = (String) message.remove(SequenceBase.CONFIG_NONCE_KEY);
     message.values().forEach(this::sanitizeBlock);
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_PROPERTY_KEY);
       message.remove(TIMESTAMP_PROPERTY_KEY);
     }
+    return nonce;
   }
 
   private void sanitizeBlock(Object subBlock) {

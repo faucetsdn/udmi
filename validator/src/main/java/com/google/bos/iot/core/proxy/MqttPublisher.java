@@ -21,7 +21,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -93,7 +92,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
@@ -101,6 +100,7 @@ class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
+    return null;
   }
 
   private void publishCore(String deviceId, String topic, String payload) {

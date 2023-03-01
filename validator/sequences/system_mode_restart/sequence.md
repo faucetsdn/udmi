@@ -15,5 +15,6 @@ Restart and connect to same endpoint and expect it returns.
 1. Update config before system mode is ACTIVE:
     * Set `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
+1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
