@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;

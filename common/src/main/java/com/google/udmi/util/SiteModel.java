@@ -8,9 +8,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.api.client.json.Json;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -140,21 +142,46 @@ public class SiteModel {
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
+    return loadDeviceMetadata(sitePath, deviceId, SiteModel.class);
+  }
+
+  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File deviceDir = getDeviceDir(deviceId);
+    File deviceDir = getDeviceDir(sitePath, deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      Metadata metadata = JsonUtil.loadFile(Metadata.class, deviceMetadataFile);
+      if (metadata != null) {
+        metadata.exception = captureLoadErrors(deviceMetadataFile, container);
+        // Missing arrays are automatically parsed to an empty list, which is not what
+        // we want, so hacky go through and convert an empty list to null.
+        if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+          metadata.gateway.proxy_ids = null;
+        }
+      }
+      return metadata;
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
+  private static Exception captureLoadErrors(File deviceMetadataFile, Class<?> container) {
+    try {
+      JsonUtil.loadStrict(Metadata.class, deviceMetadataFile);
+      return null;
+    } catch (Exception e) {
+      return e;
+    }
+  }
+
   private File getDeviceDir(String deviceId) {
+    return getDeviceDir(sitePath, deviceId);
+  }
+
+  private static File getDeviceDir(String sitePath, String deviceId) {
     File devicesFile = new File(new File(sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
-    return deviceDir;
+    return new File(devicesFile, deviceId);
   }
 
   public Metadata getMetadata(String deviceId) {

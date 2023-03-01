@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.daq.mqtt.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,11 +16,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;

@@ -77,5 +77,5 @@ echo "Expecting:                                     " ${base_devices}
 
 mv ${TEST_SITE}/_site_metadata.json ${TEST_SITE}/site_metadata.json
 
-echo Done with registrar tests, results are $exit_status
+echo Done with registrar tests, results are \'$exit_status\' \(expected to be \'clean\'\)
 [[ $exit_status == clean ]]

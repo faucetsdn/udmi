@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
