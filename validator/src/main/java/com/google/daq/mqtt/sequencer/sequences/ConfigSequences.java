@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
