@@ -1014,7 +1014,7 @@ public class SequenceBase {
         info(String.format("Updated config #%03d", updateCount), stringify(converted));
       } else if (converted instanceof AugmentedState) {
         State convertedState = (State) converted;
-        if (deviceState.timestamp.after(convertedState.timestamp)) {
+        if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
         }
