@@ -1,16 +1,39 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.runtimeExec;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
-import udmi.schema.Config;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
-import udmi.schema.State;
 
 public class LocalnetManager {
 
-  public LocalnetManager(State deviceState, Config deviceConfig) {
-    deviceState.localnet = new LocalnetState();
-    deviceState.localnet.families = enumerateInterfaceAddresses();
+  private static final List<Pattern> familyPatterns = ImmutableList.of(
+      Pattern.compile(" +(inet) ([.\\d]+)/.+"),
+      Pattern.compile(" +(inet6) ([:\\da-f]+)/.+"),
+      Pattern.compile(" +link/(ether) ([:\\da-f]+) .+")
+  );
+
+  private static final Map<String, String> ifaceMap = ImmutableMap.of(
+      "ether", "ether",
+      "inet", "ipv4",
+      "inet6", "ipv6"
+  );
+
+  private final Pubber parent;
+
+  public LocalnetManager(Pubber parent) {
+    this.parent = parent;
+    parent.deviceState.localnet = new LocalnetState();
+    parent.deviceState.localnet.families = enumerateInterfaceAddresses();
   }
 
   /**
@@ -36,6 +59,41 @@ public class LocalnetManager {
    *        valid_lft forever preferred_lft forever
    */
   private HashMap<String, FamilyLocalnetState> enumerateInterfaceAddresses() {
-
+    String defaultInterface = getDefaultInterface();
+    parent.info("Using addresses from default interface " + defaultInterface);
+    Map<String, String> interfaceAddresses = getInterfaceAddresses(defaultInterface);
+    return null;
   }
+
+  private String getDefaultInterface() {
+    List<String> routeLines = runtimeExec("ip", "route");
+    AtomicReference<String> currentInterface = new AtomicReference<>();
+    AtomicInteger currentMaxMetric = new AtomicInteger(Integer.MAX_VALUE);
+    routeLines.forEach(line -> {
+      String[] parts = line.split(" ", 12);
+      if (parts[0].equals("default")) {
+        int metric = Integer.parseInt(parts[10]);
+        if (metric < currentMaxMetric.get()) {
+          currentMaxMetric.set(metric);
+          currentInterface.set(parts[4]);
+        }
+      }
+    });
+    return currentInterface.get();
+  }
+
+  private Map<String, String> getInterfaceAddresses(String defaultInterface) {
+    List<String> strings = runtimeExec("ip", "addr", "show", "dev", defaultInterface);
+    Map<String, String> interfaceMap = new HashMap<>();
+    strings.forEach(line -> {
+      for (Pattern pattern : familyPatterns) {
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.matches()) {
+          interfaceMap.put(ifaceMap.get(matcher.group(1)), matcher.group(2));
+        }
+      }
+    });
+    return interfaceMap;
+  }
+
 }

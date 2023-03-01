@@ -440,7 +440,7 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
-    localnetManager = new LocalnetManager(deviceState, deviceConfig);
+    localnetManager = new LocalnetManager(this);
     markStateDirty();
   }
 
@@ -924,7 +924,7 @@ public class Pubber {
         error("Empty config system block and configured to restart on bad config!");
         restartSystem(true);
       }
-      deviceConfig = config;
+      GeneralUtils.copyFields(config, deviceConfig);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
@@ -1594,7 +1594,7 @@ public class Pubber {
     cloudLog(message, Level.DEBUG, detail);
   }
 
-  private void info(String message) {
+  void info(String message) {
     cloudLog(message, Level.INFO);
   }
 
