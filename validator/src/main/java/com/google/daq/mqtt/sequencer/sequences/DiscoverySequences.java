@@ -158,7 +158,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -169,6 +169,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY, stage = ALPHA)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -210,7 +211,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(DISCOVERY_SCAN)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();
