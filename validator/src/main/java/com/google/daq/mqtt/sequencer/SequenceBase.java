@@ -1013,8 +1013,13 @@ public class SequenceBase {
             transactionId));
         info(String.format("Updated config #%03d", updateCount), stringify(converted));
       } else if (converted instanceof AugmentedState) {
+        State convertedState = (State) converted;
+        if (deviceState.timestamp.after(convertedState.timestamp)) {
+          warning("Ignoring out-of-order state update " + convertedState);
+          return;
+        }
         info(String.format("Updated state #%03d", updateCount), stringify(converted));
-        deviceState = (State) converted;
+        deviceState = convertedState;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
         debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
