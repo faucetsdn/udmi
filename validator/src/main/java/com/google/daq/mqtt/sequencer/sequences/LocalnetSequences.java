@@ -1,20 +1,39 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static org.junit.Assert.assertTrue;
-
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import java.util.HashMap;
+import com.google.daq.mqtt.sequencer.SkipTest;
 import org.junit.Test;
-import udmi.schema.FamilyLocalnetState;
+import udmi.schema.FamilyLocalnetModel;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Validate localnet related functionality.
  */
 public class LocalnetSequences extends SequenceBase {
 
-  @Test
-  public void family_addrs() {
+  private void familyAddr(String family) {
+    String expected = catchToNull(() -> deviceMetadata.localnet.families.get(family).addr);
+    if (expected == null) {
+      throw new SkipTest("No ipv4 address defined in metadata");
+    }
     untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
+    String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);
+    assertEquals(actual, expected, "device family address");
+  }
+
+  @Test
+  public void family_ether_addr() {
+    familyAddr("ether");
+  }
+
+  @Test
+  public void family_ipv4_addr() {
+    familyAddr("ipv4");
+  }
+
+  @Test
+  public void family_ipv6_addr() {
+    familyAddr("ipv6");
   }
 }
 
