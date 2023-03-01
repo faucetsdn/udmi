@@ -36,5 +36,3 @@ public class LocalnetSequences extends SequenceBase {
     familyAddr("ipv6");
   }
 }
-
-
