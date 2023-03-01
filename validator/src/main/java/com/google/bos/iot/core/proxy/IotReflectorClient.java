@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -259,8 +260,8 @@ public class IotReflectorClient implements MessagePublisher {
 
   private String parseMessageTopic(String topic) {
     String[] parts = topic.substring(1).split("/", 3);
-    assert "devices".equals(parts[0]);
-    assert registryId.equals(parts[1]);
+    checkState("devices".equals(parts[0]), "unknown parsed path field");
+    checkState(registryId.equals(parts[1]), "unexpected parsed registry id");
     return parts[2];
   }
 
