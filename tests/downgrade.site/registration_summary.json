@@ -1,4 +1,7 @@
 {
+  "Converting" : {
+    "DWN-2" : "Unrecognized field \"grumpy\" (class udmi.schema.Metadata), not marked as ignorable (12 known properties: \"discovery\", \"localnet\", \"gateway\", \"cloud\", \"timestamp\", \"version\", \"description\", \"hash\", \"exception\", \"testing\", \"pointset\", \"system\"])\n at [Source: (File); line: 26, column: 14] (through reference chain: udmi.schema.Metadata[\"grumpy\"])"
+  },
   "Credential" : {
     "DWN-1" : "While loading credentials for local device DWN-1",
     "DWN-2" : "While loading credentials for local device DWN-2"
@@ -8,6 +11,6 @@
     "DWN-2" : "devices/DWN-2"
   },
   "Version" : {
-    "main" : "1.4.0-195-gdfe40886"
+    "main" : "1.4.0-147-g792ad526"
   }
 }

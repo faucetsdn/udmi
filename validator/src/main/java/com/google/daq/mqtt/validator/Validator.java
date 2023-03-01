@@ -1,17 +1,17 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
-import static com.google.daq.mqtt.util.Common.NO_SITE;
-import static com.google.daq.mqtt.util.Common.STATE_QUERY_TOPIC;
-import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.VERSION_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.removeNextArg;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
+import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
+import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 
@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -40,6 +39,7 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -317,9 +317,8 @@ public class Validator {
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
-          File deviceDir = new File(devicesDir, device);
-          File metadataFile = new File(deviceDir, METADATA_JSON);
-          reportingDevice.setMetadata(OBJECT_MAPPER.readValue(metadataFile, Metadata.class));
+          Metadata metadata = SiteModel.loadDeviceMetadata(siteDir, device, Validator.class);
+          reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
           System.err.printf("Error while loading device %s: %s%n", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
@@ -851,7 +850,7 @@ public class Validator {
     try (OutputStream outputStream = new FileOutputStream(outputFile)) {
       File inputFile = getFullPath(prefix, new File(targetFile));
       copyFileHeader(inputFile, outputStream);
-      Map<String, Object> message = JsonUtil.toMap(inputFile);
+      Map<String, Object> message = JsonUtil.loadMap(inputFile);
       sanitizeMessage(schemaName, message);
       JsonNode jsonNode = OBJECT_MAPPER.valueToTree(message);
       if (upgradeMessage(schemaName, jsonNode)) {

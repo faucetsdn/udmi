@@ -5,9 +5,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
-import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
-import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
@@ -33,6 +32,7 @@ import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -202,6 +202,7 @@ public class SequenceBase {
         validatorConfig = ConfigUtil.readValidatorConfig(configFile);
         SiteModel model = new SiteModel(validatorConfig.site_model);
         model.initialize();
+        reportLoadingErrors(model);
         validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
             .orElse(model.getCloudRegion());
         validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
@@ -211,6 +212,13 @@ public class SequenceBase {
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
       }
+    }
+  }
+
+  private static void reportLoadingErrors(SiteModel model) {
+    Exception exception = model.getMetadata(validatorConfig.device_id).exception;
+    if (exception != null) {
+      System.err.println("Device loading error: " + exception.getMessage());
     }
   }
 

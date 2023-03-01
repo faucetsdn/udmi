@@ -1,6 +1,8 @@
 Exceptions for DWN-2
   While loading credentials for local device DWN-2
     Found 0 credentials
+  Unrecognized field "grumpy" (class udmi.schema.Metadata), not marked as ignorable (12 known properties: "discovery", "localnet", "gateway", "cloud", "timestamp", "version", "description", "hash", "exception", "testing", "pointset", "system"])
+ at [Source: (File); line: 26, column: 14] (through reference chain: udmi.schema.Metadata["grumpy"])
   devices/DWN-2
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
     Extra out files: [exceptions.txt]
