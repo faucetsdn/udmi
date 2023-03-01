@@ -1,5 +1,5 @@
-RESULT pass discovery.scan single_scan ALPHA 5 Sequence complete
 RESULT pass discovery.scan periodic_scan ALPHA 5 Sequence complete
+RESULT pass discovery.scan single_scan ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_connection_bad_hash ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_connection_error ALPHA 5 Sequence complete
 RESULT pass endpoint endpoint_connection_retry ALPHA 5 Sequence complete
