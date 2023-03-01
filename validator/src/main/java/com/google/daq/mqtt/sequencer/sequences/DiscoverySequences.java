@@ -159,7 +159,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
