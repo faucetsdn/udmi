@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;

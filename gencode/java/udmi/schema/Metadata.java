@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "description",
     "hash",
+    "exception",
     "cloud",
     "system",
     "gateway",
@@ -62,6 +63,13 @@ public class Metadata {
     @JsonProperty("hash")
     @JsonPropertyDescription("Automatically generated field that contains the hash of file contents.")
     public String hash;
+    /**
+     * Exception captured during processing or conversion.
+     * 
+     */
+    @JsonProperty("exception")
+    @JsonPropertyDescription("Exception captured during processing or conversion.")
+    public Exception exception;
     /**
      * Cloud Model
      * <p>
@@ -130,13 +138,14 @@ public class Metadata {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.exception == null)? 0 :this.exception.hashCode()));
+        result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
+        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.cloud == null)? 0 :this.cloud.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
-        result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
-        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
-        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.hash == null)? 0 :this.hash.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
         result = ((result* 31)+((this.localnet == null)? 0 :this.localnet.hashCode()));
@@ -153,7 +162,7 @@ public class Metadata {
             return false;
         }
         Metadata rhs = ((Metadata) other);
-        return ((((((((((((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((((((((((this.exception == rhs.exception)||((this.exception!= null)&&this.exception.equals(rhs.exception)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

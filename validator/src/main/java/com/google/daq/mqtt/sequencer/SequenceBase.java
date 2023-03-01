@@ -2,11 +2,12 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
-import static com.google.daq.mqtt.util.Common.EXCEPTION_KEY;
-import static com.google.daq.mqtt.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -24,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
@@ -32,6 +32,7 @@ import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -152,7 +153,7 @@ public class SequenceBase {
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
-  private static MessagePublisher altClient;
+  protected static MessagePublisher altClient;
   private static SequenceBase activeInstance;
   private static MessageBundle stashedBundle;
   private static boolean resetRequired = true;
@@ -201,6 +202,7 @@ public class SequenceBase {
         validatorConfig = ConfigUtil.readValidatorConfig(configFile);
         SiteModel model = new SiteModel(validatorConfig.site_model);
         model.initialize();
+        reportLoadingErrors(model);
         validatorConfig.cloud_region = Optional.ofNullable(validatorConfig.cloud_region)
             .orElse(model.getCloudRegion());
         validatorConfig.registry_id = Optional.ofNullable(validatorConfig.registry_id)
@@ -210,6 +212,13 @@ public class SequenceBase {
       } catch (Exception e) {
         throw new RuntimeException("While loading " + configFile, e);
       }
+    }
+  }
+
+  private static void reportLoadingErrors(SiteModel model) {
+    Exception exception = model.getMetadata(validatorConfig.device_id).exception;
+    if (exception != null) {
+      System.err.println("Device loading error: " + exception.getMessage());
     }
   }
 
@@ -269,7 +278,15 @@ public class SequenceBase {
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
     altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
-    return new IotReflectorClient(altConfiguration);
+    try {
+      return new IotReflectorClient(altConfiguration);
+    } catch (Exception e) {
+      System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
+      if (traceLogLevel()) {
+        e.printStackTrace();
+      }
+      return null;
+    }
   }
 
   private static MessagePublisher getReflectorClient() {
@@ -400,7 +417,7 @@ public class SequenceBase {
     }
     waitingCondition.clear();
     waitingCondition.push("starting test wrapper");
-    assert reflector().isActive();
+    checkState(reflector().isActive(), "Reflector is not currently active");
 
     // Old messages can sometimes take a while to clear out, so need some delay for stability.
     // TODO: Minimize time, or better yet find deterministic way to flush messages.
@@ -588,11 +605,11 @@ public class SequenceBase {
         Level.fromValue(logEntry.level).name(), logEntry.category, logEntry.message);
   }
 
-  private boolean debugLogLevel() {
+  private static boolean debugLogLevel() {
     return logLevel <= Level.DEBUG.value();
   }
 
-  private boolean traceLogLevel() {
+  private static boolean traceLogLevel() {
     return logLevel <= Level.TRACE.value();
   }
 
@@ -931,7 +948,7 @@ public class SequenceBase {
       MessageBundle bundle = reflector().takeNextMessage();
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
-        assert stashedBundle == null;
+        checkState(stashedBundle == null, "stashed bundle is not null");
         stashedBundle = bundle;
         throw new RuntimeException("Message loop no longer for active thread");
       }
@@ -1013,8 +1030,13 @@ public class SequenceBase {
             transactionId));
         info(String.format("Updated config #%03d", updateCount), stringify(converted));
       } else if (converted instanceof AugmentedState) {
+        State convertedState = (State) converted;
+        if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
+          warning("Ignoring out-of-order state update " + convertedState);
+          return;
+        }
         info(String.format("Updated state #%03d", updateCount), stringify(converted));
-        deviceState = (State) converted;
+        deviceState = convertedState;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
         debug("Updated state has last_config " + getTimestamp(deviceState.system.last_config));
@@ -1178,8 +1200,9 @@ public class SequenceBase {
   }
 
   protected void withAlternateClient(Runnable evaluator) {
-    assert !useAlternateClient;
-    assert deviceConfig.system.testing.endpoint_type == null;
+    checkNotNull(altClient, "Alternate client used but test not skipped");
+    checkState(!useAlternateClient, "Alternate client already in use");
+    checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
       deviceConfig.system.testing.endpoint_type = "alternate";
@@ -1221,7 +1244,7 @@ public class SequenceBase {
   }
 
   private void updateMirrorConfig(String receivedConfig) {
-    assert altClient != null;
+    checkNotNull(altClient, "Alternate client used but test not skipped");
     String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
     reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
     // There's a race condition if the mirror command gets delayed, so chill for a bit.
@@ -1288,7 +1311,7 @@ public class SequenceBase {
       try {
         setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
-        assert reflector().isActive();
+        checkState(reflector().isActive(), "Reflector is not currently active");
 
         testName = description.getMethodName();
         testDescription = getTestDescription(description);

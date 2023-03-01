@@ -1,14 +1,14 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
-import static com.google.daq.mqtt.util.Common.NO_SITE;
-import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
+import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.removeNextArg;
 
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.Common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;

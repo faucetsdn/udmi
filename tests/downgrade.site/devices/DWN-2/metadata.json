@@ -23,6 +23,9 @@
       }
     }
   },
+  "grumpy": {
+    "reason": "This is an intentional schema violation to test the tools"
+  },
   "localnet": {
     "families": {
       "virtual": {

@@ -29,6 +29,7 @@ credentials.json
 pubber.out*
 /sequencer.out
 __pycache__/
+/tests/downgrade.site/out/
 /tests/downgrade.site/devices/*/out/
 /udmi_*.log
 
