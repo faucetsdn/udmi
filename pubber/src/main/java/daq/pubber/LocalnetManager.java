@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -33,7 +34,7 @@ public class LocalnetManager {
   public LocalnetManager(Pubber parent) {
     this.parent = parent;
     parent.deviceState.localnet = new LocalnetState();
-    parent.deviceState.localnet.families = enumerateInterfaceAddresses();
+    populateInterfaceAddresses();
   }
 
   /**
@@ -58,13 +59,21 @@ public class LocalnetManager {
    *        valid_lft forever preferred_lft forever
    * </pre>
    */
-  private HashMap<String, FamilyLocalnetState> enumerateInterfaceAddresses() {
+  private void populateInterfaceAddresses() {
+    parent.deviceState.localnet.families = new HashMap<>();
     String defaultInterface = getDefaultInterface();
     parent.info("Using addresses from default interface " + defaultInterface);
     Map<String, String> interfaceAddresses = getInterfaceAddresses(defaultInterface);
-    interfaceAddresses.forEach(
-        (key, value) -> parent.info("Family " + key + " address is " + value));
-    return null;
+    interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
+    HashMap<String, FamilyLocalnetState> stateMap = new HashMap<>();
+  }
+
+  private void addStateMapEntry(Entry<String, String> entry) {
+    FamilyLocalnetState stateEntry = new FamilyLocalnetState();
+    stateEntry.addr = entry.getValue();
+    String family = entry.getKey();
+    parent.info("Family " + family + " address is " + stateEntry.addr);
+    parent.deviceState.localnet.families.put(family, stateEntry);
   }
 
   private String getDefaultInterface() {
