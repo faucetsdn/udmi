@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static udmi.schema.Bucket.DISCOVERY;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
