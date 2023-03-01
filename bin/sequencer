@@ -42,7 +42,6 @@ if [[ $project_id == -- ]]; then
     echo Configuring for mock project use...
     project_id=mock-project
     alt_registry=
-    alt_project=mock-project
 fi
 
 test_names="$@"
@@ -66,7 +65,6 @@ cat <<EOF > $VALIDATOR_CONFIG
   "site_model": "$site_path",
   "device_id": "$device_id",
   "alt_registry": "$alt_registry",
-  "alt_project": "$alt_project",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
