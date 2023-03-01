@@ -1,13 +1,12 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.ValidationException;
-import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.Common;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,10 +27,7 @@ import udmi.schema.PointsetState;
  */
 public class ReportingDevice {
 
-  private static final char DETAIL_SEPARATOR_CHAR = ';';
   private static final char DETAIL_REPLACE_CHAR = ',';
-  private static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";
-  private static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
   private static final long THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
@@ -68,7 +64,8 @@ public class ReportingDevice {
   private static Entry makeEntry(Exception error, String category, String detail) {
     Entry entry = new Entry();
     entry.message = Common.getExceptionMessage(error);
-    entry.detail = detail == null ? getExceptionDetail(error) : detail;
+    entry.detail = detail == null ? Common.getExceptionDetail(error, ReportingDevice.class,
+        ReportingDevice::validationMessage) : detail;
     assertTrue("valid entry category", Category.LEVEL.containsKey(category));
     entry.category = Category.VALIDATION_DEVICE_SCHEMA;
     entry.level = Level.ERROR.value();
@@ -78,38 +75,6 @@ public class ReportingDevice {
 
   private static Date getTimestamp() {
     return mockNow != null ? mockNow : new Date();
-  }
-
-  private static String getExceptionDetail(Throwable exception) {
-    List<String> messages = new ArrayList<>();
-    String previousMessage = null;
-    while (exception != null) {
-      final String useMessage;
-      if (exception instanceof ValidationException) {
-        useMessage = validationMessage((ValidationException) exception);
-      } else {
-        String message = Common.getExceptionMessage(exception);
-        String line = Common.getExceptionLine(exception, Validator.class);
-        useMessage = message + (line == null ? "" : " @" + line);
-      }
-      if (previousMessage == null || !previousMessage.equals(useMessage)) {
-        messages.add(useMessage);
-        previousMessage = useMessage;
-      }
-      exception = exception.getCause();
-    }
-    return DETAIL_JOINER.join(messages);
-  }
-
-  private static String validationMessage(ValidationException exception) {
-    return exception.getAllMessages().stream()
-        .map(ReportingDevice::replaceCategoryMissing)
-        .collect(Collectors.joining(DETAIL_SEPARATOR));
-  }
-
-  private static String replaceCategoryMissing(String message) {
-    int index = message.indexOf(CATEGORY_MISSING_MESSAGE);
-    return index < 0 ? message : message.substring(0, index) + CATEGORY_MISSING_REPLACEMENT;
   }
 
   /**
@@ -130,7 +95,7 @@ public class ReportingDevice {
     Entry entry = new Entry();
     entry.category = Category.VALIDATION_DEVICE_MULTIPLE;
     entry.message = "Multiple validation errors";
-    entry.detail = DETAIL_JOINER
+    entry.detail = Common.DETAIL_JOINER
         .join(entries.stream()
             .map(ReportingDevice::makeEntrySummary)
             .collect(Collectors.toList()));
@@ -141,11 +106,25 @@ public class ReportingDevice {
   }
 
   private static String makeEntrySummary(Entry entry) {
-    return entry.message.replace(DETAIL_SEPARATOR_CHAR, DETAIL_REPLACE_CHAR);
+    return entry.message.replace(Common.DETAIL_SEPARATOR_CHAR, DETAIL_REPLACE_CHAR);
   }
 
   static void setMockNow(Instant now) {
     mockNow = Date.from(now);
+  }
+
+  static String validationMessage(Throwable exception) {
+    if (exception instanceof ValidationException) {
+      return ((ValidationException) exception).getAllMessages().stream()
+          .map(ReportingDevice::replaceCategoryMissing)
+          .collect(Collectors.joining(Common.DETAIL_SEPARATOR));
+    }
+    return null;
+  }
+
+  private static String replaceCategoryMissing(String message) {
+    int index = message.indexOf(CATEGORY_MISSING_MESSAGE);
+    return index < 0 ? message : message.substring(0, index) + CATEGORY_MISSING_REPLACEMENT;
   }
 
   /**
@@ -242,7 +221,8 @@ public class ReportingDevice {
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     addError(error, category,
-        String.format("%s_%s: %s", subType, subFolder, getExceptionDetail(error)));
+        String.format("%s_%s: %s", subType, subFolder,
+            Common.getExceptionDetail(error, this.getClass(), ReportingDevice::validationMessage)));
   }
 
   void addError(Exception error, String category, String detail) {
@@ -322,6 +302,7 @@ public class ReportingDevice {
    * Encapsulation of metadata differences.
    */
   public static class MetadataDiff {
+
     public Set<String> extraPoints;
     public Set<String> missingPoints;
   }

@@ -1,4 +1,38 @@
 """Generated class for metadata.json"""
+
+
+class Object9DDDF843:
+  """Generated schema class"""
+
+  def __init__(self):
+    pass
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = Object9DDDF843()
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = Object9DDDF843.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    return result
 from .model_cloud import CloudModel
 from .model_system import SystemModel
 from .model_gateway import GatewayModel
@@ -16,6 +50,7 @@ class Metadata:
     self.version = None
     self.description = None
     self.hash = None
+    self.exception = None
     self.cloud = None
     self.system = None
     self.gateway = None
@@ -33,6 +68,7 @@ class Metadata:
     result.version = source.get('version')
     result.description = source.get('description')
     result.hash = source.get('hash')
+    result.exception = Object9DDDF843.from_dict(source.get('exception'))
     result.cloud = CloudModel.from_dict(source.get('cloud'))
     result.system = SystemModel.from_dict(source.get('system'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
@@ -68,6 +104,8 @@ class Metadata:
       result['description'] = self.description # 5
     if self.hash:
       result['hash'] = self.hash # 5
+    if self.exception:
+      result['exception'] = self.exception.to_dict() # 4
     if self.cloud:
       result['cloud'] = self.cloud.to_dict() # 4
     if self.system:

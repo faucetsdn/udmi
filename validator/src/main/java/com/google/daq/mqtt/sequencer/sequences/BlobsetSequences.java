@@ -183,8 +183,8 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Description("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    if (altRegistry == null) {
-      throw new SkipTest("No alternate registry defined");
+    if (altClient == null) {
+      throw new SkipTest("No functional alternate registry defined");
     }
 
     // Phase one: initiate connection to alternate registry.
