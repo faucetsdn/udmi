@@ -18,10 +18,12 @@ all_tests=$(cat $TEST_LIST.sorted)
 for test in $all_tests; do
     src_dir=sites/udmi_site_model/out/devices/AHU-1/tests/$test
     cache_dir=validator/sequences/$test/
-    if diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
-        echo Clean $cache_dir
+    if [[ ! -f $src_dir/sequence.md ]]; then
+        echo Skipping $src_dir
+    elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
+        echo "Keeping " $cache_dir
     else
-        echo Update $cache_dir from $src_dir...
+        echo Updating $cache_dir from $src_dir...
         rm -rf $cache_dir
         cp -a $src_dir $(dirname $cache_dir)
         ls -l $src_dir/sequence.md $cache_dir/sequence.md
