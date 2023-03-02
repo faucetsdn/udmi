@@ -108,7 +108,7 @@ public class SequenceBase {
   public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_norm.json";
+  private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
   private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
