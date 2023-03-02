@@ -17,7 +17,6 @@ Sequence tests use the @Feature annotation to tag test functions with their stag
         * Ready for external testing by many manufacturers.
         * The feature will only change if significant bugs or feature mismatch is found from the industry, partners, or testers.  (Note that feature mismatch should be a very rare occurrence if the feature was fully vetted in the ALPHA stage.)
 * STABLE
-    * "Qualification Lab” stage in SmartReady Managed Device Release Pipeline
     * Definition
         * Feature is complete, and should not change. 
         * Minor revision update (1.0.0 → 1.1.0) if feature changes.
