@@ -65,7 +65,7 @@ public class DiscoverySequences extends SequenceBase {
 
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
         .collect(Collectors.toList());
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
