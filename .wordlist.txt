@@ -13,6 +13,7 @@ bacnet
 BACnet
 blobset
 BMS
+breakpoint
 buildingsiot
 centric
 CLA
