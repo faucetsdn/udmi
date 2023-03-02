@@ -79,7 +79,6 @@ bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $t
 echo Completed execution of sequencer test run.
 
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
-echo Copied output to /tmp/sequencer.out for later examination.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then

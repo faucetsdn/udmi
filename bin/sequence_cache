@@ -17,11 +17,13 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 TEST_LIST=/tmp/sequencer_tests.txt
+TEST_OUT=/tmp/sequencer.out
 
 find validator/sequences/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
 find sites/udmi_site_model/out/devices/AHU-1 -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
 cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
 all_tests=$(cat $TEST_LIST.sorted)
+rm -f $TEST_OUT
 
 for test in $all_tests; do
     src_dir=sites/udmi_site_model/out/devices/AHU-1/tests/$test
@@ -36,6 +38,12 @@ for test in $all_tests; do
         cp -a $src_dir $(dirname $cache_dir)
         ls -l $src_dir/sequence.md $cache_dir/sequence.md
     fi
+
+    fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*sequencer RESULT/RESULT/' >> $TEST_OUT
 done
 
+mv $TEST_OUT $TEST_OUT.bak
+sort -k 3 < $TEST_OUT.bak > $TEST_OUT
 echo Done with test cache update.
+
+cat $TEST_OUT
