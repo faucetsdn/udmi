@@ -1,0 +1,26 @@
+#!/bin/bash -e
+#
+# Command line wrapper to create a config file, and pass off
+# to sequence looper for complete sequence run.
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+TEST_LOG=/tmp/test_log.txt
+log_level=INFO
+alt_registry=ZZ-REDIRECT-NA
+min_stage=BETA
+
+TEST_LIST=/tmp/sequencer_tests.txt
+find validator/sequences/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
+find sites/udmi_site_model/out/devices/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
+cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
+all_tests=$(cat $TEST_LIST.sorted)
+for test in $all_tests; do
+    echo $test
+    ls -l sites/udmi_site_model/out/devices/AHU-1/tests/$test/sequence.md validator/sequences/$test/sequence.md || true
+    if ! diff sites/udmi_site_model/out/devices/AHU-1/tests/$test/sequence.md validator/sequences/$test/sequence.md; then
+        echo updating
+        mkdir -p validator/sequences/$test
+        cp sites/udmi_site_model/out/devices/AHU-1/tests/$test/sequence.md validator/sequences/$test/sequence.md
+    fi
+done

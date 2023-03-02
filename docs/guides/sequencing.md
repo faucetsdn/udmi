@@ -15,5 +15,5 @@ Sequencing is a set of testing steps for verifying that _sequences_ of device be
 
 ## Individual Tests
 
-At its heard, sequence tests are JUnit `@Test` classes that can be run indivudally within an IDE. This
+At its heard, sequence tests are JUnit `@Test` classes that can be run individually within an IDE. This
 is useful for development because it enables breakpoints and all that jazz.
