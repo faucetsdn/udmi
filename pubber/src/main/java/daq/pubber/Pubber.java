@@ -1295,7 +1295,7 @@ public class Pubber {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
     event.addr = target.getValue().addr;
     return event;
-  }git
+  }
 
   private FamilyLocalnetModel getFamilyLocalnetModel(String family, Metadata targetMetadata) {
     try {
