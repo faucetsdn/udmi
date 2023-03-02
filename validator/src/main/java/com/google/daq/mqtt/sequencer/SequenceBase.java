@@ -1171,7 +1171,7 @@ public class SequenceBase {
   }
 
   protected void info(String message) {
-    log(String.format("%s%s", message, useAlternateClient ? "   [AC]":""), Level.INFO);  // jrand
+    log(message, Level.INFO);
   }
 
   protected void notice(String message) {
