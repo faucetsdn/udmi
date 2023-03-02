@@ -10,16 +10,16 @@
   "scan_family": "bacnet",
   "families": {
     "ipv4": {
-      "id": "192.168.1.2"
+      "addr": "192.168.1.2"
     },
     "bacnet": {
-      "id": "872849"
+      "addr": "872849"
     },
     "ipv6": {
-      "id": "FE80::D05C:1A90:DD9E:A582"
+      "addr": "FE80::D05C:1A90:DD9E:A582"
     },
     "ethmac": {
-      "id": "0E:93:32:11:04:82"
+      "addr": "0E:93:32:11:04:82"
     }
   },
   "status": {
