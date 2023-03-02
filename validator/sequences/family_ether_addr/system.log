@@ -1,0 +1,18 @@
+2023-03-02T06:14:35Z INFO device.log update state 2023-03-02T06:14:35Z last_config 2023-03-02T06:14:31Z
+2023-03-02T06:14:41Z INFO device.log update state 2023-03-02T06:14:41Z last_config 2023-03-02T06:14:31Z
+2023-03-02T06:14:41Z INFO device.log Config handler
+2023-03-02T06:14:41Z INFO device.log 2023-03-02T06:14:41Z received config 2023-03-02T06:14:41Z
+2023-03-02T06:14:41Z NOTICE system.config.apply success
+2023-03-02T06:14:43Z INFO device.log Config handler
+2023-03-02T06:14:43Z INFO device.log 2023-03-02T06:14:43Z received config 2023-03-02T06:14:41Z
+2023-03-02T06:14:43Z NOTICE system.config.apply success
+2023-03-02T06:14:43Z INFO device.log update state 2023-03-02T06:14:43Z last_config 2023-03-02T06:14:41Z
+2023-03-02T06:14:45Z INFO device.log Config handler
+2023-03-02T06:14:45Z INFO device.log 2023-03-02T06:14:45Z received config 2023-03-02T06:14:43Z
+2023-03-02T06:14:45Z NOTICE system.config.apply success
+2023-03-02T06:14:45Z INFO device.log update state 2023-03-02T06:14:45Z last_config 2023-03-02T06:14:43Z
+2023-03-02T06:14:53Z INFO device.log update state 2023-03-02T06:14:53Z last_config 2023-03-02T06:14:43Z
+2023-03-02T06:14:53Z INFO device.log Config handler
+2023-03-02T06:14:53Z INFO device.log 2023-03-02T06:14:53Z received config 2023-03-02T06:14:53Z
+2023-03-02T06:14:53Z NOTICE system.config.apply success
+2023-03-02T06:15:00Z ERROR sequencer device family address expected:<[00:50:b6:ed:5f:77]> but was:<[8c:8c:aa:50:bc:72]>

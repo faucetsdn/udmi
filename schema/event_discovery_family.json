@@ -6,13 +6,13 @@
   "additionalProperties": false,
   "description": "Discovery information for an individual protocol family.",
   "properties": {
-    "id": {
+    "addr": {
       "type": "string",
       "pattern": "^[-_.:0-9A-Z]+$",
-      "description": "Device id in the namespace of the given family"
+      "description": "Device addr in the namespace of the given family"
     }
   },
   "required": [
-    "id"
+    "addr"
   ]
 }

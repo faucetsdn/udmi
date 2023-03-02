@@ -1,10 +1,12 @@
 {
-  "last_start" : "2022-09-09T03:12:37Z",
   "metrics_rate_sec" : 600,
   "min_loglevel" : 100,
+  "operation" : {
+    "last_start" : "2023-03-02T06:08:43Z"
+  },
   "testing" : {
     "sequence_name" : "extra_config"
   },
-  "timestamp" : "2022-09-09T03:13:52.860Z",
-  "version" : "1.3.14-44-gecf30496-dirty"
+  "timestamp" : "2023-03-02T06:11:15.479Z",
+  "version" : "1.4.0-221-g632b879b"
 }

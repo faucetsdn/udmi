@@ -1,0 +1,25 @@
+{
+  "hardware" : {
+    "make" : "BOS",
+    "model" : "pubber"
+  },
+  "last_config" : "2023-03-02T06:07:17Z",
+  "operation" : {
+    "operational" : true,
+    "last_start" : "2023-03-02T06:03:08Z",
+    "restart_count" : 4,
+    "mode" : "initial"
+  },
+  "serial_no" : "sequencer-7010",
+  "software" : {
+    "firmware" : "v1"
+  },
+  "status" : {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:07:18Z",
+    "level" : 300
+  },
+  "timestamp" : "2023-03-02T06:07:23Z",
+  "version" : "1.4.1"
+}
