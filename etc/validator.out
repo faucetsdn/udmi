@@ -3,6 +3,7 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/event_system.json
 sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-1/state.json
+sites/udmi_site_model/out/devices/AHU-1/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/config.json
@@ -10,11 +11,35 @@ sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
 sites/udmi_site_model/out/devices/AHU-22/persistent_data.json
 sites/udmi_site_model/out/devices/AHU-22/state.json
+sites/udmi_site_model/out/devices/AHU-22/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/state_system.json
 ::::::::::::::
 /dev/null
 ::::::::::::::
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/config.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.0",
+  "sub_folder" : "update",
+  "sub_type" : "config",
+  "status" : {
+    "message" : "While converting to json node: 4 schema violations found",
+    "detail" : "config_update: While converting to json node: 4 schema violations found @Validator.validateMessage(redacted); 4 schema violations found; /localnet/families/ether: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/ether: object has missing required properties ([\"id\"]); /localnet/families/inet: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/inet: object has missing required properties ([\"id\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting to json node: 4 schema violations found",
+    "detail" : "config_update: While converting to json node: 4 schema violations found @Validator.validateMessage(redacted); 4 schema violations found; /localnet/families/ether: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/ether: object has missing required properties ([\"id\"]); /localnet/families/inet: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/inet: object has missing required properties ([\"id\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
 ::::::::::::::
@@ -35,8 +60,37 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
     "extra" : [ ]
   },
   "errors" : [ {
+    "message" : "While converting to json node: 4 schema violations found",
+    "detail" : "config_update: While converting to json node: 4 schema violations found @Validator.validateMessage(redacted); 4 schema violations found; /localnet/families/ether: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/ether: object has missing required properties ([\"id\"]); /localnet/families/inet: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/inet: object has missing required properties ([\"id\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
     "message" : "While converting to json node: 1 schema violations found",
     "detail" : "event_pointset: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/config.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.0",
+  "sub_folder" : "update",
+  "sub_type" : "config",
+  "status" : {
+    "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "config_update: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; /localnet/families/virtual: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/virtual: object has missing required properties ([\"id\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting to json node: 2 schema violations found",
+    "detail" : "config_update: While converting to json node: 2 schema violations found @Validator.validateMessage(redacted); 2 schema violations found; /localnet/families/virtual: object instance has properties which are not allowed by the schema: [\"addr\"]; /localnet/families/virtual: object has missing required properties ([\"id\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
