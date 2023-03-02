@@ -20,7 +20,7 @@ shift 2
 device_dir=$site_dir/devices/$device_id
 mkdir -p $device_dir/out
 metadata_file=$device_dir/metadata.json
-metadata_out=$device_dir/out/metadata_norm.json
+metadata_out=$site_dir/out/devices/$device_id/metadata_mod.json
 # TODO: Implement some mechanism to auto-detect if _norm.json already exists and is up-to-date, and use that.
 
 # Get the interface with the lowest default route metric.
@@ -29,9 +29,7 @@ default_iface=$(ip route | fgrep default | awk '{print $11, $5}' | sort -n | hea
 # Get the ethernet mac address
 ether_addr=$(ip addr show dev $default_iface | fgrep ether | awk '{print $2}')
 
+echo Setting $metadata_out ether addr to $ether_addr
 jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file > $metadata_out
 
 ls -l $metadata_file $metadata_out
-
-# Diagnostic/debug output
-diff $metadata_file $metadata_out || true

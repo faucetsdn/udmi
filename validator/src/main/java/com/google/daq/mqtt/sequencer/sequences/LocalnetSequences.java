@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import org.junit.Test;
-import udmi.schema.FamilyLocalnetModel;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Validate localnet related functionality.

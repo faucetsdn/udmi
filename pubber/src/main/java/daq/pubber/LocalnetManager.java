@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetState;
 
+/**
+ * Container class for dealing with the localnet subblock of UDMI.
+ */
 public class LocalnetManager {
 
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -31,6 +34,11 @@ public class LocalnetManager {
 
   private final Pubber parent;
 
+  /**
+   * Create a new container with the given Pubber parent.
+   *
+   * @param parent parent pubber class
+   */
   public LocalnetManager(Pubber parent) {
     this.parent = parent;
     parent.deviceState.localnet = new LocalnetState();
@@ -39,8 +47,8 @@ public class LocalnetManager {
 
   /**
    * Parse the output of ip route/addr and turn it into a family addr map.
-   * <p>
-   * Start with default route with lowest metric, and then parse the addresses for that interface.
+   *
+   * <p>Start with default route with lowest metric, and then parse the interface addresses.
    *
    * <pre>
    * peringknife@peringknife-glaptop4:~/udmi$ ip route
@@ -51,7 +59,7 @@ public class LocalnetManager {
    * 192.168.9.0/24 dev docker0 proto kernel scope link src 192.168.9.1 linkdown
    *
    * peringknife@peringknife-glaptop4:~/udmi$ ip addr show dev enp0s31f6
-   * 2: enp0s31f6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+   * 2: enp0s31f6: *BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc .... 1000
    *     link/ether 8c:8c:aa:50:bc:72 brd ff:ff:ff:ff:ff:ff
    *     inet 192.168.8.3/24 brd 192.168.8.255 scope global dynamic noprefixroute enp0s31f6
    *        valid_lft 83596sec preferred_lft 83596sec

@@ -8,7 +8,7 @@
   "localnet" : {
     "subsystem" : {
       "virtual" : {
-        "id" : "0x65"
+        "addr" : "0x65"
       }
     }
   },
