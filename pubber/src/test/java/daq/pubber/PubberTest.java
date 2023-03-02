@@ -34,7 +34,8 @@ public class PubberTest extends TestBase {
   private static final String TEST_REDIRECT_HOSTNAME = "mqtt-redirect.google.com";
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
   private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
-  private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT = getEndpointConfigurationRedirect();
+  private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT = 
+      getEndpointConfigurationRedirect();
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
   private static final String ENDPOINT_REDIRECT_BLOB = JsonUtil.stringify(TEST_REDIRECT_ENDPOINT);
   private Pubber pubber;
