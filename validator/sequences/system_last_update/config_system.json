@@ -1,10 +1,12 @@
 {
-  "last_start" : "1970-01-01T00:00:00Z",
   "metrics_rate_sec" : 600,
   "min_loglevel" : 200,
+  "operation" : {
+    "last_start" : "2023-03-02T06:08:43Z"
+  },
   "testing" : {
     "sequence_name" : "system_last_update"
   },
-  "timestamp" : "2022-09-09T03:13:57.980Z",
-  "version" : "1.3.14-44-gecf30496-dirty"
+  "timestamp" : "2023-03-02T06:09:18.380Z",
+  "version" : "1.4.0-221-g632b879b"
 }

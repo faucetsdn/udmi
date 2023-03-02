@@ -1,10 +1,9 @@
 {
-  "deviceNumId" : "123456789101112",
-  "subFolder" : "system",
-  "wasBase64" : "false",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "config",
-  "category" : "commands",
   "deviceId" : "AHU-1",
-  "projectId" : "bos-tester-dev"
+  "deviceNumId" : "123456789101112",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "projectId" : "bos-peringknife-dev",
+  "subFolder" : "system",
+  "subType" : "config",
+  "transactionId" : "1677737356449"
 }
