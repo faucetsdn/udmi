@@ -1136,9 +1136,9 @@ public class Pubber {
   }
 
   private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
-    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).addr;
-    return familyDiscoveryEvent;
+    FamilyDiscoveryEvent familyEvent = new FamilyDiscoveryEvent();
+    familyEvent.addr = siteModel.getMetadata(deviceId).localnet.families.get(familyId).addr;
+    return familyEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
@@ -1270,7 +1270,7 @@ public class Pubber {
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).id = deviceId;
+              key -> new FamilyDiscoveryEvent()).addr = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
@@ -1293,9 +1293,9 @@ public class Pubber {
 
   private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
-    event.id = target.getValue().addr;
+    event.addr = target.getValue().addr;
     return event;
-  }
+  }git
 
   private FamilyLocalnetModel getFamilyLocalnetModel(String family, Metadata targetMetadata) {
     try {
