@@ -4,6 +4,8 @@ import sys
 import json
 import getopt
 
+LINE_BREAK = '=' * 75
+
 RE_SEQUENCER_LINE = re.compile(
   '^(?P<date>\d{4}-\d{2}-\d{2})T'
   '(?P<time>\d\d:\d\d:\d\d)Z\s'
@@ -20,8 +22,17 @@ RE_PUBBER_LINE = re.compile(
 RE_SEQUENCER_TAIL_JSON_BEGIN = re.compile(
   '^Updated (?P<type>config|state) \#(?P<num>\d+):$')
 
+RE_SEQUENCER_TAIL_TEST_BEGIN_END = re.compile(
+  '^(?P<mode>starting|ending) test (?P<name>[a-z_]+)')
+
 RE_PUBBER_TAIL_JSON_BEGIN = re.compile(
   r'^(?P<type>Config|State) update(|\s+\(\w+\)):$')
+
+RE_FILTER_INVALID_JSON_LINE = re.compile(
+  r'^more: cannot open pubber\/out\/\*\/\*\.json: No such file or directory$')
+
+RE_FILTER_END_JSON_BLOCK = re.compile(
+  r'^(?P<end>})(\s+\[AC\])?$')
 
 json_stack = None
 
@@ -94,12 +105,28 @@ def parse_log_file(filename, github_action=False):
         in_json_type = m2.groupdict()['type']
         in_json_num = int(m2.groupdict()['num'])
         in_json = True
-      output_print(l)
+
+      m2 = RE_SEQUENCER_TAIL_TEST_BEGIN_END.match(m_seq['tail'])
+      if m2:
+        output_print('')
+        output_print(LINE_BREAK)
+        output_print('    %s TEST', m2['mode'].upper())
+        output_print('    %s', m2['name'])
+        output_print(LINE_BREAK)
+      else:
+        output_print(l)
 
     if not m_pub and not m_seq and in_json: 
-      json_lines.append(l)
-      if l == '}':
-        in_json = False 
+      if RE_FILTER_INVALID_JSON_LINE.match(l):
+        debug_print('Skipping invalid line: %s', l)
+      else:
+        m_brace = RE_FILTER_END_JSON_BLOCK.match(l)
+        if m_brace:
+          debug_print('m_brace')
+          json_lines.append(m_brace['end'])
+          in_json = False
+        else:
+          json_lines.append(l)
    
     if not in_json and json_lines:
       debug_print(json_lines)
