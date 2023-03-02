@@ -7,7 +7,7 @@ validates that the composition of sequential messages is compliant with the UDMI
 
 1.  Ensure you have [deployed the necessary cloud functions](../cloud/gcp/udmis.md) to your GCP project
 2.  Add a new GCP IoT Core registry with a registry ID of `UDMS-REFLECT`.
-    *   Use `udmi_reflect` as the default PUB/SUB topic for this registry.
+    *   Use `udmi_reflect` as the Pub/Sub topic for both the  **device telemetry and **device state**
     *   This serves as a _reflector_ of the MAIN IoT registry combining all messages
         published into a single stream.
 3.  Create credentials for a reflector 'device' (there is no actual, physical device):
