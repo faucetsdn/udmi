@@ -26,6 +26,8 @@ Sequence tests use the @Feature annotation to tag test functions with their stag
 
 [Sequence tests](../.././validator/src/main/java/com/google/daq/mqtt/sequencer/sequences/) contain @Feature annotations.
 
+For example:
+
 ```
     @Test
     @Description("Restart and connect to same endpoint and expect it returns.")
