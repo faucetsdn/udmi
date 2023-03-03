@@ -42,9 +42,11 @@ public class PubberTest extends TestBase {
   private static final String ENDPOINT_REDIRECT_BLOB = JsonUtil.stringify(TEST_REDIRECT_ENDPOINT);
 
   private class PubberUnderTest extends Pubber {
+
     public void setOptionsNoPersist(boolean value) {
       configuration.options.noPersist = value;
     }
+
     PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo) {
       super(projectId, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
@@ -56,7 +58,8 @@ public class PubberTest extends TestBase {
   private PubberUnderTest singularPubber(String[] args) {
     PubberUnderTest pubber = new PubberUnderTest(args[0], args[1], args[2], args[3]);
     pubber.initialize();
-    pubber.startConnection(deviceId -> { return true; });
+    pubber.startConnection(deviceId -> {
+      return true; });
     return pubber;
   }
 
@@ -164,17 +167,19 @@ public class PubberTest extends TestBase {
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
         pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date initial_generation = pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).generation;
-    assertNotEquals(null, initial_generation);
+    Date initialGeneration = pubber.deviceState.blobset.blobs.get(
+        IOT_ENDPOINT_CONFIG.value()).generation;
+    assertNotEquals(null, initialGeneration);
 
     configurePubberRedirect();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
         pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date redirect_generation = pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).generation;
-    assertNotEquals(null, redirect_generation);
+    Date redirectGeneration = pubber.deviceState.blobset.blobs.get(
+        IOT_ENDPOINT_CONFIG.value()).generation;
+    assertNotEquals(null, redirectGeneration);
 
-    assertTrue(redirect_generation.after(initial_generation));
+    assertTrue(redirectGeneration.after(initialGeneration));
   }
 
   @Test
