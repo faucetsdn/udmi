@@ -1,0 +1,49 @@
+{
+  "families" : {
+    "ether" : {
+      "id" : "00:50:b6:ed:5f:77"
+    },
+    "inet" : {
+      "id" : "192.168.2.1"
+    }
+  },
+  "features" : {
+    "enumeration" : {
+      "stage" : "stable",
+      "features" : {
+        "features" : {
+          "stage" : "stable"
+        },
+        "pointset" : {
+          "stage" : "beta"
+        },
+        "families" : {
+          "stage" : "alpha"
+        }
+      }
+    }
+  },
+  "generation" : "2023-03-02T06:13:04Z",
+  "timestamp" : "2023-03-02T06:13:05.005Z",
+  "uniqs" : {
+    "9b291597" : {
+      "name" : "filter_differential_pressure_sensor",
+      "possible_values" : [ ],
+      "units" : "Degrees-Celsius",
+      "ref" : "AV12.present_value"
+    },
+    "f1c0bfb7" : {
+      "name" : "filter_alarm_pressure_status",
+      "possible_values" : [ ],
+      "units" : "No-units",
+      "ref" : "BV11.present_value"
+    },
+    "7f4cc50b" : {
+      "name" : "filter_differential_pressure_setpoint",
+      "possible_values" : [ ],
+      "units" : "Bars",
+      "writable" : true
+    }
+  },
+  "version" : "1.4.1"
+}

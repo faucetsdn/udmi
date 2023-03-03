@@ -1,0 +1,50 @@
+{
+  "discovery" : { },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "8c:8c:aa:50:bc:72"
+      },
+      "ipv4" : {
+        "addr" : "192.168.8.3"
+      },
+      "ipv6" : {
+        "addr" : "fe80::11a9:496f:6596:b455"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "system" : {
+    "last_config" : "2023-03-02T06:12:47Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2023-03-02T06:08:43Z",
+      "restart_count" : 5,
+      "mode" : "active"
+    },
+    "serial_no" : "sequencer-7010",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2023-03-02T06:12:47Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2023-03-02T06:12:49Z",
+  "version" : "1.4.1"
+}
