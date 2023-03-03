@@ -75,69 +75,69 @@ def parse_log_file(filename, github_action=False):
   global json_stack
   json_stack = {'config': {}, 'state': {}}
 
-  f = open(filename, 'r', encoding='ascii')
-  for l in f:
-    l = l.strip('\n')
-    if github_action:
-      l = l[29:]
-    debug_print(
-      '[in_json=%s (%s,%s)] %s', in_json, in_json_type, in_json_num, l)
-    m_seq = RE_SEQUENCER_LINE.match(l)
-    m_pub = RE_PUBBER_LINE.match(l)
+  with open(filename, 'r', encoding='ascii') as f:
+    for l in f:
+      l = l.strip('\n')
+      if github_action:
+        l = l[29:]
+      debug_print(
+        '[in_json=%s (%s,%s)] %s', in_json, in_json_type, in_json_num, l)
+      m_seq = RE_SEQUENCER_LINE.match(l)
+      m_pub = RE_PUBBER_LINE.match(l)
 
-    if m_pub:
-      assert in_json is False
-      debug_print(m_pub.groupdict())
-      m2 = RE_PUBBER_TAIL_JSON_BEGIN.match(m_pub['tail'])
-      if m2:
-        debug_print(m2.groupdict())
-        in_json_type = m2.groupdict()['type'].lower()
-        pubber_json_num += 1
-        in_json_num = pubber_json_num
-        in_json = True
-      output_print(l)
-
-    if m_seq:
-      assert in_json is False
-      debug_print(m_seq.groupdict())
-      m2 = RE_SEQUENCER_TAIL_JSON_BEGIN.match(m_seq['tail'])
-      if m2:
-        debug_print(m2.groupdict())
-        in_json_type = m2.groupdict()['type']
-        in_json_num = int(m2.groupdict()['num'])
-        in_json = True
-
-      m2 = RE_SEQUENCER_TAIL_TEST_BEGIN_END.match(m_seq['tail'])
-      if m2:
-        output_print('')
-        output_print(LINE_BREAK)
-        output_print('    %s TEST', m2['mode'].upper())
-        output_print('    %s', m2['name'])
-        output_print(LINE_BREAK)
-      else:
+      if m_pub:
+        assert in_json is False
+        debug_print(m_pub.groupdict())
+        m2 = RE_PUBBER_TAIL_JSON_BEGIN.match(m_pub['tail'])
+        if m2:
+          debug_print(m2.groupdict())
+          in_json_type = m2.groupdict()['type'].lower()
+          pubber_json_num += 1
+          in_json_num = pubber_json_num
+          in_json = True
         output_print(l)
 
-    if not m_pub and not m_seq and in_json:
-      if RE_FILTER_INVALID_JSON_LINE.match(l):
-        debug_print('Skipping invalid line: %s', l)
-      else:
-        m_brace = RE_FILTER_END_JSON_BLOCK.match(l)
-        if m_brace:
-          debug_print('m_brace')
-          json_lines.append(m_brace['end'])
-          in_json = False
-        else:
-          json_lines.append(l)
+      if m_seq:
+        assert in_json is False
+        debug_print(m_seq.groupdict())
+        m2 = RE_SEQUENCER_TAIL_JSON_BEGIN.match(m_seq['tail'])
+        if m2:
+          debug_print(m2.groupdict())
+          in_json_type = m2.groupdict()['type']
+          in_json_num = int(m2.groupdict()['num'])
+          in_json = True
 
-    if not in_json and json_lines:
-      debug_print(json_lines)
-      json_obj = json.loads('\n'.join(json_lines))
-      debug_print(json_obj)
-      json_lines = []
-      json_stack[in_json_type][in_json_num] = json_obj
-      json_stack_print(in_json_type, in_json_num)
-      in_json_type = None
-      in_json_num = None
+        m2 = RE_SEQUENCER_TAIL_TEST_BEGIN_END.match(m_seq['tail'])
+        if m2:
+          output_print('')
+          output_print(LINE_BREAK)
+          output_print('    %s TEST', m2['mode'].upper())
+          output_print('    %s', m2['name'])
+          output_print(LINE_BREAK)
+        else:
+          output_print(l)
+
+      if not m_pub and not m_seq and in_json:
+        if RE_FILTER_INVALID_JSON_LINE.match(l):
+          debug_print('Skipping invalid line: %s', l)
+        else:
+          m_brace = RE_FILTER_END_JSON_BLOCK.match(l)
+          if m_brace:
+            debug_print('m_brace')
+            json_lines.append(m_brace['end'])
+            in_json = False
+          else:
+            json_lines.append(l)
+
+      if not in_json and json_lines:
+        debug_print(json_lines)
+        json_obj = json.loads('\n'.join(json_lines))
+        debug_print(json_obj)
+        json_lines = []
+        json_stack[in_json_type][in_json_num] = json_obj
+        json_stack_print(in_json_type, in_json_num)
+        in_json_type = None
+        in_json_num = None
 
   debug_print(json_stack)
 
@@ -152,4 +152,3 @@ def main(args):
 
 if __name__ == '__main__':
   main(sys.argv)
-
