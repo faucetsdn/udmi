@@ -1,7 +1,9 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 600,
-  "last_start" : "1970-01-01T00:00:00Z",
+  "operation" : {
+    "last_start" : "2023-03-02T06:08:43Z"
+  },
   "testing" : {
     "sequence_name" : "broken_config"
   }

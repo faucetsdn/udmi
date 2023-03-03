@@ -1,0 +1,41 @@
+#!/bin/bash -e
+#
+# Utility to update cached sequence runs into the canonical git repository.
+# Automatically run from bin/test_sequencer, but can be done manually as needed.
+#
+# Live updates are taken from the default path for bin/test_sequencer:
+#   sites/udmi_site_model/out/devices/AHU-1
+#
+# Cached results are managed in validator/sequences/
+#
+# Doesn't properly handle the case of a test going away.
+#
+# The cache update algortihm relies on detecting changes to the generated.md file,
+# focusing on providing stability for bin/gencode_seq when needed.
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd $ROOT_DIR
+TEST_LIST=/tmp/sequencer_tests.txt
+
+find validator/sequences/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
+find sites/udmi_site_model/out/devices/AHU-1 -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
+cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
+all_tests=$(cat $TEST_LIST.sorted)
+
+for test in $all_tests; do
+    src_dir=sites/udmi_site_model/out/devices/AHU-1/tests/$test
+    cache_dir=validator/sequences/$test/
+    if [[ ! -f $src_dir/sequence.md ]]; then
+        echo Skipping $src_dir
+    elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
+        echo Existing $cache_dir
+    else
+        echo Updating $cache_dir from $src_dir...
+        rm -rf $cache_dir
+        cp -a $src_dir $(dirname $cache_dir)
+        ls -l $src_dir/sequence.md $cache_dir/sequence.md
+    fi
+done
+
+echo Done with test cache update.

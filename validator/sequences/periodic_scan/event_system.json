@@ -1,10 +1,26 @@
 {
+  "event_count" : 32,
+  "last_config" : "2023-03-02T06:13:57Z",
   "logentries" : [ {
-    "message" : "State update defer -7840ms",
-    "category" : "pubber",
-    "timestamp" : "2022-09-09T03:15:19Z",
-    "level" : 400
+    "message" : "Discovery scan starting virtual as 2023-03-02T06:14:07Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:08Z",
+    "level" : 200
+  }, {
+    "message" : "update state 2023-03-02T06:14:08Z last_config 2023-03-02T06:13:57Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:08Z",
+    "level" : 200
+  }, {
+    "message" : "Sent 1 discovery events from virtual for Wed Mar 01 22:14:07 PST 2023",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:13Z",
+    "level" : 200
   } ],
-  "timestamp" : "2022-09-09T03:15:19.613Z",
-  "version" : "1.3.14"
+  "metrics" : {
+    "mem_total_mb" : 252,
+    "mem_free_mb" : 206.89441680908203
+  },
+  "timestamp" : "2023-03-02T06:14:15.033Z",
+  "version" : "1.4.1"
 }
