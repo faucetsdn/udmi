@@ -24,8 +24,7 @@ cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
 sequences=$(cat $TEST_LIST.sorted)
 
 to_add=
-
-echo "Generating table of contents:"
+echo
 
 # Generate table of contents
 for sequence in $sequences; do
@@ -37,19 +36,17 @@ for sequence in $sequences; do
   seqfile=$base/$sequence/sequence.md
   header=$(fgrep \#\# $seqfile) || true
   if [[ -z $header ]]; then
-    echo "  $sequence: Invalid or missing header in $seqfile."
+    echo "$sequence: invalid or missing header in $seqfile"
     false
   fi
   if [[ $header == *\(ALPHA\)* ]]; then
-    echo "  $sequence: Skipping alpha test."
+    echo "$sequence: skipping alpha test"
     continue
   fi
   description=": $(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
   echo "* [${sequence}](#${sequence})${description%: }" >> $SEQUENCE_MD
   to_add+=" $sequence"
 done
-
-echo "Processing sequences:"
 
 # Add in specific test sequences
 for sequence in $to_add; do
@@ -58,6 +55,11 @@ for sequence in $to_add; do
     else
         base=$altfix
     fi
-    echo "  $sequence"
-    cat $base/$sequence/sequence.md >> $SEQUENCE_MD
+    seqfile=$base/$sequence/sequence.md
+    description="$(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
+    echo $sequence: $description
+    cat $seqfile >> $SEQUENCE_MD
 done
+
+echo
+echo Done with $SEQUENCE_MD generation.
