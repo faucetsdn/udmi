@@ -184,8 +184,8 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void check_endpoint_connection_success(boolean doRestart) {
-    if (altRegistry == null) {
-      throw new SkipTest("No alternate registry defined");
+    if (altClient == null) {
+      throw new SkipTest("No functional alternate registry defined");
     }
 
     info("======================================== A");

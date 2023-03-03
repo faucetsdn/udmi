@@ -43,7 +43,7 @@ Some caveats:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration
-1. Check that features enumerated
+1. Check that feature enumeration feature is stable
 1. Check that no point enumeration
 
 ## system_mode_restart (STABLE)
@@ -62,6 +62,7 @@ Restart and connect to same endpoint and expect it returns.
 1. Update config before system mode is ACTIVE:
     * Set `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
+1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
 

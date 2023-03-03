@@ -8,6 +8,9 @@ class PubberOptions:
     self.fixedSampleRate = None
     self.noHardware = None
     self.noConfigAck = None
+    self.noPersist = None
+    self.noLastStart = None
+    self.barfConfig = None
     self.messageTrace = None
     self.extraPoint = None
     self.missingPoint = None
@@ -25,6 +28,9 @@ class PubberOptions:
     result.fixedSampleRate = source.get('fixedSampleRate')
     result.noHardware = source.get('noHardware')
     result.noConfigAck = source.get('noConfigAck')
+    result.noPersist = source.get('noPersist')
+    result.noLastStart = source.get('noLastStart')
+    result.barfConfig = source.get('barfConfig')
     result.messageTrace = source.get('messageTrace')
     result.extraPoint = source.get('extraPoint')
     result.missingPoint = source.get('missingPoint')
@@ -59,6 +65,12 @@ class PubberOptions:
       result['noHardware'] = self.noHardware # 5
     if self.noConfigAck:
       result['noConfigAck'] = self.noConfigAck # 5
+    if self.noPersist:
+      result['noPersist'] = self.noPersist # 5
+    if self.noLastStart:
+      result['noLastStart'] = self.noLastStart # 5
+    if self.barfConfig:
+      result['barfConfig'] = self.barfConfig # 5
     if self.messageTrace:
       result['messageTrace'] = self.messageTrace # 5
     if self.extraPoint:

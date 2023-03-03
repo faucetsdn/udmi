@@ -9,9 +9,9 @@ import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 
 /**
  * Create a data sink that writes to local files.
@@ -44,17 +44,18 @@ public class FileDataSink implements MessagePublisher {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     File outFile =
         isValidation(topic) ? getValidationFile(deviceId, data) : getOutputFile(deviceId, topic);
     if (outFile == null) {
-      return;
+      return null;
     }
-    try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile))) {
+    try (PrintWriter out = new PrintWriter(Files.newOutputStream(outFile.toPath()))) {
       out.println(data);
     } catch (Exception e) {
       throw new RuntimeException("While writing output file " + outFile.getAbsolutePath(), e);
     }
+    return null;
   }
 
   private boolean isValidation(String topic) {

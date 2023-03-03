@@ -1,0 +1,51 @@
+{
+  "event_count" : 9,
+  "last_config" : "2023-03-02T06:05:01Z",
+  "logentries" : [ {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:05:01Z received config 2023-03-02T06:04:36Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 200
+  }, {
+    "message" : "Starting executor with send message delay 10000",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:05:01Z received config 2023-03-02T06:05:01Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:05:01Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-03-02T06:05:03Z last_config 2023-03-02T06:05:01Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:05:03Z",
+    "level" : 200
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 252,
+    "mem_free_mb" : 207.41943359375
+  },
+  "timestamp" : "2023-03-02T06:05:11.010Z",
+  "version" : "1.4.1"
+}

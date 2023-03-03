@@ -1,72 +1,36 @@
-2022-09-09T03:14:49Z WARNING pubber State update defer 1642ms
-2022-09-09T03:14:49Z WARNING pubber State update defer 1642ms
-2022-09-09T03:14:49Z INFO pubber Clearing scheduled discovery family virtual
-2022-09-09T03:14:49Z INFO pubber 2022-09-09T03:14:49Z received config 2022-09-09T03:14:49Z
-2022-09-09T03:14:49Z NOTICE system.config.apply success
-2022-09-09T03:14:49Z WARNING pubber State update defer 1633ms
-2022-09-09T03:14:49Z INFO pubber Config handler
-2022-09-09T03:14:49Z WARNING pubber State update defer 1632ms
-2022-09-09T03:14:51Z WARNING pubber State update defer 0ms
-2022-09-09T03:14:51Z INFO pubber update state 2022-09-09T03:14:51Z last_config 2022-09-09T03:14:49Z
-2022-09-09T03:14:51Z NOTICE system.config.apply success
-2022-09-09T03:14:51Z WARNING pubber State update defer 1806ms
-2022-09-09T03:14:51Z WARNING pubber State update defer 1800ms
-2022-09-09T03:14:51Z INFO pubber Config handler
-2022-09-09T03:14:51Z INFO pubber 2022-09-09T03:14:51Z received config 2022-09-09T03:14:49Z
-2022-09-09T03:14:51Z WARNING pubber State update defer 1807ms
-2022-09-09T03:14:51Z WARNING pubber State update defer 1800ms
-2022-09-09T03:14:53Z INFO pubber update state 2022-09-09T03:14:53Z last_config 2022-09-09T03:14:49Z
-2022-09-09T03:14:53Z INFO pubber Config handler
-2022-09-09T03:14:53Z NOTICE system.config.apply success
-2022-09-09T03:14:53Z WARNING pubber State update defer 1999ms
-2022-09-09T03:14:53Z WARNING pubber State update defer 1998ms
-2022-09-09T03:14:53Z WARNING pubber State update defer 1999ms
-2022-09-09T03:14:53Z INFO pubber 2022-09-09T03:14:53Z received config 2022-09-09T03:14:52Z
-2022-09-09T03:14:53Z WARNING pubber State update defer 0ms
-2022-09-09T03:14:54Z WARNING pubber State update defer 893ms
-2022-09-09T03:14:54Z WARNING pubber State update defer 893ms
-2022-09-09T03:14:54Z INFO pubber Config handler
-2022-09-09T03:14:54Z WARNING pubber State update defer 890ms
-2022-09-09T03:14:55Z WARNING pubber State update defer 0ms
-2022-09-09T03:14:55Z INFO pubber update state 2022-09-09T03:14:55Z last_config 2022-09-09T03:14:54Z
-2022-09-09T03:14:55Z INFO pubber 2022-09-09T03:14:55Z received config 2022-09-09T03:14:54Z
-2022-09-09T03:14:55Z INFO pubber Config handler
-2022-09-09T03:14:55Z NOTICE system.config.apply success
-2022-09-09T03:14:55Z WARNING pubber State update defer 1654ms
-2022-09-09T03:14:55Z WARNING pubber State update defer 1645ms
-2022-09-09T03:14:54Z WARNING pubber State update defer 891ms
-2022-09-09T03:14:54Z INFO pubber 2022-09-09T03:14:54Z received config 2022-09-09T03:14:54Z
-2022-09-09T03:14:54Z NOTICE system.config.apply success
-2022-09-09T03:14:55Z WARNING pubber State update defer 1653ms
-2022-09-09T03:14:57Z WARNING pubber State update defer 0ms
-2022-09-09T03:14:55Z WARNING pubber State update defer 1646ms
-2022-09-09T03:14:57Z INFO pubber update state 2022-09-09T03:14:57Z last_config 2022-09-09T03:14:54Z
-2022-09-09T03:14:57Z INFO pubber Config handler
-2022-09-09T03:14:57Z WARNING pubber State update defer 1935ms
-2022-09-09T03:14:57Z NOTICE system.config.apply success
-2022-09-09T03:14:57Z WARNING pubber State update defer 1933ms
-2022-09-09T03:14:57Z INFO pubber 2022-09-09T03:14:57Z received config 2022-09-09T03:14:58Z
-2022-09-09T03:14:57Z WARNING pubber State update defer 1934ms
-2022-09-09T03:14:57Z WARNING pubber State update defer 1933ms
-2022-09-09T03:14:58Z WARNING pubber State update defer 1082ms
-2022-09-09T03:14:59Z INFO pubber 2022-09-09T03:14:59Z received config 2022-09-09T03:15:00Z
-2022-09-09T03:14:59Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:14:59Z
-2022-09-09T03:14:59Z INFO pubber Discovery scan generation virtual is 2022-09-09T03:14:59Z
-2022-09-09T03:14:59Z INFO pubber Config handler
-2022-09-09T03:14:59Z WARNING pubber State update defer 16ms
-2022-09-09T03:14:59Z NOTICE system.config.apply success
-2022-09-09T03:14:59Z WARNING pubber State update defer 15ms
-2022-09-09T03:14:59Z WARNING pubber State update defer 15ms
-2022-09-09T03:14:59Z WARNING pubber State update defer 0ms
-2022-09-09T03:14:59Z WARNING pubber State update defer 22ms
-2022-09-09T03:14:59Z WARNING pubber State update defer 23ms
-2022-09-09T03:14:59Z INFO pubber update state 2022-09-09T03:14:59Z last_config 2022-09-09T03:15:00Z
-2022-09-09T03:15:04Z INFO pubber Sent 1 discovery events from virtual for Thu Sep 08 20:14:59 PDT 2022
-2022-09-09T03:15:09Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:15:09Z
-2022-09-09T03:15:09Z INFO pubber update state 2022-09-09T03:15:09Z last_config 2022-09-09T03:15:00Z
-2022-09-09T03:15:09Z WARNING pubber State update defer -7791ms
-2022-09-09T03:15:14Z INFO pubber Sent 1 discovery events from virtual for Thu Sep 08 20:15:09 PDT 2022
-2022-09-09T03:15:19Z INFO pubber Discovery scan starting virtual as 2022-09-09T03:15:19Z
-2022-09-09T03:15:19Z INFO pubber update state 2022-09-09T03:15:19Z last_config 2022-09-09T03:15:00Z
-2022-09-09T03:15:19Z WARNING pubber State update defer -7840ms
-2022-09-09T03:15:25Z INFO sequencer Sequence complete
+2023-03-02T06:13:38Z INFO device.log Sent 1 discovery events from virtual for Wed Mar 01 22:13:33 PST 2023
+2023-03-02T06:13:43Z INFO device.log Discovery scan stopping virtual from 2023-03-02T06:13:33Z
+2023-03-02T06:13:43Z INFO device.log update state 2023-03-02T06:13:43Z last_config 2023-03-02T06:13:24Z
+2023-03-02T06:13:51Z INFO device.log update state 2023-03-02T06:13:51Z last_config 2023-03-02T06:13:24Z
+2023-03-02T06:13:51Z INFO device.log Config handler
+2023-03-02T06:13:51Z INFO device.log 2023-03-02T06:13:51Z received config 2023-03-02T06:13:51Z
+2023-03-02T06:13:51Z INFO device.log Discovery scan generation virtual is 2023-03-02T06:13:33Z
+2023-03-02T06:13:51Z NOTICE system.config.apply success
+2023-03-02T06:13:52Z INFO device.log Config handler
+2023-03-02T06:13:52Z INFO device.log 2023-03-02T06:13:52Z received config 2023-03-02T06:13:51Z
+2023-03-02T06:13:52Z INFO device.log Discovery scan generation virtual is 2023-03-02T06:13:33Z
+2023-03-02T06:13:52Z NOTICE system.config.apply success
+2023-03-02T06:13:53Z INFO device.log update state 2023-03-02T06:13:53Z last_config 2023-03-02T06:13:51Z
+2023-03-02T06:13:54Z INFO device.log Config handler
+2023-03-02T06:13:54Z INFO device.log 2023-03-02T06:13:54Z received config 2023-03-02T06:13:52Z
+2023-03-02T06:13:54Z NOTICE system.config.apply success
+2023-03-02T06:13:55Z INFO device.log 2023-03-02T06:13:55Z sending test message #30
+2023-03-02T06:13:55Z INFO device.log update state 2023-03-02T06:13:55Z last_config 2023-03-02T06:13:52Z
+2023-03-02T06:13:55Z INFO device.log Config handler
+2023-03-02T06:13:55Z INFO device.log 2023-03-02T06:13:55Z received config 2023-03-02T06:13:55Z
+2023-03-02T06:13:55Z NOTICE system.config.apply success
+2023-03-02T06:13:57Z INFO device.log Config handler
+2023-03-02T06:13:57Z INFO device.log 2023-03-02T06:13:57Z received config 2023-03-02T06:13:55Z
+2023-03-02T06:13:57Z NOTICE system.config.apply success
+2023-03-02T06:13:57Z INFO device.log update state 2023-03-02T06:13:57Z last_config 2023-03-02T06:13:55Z
+2023-03-02T06:13:58Z INFO device.log Config handler
+2023-03-02T06:13:58Z INFO device.log 2023-03-02T06:13:58Z received config 2023-03-02T06:13:57Z
+2023-03-02T06:13:58Z INFO device.log Discovery scan generation virtual is 2023-03-02T06:13:57Z
+2023-03-02T06:13:58Z NOTICE system.config.apply success
+2023-03-02T06:13:58Z INFO device.log Discovery scan starting virtual as 2023-03-02T06:13:57Z
+2023-03-02T06:13:59Z INFO device.log update state 2023-03-02T06:13:59Z last_config 2023-03-02T06:13:57Z
+2023-03-02T06:14:03Z INFO device.log Sent 1 discovery events from virtual for Wed Mar 01 22:13:57 PST 2023
+2023-03-02T06:14:08Z INFO device.log Discovery scan starting virtual as 2023-03-02T06:14:07Z
+2023-03-02T06:14:08Z INFO device.log update state 2023-03-02T06:14:08Z last_config 2023-03-02T06:13:57Z
+2023-03-02T06:14:13Z INFO device.log Sent 1 discovery events from virtual for Wed Mar 01 22:14:07 PST 2023
+2023-03-02T06:14:18Z INFO sequencer Sequence complete

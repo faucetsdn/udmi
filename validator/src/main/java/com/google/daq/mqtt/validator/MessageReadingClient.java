@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.SUBFOLDER_PROPERTY_KEY;
-import static com.google.daq.mqtt.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -136,13 +136,14 @@ public class MessageReadingClient implements MessagePublisher {
 
   @Override
   @SuppressWarnings("unchecked")
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     try {
       OutputBundle outputBundle = new OutputBundle();
       outputBundle.deviceId = deviceId;
       outputBundle.topic = topic;
       outputBundle.message = OBJECT_MAPPER.readValue(data, TreeMap.class);
       outputMessages.add(outputBundle);
+      return null;
     } catch (Exception e) {
       throw new RuntimeException("While converting message data", e);
     }

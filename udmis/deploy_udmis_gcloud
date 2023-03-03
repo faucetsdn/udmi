@@ -1,9 +1,5 @@
 #!/bin/bash -e
 
-# This version is used to automatically check that the deployed cloud functions are suitable for any bit
-# of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range.
-FUNCTIONS_VERSION=1
-
 if (( $# < 1 )); then
     echo Usage: $0 PROJECT_ID [options]
     false
@@ -18,13 +14,25 @@ shift
 RUNTIME=nodejs16
 SOURCE=functions/
 
+
+deployed_by=$USER@$HOSTNAME
+deployed_at=`date --utc --iso=seconds`
 version=`git describe --dirty`
+funchash=`git log -n 1 --oneline -- functions/ | awk '{print $1}'`
+funccount=`git diff --name-only -- functions/ | wc -l`
+if [[ $funccount != 0 ]]; then
+    funcdirty=-dirty
+fi
+funcver=`git describe $funchash`$funcdirty
+
 echo Deploying version $version to $PROJECT
 
 cat <<EOF > functions/version.js
 module.exports = {
-  udmis: '$version',
-  functions: $FUNCTIONS_VERSION
+  udmi_version: '$version',
+  udmi_functions: '$funcver',
+  deployed_at: '$deployed_at',
+  deployed_by: '$deployed_by'
 }
 EOF
 

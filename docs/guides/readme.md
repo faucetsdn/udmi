@@ -3,6 +3,7 @@
 # Guides
   
 - [Development](development.md) - Information on contribution to the UDMI specification
+- [Sequencing](sequencing.md) - Additional notes about (developing) sequence tests
 - [Validator Troubleshooting](../tools/validator.md#troubleshooting) - Troubleshooting steps to help diagnose validator
   unexpected results
 - [UDMI Workflow](workflow.md) - Suggested workflow for cloud side registration of UDMI devices

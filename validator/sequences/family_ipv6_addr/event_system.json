@@ -1,0 +1,101 @@
+{
+  "event_count" : 34,
+  "last_config" : "2023-03-02T06:14:31Z",
+  "logentries" : [ {
+    "message" : "update state 2023-03-02T06:14:26Z last_config 2023-03-02T06:13:57Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:26Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:26Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:14:26Z received config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:26Z",
+    "level" : 200
+  }, {
+    "message" : "Discovery scan generation virtual is 2023-03-02T06:14:17Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:26Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:14:26Z",
+    "level" : 300
+  }, {
+    "message" : "Discovery scan starting virtual as 2023-03-02T06:14:27Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:28Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:28Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:14:28Z received config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:28Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:14:28Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-03-02T06:14:28Z last_config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:28Z",
+    "level" : 200
+  }, {
+    "message" : "update state 2023-03-02T06:14:30Z last_config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:30Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:31Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:14:31Z received config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:31Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:14:31Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-03-02T06:14:33Z last_config 2023-03-02T06:14:26Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:33Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:33Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:14:33Z received config 2023-03-02T06:14:31Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:14:33Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:14:33Z",
+    "level" : 300
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 252,
+    "mem_free_mb" : 206.2144012451172
+  },
+  "timestamp" : "2023-03-02T06:14:35.035Z",
+  "version" : "1.4.1"
+}

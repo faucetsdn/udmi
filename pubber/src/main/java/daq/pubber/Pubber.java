@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -386,7 +387,9 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
-    deviceState.system.operation.last_start = DEVICE_START_TIME;
+    if (!TRUE.equals(configuration.options.noLastStart)) {
+      deviceState.system.operation.last_start = DEVICE_START_TIME;
+    }
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
@@ -432,7 +435,7 @@ public class Pubber {
           makePointPointsetModel(true, 50, 50, "Celsius")));
     }
 
-    if (configuration.options.noHardware != null && configuration.options.noHardware) {
+    if (TRUE.equals(configuration.options.noHardware)) {
       deviceState.system.hardware = null;
     }
 
@@ -442,10 +445,15 @@ public class Pubber {
   private void initializePersistentStore() {
     Preconditions.checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
-    info("Initializing from persistent store " + persistentStore.getAbsolutePath());
-    persistentData =
-        persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
-            : new DevicePersistent();
+    if (TRUE.equals(configuration.options.noPersist)) {
+      info("Resetting persistent store " + persistentStore.getAbsolutePath());
+      persistentData = new DevicePersistent();
+    } else {
+      info("Initializing from persistent store " + persistentStore.getAbsolutePath());
+      persistentData =
+          persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
+              : new DevicePersistent();
+    }
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
     if (persistentData.endpoint != null) {
@@ -851,6 +859,10 @@ public class Pubber {
   private void publisherHandler(String type, String phase, Throwable cause) {
     if (cause != null) {
       error("Error receiving message " + type, cause);
+      if (TRUE.equals(configuration.options.barfConfig)) {
+        error("Restarting system because of restart-on-error configuration setting");
+        restartSystem(true);
+      }
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
     Entry report = entryFromException(category, cause);
@@ -914,6 +926,10 @@ public class Pubber {
   private void processConfigUpdate(Config config) {
     final int actualInterval;
     if (config != null) {
+      if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
+        error("Empty config system block and configured to restart on bad config!");
+        restartSystem(true);
+      }
       deviceConfig = config;
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;

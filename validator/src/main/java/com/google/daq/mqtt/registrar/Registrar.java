@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.daq.mqtt.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,15 +16,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.Common;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.udmi.util.Common;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -552,25 +552,20 @@ public class Registrar {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
     }
 
-    final String[] devices;
-    if (specifiedDevices == null) {
-      devices = devicesDir.list();
-    } else {
-      devices = devicesDir.list(new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-          return specifiedDevices.contains(name);
-        }
-      });
-    }
-
-    Preconditions.checkNotNull(devices, "No devices found in " + devicesDir.getAbsolutePath());
-    Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, devices);
+    List<String> deviceList = getDeviceList(specifiedDevices, devicesDir);
+    Map<String, LocalDevice> localDevices = loadDevices(siteDir, devicesDir, deviceList);
     initializeSettings(localDevices);
     writeNormalized(localDevices);
     validateKeys(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     return localDevices;
+  }
+
+  private List<String> getDeviceList(Set<String> specifiedDevices, File devicesDir) {
+    return SiteModel.listDevices(devicesDir).stream()
+        .filter(name -> specifiedDevices == null || specifiedDevices.contains(name))
+        .collect(Collectors.toList());
   }
 
   private void initializeSettings(Map<String, LocalDevice> localDevices) {
@@ -629,13 +624,13 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadDevices(File siteDir, File devicesDir,
-      String[] devices) {
+      List<String> devices) {
     HashMap<String, LocalDevice> localDevices = new HashMap<>();
     AtomicInteger loaded = new AtomicInteger(0);
     for (String deviceName : devices) {
       int count = loaded.incrementAndGet();
       if (LocalDevice.deviceExists(devicesDir, deviceName)) {
-        if (devices.length < 100) {
+        if (devices.size() < 100) {
           System.err.println("Loading local device " + deviceName);
         } else if (count % 500 == 0) {
           System.err.printf("Loaded %d devices...%n", count);

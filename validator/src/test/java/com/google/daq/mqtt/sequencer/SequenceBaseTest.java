@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.daq.mqtt.TestCommon;
@@ -48,7 +49,7 @@ public class SequenceBaseTest {
     base2.testWatcher.starting(makeTestDescription("test_two"));
     try {
       base1.nextMessageBundle();
-      assert false;
+      fail("shouldn't be a next message bundle to get!");
     } catch (RuntimeException e) {
       // This is expected, but then also preserve the message for the next call.
     }
