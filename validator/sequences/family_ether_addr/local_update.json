@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-03-02T21:14:31Z",
+  "timestamp" : "2023-03-02T06:14:59Z",
   "version" : "@@@cloud udmi version###1.4.0-221-g632b879b",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-03-02T21:13:59Z"
+      "last_start" : "2023-03-02T06:08:43Z"
     },
     "testing" : {
       "sequence_name" : "family_ether_addr"
