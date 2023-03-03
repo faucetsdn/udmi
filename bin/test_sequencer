@@ -105,6 +105,8 @@ diff -u /tmp/generated.md docs/specs/sequences/generated.md || (
 generated_sequences=$test_out_base/%/sequence.md
 expected_sequences=validator/sequences/%/sequence.md
 echo Comparing diff $generated_sequences $expected_sequences
-echo $all_tests | xargs -I% diff -u $generated_sequences $expected_sequences
+for test in $all_tests; do
+    diff -u $generated_sequences $expected_sequences
+done
 
 echo Done with base test_sequencer run.
