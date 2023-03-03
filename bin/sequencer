@@ -7,7 +7,8 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
-alt_registry=ZZ-REDIRECT-NA
+UDMI_ALT_REGISTRY=ZZ-TRI-FECTA-ALT-REGISTRY
+
 min_stage=BETA
 
 if [[ $1 == '-a' ]]; then
@@ -38,12 +39,6 @@ shift 3
 serial_no=${1:-//}
 shift || true
 
-if [[ $project_id == -- ]]; then
-    echo Configuring for mock project use...
-    project_id=mock-project
-    alt_registry=
-fi
-
 test_names="$@"
 udmi_version=`git describe --always --dirty`
 
@@ -64,7 +59,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "project_id": "$project_id",
   "site_model": "$site_path",
   "device_id": "$device_id",
-  "alt_registry": "$alt_registry",
+  "alt_registry": "$UDMI_ALT_REGISTRY",
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
