@@ -138,11 +138,14 @@ public class PubberTest extends TestBase {
   }
 
   @Test
-  public void redirectEndpoint() {
+  public void redirectEndpoint() throws InterruptedException {
+    Thread.sleep(2000);
     configurePubberEndpoint();
     pubber.maybeRedirectEndpoint();
+    Thread.sleep(2000);
     assertEquals(null,
         pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    Thread.sleep(2000);
     configurePubberRedirect();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
