@@ -10,7 +10,7 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.api.client.util.Base64;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
+import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -34,6 +34,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
+import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SetupReflectorConfig;
 import udmi.schema.SetupReflectorState;
 
@@ -42,7 +43,7 @@ import udmi.schema.SetupReflectorState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
-  public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
+  public static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
 
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
@@ -59,7 +60,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
   private final CountDownLatch validConfigReceived = new CountDownLatch(1);
-  private final Stage minStage;
+  private final FeatureStage minStage;
   private boolean isInstallValid;
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
@@ -91,7 +92,8 @@ public class IotReflectorClient implements MessagePublisher {
     projectId = iotConfig.project_id;
     udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
     minStage =
-        isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(iotConfig.min_stage);
+        isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE
+            : FeatureStage.valueOf(iotConfig.min_stage);
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
@@ -172,7 +174,8 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private int getRequiredFunctionsVersion() {
-    return Stage.ALPHA.processGiven(minStage) ? FUNCTIONS_VERSION_ALPHA : FUNCTIONS_VERSION_BETA;
+    return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
+        : FUNCTIONS_VERSION_BETA;
   }
 
   private void handleCommandEnvelope(Map<String, Object> messageMap) {

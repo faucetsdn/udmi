@@ -1,10 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
-import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;

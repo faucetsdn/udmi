@@ -3,7 +3,6 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -14,6 +13,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
@@ -87,6 +86,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
 import udmi.schema.SequenceValidationState;
+import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -183,7 +183,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
-  private Stage testStage;
+  private FeatureStage testStage;
   private long testStartTimeMs;
   private File testDir;
   private PrintWriter sequencerLog;
@@ -383,12 +383,12 @@ public class SequenceBase {
     sequenceMd.flush();
   }
 
-  private String getTestDescription(Description summary) {
+  private String getTestSummary(Description summary) {
     Summary annotation = summary.getAnnotation(Summary.class);
     return annotation == null ? null : annotation.value();
   }
 
-  private Stage getTestStage(Description description) {
+  private FeatureStage getTestStage(Description description) {
     Feature annotation = description.getAnnotation(Feature.class);
     return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
   }
@@ -1342,7 +1342,7 @@ public class SequenceBase {
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         testName = description.getMethodName();
-        testDescription = getTestDescription(description);
+        testDescription = getTestSummary(description);
         testStage = getTestStage(description);
 
         testStartTimeMs = System.currentTimeMillis();
@@ -1454,6 +1454,8 @@ public class SequenceBase {
         name, key -> new SequenceValidationState());
     sequenceValidationState.status = logEntry;
     sequenceValidationState.result = result;
+    sequenceValidationState.summary = getTestSummary(description);
+    sequenceValidationState.stage = getTestStage(description);
     updateValidationState();
   }
 

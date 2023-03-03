@@ -19,12 +19,24 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "summary",
+    "stage",
     "result",
     "status"
 })
 @Generated("jsonschema2pojo")
 public class SequenceValidationState {
 
+    @JsonProperty("summary")
+    public String summary;
+    /**
+     * Feature Stage
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("stage")
+    public SequenceValidationState.FeatureStage stage;
     /**
      * Sequence Result
      * <p>
@@ -45,7 +57,9 @@ public class SequenceValidationState {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.summary == null)? 0 :this.summary.hashCode()));
         result = ((result* 31)+((this.result == null)? 0 :this.result.hashCode()));
+        result = ((result* 31)+((this.stage == null)? 0 :this.stage.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -59,7 +73,55 @@ public class SequenceValidationState {
             return false;
         }
         SequenceValidationState rhs = ((SequenceValidationState) other);
-        return (((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result)))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+    }
+
+
+    /**
+     * Feature Stage
+     * <p>
+     * 
+     * 
+     */
+    @Generated("jsonschema2pojo")
+    public enum FeatureStage {
+
+        ALPHA("alpha"),
+        BETA("beta"),
+        STABLE("stable");
+        private final String value;
+        private final static Map<String, SequenceValidationState.FeatureStage> CONSTANTS = new HashMap<String, SequenceValidationState.FeatureStage>();
+
+        static {
+            for (SequenceValidationState.FeatureStage c: values()) {
+                CONSTANTS.put(c.value, c);
+            }
+        }
+
+        FeatureStage(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        @JsonValue
+        public String value() {
+            return this.value;
+        }
+
+        @JsonCreator
+        public static SequenceValidationState.FeatureStage fromValue(String value) {
+            SequenceValidationState.FeatureStage constant = CONSTANTS.get(value);
+            if (constant == null) {
+                throw new IllegalArgumentException(value);
+            } else {
+                return constant;
+            }
+        }
+
     }
 
 
