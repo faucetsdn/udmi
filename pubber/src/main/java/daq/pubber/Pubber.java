@@ -158,7 +158,7 @@ public class Pubber {
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final PubberConfiguration configuration;
+  protected final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
@@ -717,7 +717,7 @@ public class Pubber {
     }
   }
 
-  private void startConnection(Function<String, Boolean> connectionDone) {
+  protected void startConnection(Function<String, Boolean> connectionDone) {
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -757,7 +757,7 @@ public class Pubber {
     allPoints.add(point);
   }
 
-  private void initialize() {
+  protected void initialize() {
     try {
       initializeDevice();
 
