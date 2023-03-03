@@ -1451,7 +1451,7 @@ public class SequenceBase {
     String name = description.getMethodName();
     SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
         bucket, key -> newFeatureValidationState()).sequences.computeIfAbsent(
-            name, key -> new SequenceValidationState());
+        name, key -> new SequenceValidationState());
     sequenceValidationState.status = logEntry;
     sequenceValidationState.result = result;
     updateValidationState();
@@ -1483,55 +1483,3 @@ public class SequenceBase {
     updateValidationState();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -18,7 +18,7 @@ The various _subblocks_ are detailed below. Each _subblock_ (or _subFolder_ if y
 at the PubSub _message envelope_), has several basic _subTypes_ that manifest themselves from
 different sources:
 
-* **Model**: Model-based summary of this device. Unlike the other messages, this exists
+* **Model**: Model-based description of this device. Unlike the other messages, this exists
   independent of any actual physical device, and will be injected by the system through something
   like the `registrar` tool. The _model_ is typically also reflected in a _site\_model_ as a
   static set of files somewhere.

@@ -1,18 +1,14 @@
 package com.google.daq.mqtt.sequencer;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.JsonUtil;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
-import udmi.schema.State;
 
 /**
  * Unit tests for the SequenceBaseTest class.

@@ -9,7 +9,7 @@ using git will still require some detailed knowledge of how it works to resolve 
 etc...
 
 * `git-branch-status`: Shows the status of all local branches as configured against their origin or parents.
-* `git-branch-create`: Create a new clean branch with provided summary.
+* `git-branch-create`: Create a new clean branch with provided description.
 * `git-branch-update`: Updates all local branches and upstream repo to keep things in sync.
 * `git-branch-remote`: Scans upstream remote branches and makes suggestions for purging them.
 
@@ -40,7 +40,7 @@ you want to synchronize with:
 Each local branch also works with tracking information to help sort through the needful. This is
 handled automatically by `git-branch-create`:
 
-* `git config branch.$branch.summary "SOME WORDS HERE"` as a reminder of what the branch is for.
+* `git config branch.$branch.description "SOME WORDS HERE"` as a reminder of what the branch is for.
 * `git config branch.$branch.parent $main` to set the parent (local) branch that $branch should track.
 
 # Deciphering Tool Output
