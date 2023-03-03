@@ -68,10 +68,6 @@ fi
 bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
-echo Structured sequencer output:
-cat $device_out_base/sequencer_state.json
-echo
-
 sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
 echo Copied output to /tmp/sequencer.out for later examination.
 
