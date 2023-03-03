@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -12,7 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyLocalnetState;
+import udmi.schema.LocalnetModel;
 import udmi.schema.LocalnetState;
 
 /**
@@ -115,4 +118,14 @@ public class LocalnetManager {
     return interfaceMap;
   }
 
+  Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
+    return parent.deviceState.localnet.families.keySet().stream()
+        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
+  }
+
+  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String key) {
+    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
+    familyDiscoveryEvent.addr = parent.deviceState.localnet.families.get(key).addr;
+    return familyDiscoveryEvent;
+  }
 }

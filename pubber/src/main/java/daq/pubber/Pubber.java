@@ -1125,20 +1125,8 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
+    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
     publishDeviceMessage(discoveryEvent);
-  }
-
-  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
-    LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
-    return localnet == null ? null : localnet.families.keySet().stream()
-        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
-  }
-
-  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
-    FamilyDiscoveryEvent familyEvent = new FamilyDiscoveryEvent();
-    familyEvent.addr = siteModel.getMetadata(deviceId).localnet.families.get(familyId).addr;
-    return familyEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {

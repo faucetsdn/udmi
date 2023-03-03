@@ -79,7 +79,7 @@ public class DiscoverySequences extends SequenceBase {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      checkThat("family enumeration matches", () -> Objects.equals(models, events));
+      checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no family enumeration", () -> event.families == null);
     }

@@ -1,106 +1,51 @@
 {
-  "event_count" : 25,
-  "last_config" : "2023-03-02T06:13:02Z",
+  "event_count" : 3,
+  "last_config" : "2023-03-03T14:56:34Z",
   "logentries" : [ {
-    "message" : "update state 2023-03-02T06:12:57Z last_config 2023-03-02T06:12:47Z",
+    "message" : "update state 2023-03-03T14:56:34Z last_config 2023-03-03T14:56:24Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:12:57Z",
+    "timestamp" : "2023-03-03T14:56:34Z",
     "level" : 200
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:12:58Z",
+    "timestamp" : "2023-03-03T14:56:34Z",
     "level" : 200
   }, {
-    "message" : "2023-03-02T06:12:58Z received config 2023-03-02T06:12:57Z",
+    "message" : "2023-03-03T14:56:34Z received config 2023-03-03T14:56:34Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:12:58Z",
+    "timestamp" : "2023-03-03T14:56:34Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:12:58Z",
+    "timestamp" : "2023-03-03T14:56:34Z",
     "level" : 300
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:12:59Z",
+    "timestamp" : "2023-03-03T14:56:36Z",
     "level" : 200
   }, {
-    "message" : "2023-03-02T06:12:59Z received config 2023-03-02T06:12:57Z",
+    "message" : "2023-03-03T14:56:36Z received config 2023-03-03T14:56:34Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:12:59Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:12:59Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-02T06:13:00Z last_config 2023-03-02T06:12:57Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:00Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:00Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-02T06:13:00Z received config 2023-03-02T06:12:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:00Z",
+    "timestamp" : "2023-03-03T14:56:36Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:13:00Z",
+    "timestamp" : "2023-03-03T14:56:36Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-03-02T06:13:02Z last_config 2023-03-02T06:12:59Z",
+    "message" : "update state 2023-03-03T14:56:36Z last_config 2023-03-03T14:56:34Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:02Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:02Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-02T06:13:02Z received config 2023-03-02T06:13:00Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:02Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:13:02Z",
-    "level" : 300
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:04Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-02T06:13:04Z received config 2023-03-02T06:13:02Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:04Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:13:04Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-02T06:13:04Z last_config 2023-03-02T06:13:02Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:04Z",
+    "timestamp" : "2023-03-03T14:56:36Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 252,
-    "mem_free_mb" : 211.53421783447266
+    "mem_free_mb" : 224.19219970703125
   },
-  "timestamp" : "2023-03-02T06:13:05.026Z",
+  "timestamp" : "2023-03-03T14:56:38.004Z",
   "version" : "1.4.1"
 }
