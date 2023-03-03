@@ -2,10 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
-import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
-import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -41,7 +38,7 @@ public class PointsetSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = ALPHA)
-  @Description("device publishes pointset events at a rate of no more than config sample_rate_sec")
+  @Summary("device publishes pointset events at a rate of no more than config sample_rate_sec")
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;
 
@@ -101,7 +98,7 @@ public class PointsetSequences extends SequenceBase {
    * ranges of both parameters, and ensuring telemetry is within this range.
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Description("test sample rate and sample limit sec")
+  @Summary("test sample rate and sample limit sec")
   @Feature(stage = ALPHA)
   public void pointset_publish_interval() {
     

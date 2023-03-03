@@ -21,7 +21,7 @@ is constructed.
 
 ### System
 * `min_loglevel`: Indicates the minimum loglevel for reporting log messages below which log entries
-should not be sent. See note below for a description of the level value.
+should not be sent. See note below for a summary of the level value.
 
 ### Pointset
 

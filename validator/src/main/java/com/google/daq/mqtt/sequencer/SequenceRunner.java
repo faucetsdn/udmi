@@ -125,6 +125,15 @@ public class SequenceRunner {
   }
 
   private void process() {
+    try {
+      processRaw();
+      SequenceBase.processComplete(null);
+    } catch (Exception e) {
+      SequenceBase.processComplete(e);
+    }
+  }
+
+  private void processRaw() {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }

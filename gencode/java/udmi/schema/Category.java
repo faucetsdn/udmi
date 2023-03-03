@@ -159,4 +159,9 @@ public class Category {
     public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
     public static final Level VALIDATION_SUMMARY_REPORT_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_SUMMARY_REPORT, INFO); }
+
+    // An individual line-item sequence test.
+    public static final String VALIDATION_FEATURE_SEQUENCE = "validation.feature.sequence";
+    public static final Level VALIDATION_FEATURE_SEQUENCE_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_FEATURE_SEQUENCE, INFO); }
 }
