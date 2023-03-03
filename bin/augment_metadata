@@ -28,8 +28,16 @@ default_iface=$(ip route | fgrep default | awk '{print $11, $5}' | sort -n | hea
 
 # Get the ethernet mac address
 ether_addr=$(ip addr show dev $default_iface | fgrep ether | awk '{print $2}')
+ipv4_addr=$(ip addr show dev $default_iface | fgrep 'inet ' | awk '{print $2}')
+ipv4_addr=${ipv4_addr%/*}
+ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | awk '{print $2}')
+ipv6_addr=${ipv6_addr%/*}
 
 echo Setting $metadata_out ether addr to $ether_addr
-jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file > $metadata_out
+echo Setting $metadata_out ipv4 addr to $ipv4_addr
+echo Setting $metadata_out ipv6 addr to $ipv6_addr
+jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
+    jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
+    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
 
 ls -l $metadata_file $metadata_out
