@@ -6,7 +6,7 @@
       "make" : "unknown"
     },
     "software" : {
-      "firmware" : ""
+      "firmware" : [ "D_IP_BW6_V35_6_S14" ]
     },
     "operation" : {
       "operational" : true
