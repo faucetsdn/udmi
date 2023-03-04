@@ -88,10 +88,6 @@ public class MessageReadingClient implements MessagePublisher {
       Map<String, String> attributes = makeAttributes(deviceId, msgName);
       deviceAttributes.put(deviceId, attributes);
       Map<String, Object> msgObj = getMessageObject(deviceId, msgName);
-      Exception cause = (Exception) msgObj.get(EXCEPTION_KEY);
-      if (cause != null) {
-        throw new RuntimeException((String) msgObj.get(MESSAGE_KEY), cause);
-      }
       deviceMessages.put(deviceId, msgObj);
       if (!msgObj.containsKey("timestamp")) {
         msgObj.put("timestamp", deviceLastTimestamp.get(deviceId));
