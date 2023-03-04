@@ -4,13 +4,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
+import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.STATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
-import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -92,9 +94,6 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final String EXCEPTION_KEY = "exception";
-  public static final String TIMESTAMP_KEY = "timestamp";
-  public static final String MESSAGE_KEY = "message";
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -103,7 +102,6 @@ public class Validator {
   private static final String MESSAGE_FILE_FORMAT = "%s.json";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
-  private static final String METADATA_JSON = "metadata.json";
   private static final String DEVICES_SUBDIR = "devices";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
@@ -462,8 +460,8 @@ public class Validator {
     String nonce = (String) message.remove(SequenceBase.CONFIG_NONCE_KEY);
     message.values().forEach(this::sanitizeBlock);
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
-      message.remove(VERSION_PROPERTY_KEY);
-      message.remove(TIMESTAMP_PROPERTY_KEY);
+      message.remove(VERSION_KEY);
+      message.remove(TIMESTAMP_KEY);
     }
     return nonce;
   }
@@ -496,8 +494,8 @@ public class Validator {
         base64Devices.add(deviceId);
       }
 
-      if (message.containsKey(Common.EXCEPTION_KEY)) {
-        device.addError((Exception) message.get(Common.EXCEPTION_KEY), attributes,
+      if (message.containsKey(EXCEPTION_KEY)) {
+        device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
             Category.VALIDATION_DEVICE_RECEIVE);
         return device;
       }
@@ -506,7 +504,7 @@ public class Validator {
       upgradeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
-      String timeString = (String) message.get(TIMESTAMP_PROPERTY_KEY);
+      String timeString = (String) message.get(TIMESTAMP_KEY);
       String subTypeRaw = Optional.ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
           .orElse(UNKNOWN_TYPE_DEFAULT);
       if (timeString != null && LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw))) {

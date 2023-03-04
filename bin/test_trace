@@ -17,8 +17,8 @@ function redact() {
 }
 
 
-trace_out=validator/traces/${trace_name}.out
-trace_in=validator/traces/${trace_name}.in
+trace_in=tests/${trace_name}.trace
+trace_out=$trace_in/expected/
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
