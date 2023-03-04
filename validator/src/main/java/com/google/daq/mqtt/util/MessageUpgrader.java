@@ -165,7 +165,7 @@ public class MessageUpgrader {
       JsonNode version = ((ObjectNode) firmware).remove(VERSION_KEY);
       if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
-        softwareNode.put("firmware", version.asText());
+        softwareNode.set("firmware", version);
         system.set("software", softwareNode);
       }
     }
