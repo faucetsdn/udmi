@@ -37,6 +37,9 @@
     "redirectRegistry": {
       "type": "string"
     },
+    "smokeCheck": {
+      "type": "boolean"
+    },
     "noPointState": {
       "type": "boolean"
     },
