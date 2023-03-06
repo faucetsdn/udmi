@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -43,8 +43,8 @@ public class MessageDowngrader {
     major = Integer.parseInt(parts[0]);
     minor = parts.length >= 2 ? Integer.parseInt(parts[1]) : 0;
     patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
-    JsonNode oldVersion = message.get(VERSION_PROPERTY_KEY);
-    message.set(VERSION_PROPERTY_KEY, newVersion);
+    JsonNode oldVersion = message.get(VERSION_KEY);
+    message.set(VERSION_KEY, newVersion);
 
     if (oldVersion.equals(newVersion)) {
       return;

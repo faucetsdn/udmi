@@ -19,13 +19,14 @@ import java.util.stream.Collectors;
 public abstract class Common {
 
   public static final String STATE_QUERY_TOPIC = "update/query";
-  public static final String TIMESTAMP_PROPERTY_KEY = "timestamp";
-  public static final String VERSION_PROPERTY_KEY = "version";
+  public static final String EXCEPTION_KEY = "exception";
+  public static final String MESSAGE_KEY = "message";
+  public static final String TIMESTAMP_KEY = "timestamp";
+  public static final String VERSION_KEY = "version";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
   public static final String NO_SITE = "--";
   public static final String GCP_REFLECT_KEY_PKCS8 = "validator/rsa_private.pkcs8";
-  public static final String EXCEPTION_KEY = "exception";
   private static final String UDMI_VERSION_KEY = "UDMI_VERSION";
   public static final char DETAIL_SEPARATOR_CHAR = ';';
   public static final String DETAIL_SEPARATOR = DETAIL_SEPARATOR_CHAR + " ";

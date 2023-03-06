@@ -1,5 +1,7 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 
@@ -63,11 +65,12 @@ public class MessageReadingClient implements MessagePublisher {
     if (!messageDir.exists() || !messageDir.isDirectory()) {
       throw new RuntimeException("Message directory not found " + messageDir.getAbsolutePath());
     }
-    Arrays.stream(Objects.requireNonNull(messageDir.list())).forEach(this::prepDevice);
+    File devicesDir = new File(messageDir, "devices");
+    Arrays.stream(Objects.requireNonNull(devicesDir.list())).forEach(this::prepDevice);
   }
 
   private void prepDevice(String deviceId) {
-    File deviceDir = new File(messageDir, deviceId);
+    File deviceDir = new File(messageDir, "devices/" + deviceId);
     List<String> messages = Arrays.stream(Objects.requireNonNull(deviceDir.list()))
         .filter(filename -> filename.endsWith(TRACE_FILE_SUFFIX))
         .sorted()
@@ -97,14 +100,14 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   private Map<String, Object> getMessageObject(String deviceId, String msgName) {
+    File deviceDir = new File(messageDir, "devices/" + deviceId);
+    File msgFile = new File(deviceDir, msgName);
     try {
-      File deviceDir = new File(messageDir, deviceId);
-      File msgFile = new File(deviceDir, msgName);
       @SuppressWarnings("unchecked")
       Map<String, Object> treeMap = OBJECT_MAPPER.readValue(msgFile, TreeMap.class);
       return treeMap;
     } catch (Exception e) {
-      return new ErrorContainer(e, msgName, lastValidTimestamp);
+      return new ErrorContainer(e, "Reading from " + msgFile.getAbsolutePath(), lastValidTimestamp);
     }
   }
 

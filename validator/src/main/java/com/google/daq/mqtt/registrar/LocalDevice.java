@@ -8,7 +8,7 @@ import static com.google.daq.mqtt.registrar.Registrar.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.NORMALIZED_JSON;
 import static com.google.daq.mqtt.util.MessageUpgrader.METADATA_SCHEMA;
-import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.JsonUtil.asMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -297,7 +297,7 @@ class LocalDevice {
       Metadata loadedMetadata = SiteModel.loadDeviceMetadata(siteDir.getPath(), deviceId,
           LocalDevice.class);
       instance = JsonUtil.convertTo(JsonNode.class, loadedMetadata);
-      baseVersion = instance.get(VERSION_PROPERTY_KEY);
+      baseVersion = instance.get(VERSION_KEY);
       new MessageUpgrader(METADATA_SCHEMA, instance).upgrade(false);
     } catch (Exception exception) {
       exceptionMap.put(EXCEPTION_LOADING, exception);
