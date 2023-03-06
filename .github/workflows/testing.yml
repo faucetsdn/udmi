@@ -128,6 +128,10 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out /tmp/generated.md
+      - name: sequencer end state
+        if: ${{ always() }}
+        run: |
+          cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: itemized sequencer tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

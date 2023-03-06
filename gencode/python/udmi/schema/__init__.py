@@ -67,4 +67,6 @@ from .state_system import SystemState
 from .state_system_hardware import StateSystemHardware
 from .state_system_operation import StateSystemOperation
 from .state_validation import ValidationState
+from .state_validation_feature import FeatureValidationState
+from .state_validation_sequence import SequenceValidationState
 from .virtual_links import VirtualEquipmentLinks

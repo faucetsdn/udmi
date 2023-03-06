@@ -3,7 +3,6 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -14,6 +13,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.daq.mqtt.util.ConfigDiffEngine;
@@ -72,6 +71,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.rules.Timeout;
+import org.junit.runner.Description;
 import org.junit.runners.model.TestTimedOutException;
 import udmi.schema.Bucket;
 import udmi.schema.Config;
@@ -80,27 +80,29 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.FeatureValidationState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvent;
+import udmi.schema.SequenceValidationState;
+import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvent;
 import udmi.schema.TestingSystemConfig;
+import udmi.schema.ValidationState;
 
 /**
  * Validate a device using a sequence of message exchanges.
  */
 public class SequenceBase {
 
-  public static final String RESULT_FAIL = "fail";
-  public static final String RESULT_PASS = "pass";
-  public static final String RESULT_SKIP = "skip";
   public static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   public static final String TESTS_OUT_DIR = "tests";
   public static final String SERIAL_NO_MISSING = "//";
-  public static final String SEQUENCER_CATEGORY = "sequencer";
+  public static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
   public static final String EVENT_PREFIX = "event_";
   public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
   public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
@@ -135,10 +137,18 @@ public class SequenceBase {
   private static final long ONE_SECOND_MS = 1000;
   private static final int EXIT_CODE_PRESERVE = -9;
   private static final String SYSTEM_TESTING_MARKER = " `system.testing";
+  private static final Map<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableMap.of(
+      SequenceResult.START, Level.INFO,
+      SequenceResult.SKIP, Level.WARNING,
+      SequenceResult.PASS, Level.WARNING,
+      SequenceResult.FAIL, Level.ERROR
+  );
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
-  private static boolean udmisInstallValid;
+  public static final String VALIDATION_STATE_TOPIC = "validation/state";
+  private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
+  private static ValidationState validationState;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -173,7 +183,7 @@ public class SequenceBase {
   private boolean enforceSerial;
   private String testName;
   private String testDescription;
-  private Stage testStage;
+  private FeatureStage testStage;
   private long testStartTimeMs;
   private File testDir;
   private PrintWriter sequencerLog;
@@ -248,7 +258,8 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    deviceOutputDir = new File(new File(SequenceBase.siteModel), "out/devices/" + getDeviceId());
+    File baseOutputDir = new File(SequenceBase.siteModel, "out");
+    deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
     resultSummary = new File(deviceOutputDir, RESULT_LOG_FILE);
@@ -259,6 +270,20 @@ public class SequenceBase {
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
     altClient = getAlternateClient();
+    initializeValidationState();
+  }
+
+  private static void initializeValidationState() {
+    validationState = new ValidationState();
+    validationState.features = new HashMap<>();
+    validationState.start_time = new Date();
+    Entry statusEntry = new Entry();
+    statusEntry.category = SEQUENCER_CATEGORY;
+    statusEntry.message = "Starting sequence run for device " + getDeviceId();
+    statusEntry.level = Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    validationState.status = statusEntry;
+    updateValidationState();
   }
 
   private static MessagePublisher getPublisherClient() {
@@ -358,12 +383,12 @@ public class SequenceBase {
     sequenceMd.flush();
   }
 
-  private String getTestDescription(org.junit.runner.Description description) {
-    Description annotation = description.getAnnotation(Description.class);
+  private String getTestSummary(Description summary) {
+    Summary annotation = summary.getAnnotation(Summary.class);
     return annotation == null ? null : annotation.value();
   }
 
-  private Stage getTestStage(org.junit.runner.Description description) {
+  private FeatureStage getTestStage(Description description) {
     Feature annotation = description.getAnnotation(Feature.class);
     return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
   }
@@ -484,8 +509,7 @@ public class SequenceBase {
     untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
   }
 
-  private void recordResult(String result, org.junit.runner.Description description,
-      String message) {
+  private void recordResult(SequenceResult result, Description description, String message) {
     String methodName = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     Bucket bucket = getBucket(feature);
@@ -500,6 +524,10 @@ public class SequenceBase {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
     }
+  }
+
+  private Bucket getBucket(Description description) {
+    return getBucket(description.getAnnotation(Feature.class));
   }
 
   private Bucket getBucket(Feature feature) {
@@ -1280,16 +1308,16 @@ public class SequenceBase {
   }
 
   /**
-   * Add a description for a test that can be programmatically extracted.
+   * Add a summary of a test, with a simple description of what it's testing.
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.METHOD})
-  public @interface Description {
+  public @interface Summary {
 
     /**
-     * Description of the test.
+     * Summary description of the test.
      *
-     * @return test description
+     * @return test summary description
      */
     String value();
   }
@@ -1307,14 +1335,14 @@ public class SequenceBase {
   class SequenceTestWatcher extends TestWatcher {
 
     @Override
-    protected void starting(@NotNull org.junit.runner.Description description) {
+    protected void starting(@NotNull Description description) {
       try {
         setupSequencer();
         SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         testName = description.getMethodName();
-        testDescription = getTestDescription(description);
+        testDescription = getTestSummary(description);
         testStage = getTestStage(description);
 
         testStartTimeMs = System.currentTimeMillis();
@@ -1327,6 +1355,8 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
         writeSequenceMdHeader();
 
+        startSequenceStatus(description);
+
         notice("starting test " + testName);
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
@@ -1336,7 +1366,7 @@ public class SequenceBase {
     }
 
     @Override
-    protected void finished(org.junit.runner.Description description) {
+    protected void finished(Description description) {
       if (activeInstance == null) {
         return;
       }
@@ -1356,39 +1386,35 @@ public class SequenceBase {
     }
 
     @Override
-    protected void succeeded(org.junit.runner.Description description) {
-      recordCompletion(RESULT_PASS, Level.INFO, description, "Sequence complete");
+    protected void succeeded(Description description) {
+      recordCompletion(SequenceResult.PASS, description, "Sequence complete");
     }
 
     @Override
-    protected void failed(Throwable e, org.junit.runner.Description description) {
+    protected void failed(Throwable e, Description description) {
       if (activeInstance == null) {
         return;
       }
       final String message;
-      final String type;
-      final Level level;
+      final SequenceResult type;
       if (e instanceof TestTimedOutException) {
         waitingCondition.forEach(condition -> warning("while " + condition));
         error(String.format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
         message = "timeout " + waitingCondition.peek();
-        type = RESULT_FAIL;
-        level = Level.ERROR;
+        type = SequenceResult.FAIL;
       } else if (e instanceof SkipTest) {
         message = e.getMessage();
-        type = RESULT_SKIP;
-        level = Level.WARNING;
+        type = SequenceResult.SKIP;
       } else {
         while (e.getCause() != null) {
           e = e.getCause();
         }
         message = e.getMessage();
-        type = RESULT_FAIL;
-        level = Level.ERROR;
+        type = SequenceResult.FAIL;
       }
       debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
-      recordCompletion(type, level, description, message);
-      String actioned = type.equals(RESULT_SKIP) ? "skipped" : "failed";
+      recordCompletion(type, description, message);
+      String actioned = type.equals(SequenceResult.SKIP) ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
       resetRequired = true;
       if (debugLogLevel()) {
@@ -1397,16 +1423,65 @@ public class SequenceBase {
       }
     }
 
-    private void recordCompletion(String result, Level level,
-        org.junit.runner.Description description, String message) {
+    private void recordCompletion(SequenceResult result, Description description, String message) {
       recordResult(result, description, message);
       Entry logEntry = new Entry();
       logEntry.category = SEQUENCER_CATEGORY;
       logEntry.message = message;
-      logEntry.level = level.value();
+      logEntry.level = RESULT_LEVEL_MAP.get(result).value();
       logEntry.timestamp = CleanDateFormat.cleanDate();
       writeSequencerLog(logEntry);
       writeSystemLog(logEntry);
+      setSequenceStatus(description, result, logEntry);
     }
+  }
+
+  private void startSequenceStatus(Description description) {
+    Entry entry = new Entry();
+    entry.message = "Starting test";
+    entry.category = SEQUENCER_CATEGORY;
+    SequenceResult startResult = SequenceResult.START;
+    entry.level = RESULT_LEVEL_MAP.get(startResult).value();
+    entry.timestamp = new Date();
+    setSequenceStatus(description, startResult, entry);
+  }
+
+  private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
+    String bucket = getBucket(description).value();
+    String name = description.getMethodName();
+    SequenceValidationState sequenceValidationState = validationState.features.computeIfAbsent(
+        bucket, key -> newFeatureValidationState()).sequences.computeIfAbsent(
+        name, key -> new SequenceValidationState());
+    sequenceValidationState.status = logEntry;
+    sequenceValidationState.result = result;
+    sequenceValidationState.summary = getTestSummary(description);
+    sequenceValidationState.stage = getTestStage(description);
+    updateValidationState();
+  }
+
+  @NotNull
+  private FeatureValidationState newFeatureValidationState() {
+    FeatureValidationState featureValidationState = new FeatureValidationState();
+    featureValidationState.sequences = new HashMap<>();
+    return featureValidationState;
+  }
+
+  private static void updateValidationState() {
+    validationState.timestamp = new Date();
+    File stateFile = new File(deviceOutputDir, VALIDATION_STATE_FILE);
+    JsonUtil.writeFile(validationState, stateFile);
+    String validationString = stringify(validationState);
+    client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
+  }
+
+  static void processComplete(Exception e) {
+    boolean wasError = e != null;
+    Entry statusEntry = new Entry();
+    statusEntry.level = wasError ? Level.ERROR.value() : Level.NOTICE.value();
+    statusEntry.timestamp = new Date();
+    statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
+    statusEntry.category = SEQUENCER_CATEGORY;
+    validationState.status = statusEntry;
+    updateValidationState();
   }
 }
