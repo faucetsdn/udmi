@@ -31,13 +31,13 @@ public class ConfigSequences extends SequenceBase {
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that last_update state is correctly set in response to a config update.")
+  @Summary("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the min log-level config is honored by the device.")
+  @Summary("Check that the min log-level config is honored by the device.")
   @Feature()
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
@@ -63,13 +63,13 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device MQTT-acknowledges a sent config.")
+  @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles a broken (non-json) config message.")
+  @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
@@ -111,7 +111,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles an extra out-of-schema field")
+  @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
