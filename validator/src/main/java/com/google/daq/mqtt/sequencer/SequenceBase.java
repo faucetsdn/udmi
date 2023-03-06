@@ -6,7 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
-import static com.google.udmi.util.Common.TIMESTAMP_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -1036,7 +1036,7 @@ public class SequenceBase {
       }
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
-        configExceptionTimestamp = (String) message.get(TIMESTAMP_PROPERTY_KEY);
+        configExceptionTimestamp = (String) message.get(TIMESTAMP_KEY);
         return;
       }
       configExceptionTimestamp = null;

@@ -22,8 +22,7 @@ import udmi.schema.ValidationState;
  */
 public class PlaybackTest extends TestBase {
 
-  public static final String SIMPLE_TRACE_DIR = "simple.in";
-  private static final String TRACE_BASE = "../validator/traces/";
+  public static final String SIMPLE_TRACE_DIR = "../tests/simple.trace";
   private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
 
   @Test
@@ -113,14 +112,12 @@ public class PlaybackTest extends TestBase {
   }
 
   private MessageReadingClient validateTrace(String traceDir, List<String> additionalArgs) {
-    String tracePath = TRACE_BASE + traceDir;
-
     List<String> testArgs = new ArrayList<>();
     testArgs.addAll(List.of(
         "-p", SiteModel.MOCK_PROJECT,
         "-a", TestCommon.SCHEMA_SPEC,
         "-s", TestCommon.SITE_DIR,
-        "-r", tracePath));
+        "-r", traceDir));
     testArgs.addAll(additionalArgs);
     Validator validator = new Validator(testArgs);
     validator.messageLoop();
