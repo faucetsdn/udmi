@@ -1,3 +1,7 @@
 Exceptions for AHU-22
-  1 schema violations found
-    /system/location/site: ECMA 262 regex "^[A-Z]{2}-[A-Z]{3}-[A-Z0-9]{2,9}$" does not match input string "ZZ-TRI-FECTA-ALT"
+  Unrecognized field "id" (class udmi.schema.NetworkLocalnetModel), not marked as ignorable (one known property: "addr"])
+ at [Source: (File); line: 40, column: 16] (through reference chain: udmi.schema.Metadata["localnet"]->udmi.schema.LocalnetModel["networks"]->java.util.HashMap["virtual"]->udmi.schema.NetworkLocalnetModel["id"])
+  While validating envelope
+    system.location.site ZZ-TRI-FECTA-ALT does not match expected ZZ-TRI-FECTA
+  devices/AHU-22
+    Extra out files: [exceptions.txt]

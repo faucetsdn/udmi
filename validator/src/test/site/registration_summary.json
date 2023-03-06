@@ -1,12 +1,18 @@
 {
   "Clean" : {
-    "AHU-1" : "2020-05-01T13:39:07Z"
+    "AHU-1" : "2020-05-01T13:39:07Z",
+    "GAT-123" : "2020-05-01T13:39:07Z"
   },
-  "Validating" : {
-    "AHU-22" : "1 schema violations found",
-    "GAT-123" : "1 schema violations found"
+  "Converting" : {
+    "AHU-22" : "Unrecognized field \"id\" (class udmi.schema.NetworkLocalnetModel), not marked as ignorable (one known property: \"addr\"])\n at [Source: (File); line: 40, column: 16] (through reference chain: udmi.schema.Metadata[\"localnet\"]->udmi.schema.LocalnetModel[\"networks\"]->java.util.HashMap[\"virtual\"]->udmi.schema.NetworkLocalnetModel[\"id\"])"
+  },
+  "Envelope" : {
+    "AHU-22" : "While validating envelope"
+  },
+  "Files" : {
+    "AHU-22" : "devices/AHU-22"
   },
   "Version" : {
-    "main" : "1.4.0-148-g70f84cf5"
+    "main" : "unknown"
   }
 }

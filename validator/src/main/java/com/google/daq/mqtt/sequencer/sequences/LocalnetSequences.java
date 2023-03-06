@@ -12,7 +12,7 @@ import org.junit.Test;
 public class LocalnetSequences extends SequenceBase {
 
   private void familyAddr(String family) {
-    String expected = catchToNull(() -> deviceMetadata.localnet.families.get(family).addr);
+    String expected = catchToNull(() -> deviceMetadata.localnet.networks.get(family).addr);
     if (expected == null) {
       throw new SkipTest(String.format("No %S address defined in metadata", family));
     }

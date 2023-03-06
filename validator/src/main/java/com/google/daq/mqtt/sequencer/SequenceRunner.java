@@ -5,7 +5,6 @@ import static joptsimple.internal.Strings.isNullOrEmpty;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
@@ -25,6 +24,7 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 /**
  * Custom test runner that can execute a specific method to test.
@@ -125,6 +125,15 @@ public class SequenceRunner {
   }
 
   private void process() {
+    try {
+      processRaw();
+      SequenceBase.processComplete(null);
+    } catch (Exception e) {
+      SequenceBase.processComplete(e);
+    }
+  }
+
+  private void processRaw() {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
@@ -185,13 +194,18 @@ public class SequenceRunner {
       return true;
     }
     Feature annotation = method.getAnnotation(Feature.class);
-    Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
-    return stage.processGiven(getFeatureMinStage());
+    FeatureStage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return processGiven(stage, getFeatureMinStage());
   }
 
-  static Stage getFeatureMinStage() {
+  public static boolean processGiven(FeatureStage query, FeatureStage level) {
+    return query.compareTo(level) >= 0;
+  }
+
+  static FeatureStage getFeatureMinStage() {
     String stage = SequenceBase.validatorConfig.min_stage;
-    return isNullOrEmpty(stage) ? IotReflectorClient.DEFAULT_MIN_STAGE : Stage.valueOf(stage);
+    return isNullOrEmpty(stage) ? IotReflectorClient.DEFAULT_MIN_STAGE
+        : FeatureStage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {

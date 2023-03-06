@@ -8,9 +8,7 @@
   },
   "localnet" : {
     "networks" : {
-      "virtual" : {
-        "id" : "0x65"
-      }
+      "virtual" : { }
     }
   },
   "pointset" : {

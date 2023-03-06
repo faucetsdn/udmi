@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -12,9 +10,10 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_NETWORKS;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -35,14 +34,10 @@ import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
-<<<<<<< HEAD
+import udmi.schema.FeatureEnumerationEvent;
 import udmi.schema.NetworkDiscoveryConfig;
 import udmi.schema.NetworkDiscoveryState;
-=======
-import udmi.schema.FamilyDiscoveryConfig;
-import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.FeatureEnumerationEvent;
->>>>>>> master
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -82,23 +77,17 @@ public class DiscoverySequences extends SequenceBase {
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
     if (isTrue(enumerate.networks)) {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
-<<<<<<< HEAD
           .map(localnet -> localnet.networks.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.localnet).map(Map::keySet).orElse(null);
-      checkThat("network enumeration matches", () -> Objects.equals(models, events));
-=======
-          .map(localnet -> localnet.families.keySet()).orElse(null);
-      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      checkThat("family enumeration matches", () -> models.size() == events.size());
->>>>>>> familyaddr
+      checkThat("network enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no network enumeration", () -> event.localnet == null);
     }
 
     if (isTrue(enumerate.features)) {
-      Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", event.features);
+      Map<Bucket, FeatureStage> bucketStageMap = flattenFeatureEnumeration("", event.features);
       checkThat("feature enumeration feature is stable",
-          () -> bucketStageMap.get(ENUMERATION_FEATURES) == Stage.STABLE);
+          () -> bucketStageMap.get(ENUMERATION_FEATURES) == FeatureStage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -112,13 +101,13 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix,
+  private Map<Bucket, FeatureStage> flattenFeatureEnumeration(String prefix,
       Map<String, FeatureEnumerationEvent> eventFeatures) {
-    Map<Bucket, Stage> buckets = new HashMap<>();
+    Map<Bucket, FeatureStage> buckets = new HashMap<>();
     eventFeatures.forEach((key, value) -> {
       String fullBucket = prefix + "." + key;
       Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
-      buckets.put(bucket, Stage.valueOf(value.stage.value().toUpperCase()));
+      buckets.put(bucket, FeatureStage.valueOf(value.stage.value().toUpperCase()));
       if (value.features != null) {
         buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
       }
