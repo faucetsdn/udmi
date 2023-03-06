@@ -98,11 +98,11 @@ jobs:
           fgrep registries/reconfigure/devices pubber.out.2
           fgrep 'While waiting for connection start: Connection error' pubber.out.2
           fgrep 'Endpoint connection restored to last working endpoint' pubber.out.2
-	  # pubber restartSystem(restart=true)
+          # pubber restartSystem(restart=true)
           fgrep 'Stopping system with extreme prejudice, restart true' pubber.out.2  # restart config
-	  # pubber restartSystem(restart=false)
+          # pubber restartSystem(restart=false)
           fgrep 'Stopping system with extreme prejudice, restart false' pubber.out.2  # auto-kill
-	  # pubber private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
+          # pubber private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
           fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
 
   udmi:
