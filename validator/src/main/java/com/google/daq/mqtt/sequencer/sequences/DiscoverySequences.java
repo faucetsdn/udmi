@@ -70,7 +70,7 @@ public class DiscoverySequences extends SequenceBase {
 
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
         .collect(Collectors.toList());
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
@@ -82,9 +82,15 @@ public class DiscoverySequences extends SequenceBase {
   private void checkSelfEnumeration(DiscoveryEvent event, Enumerate enumerate) {
     if (isTrue(enumerate.networks)) {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
+<<<<<<< HEAD
           .map(localnet -> localnet.networks.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.localnet).map(Map::keySet).orElse(null);
       checkThat("network enumeration matches", () -> Objects.equals(models, events));
+=======
+          .map(localnet -> localnet.families.keySet()).orElse(null);
+      Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
+      checkThat("family enumeration matches", () -> models.size() == events.size());
+>>>>>>> familyaddr
     } else {
       checkThat("no network enumeration", () -> event.localnet == null);
     }

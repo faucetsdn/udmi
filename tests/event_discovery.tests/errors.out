@@ -1,4 +1,14 @@
+<<<<<<< HEAD
 3 schema violations found
   /uniqs/bad_entity_name_: object instance has properties which are not allowed by the schema: ["present_value"]
   object has missing required properties (["generation"])
   object instance has properties which are not allowed by the schema: ["id","networks","points"]
+=======
+6 schema violations found
+  /families/bacnet: object has missing required properties (["addr"])
+  /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
+  /families: object instance has properties which are not allowed by the schema: ["ip_v4","mac"]
+  /uniqs/bad_entity_name_: object instance has properties which are not allowed by the schema: ["present_value"]
+  object has missing required properties (["generation"])
+  object instance has properties which are not allowed by the schema: ["addr","id","points"]
+>>>>>>> familyaddr

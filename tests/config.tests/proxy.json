@@ -7,7 +7,7 @@
   "localnet": {
     "networks": {
       "bacnet": {
-        "id": "78ce19"
+        "addr": "78ce19"
       }
     }
   },

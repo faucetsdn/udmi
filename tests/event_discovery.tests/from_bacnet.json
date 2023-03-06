@@ -107,8 +107,18 @@
       }
     }
   },
+<<<<<<< HEAD
   "scan_network": "iot",
   "scan_id": "5005",
+=======
+  "families": {
+    "iot": {
+      "addr": "5005"
+    }
+  },
+  "scan_family": "iot",
+  "scan_addr": "5005",
+>>>>>>> familyaddr
   "version": "1.4.0",
   "timestamp": "2022-06-21T17:19:49.191183+00:00",
   "system": {

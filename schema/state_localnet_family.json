@@ -8,6 +8,9 @@
     },
     "scope": {
       "type": "string"
+    },
+    "status": {
+      "$ref": "file:common.json#/definitions/entry"
     }
   }
 }

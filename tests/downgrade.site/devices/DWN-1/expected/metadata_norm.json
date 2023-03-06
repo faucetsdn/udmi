@@ -1,7 +1,11 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.4.0",
+<<<<<<< HEAD
   "hash": "9b06144d",
+=======
+  "hash": "d45fc7f4",
+>>>>>>> familyaddr
   "cloud": {
     "auth_type": "RS256"
   },
@@ -26,7 +30,7 @@
   "localnet": {
     "networks": {
       "virtual": {
-        "id": "0x65"
+        "addr": "0x65"
       }
     }
   },

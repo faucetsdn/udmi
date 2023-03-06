@@ -7,6 +7,22 @@
   "version": "1.4.0",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "generation": "2018-08-26T22:00:13Z",
+<<<<<<< HEAD
   "scan_network": "ipv6",
   "scan_id": "FE80::D05C:1A90:DD9E:A582"
+=======
+  "scan_family": "ipv6",
+  "scan_addr": "FE80::D05C:1A90:DD9E:A582",
+  "families": {
+    "ipv4": {
+      "addr": "192.168.1.2"
+    },
+    "ipv6": {
+      "addr": "FE80::D05C:1A90:DD9E:A582"
+    },
+    "ethmac": {
+      "addr": "0E:93:32:11:04:82"
+    }
+  }
+>>>>>>> familyaddr
 }

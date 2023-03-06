@@ -26,6 +26,7 @@
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance
 * [**event**](event.html) - Container object for all event schemas, not directly used.
+* [**event_discovery_family**](event_discovery_family.html) - Discovery information for an individual protocol family.
 * [**event_mapping**](event_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**event_validation**](event_validation.html) - Validation device result
 * [**persistent_device**](persistent_device.html) - Device persistent data

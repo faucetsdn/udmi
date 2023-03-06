@@ -1,4 +1,5 @@
 """Generated class for state_localnet_family.json"""
+from .common import Entry
 
 
 class FamilyLocalnetState:
@@ -7,6 +8,7 @@ class FamilyLocalnetState:
   def __init__(self):
     self.addr = None
     self.scope = None
+    self.status = None
 
   @staticmethod
   def from_dict(source):
@@ -15,6 +17,7 @@ class FamilyLocalnetState:
     result = FamilyLocalnetState()
     result.addr = source.get('addr')
     result.scope = source.get('scope')
+    result.status = Entry.from_dict(source.get('status'))
     return result
 
   @staticmethod
@@ -39,4 +42,6 @@ class FamilyLocalnetState:
       result['addr'] = self.addr # 5
     if self.scope:
       result['scope'] = self.scope # 5
+    if self.status:
+      result['status'] = self.status.to_dict() # 4
     return result

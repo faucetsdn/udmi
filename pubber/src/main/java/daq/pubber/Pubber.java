@@ -167,7 +167,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  Config deviceConfig = new Config();
+  final Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -183,6 +183,7 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
+  private LocalnetManager localnetManager;
 
   /**
    * Start an instance from a configuration file.
@@ -439,6 +440,7 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
+    localnetManager = new LocalnetManager(this);
     markStateDirty();
   }
 
@@ -922,7 +924,7 @@ public class Pubber {
         error("Empty config system block and configured to restart on bad config!");
         restartSystem(true);
       }
-      deviceConfig = config;
+      GeneralUtils.copyFields(config, deviceConfig);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
@@ -1123,6 +1125,7 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
+<<<<<<< HEAD
     discoveryEvent.networks = ifTrue(enumerate.networks, this::enumeratenetworks);
     publishDeviceMessage(discoveryEvent);
   }
@@ -1139,6 +1142,12 @@ public class Pubber {
     return networkDiscoveryEvent;
   }
 
+=======
+    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
+    publishDeviceMessage(discoveryEvent);
+  }
+
+>>>>>>> familyaddr
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
     return isTrue(() -> condition) ? supplier.get() : null;
   }
@@ -1259,6 +1268,7 @@ public class Pubber {
         && networkDiscoveryState.active) {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
+<<<<<<< HEAD
         NetworkLocalnetModel networkLocalnetModel = getnetworkLocalnetModel(network,
             targetMetadata);
         if (networkLocalnetModel != null && networkLocalnetModel.id != null) {
@@ -1271,6 +1281,19 @@ public class Pubber {
           discoveryEvent.networks.computeIfAbsent("iot",
               key -> new NetworkDiscoveryEvent()).id = deviceId;
           if (isTrue(() -> deviceConfig.discovery.networks.get(network).enumerate)) {
+=======
+        FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
+        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
+          DiscoveryEvent discoveryEvent = new DiscoveryEvent();
+          discoveryEvent.generation = scanGeneration;
+          discoveryEvent.scan_family = family;
+          discoveryEvent.scan_addr = deviceId;
+          discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
+              .collect(toMap(Map.Entry::getKey, this::eventForTarget));
+          discoveryEvent.families.computeIfAbsent("iot",
+              key -> new FamilyDiscoveryEvent()).addr = deviceId;
+          if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
+>>>>>>> familyaddr
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
           publishDeviceMessage(discoveryEvent);
@@ -1290,9 +1313,15 @@ public class Pubber {
     }
   }
 
+<<<<<<< HEAD
   private NetworkDiscoveryEvent eventForTarget(Map.Entry<String, NetworkLocalnetModel> target) {
     NetworkDiscoveryEvent event = new NetworkDiscoveryEvent();
     event.id = target.getValue().id;
+=======
+  private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
+    FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
+    event.addr = target.getValue().addr;
+>>>>>>> familyaddr
     return event;
   }
 
@@ -1593,7 +1622,7 @@ public class Pubber {
     cloudLog(message, Level.DEBUG, detail);
   }
 
-  private void info(String message) {
+  void info(String message) {
     cloudLog(message, Level.INFO);
   }
 
