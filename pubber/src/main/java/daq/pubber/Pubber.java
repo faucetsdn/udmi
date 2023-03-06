@@ -457,7 +457,7 @@ public class Pubber {
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
     if (persistentData.endpoint != null) {
-      info("Loading endpoint from persistent data: " + persistentData.endpoint);
+      info("Loading endpoint from persistent data");
       configuration.endpoint = persistentData.endpoint;
       info("Clearing endpoint from persistent data");
       persistentData.endpoint = null;
@@ -944,7 +944,8 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
-  EndpointConfiguration extractEndpointBlobConfig() {   // TODO why does this have a return
+  // TODO(x): Consider refactoring this to either return or change an instance variable.
+  EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
       return null;
@@ -956,8 +957,8 @@ public class Pubber {
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
-          persistentData.endpoint = extractedEndpoint;  // jrand
-          writePersistentStore();  // jrand
+          persistentData.endpoint = extractedEndpoint;
+          writePersistentStore();
         }
       }
     } catch (Exception e) {
