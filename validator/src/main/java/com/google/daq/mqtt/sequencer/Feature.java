@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import udmi.schema.Bucket;
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 /**
  * Feature designation for line-item tests.
@@ -13,7 +14,7 @@ import udmi.schema.Bucket;
 @Target({ElementType.METHOD})
 public @interface
 Feature {
-  Stage DEFAULT_STAGE = Stage.ALPHA;
+  FeatureStage DEFAULT_STAGE = FeatureStage.ALPHA;
   int DEFAULT_SCORE = 5;
 
   /**
@@ -35,7 +36,7 @@ Feature {
    *
    * @return annotated release stage of this test
    */
-  Stage stage() default Stage.ALPHA;
+  FeatureStage stage() default FeatureStage.ALPHA;
 
   /**
    * Defines the feature score for this test, in AU.
@@ -43,17 +44,4 @@ Feature {
    * @return feature score value
    */
   int score() default DEFAULT_SCORE;
-
-  /**
-   * Enum of allowed stages.
-   */
-  enum Stage {
-    ALPHA,
-    BETA,
-    STABLE;
-
-    public boolean processGiven(Stage level) {
-      return this.compareTo(level) >= 0;
-    }
-  }
 }

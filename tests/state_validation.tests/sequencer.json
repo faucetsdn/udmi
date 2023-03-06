@@ -1,0 +1,33 @@
+{
+  "version": "1.4.0",
+  "last_updated" : "2022-07-16T18:27:19Z",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "features": {
+    "unknown": {
+      "sequences": {
+        "writeback_succes": {
+        }
+      }
+    },
+    "endpoint.config": {
+      "sequences": {
+        "endpoint_redirect_basic": {
+          "status": {
+            "message": "Timeout after 60s",
+            "category": "validation.feature.sequence",
+            "timestamp": "2018-08-26T21:39:30.364Z",
+            "level": 400
+          }
+        },
+        "endpoint_redirect_registry": {
+          "status": {
+            "message": "Sequence complete",
+            "category": "validation.feature.sequence",
+            "timestamp": "2018-08-26T21:39:30.364Z",
+            "level": 500
+          }
+        }
+      }
+    }
+  }
+}
