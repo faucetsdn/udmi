@@ -944,7 +944,7 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
-  // TODO(x): Consider refactoring this to either return or change an instance variable.
+  // TODO(x): Consider refactoring this to either return or change an instance variable, not both.
   EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
