@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.udmi.util.Common.VERSION_PROPERTY_KEY;
+import static com.google.udmi.util.Common.VERSION_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -31,7 +31,7 @@ public class MessageUpgrader {
     this.message = message;
     this.schemaName = schemaName;
 
-    JsonNode version = message.get(VERSION_PROPERTY_KEY);
+    JsonNode version = message.get(VERSION_KEY);
     String verStr =
         version != null ? version.isNumber() ? Integer.toString(version.asInt()) : version.asText()
             : "1";
@@ -90,8 +90,8 @@ public class MessageUpgrader {
       patch = 0;
     }
 
-    if (upgraded && message.has(VERSION_PROPERTY_KEY)) {
-      ((ObjectNode) message).put(VERSION_PROPERTY_KEY,
+    if (upgraded && message.has(VERSION_KEY)) {
+      ((ObjectNode) message).put(VERSION_KEY,
           String.format(TARGET_FORMAT, major, minor, patch));
     }
 
@@ -162,10 +162,10 @@ public class MessageUpgrader {
   private void upgradeFirmware(ObjectNode system) {
     JsonNode firmware = system.remove("firmware");
     if (firmware != null) {
-      JsonNode version = ((ObjectNode) firmware).remove(VERSION_PROPERTY_KEY);
+      JsonNode version = ((ObjectNode) firmware).remove(VERSION_KEY);
       if (version != null && !system.has("software")) {
         ObjectNode softwareNode = new ObjectNode(NODE_FACTORY);
-        softwareNode.put("firmware", version.asText());
+        softwareNode.set("firmware", version);
         system.set("software", softwareNode);
       }
     }
