@@ -7,7 +7,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
-alt_registry=ZZ-REDIRECT-NA
+alt_registry=ZZ-TRI-FECTA-ALT-REGISTRY
 min_stage=BETA
 
 if [[ $1 == '-a' ]]; then
