@@ -466,9 +466,7 @@ public class Pubber {
   }
 
   private void writePersistentStore() {
-    info("====================================== Z1");
     Preconditions.checkState(persistentData != null, "persistent data not defined");
-    info("====================================== Z2 " + getPersistentStore());
     toJsonFile(getPersistentStore(), persistentData);
   }
 
@@ -952,15 +950,10 @@ public class Pubber {
       return null;
     }
     try {
-      info("========================================== A");
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
-      info("========================================== B");
       extractedEndpoint = fromJsonString(iotConfig, EndpointConfiguration.class);
-      info("========================================== C");
       if (extractedEndpoint != null) {
-        info("========================================== D");
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          info("========================================== E");
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
           persistentData.endpoint = extractedEndpoint;  // jrand
