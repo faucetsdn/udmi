@@ -99,3 +99,12 @@ y tests/command_mapping.tests/mapping.json
 y tests/metadata.tests/errors.json
 y tests/config.tests/blobset_final.json
 n tests/configuration_execution.tests/cloud_iot_config.json
+n tests/configuration_endpoint.tests/gcp_iot_core.json
+n tests/configuration_endpoint.tests/mosquitto.json
+n tests/configuration_endpoint.tests/multiple.json
+n tests/configuration_pubber.tests/mosnquitto.json
+n tests/event_discovery.tests/features.json
+y tests/event_system.tests/categories.json
+y tests/metadata.tests/nosys.json
+y tests/state.tests/gateway_test.json
+y tests/state_validation.tests/sequencer.json
