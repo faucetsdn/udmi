@@ -3,7 +3,6 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -15,7 +14,7 @@ import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;

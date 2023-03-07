@@ -1,9 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -19,6 +16,9 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
