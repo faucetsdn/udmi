@@ -3,7 +3,9 @@ package com.google.daq.mqtt.registrar;
 import static com.google.udmi.util.Common.VERSION_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Downgrade a message to a previous UDMI schema version.
@@ -14,6 +16,8 @@ public class MessageDowngrader {
   private int major;
   private int minor;
   private int patch;
+  private TextNode LEGACY_VERSION = new TextNode("1");
+  private JsonNode LEGACY_REPLACEMENT = new IntNode(1);
 
   /**
    * Create message downgrader.
@@ -58,7 +62,9 @@ public class MessageDowngrader {
       }
     }
 
-    message.set(VERSION_KEY, versionNode);
+    JsonNode useVersion = versionNode.equals(LEGACY_VERSION) ? LEGACY_REPLACEMENT : versionNode;
+
+    message.set(VERSION_KEY, useVersion);
   }
 
   private String convertVersion(JsonNode versionNode) {
