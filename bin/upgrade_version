@@ -55,7 +55,7 @@ fi
 NEW_VERSION=$1
 shift 1
 
-rm -f .upversion_error
+rm -f $ERROR_MARKER
 
 if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo ERROR Invalid version: $NEW_VERSION
@@ -70,7 +70,7 @@ fi
 
 if [[ -n $(git status --untracked-files=no --porcelain) ]]; then
     echo ERROR Git not clean .. commit/stash all changes first
-    #exit 1
+    exit 1
 fi
 
 # Check test files exist in the upversion list  
