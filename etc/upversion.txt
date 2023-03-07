@@ -76,7 +76,6 @@ y tests/config.tests/enumeration.json
 y tests/config.tests/writeback.json
 y tests/config.tests/proxy.json
 y tests/config.tests/continuous.json
-y tests/config.tests/delta_endpoint.json
 y tests/config.tests/periodic.json
 y tests/config.tests/discovery.json
 y tests/config.tests/example.json
@@ -85,7 +84,6 @@ y tests/config.tests/fcu.json
 y tests/config.tests/gateway.json
 y tests/config.tests/smartprimus.json
 y tests/config.tests/restart.json
-y tests/config.tests/blobset_final_incomplete_payload.json
 y tests/config.tests/implicit.json
 y tests/state_mapping.tests/mapping.json
 y tests/command_discovery.tests/provision.json
