@@ -107,3 +107,4 @@ y tests/event_system.tests/categories.json
 y tests/metadata.tests/nosys.json
 y tests/state.tests/gateway_test.json
 y tests/state_validation.tests/sequencer.json
+n tests/configuration_pubber.tests/mosquitto.json
