@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 """Filter log output."""
+import getopt
+import json
 import re
 import sys
-import json
-import getopt
 
 LINE_BREAK = '=' * 75
 

@@ -53,14 +53,10 @@ public class PubberTest extends TestBase {
     private HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
         PubberUnderTestFeatures, Boolean>();
 
-    public void setOptionsNoPersist(boolean value) {
+    private void setOptionsNoPersist(boolean value) {
       configuration.options.noPersist = value;
     }
-
-    public void setFeature(PubberUnderTestFeatures feature, Boolean value) {
-      testFeatures.put(feature, value);
-    }
-
+    
     @Override
     protected DevicePersistent newDevicePersistent() {
       return testPersistentData;
