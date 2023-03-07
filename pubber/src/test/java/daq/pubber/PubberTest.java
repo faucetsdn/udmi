@@ -242,7 +242,7 @@ public class PubberTest extends TestBase {
     });
 
     // Prepare test.
-    pubber.persistentData = null;
+    testPersistentData.endpoint = null;
     pubber.configuration.endpoint = null;
 
     // Now test.
@@ -263,7 +263,7 @@ public class PubberTest extends TestBase {
     });
 
     // Prepare test.
-    pubber.persistentData = null;
+    testPersistentData.endpoint = null;
     pubber.configuration.endpoint = getEndpointConfiguration("from_config");
 
     // Now test.

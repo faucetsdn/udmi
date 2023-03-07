@@ -462,18 +462,17 @@ public class Pubber {
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
 
-    // If the persistentData contains endpoint configuration, use that. Otherwise, use the
-    // supplied configuration.
+    // If the persistentData contains endpoint configuration, prioritize using that.
+    // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
     if (persistentData.endpoint != null) {
       info("Loading endpoint from persistent data");
       configuration.endpoint = persistentData.endpoint;
-      // info("Clearing endpoint from persistent data");
-      // persistentData.endpoint = null;
     } else if (configuration.endpoint != null) {
       info("Loading endpoint into persistent data from configuration");
       persistentData.endpoint = configuration.endpoint;
     } else {
-      error("Neither configuration nor persistent data supplies endpoint configuration");
+      error(
+          "Neither configuration nor persistent data supplies endpoint configuration");
     }
 
     writePersistentStore();
