@@ -55,7 +55,7 @@ fi
 NEW_VERSION=$1
 shift 1
 
-rm .upversion_error
+rm -f .upversion_error
 
 if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo ERROR Invalid version: $NEW_VERSION
