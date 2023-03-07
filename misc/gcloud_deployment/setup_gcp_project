@@ -46,7 +46,8 @@ $ROOT_DIR/bin/registrar $ROOT_DIR/sites/udmi_site_model $PROJECT_ID
 gcloud iot registries create UDMS-REFLECT \
     --project=$PROJECT_ID \
     --region=us-central1 \
-    --event-notification-config=topic=projects/$PROJECT_ID/topics/udmi_reflect
+    --event-notification-config=topic=projects/$PROJECT_ID/topics/udmi_reflect \
+    --state-pubsub-topic=projects/$PROJECT_ID/topics/udmi_reflect
 
 gcloud iot devices create $registry_id --region=us-central1 --registry=UDMS-REFLECT --project=$PROJECT_ID \
     --public-key \
