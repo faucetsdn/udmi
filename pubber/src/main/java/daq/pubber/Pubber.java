@@ -467,8 +467,8 @@ public class Pubber {
     if (persistentData.endpoint != null) {
       info("Loading endpoint from persistent data");
       configuration.endpoint = persistentData.endpoint;
-//      info("Clearing endpoint from persistent data");
-//      persistentData.endpoint = null;
+      // info("Clearing endpoint from persistent data");
+      // persistentData.endpoint = null;
     } else if (configuration.endpoint != null) {
       info("Loading endpoint into persistent data from configuration");
       persistentData.endpoint = configuration.endpoint;

@@ -50,11 +50,13 @@ public class PubberTest extends TestBase {
 
   private class PubberUnderTest extends Pubber {
 
-    private HashMap<PubberUnderTestFeatures, Boolean> testFeatures;
+    private HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
+        PubberUnderTestFeatures, Boolean>();
 
     public void setOptionsNoPersist(boolean value) {
       configuration.options.noPersist = value;
     }
+
     public void setFeature(PubberUnderTestFeatures feature, Boolean value) {
       testFeatures.put(feature, value);
     }
@@ -82,7 +84,8 @@ public class PubberTest extends TestBase {
         HashMap<PubberUnderTestFeatures, Boolean> features) {
       super(projectId, sitePath, deviceId, serialNo);
       testFeatures = features;
-      setOptionsNoPersist(testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
+      setOptionsNoPersist(
+          testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
     }
   }
 
@@ -229,12 +232,14 @@ public class PubberTest extends TestBase {
   @Test
   public void initializePersistentStoreNullTest() {
     // Initialize the test Pubber.
-    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
+        PubberUnderTestFeatures, Boolean>();
     testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
     pubber.startConnection(deviceId -> {
-      return true; });
+      return true;
+    });
 
     // Prepare test.
     pubber.persistentData = null;
@@ -248,12 +253,14 @@ public class PubberTest extends TestBase {
   @Test
   public void initializePersistentStoreFromConfigTest() {
     // Initialize the test Pubber.
-    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
+        PubberUnderTestFeatures, Boolean>();
     testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
     pubber.startConnection(deviceId -> {
-      return true; });
+      return true;
+    });
 
     // Prepare test.
     pubber.persistentData = null;
@@ -268,12 +275,14 @@ public class PubberTest extends TestBase {
   @Test
   public void initializePersistentStoreFromPersistentDataTest() {
     // Initialize the test Pubber.
-    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
+        PubberUnderTestFeatures, Boolean>();
     testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
     pubber.startConnection(deviceId -> {
-      return true; });
+      return true;
+    });
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
