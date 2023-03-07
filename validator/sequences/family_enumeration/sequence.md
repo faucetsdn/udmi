@@ -10,6 +10,4 @@
 1. Update config before cleared enumeration generation:
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
-1. Check that family enumeration matches
-1. Check that no feature enumeration
-1. Check that no point enumeration
+1. Test failed: Failed check that family enumeration matches
