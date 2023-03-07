@@ -63,9 +63,7 @@ public class PubberTest extends TestBase {
 
     @Override
     protected DevicePersistent newDevicePersistent() {
-      DevicePersistent persistentData = super.newDevicePersistent();
-      persistentData = testPersistentData;
-      return persistentData;
+      return testPersistentData;
     }
 
     @Override
