@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static org.junit.Assert.assertEquals;
-
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import org.junit.Test;
@@ -18,7 +16,7 @@ public class LocalnetSequences extends SequenceBase {
     }
     untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
     String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);
-    assertEquals("device family address", expected, actual);
+    checkThat(String.format("device family %s address matches", family), () -> expected.equals(actual));
   }
 
   @Test

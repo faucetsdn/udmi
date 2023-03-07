@@ -88,6 +88,13 @@ public class MessageDowngrader {
     JsonNode families = localnet.remove("families");
     if (families != null) {
       localnet.set("subsystem", families);
+      for (JsonNode familyName : ((ObjectNode) families.fieldNames())) {
+        ObjectNode family = (ObjectNode) families.get(familyName.textValue());
+        JsonNode removedNode = family.remove("addr");
+        if (removedNode != null) {
+          family.set("id", removedNode);
+        }
+      }
     }
   }
 }

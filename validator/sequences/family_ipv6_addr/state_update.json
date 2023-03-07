@@ -22,14 +22,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-03-02T06:14:41Z",
+    "last_config" : "2023-03-07T04:07:04Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-03-02T06:08:43Z",
-      "restart_count" : 5,
-      "mode" : "active"
+      "last_start" : "2023-03-07T04:06:02Z",
+      "restart_count" : 1,
+      "mode" : "initial"
     },
-    "serial_no" : "sequencer-7010",
+    "serial_no" : "sequencer-8892",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -40,10 +40,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-03-02T06:14:43Z",
+      "timestamp" : "2023-03-07T04:07:06Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-03-02T06:14:43Z",
+  "timestamp" : "2023-03-07T04:07:07Z",
   "version" : "1.4.1"
 }
