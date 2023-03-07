@@ -18,6 +18,7 @@ import org.junit.Test;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.State;
 
@@ -35,21 +36,53 @@ public class PubberTest extends TestBase {
   private static final String TEST_BLOB_DATA = "mary had a little lamb";
   private static final String TEST_REDIRECT_HOSTNAME = "mqtt-redirect.google.com";
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
-  private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration();
+  private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration(null);
   private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT = 
-      getEndpointConfigurationRedirect();
+      getEndpointConfiguration(TEST_REDIRECT_HOSTNAME);
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
   private static final String ENDPOINT_REDIRECT_BLOB = JsonUtil.stringify(TEST_REDIRECT_ENDPOINT);
+  private DevicePersistent testPersistentData = new DevicePersistent();
+
+  private enum PubberUnderTestFeatures {
+    nopInitializePersistentStore,
+    OptionsNoPersist
+  }
 
   private class PubberUnderTest extends Pubber {
 
+    private HashMap<PubberUnderTestFeatures, Boolean> testFeatures;
+
     public void setOptionsNoPersist(boolean value) {
       configuration.options.noPersist = value;
+    }
+    public void setFeature(PubberUnderTestFeatures feature, Boolean value) {
+      testFeatures.put(feature, value);
+    }
+
+    @Override
+    protected DevicePersistent newDevicePersistent() {
+      DevicePersistent persistentData = super.newDevicePersistent();
+      persistentData = testPersistentData;
+      return persistentData;
+    }
+
+    @Override
+    protected void initializePersistentStore() {
+      if (!testFeatures.getOrDefault(PubberUnderTestFeatures.nopInitializePersistentStore, false)) {
+        super.initializePersistentStore();
+      }
     }
 
     PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo) {
       super(projectId, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
+    }
+
+    PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo,
+        HashMap<PubberUnderTestFeatures, Boolean> features) {
+      super(projectId, sitePath, deviceId, serialNo);
+      testFeatures = features;
+      setOptionsNoPersist(testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
     }
   }
 
@@ -63,16 +96,12 @@ public class PubberTest extends TestBase {
     return pubber;
   }
 
-  private static EndpointConfiguration getEndpointConfiguration() {
+  private static EndpointConfiguration getEndpointConfiguration(String hostname) {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.client_id = TEST_DEVICE;
-    return endpointConfiguration;
-  }
-
-  private static EndpointConfiguration getEndpointConfigurationRedirect() {
-    EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
-    endpointConfiguration.hostname = TEST_REDIRECT_HOSTNAME;
-    endpointConfiguration.client_id = TEST_DEVICE;
+    if (hostname != null) {
+      endpointConfiguration.hostname = hostname;
+    }
     return endpointConfiguration;
   }
 
@@ -195,5 +224,65 @@ public class PubberTest extends TestBase {
     Pubber.augmentDeviceMessage(testMessage);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
+  }
+
+  @Test
+  public void initializePersistentStoreNullTest() {
+    // Initialize the test Pubber.
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
+    pubber.initialize();
+    pubber.startConnection(deviceId -> {
+      return true; });
+
+    // Prepare test.
+    pubber.persistentData = null;
+    pubber.configuration.endpoint = null;
+
+    // Now test.
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, false);
+    pubber.initializePersistentStore();
+  }
+
+  @Test
+  public void initializePersistentStoreFromConfigTest() {
+    // Initialize the test Pubber.
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
+    pubber.initialize();
+    pubber.startConnection(deviceId -> {
+      return true; });
+
+    // Prepare test.
+    pubber.persistentData = null;
+    pubber.configuration.endpoint = getEndpointConfiguration("from_config");
+
+    // Now test.
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, false);
+    pubber.initializePersistentStore();
+    assertEquals(pubber.persistentData.endpoint.hostname, "from_config");
+  }
+
+  @Test
+  public void initializePersistentStoreFromPersistentDataTest() {
+    // Initialize the test Pubber.
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<PubberUnderTestFeatures, Boolean>();
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, true);
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
+    pubber.initialize();
+    pubber.startConnection(deviceId -> {
+      return true; });
+
+    // Prepare test.
+    testPersistentData.endpoint = getEndpointConfiguration("persistent");
+    pubber.configuration.endpoint = null;
+
+    // Now test.
+    testFeatures.put(PubberUnderTestFeatures.nopInitializePersistentStore, false);
+    pubber.initializePersistentStore();
+    assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
+    assertEquals(pubber.configuration.endpoint.hostname, "persistent");
   }
 }
