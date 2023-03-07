@@ -12,12 +12,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
  */
 public class MessageDowngrader {
 
+  private static final TextNode LEGACY_VERSION = new TextNode("1");
+  private static final JsonNode LEGACY_REPLACEMENT = new IntNode(1);
   private final ObjectNode message;
   private int major;
   private int minor;
   private int patch;
-  private TextNode LEGACY_VERSION = new TextNode("1");
-  private JsonNode LEGACY_REPLACEMENT = new IntNode(1);
 
   /**
    * Create message downgrader.
