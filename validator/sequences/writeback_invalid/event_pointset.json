@@ -4,12 +4,12 @@
       "present_value" : false
     },
     "filter_differential_pressure_setpoint" : {
-      "present_value" : 98
+      "present_value" : 60
     },
     "filter_differential_pressure_sensor" : {
-      "present_value" : 11
+      "present_value" : 10
     }
   },
-  "timestamp" : "2022-11-07T17:41:40.008Z",
-  "version" : "1.4.0"
+  "timestamp" : "2023-03-02T06:03:49.004Z",
+  "version" : "1.4.1"
 }

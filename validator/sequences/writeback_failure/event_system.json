@@ -1,11 +1,66 @@
 {
-  "last_config" : "2022-11-07T17:41:00Z",
+  "event_count" : 5,
+  "last_config" : "2023-03-02T06:04:08Z",
   "logentries" : [ {
-    "message" : "update state 2022-11-07T17:41:02Z last_config 2022-11-07T17:41:00Z",
+    "message" : "update state 2023-03-02T06:04:06Z last_config 2023-03-02T06:03:54Z",
     "category" : "device.log",
-    "timestamp" : "2022-11-07T17:41:02Z",
+    "timestamp" : "2023-03-02T06:04:06Z",
     "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:06Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:04:06Z received config 2023-03-02T06:04:06Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:06Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:04:06Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:07Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:04:07Z received config 2023-03-02T06:04:06Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:07Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:04:07Z",
+    "level" : 300
+  }, {
+    "message" : "update state 2023-03-02T06:04:08Z last_config 2023-03-02T06:04:06Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:08Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:08Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-02T06:04:08Z received config 2023-03-02T06:04:08Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-02T06:04:08Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2023-03-02T06:04:08Z",
+    "level" : 300
   } ],
-  "timestamp" : "2022-11-07T17:41:02.078Z",
-  "version" : "1.4.0"
+  "metrics" : {
+    "mem_total_mb" : 252,
+    "mem_free_mb" : 223.41943359375
+  },
+  "timestamp" : "2023-03-02T06:04:09.006Z",
+  "version" : "1.4.1"
 }

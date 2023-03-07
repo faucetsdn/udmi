@@ -1,8 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -11,6 +9,7 @@ import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -127,7 +126,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
-  @Description("Push endpoint config message to device that results in a connection error.")
+  @Summary("Push endpoint config message to device that results in a connection error.")
   @Test
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
@@ -136,7 +135,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
-  @Description("Check repeated endpoint with same information gets retried.")
+  @Summary("Check repeated endpoint with same information gets retried.")
   @Test
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
@@ -153,7 +152,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
-  @Description("Check a successful reconnect to the same endpoint.")
+  @Summary("Check a successful reconnect to the same endpoint.")
   @Test
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
@@ -162,7 +161,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Feature(stage = ALPHA, bucket = ENDPOINT)
-  @Description("Failed connection because of bad hash.")
+  @Summary("Failed connection because of bad hash.")
   @Test
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
@@ -181,7 +180,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Feature(stage = ALPHA, bucket = ENDPOINT)
-  @Description("Check connection to an alternate project.")
+  @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
     if (altClient == null) {
       throw new SkipTest("No functional alternate registry defined");
@@ -214,7 +213,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Restart and connect to same endpoint and expect it returns.")
+  @Summary("Restart and connect to same endpoint and expect it returns.")
   @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
     // Prepare for the restart.

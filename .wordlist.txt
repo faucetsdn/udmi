@@ -13,6 +13,7 @@ bacnet
 BACnet
 blobset
 BMS
+breakpoint
 buildingsiot
 centric
 CLA
@@ -73,6 +74,7 @@ IPv
 JDK
 JS
 json
+JUnit
 JWT
 keygen
 kube

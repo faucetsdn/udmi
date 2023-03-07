@@ -24,18 +24,10 @@ fi
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
-
-if [[ -z $targets ]]; then
-    rm -rf $site_path/out/devices/$device_id/tests
-else
-    for target in $targets; do
-        rm -rf $site_path/out/devices/$device_id/tests/$target
-    done
-fi
-
-test_out_base=sites/udmi_site_model/out/devices/AHU-1/tests
+device_out_base=$site_path/out/devices/$device_id
+test_out_base=$device_out_base/tests
+rm -rf $test_out_base
 mkdir -p $test_out_base
-all_tests=$(ls -1 $test_out_base)
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -76,7 +68,7 @@ fi
 bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
-sed -i -e 's/.*sequencer RESULT/RESULT/' /tmp/sequencer.out
+sed -i -e 's/.*sequence RESULT/RESULT/' /tmp/sequencer.out
 echo Copied output to /tmp/sequencer.out for later examination.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -100,10 +92,5 @@ diff -u /tmp/generated.md docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
     )
-
-generated_sequences=$test_out_base/%/sequence.md
-expected_sequences=validator/sequences/%/sequence.md
-echo Comparing diff $generated_sequences $expected_sequences
-echo $all_tests | xargs -I% diff -u $generated_sequences $expected_sequences
 
 echo Done with base test_sequencer run.

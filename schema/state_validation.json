@@ -33,6 +33,16 @@
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     },
+    "features": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, FeatureValidationState>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[.a-z]+$": {
+          "$ref": "file:state_validation_feature.json"
+        }
+      }
+    },
     "summary": {
       "title": "Validation Summary",
       "type": "object",
@@ -74,10 +84,5 @@
         }
       }
     }
-  },
-  "required": [
-    "last_updated",
-    "summary",
-    "devices"
-  ]
+  }
 }
