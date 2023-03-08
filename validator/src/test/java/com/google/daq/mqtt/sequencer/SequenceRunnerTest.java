@@ -23,7 +23,7 @@ public class SequenceRunnerTest {
 
   // Minimum number of tests expected. This is a "low-water mark" to be increased as appropriate.
   // Only tracks tests marked as non-ALPHA.
-  private static final int TEST_COUNT_MIN = 3;
+  private static final int TEST_COUNT_MIN = 2;
   private static final int TEST_COUNT_MAX = TEST_COUNT_MIN * 2;
   private static final int SITE_COUNT_MAX = TEST_COUNT_MAX * MODEL_DEVICE_COUNT;
   private static final int SITE_COUNT_MIN = TEST_COUNT_MIN * MODEL_DEVICE_COUNT;

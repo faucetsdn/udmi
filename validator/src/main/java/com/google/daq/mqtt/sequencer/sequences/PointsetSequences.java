@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -34,7 +35,7 @@ public class PointsetSequences extends SequenceBase {
    * Skip if: initial interval < 5s (too fast for automated test)
    */
   @Test(timeout = THREE_MINUTES_MS)
-  @Feature(stage = ALPHA)
+  @Feature(stage = ALPHA, bucket = POINTSET)
   @Summary("device publishes pointset events at a rate of no more than config sample_rate_sec")
   public void pointset_sample_rate() {
     Integer defaultSampleRate = 10;
@@ -96,7 +97,7 @@ public class PointsetSequences extends SequenceBase {
    */
   @Test(timeout = THREE_MINUTES_MS)
   @Summary("test sample rate and sample limit sec")
-  @Feature(stage = ALPHA)
+  @Feature(stage = ALPHA, bucket = POINTSET)
   public void pointset_publish_interval() {
     
     if (deviceConfig.pointset == null) {
