@@ -41,7 +41,6 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
-import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -128,7 +127,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
-  private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
+  private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
@@ -137,6 +136,7 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final List<String> deviceIds;
+  private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
@@ -321,9 +321,10 @@ public class Validator {
           System.err.printf("Error while loading device %s: %s%n", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
-        expectedDevices.put(device, reportingDevice);
+        reportingDevices.put(device, reportingDevice);
       }
-      System.err.println("Loaded " + expectedDevices.size() + " expected devices");
+      System.err.println("Loaded " + reportingDevices.size() + " expected devices");
+      expectedDevices = ImmutableSet.copyOf(reportingDevices.keySet());
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
@@ -422,7 +423,7 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    if (deviceId != null && expectedDevices.containsKey(deviceId)) {
+    if (deviceId != null && reportingDevices.containsKey(deviceId)) {
       processedDevices.add(deviceId);
     }
 
@@ -477,7 +478,7 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     device.clearMessageEntries();
 
     try {
@@ -488,7 +489,7 @@ public class Validator {
 
       System.err.printf(
           "Processing device #%d/%d: %s/%s%n",
-          processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
+          processedDevices.size(), reportingDevices.size(), deviceId, schemaName);
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
@@ -538,8 +539,8 @@ public class Validator {
       }
 
       if (expectedDevices.isEmpty()) {
-        // No devices configured, so don't check metadata.
-      } else if (expectedDevices.containsKey(deviceId)) {
+        // No devices configured, so don't consider check metadata or consider extra.
+      } else if (expectedDevices.contains(deviceId)) {
         try {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
@@ -703,10 +704,10 @@ public class Validator {
 
     Map<String, DeviceValidationEvent> devices = new TreeMap<>();
     Collection<String> summarizeDevices =
-        deviceIds.isEmpty() ? expectedDevices.keySet() : deviceIds;
+        deviceIds.isEmpty() ? reportingDevices.keySet() : deviceIds;
     for (String deviceId : summarizeDevices) {
-      ReportingDevice deviceInfo = expectedDevices.get(deviceId);
-      if (deviceInfo == null) {
+      ReportingDevice deviceInfo = reportingDevices.get(deviceId);
+      if (deviceInfo == null && expectedDevices.contains(deviceId)) {
         summary.missing_devices.add(deviceId);
         continue;
       }
@@ -718,7 +719,7 @@ public class Validator {
       } else if (deviceInfo.seenRecently(getNow())) {
         summary.correct_devices.add(deviceId);
         DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
-      } else {
+      } else if (expectedDevices.contains(deviceId)) {
         summary.missing_devices.add(deviceId);
       }
     }
