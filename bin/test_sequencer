@@ -3,6 +3,9 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+# Fix sort order difference on different platforms.
+export LC_ALL=C
+
 if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID [tests...]
     false
