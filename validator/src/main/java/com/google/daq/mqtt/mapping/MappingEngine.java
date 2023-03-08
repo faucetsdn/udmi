@@ -57,7 +57,7 @@ public class MappingEngine extends MappingBase {
   }
 
   private void discoveryEventHandler(Envelope envelope, DiscoveryEvent message) {
-    String deviceId = message.scan_id;
+    String deviceId = message.scan_addr;
     System.err.printf("Processing device %s generation %s%n", deviceId,
         JsonUtil.getTimestamp(message.generation));
 

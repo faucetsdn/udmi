@@ -31,6 +31,9 @@
     "discovery": {
       "$ref": "file:state_discovery.json#"
     },
+    "localnet": {
+      "$ref": "file:state_localnet.json#"
+    },
     "blobset": {
       "$ref": "file:state_blobset.json#"
     },

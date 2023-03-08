@@ -30,8 +30,8 @@
       "description": "The primary scan discovery address family",
       "type": "string"
     },
-    "scan_id": {
-      "description": "The primary id of the device (for scan_family)",
+    "scan_addr": {
+      "description": "The primary address of the device (for scan_family)",
       "type": "string"
     },
     "families": {

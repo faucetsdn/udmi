@@ -1,46 +1,31 @@
 {
-  "event_count" : 28,
-  "last_config" : "2023-03-02T06:13:24Z",
+  "event_count" : 30,
+  "last_config" : "2023-03-07T16:43:02Z",
   "logentries" : [ {
-    "message" : "Config handler",
+    "message" : "Discovery scan starting virtual as 2023-03-07T16:43:12Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:25Z",
+    "timestamp" : "2023-03-07T16:43:12Z",
     "level" : 200
   }, {
-    "message" : "2023-03-02T06:13:25Z received config 2023-03-02T06:13:24Z",
+    "message" : "update state 2023-03-07T16:43:12Z last_config 2023-03-07T16:43:02Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:25Z",
+    "timestamp" : "2023-03-07T16:43:12Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan generation virtual is 2023-03-02T06:13:33Z",
+    "message" : "Sent 1 discovery events from virtual for Tue Mar 07 08:43:12 PST 2023",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:25Z",
+    "timestamp" : "2023-03-07T16:43:17Z",
     "level" : 200
   }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-02T06:13:25Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-02T06:13:26Z last_config 2023-03-02T06:13:24Z",
+    "message" : "2023-03-07T16:43:21Z sending test message #30",
     "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:26Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan starting virtual as 2023-03-02T06:13:33Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:33Z",
-    "level" : 200
-  }, {
-    "message" : "update state 2023-03-02T06:13:33Z last_config 2023-03-02T06:13:24Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:13:33Z",
+    "timestamp" : "2023-03-07T16:43:21Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 252,
-    "mem_free_mb" : 208.8944091796875
+    "mem_free_mb" : 209.83885192871094
   },
-  "timestamp" : "2023-03-02T06:13:35.029Z",
+  "timestamp" : "2023-03-07T16:43:21.031Z",
   "version" : "1.4.1"
 }

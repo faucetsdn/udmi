@@ -1,0 +1,43 @@
+#!/bin/bash -e
+#
+# Modify the indicated device metadata.json file with bits for testing. Only really useful in controlled
+# situations where, e.g., the MAC address of the pubber system needs to be dynamically extracted by
+# the testing infrastrucure. Not intended for use outside of CI testing.
+#
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# -ne 2 ]]; then
+    echo Usage: $0 SITE_DIR DEVICE_ID
+    false
+fi
+
+site_dir=$1
+device_id=$2
+shift 2
+
+device_dir=$site_dir/devices/$device_id
+mkdir -p $device_dir/out
+metadata_file=$device_dir/metadata.json
+metadata_out=$site_dir/out/devices/$device_id/metadata_mod.json
+# TODO: Implement some mechanism to auto-detect if _norm.json already exists and is up-to-date, and use that.
+
+# Get the interface with the lowest default route metric.
+default_iface=$(ip route | fgrep default | awk '{print $11, $5}' | sort -n | head -n 1 | awk '{print $2}')
+
+# Get the ethernet mac address
+ether_addr=$(ip addr show dev $default_iface | fgrep ether | awk '{print $2}')
+ipv4_addr=$(ip addr show dev $default_iface | fgrep 'inet ' | awk '{print $2}')
+ipv4_addr=${ipv4_addr%/*}
+ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | awk '{print $2}')
+ipv6_addr=${ipv6_addr%/*}
+
+echo Setting $metadata_out ether addr to $ether_addr
+echo Setting $metadata_out ipv4 addr to $ipv4_addr
+echo Setting $metadata_out ipv6 addr to $ipv6_addr
+jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
+    jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
+    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" > $metadata_out
+
+ls -l $metadata_file $metadata_out
