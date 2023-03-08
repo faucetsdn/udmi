@@ -16,8 +16,11 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
-TEST_LIST=/tmp/sequencer_tests.txt
-TEST_OUT=/tmp/sequencer.out
+TEST_LIST=out/sequencer_tests.txt
+TEST_OUT=out/sequencer.out
+
+# Fix sort order difference on different platforms.
+export LC_ALL=C
 
 find validator/sequences/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
 find sites/udmi_site_model/out/devices/AHU-1 -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST

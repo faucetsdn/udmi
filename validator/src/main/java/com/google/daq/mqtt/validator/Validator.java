@@ -500,8 +500,8 @@ public class Validator {
         return device;
       }
 
-      sanitizeMessage(schemaName, message);
       upgradeMessage(schemaName, message);
+      sanitizeMessage(schemaName, message);
       prepareDeviceOutDir(message, attributes, deviceId, schemaName);
 
       String timeString = (String) message.get(TIMESTAMP_KEY);
