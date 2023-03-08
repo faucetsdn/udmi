@@ -16,24 +16,24 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id"
+    "addr"
 })
 @Generated("jsonschema2pojo")
 public class FamilyDiscoveryEvent {
 
     /**
-     * Device id in the namespace of the given family
+     * Device addr in the namespace of the given family
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    @JsonPropertyDescription("Device id in the namespace of the given family")
-    public String id;
+    @JsonProperty("addr")
+    @JsonPropertyDescription("Device addr in the namespace of the given family")
+    public String addr;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
+        result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
         return result;
     }
 
@@ -46,7 +46,7 @@ public class FamilyDiscoveryEvent {
             return false;
         }
         FamilyDiscoveryEvent rhs = ((FamilyDiscoveryEvent) other);
-        return ((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id)));
+        return ((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)));
     }
 
 }

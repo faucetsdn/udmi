@@ -5,14 +5,14 @@ class FamilyLocalnetModel:
   """Generated schema class"""
 
   def __init__(self):
-    self.id = None
+    self.addr = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = FamilyLocalnetModel()
-    result.id = source.get('id')
+    result.addr = source.get('addr')
     return result
 
   @staticmethod
@@ -33,6 +33,6 @@ class FamilyLocalnetModel:
 
   def to_dict(self):
     result = {}
-    if self.id:
-      result['id'] = self.id # 5
+    if self.addr:
+      result['addr'] = self.addr # 5
     return result

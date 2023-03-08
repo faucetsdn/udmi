@@ -170,7 +170,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  Config deviceConfig = new Config();
+  final Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -186,6 +186,7 @@ public class Pubber {
   private DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
+  private LocalnetManager localnetManager;
 
   /**
    * Start an instance from a configuration file.
@@ -442,6 +443,7 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
+    localnetManager = new LocalnetManager(this);
     markStateDirty();
   }
 
@@ -933,7 +935,7 @@ public class Pubber {
         error("Empty config system block and configured to restart on bad config!");
         systemLifecycle(SystemMode.RESTART);
       }
-      deviceConfig = config;
+      GeneralUtils.copyFields(config, deviceConfig);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
@@ -1134,20 +1136,8 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
+    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
     publishDeviceMessage(discoveryEvent);
-  }
-
-  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
-    LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
-    return localnet == null ? null : localnet.families.keySet().stream()
-        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
-  }
-
-  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
-    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
-    return familyDiscoveryEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
@@ -1271,15 +1261,15 @@ public class Pubber {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-        if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
+        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
-          discoveryEvent.scan_id = deviceId;
+          discoveryEvent.scan_addr = deviceId;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).id = deviceId;
+              key -> new FamilyDiscoveryEvent()).addr = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
@@ -1302,7 +1292,7 @@ public class Pubber {
 
   private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
-    event.id = target.getValue().id;
+    event.addr = target.getValue().addr;
     return event;
   }
 
@@ -1603,7 +1593,7 @@ public class Pubber {
     cloudLog(message, Level.DEBUG, detail);
   }
 
-  private void info(String message) {
+  void info(String message) {
     cloudLog(message, Level.INFO);
   }
 

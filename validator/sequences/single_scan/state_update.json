@@ -2,7 +2,7 @@
   "discovery" : {
     "families" : {
       "virtual" : {
-        "generation" : "2023-03-02T06:13:33Z",
+        "generation" : "2023-03-07T16:43:12Z",
         "active" : false
       }
     }
@@ -30,14 +30,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-03-02T06:13:24Z",
+    "last_config" : "2023-03-07T16:43:02Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-03-02T06:08:43Z",
-      "restart_count" : 5,
+      "last_start" : "2023-03-07T16:38:08Z",
+      "restart_count" : 3,
       "mode" : "active"
     },
-    "serial_no" : "sequencer-7010",
+    "serial_no" : "sequencer-20462",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -48,10 +48,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-03-02T06:13:25Z",
+      "timestamp" : "2023-03-07T16:43:03Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-03-02T06:13:43Z",
+  "timestamp" : "2023-03-07T16:43:22Z",
   "version" : "1.4.1"
 }
