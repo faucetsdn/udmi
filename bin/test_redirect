@@ -125,19 +125,19 @@ fi
 
 echo :::::::
 echo Simple checks that a redirect happened and failed
-fgrep registries/ZZ-TRI-FECTA/devices pubber.out.1
-fgrep registries/missing/devices pubber.out.1
-fgrep 'While waiting for connection start: Connection error' pubber.out.1
-fgrep 'Endpoint connection restored to last working endpoint' pubber.out.1
+fgrep -q registries/ZZ-TRI-FECTA/devices pubber.out.1 || bin/fail no ZZ-TRI-FECTA registry reference
+fgrep -q registries/missing/devices pubber.out.1 || bin/fail no missing registry reference
+fgrep -q 'While waiting for connection start: Connection error' pubber.out.1 || bin/fail no connection error
+fgrep -q 'Endpoint connection restored to last working endpoint' pubber.out.1 || bin/fail no restore log message
 
 echo :::::::
 echo Check the redirect-by-config setup
-fgrep registries/ZZ-TRI-FECTA/devices pubber.out.2
-fgrep registries/reconfigure/devices pubber.out.2
-fgrep 'While waiting for connection start: Connection error' pubber.out.2
-fgrep 'Endpoint connection restored to last working endpoint' pubber.out.2
-fgrep 'Stopping system with extreme prejudice, restart true' pubber.out.2  # restart config
-fgrep 'Stopping system with extreme prejudice, restart false' pubber.out.2  # auto-kill
-fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
+fgrep -q registries/ZZ-TRI-FECTA/devices pubber.out.2 || bin/fail no ZZ-TRI-FECTA registry reference
+fgrep -q registries/reconfigure/devices pubber.out.2 || bin/fail no reconfigure registry reference
+fgrep -q 'While waiting for connection start: Connection error' pubber.out.2 || bin/fail no connection error
+fgrep -q 'Endpoint connection restored to last working endpoint' pubber.out.2 || bin/fail no connection restore
+fgrep -q 'Stopping system with extreme prejudice, restart true' pubber.out.2 || bin/fail no restart true
+fgrep -q 'Stopping system with extreme prejudice, restart false' pubber.out.2 || bin/fail no restart false
+fgrep -q 'Done with pubber run, exit code 193' pubber.out.2 || bin/fail no auto-kill exit code
 
 echo Done with redirect test.
