@@ -84,14 +84,13 @@ else
 fi
 
 generated=docs/specs/sequences/generated.md
-cp $generated /tmp/  # Save for test/comparison later
+cp $generated out/  # Save for test/comparison later
 bin/gencode_seq
 
 echo Comparing diff out/sequencer.out etc/sequencer.out
-md5sum out/sequencer.out etc/sequencer.out
 diff -u out/sequencer.out etc/sequencer.out
 
-echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
+echo Comparing diff out/generated.md docs/specs/sequences/generated.md
 diff -u out/generated.md docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
