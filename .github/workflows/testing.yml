@@ -38,6 +38,9 @@ jobs:
       - name: bin/run_tests registrar_tests
         if: ${{ always() }}
         run: bin/run_tests registrar_tests
+      - name: bin/run_tests util_tests
+        if: ${{ always() }}
+        run: bin/run_tests util_tests
 
   spelling:
     name: Docs Spelling Checks
@@ -104,7 +107,7 @@ jobs:
   udmi:
     name: Integration Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
@@ -128,6 +131,10 @@ jobs:
         run: |
           bin/test_sequencer $GCP_TARGET_PROJECT
           more /tmp/sequencer.out /tmp/generated.md
+      - name: sequencer end state
+        if: ${{ always() }}
+        run: |
+          cat sites/udmi_site_model/out/devices/AHU-1/sequencer_state.json || true
       - name: itemized sequencer tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

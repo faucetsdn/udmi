@@ -1,0 +1,10 @@
+#!/bin/bash -e
+#
+# Convenience script to simply output a message and then fail. Useful for testing in the form of:
+#
+#  do_test_stuff || bin/fail the testing script failed
+#
+
+echo fail because $@
+
+false
