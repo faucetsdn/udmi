@@ -91,7 +91,7 @@ function pubber_bg {
 }
 
 pubber_bg AHU-1 extraField=prlagle
-pubber_bg AHU-22
+pubber_bg AHU-22 emptyMissing
 
 echo Waiting for system to run for a bit...
 timeout 30s tail -f $VALIDATOR_OUT || true
