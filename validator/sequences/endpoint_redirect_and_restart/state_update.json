@@ -1,0 +1,36 @@
+{
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "system" : {
+    "last_config" : "2023-03-08T18:50:54Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2023-03-08T18:50:29Z",
+      "restart_count" : 5,
+      "mode" : "active"
+    },
+    "serial_no" : "sequencer-30516",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2023-03-08T18:50:54Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2023-03-08T18:51:01Z",
+  "version" : "1.4.1"
+}

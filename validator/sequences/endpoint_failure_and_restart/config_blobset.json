@@ -1,0 +1,12 @@
+{
+  "blobs" : {
+    "_iot_endpoint_config" : {
+      "phase" : "final",
+      "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJ0d2lkZGlseS5maWRkaWx5LmZvZyIsCiAgInBvcnQiIDogODg4MywKICAiY2xpZW50X2lkIiA6ICJwcm9qZWN0cy9ib3MtcGVyaW5na25pZmUtZGV2L2xvY2F0aW9ucy91cy1jZW50cmFsMS9yZWdpc3RyaWVzL1paLVRSSS1GRUNUQS9kZXZpY2VzL0FIVS0xIgp9",
+      "sha256" : "cb9410fe244d582e4b1a8532663887e854977d26db12f2a7564bbdb237d52287",
+      "generation" : "2023-03-08T19:12:55Z"
+    }
+  },
+  "timestamp" : "2023-03-08T19:12:56.876Z",
+  "version" : "1.4.0-221-g632b879b"
+}

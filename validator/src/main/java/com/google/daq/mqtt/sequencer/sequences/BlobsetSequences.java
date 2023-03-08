@@ -190,6 +190,15 @@ public class BlobsetSequences extends SequenceBase {
     check_endpoint_connection_success(true);
   }
 
+  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  public void endpoint_failure_and_restart() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    untilErrorReported();
+    check_system_restart();
+    untilClearedRedirect();
+  }
+
   private void check_endpoint_connection_success(boolean doRestart) {
     if (altClient == null) {
       throw new SkipTest("No functional alternate registry defined");
