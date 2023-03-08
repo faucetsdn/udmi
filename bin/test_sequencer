@@ -3,6 +3,9 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+# Fix sort order difference on different platforms.
+export LC_ALL=C
+
 if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID [tests...]
     false
@@ -27,7 +30,7 @@ device_id=AHU-1
 device_out_base=$site_path/out/devices/$device_id
 test_out_base=$device_out_base/tests
 rm -rf $test_out_base
-mkdir -p $test_out_base
+mkdir -p $test_out_base out/
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -68,8 +71,8 @@ fi
 bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
-sed -i -e 's/.*sequence RESULT/RESULT/' /tmp/sequencer.out
-echo Copied output to /tmp/sequencer.out for later examination.
+sed -e 's/.*sequence RESULT/RESULT/' /tmp/sequencer.out | sort > out/sequencer.out
+echo Copied output to out/sequencer.out for later examination.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
@@ -84,11 +87,12 @@ generated=docs/specs/sequences/generated.md
 cp $generated /tmp/  # Save for test/comparison later
 bin/gencode_seq
 
-echo Comparing diff /tmp/sequencer.out etc/sequencer.out
-diff -u /tmp/sequencer.out etc/sequencer.out
+echo Comparing diff out/sequencer.out etc/sequencer.out
+md5sum out/sequencer.out etc/sequencer.out
+diff -u out/sequencer.out etc/sequencer.out
 
 echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
-diff -u /tmp/generated.md docs/specs/sequences/generated.md || (
+diff -u out/generated.md docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
     )
