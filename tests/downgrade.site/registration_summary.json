@@ -13,6 +13,10 @@
     "DWN-3" : "devices/DWN-3"
   },
   "Version" : {
+<<<<<<< HEAD
     "main" : "1.4.0-168-g3fddec34"
+=======
+    "main" : "1.4.0-226-g6d962ee8"
+>>>>>>> master
   }
 }

@@ -6,7 +6,10 @@
 =======
   "version": "1.3.14",
   "hash": "57337ea8",
+<<<<<<< HEAD
 >>>>>>> familyaddr
+=======
+>>>>>>> master
   "cloud": {
     "auth_type": "RS256"
   },

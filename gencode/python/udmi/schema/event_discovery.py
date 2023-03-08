@@ -60,9 +60,15 @@ class DiscoveryEvent:
     self.version = None
     self.generation = None
     self.status = None
+<<<<<<< HEAD
     self.scan_network = None
     self.scan_addr = None
     self.localnet = None
+=======
+    self.scan_family = None
+    self.scan_addr = None
+    self.families = None
+>>>>>>> master
     self.uniqs = None
     self.features = None
     self.system = None
@@ -76,9 +82,15 @@ class DiscoveryEvent:
     result.version = source.get('version')
     result.generation = source.get('generation')
     result.status = Entry.from_dict(source.get('status'))
+<<<<<<< HEAD
     result.scan_network = source.get('scan_network')
     result.scan_addr = source.get('scan_addr')
     result.localnet = NetworkDiscoveryEvent.map_from(source.get('localnet'))
+=======
+    result.scan_family = source.get('scan_family')
+    result.scan_addr = source.get('scan_addr')
+    result.families = FamilyDiscoveryEvent.map_from(source.get('families'))
+>>>>>>> master
     result.uniqs = PointEnumerationEvent.map_from(source.get('uniqs'))
     result.features = FeatureEnumerationEvent.map_from(source.get('features'))
     result.system = SystemDiscoveryEvent.from_dict(source.get('system'))
@@ -110,12 +122,21 @@ class DiscoveryEvent:
       result['generation'] = self.generation # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
+<<<<<<< HEAD
     if self.scan_network:
       result['scan_network'] = self.scan_network # 5
     if self.scan_addr:
       result['scan_addr'] = self.scan_addr # 5
     if self.localnet:
       result['localnet'] = NetworkDiscoveryEvent.expand_dict(self.localnet) # 2
+=======
+    if self.scan_family:
+      result['scan_family'] = self.scan_family # 5
+    if self.scan_addr:
+      result['scan_addr'] = self.scan_addr # 5
+    if self.families:
+      result['families'] = FamilyDiscoveryEvent.expand_dict(self.families) # 2
+>>>>>>> master
     if self.uniqs:
       result['uniqs'] = PointEnumerationEvent.expand_dict(self.uniqs) # 2
     if self.features:

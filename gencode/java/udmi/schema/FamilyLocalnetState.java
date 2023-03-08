@@ -16,7 +16,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
+<<<<<<< HEAD
     "scope",
+=======
+>>>>>>> master
     "status"
 })
 @Generated("jsonschema2pojo")
@@ -24,8 +27,11 @@ public class FamilyLocalnetState {
 
     @JsonProperty("addr")
     public String addr;
+<<<<<<< HEAD
     @JsonProperty("scope")
     public String scope;
+=======
+>>>>>>> master
     /**
      * Entry
      * <p>
@@ -39,7 +45,10 @@ public class FamilyLocalnetState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+<<<<<<< HEAD
         result = ((result* 31)+((this.scope == null)? 0 :this.scope.hashCode()));
+=======
+>>>>>>> master
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -53,7 +62,11 @@ public class FamilyLocalnetState {
             return false;
         }
         FamilyLocalnetState rhs = ((FamilyLocalnetState) other);
+<<<<<<< HEAD
         return ((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.scope == rhs.scope)||((this.scope!= null)&&this.scope.equals(rhs.scope))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+=======
+        return (((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+>>>>>>> master
     }
 
 }

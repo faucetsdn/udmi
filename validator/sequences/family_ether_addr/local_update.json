@@ -1,11 +1,19 @@
 {
+<<<<<<< HEAD
   "timestamp" : "2023-03-03T14:21:13Z",
+=======
+  "timestamp" : "2023-03-07T16:44:20Z",
+>>>>>>> master
   "version" : "@@@cloud udmi version###1.4.0-221-g632b879b",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
+<<<<<<< HEAD
       "last_start" : "2023-03-03T14:19:51Z"
+=======
+      "last_start" : "2023-03-07T16:38:08Z"
+>>>>>>> master
     },
     "testing" : {
       "sequence_name" : "family_ether_addr"

@@ -6,9 +6,12 @@
     "addr": {
       "type": "string"
     },
+<<<<<<< HEAD
     "scope": {
       "type": "string"
     },
+=======
+>>>>>>> master
     "status": {
       "$ref": "file:common.json#/definitions/entry"
     }

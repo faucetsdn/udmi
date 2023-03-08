@@ -22,7 +22,11 @@
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
     { "pattern": "^localnet\\.network$" },
+<<<<<<< HEAD
     { "pattern": "^discovery\\.network\\.scan$" },
+=======
+    { "pattern": "^discovery\\.family\\.scan$" },
+>>>>>>> master
     { "pattern": "^discovery\\.device\\.enumerate$" },
     { "pattern": "^discovery\\.point\\.describe$" },
     { "pattern": "^mapping\\.device\\.apply$" },

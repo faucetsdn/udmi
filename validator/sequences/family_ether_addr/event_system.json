@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "event_count" : 7,
   "last_config" : "2023-03-03T14:21:10Z",
   "logentries" : [ {
@@ -15,11 +16,53 @@
     "message" : "2023-03-03T14:21:06Z received config 2023-03-03T14:21:06Z",
     "category" : "device.log",
     "timestamp" : "2023-03-03T14:21:06Z",
+=======
+  "event_count" : 36,
+  "last_config" : "2023-03-07T16:44:19Z",
+  "logentries" : [ {
+    "message" : "update state 2023-03-07T16:44:11Z last_config 2023-03-07T16:44:10Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:11Z",
+    "level" : 200
+  }, {
+    "message" : "update state 2023-03-07T16:44:19Z last_config 2023-03-07T16:44:10Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:19Z",
+    "level" : 200
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:19Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-07T16:44:19Z received config 2023-03-07T16:44:19Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:19Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
+    "timestamp" : "2023-03-07T16:44:19Z",
+    "level" : 300
+  }, {
+    "message" : "Config handler",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:20Z",
+    "level" : 200
+  }, {
+    "message" : "2023-03-07T16:44:20Z received config 2023-03-07T16:44:19Z",
+    "category" : "device.log",
+    "timestamp" : "2023-03-07T16:44:20Z",
+>>>>>>> master
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+<<<<<<< HEAD
     "timestamp" : "2023-03-03T14:21:06Z",
+=======
+    "timestamp" : "2023-03-07T16:44:20Z",
+>>>>>>> master
     "level" : 300
   }, {
     "message" : "Config handler",
@@ -99,8 +142,14 @@
   } ],
   "metrics" : {
     "mem_total_mb" : 252,
+<<<<<<< HEAD
     "mem_free_mb" : 221.5321807861328
   },
   "timestamp" : "2023-03-03T14:21:12.008Z",
+=======
+    "mem_free_mb" : 207.39501953125
+  },
+  "timestamp" : "2023-03-07T16:44:21.037Z",
+>>>>>>> master
   "version" : "1.4.1"
 }

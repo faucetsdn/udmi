@@ -1,52 +1,52 @@
-2023-03-02T06:03:41Z NOTICE sequencer starting test writeback_invalid
-2023-03-02T06:03:49Z DEBUG sequencer Starting reset_config full reset false
-2023-03-02T06:03:49Z DEBUG sequencer Reading generated config file /home/peringknife/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
-2023-03-02T06:03:49Z DEBUG sequencer extraFieldChanged false because extra_field null
-2023-03-02T06:03:49Z DEBUG sequencer lastStartChanged true, last_start 1970-01-01T00:00:00Z
-2023-03-02T06:03:49Z DEBUG sequencer system config extra field null
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system: {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   "min_loglevel" : 200,
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   "metrics_rate_sec" : 600,
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   "operation" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:     "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   },
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   "testing" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:     "sequence_name" : "writeback_success"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system:   }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_system: }
-2023-03-02T06:03:49Z DEBUG sequencer update config_system, id 1677737029022
-2023-03-02T06:03:49Z DEBUG sequencer local local_system: 
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset: {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:   "points" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     "filter_alarm_pressure_status" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "ref" : "BV11.present_value",
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "units" : "No-units"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "units" : "Bars",
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "set_value" : 60
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "ref" : "AV12.present_value",
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:       "units" : "Degrees-Celsius"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:     }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset:   }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_pointset: }
-2023-03-02T06:03:49Z DEBUG sequencer update config_pointset, id 1677737029026
-2023-03-02T06:03:49Z DEBUG sequencer local local_pointset: 
-2023-03-02T06:03:49Z TRACE sequencer updated check config_gateway: null
-2023-03-02T06:03:49Z TRACE sequencer unchanged config_gateway: null
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet: {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:   "families" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:     "ether" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:     },
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:     "inet" : {
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:       "addr" : "192.168.2.1"
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:     }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet:   }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_localnet: }
-2023-03-02T06:03:49Z TRACE sequencer unchanged config_localnet: {
+2023-03-07T16:32:54Z NOTICE validation.feature.sequence starting test writeback_invalid
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Starting reset_config full reset false
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Reading generated config file /home/peringknife/udmi/sites/udmi_site_model/devices/AHU-1/out/generated_config.json
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence extraFieldChanged false because extra_field null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence lastStartChanged true, last_start 1970-01-01T00:00:00Z
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence system config extra field null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system: {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   "min_loglevel" : 200,
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   "metrics_rate_sec" : 600,
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   "operation" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:     "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   },
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   "testing" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:     "sequence_name" : "writeback_success"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system:   }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_system: }
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence update config_system, id 1678206782786
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence local local_system: 
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset: {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:   "points" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     "filter_alarm_pressure_status" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "BV11.present_value",
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "No-units"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Bars",
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "set_value" : 60
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "AV12.present_value",
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Degrees-Celsius"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:     }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset:   }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_pointset: }
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence update config_pointset, id 1678206782787
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence local local_pointset: 
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_gateway: null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence unchanged config_gateway: null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet: {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:   "families" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:     "ether" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:     },
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:     "inet" : {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "192.168.2.1"
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:     }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet:   }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_localnet: }
+2023-03-07T16:33:02Z TRACE validation.feature.sequence unchanged config_localnet: {
   "families" : {
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
@@ -56,366 +56,429 @@
     }
   }
 }
-2023-03-02T06:03:49Z TRACE sequencer updated check config_blobset: null
-2023-03-02T06:03:49Z TRACE sequencer unchanged config_blobset: null
-2023-03-02T06:03:49Z TRACE sequencer updated check config_discovery: null
-2023-03-02T06:03:49Z TRACE sequencer unchanged config_discovery: null
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer Update lastConfigUpdate 2023-03-02T06:03:49Z, because soft reset
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
-2023-03-02T06:03:49Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:49Z INFO sequencer Updated state #010: {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "timestamp" : "2023-03-02T06:03:40Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "version" : "1.4.1",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "system" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "last_config" : "2023-03-02T06:03:39Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "operation" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "operational" : true,
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "restart_count" : 4,
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "mode" : "initial"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "hardware" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "make" : "BOS",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "model" : "pubber"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "software" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "firmware" : "v1"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "status" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "message" : "success",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "category" : "system.config.apply",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "timestamp" : "2023-03-02T06:03:39Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "level" : 300
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "localnet" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "families" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "ether" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "ipv4" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:         "addr" : "192.168.8.3"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "ipv6" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       }
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "pointset" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     "points" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:         "value_state" : "applied"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:       "filter_differential_pressure_sensor" : { }
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   },
-2023-03-02T06:03:49Z INFO sequencer Updated state #010:   "configAcked" : "true"
-2023-03-02T06:03:49Z INFO sequencer Updated state #010: }
-2023-03-02T06:03:49Z NOTICE sequencer Received serial number sequencer-7010
-2023-03-02T06:03:49Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:39Z
-2023-03-02T06:03:49Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:49Z INFO sequencer Updated state #011: {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   "timestamp" : "2023-03-02T06:03:49Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   "version" : "1.4.1",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   "system" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "last_config" : "2023-03-02T06:03:39Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "operation" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "operational" : true,
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "restart_count" : 4,
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "mode" : "initial"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "hardware" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "make" : "BOS",
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "model" : "pubber"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "software" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "firmware" : "v1"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   "localnet" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "families" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "ether" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "ipv4" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:         "addr" : "192.168.8.3"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "ipv6" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   "pointset" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     "points" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:         "value_state" : "applied"
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       },
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:       "filter_differential_pressure_sensor" : { }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:     }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011:   }
-2023-03-02T06:03:49Z INFO sequencer Updated state #011: }
-2023-03-02T06:03:49Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:39Z
-2023-03-02T06:03:49Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:49Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:49Z TRACE sequencer received command AHU-1/config/update nonce null
-2023-03-02T06:03:49Z DEBUG sequencer received config_update: 
-2023-03-02T06:03:49Z DEBUG sequencer lastStartChanged false, last_start 1970-01-01T00:00:00Z
-2023-03-02T06:03:49Z DEBUG sequencer Updated config 2023-03-02T06:03:49Z, id 1677737029022
-2023-03-02T06:03:49Z INFO sequencer Updated config #010: {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   "timestamp" : "2023-03-02T06:03:49Z",
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   "version" : "1.4.0-221-g632b879b",
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   "system" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "min_loglevel" : 200,
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "metrics_rate_sec" : 600,
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "operation" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "last_start" : "1970-01-01T00:00:00Z"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "testing" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   "localnet" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "families" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "ether" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "inet" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "addr" : "192.168.2.1"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   "pointset" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     "points" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "filter_alarm_pressure_status" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "ref" : "BV11.present_value",
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "units" : "No-units"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "units" : "Bars",
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "set_value" : 60
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       },
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "ref" : "AV12.present_value",
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:         "units" : "Degrees-Celsius"
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:       }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:     }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010:   }
-2023-03-02T06:03:49Z INFO sequencer Updated config #010: }
-2023-03-02T06:03:49Z TRACE sequencer received command AHU-1/config/system nonce null
-2023-03-02T06:03:49Z DEBUG sequencer received config_system: 
-2023-03-02T06:03:49Z DEBUG sequencer Received confirmation of individual config id 1677737029022
-2023-03-02T06:03:49Z DEBUG sequencer received event_pointset: 
-2023-03-02T06:03:49Z DEBUG sequencer received event_system 2023-03-02T06:03:40Z INFO device.log: update state 2023-03-02T06:03:40Z last_config 2023-03-02T06:03:39Z
-2023-03-02T06:03:49Z DEBUG sequencer received event_system 2023-03-02T06:03:49Z INFO device.log: update state 2023-03-02T06:03:49Z last_config 2023-03-02T06:03:39Z
-2023-03-02T06:03:49Z DEBUG sequencer received event_system 2023-03-02T06:03:49Z INFO device.log: Config handler
-2023-03-02T06:03:49Z DEBUG sequencer received event_system 2023-03-02T06:03:49Z INFO device.log: 2023-03-02T06:03:49Z received config 2023-03-02T06:03:49Z
-2023-03-02T06:03:49Z DEBUG sequencer received event_system 2023-03-02T06:03:49Z NOTICE system.config.apply: success
-2023-03-02T06:03:50Z TRACE sequencer received command AHU-1/config/update nonce null
-2023-03-02T06:03:50Z DEBUG sequencer received config_update: 
-2023-03-02T06:03:50Z DEBUG sequencer lastStartChanged true, last_start 2023-03-02T06:03:08Z
-2023-03-02T06:03:50Z DEBUG sequencer Updated config 2023-03-02T06:03:49Z, id null
-2023-03-02T06:03:50Z INFO sequencer Updated config #011: {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   "timestamp" : "2023-03-02T06:03:49Z",
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   "version" : "1.4.0-221-g632b879b",
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   "system" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "min_loglevel" : 200,
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "metrics_rate_sec" : 600,
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "operation" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "testing" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   "localnet" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "families" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "ether" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "inet" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "addr" : "192.168.2.1"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   "pointset" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     "points" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "filter_alarm_pressure_status" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "ref" : "BV11.present_value",
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "units" : "No-units"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "units" : "Bars",
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "set_value" : 60
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       },
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "ref" : "AV12.present_value",
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:         "units" : "Degrees-Celsius"
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:       }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:     }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011:   }
-2023-03-02T06:03:50Z INFO sequencer Updated config #011: }
-2023-03-02T06:03:51Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:51Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:51Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:51Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:51Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:51Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:51Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:51Z INFO sequencer Updated state #012: {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   "timestamp" : "2023-03-02T06:03:51Z",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   "version" : "1.4.1",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   "system" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "last_config" : "2023-03-02T06:03:49Z",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "operation" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "operational" : true,
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "restart_count" : 4,
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "mode" : "initial"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "hardware" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "make" : "BOS",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "model" : "pubber"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "software" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "firmware" : "v1"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "status" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "message" : "success",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "category" : "system.config.apply",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "timestamp" : "2023-03-02T06:03:50Z",
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "level" : 300
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   "localnet" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "families" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "ether" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "ipv4" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:         "addr" : "192.168.8.3"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "ipv6" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   "pointset" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     "points" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:         "value_state" : "applied"
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       },
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:       "filter_differential_pressure_sensor" : { }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:     }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012:   }
-2023-03-02T06:03:51Z INFO sequencer Updated state #012: }
-2023-03-02T06:03:51Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:49Z
-2023-03-02T06:03:52Z TRACE sequencer received command AHU-1/config/update nonce null
-2023-03-02T06:03:52Z DEBUG sequencer received config_update: 
-2023-03-02T06:03:52Z DEBUG sequencer lastStartChanged false, last_start 2023-03-02T06:03:08Z
-2023-03-02T06:03:52Z DEBUG sequencer Updated config 2023-03-02T06:03:50Z, id 1677737029026
-2023-03-02T06:03:52Z INFO sequencer Updated config #012: {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   "timestamp" : "2023-03-02T06:03:50Z",
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   "version" : "1.4.0-221-g632b879b",
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   "system" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "min_loglevel" : 200,
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "metrics_rate_sec" : 600,
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "operation" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "testing" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   "localnet" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "families" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "ether" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "inet" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "addr" : "192.168.2.1"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   "pointset" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     "points" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "filter_alarm_pressure_status" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "ref" : "BV11.present_value",
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "units" : "No-units"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "units" : "Bars",
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "set_value" : 98
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       },
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "ref" : "AV12.present_value",
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:         "units" : "Degrees-Celsius"
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:       }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:     }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012:   }
-2023-03-02T06:03:52Z INFO sequencer Updated config #012: }
-2023-03-02T06:03:52Z DEBUG sequencer Configuration sync took 3s
-2023-03-02T06:03:52Z DEBUG sequencer lastStartSynchronized true, pending transactions: 
-2023-03-02T06:03:52Z DEBUG sequencer wait for config sync result false
-2023-03-02T06:03:52Z DEBUG sequencer Update config soft reset: 2023-03-02T06:03:50Z
-2023-03-02T06:03:52Z DEBUG sequencer local local_update: 
-2023-03-02T06:03:52Z TRACE sequencer Update config soft reset: Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `98`
-2023-03-02T06:03:52Z DEBUG sequencer Done with reset_config
-2023-03-02T06:03:52Z DEBUG sequencer system config extra field null
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system: {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   "min_loglevel" : 200,
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   "metrics_rate_sec" : 600,
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   "operation" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:     "last_start" : "1970-01-01T00:00:00Z"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   },
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   "testing" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:     "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system:   }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_system: }
-2023-03-02T06:03:52Z DEBUG sequencer update config_system, id 1677737032132
-2023-03-02T06:03:52Z DEBUG sequencer local local_system: 
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset: {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:   "points" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     "filter_alarm_pressure_status" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "ref" : "BV11.present_value",
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "units" : "No-units"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "units" : "Bars",
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "set_value" : 98
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "ref" : "AV12.present_value",
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:       "units" : "Degrees-Celsius"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:     }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset:   }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_pointset: }
-2023-03-02T06:03:52Z TRACE sequencer unchanged config_pointset: {
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_blobset: null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence unchanged config_blobset: null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence updated check config_discovery: null
+2023-03-07T16:33:02Z TRACE validation.feature.sequence unchanged config_discovery: null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Update lastConfigUpdate 2023-03-07T16:33:02Z, because soft reset
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received state_validation: 
+2023-03-07T16:33:02Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received state_validation: 
+2023-03-07T16:33:02Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:44Z INFO device.log: update state 2023-03-07T16:32:44Z last_config 2023-03-07T16:32:41Z
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:48Z INFO device.log: update state 2023-03-07T16:32:48Z last_config 2023-03-07T16:32:41Z
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:48Z INFO device.log: Config handler
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:48Z INFO device.log: 2023-03-07T16:32:48Z received config 2023-03-07T16:32:47Z
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:48Z NOTICE system.config.apply: success
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:32:50Z INFO device.log: update state 2023-03-07T16:32:50Z last_config 2023-03-07T16:32:47Z
+2023-03-07T16:33:02Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received event_pointset: 
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013: {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "timestamp" : "2023-03-07T16:32:50Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "version" : "1.4.1",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "system" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "last_config" : "2023-03-07T16:32:47Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "operation" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "operational" : true,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "restart_count" : 2,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "mode" : "initial"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "hardware" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "make" : "BOS",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "model" : "pubber"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "software" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "firmware" : "v1"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "status" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "message" : "success",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "category" : "system.config.apply",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "timestamp" : "2023-03-07T16:32:48Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "level" : 300
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "localnet" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "families" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "ether" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "ipv4" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:         "addr" : "192.168.8.3"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "ipv6" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "pointset" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     "points" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:         "value_state" : "applied"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013:   "configAcked" : "true"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #013: }
+2023-03-07T16:33:04Z NOTICE validation.feature.sequence Received serial number sequencer-20462
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:32:47Z
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received event_system (no logs)
+2023-03-07T16:33:04Z TRACE validation.feature.sequence received command AHU-1/config/update nonce null
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received config_update: 
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence lastStartChanged true, last_start 2023-03-07T16:31:51Z
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Updated config 2023-03-07T16:33:04Z, id 1678206782787
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010: {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   "timestamp" : "2023-03-07T16:33:04Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   "version" : "1.4.0-221-g632b879b",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   "system" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "min_loglevel" : 200,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "metrics_rate_sec" : 600,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "operation" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "testing" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "sequence_name" : "writeback_success"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   "localnet" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "families" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "ether" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "inet" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "addr" : "192.168.2.1"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   "pointset" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     "points" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "filter_alarm_pressure_status" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "ref" : "BV11.present_value",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "units" : "No-units"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "units" : "Bars",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "set_value" : 98
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "ref" : "AV12.present_value",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:         "units" : "Degrees-Celsius"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:       }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010:   }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated config #010: }
+2023-03-07T16:33:04Z TRACE validation.feature.sequence received command AHU-1/config/pointset nonce null
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received config_pointset: 
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Received confirmation of individual config id 1678206782787
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:04Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014: {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   "timestamp" : "2023-03-07T16:33:04Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   "version" : "1.4.1",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   "system" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "last_config" : "2023-03-07T16:32:47Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "operation" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "operational" : true,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "restart_count" : 2,
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "mode" : "initial"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "hardware" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "make" : "BOS",
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "model" : "pubber"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "software" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "firmware" : "v1"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   "localnet" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "families" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "ether" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "ipv4" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:         "addr" : "192.168.8.3"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "ipv6" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   "pointset" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     "points" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:         "value_state" : "applied"
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       },
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:     }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014:   }
+2023-03-07T16:33:04Z INFO validation.feature.sequence Updated state #014: }
+2023-03-07T16:33:04Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:32:47Z
+2023-03-07T16:33:06Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015: {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   "timestamp" : "2023-03-07T16:33:06Z",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   "version" : "1.4.1",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   "system" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "last_config" : "2023-03-07T16:33:04Z",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "operation" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "operational" : true,
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "restart_count" : 2,
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "mode" : "initial"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "hardware" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "make" : "BOS",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "model" : "pubber"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "software" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "firmware" : "v1"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "status" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "message" : "success",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "category" : "system.config.apply",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "timestamp" : "2023-03-07T16:33:04Z",
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "level" : 300
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   "localnet" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "families" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "ether" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "ipv4" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:         "addr" : "192.168.8.3"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "ipv6" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   "pointset" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     "points" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:         "value_state" : "applied"
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       },
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:     }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015:   }
+2023-03-07T16:33:06Z INFO validation.feature.sequence Updated state #015: }
+2023-03-07T16:33:06Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:33:04Z
+2023-03-07T16:33:06Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:06Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:06Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:06Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:06Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:06Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:07Z TRACE validation.feature.sequence received command AHU-1/config/update nonce null
+2023-03-07T16:33:07Z DEBUG validation.feature.sequence received config_update: 
+2023-03-07T16:33:07Z DEBUG validation.feature.sequence lastStartChanged true, last_start 1970-01-01T00:00:00Z
+2023-03-07T16:33:07Z DEBUG validation.feature.sequence Updated config 2023-03-07T16:33:06Z, id 1678206782786
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011: {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   "timestamp" : "2023-03-07T16:33:06Z",
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   "version" : "1.4.0-221-g632b879b",
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   "system" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "min_loglevel" : 200,
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "metrics_rate_sec" : 600,
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "operation" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "last_start" : "1970-01-01T00:00:00Z"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "testing" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   "localnet" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "families" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "ether" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "inet" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "addr" : "192.168.2.1"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   "pointset" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     "points" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "filter_alarm_pressure_status" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "ref" : "BV11.present_value",
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "units" : "No-units"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "units" : "Bars",
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "set_value" : 98
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       },
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "ref" : "AV12.present_value",
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:         "units" : "Degrees-Celsius"
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:       }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:     }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011:   }
+2023-03-07T16:33:07Z INFO validation.feature.sequence Updated config #011: }
+2023-03-07T16:33:07Z TRACE validation.feature.sequence received command AHU-1/config/system nonce null
+2023-03-07T16:33:07Z DEBUG validation.feature.sequence received config_system: 
+2023-03-07T16:33:07Z DEBUG validation.feature.sequence Received confirmation of individual config id 1678206782786
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016: {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   "timestamp" : "2023-03-07T16:33:08Z",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   "version" : "1.4.1",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   "system" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "last_config" : "2023-03-07T16:33:06Z",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "operation" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "operational" : true,
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "restart_count" : 2,
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "mode" : "initial"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "hardware" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "make" : "BOS",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "model" : "pubber"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "software" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "firmware" : "v1"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "status" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "message" : "success",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "category" : "system.config.apply",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "timestamp" : "2023-03-07T16:33:07Z",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "level" : 300
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   "localnet" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "families" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "ether" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "ipv4" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:         "addr" : "192.168.8.3"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "ipv6" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   "pointset" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     "points" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:         "value_state" : "applied"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016:   }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated state #016: }
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:33:06Z
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:08Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:08Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:08Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:08Z TRACE validation.feature.sequence received command AHU-1/config/update nonce null
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence received config_update: 
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence lastStartChanged true, last_start 2023-03-07T16:31:51Z
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Updated config 2023-03-07T16:33:06Z, id null
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012: {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   "timestamp" : "2023-03-07T16:33:06Z",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   "version" : "1.4.0-221-g632b879b",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   "system" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "min_loglevel" : 200,
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "metrics_rate_sec" : 600,
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "operation" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "testing" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   "localnet" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "families" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "ether" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "inet" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "addr" : "192.168.2.1"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   "pointset" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     "points" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "filter_alarm_pressure_status" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "ref" : "BV11.present_value",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "units" : "No-units"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "units" : "Bars",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "set_value" : 98
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       },
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "ref" : "AV12.present_value",
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:         "units" : "Degrees-Celsius"
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:       }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:     }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012:   }
+2023-03-07T16:33:08Z INFO validation.feature.sequence Updated config #012: }
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Configuration sync took 6s
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence lastStartSynchronized true, pending transactions: 
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence wait for config sync result false
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Update config soft reset: 2023-03-07T16:33:06Z
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence local local_update: 
+2023-03-07T16:33:08Z TRACE validation.feature.sequence Update config soft reset: Set `pointset.points.filter_differential_pressure_setpoint.set_value` = `98`
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Done with reset_config
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence system config extra field null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system: {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   "min_loglevel" : 200,
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   "metrics_rate_sec" : 600,
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   "operation" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:     "last_start" : "1970-01-01T00:00:00Z"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   },
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   "testing" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:     "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system:   }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_system: }
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence update config_system, id 1678206788825
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence local local_system: 
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset: {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:   "points" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     "filter_alarm_pressure_status" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "BV11.present_value",
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "No-units"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Bars",
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "set_value" : 98
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "AV12.present_value",
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Degrees-Celsius"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:     }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset:   }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_pointset: }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence unchanged config_pointset: {
   "points" : {
     "filter_alarm_pressure_status" : {
       "ref" : "BV11.present_value",
@@ -431,19 +494,19 @@
     }
   }
 }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_gateway: null
-2023-03-02T06:03:52Z TRACE sequencer unchanged config_gateway: null
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet: {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:   "families" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:     "ether" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:     },
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:     "inet" : {
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:       "addr" : "192.168.2.1"
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:     }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet:   }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_localnet: }
-2023-03-02T06:03:52Z TRACE sequencer unchanged config_localnet: {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_gateway: null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence unchanged config_gateway: null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet: {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:   "families" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:     "ether" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:     },
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:     "inet" : {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "192.168.2.1"
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:     }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet:   }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_localnet: }
+2023-03-07T16:33:08Z TRACE validation.feature.sequence unchanged config_localnet: {
   "families" : {
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
@@ -453,160 +516,100 @@
     }
   }
 }
-2023-03-02T06:03:52Z TRACE sequencer updated check config_blobset: null
-2023-03-02T06:03:52Z TRACE sequencer unchanged config_blobset: null
-2023-03-02T06:03:52Z TRACE sequencer updated check config_discovery: null
-2023-03-02T06:03:52Z TRACE sequencer unchanged config_discovery: null
-2023-03-02T06:03:52Z DEBUG sequencer Update lastConfigUpdate 2023-03-02T06:03:52Z, because setUp
-2023-03-02T06:03:52Z TRACE sequencer received command AHU-1/config/pointset nonce null
-2023-03-02T06:03:52Z DEBUG sequencer received config_pointset: 
-2023-03-02T06:03:52Z DEBUG sequencer Received confirmation of individual config id 1677737029026
-2023-03-02T06:03:53Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:53Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:53Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:53Z INFO sequencer Updated state #013: {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   "timestamp" : "2023-03-02T06:03:53Z",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   "version" : "1.4.1",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   "system" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "last_config" : "2023-03-02T06:03:50Z",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "operation" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "operational" : true,
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "restart_count" : 4,
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "mode" : "initial"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "hardware" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "make" : "BOS",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "model" : "pubber"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "software" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "firmware" : "v1"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "status" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "message" : "success",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "category" : "system.config.apply",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "timestamp" : "2023-03-02T06:03:52Z",
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "level" : 300
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   "localnet" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "families" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "ether" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "ipv4" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:         "addr" : "192.168.8.3"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "ipv6" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   "pointset" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     "points" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:         "value_state" : "applied"
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       },
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:       "filter_differential_pressure_sensor" : { }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:     }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013:   }
-2023-03-02T06:03:53Z INFO sequencer Updated state #013: }
-2023-03-02T06:03:53Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:50Z
-2023-03-02T06:03:53Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:53Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:53Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:53Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:54Z TRACE sequencer received command AHU-1/config/update nonce null
-2023-03-02T06:03:54Z DEBUG sequencer received config_update: 
-2023-03-02T06:03:54Z DEBUG sequencer lastStartChanged false, last_start 2023-03-02T06:03:08Z
-2023-03-02T06:03:54Z DEBUG sequencer Updated config 2023-03-02T06:03:52Z, id 1677737032132
-2023-03-02T06:03:54Z INFO sequencer Updated config #013: {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   "timestamp" : "2023-03-02T06:03:52Z",
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   "version" : "1.4.0-221-g632b879b",
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   "system" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "min_loglevel" : 200,
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "metrics_rate_sec" : 600,
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "operation" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "testing" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   "localnet" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "families" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "ether" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "inet" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "addr" : "192.168.2.1"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   "pointset" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     "points" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "filter_alarm_pressure_status" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "ref" : "BV11.present_value",
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "units" : "No-units"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "units" : "Bars",
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "set_value" : 98
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       },
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "ref" : "AV12.present_value",
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:         "units" : "Degrees-Celsius"
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:       }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:     }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013:   }
-2023-03-02T06:03:54Z INFO sequencer Updated config #013: }
-2023-03-02T06:03:54Z DEBUG sequencer Configuration sync took 2s
-2023-03-02T06:03:54Z DEBUG sequencer lastStartSynchronized true, pending transactions: 
-2023-03-02T06:03:54Z DEBUG sequencer wait for config sync result false
-2023-03-02T06:03:54Z DEBUG sequencer Update config setUp: 2023-03-02T06:03:52Z
-2023-03-02T06:03:54Z DEBUG sequencer local local_update: 
-2023-03-02T06:03:54Z TRACE sequencer stage suspend starting test wrapper at 13s
-2023-03-02T06:03:54Z INFO sequencer stage start waiting for device state update at 13s
-2023-03-02T06:03:54Z DEBUG sequencer system config extra field null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "min_loglevel" : 200,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "metrics_rate_sec" : 600,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "operation" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "testing" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_system: {
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_blobset: null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence unchanged config_blobset: null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence updated check config_discovery: null
+2023-03-07T16:33:08Z TRACE validation.feature.sequence unchanged config_discovery: null
+2023-03-07T16:33:08Z DEBUG validation.feature.sequence Update lastConfigUpdate 2023-03-07T16:33:08Z, because setUp
+2023-03-07T16:33:10Z TRACE validation.feature.sequence received command AHU-1/config/update nonce null
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received config_update: 
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence lastStartChanged false, last_start 2023-03-07T16:31:51Z
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Updated config 2023-03-07T16:33:10Z, id 1678206788825
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013: {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   "timestamp" : "2023-03-07T16:33:10Z",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   "version" : "1.4.0-221-g632b879b",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   "system" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "min_loglevel" : 200,
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "metrics_rate_sec" : 600,
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "operation" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "testing" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   "localnet" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "families" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "ether" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "inet" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "addr" : "192.168.2.1"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   "pointset" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     "points" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "filter_alarm_pressure_status" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "ref" : "BV11.present_value",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "units" : "No-units"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "units" : "Bars",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "set_value" : 98
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "ref" : "AV12.present_value",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:         "units" : "Degrees-Celsius"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:       }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013:   }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated config #013: }
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Configuration sync took 2s
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence lastStartSynchronized true, pending transactions: 
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence wait for config sync result false
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Update config setUp: 2023-03-07T16:33:10Z
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence local local_update: 
+2023-03-07T16:33:10Z TRACE validation.feature.sequence stage suspend starting test wrapper at 15s
+2023-03-07T16:33:10Z INFO validation.feature.sequence stage start waiting for device state update at 15s
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence system config extra field null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "min_loglevel" : 200,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "metrics_rate_sec" : 600,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "operation" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "testing" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_system: {
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
   "operation" : {
-    "last_start" : "2023-03-02T06:03:08Z"
+    "last_start" : "2023-03-07T16:31:51Z"
   },
   "testing" : {
     "sequence_name" : "writeback_invalid"
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   "points" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_alarm_pressure_status" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "BV11.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "No-units"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Bars",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "set_value" : 98
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "AV12.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Degrees-Celsius"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_pointset: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   "points" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_alarm_pressure_status" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "BV11.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "No-units"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Bars",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "set_value" : 98
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "AV12.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Degrees-Celsius"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_pointset: {
   "points" : {
     "filter_alarm_pressure_status" : {
       "ref" : "BV11.present_value",
@@ -622,19 +625,19 @@
     }
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   "families" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "ether" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "inet" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "192.168.2.1"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   "families" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "ether" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "inet" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "192.168.2.1"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_localnet: {
   "families" : {
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
@@ -644,55 +647,55 @@
     }
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_discovery: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_discovery: null
-2023-03-02T06:03:54Z DEBUG sequencer Update config before device state update: 2023-03-02T06:03:52Z
-2023-03-02T06:03:54Z DEBUG sequencer local local_update: 
-2023-03-02T06:03:54Z DEBUG sequencer stage finished waiting for device state update at 13s after 0s
-2023-03-02T06:03:54Z TRACE sequencer stage resume starting test wrapper at 13s
-2023-03-02T06:03:54Z DEBUG sequencer stage begin executing test at 13s
-2023-03-02T06:03:54Z TRACE sequencer stage suspend executing test at 13s
-2023-03-02T06:03:54Z INFO sequencer stage start waiting for point filter_differential_pressure_sensor to have value_state default (null) at 13s
-2023-03-02T06:03:54Z DEBUG sequencer system config extra field null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "min_loglevel" : 200,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "metrics_rate_sec" : 600,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "operation" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "testing" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_system: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_discovery: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_discovery: null
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Update config before device state update: 2023-03-07T16:33:10Z
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence local local_update: 
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence stage finished waiting for device state update at 15s after 0s
+2023-03-07T16:33:10Z TRACE validation.feature.sequence stage resume starting test wrapper at 15s
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence stage begin executing test at 15s
+2023-03-07T16:33:10Z TRACE validation.feature.sequence stage suspend executing test at 15s
+2023-03-07T16:33:10Z INFO validation.feature.sequence stage start waiting for point filter_differential_pressure_sensor to have value_state default (null) at 15s
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence system config extra field null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "min_loglevel" : 200,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "metrics_rate_sec" : 600,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "operation" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "testing" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_system: {
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
   "operation" : {
-    "last_start" : "2023-03-02T06:03:08Z"
+    "last_start" : "2023-03-07T16:31:51Z"
   },
   "testing" : {
     "sequence_name" : "writeback_invalid"
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   "points" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_alarm_pressure_status" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "BV11.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "No-units"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Bars",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "set_value" : 98
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "AV12.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Degrees-Celsius"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_pointset: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   "points" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_alarm_pressure_status" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "BV11.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "No-units"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Bars",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "set_value" : 98
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "AV12.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Degrees-Celsius"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_pointset: {
   "points" : {
     "filter_alarm_pressure_status" : {
       "ref" : "BV11.present_value",
@@ -708,19 +711,19 @@
     }
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   "families" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "ether" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "inet" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "192.168.2.1"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   "families" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "ether" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "inet" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "192.168.2.1"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_localnet: {
   "families" : {
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
@@ -730,69 +733,69 @@
     }
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_discovery: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_discovery: null
-2023-03-02T06:03:54Z DEBUG sequencer Update config before point filter_differential_pressure_sensor to have value_state default (null): 2023-03-02T06:03:52Z
-2023-03-02T06:03:54Z DEBUG sequencer local local_update: 
-2023-03-02T06:03:54Z DEBUG sequencer Value state null equals null = true
-2023-03-02T06:03:54Z DEBUG sequencer stage finished waiting for point filter_differential_pressure_sensor to have value_state default (null) at 13s after 0s
-2023-03-02T06:03:54Z TRACE sequencer stage resume executing test at 13s
-2023-03-02T06:03:54Z TRACE sequencer stage suspend executing test at 13s
-2023-03-02T06:03:54Z INFO sequencer stage start waiting for point filter_differential_pressure_sensor to have value_state invalid at 13s
-2023-03-02T06:03:54Z DEBUG sequencer system config extra field null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "min_loglevel" : 200,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "metrics_rate_sec" : 600,
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "operation" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   "testing" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:     "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_system: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_system: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_discovery: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_discovery: null
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Update config before point filter_differential_pressure_sensor to have value_state default (null): 2023-03-07T16:33:10Z
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence local local_update: 
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Value state null equals null = true
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence stage finished waiting for point filter_differential_pressure_sensor to have value_state default (null) at 15s after 0s
+2023-03-07T16:33:10Z TRACE validation.feature.sequence stage resume executing test at 15s
+2023-03-07T16:33:10Z TRACE validation.feature.sequence stage suspend executing test at 15s
+2023-03-07T16:33:10Z INFO validation.feature.sequence stage start waiting for point filter_differential_pressure_sensor to have value_state invalid at 15s
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence system config extra field null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "min_loglevel" : 200,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "metrics_rate_sec" : 600,
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "operation" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   "testing" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:     "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_system: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_system: {
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
   "operation" : {
-    "last_start" : "2023-03-02T06:03:08Z"
+    "last_start" : "2023-03-07T16:31:51Z"
   },
   "testing" : {
     "sequence_name" : "writeback_invalid"
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   "points" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_alarm_pressure_status" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "BV11.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "No-units"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Bars",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "set_value" : 98
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "ref" : "AV12.present_value",
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:       "units" : "Degrees-Celsius"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_pointset: }
-2023-03-02T06:03:54Z DEBUG sequencer update config_pointset, id 1677737034365
-2023-03-02T06:03:54Z DEBUG sequencer local local_pointset: 
-2023-03-02T06:03:54Z TRACE sequencer updated check config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_gateway: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   "families" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "ether" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     },
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     "inet" : {
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:       "addr" : "192.168.2.1"
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:     }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet:   }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_localnet: }
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   "points" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_alarm_pressure_status" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "BV11.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "No-units"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Bars",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "set_value" : 98
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "ref" : "AV12.present_value",
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:       "units" : "Degrees-Celsius"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_pointset: }
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence update config_pointset, id 1678206790252
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence local local_pointset: 
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_gateway: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   "families" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "ether" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     },
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     "inet" : {
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:       "addr" : "192.168.2.1"
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:     }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet:   }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_localnet: }
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_localnet: {
   "families" : {
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
@@ -802,198 +805,269 @@
     }
   }
 }
-2023-03-02T06:03:54Z TRACE sequencer updated check config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_blobset: null
-2023-03-02T06:03:54Z TRACE sequencer updated check config_discovery: null
-2023-03-02T06:03:54Z TRACE sequencer unchanged config_discovery: null
-2023-03-02T06:03:54Z DEBUG sequencer Update lastConfigUpdate 2023-03-02T06:03:54Z, because before point filter_differential_pressure_sensor to have value_state invalid
-2023-03-02T06:03:54Z TRACE sequencer received command AHU-1/config/system nonce null
-2023-03-02T06:03:54Z DEBUG sequencer received config_system: 
-2023-03-02T06:03:54Z DEBUG sequencer Received confirmation of individual config id 1677737032132
-2023-03-02T06:03:55Z TRACE sequencer received command AHU-1/config/update nonce null
-2023-03-02T06:03:55Z DEBUG sequencer received config_update: 
-2023-03-02T06:03:55Z DEBUG sequencer lastStartChanged false, last_start 2023-03-02T06:03:08Z
-2023-03-02T06:03:55Z DEBUG sequencer Updated config 2023-03-02T06:03:54Z, id 1677737034365
-2023-03-02T06:03:55Z INFO sequencer Updated config #014: {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   "timestamp" : "2023-03-02T06:03:54Z",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   "version" : "1.4.0-221-g632b879b",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   "system" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "min_loglevel" : 200,
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "metrics_rate_sec" : 600,
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "operation" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "last_start" : "2023-03-02T06:03:08Z"
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "testing" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "sequence_name" : "writeback_invalid"
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   "localnet" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "families" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "ether" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "addr" : "00:50:b6:ed:5f:77"
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "inet" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "addr" : "192.168.2.1"
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   "pointset" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     "points" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "filter_alarm_pressure_status" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "ref" : "BV11.present_value",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "units" : "No-units"
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "units" : "Bars",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "set_value" : 98
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "ref" : "AV12.present_value",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "units" : "Degrees-Celsius",
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:         "set_value" : 15
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:       }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014:   }
-2023-03-02T06:03:55Z INFO sequencer Updated config #014: }
-2023-03-02T06:03:55Z DEBUG sequencer Configuration sync took 1s
-2023-03-02T06:03:55Z DEBUG sequencer lastStartSynchronized true, pending transactions: 
-2023-03-02T06:03:55Z DEBUG sequencer wait for config sync result false
-2023-03-02T06:03:55Z DEBUG sequencer Update config before point filter_differential_pressure_sensor to have value_state invalid: 2023-03-02T06:03:54Z
-2023-03-02T06:03:55Z DEBUG sequencer local local_update: 
-2023-03-02T06:03:55Z INFO sequencer Device config Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
-2023-03-02T06:03:55Z TRACE sequencer Update config before point filter_differential_pressure_sensor to have value_state invalid: Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:55Z TRACE sequencer received command AHU-1/config/pointset nonce null
-2023-03-02T06:03:55Z DEBUG sequencer received config_pointset: 
-2023-03-02T06:03:55Z DEBUG sequencer Received confirmation of individual config id 1677737034365
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:55Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:55Z INFO sequencer Updated state #014: {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   "timestamp" : "2023-03-02T06:03:55Z",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   "version" : "1.4.1",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   "system" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "last_config" : "2023-03-02T06:03:52Z",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "operation" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "operational" : true,
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "restart_count" : 4,
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "mode" : "initial"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "hardware" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "make" : "BOS",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "model" : "pubber"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "software" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "firmware" : "v1"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "status" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "message" : "success",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "category" : "system.config.apply",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "timestamp" : "2023-03-02T06:03:54Z",
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "level" : 300
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   "localnet" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "families" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "ether" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "ipv4" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:         "addr" : "192.168.8.3"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "ipv6" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   "pointset" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     "points" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:         "value_state" : "applied"
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       },
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:       "filter_differential_pressure_sensor" : { }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:     }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014:   }
-2023-03-02T06:03:55Z INFO sequencer Updated state #014: }
-2023-03-02T06:03:55Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:52Z
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:55Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:55Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:55Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:55Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:55Z DEBUG sequencer received state_system: 
-2023-03-02T06:03:55Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:55Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:57Z DEBUG sequencer received state_localnet: 
-2023-03-02T06:03:57Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:57Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:57Z DEBUG sequencer received state_pointset: 
-2023-03-02T06:03:57Z TRACE sequencer Ignoring partial state update
-2023-03-02T06:03:57Z DEBUG sequencer Value state invalid equals null = false
-2023-03-02T06:03:57Z DEBUG sequencer received state_update: 
-2023-03-02T06:03:57Z INFO sequencer Updated state #015: {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   "timestamp" : "2023-03-02T06:03:57Z",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   "version" : "1.4.1",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   "system" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "last_config" : "2023-03-02T06:03:54Z",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "operation" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "operational" : true,
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "last_start" : "2023-03-02T06:03:08Z",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "restart_count" : 4,
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "mode" : "initial"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "serial_no" : "sequencer-7010",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "hardware" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "make" : "BOS",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "model" : "pubber"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "software" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "firmware" : "v1"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "status" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "message" : "success",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "category" : "system.config.apply",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "timestamp" : "2023-03-02T06:03:55Z",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "level" : 300
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   "localnet" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "families" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "ether" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "addr" : "8c:8c:aa:50:bc:72"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "ipv4" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "addr" : "192.168.8.3"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "ipv6" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "addr" : "fe80::11a9:496f:6596:b455"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   "pointset" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     "points" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "filter_alarm_pressure_status" : { },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "filter_differential_pressure_setpoint" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "value_state" : "applied"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       },
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       "filter_differential_pressure_sensor" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "value_state" : "invalid",
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         "status" : {
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:           "message" : "Written value is not valid"
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:         }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:       }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:     }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015:   }
-2023-03-02T06:03:57Z INFO sequencer Updated state #015: }
-2023-03-02T06:03:57Z DEBUG sequencer Updated state has last_config 2023-03-02T06:03:54Z
-2023-03-02T06:03:57Z DEBUG sequencer Value state invalid equals invalid = true
-2023-03-02T06:03:57Z DEBUG sequencer stage finished waiting for point filter_differential_pressure_sensor to have value_state invalid at 16s after 3s
-2023-03-02T06:03:57Z TRACE sequencer stage resume executing test at 16s
-2023-03-02T06:03:57Z DEBUG sequencer stage done executing test at 16s
-2023-03-02T06:03:57Z NOTICE sequencer RESULT pass unknown writeback_invalid ALPHA 5 Sequence complete
-2023-03-02T06:03:57Z INFO sequencer Sequence complete
-2023-03-02T06:03:57Z NOTICE sequencer ending test writeback_invalid after 16s
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_blobset: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence updated check config_discovery: null
+2023-03-07T16:33:10Z TRACE validation.feature.sequence unchanged config_discovery: null
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Update lastConfigUpdate 2023-03-07T16:33:10Z, because before point filter_differential_pressure_sensor to have value_state invalid
+2023-03-07T16:33:10Z TRACE validation.feature.sequence received command AHU-1/config/system nonce null
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received config_system: 
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Received confirmation of individual config id 1678206788825
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:10Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017: {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   "timestamp" : "2023-03-07T16:33:10Z",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   "version" : "1.4.1",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   "system" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "last_config" : "2023-03-07T16:33:10Z",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "operation" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "operational" : true,
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "restart_count" : 2,
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "mode" : "initial"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "hardware" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "make" : "BOS",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "model" : "pubber"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "software" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "firmware" : "v1"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "status" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "message" : "success",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "category" : "system.config.apply",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "timestamp" : "2023-03-07T16:33:10Z",
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "level" : 300
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   "localnet" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "families" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "ether" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "ipv4" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:         "addr" : "192.168.8.3"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "ipv6" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   "pointset" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     "points" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:         "value_state" : "applied"
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       },
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:     }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017:   }
+2023-03-07T16:33:10Z INFO validation.feature.sequence Updated state #017: }
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:33:10Z
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:10Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:10Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:10Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_pointset: 
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:04Z INFO device.log: update state 2023-03-07T16:33:04Z last_config 2023-03-07T16:32:47Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:04Z INFO device.log: Config handler
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:04Z INFO device.log: 2023-03-07T16:33:04Z received config 2023-03-07T16:33:04Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:04Z NOTICE system.config.apply: success
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:06Z INFO device.log: update state 2023-03-07T16:33:06Z last_config 2023-03-07T16:33:04Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:07Z INFO device.log: Config handler
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:07Z INFO device.log: 2023-03-07T16:33:07Z received config 2023-03-07T16:33:06Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:07Z NOTICE system.config.apply: success
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:08Z INFO device.log: update state 2023-03-07T16:33:08Z last_config 2023-03-07T16:33:06Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:08Z INFO device.log: Config handler
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:08Z INFO device.log: 2023-03-07T16:33:08Z received config 2023-03-07T16:33:06Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:08Z NOTICE system.config.apply: success
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:10Z INFO device.log: Config handler
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:10Z INFO device.log: 2023-03-07T16:33:10Z received config 2023-03-07T16:33:10Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:10Z NOTICE system.config.apply: success
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received event_system 2023-03-07T16:33:10Z INFO device.log: update state 2023-03-07T16:33:10Z last_config 2023-03-07T16:33:10Z
+2023-03-07T16:33:14Z TRACE validation.feature.sequence received command AHU-1/config/update nonce null
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received config_update: 
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence lastStartChanged false, last_start 2023-03-07T16:31:51Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Updated config 2023-03-07T16:33:14Z, id 1678206790252
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014: {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   "timestamp" : "2023-03-07T16:33:14Z",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   "version" : "1.4.0-221-g632b879b",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   "system" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "min_loglevel" : 200,
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "metrics_rate_sec" : 600,
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "operation" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "last_start" : "2023-03-07T16:31:51Z"
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "testing" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "sequence_name" : "writeback_invalid"
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   "localnet" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "families" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "ether" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "addr" : "00:50:b6:ed:5f:77"
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "inet" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "addr" : "192.168.2.1"
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   "pointset" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     "points" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "filter_alarm_pressure_status" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "ref" : "BV11.present_value",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "units" : "No-units"
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "units" : "Bars",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "set_value" : 98
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       },
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "ref" : "AV12.present_value",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "units" : "Degrees-Celsius",
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:         "set_value" : 15
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:       }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:     }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014:   }
+2023-03-07T16:33:14Z INFO validation.feature.sequence Updated config #014: }
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Configuration sync took 4s
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence lastStartSynchronized true, pending transactions: 
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence wait for config sync result false
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Update config before point filter_differential_pressure_sensor to have value_state invalid: 2023-03-07T16:33:14Z
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence local local_update: 
+2023-03-07T16:33:14Z INFO validation.feature.sequence Device config Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
+2023-03-07T16:33:14Z TRACE validation.feature.sequence Update config before point filter_differential_pressure_sensor to have value_state invalid: Add `pointset.points.filter_differential_pressure_sensor.set_value` = `15`
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:14Z TRACE validation.feature.sequence received command AHU-1/config/pointset nonce null
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence received config_pointset: 
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Received confirmation of individual config id 1678206790252
+2023-03-07T16:33:14Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018: {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   "timestamp" : "2023-03-07T16:33:15Z",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   "version" : "1.4.1",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   "system" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "last_config" : "2023-03-07T16:33:10Z",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "operation" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "operational" : true,
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "restart_count" : 2,
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "mode" : "initial"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "hardware" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "make" : "BOS",
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "model" : "pubber"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "software" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "firmware" : "v1"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   "localnet" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "families" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "ether" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "ipv4" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:         "addr" : "192.168.8.3"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "ipv6" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   "pointset" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     "points" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:         "value_state" : "applied"
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       },
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:       "filter_differential_pressure_sensor" : { }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:     }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018:   }
+2023-03-07T16:33:15Z INFO validation.feature.sequence Updated state #018: }
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:33:10Z
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:15Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:15Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:15Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:15Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence received state_system: 
+2023-03-07T16:33:17Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence received state_pointset: 
+2023-03-07T16:33:17Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence received state_localnet: 
+2023-03-07T16:33:17Z TRACE validation.feature.sequence Ignoring partial state update
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence Value state invalid equals null = false
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence received state_update: 
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019: {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   "timestamp" : "2023-03-07T16:33:17Z",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   "version" : "1.4.1",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   "system" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "last_config" : "2023-03-07T16:33:14Z",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "operation" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "operational" : true,
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "last_start" : "2023-03-07T16:31:51Z",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "restart_count" : 2,
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "mode" : "initial"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "serial_no" : "sequencer-20462",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "hardware" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "make" : "BOS",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "model" : "pubber"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "software" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "firmware" : "v1"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "status" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "message" : "success",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "category" : "system.config.apply",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "timestamp" : "2023-03-07T16:33:15Z",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "level" : 300
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   "localnet" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "families" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "ether" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "addr" : "8c:8c:aa:50:bc:72"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "ipv4" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "addr" : "192.168.8.3"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "ipv6" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "addr" : "fe80::11a9:496f:6596:b455"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   "pointset" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     "points" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "filter_alarm_pressure_status" : { },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "filter_differential_pressure_setpoint" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "value_state" : "applied"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       },
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       "filter_differential_pressure_sensor" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "value_state" : "invalid",
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         "status" : {
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:           "message" : "Written value is not valid"
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:         }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:       }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:     }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019:   }
+2023-03-07T16:33:17Z INFO validation.feature.sequence Updated state #019: }
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence Updated state has last_config 2023-03-07T16:33:14Z
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence Value state invalid equals invalid = true
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence stage finished waiting for point filter_differential_pressure_sensor to have value_state invalid at 22s after 7s
+2023-03-07T16:33:17Z TRACE validation.feature.sequence stage resume executing test at 22s
+2023-03-07T16:33:17Z DEBUG validation.feature.sequence stage done executing test at 22s
+2023-03-07T16:33:17Z NOTICE validation.feature.sequence RESULT pass writeback writeback_invalid ALPHA 5 Sequence complete
+2023-03-07T16:33:17Z WARNING validation.feature.sequence Sequence complete
+2023-03-07T16:33:17Z NOTICE validation.feature.sequence ending test writeback_invalid after 22s

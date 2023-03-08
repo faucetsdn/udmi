@@ -1,0 +1,16 @@
+{
+  "families" : {
+    "ether" : {
+      "addr" : "00:50:b6:ed:5f:77"
+    },
+    "inet" : {
+      "addr" : "192.168.2.1"
+    }
+  },
+<<<<<<< HEAD:validator/sequences/family_ether_addr/config_localnet.json
+  "timestamp" : "2023-03-03T14:21:09.839Z",
+=======
+  "timestamp" : "2023-03-07T16:40:17.348Z",
+>>>>>>> master:validator/sequences/config_localnet.json
+  "version" : "1.4.0-221-g632b879b"
+}

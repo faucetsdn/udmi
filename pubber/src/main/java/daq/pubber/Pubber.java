@@ -1126,6 +1126,7 @@ public class Pubber {
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
 <<<<<<< HEAD
+<<<<<<< HEAD
     discoveryEvent.networks = ifTrue(enumerate.networks, this::enumeratenetworks);
     publishDeviceMessage(discoveryEvent);
   }
@@ -1148,6 +1149,12 @@ public class Pubber {
   }
 
 >>>>>>> familyaddr
+=======
+    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
+    publishDeviceMessage(discoveryEvent);
+  }
+
+>>>>>>> master
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
     return isTrue(() -> condition) ? supplier.get() : null;
   }
@@ -1321,7 +1328,10 @@ public class Pubber {
   private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
     event.addr = target.getValue().addr;
+<<<<<<< HEAD
 >>>>>>> familyaddr
+=======
+>>>>>>> master
     return event;
   }
 

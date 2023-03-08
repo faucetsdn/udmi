@@ -5,5 +5,9 @@
   "projectId" : "bos-peringknife-dev",
   "subFolder" : "pointset",
   "subType" : "config",
+<<<<<<< HEAD
   "transactionId" : "1677855375070"
+=======
+  "transactionId" : "1678240592291"
+>>>>>>> master
 }

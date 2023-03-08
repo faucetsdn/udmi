@@ -45,7 +45,11 @@ public class NetworkLocalnetModel {
         if ((other instanceof NetworkLocalnetModel) == false) {
             return false;
         }
+<<<<<<< HEAD:gencode/java/udmi/schema/NetworkLocalnetModel.java
         NetworkLocalnetModel rhs = ((NetworkLocalnetModel) other);
+=======
+        FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
+>>>>>>> master:gencode/java/udmi/schema/FamilyLocalnetModel.java
         return ((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)));
     }
 

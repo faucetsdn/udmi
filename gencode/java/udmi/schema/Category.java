@@ -105,10 +105,17 @@ public class Category {
     public static final Level LOCALNET_NETWORK_LEVEL = INFO;
     static { LEVEL.put(LOCALNET_NETWORK, INFO); }
 
+<<<<<<< HEAD
     // Relating to network scanning
     public static final String DISCOVERY_NETWORK_SCAN = "discovery.network.scan";
     public static final Level DISCOVERY_NETWORK_SCAN_LEVEL = INFO;
     static { LEVEL.put(DISCOVERY_NETWORK_SCAN, INFO); }
+=======
+    // Relating to scanning a particular address family
+    public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";
+    public static final Level DISCOVERY_FAMILY_SCAN_LEVEL = INFO;
+    static { LEVEL.put(DISCOVERY_FAMILY_SCAN, INFO); }
+>>>>>>> master
 
     // Handling point enumeration for a given device
     public static final String DISCOVERY_DEVICE_ENUMERATE = "discovery.device.enumerate";

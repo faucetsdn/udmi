@@ -9,7 +9,7 @@
           "category" : "blobset.blob.apply",
           "level" : 500
         },
-        "generation" : "2023-03-02T06:07:17Z"
+        "generation" : "2023-03-07T16:36:43Z"
       }
     }
   },
@@ -36,14 +36,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-03-02T06:07:17Z",
+    "last_config" : "2023-03-07T16:36:43Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-03-02T06:03:08Z",
-      "restart_count" : 4,
+      "last_start" : "2023-03-07T16:31:51Z",
+      "restart_count" : 2,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-7010",
+    "serial_no" : "sequencer-20462",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -54,10 +54,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-03-02T06:07:18Z",
+      "timestamp" : "2023-03-07T16:36:44Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-03-02T06:07:23Z",
+  "timestamp" : "2023-03-07T16:36:48Z",
   "version" : "1.4.1"
 }

@@ -7,7 +7,10 @@ class FamilyLocalnetState:
 
   def __init__(self):
     self.addr = None
+<<<<<<< HEAD
     self.scope = None
+=======
+>>>>>>> master
     self.status = None
 
   @staticmethod
@@ -16,7 +19,10 @@ class FamilyLocalnetState:
       return None
     result = FamilyLocalnetState()
     result.addr = source.get('addr')
+<<<<<<< HEAD
     result.scope = source.get('scope')
+=======
+>>>>>>> master
     result.status = Entry.from_dict(source.get('status'))
     return result
 
@@ -40,8 +46,11 @@ class FamilyLocalnetState:
     result = {}
     if self.addr:
       result['addr'] = self.addr # 5
+<<<<<<< HEAD
     if self.scope:
       result['scope'] = self.scope # 5
+=======
+>>>>>>> master
     if self.status:
       result['status'] = self.status.to_dict() # 4
     return result

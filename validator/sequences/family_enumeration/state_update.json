@@ -23,6 +23,7 @@
     }
   },
   "system" : {
+<<<<<<< HEAD
     "last_config" : "2023-03-03T14:56:24Z",
     "operation" : {
       "operational" : true,
@@ -31,6 +32,16 @@
       "mode" : "initial"
     },
     "serial_no" : "sequencer-13225",
+=======
+    "last_config" : "2023-03-08T01:56:46Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2023-03-08T01:56:10Z",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-22844",
+>>>>>>> master
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -41,10 +52,18 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
+<<<<<<< HEAD
       "timestamp" : "2023-03-03T14:56:24Z",
       "level" : 300
     }
   },
   "timestamp" : "2023-03-03T14:56:26Z",
+=======
+      "timestamp" : "2023-03-08T01:56:46Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2023-03-08T01:56:47Z",
+>>>>>>> master
   "version" : "1.4.1"
 }

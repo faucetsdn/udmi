@@ -2,6 +2,10 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "hash": "9b06144d",
   "version": "1.4.1",
+<<<<<<< HEAD
+=======
+  "hash": "fafc4eb5",
+>>>>>>> master
   "cloud": {
     "auth_type": "RS256"
   },

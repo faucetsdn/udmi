@@ -2,11 +2,19 @@
   "metrics_rate_sec" : 600,
   "min_loglevel" : 200,
   "operation" : {
+<<<<<<< HEAD
     "last_start" : "2023-03-03T14:55:57Z"
+=======
+    "last_start" : "2023-03-08T01:56:10Z"
+>>>>>>> master
   },
   "testing" : {
     "sequence_name" : "family_enumeration"
   },
+<<<<<<< HEAD
   "timestamp" : "2023-03-03T14:56:20.875Z",
+=======
+  "timestamp" : "2023-03-08T01:56:40.384Z",
+>>>>>>> master
   "version" : "1.4.0-221-g632b879b"
 }

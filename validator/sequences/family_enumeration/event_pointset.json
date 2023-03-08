@@ -10,6 +10,10 @@
       "present_value" : 10
     }
   },
+<<<<<<< HEAD
   "timestamp" : "2023-03-03T14:56:18.002Z",
+=======
+  "timestamp" : "2023-03-08T01:56:41.003Z",
+>>>>>>> master
   "version" : "1.4.1"
 }

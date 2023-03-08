@@ -2,7 +2,11 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
   "operation" : {
+<<<<<<< HEAD
     "last_start" : "2023-03-03T14:19:51Z"
+=======
+    "last_start" : "2023-03-07T16:38:08Z"
+>>>>>>> master
   },
   "testing" : {
     "sequence_name" : "family_ether_addr"

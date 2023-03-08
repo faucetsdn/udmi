@@ -5,5 +5,9 @@
   "projectId" : "bos-peringknife-dev",
   "subFolder" : "update",
   "subType" : "config",
+<<<<<<< HEAD
   "transactionId" : "1677853273445"
+=======
+  "transactionId" : "1678207460595"
+>>>>>>> master
 }

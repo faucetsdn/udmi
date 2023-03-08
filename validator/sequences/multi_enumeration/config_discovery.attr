@@ -5,5 +5,9 @@
   "projectId" : "bos-peringknife-dev",
   "subFolder" : "discovery",
   "subType" : "config",
+<<<<<<< HEAD
   "transactionId" : "1677855405315"
+=======
+  "transactionId" : "1678240629386"
+>>>>>>> master
 }

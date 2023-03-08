@@ -3,13 +3,17 @@ package com.google.daq.mqtt.registrar;
 import static com.google.udmi.util.Common.VERSION_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Downgrade a message to a previous UDMI schema version.
  */
 public class MessageDowngrader {
 
+  private static final TextNode LEGACY_VERSION = new TextNode("1");
+  private static final JsonNode LEGACY_REPLACEMENT = new IntNode(1);
   private final ObjectNode message;
   private int major;
   private int minor;
@@ -64,6 +68,7 @@ public class MessageDowngrader {
       return;
     }
 
+<<<<<<< HEAD
     if (major == 1 && minor == 4 && patch > 0) {
       return;
     }
@@ -87,6 +92,11 @@ public class MessageDowngrader {
     if (system != null) {
       system.remove("operation");
     }
+=======
+    JsonNode useVersion = versionNode.equals(LEGACY_VERSION) ? LEGACY_REPLACEMENT : versionNode;
+
+    message.set(VERSION_KEY, useVersion);
+>>>>>>> master
   }
 
   private String convertVersion(JsonNode versionNode) {
@@ -107,9 +117,22 @@ public class MessageDowngrader {
     if (localnet == null) {
       return;
     }
+<<<<<<< HEAD
     JsonNode networks = localnet.remove("networks");
     if (networks != null) {
       localnet.set("families", networks);
+=======
+    JsonNode families = localnet.remove("families");
+    if (families != null) {
+      localnet.set("subsystem", families);
+      families.fieldNames().forEachRemaining(familyName -> {
+        ObjectNode family = (ObjectNode) families.get(familyName);
+        JsonNode removedNode = family.remove("addr");
+        if (removedNode != null) {
+          family.set("id", removedNode);
+        }
+      });
+>>>>>>> master
     }
   }
 
