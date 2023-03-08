@@ -1,35 +1,34 @@
-2023-03-02T06:11:45Z INFO device.log Config handler
-2023-03-02T06:11:45Z INFO device.log 2023-03-02T06:11:45Z received config 2023-03-02T06:11:44Z
-2023-03-02T06:11:45Z NOTICE system.config.apply success
-2023-03-02T06:11:46Z INFO device.log update state 2023-03-02T06:11:46Z last_config 2023-03-02T06:11:44Z
-2023-03-02T06:11:47Z INFO device.log Config handler
-2023-03-02T06:11:47Z INFO device.log 2023-03-02T06:11:47Z received config 2023-03-02T06:11:45Z
-2023-03-02T06:11:47Z NOTICE system.config.apply success
-2023-03-02T06:11:48Z INFO device.log Config handler
-2023-03-02T06:11:48Z INFO device.log 2023-03-02T06:11:48Z received config 2023-03-02T06:11:47Z
-2023-03-02T06:11:48Z NOTICE system.config.apply success
-2023-03-02T06:11:48Z INFO device.log update state 2023-03-02T06:11:48Z last_config 2023-03-02T06:11:47Z
-2023-03-02T06:11:49Z INFO device.log Config handler
-2023-03-02T06:11:49Z INFO device.log 2023-03-02T06:11:49Z received config 2023-03-02T06:11:49Z
-2023-03-02T06:11:49Z INFO device.log Discovery enumeration at 2023-03-02T06:11:48Z
-2023-03-02T06:11:49Z NOTICE system.config.apply success
-2023-03-02T06:11:50Z INFO device.log update state 2023-03-02T06:11:50Z last_config 2023-03-02T06:11:49Z
-2023-03-02T06:11:51Z INFO device.log Config handler
-2023-03-02T06:11:51Z INFO device.log 2023-03-02T06:11:51Z received config 2023-03-02T06:11:51Z
-2023-03-02T06:11:51Z NOTICE system.config.apply success
-2023-03-02T06:11:52Z INFO device.log update state 2023-03-02T06:11:52Z last_config 2023-03-02T06:11:51Z
-2023-03-02T06:12:01Z INFO device.log update state 2023-03-02T06:12:01Z last_config 2023-03-02T06:11:51Z
-2023-03-02T06:12:01Z INFO device.log Config handler
-2023-03-02T06:12:01Z INFO device.log 2023-03-02T06:12:01Z received config 2023-03-02T06:12:01Z
-2023-03-02T06:12:01Z NOTICE system.config.apply success
-2023-03-02T06:12:02Z INFO device.log Config handler
-2023-03-02T06:12:02Z INFO device.log 2023-03-02T06:12:02Z received config 2023-03-02T06:12:01Z
-2023-03-02T06:12:02Z NOTICE system.config.apply success
-2023-03-02T06:12:03Z INFO device.log update state 2023-03-02T06:12:03Z last_config 2023-03-02T06:12:01Z
-2023-03-02T06:12:03Z INFO device.log Config handler
-2023-03-02T06:12:03Z INFO device.log 2023-03-02T06:12:03Z received config 2023-03-02T06:12:03Z
-2023-03-02T06:12:03Z NOTICE system.config.apply success
-2023-03-02T06:12:04Z INFO device.log Config handler
-2023-03-02T06:12:04Z INFO device.log 2023-03-02T06:12:04Z received config 2023-03-02T06:12:03Z
-2023-03-02T06:12:04Z NOTICE system.config.apply success
-2023-03-02T06:12:11Z INFO sequencer Sequence complete
+2023-03-07T16:41:21Z INFO device.log update state 2023-03-07T16:41:21Z last_config 2023-03-07T16:41:19Z
+2023-03-07T16:41:21Z INFO device.log Config handler
+2023-03-07T16:41:21Z INFO device.log 2023-03-07T16:41:21Z received config 2023-03-07T16:41:21Z
+2023-03-07T16:41:21Z NOTICE system.config.apply success
+2023-03-07T16:41:23Z INFO device.log update state 2023-03-07T16:41:23Z last_config 2023-03-07T16:41:21Z
+2023-03-07T16:41:31Z INFO device.log update state 2023-03-07T16:41:31Z last_config 2023-03-07T16:41:21Z
+2023-03-07T16:41:31Z INFO device.log Config handler
+2023-03-07T16:41:31Z INFO device.log 2023-03-07T16:41:31Z received config 2023-03-07T16:41:31Z
+2023-03-07T16:41:31Z NOTICE system.config.apply success
+2023-03-07T16:41:33Z INFO device.log Config handler
+2023-03-07T16:41:33Z INFO device.log 2023-03-07T16:41:33Z received config 2023-03-07T16:41:31Z
+2023-03-07T16:41:33Z NOTICE system.config.apply success
+2023-03-07T16:41:33Z INFO device.log update state 2023-03-07T16:41:33Z last_config 2023-03-07T16:41:31Z
+2023-03-07T16:41:34Z INFO device.log Config handler
+2023-03-07T16:41:34Z INFO device.log 2023-03-07T16:41:34Z received config 2023-03-07T16:41:34Z
+2023-03-07T16:41:34Z NOTICE system.config.apply success
+2023-03-07T16:41:35Z INFO device.log update state 2023-03-07T16:41:35Z last_config 2023-03-07T16:41:34Z
+2023-03-07T16:41:36Z INFO device.log Config handler
+2023-03-07T16:41:36Z INFO device.log 2023-03-07T16:41:36Z received config 2023-03-07T16:41:34Z
+2023-03-07T16:41:36Z NOTICE system.config.apply success
+2023-03-07T16:41:37Z INFO device.log Config handler
+2023-03-07T16:41:37Z INFO device.log 2023-03-07T16:41:37Z received config 2023-03-07T16:41:36Z
+2023-03-07T16:41:37Z NOTICE system.config.apply success
+2023-03-07T16:41:38Z INFO device.log update state 2023-03-07T16:41:38Z last_config 2023-03-07T16:41:36Z
+2023-03-07T16:41:38Z INFO device.log Config handler
+2023-03-07T16:41:38Z INFO device.log 2023-03-07T16:41:38Z received config 2023-03-07T16:41:38Z
+2023-03-07T16:41:38Z INFO device.log Discovery enumeration at 2023-03-07T16:41:38Z
+2023-03-07T16:41:38Z NOTICE system.config.apply success
+2023-03-07T16:41:40Z INFO device.log update state 2023-03-07T16:41:40Z last_config 2023-03-07T16:41:38Z
+2023-03-07T16:41:40Z INFO device.log Config handler
+2023-03-07T16:41:40Z INFO device.log 2023-03-07T16:41:40Z received config 2023-03-07T16:41:40Z
+2023-03-07T16:41:40Z NOTICE system.config.apply success
+2023-03-07T16:41:41Z INFO device.log 2023-03-07T16:41:41Z sending test message #20
+2023-03-07T16:41:42Z WARNING validation.feature.sequence Sequence complete

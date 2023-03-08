@@ -1,5 +1,5 @@
 
-## feature_enumeration (BETA)
+## feature_enumeration (ALPHA)
 
 1. Update config before enumeration not active:
     * Add `discovery` = { "enumerate": { "features": `true` } }

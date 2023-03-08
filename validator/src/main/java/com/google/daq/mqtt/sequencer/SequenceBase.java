@@ -112,7 +112,8 @@ public class SequenceBase {
   public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
   private static final String EMPTY_MESSAGE = "{}";
   private static final String RESULT_LOG_FILE = "RESULT.log";
-  private static final String DEVICE_METADATA_FORMAT = "%s/devices/%s/metadata.json";
+  private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
+  private static final String DEVICE_METADATA = "%s/devices/%s/metadata.json";
   private static final String DEVICE_CONFIG_FORMAT = "%s/devices/%s/out/generated_config.json";
   private static final String CONFIG_ENV = "VALIDATOR_CONFIG";
   private static final String DEFAULT_CONFIG = "/tmp/validator_config.json";
@@ -329,13 +330,14 @@ public class SequenceBase {
   }
 
   private static Metadata readDeviceMetadata() {
-    File deviceMetadataFile = new File(
-        String.format(DEVICE_METADATA_FORMAT, siteModel, getDeviceId()));
+    File moddataFile = new File(String.format(DEVICE_MODDATA, siteModel, getDeviceId()));
+    File metadataFile = new File(String.format(DEVICE_METADATA, siteModel, getDeviceId()));
+    File useFile = moddataFile.exists() ? moddataFile : metadataFile;
     try {
-      System.err.println("Reading device metadata file " + deviceMetadataFile.getPath());
-      return JsonUtil.OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      System.err.println("Reading device metadata file " + useFile.getPath());
+      return JsonUtil.OBJECT_MAPPER.readValue(useFile, Metadata.class);
     } catch (Exception e) {
-      throw new RuntimeException("While loading " + deviceMetadataFile.getAbsolutePath(), e);
+      throw new RuntimeException("While loading " + useFile.getAbsolutePath(), e);
     }
   }
 

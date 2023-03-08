@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-03-02T06:12:47Z",
+  "timestamp" : "2023-03-08T01:56:46Z",
   "version" : "@@@cloud udmi version###1.4.0-221-g632b879b",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-03-02T06:08:43Z"
+      "last_start" : "2023-03-08T01:56:10Z"
     },
     "testing" : {
       "sequence_name" : "family_enumeration"
@@ -21,7 +21,7 @@
       "ether" : {
         "addr" : "00:50:b6:ed:5f:77"
       },
-      "inet" : {
+      "ipv4" : {
         "addr" : "192.168.2.1"
       }
     }

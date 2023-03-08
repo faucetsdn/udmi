@@ -2,6 +2,7 @@
 from .state_system import SystemState
 from .state_gateway import GatewayState
 from .state_discovery import DiscoveryState
+from .state_localnet import LocalnetState
 from .state_blobset import BlobsetState
 from .state_pointset import PointsetState
 
@@ -15,6 +16,7 @@ class State:
     self.system = None
     self.gateway = None
     self.discovery = None
+    self.localnet = None
     self.blobset = None
     self.pointset = None
 
@@ -28,6 +30,7 @@ class State:
     result.system = SystemState.from_dict(source.get('system'))
     result.gateway = GatewayState.from_dict(source.get('gateway'))
     result.discovery = DiscoveryState.from_dict(source.get('discovery'))
+    result.localnet = LocalnetState.from_dict(source.get('localnet'))
     result.blobset = BlobsetState.from_dict(source.get('blobset'))
     result.pointset = PointsetState.from_dict(source.get('pointset'))
     return result
@@ -60,6 +63,8 @@ class State:
       result['gateway'] = self.gateway.to_dict() # 4
     if self.discovery:
       result['discovery'] = self.discovery.to_dict() # 4
+    if self.localnet:
+      result['localnet'] = self.localnet.to_dict() # 4
     if self.blobset:
       result['blobset'] = self.blobset.to_dict() # 4
     if self.pointset:
