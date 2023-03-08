@@ -12,8 +12,9 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.nio.file.Files.newOutputStream;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -501,7 +502,7 @@ public class SequenceBase {
   }
 
   @Test
-  @Feature(stage = STABLE)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
   public void valid_serial_no() {
     if (serialNo == null) {
       throw new SkipTest("No test serial number provided");

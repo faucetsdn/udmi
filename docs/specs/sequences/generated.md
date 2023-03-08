@@ -27,45 +27,33 @@ Some caveats:
 -->
 
 <!-- START GENERATED, do not edit anything after this line! -->
-* [feature_enumeration](#feature_enumeration)
-* [system_mode_restart](#system_mode_restart): Restart and connect to same endpoint and expect it returns.
-* [valid_serial_no](#valid_serial_no)
+* [extra_config](#extra_config): Check that the device correctly handles an extra out-of-schema field
+* [system_last_update](#system_last_update): Check that last_update state is correctly set in response to a config update.
 
-## feature_enumeration (BETA)
+## extra_config (BETA)
 
-1. Update config before enumeration not active:
-    * Add `discovery` = { "enumerate": { "features": `true` } }
-1. Wait for enumeration not active
-1. Update config before matching enumeration generation:
-    * Add `discovery.generation` = `generation start time`
-1. Wait for matching enumeration generation
-1. Update config before cleared enumeration generation:
-    * Remove `discovery.generation`
-1. Wait for cleared enumeration generation
-1. Check that no family enumeration
-1. Check that feature enumeration feature is stable
-1. Check that no point enumeration
+Check that the device correctly handles an extra out-of-schema field
 
-## system_mode_restart (STABLE)
+1. Update config before last_config not null:
+    * Set `system.min_loglevel` = `100`
+1. Wait for last_config not null
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for last_config updated
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.parse` level `DEBUG` was logged
+1. Wait for log category `system.config.apply` level `NOTICE` was logged
+1. Wait for log category `system.config.receive` level `DEBUG` was logged
+1. Wait for last_config updated again
+1. Wait for system operational
+1. Check that no interesting system status
+1. Wait for log category `system.config.parse` level `DEBUG` was logged
+1. Wait for log category `system.config.apply` level `NOTICE` was logged
 
-Restart and connect to same endpoint and expect it returns.
+## system_last_update (STABLE)
 
-1. Wait for last_start is not zero
-1. Check that initial count is greater than 0
-1. Update config before system mode is ACTIVE:
-    * Add `system.operation.mode` = `active`
-1. Wait for system mode is ACTIVE
-1. Update config before system mode is INITIAL:
-    * Set `system.operation.mode` = `restart`
-1. Wait for system mode is INITIAL
-1. Check that restart count increased by one
-1. Update config before system mode is ACTIVE:
-    * Set `system.operation.mode` = `active`
-1. Wait for system mode is ACTIVE
-1. Wait for last_config is newer than previous last_config before abort
-1. Wait for last_config is newer than previous last_config after abort
-1. Wait for last_start is newer than previous last_start
+Check that last_update state is correctly set in response to a config update.
 
-## valid_serial_no (STABLE)
-
-1. Wait for received serial number matches
+1. Wait for state last_config matches config timestamp
