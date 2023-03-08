@@ -185,7 +185,6 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Check connection to an alternate project, restart, and return.")
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
   }
