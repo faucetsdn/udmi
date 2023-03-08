@@ -85,6 +85,7 @@ cp $generated /tmp/  # Save for test/comparison later
 bin/gencode_seq
 
 echo Comparing diff out/sequencer.out etc/sequencer.out
+md5sum out/sequencer.out etc/sequencer.out
 diff -u out/sequencer.out etc/sequencer.out
 
 echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
