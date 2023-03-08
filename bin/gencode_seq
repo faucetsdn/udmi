@@ -7,50 +7,59 @@ SEQUENCE_MD=docs/specs/sequences/generated.md
 
 # Create doc of generated sequence steps
 prefix=sites/udmi_site_model/out/devices/AHU-1/tests
+altfix=validator/sequences/
 
 # Remove test runs that are from unit testing
 rm -rf $prefix/test_*
 
-if [[ -d $prefix ]]; then
-  echo Updating $SEQUENCE_MD from $prefix:
+echo Updating $SEQUENCE_MD:
 
-  # Clear out existing generated sequences
-  sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
+# Clear out existing generated sequences
+sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
 
-  sequences=$(cd $prefix; find . -name sequence.md | sort)
-  to_add=
+TEST_LIST=/tmp/sequence.txt
+find $altfix -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}' > $TEST_LIST
+find $prefix -name sequencer.log | xargs fgrep -H RESULT | awk '{print $7}'>> $TEST_LIST
+cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
+sequences=$(cat $TEST_LIST.sorted)
 
-  echo "Generating table of contents:"
+to_add=
+echo
 
-  # Generate table of contents
-  for sequence in $sequences; do
-    directory=${sequence%/sequence.md}
-    name=${directory##.*/}
-    header=$(fgrep \#\# $prefix/$sequence) || true
-    if [[ -z $header ]]; then
-      echo "  $name: Invalid or missing header."
-      continue
+# Generate table of contents
+for sequence in $sequences; do
+  if [[ -f $prefix/$sequence/sequence.md ]]; then
+      base=$prefix
+  else
+      base=$altfix
+  fi
+  seqfile=$base/$sequence/sequence.md
+  header=$(fgrep \#\# $seqfile) || true
+  if [[ -z $header ]]; then
+    echo "$sequence: invalid or missing header in $seqfile"
+    false
+  fi
+  if [[ $header == *\(ALPHA\)* ]]; then
+    echo "$sequence: skipping alpha test"
+    continue
+  fi
+  description=": $(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
+  echo "* [${sequence}](#${sequence})${description%: }" >> $SEQUENCE_MD
+  to_add+=" $sequence"
+done
+
+# Add in specific test sequences
+for sequence in $to_add; do
+    if [[ -f $prefix/$sequence/sequence.md ]]; then
+        base=$prefix
+    else
+        base=$altfix
     fi
-    if [[ $header == *\(ALPHA\)* ]]; then
-      echo "  $name: Skipping alpha test."
-      continue
-    fi
-    description=": $(sed -n -n '/^1\./q;p' $prefix/$sequence | fgrep -v \#\# | xargs echo)"
-    echo "* [${name}](#${name})${description%: }" >> $SEQUENCE_MD
-    to_add+=" $sequence"
-  done
+    seqfile=$base/$sequence/sequence.md
+    description="$(sed -n -n '/^1\./q;p' $seqfile | fgrep -v \#\# | xargs echo)"
+    echo $sequence: $description
+    cat $seqfile >> $SEQUENCE_MD
+done
 
-  echo "Processing sequences:"
-
-  # Add in specific test sequences
-  for sequence in $to_add; do
-    directory=${sequence%/sequence.md}
-    name=${directory##.*/}
-    echo "  $name"
-    cat $prefix/$sequence >> $SEQUENCE_MD
-    mkdir -p validator/sequences/$directory
-    cp $prefix/$sequence validator/sequences/$directory/
-  done
-else
-  echo $prefix not found, skipping sequence generation.
-fi
+echo
+echo Done with $SEQUENCE_MD generation.

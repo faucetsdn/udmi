@@ -3,9 +3,6 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
-# Fix sort order difference on different platforms.
-export LC_ALL=C
-
 if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID [tests...]
     false
@@ -45,6 +42,8 @@ fi
 
 bin/clone_model # Clone, and check that version is correct.
 
+bin/augment_metadata $site_path $device_id
+
 bin/reset_config $site_path $project_id $device_id
 
 pubber/bin/build
@@ -71,9 +70,6 @@ fi
 bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
-sed -e 's/.*sequence RESULT/RESULT/' /tmp/sequencer.out | sort > out/sequencer.out
-echo Copied output to out/sequencer.out for later examination.
-
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
 if [[ -n $pids ]]; then
     echo Killing pubber pids $pids
@@ -82,6 +78,8 @@ else
     echo No pubber pids found, likely due to premature termination: failing test run.
     false
 fi
+
+bin/sequence_cache
 
 generated=docs/specs/sequences/generated.md
 cp $generated out/  # Save for test/comparison later

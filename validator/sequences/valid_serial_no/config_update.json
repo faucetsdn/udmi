@@ -29,12 +29,12 @@
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-03-02T06:08:43Z"
+      "last_start" : "2023-03-07T16:38:08Z"
     },
     "testing" : {
       "sequence_name" : "valid_serial_no"
     }
   },
-  "timestamp" : "2023-03-02T06:19:13.173Z",
+  "timestamp" : "2023-03-07T16:48:14.101Z",
   "version" : "1.4.0-221-g632b879b"
 }

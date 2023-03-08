@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.io.File;
@@ -25,7 +26,7 @@ public class MessageDowngraderTest {
   private static final String FUTURE_VERSION = "2.2.2";
   private static final String LOCALNET_CONFIG_FILE = "src/test/configs/localnet.json";
   private static final String LOCALNET_VERSION = "1.3.14";
-  private static final String OLD_VERSION = "1";
+  private static final IntNode OLD_VERSION = new IntNode(1);
 
   @Test(expected = IllegalArgumentException.class)
   public void stateFail() {
@@ -46,8 +47,8 @@ public class MessageDowngraderTest {
   public void families() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
     MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
-    downgrader.downgrade(new TextNode(OLD_VERSION));
-    assertEquals("version node", simpleConfig.get("version"), new TextNode(OLD_VERSION));
+    downgrader.downgrade(OLD_VERSION);
+    assertEquals("version node", simpleConfig.get("version"), OLD_VERSION);
     assertTrue("families", !simpleConfig.get("localnet").has("families"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
   }

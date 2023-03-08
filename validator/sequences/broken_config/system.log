@@ -1,75 +1,77 @@
-2023-03-02T06:10:15Z INFO device.log update state 2023-03-02T06:10:15Z last_config 2023-03-02T06:10:13Z
-2023-03-02T06:10:15Z INFO device.log Config handler
-2023-03-02T06:10:15Z INFO device.log 2023-03-02T06:10:15Z received config 2023-03-02T06:10:14Z
-2023-03-02T06:10:15Z NOTICE system.config.apply success
-2023-03-02T06:10:17Z INFO device.log update state 2023-03-02T06:10:17Z last_config 2023-03-02T06:10:14Z
-2023-03-02T06:10:24Z INFO device.log update state 2023-03-02T06:10:24Z last_config 2023-03-02T06:10:14Z
-2023-03-02T06:10:24Z INFO device.log Config handler
-2023-03-02T06:10:24Z INFO device.log 2023-03-02T06:10:24Z received config 2023-03-02T06:10:24Z
-2023-03-02T06:10:24Z NOTICE system.config.apply success
-2023-03-02T06:10:26Z INFO device.log Config handler
-2023-03-02T06:10:26Z INFO device.log 2023-03-02T06:10:26Z received config 2023-03-02T06:10:24Z
-2023-03-02T06:10:26Z NOTICE system.config.apply success
-2023-03-02T06:10:26Z INFO device.log update state 2023-03-02T06:10:26Z last_config 2023-03-02T06:10:24Z
-2023-03-02T06:10:27Z INFO device.log Config handler
-2023-03-02T06:10:27Z INFO device.log 2023-03-02T06:10:27Z received config 2023-03-02T06:10:26Z
-2023-03-02T06:10:27Z NOTICE system.config.apply success
-2023-03-02T06:10:28Z INFO device.log update state 2023-03-02T06:10:28Z last_config 2023-03-02T06:10:26Z
-2023-03-02T06:10:28Z INFO device.log Config handler
-2023-03-02T06:10:28Z INFO device.log 2023-03-02T06:10:28Z received config 2023-03-02T06:10:27Z
-2023-03-02T06:10:28Z NOTICE system.config.apply success
-2023-03-02T06:10:28Z DEBUG device.log State update defer 1605ms
-2023-03-02T06:10:28Z DEBUG device.log State update defer 1605ms
-2023-03-02T06:10:30Z DEBUG device.log State update defer -1ms
-2023-03-02T06:10:30Z INFO device.log update state 2023-03-02T06:10:30Z last_config 2023-03-02T06:10:27Z
-2023-03-02T06:10:30Z DEBUG device.log State update (broken_config)
-2023-03-02T06:10:35Z INFO device.log 2023-03-02T06:10:35Z sending test message #10
-2023-03-02T06:10:35Z DEBUG system.config.receive success
-2023-03-02T06:10:35Z DEBUG device.log State update defer -2936ms
-2023-03-02T06:10:35Z INFO device.log update state 2023-03-02T06:10:35Z last_config 2023-03-02T06:10:27Z
-2023-03-02T06:10:35Z DEBUG device.log State update (broken_config)
-2023-03-02T06:10:35Z ERROR device.log Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+2023-03-07T16:39:42Z INFO device.log Config handler
+2023-03-07T16:39:42Z INFO device.log 2023-03-07T16:39:42Z received config 2023-03-07T16:39:40Z
+2023-03-07T16:39:42Z NOTICE system.config.apply success
+2023-03-07T16:39:42Z INFO device.log update state 2023-03-07T16:39:42Z last_config 2023-03-07T16:39:40Z
+2023-03-07T16:39:43Z INFO device.log Config handler
+2023-03-07T16:39:43Z INFO device.log 2023-03-07T16:39:43Z received config 2023-03-07T16:39:42Z
+2023-03-07T16:39:43Z NOTICE system.config.apply success
+2023-03-07T16:39:44Z INFO device.log update state 2023-03-07T16:39:44Z last_config 2023-03-07T16:39:42Z
+2023-03-07T16:39:52Z INFO device.log update state 2023-03-07T16:39:52Z last_config 2023-03-07T16:39:42Z
+2023-03-07T16:39:52Z INFO device.log Config handler
+2023-03-07T16:39:52Z INFO device.log 2023-03-07T16:39:52Z received config 2023-03-07T16:39:52Z
+2023-03-07T16:39:52Z NOTICE system.config.apply success
+2023-03-07T16:39:53Z INFO device.log Config handler
+2023-03-07T16:39:53Z INFO device.log 2023-03-07T16:39:53Z received config 2023-03-07T16:39:52Z
+2023-03-07T16:39:53Z NOTICE system.config.apply success
+2023-03-07T16:39:54Z INFO device.log update state 2023-03-07T16:39:54Z last_config 2023-03-07T16:39:52Z
+2023-03-07T16:39:54Z INFO device.log Config handler
+2023-03-07T16:39:54Z INFO device.log 2023-03-07T16:39:54Z received config 2023-03-07T16:39:53Z
+2023-03-07T16:39:54Z NOTICE system.config.apply success
+2023-03-07T16:39:55Z INFO device.log Config handler
+2023-03-07T16:39:56Z INFO device.log 2023-03-07T16:39:56Z received config 2023-03-07T16:39:55Z
+2023-03-07T16:39:56Z NOTICE system.config.apply success
+2023-03-07T16:39:56Z DEBUG device.log State update defer 767ms
+2023-03-07T16:39:56Z DEBUG device.log State update defer 766ms
+2023-03-07T16:39:56Z DEBUG device.log State update defer 0ms
+2023-03-07T16:39:56Z INFO device.log update state 2023-03-07T16:39:56Z last_config 2023-03-07T16:39:55Z
+2023-03-07T16:39:56Z DEBUG device.log State update (broken_config)
+2023-03-07T16:40:01Z INFO device.log 2023-03-07T16:40:01Z sending test message #10
+2023-03-07T16:40:01Z DEBUG system.config.receive success
+2023-03-07T16:40:01Z DEBUG device.log State update defer -2701ms
+2023-03-07T16:40:01Z INFO device.log update state 2023-03-07T16:40:01Z last_config 2023-03-07T16:39:55Z
+2023-03-07T16:40:01Z DEBUG device.log State update (broken_config)
+2023-03-07T16:40:01Z ERROR device.log Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken because extra_field == break_json"; line: 1, column: 4]
-2023-03-02T06:10:35Z ERROR system.config.parse Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+2023-03-07T16:40:01Z ERROR system.config.parse Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken because extra_field == break_json"; line: 1, column: 4]
-2023-03-02T06:10:35Z DEBUG device.log State update defer 1992ms
-2023-03-02T06:10:37Z DEBUG device.log State update defer 0ms
-2023-03-02T06:10:37Z INFO device.log update state 2023-03-02T06:10:37Z last_config 2023-03-02T06:10:27Z
-2023-03-02T06:10:37Z DEBUG device.log State update (broken_config)
-2023-03-02T06:10:45Z DEBUG system.config.receive success
-2023-03-02T06:10:45Z DEBUG device.log State update defer -5953ms
-2023-03-02T06:10:45Z INFO device.log update state 2023-03-02T06:10:45Z last_config 2023-03-02T06:10:27Z
-2023-03-02T06:10:45Z DEBUG device.log State update (broken_config)
-2023-03-02T06:10:45Z DEBUG system.config.parse success
-2023-03-02T06:10:45Z DEBUG device.log State update defer 1998ms
-2023-03-02T06:10:45Z INFO device.log Config handler
-2023-03-02T06:10:45Z DEBUG device.log Config update (reset_config)
-2023-03-02T06:10:45Z INFO device.log 2023-03-02T06:10:45Z received config 2023-03-02T06:10:45Z
-2023-03-02T06:10:45Z NOTICE system.config.apply success
-2023-03-02T06:10:46Z INFO device.log Config handler
-2023-03-02T06:10:46Z INFO device.log 2023-03-02T06:10:46Z received config 2023-03-02T06:10:45Z
-2023-03-02T06:10:46Z NOTICE system.config.apply success
-2023-03-02T06:10:47Z INFO device.log update state 2023-03-02T06:10:47Z last_config 2023-03-02T06:10:45Z
-2023-03-02T06:10:48Z INFO device.log Config handler
-2023-03-02T06:10:48Z INFO device.log 2023-03-02T06:10:48Z received config 2023-03-02T06:10:46Z
-2023-03-02T06:10:48Z NOTICE system.config.apply success
-2023-03-02T06:10:49Z INFO device.log update state 2023-03-02T06:10:49Z last_config 2023-03-02T06:10:46Z
-2023-03-02T06:10:49Z INFO device.log Config handler
-2023-03-02T06:10:49Z INFO device.log 2023-03-02T06:10:49Z received config 2023-03-02T06:10:46Z
-2023-03-02T06:10:49Z NOTICE system.config.apply success
-2023-03-02T06:10:51Z INFO device.log Config handler
-2023-03-02T06:10:51Z INFO device.log 2023-03-02T06:10:51Z received config 2023-03-02T06:10:50Z
-2023-03-02T06:10:51Z NOTICE system.config.apply success
-2023-03-02T06:10:51Z INFO device.log update state 2023-03-02T06:10:51Z last_config 2023-03-02T06:10:50Z
-2023-03-02T06:10:52Z INFO device.log Config handler
-2023-03-02T06:10:52Z INFO device.log 2023-03-02T06:10:52Z received config 2023-03-02T06:10:51Z
-2023-03-02T06:10:52Z NOTICE system.config.apply success
-2023-03-02T06:10:53Z INFO device.log Config handler
-2023-03-02T06:10:53Z INFO device.log 2023-03-02T06:10:53Z received config 2023-03-02T06:10:52Z
-2023-03-02T06:10:53Z NOTICE system.config.apply success
-2023-03-02T06:10:53Z DEBUG device.log State update defer 125ms
-2023-03-02T06:10:53Z DEBUG device.log State update defer 124ms
-2023-03-02T06:10:53Z DEBUG device.log State update defer 0ms
-2023-03-02T06:10:53Z INFO device.log update state 2023-03-02T06:10:53Z last_config 2023-03-02T06:10:52Z
-2023-03-02T06:10:53Z DEBUG device.log State update (broken_config)
-2023-03-02T06:10:55Z INFO sequencer Sequence complete
+2023-03-07T16:40:01Z DEBUG device.log State update defer 1997ms
+2023-03-07T16:40:03Z DEBUG device.log State update defer -1ms
+2023-03-07T16:40:03Z INFO device.log update state 2023-03-07T16:40:03Z last_config 2023-03-07T16:39:55Z
+2023-03-07T16:40:03Z DEBUG device.log State update (broken_config)
+2023-03-07T16:40:11Z DEBUG system.config.receive success
+2023-03-07T16:40:11Z DEBUG device.log State update defer -5846ms
+2023-03-07T16:40:11Z INFO device.log update state 2023-03-07T16:40:11Z last_config 2023-03-07T16:39:55Z
+2023-03-07T16:40:11Z DEBUG device.log State update (broken_config)
+2023-03-07T16:40:11Z DEBUG system.config.parse success
+2023-03-07T16:40:11Z DEBUG device.log State update defer 1999ms
+2023-03-07T16:40:11Z INFO device.log Config handler
+2023-03-07T16:40:11Z DEBUG device.log Config update (reset_config)
+2023-03-07T16:40:11Z INFO device.log 2023-03-07T16:40:11Z received config 2023-03-07T16:40:11Z
+2023-03-07T16:40:11Z NOTICE system.config.apply success
+2023-03-07T16:40:12Z INFO device.log Config handler
+2023-03-07T16:40:12Z INFO device.log 2023-03-07T16:40:12Z received config 2023-03-07T16:40:11Z
+2023-03-07T16:40:12Z NOTICE system.config.apply success
+2023-03-07T16:40:13Z INFO device.log Config handler
+2023-03-07T16:40:13Z INFO device.log 2023-03-07T16:40:13Z received config 2023-03-07T16:40:12Z
+2023-03-07T16:40:13Z NOTICE system.config.apply success
+2023-03-07T16:40:13Z INFO device.log update state 2023-03-07T16:40:13Z last_config 2023-03-07T16:40:12Z
+2023-03-07T16:40:14Z INFO device.log Config handler
+2023-03-07T16:40:14Z INFO device.log 2023-03-07T16:40:14Z received config 2023-03-07T16:40:12Z
+2023-03-07T16:40:14Z NOTICE system.config.apply success
+2023-03-07T16:40:15Z INFO device.log update state 2023-03-07T16:40:15Z last_config 2023-03-07T16:40:12Z
+2023-03-07T16:40:16Z INFO device.log Config handler
+2023-03-07T16:40:16Z INFO device.log 2023-03-07T16:40:16Z received config 2023-03-07T16:40:15Z
+2023-03-07T16:40:16Z NOTICE system.config.apply success
+2023-03-07T16:40:17Z INFO device.log Config handler
+2023-03-07T16:40:17Z INFO device.log 2023-03-07T16:40:17Z received config 2023-03-07T16:40:17Z
+2023-03-07T16:40:17Z NOTICE system.config.apply success
+2023-03-07T16:40:17Z INFO device.log update state 2023-03-07T16:40:17Z last_config 2023-03-07T16:40:17Z
+2023-03-07T16:40:18Z INFO device.log Config handler
+2023-03-07T16:40:18Z INFO device.log 2023-03-07T16:40:18Z received config 2023-03-07T16:40:18Z
+2023-03-07T16:40:18Z NOTICE system.config.apply success
+2023-03-07T16:40:18Z DEBUG device.log State update defer 1479ms
+2023-03-07T16:40:18Z DEBUG device.log State update defer 1479ms
+2023-03-07T16:40:19Z DEBUG device.log State update defer 0ms
+2023-03-07T16:40:19Z INFO device.log update state 2023-03-07T16:40:19Z last_config 2023-03-07T16:40:18Z
+2023-03-07T16:40:19Z DEBUG device.log State update (broken_config)
+2023-03-07T16:40:21Z WARNING validation.feature.sequence Sequence complete

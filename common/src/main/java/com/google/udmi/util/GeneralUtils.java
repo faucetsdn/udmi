@@ -3,17 +3,24 @@ package com.google.udmi.util;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.hash.Hashing;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GeneralUtils {
 
@@ -153,5 +160,43 @@ public class GeneralUtils {
       e.printStackTrace(ps);
     }
     return outputStream.toString();
+  }
+
+  public static List<String> runtimeExec(String... command) {
+    ProcessBuilder processBuilder = new ProcessBuilder().command(command);
+    try {
+      Process process = processBuilder.start();
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(process.getInputStream()))) {
+        int exitVal = process.waitFor();
+        if (exitVal != 0) {
+          throw new RuntimeException("Process exited with exit code " + exitVal);
+        }
+        return reader.lines().collect(Collectors.toList());
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While executing subprocess " + String.join(" ", command));
+    }
+  }
+
+  /**
+   * Shallow all fields from one class to another existing class. This can be used, for example,
+   * if the target class is "final" but the fields themselves need to be updated.
+   *
+   * @param from source object
+   * @param to   target object
+   * @param <T>  type of object
+   */
+  public static <T> void copyFields(T from, T to) {
+    Field[] fields = to.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      if (!Modifier.isStatic(field.getModifiers())) {
+        try {
+          field.set(to, field.get(from));
+        } catch (Exception e) {
+          throw new RuntimeException("While copying field " + field.getName(), e);
+        }
+      }
+    }
   }
 }

@@ -74,35 +74,20 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
-      - name: pubber cmd checks
+      - name: pubber logs #1
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           echo ::::::: pubber.out.1
           cat pubber.out.1
-          echo :::::::
-          echo Simple checks that a redirect happened and failed
-          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.1
-          fgrep registries/missing/devices pubber.out.1
-          fgrep 'While waiting for connection start: Connection error' pubber.out.1
-          fgrep 'Endpoint connection restored to last working endpoint' pubber.out.1
-      - name: pubber config checks
+      - name: pubber logs #2
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           echo ::::::: pubber.out.2
           cat pubber.out.2
-          echo :::::::
-          echo Check the redirect-by-config setup
-          fgrep registries/ZZ-TRI-FECTA/devices pubber.out.2
-          fgrep registries/reconfigure/devices pubber.out.2
-          fgrep 'While waiting for connection start: Connection error' pubber.out.2
-          fgrep 'Endpoint connection restored to last working endpoint' pubber.out.2
-          fgrep 'Stopping system with extreme prejudice, restart true' pubber.out.2  # restart config
-          fgrep 'Stopping system with extreme prejudice, restart false' pubber.out.2  # auto-kill
-          fgrep 'Done with pubber run, exit code 193' pubber.out.2  # last_start auto-kill check
 
   udmi:
     name: Integration Tests

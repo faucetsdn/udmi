@@ -15,14 +15,14 @@
           "description": "The network family",
           "examples": ["bacnet", "ipv4"],
           "properties": {
-            "id": {
-              "description": "The address of a device on the local network",
+            "addr": {
+              "description": "The address of the device on the local network",
               "examples": ["4148893"],
               "type": "string"
             }
           },
           "required": [
-            "id"
+            "addr"
           ]
         }
       }

@@ -1,11 +1,11 @@
 {
   "families" : {
     "virtual" : {
-      "generation" : "2023-03-02T06:13:57Z",
+      "generation" : "2023-03-07T16:43:38Z",
       "scan_interval_sec" : 10,
       "enumerate" : true
     }
   },
-  "timestamp" : "2023-03-02T06:13:58.241Z",
+  "timestamp" : "2023-03-07T16:43:39.253Z",
   "version" : "1.4.0-221-g632b879b"
 }

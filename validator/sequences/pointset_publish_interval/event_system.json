@@ -1,16 +1,11 @@
 {
-  "event_count" : 60,
-  "last_config" : "2023-03-02T06:17:29Z",
-  "logentries" : [ {
-    "message" : "2023-03-02T06:18:41Z sending test message #60",
-    "category" : "device.log",
-    "timestamp" : "2023-03-02T06:18:41Z",
-    "level" : 200
-  } ],
+  "event_count" : 48,
+  "last_config" : "2023-03-07T16:45:48Z",
+  "logentries" : [ ],
   "metrics" : {
     "mem_total_mb" : 252,
-    "mem_free_mb" : 196.89439392089844
+    "mem_free_mb" : 201.71504974365234
   },
-  "timestamp" : "2023-03-02T06:18:41.061Z",
+  "timestamp" : "2023-03-07T16:46:42.049Z",
   "version" : "1.4.1"
 }
