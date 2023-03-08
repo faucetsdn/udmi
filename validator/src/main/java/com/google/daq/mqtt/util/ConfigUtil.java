@@ -19,7 +19,7 @@ import udmi.schema.ExecutionConfiguration;
 public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
-  public static final String UDMI_VERSION = "1.4.0";
+  public static final String UDMI_VERSION = "1.4.1";
   public static final String UDMI_TOOLS = System.getenv("UDMI_TOOLS");
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()

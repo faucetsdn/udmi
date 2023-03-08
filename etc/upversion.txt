@@ -76,7 +76,6 @@ y tests/config.tests/enumeration.json
 y tests/config.tests/writeback.json
 y tests/config.tests/proxy.json
 y tests/config.tests/continuous.json
-y tests/config.tests/delta_endpoint.json
 y tests/config.tests/periodic.json
 y tests/config.tests/discovery.json
 y tests/config.tests/example.json
@@ -85,7 +84,6 @@ y tests/config.tests/fcu.json
 y tests/config.tests/gateway.json
 y tests/config.tests/smartprimus.json
 y tests/config.tests/restart.json
-y tests/config.tests/blobset_final_incomplete_payload.json
 y tests/config.tests/implicit.json
 y tests/state_mapping.tests/mapping.json
 y tests/command_discovery.tests/provision.json
@@ -99,3 +97,12 @@ y tests/command_mapping.tests/mapping.json
 y tests/metadata.tests/errors.json
 y tests/config.tests/blobset_final.json
 n tests/configuration_execution.tests/cloud_iot_config.json
+n tests/configuration_endpoint.tests/gcp_iot_core.json
+n tests/configuration_endpoint.tests/mosquitto.json
+n tests/configuration_endpoint.tests/multiple.json
+n tests/event_discovery.tests/features.json
+y tests/event_system.tests/categories.json
+y tests/metadata.tests/nosys.json
+y tests/state.tests/gateway_test.json
+y tests/state_validation.tests/sequencer.json
+n tests/configuration_pubber.tests/mosquitto.json

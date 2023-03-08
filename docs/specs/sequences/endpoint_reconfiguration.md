@@ -78,7 +78,7 @@ Config message to initiate Reconfiguration (sequence #1 in diagrams above)
 <!--example:config/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "blobset": {
     "blobs": {
       "_iot_endpoint_config": {
