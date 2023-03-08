@@ -2,6 +2,7 @@
   "version": "1.4.1",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "id": "sneakyCASE",
+  "addr": "whitehouse",
   "families": {
     "bacnet": {
       "id": "92E*A09"
@@ -11,7 +12,7 @@
     },
     "mac": {
       "group": "vlan182",
-      "id": "0E:93:32:11:04:82"
+      "addr": "0E:93:32:11:04:82"
     }
   },
   "uniqs": {

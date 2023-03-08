@@ -18,11 +18,10 @@ RESULT pass system extra_config BETA 5 Sequence complete
 RESULT pass system system_last_update STABLE 5 Sequence complete
 RESULT pass system system_min_loglevel ALPHA 5 Sequence complete
 RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-RESULT pass system valid_serial_no ALPHA 5 Sequence complete
-RESULT pass system valid_serial_no ALPHA 5 Sequence complete
 RESULT pass system.mode system_mode_restart ALPHA 5 Sequence complete
+RESULT pass unknown family_ether_addr ALPHA 5 Sequence complete
+RESULT pass unknown family_ipv4_addr ALPHA 5 Sequence complete
+RESULT pass unknown family_ipv6_addr ALPHA 5 Sequence complete
 RESULT pass writeback writeback_failure ALPHA 5 Sequence complete
 RESULT pass writeback writeback_invalid ALPHA 5 Sequence complete
 RESULT pass writeback writeback_success ALPHA 5 Sequence complete

@@ -1,19 +1,9 @@
-2023-03-02T06:14:26Z INFO device.log update state 2023-03-02T06:14:26Z last_config 2023-03-02T06:13:57Z
-2023-03-02T06:14:26Z INFO device.log Config handler
-2023-03-02T06:14:26Z INFO device.log 2023-03-02T06:14:26Z received config 2023-03-02T06:14:26Z
-2023-03-02T06:14:26Z INFO device.log Discovery scan generation virtual is 2023-03-02T06:14:17Z
-2023-03-02T06:14:26Z NOTICE system.config.apply success
-2023-03-02T06:14:28Z INFO device.log Discovery scan starting virtual as 2023-03-02T06:14:27Z
-2023-03-02T06:14:28Z INFO device.log Config handler
-2023-03-02T06:14:28Z INFO device.log 2023-03-02T06:14:28Z received config 2023-03-02T06:14:26Z
-2023-03-02T06:14:28Z NOTICE system.config.apply success
-2023-03-02T06:14:28Z INFO device.log update state 2023-03-02T06:14:28Z last_config 2023-03-02T06:14:26Z
-2023-03-02T06:14:30Z INFO device.log update state 2023-03-02T06:14:30Z last_config 2023-03-02T06:14:26Z
-2023-03-02T06:14:31Z INFO device.log Config handler
-2023-03-02T06:14:31Z INFO device.log 2023-03-02T06:14:31Z received config 2023-03-02T06:14:26Z
-2023-03-02T06:14:31Z NOTICE system.config.apply success
-2023-03-02T06:14:33Z INFO device.log update state 2023-03-02T06:14:33Z last_config 2023-03-02T06:14:26Z
-2023-03-02T06:14:33Z INFO device.log Config handler
-2023-03-02T06:14:33Z INFO device.log 2023-03-02T06:14:33Z received config 2023-03-02T06:14:31Z
-2023-03-02T06:14:33Z NOTICE system.config.apply success
-2023-03-02T06:14:45Z WARNING sequencer No IPV6 address defined in metadata
+2023-03-07T16:44:32Z INFO device.log update state 2023-03-07T16:44:32Z last_config 2023-03-07T16:44:30Z
+2023-03-07T16:44:33Z INFO device.log Config handler
+2023-03-07T16:44:33Z INFO device.log 2023-03-07T16:44:33Z received config 2023-03-07T16:44:30Z
+2023-03-07T16:44:33Z NOTICE system.config.apply success
+2023-03-07T16:44:33Z INFO device.log Config handler
+2023-03-07T16:44:33Z INFO device.log 2023-03-07T16:44:33Z received config 2023-03-07T16:44:32Z
+2023-03-07T16:44:33Z NOTICE system.config.apply success
+2023-03-07T16:44:34Z INFO device.log update state 2023-03-07T16:44:34Z last_config 2023-03-07T16:44:32Z
+2023-03-07T16:44:44Z WARNING validation.feature.sequence Sequence complete

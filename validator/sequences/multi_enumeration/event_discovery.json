@@ -1,10 +1,13 @@
 {
   "families" : {
     "ether" : {
-      "id" : "00:50:b6:ed:5f:77"
+      "addr" : "8c:8c:aa:50:bc:72"
     },
-    "inet" : {
-      "id" : "192.168.2.1"
+    "ipv4" : {
+      "addr" : "192.168.8.3"
+    },
+    "ipv6" : {
+      "addr" : "fe80::11a9:496f:6596:b455"
     }
   },
   "features" : {
@@ -23,8 +26,8 @@
       }
     }
   },
-  "generation" : "2023-03-02T06:13:04Z",
-  "timestamp" : "2023-03-02T06:13:05.005Z",
+  "generation" : "2023-03-08T01:57:07Z",
+  "timestamp" : "2023-03-08T01:57:08.002Z",
   "uniqs" : {
     "9b291597" : {
       "name" : "filter_differential_pressure_sensor",
