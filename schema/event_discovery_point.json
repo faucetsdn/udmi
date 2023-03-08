@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Point Enumeration Event",
   "description": "Object representation for for a single point enumeration",
   "type": "object",

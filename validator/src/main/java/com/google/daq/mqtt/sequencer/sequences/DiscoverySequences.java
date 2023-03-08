@@ -1,20 +1,20 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static udmi.schema.Bucket.DISCOVERY;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.SkipTest;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -38,6 +38,7 @@ import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureEnumerationEvent;
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -85,9 +86,9 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     if (isTrue(enumerate.features)) {
-      Map<Bucket, Stage> bucketStageMap = flattenFeatureEnumeration("", event.features);
+      Map<Bucket, FeatureStage> bucketStageMap = flattenFeatureEnumeration("", event.features);
       checkThat("feature enumeration feature is stable",
-          () -> bucketStageMap.get(ENUMERATION_FEATURES) == Stage.STABLE);
+          () -> bucketStageMap.get(ENUMERATION_FEATURES) == FeatureStage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -101,13 +102,13 @@ public class DiscoverySequences extends SequenceBase {
     }
   }
 
-  private Map<Bucket, Stage> flattenFeatureEnumeration(String prefix,
+  private Map<Bucket, FeatureStage> flattenFeatureEnumeration(String prefix,
       Map<String, FeatureEnumerationEvent> eventFeatures) {
-    Map<Bucket, Stage> buckets = new HashMap<>();
+    Map<Bucket, FeatureStage> buckets = new HashMap<>();
     eventFeatures.forEach((key, value) -> {
       String fullBucket = prefix + "." + key;
       Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
-      buckets.put(bucket, Stage.valueOf(value.stage.value().toUpperCase()));
+      buckets.put(bucket, FeatureStage.valueOf(value.stage.value().toUpperCase()));
       if (value.features != null) {
         buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
       }
@@ -140,7 +141,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = BETA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -158,7 +159,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -169,6 +170,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -210,7 +212,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(DISCOVERY_SCAN)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();

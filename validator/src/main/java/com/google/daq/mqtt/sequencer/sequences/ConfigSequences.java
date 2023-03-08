@@ -1,18 +1,24 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Bucket.ENDPOINT;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -31,14 +37,15 @@ public class ConfigSequences extends SequenceBase {
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that last_update state is correctly set in response to a config update.")
+  @Feature(stage = STABLE, bucket = SYSTEM)
+  @Summary("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the min log-level config is honored by the device.")
-  @Feature()
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the min log-level config is honored by the device.")
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
     checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
@@ -63,13 +70,15 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device MQTT-acknowledges a sent config.")
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles a broken (non-json) config message.")
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     updateConfig("starting broken_config");
@@ -111,7 +120,8 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles an extra out-of-schema field")
+  @Feature(stage = BETA, bucket = SYSTEM)
+  @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);

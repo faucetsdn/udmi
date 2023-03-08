@@ -1,0 +1,24 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "tools" : "test_trace",
+  "start_time" : "1999-10-20T01:02:03Z",
+  "summary" : {
+    "correct_devices" : [ ],
+    "extra_devices" : [ ],
+    "missing_devices" : [ "AHU-22", "GAT-123", "SNS-4" ],
+    "error_devices" : [ "AHU-1" ]
+  },
+  "devices" : {
+    "AHU-1" : {
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "Multiple validation errors",
+        "detail" : "While converting to json node: 2 schema violations found; While converting to json node: 2 schema violations found",
+        "category" : "validation.device.multiple",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 500
+      }
+    }
+  }
+}
