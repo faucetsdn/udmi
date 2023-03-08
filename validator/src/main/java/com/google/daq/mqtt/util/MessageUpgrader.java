@@ -13,9 +13,10 @@ public class MessageUpgrader {
 
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
   public static final String STATE_SCHEMA = "state";
+  public static final String STATE_SCHEMA_PREFIX = "state_";
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
-  private final JsonNode message;
+  private final ObjectNode message;
   private final String schemaName;
   private final int major;
   private int patch;
@@ -28,7 +29,7 @@ public class MessageUpgrader {
    * @param message    message to be upgraded
    */
   public MessageUpgrader(String schemaName, JsonNode message) {
-    this.message = message;
+    this.message = (ObjectNode) message;
     this.schemaName = schemaName;
 
     JsonNode version = message.get(VERSION_KEY);
@@ -87,7 +88,7 @@ public class MessageUpgrader {
       JsonNode before = message.deepCopy();
       upgrade_1_4_1();
       upgraded |= !before.equals(message);
-      patch = 0;
+      patch = 1;
     }
 
     if (upgraded && message.has(VERSION_KEY)) {
@@ -99,7 +100,7 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_3_14() {
-    if (STATE_SCHEMA.equals(schemaName)) {
+    if (STATE_SCHEMA.equals(schemaName) || schemaName.startsWith(STATE_SCHEMA_PREFIX)) {
       upgrade_1_3_14_state();
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
@@ -108,7 +109,7 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_3_14_state() {
-    ObjectNode system = (ObjectNode) message.get("system");
+    ObjectNode system = getStateSystemNode();
     if (system != null) {
       upgradeMakeModel(system);
       upgradeFirmware(system);
@@ -128,7 +129,7 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_4_1() {
-    if (STATE_SCHEMA.equals(schemaName)) {
+    if (STATE_SCHEMA.equals(schemaName) || schemaName.startsWith(STATE_SCHEMA_PREFIX)) {
       upgrade_1_4_1_state();
     }
     if (METADATA_SCHEMA.equals(schemaName)) {
@@ -137,7 +138,7 @@ public class MessageUpgrader {
   }
 
   private void upgrade_1_4_1_state() {
-    ObjectNode system = (ObjectNode) message.get("system");
+    ObjectNode system = getStateSystemNode();
     if (system != null) {
       assertFalse("operation key in older version", system.has("operation"));
       JsonNode operational = system.remove("operational");
@@ -158,6 +159,10 @@ public class MessageUpgrader {
     if (subsystem != null) {
       localnet.set("networks", subsystem);
     }
+  }
+    
+  private ObjectNode getStateSystemNode() {
+    return schemaName.equals(STATE_SCHEMA) ? ((ObjectNode) message.get("system")) : message;
   }
 
   private void assertFalse(String message, boolean value) {

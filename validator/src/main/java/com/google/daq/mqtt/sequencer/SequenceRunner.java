@@ -129,6 +129,7 @@ public class SequenceRunner {
       processRaw();
       SequenceBase.processComplete(null);
     } catch (Exception e) {
+      e.printStackTrace();
       SequenceBase.processComplete(e);
     }
   }

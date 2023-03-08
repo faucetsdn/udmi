@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -228,7 +229,10 @@ public class SequenceBase {
   }
 
   private static void reportLoadingErrors(SiteModel model) {
-    Exception exception = model.getMetadata(validatorConfig.device_id).exception;
+    String deviceId = validatorConfig.device_id;
+    checkState(model.allDeviceIds().contains(deviceId),
+        String.format("device_id %s not found in site model", deviceId));
+    Exception exception = model.getMetadata(deviceId).exception;
     if (exception != null) {
       System.err.println("Device loading error: " + exception.getMessage());
     }
@@ -1484,7 +1488,9 @@ public class SequenceBase {
     statusEntry.timestamp = new Date();
     statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
     statusEntry.category = SEQUENCER_CATEGORY;
-    validationState.status = statusEntry;
-    updateValidationState();
+    if (validationState != null) {
+      validationState.status = statusEntry;
+      updateValidationState();
+    }
   }
 }

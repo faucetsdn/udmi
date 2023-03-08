@@ -1,6 +1,6 @@
 {
-  "$udmi_version": "1.4.0",
   "title": "Network Discovery Testing Model",
+  "$udmi_version": "1.4.1",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,

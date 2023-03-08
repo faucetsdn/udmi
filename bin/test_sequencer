@@ -3,6 +3,9 @@
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
+# Fix sort order difference on different platforms.
+export LC_ALL=C
+
 if [[ $# -lt 1 ]]; then
     echo Usage: $0 PROJECT_ID [tests...]
     false
@@ -27,7 +30,7 @@ device_id=AHU-1
 device_out_base=$site_path/out/devices/$device_id
 test_out_base=$device_out_base/tests
 rm -rf $test_out_base
-mkdir -p $test_out_base
+mkdir -p $test_out_base out/
 
 serial_no=sequencer-$RANDOM
 echo Using pubber with serial $serial_no
@@ -82,14 +85,14 @@ fi
 bin/sequence_cache
 
 generated=docs/specs/sequences/generated.md
-cp $generated /tmp/  # Save for test/comparison later
+cp $generated out/  # Save for test/comparison later
 bin/gencode_seq
 
-echo Comparing diff /tmp/sequencer.out etc/sequencer.out
-diff -u /tmp/sequencer.out etc/sequencer.out
+echo Comparing diff out/sequencer.out etc/sequencer.out
+diff -u out/sequencer.out etc/sequencer.out
 
-echo Comparing diff /tmp/generated.md docs/specs/sequences/generated.md
-diff -u /tmp/generated.md docs/specs/sequences/generated.md || (
+echo Comparing diff out/generated.md docs/specs/sequences/generated.md
+diff -u out/generated.md docs/specs/sequences/generated.md || (
     echo Run bin/gencode_seq to regenerate output, if necessary.
     false
     )

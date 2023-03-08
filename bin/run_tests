@@ -8,10 +8,10 @@ $0 [step]
 where [step] is one of:
   install_dependencies
   code_tests
-  util_tests
   schema_tests
   trace_tests
   registrar_tests
+  util_tests
   all_tests
 EOF
   false
@@ -46,10 +46,10 @@ case "$1" in
   all_tests)
     bin/run_tests install_dependencies
     bin/run_tests code_tests
-    bin/run_tests util_tests
     bin/run_tests schema_tests
     bin/run_tests trace_tests
     bin/run_tests registrar_tests
+    bin/run_tests util_tests
     ;;
   *)
     usage
