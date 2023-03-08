@@ -14,6 +14,7 @@ import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -90,7 +92,7 @@ public class IotReflectorClient implements MessagePublisher {
 
     registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
-    udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
+    udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     minStage =
         isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE
             : FeatureStage.valueOf(iotConfig.min_stage);
