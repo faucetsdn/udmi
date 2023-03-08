@@ -88,7 +88,7 @@ public class MessageUpgrader {
       JsonNode before = message.deepCopy();
       upgrade_1_4_1();
       upgraded |= !before.equals(message);
-      patch = 0;
+      patch = 1;
     }
 
     if (upgraded && message.has(VERSION_KEY)) {
