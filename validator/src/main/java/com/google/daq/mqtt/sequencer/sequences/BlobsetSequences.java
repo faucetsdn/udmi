@@ -185,6 +185,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
   }
