@@ -56,7 +56,7 @@ public class PubberTest extends TestBase {
     private void setOptionsNoPersist(boolean value) {
       configuration.options.noPersist = value;
     }
-    
+
     @Override
     protected DevicePersistent newDevicePersistent() {
       return testPersistentData;

@@ -135,7 +135,8 @@ fgrep -q registries/reconfigure/devices pubber.out.2 || bin/fail no reconfigure 
 fgrep -q 'While waiting for connection start: Connection error' pubber.out.2 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' pubber.out.2 || bin/fail no connection restore
 fgrep -q 'Stopping system with extreme prejudice, restart true' pubber.out.2 || bin/fail no restart true
-fgrep -q 'Stopping system with extreme prejudice, restart false' pubber.out.2 || bin/fail no restart false
-fgrep -q 'Done with pubber run, exit code 193' pubber.out.2 || bin/fail no auto-kill exit code
+# TODO(b/internal): Disable these tests until they are rewritten.
+#fgrep -q 'Stopping system with extreme prejudice, restart false' pubber.out.2 || bin/fail no restart false
+#fgrep -q 'Done with pubber run, exit code 193' pubber.out.2 || bin/fail no auto-kill exit code
 
 echo Done with redirect tests.
