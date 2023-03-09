@@ -82,7 +82,6 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
-import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.Operation;
@@ -125,13 +124,15 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static final Map<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP = ImmutableMap.of(
-      State.class, MqttDevice.STATE_TOPIC,
-      SystemEvent.class, getEventsSuffix("system"),
-      PointsetEvent.class, getEventsSuffix("pointset"),
-      ExtraPointsetEvent.class, getEventsSuffix("pointset"),
-      DiscoveryEvent.class, getEventsSuffix("discovery")
-  );
+  private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
+      new ImmutableMap.Builder<Class<?>, String>()
+          .put(State.class, MqttDevice.STATE_TOPIC)
+          .put(SystemEvent.class, getEventsSuffix("system"))
+          .put(PointsetEvent.class, getEventsSuffix("pointset"))
+          .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
+          .put(InvalidMessage.class, getEventsSuffix("invalid"))
+          .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
+          .build();
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -599,9 +600,28 @@ public class Pubber {
       deferredConfigActions();
       sendDevicePoints();
       sendSystemEvent();
+      sendEmptyMissingBadEvents();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
+    }
+  }
+
+  /**
+   * For testing, if configured, send a slate of bad messages for testing by the message handling
+   * infrastructure. Uses the sekrit REPLACE_MESSSAGE_WITH field to sneak bad output into the pipe.
+   */
+  private void sendEmptyMissingBadEvents() {
+    if (TRUE.equals(configuration.options.emptyMissing)) {
+      configuration.options.emptyMissing = FALSE;
+      InvalidMessage invalidMessage = new InvalidMessage();
+      publishDeviceMessage(invalidMessage);
+      invalidMessage.REPLACE_MESSAGE_WITH = "";
+      publishDeviceMessage(invalidMessage);
+      invalidMessage.REPLACE_MESSAGE_WITH = "{}";
+      publishDeviceMessage(invalidMessage);
+      invalidMessage.REPLACE_MESSAGE_WITH = "{{{{{ NOT VALID JSON!";
+      publishDeviceMessage(invalidMessage);
     }
   }
 
@@ -1608,5 +1628,11 @@ public class Pubber {
 
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;
+  }
+
+  private static class InvalidMessage {
+    public String version;
+    public Date timestamp;
+    public String REPLACE_MESSAGE_WITH;
   }
 }

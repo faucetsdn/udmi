@@ -175,10 +175,13 @@ public class MqttPublisher implements Publisher {
             + "/" + topic;
   }
 
+  @SuppressWarnings("unchecked")
   private void publishCore(String deviceId, String topicSuffix, Object data,
       Runnable callback) {
     try {
-      String payload = OBJECT_MAPPER.writeValueAsString(data);
+      String replaceWith =
+          data instanceof Map ? ((Map<String, String>) data).remove("REPLACE_MESSAGE_WITH") : null;
+      String payload = replaceWith != null ? replaceWith : OBJECT_MAPPER.writeValueAsString(data);
       debug("Sending message to " + topicSuffix);
       sendMessage(deviceId, getSendTopic(deviceId, topicSuffix), payload.getBytes());
       if (callback != null) {
