@@ -138,8 +138,8 @@ fgrep -q registries/ZZ-TRI-FECTA/devices pubber.out.2 || bin/fail no ZZ-TRI-FECT
 fgrep -q registries/reconfigure/devices pubber.out.2 || bin/fail no reconfigure registry reference
 fgrep -q 'While waiting for connection start: Connection error' pubber.out.2 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' pubber.out.2 || bin/fail no connection restore
-fgrep -q 'Stopping system with extreme prejudice, restart true' pubber.out.2 || bin/fail no restart true
-fgrep -q 'Stopping system with extreme prejudice, restart false' pubber.out.2 || bin/fail no restart false
+fgrep -q 'Stopping system with extreme prejudice, restart restart' pubber.out.2 || bin/fail no restart to restart
+fgrep -q 'Stopping system with extreme prejudice, restart terminate' pubber.out.2 || bin/fail no restart to terminate
 fgrep -q 'Done with pubber run, exit code 193' pubber.out.2 || bin/fail no auto-kill exit code
 
 log Done with redirect tests.
