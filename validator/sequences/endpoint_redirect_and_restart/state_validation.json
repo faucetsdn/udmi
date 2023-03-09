@@ -1,0 +1,27 @@
+{
+  "features" : {
+    "endpoint" : {
+      "sequences" : {
+        "endpoint_redirect_and_restart" : {
+          "stage" : "alpha",
+          "result" : "start",
+          "status" : {
+            "message" : "Starting test",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-08T17:44:06Z",
+            "level" : 200
+          }
+        }
+      }
+    }
+  },
+  "start_time" : "2023-03-08T17:44:06Z",
+  "status" : {
+    "message" : "Starting sequence run for device AHU-1",
+    "category" : "validation.feature.sequence",
+    "timestamp" : "2023-03-08T17:44:06Z",
+    "level" : 300
+  },
+  "timestamp" : "2023-03-08T17:44:06Z",
+  "version" : "1.3.14-273-g019d641c-dirty"
+}
