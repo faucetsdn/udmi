@@ -1633,6 +1633,8 @@ public class Pubber {
   private static class InvalidMessage {
     public String version;
     public Date timestamp;
+
+    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_MESSAGE_WITH;
   }
 }
