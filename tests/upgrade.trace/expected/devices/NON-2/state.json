@@ -13,10 +13,10 @@
     }
   },
   "system" : {
-    "last_config" : "2023-03-07T16:33:14Z",
+    "last_config" : "1999-10-20T01:02:03Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-03-07T16:31:51Z",
+      "last_start" : "1999-10-20T01:02:03Z",
       "restart_count" : 2,
       "mode" : "initial"
     },
@@ -31,10 +31,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-03-07T16:33:15Z",
+      "timestamp" : "1999-10-20T01:02:03Z",
       "level" : 300
     }
   },
-  "timestamp": "2023-03-02T19:27:37.819Z",
+  "timestamp" : "2023-03-02T19:27:37.819Z",
   "version" : "1.4.1"
 }

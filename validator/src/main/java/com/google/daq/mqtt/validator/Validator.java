@@ -31,6 +31,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -80,6 +82,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -135,7 +138,7 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final List<String> deviceIds;
+  private final List<String> targetDevices;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
@@ -164,7 +167,7 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
-    deviceIds = listCopy;
+    targetDevices = listCopy;
   }
 
   /**
@@ -312,6 +315,7 @@ public class Validator {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
     List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
+      expectedDevices = ImmutableSet.copyOf(siteDevices);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
@@ -324,7 +328,6 @@ public class Validator {
         reportingDevices.put(device, reportingDevice);
       }
       System.err.println("Loaded " + reportingDevices.size() + " expected devices");
-      expectedDevices = ImmutableSet.copyOf(reportingDevices.keySet());
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
@@ -406,10 +409,8 @@ public class Validator {
   }
 
   private void sendInitializationQuery() {
-    if (!deviceIds.isEmpty()) {
-      System.err.println("Sending initialization query messages for device " + deviceIds);
-    }
-    for (String deviceId : deviceIds) {
+    for (String deviceId : targetDevices) {
+      System.err.println("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
@@ -640,7 +641,7 @@ public class Validator {
       return false;
     }
 
-    if (!deviceIds.isEmpty() && !deviceIds.contains(deviceId)) {
+    if (!targetDevices.isEmpty() && !targetDevices.contains(deviceId)) {
       return false;
     }
 
@@ -698,31 +699,39 @@ public class Validator {
     ValidationSummary summary = new ValidationSummary();
     summary.extra_devices = new ArrayList<>(extraDevices);
 
-    summary.missing_devices = new ArrayList<>();
     summary.correct_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
     Map<String, DeviceValidationEvent> devices = new TreeMap<>();
-    Collection<String> summarizeDevices =
-        deviceIds.isEmpty() ? reportingDevices.keySet() : deviceIds;
-    for (String deviceId : summarizeDevices) {
+    Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
+    for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
-      if (deviceInfo == null && expectedDevices.contains(deviceId)) {
-        summary.missing_devices.add(deviceId);
-        continue;
-      }
       deviceInfo.expireEntries(getNow());
+      boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
-        summary.error_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
-        deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        if (expected) {
+          summary.error_devices.add(deviceId);
+        } else {
+          event.status.category = Category.VALIDATION_DEVICE_EXTRA;
+          event.status.level = Level.WARNING.value();
+        }
       } else if (deviceInfo.seenRecently(getNow())) {
-        summary.correct_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
-      } else if (expectedDevices.contains(deviceId)) {
-        summary.missing_devices.add(deviceId);
+        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        if (expected) {
+          summary.correct_devices.add(deviceId);
+        } else {
+          event.status.category = Category.VALIDATION_DEVICE_EXTRA;
+          event.status.level = Level.WARNING.value();
+        }
       }
     }
+
+    summary.missing_devices = new ArrayList(targets);
+    summary.missing_devices.removeAll(summary.error_devices);
+    summary.missing_devices.removeAll(summary.correct_devices);
 
     sendValidationReport(makeValidationReport(summary, devices));
   }

@@ -85,7 +85,7 @@ public class ReportingDevice {
    */
   public static Entry getSummaryEntry(List<Entry> entries) {
     if (entries.isEmpty()) {
-      return null;
+      return getSuccessEntry();
     }
 
     if (entries.size() == 1) {
@@ -101,6 +101,15 @@ public class ReportingDevice {
             .collect(Collectors.toList()));
     entry.level = entries.stream().map(item -> item.level).max(Integer::compareTo)
         .orElse(Level.ERROR.value());
+    entry.timestamp = getTimestamp();
+    return entry;
+  }
+
+  private static Entry getSuccessEntry() {
+    Entry entry = new Entry();
+    entry.category = Category.VALIDATION_DEVICE_RECEIVE;
+    entry.message = "Successful validation";
+    entry.level = Level.INFO.value();
     entry.timestamp = getTimestamp();
     return entry;
   }
