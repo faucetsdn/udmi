@@ -191,7 +191,6 @@ public class BlobsetSequences extends SequenceBase {
     check_endpoint_connection_success(true);
   }
 
-  @Test
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
