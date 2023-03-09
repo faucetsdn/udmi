@@ -1234,6 +1234,10 @@ public class SequenceBase {
         .collect(Collectors.toList());
   }
 
+  protected boolean isAlternateClient() {
+    return useAlternateClient;
+  }
+
   protected void withAlternateClient(Runnable evaluator) {
     checkNotNull(altClient, "Alternate client used but test not skipped");
     checkState(!useAlternateClient, "Alternate client already in use");

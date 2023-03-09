@@ -1,8 +1,6 @@
 
 ## endpoint_redirect_and_restart (ALPHA)
 
-Check connection to an alternate project, restart, and return.
-
 1. Wait for initial last_config matches config timestamp
 1. Update config mirroring config false:
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint url` } } }
