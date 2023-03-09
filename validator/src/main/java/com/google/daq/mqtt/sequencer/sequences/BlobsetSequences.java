@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -191,6 +192,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_failure_and_restart() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);

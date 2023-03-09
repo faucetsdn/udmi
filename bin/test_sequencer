@@ -79,10 +79,10 @@ else
     false
 fi
 
+cp etc/sequencer.out out/  # Sace for later test/comparison
 bin/sequence_cache
 
-generated=docs/specs/sequences/generated.md
-cp $generated out/  # Save for test/comparison later
+cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
 bin/gencode_seq
 
 echo Comparing diff out/sequencer.out etc/sequencer.out
