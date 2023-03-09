@@ -11,11 +11,15 @@ fi
 project_id=$1
 shift
 
+function log {
+    bin/timestamp $@
+}
+
 if [[ -n `which rot13` ]]; then
    # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
-   echo 'Using target project (rot13):' $(echo $project_id | rot13)
+   log 'Using target project (rot13):' $(echo $project_id | rot13)
 else
-   echo 'Using target project:' $project_id
+   log 'Using target project:' $project_id
 fi
 
 site_path=sites/udmi_site_model
@@ -27,7 +31,7 @@ work_base=$site_path/out/devices/$device_id # For runtime out files (transitory)
 rm -rf $work_base
 
 serial_no=sequencer-$RANDOM
-echo Using pubber with serial $serial_no
+log Using pubber with serial $serial_no
 
 site_config=$site_path/cloud_iot_config.json
 cloud_region=$(jq -r .cloud_region $site_config)
@@ -36,15 +40,15 @@ registry_id=$(jq -r .registry_id $site_config)
 PUBBER_OUT=pubber.out
 rm -f $PUBBER_OUT.*
 
-echo Killing running pubber instances...
+log Killing running pubber instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 
 bin/reset_config $site_path $project_id $device_id
 
-echo Running pubber with redirectRegistry on timeout
+log Running pubber with redirectRegistry on timeout
 timeout 3m unbuffer bin/pubber $site_path $project_id $device_id $serial_no redirectRegistry=missing > $PUBBER_OUT.1 2>&1 || true
 
-echo Done with timeout, running pubber in background...
+log Done with timeout, running pubber in background...
 bin/pubber $site_path $project_id $device_id $serial_no > $PUBBER_OUT.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
@@ -90,46 +94,46 @@ EOF
 jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $out_base/redirect_config.json
 jq '.system.operation.mode = "restart"' $out_base/redirect_config.json > $out_base/restart_config.json
 
-echo New redirection config:
+log New redirection config:
 cat /tmp/${device_id}_config.json
 
-echo bin/reset_config $site_path $project_id $device_id redirect_config.json
+log bin/reset_config $site_path $project_id $device_id redirect_config.json
 bin/reset_config $site_path $project_id $device_id redirect_config.json
 
-echo Let pubber react to the new configuration...
+log Let pubber react to the new configuration...
 sleep 20
 
-echo Restart the system...
-echo bin/reset_config $site_path $project_id $device_id restart_config.json
+log Restart the system...
+log bin/reset_config $site_path $project_id $device_id restart_config.json
 bin/reset_config $site_path $project_id $device_id restart_config.json
 
-echo And let it settle for restart...
+log And let it settle for restart...
 sleep 20
 
 # Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
-echo Setting last_start time to $now_date for pubber shutdown...
+log Setting last_start time to $now_date for pubber shutdown...
 jq ".system.operation.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
-echo bin/reset_config $site_path $project_id $device_id shutdown_config.json
+log bin/reset_config $site_path $project_id $device_id shutdown_config.json
 bin/reset_config $site_path $project_id $device_id shutdown_config.json
 
-echo And let it settle for last start...
+log And let it settle for last start...
 sleep 20
 
 # Quick sanity check that the restart_count persistent store is handled correctly.
 restarts=$(jq .restart_count $work_base/persistent_data.json)
 if [[ $restarts -ne 3 ]]; then
-    echo Restart count incorrect, was $restarts
+    log Restart count incorrect, was $restarts
     false
 fi
 
-echo Checks that a redirect happened and failed...
+log Checks that a redirect happened and failed...
 fgrep -q registries/ZZ-TRI-FECTA/devices pubber.out.1 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q registries/missing/devices pubber.out.1 || bin/fail no missing registry reference
 fgrep -q 'While waiting for connection start: Connection error' pubber.out.1 || bin/fail no connection error
 fgrep -q 'Endpoint connection restored to last working endpoint' pubber.out.1 || bin/fail no restore log message
 
-echo Check basic redirect-by-config setup...
+log Check basic redirect-by-config setup...
 fgrep -q registries/ZZ-TRI-FECTA/devices pubber.out.2 || bin/fail no ZZ-TRI-FECTA registry reference
 fgrep -q registries/reconfigure/devices pubber.out.2 || bin/fail no reconfigure registry reference
 fgrep -q 'While waiting for connection start: Connection error' pubber.out.2 || bin/fail no connection error
@@ -138,4 +142,4 @@ fgrep -q 'Stopping system with extreme prejudice, restart true' pubber.out.2 || 
 fgrep -q 'Stopping system with extreme prejudice, restart false' pubber.out.2 || bin/fail no restart false
 fgrep -q 'Done with pubber run, exit code 193' pubber.out.2 || bin/fail no auto-kill exit code
 
-echo Done with redirect tests.
+log Done with redirect tests.
