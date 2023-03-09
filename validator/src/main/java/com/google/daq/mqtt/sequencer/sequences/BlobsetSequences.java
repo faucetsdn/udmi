@@ -181,6 +181,16 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
+    check_endpoint_connection_success(false);
+  }
+
+  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  public void endpoint_redirect_and_restart() {
+    check_endpoint_connection_success(true);
+  }
+
+  private void check_endpoint_connection_success(boolean doRestart) {
     if (altClient == null) {
       throw new SkipTest("No functional alternate registry defined");
     }
@@ -196,6 +206,11 @@ public class BlobsetSequences extends SequenceBase {
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
+
+      if (doRestart) {
+        // Phase two.five: restart the system to make sure the change sticks.
+        check_system_restart();
+      }
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
@@ -215,6 +230,10 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Restart and connect to same endpoint and expect it returns.")
   @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
+    check_system_restart();
+  }
+
+  private void check_system_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero",
@@ -260,5 +279,4 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is newer than previous last_start",
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
-
 }

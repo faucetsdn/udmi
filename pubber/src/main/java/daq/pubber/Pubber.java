@@ -158,7 +158,7 @@ public class Pubber {
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final PubberConfiguration configuration;
+  protected final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
@@ -180,7 +180,7 @@ public class Pubber {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
-  private DevicePersistent persistentData;
+  protected DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
@@ -444,20 +444,39 @@ public class Pubber {
     markStateDirty();
   }
 
-  private void initializePersistentStore() {
+  protected DevicePersistent newDevicePersistent() {
+    DevicePersistent data = new DevicePersistent();
+    return data;
+  }
+
+  protected void initializePersistentStore() {
     Preconditions.checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
     if (TRUE.equals(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
-      persistentData = new DevicePersistent();
+      persistentData = newDevicePersistent();
     } else {
       info("Initializing from persistent store " + persistentStore.getAbsolutePath());
       persistentData =
           persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
-              : new DevicePersistent();
+              : newDevicePersistent();
     }
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
+
+    // If the persistentData contains endpoint configuration, prioritize using that.
+    // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
+    if (persistentData.endpoint != null) {
+      info("Loading endpoint from persistent data");
+      configuration.endpoint = persistentData.endpoint;
+    } else if (configuration.endpoint != null) {
+      info("Loading endpoint into persistent data from configuration");
+      persistentData.endpoint = configuration.endpoint;
+    } else {
+      error(
+          "Neither configuration nor persistent data supplies endpoint configuration");
+    }
+
     writePersistentStore();
   }
 
@@ -711,7 +730,7 @@ public class Pubber {
     }
   }
 
-  private void startConnection(Function<String, Boolean> connectionDone) {
+  protected void startConnection(Function<String, Boolean> connectionDone) {
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -751,7 +770,7 @@ public class Pubber {
     allPoints.add(point);
   }
 
-  private void initialize() {
+  protected void initialize() {
     try {
       initializeDevice();
 
@@ -940,6 +959,7 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
+  // TODO(x): Consider refactoring this to either return or change an instance variable, not both.
   EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
@@ -952,6 +972,8 @@ public class Pubber {
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
+          persistentData.endpoint = extractedEndpoint;
+          writePersistentStore();
         }
       }
     } catch (Exception e) {
