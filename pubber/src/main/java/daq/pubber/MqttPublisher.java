@@ -51,6 +51,7 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.State;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -182,7 +183,6 @@ public class MqttPublisher implements Publisher {
       String payload = getMessagePayload(data);
       String udmiTopic = getMessageTopic(topicSuffix, data);
       debug("Sending message to " + udmiTopic);
-      info("TAP TAP TAP TAP sending message to " + udmiTopic);
       sendMessage(deviceId, getSendTopic(deviceId, udmiTopic), payload.getBytes());
       if (callback != null) {
         callback.run();
@@ -212,9 +212,11 @@ public class MqttPublisher implements Publisher {
 
   @SuppressWarnings("unchecked")
   private String getMessagePayload(Object data) throws JsonProcessingException {
+    String stringMessage =
+        data instanceof InjectedMessage ? ((InjectedMessage) data).REPLACE_MESSAGE_WITH : null;
     String altMessage = data instanceof Map
         ? ((Map<String, String>) data).remove(InjectedMessage.REPLACE_MESSAGE_KEY)
-        : null;
+        : stringMessage;
     return altMessage != null ? altMessage : OBJECT_MAPPER.writeValueAsString(data);
   }
 
@@ -611,7 +613,6 @@ public class MqttPublisher implements Publisher {
   }
 
   static class InjectedState extends InjectedMessage {
-
   }
 
   private class MqttCallbackHandler implements MqttCallback {

@@ -290,14 +290,17 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
-  console.log("TAP state", msgString);
-  const msgObject = JSON.parse(msgString);
-
-  if (attributes.subFolder) {
+  try {
+    const msgObject = JSON.parse(msgString);
+    if (attributes.subFolder) {
+      attributes.subType = STATE_TYPE;
+      return process_state_block(attributes, msgObject);
+    } else {
+      return process_state_update(attributes, msgObject);
+    }
+  } catch (e) {
     attributes.subType = STATE_TYPE;
-    return process_state_block(attributes, msgObject);
-  } else {
-    return process_state_update(attributes, msgObject);
+    return reflectError(attributes, base64, e);
   }
 });
 
