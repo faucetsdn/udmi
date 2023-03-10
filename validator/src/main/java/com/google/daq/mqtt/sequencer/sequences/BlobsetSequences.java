@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -9,6 +10,7 @@ import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.DISABLED;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -28,6 +30,7 @@ import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 
 /**
@@ -188,6 +191,15 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = ALPHA, bucket = ENDPOINT)
   public void endpoint_redirect_and_restart() {
     check_endpoint_connection_success(true);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = DISABLED, bucket = ENDPOINT)
+  public void endpoint_failure_and_restart() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    untilErrorReported();
+    check_system_restart();
+    untilClearedRedirect();
   }
 
   private void check_endpoint_connection_success(boolean doRestart) {

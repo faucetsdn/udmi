@@ -16,15 +16,10 @@
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
-<<<<<<< HEAD
-TEST_LIST=/tmp/sequencer_tests.txt
-TEST_OUT=/tmp/sequencer.out
-=======
 TEST_LIST=out/sequencer_tests.txt
-TEST_OUT=out/sequencer.out
+TEST_OUT=etc/sequencer.out
 CACHE_ROOT=validator/sequences
 TEST_ROOT=sites/udmi_site_model/out/devices/AHU-1
->>>>>>> master
 
 # Fix sort order difference on different platforms.
 export LC_ALL=C
@@ -49,20 +44,13 @@ for test in $all_tests; do
         ls -l $src_dir/sequence.md $cache_dir/sequence.md
     fi
 
-<<<<<<< HEAD
-    fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*sequencer RESULT/RESULT/' >> $TEST_OUT
-=======
     fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*sequence RESULT/RESULT/' >> $TEST_OUT
->>>>>>> master
 done
 
 mv $TEST_OUT $TEST_OUT.bak
-sort -k 3 < $TEST_OUT.bak > $TEST_OUT
-<<<<<<< HEAD
+sort -k 3 < $TEST_OUT.bak | fgrep -v " DISABLED " > $TEST_OUT
 echo Done with test cache update.
-
-cat $TEST_OUT
-=======
+rm $TEST_OUT.bak
 
 echo
 echo Resulting $TEST_OUT:
@@ -70,4 +58,3 @@ cat $TEST_OUT
 
 echo
 echo Done with test cache update of $CACHE_ROOT, generated $TEST_OUT
->>>>>>> master
