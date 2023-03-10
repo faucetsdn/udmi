@@ -172,12 +172,6 @@ public class MqttPublisher implements Publisher {
     topicPrefixMap.put(deviceId, topicPrefix);
   }
 
-  private String getMessageTopic(String deviceId, String topic) {
-    return
-        topicPrefixMap.computeIfAbsent(deviceId, key -> String.format(TOPIC_PREFIX_FMT, deviceId))
-            + "/" + topic;
-  }
-
   private void publishCore(String deviceId, String topicSuffix, Object data, Runnable callback) {
     try {
       String payload = getMessagePayload(data);
@@ -200,6 +194,12 @@ public class MqttPublisher implements Publisher {
         close();
       }
     }
+  }
+
+  private String getMessageTopic(String deviceId, String topic) {
+    return
+        topicPrefixMap.computeIfAbsent(deviceId, key -> String.format(TOPIC_PREFIX_FMT, deviceId))
+            + "/" + topic;
   }
 
   @SuppressWarnings("unchecked")

@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
@@ -168,6 +169,7 @@ public class Pubber {
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
+  private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -549,14 +551,6 @@ public class Pubber {
     }
   }
 
-  private void safeSleep(long durationMs) {
-    try {
-      Thread.sleep(durationMs);
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Error sleeping", e);
-    }
-  }
-
   private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
     configuration.deviceId = checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
@@ -641,7 +635,6 @@ public class Pubber {
   /**
    * For testing, if configured, send a slate of bad messages for testing by the message handling
    * infrastructure. Uses the sekrit REPLACE_MESSAGE_WITH field to sneak bad output into the pipe.
-   *
    * E.g., Will send a message with "{ INVALID JSON!" as a message payload.
    */
   private void sendEmptyMissingBadEvents() {
@@ -656,6 +649,7 @@ public class Pubber {
         InjectedMessage replacedEvent = new InjectedMessage();
         replacedEvent.REPLACE_TOPIC_WITH = key;
         replacedEvent.REPLACE_MESSAGE_WITH = value;
+        safeSleep(INJECT_MESSAGE_DELAY_MS);
         publishDeviceMessage(replacedEvent);
       });
 
