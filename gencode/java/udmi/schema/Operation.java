@@ -70,6 +70,7 @@ public class Operation {
         INITIAL("initial"),
         ACTIVE("active"),
         RESTART("restart"),
+        TERMINATE("terminate"),
         SHUTDOWN("shutdown");
         private final String value;
         private final static Map<String, Operation.SystemMode> CONSTANTS = new HashMap<String, Operation.SystemMode>();

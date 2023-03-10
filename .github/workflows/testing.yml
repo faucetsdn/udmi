@@ -65,23 +65,30 @@ jobs:
           java-version: '11'
       - name: base setup
         run: bin/run_tests install_dependencies
-      - name: mosquitto connect
+      - name: bin/test_mosquitto
         run: |
           bin/test_mosquitto
-      - name: pubber redirect
+      - name: bin/test_proxy
+        env:
+          MQTT_PROXY_HOST: ${{ secrets.MQTT_PROXY_HOST }}
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+        if: "${{ env.MQTT_PROXY_HOST != '' }}"
+        run: |
+          bin/test_proxy $GCP_TARGET_PROJECT $MQTT_PROXY_HOST
+      - name: bin/test_redirect
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_redirect $GCP_TARGET_PROJECT
-      - name: pubber logs #1
+      - name: pubber.out.1
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           echo ::::::: pubber.out.1
           cat pubber.out.1
-      - name: pubber logs #2
+      - name: pubber.out.2
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
