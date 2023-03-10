@@ -12,6 +12,7 @@
     "stage": {
       "title": "Feature Stage",
       "enum": [
+        "disabled",
         "alpha",
         "beta",
         "stable"
