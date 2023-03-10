@@ -74,7 +74,7 @@ public class IotReflectorClient implements MessagePublisher {
    * Create a new reflector instance.
    *
    * @param iotConfig       configuration file
-   * @param requiredVersion
+   * @param requiredVersion version of the functions that are required by the tools
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
     final byte[] keyBytes;
@@ -83,8 +83,7 @@ public class IotReflectorClient implements MessagePublisher {
       keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
       throw new RuntimeException(
-          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(),
-          e);
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
     }
 
     this.requiredVersion = requiredVersion;
