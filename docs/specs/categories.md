@@ -61,6 +61,7 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _schema_: (**INFO**) Basic schema and structure validation.
     * _content_: (**INFO**) Errors validating semantic content of the message.
     * _multiple_: (**INFO**) Multiple issues reported.
+    * _extra_: (**INFO**) Device was unexpected (not in site model).
   * _summary_: Conditions specific to an overall site summary.
     * _report_: (**INFO**) The validation summary report.
   * _feature_: Results of feature sequence testing.

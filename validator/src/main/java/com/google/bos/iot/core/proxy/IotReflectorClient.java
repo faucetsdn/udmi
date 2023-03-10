@@ -14,6 +14,7 @@ import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -43,12 +45,8 @@ import udmi.schema.SetupReflectorState;
  */
 public class IotReflectorClient implements MessagePublisher {
 
-  public static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
-
   private static final String IOT_KEY_ALGORITHM = "RS256";
   private static final String UDMS_REFLECT = "UDMS-REFLECT";
-  private static final int FUNCTIONS_VERSION_BETA = 5; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 5; // Version required for alpha execution.
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_FOLDER = "udmi";
   private static final String UDMI_TOPIC = "events/" + UDMI_FOLDER;
@@ -60,7 +58,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
   private final CountDownLatch validConfigReceived = new CountDownLatch(1);
-  private final FeatureStage minStage;
+  private final int requiredVersion;
   private boolean isInstallValid;
 
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
@@ -75,25 +73,23 @@ public class IotReflectorClient implements MessagePublisher {
   /**
    * Create a new reflector instance.
    *
-   * @param iotConfig configuration file
+   * @param iotConfig       configuration file
+   * @param requiredVersion version of the functions that are required by the tools
    */
-  public IotReflectorClient(ExecutionConfiguration iotConfig) {
+  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
     try {
       keyBytes = getFileBytes(iotConfig.key_file);
     } catch (Exception e) {
       throw new RuntimeException(
-          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(),
-          e);
+          "While loading key file " + new File(iotConfig.key_file).getAbsolutePath(), e);
     }
 
+    this.requiredVersion = requiredVersion;
     registryId = iotConfig.registry_id;
     projectId = iotConfig.project_id;
-    udmiVersion = checkNotNull(iotConfig.udmi_version, "udmi_version");
-    minStage =
-        isNullOrEmpty(iotConfig.min_stage) ? DEFAULT_MIN_STAGE
-            : FeatureStage.valueOf(iotConfig.min_stage);
+    udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
@@ -173,11 +169,6 @@ public class IotReflectorClient implements MessagePublisher {
     }
   }
 
-  private int getRequiredFunctionsVersion() {
-    return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
-        : FUNCTIONS_VERSION_BETA;
-  }
-
   private void handleCommandEnvelope(Map<String, Object> messageMap) {
     if (!isInstallValid) {
       return;
@@ -190,13 +181,12 @@ public class IotReflectorClient implements MessagePublisher {
   @NotNull
   private Map<String, String> extractAttributes(Map<String, Object> messageMap) {
     Map<String, String> attributes = new TreeMap<>();
-    Envelope envelope = convertTo(Envelope.class, messageMap);
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
-    attributes.put("deviceId", envelope.deviceId);
-    attributes.put("subType", envelope.subType.value());
-    attributes.put("subFolder", envelope.subFolder.value());
-    attributes.put("transactionId", envelope.transactionId);
+    attributes.put("deviceId", (String) messageMap.get("deviceId"));
+    attributes.put("subType", (String) messageMap.get("subType"));
+    attributes.put("subFolder", (String) messageMap.get("subFolder"));
+    attributes.put("transactionId", (String) messageMap.get("transactionId"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return attributes;
   }
@@ -232,17 +222,16 @@ public class IotReflectorClient implements MessagePublisher {
         System.err.println("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(
             udmisInfo.deployed_at));
 
-        int required = getRequiredFunctionsVersion();
         System.err.printf("UDMIS functions support versions %s:%s (required %s)%n",
-            udmisInfo.functions_min, udmisInfo.functions_max, required);
+            udmisInfo.functions_min, udmisInfo.functions_max, requiredVersion);
         String baseError = String.format("UDMIS required functions version %d not allowed",
-            required);
-        if (required < udmisInfo.functions_min) {
+            requiredVersion);
+        if (requiredVersion < udmisInfo.functions_min) {
           throw new RuntimeException(
               String.format("%s: min supported %s. Please update local UDMI install.", baseError,
                   udmisInfo.functions_min));
         }
-        if (required > udmisInfo.functions_max) {
+        if (requiredVersion > udmisInfo.functions_max) {
           throw new RuntimeException(
               String.format("%s: max supported %s. Please update cloud UDMIS install.",
                   baseError, udmisInfo.functions_max));

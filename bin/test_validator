@@ -70,7 +70,10 @@ function pubber_bg {
     echo Writing pubber output to $outfile, serial no $serial_no
     cmd="bin/pubber $site_path $project_id $did $serial_no $@"
     echo $cmd
-    $cmd > $outfile 2>&1 &
+
+    date > $outfile
+    echo $cmd >> $outfile
+    $cmd >> $outfile 2>&1 &
 
     # Give a little bit of time to settle before deterministic check
     sleep 10
@@ -91,7 +94,7 @@ function pubber_bg {
 }
 
 pubber_bg AHU-1 extraField=prlagle
-pubber_bg AHU-22
+pubber_bg AHU-22 emptyMissing
 
 echo Waiting for system to run for a bit...
 timeout 30s tail -f $VALIDATOR_OUT || true
