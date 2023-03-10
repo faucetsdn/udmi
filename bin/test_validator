@@ -122,5 +122,5 @@ more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/Validator.java:[0-9]+/redacted/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'
 
-#echo diff -u $TMP_VALIDATOR etc/validator.out
-#diff -u $TMP_VALIDATOR etc/validator.out && echo No mismatch from golden file.
+echo diff -u $TMP_VALIDATOR etc/validator.out
+diff -u $TMP_VALIDATOR etc/validator.out && echo No mismatch from golden file.

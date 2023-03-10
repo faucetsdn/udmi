@@ -290,6 +290,7 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
+  console.log("TAP state", msgString);
   const msgObject = JSON.parse(msgString);
 
   if (attributes.subFolder) {

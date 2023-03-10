@@ -147,7 +147,7 @@ public class Pubber {
           .put(Level.ERROR, LOG::error)
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
-      "events/nostring", "",
+      "events/string", "\"\"",
       "events/emptyjson", "{}",
       "events/badjson", "{ NOT VALID JSON!"
   );
