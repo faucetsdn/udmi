@@ -46,6 +46,9 @@ bin/augment_metadata $site_path $device_id
 
 bin/reset_config $site_path $project_id $device_id
 
+echo Cleaning AHU-1 persistent data store
+rm -rf udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_OUT
