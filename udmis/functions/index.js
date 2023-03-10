@@ -36,7 +36,7 @@ const QUERY_TYPE = 'query';
 
 const UPDATE_FOLDER = 'update';
 const UDMIS_FOLDER = 'udmis';
-const EXCEPTION_FOLDER = 'exception';
+const ERROR_FOLDER = 'error';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -87,7 +87,7 @@ function reflectError(attributes, base64, error) {
     subFolder: attributes.subFolder,
     data: base64
   }
-  attributes.subFolder = EXCEPTION_FOLDER;
+  attributes.subFolder = ERROR_FOLDER;
   reflectMessage(attributes, message);
 }
 
