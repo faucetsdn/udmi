@@ -7,6 +7,8 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/state_system.json
 sites/udmi_site_model/out/devices/AHU-22/config.json
+sites/udmi_site_model/out/devices/AHU-22/event_emptyjson.json
+sites/udmi_site_model/out/devices/AHU-22/event_invalid.json
 sites/udmi_site_model/out/devices/AHU-22/event_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/event_system.json
 sites/udmi_site_model/out/devices/AHU-22/persistent_data.json
@@ -17,6 +19,22 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.json
 ::::::::::::::
 /dev/null
 ::::::::::::::
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/config.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "update",
+  "sub_type" : "config",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
 ::::::::::::::
@@ -43,4 +61,467 @@ sites/udmi_site_model/out/devices/AHU-1/event_pointset.out
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/event_system.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "system",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_pointset: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "update",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "localnet",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "pointset",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ ]
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_system.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "system",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/config.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "update",
+  "sub_type" : "config",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_emptyjson.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "emptyjson",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Multiple validation errors",
+    "detail" : "Unknown schema subFolder 'event_emptyjson' for AHU-22; While converting to json node: 1 schema violations found",
+    "category" : "validation.device.multiple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_emptyjson' for AHU-22",
+    "detail" : "event_emptyjson: Unknown schema subFolder 'event_emptyjson' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_emptyjson: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"emptyjson\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_error.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "error",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson",
+    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_emptyjson' for AHU-22",
+    "detail" : "event_emptyjson: Unknown schema subFolder 'event_emptyjson' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_emptyjson: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"emptyjson\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson",
+    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "invalid",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Multiple validation errors",
+    "detail" : "Unknown schema subFolder 'event_invalid' for AHU-22; While converting to json node: 1 schema violations found",
+    "category" : "validation.device.multiple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_pointset.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "pointset",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ ]
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_string.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "string",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/event_system.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "system",
+  "sub_type" : "event",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_emptyjson' for AHU-22",
+    "detail" : "event_emptyjson: Unknown schema subFolder 'event_emptyjson' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_emptyjson: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"emptyjson\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson",
+    "detail" : "event_error: Error in message pipeline: SyntaxError: Unexpected token N in JSON at position 2 for subFolder badjson @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "update",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state_error.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "error",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "While converting message to java.util.TreeMap",
+    "detail" : "event_string: While converting message to java.util.TreeMap; No content to map due to end-of-input\n at [Source: (String)\"\"; line: 1, column: 0]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Unknown schema subFolder 'event_invalid' for AHU-22",
+    "detail" : "event_invalid: Unknown schema subFolder 'event_invalid' for AHU-22 @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "While converting to json node: 1 schema violations found",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined",
+    "detail" : "state_error: Error in message pipeline: SyntaxError: Unexpected token ! in JSON at position 0 for subFolder undefined @Validator.validateUpdate(redacted)",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "localnet",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "pointset",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ ]
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-22/state_system.out
+::::::::::::::
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.1",
+  "sub_folder" : "system",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
 }
