@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
 import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.SequenceValidationState.FeatureStage.DISABLED;
 import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import org.junit.Test;
@@ -21,5 +22,7 @@ public class FeatureTest {
     assertTrue(processGiven(STABLE, BETA));
     assertFalse(processGiven(ALPHA, BETA));
     assertFalse(processGiven(BETA, STABLE));
+    assertFalse(processGiven(DISABLED, ALPHA));
+    assertFalse(processGiven(DISABLED, STABLE));
   }
 }
