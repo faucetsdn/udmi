@@ -86,6 +86,7 @@ public class SequenceValidationState {
     @Generated("jsonschema2pojo")
     public enum FeatureStage {
 
+        DISABLED("disabled"),
         ALPHA("alpha"),
         BETA("beta"),
         STABLE("stable");
