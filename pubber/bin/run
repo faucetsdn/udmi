@@ -5,7 +5,7 @@ ROOT_DIR=$(realpath $(dirname $0)/../..)
 function cleanup {
     if [[ -n $PUB_PID ]]; then
         echo Killing pubber instance $PUB_PID
-        kill $PUB_PID
+        kill $PUB_PID || true
     fi
 }
 trap cleanup EXIT

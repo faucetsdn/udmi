@@ -1,0 +1,13 @@
+{
+  "endpoint": {
+    "protocol": "mqtt",
+    "client_id": "projects/bos-udmi-dev/locations/us-central1/registries/ZZ-TRI-FECTA/devices/AHU-1",
+    "hostname": "proxya.digitalbuilding.uk",
+    "port": 443
+  },
+  "sitePath": "sites/udmi_site_model/",
+  "deviceId": "AHU-1",
+  "projectId": "bos-udmi-dev",
+  "serialNo": "54321",
+  "options": {"smokeCheck": true}
+}

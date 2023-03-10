@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -151,8 +152,11 @@ public class Pubber {
       "superimposition_reading", makePointPointsetModel(false)
   );
   private static final Date DEVICE_START_TIME = getRoundedStartTime();
-  private static final int RESTART_EXIT_CODE = 192; // After exit, wrapper script should restart.
-  private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
+  private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
+      SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
+      SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.
+      SystemMode.TERMINATE, 193); // Indicates expected shutdown (failure code).
+  private static final Integer UNKNOWN_MODE_EXIT_CODE = -1;
   private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private static final int CONNECT_RETRIES = 10;
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
@@ -676,28 +680,36 @@ public class Pubber {
     Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
         && SystemMode.RESTART.equals(operation.mode)) {
-      restartSystem(true);
+      systemLifecycle(SystemMode.RESTART);
     }
     if (SystemMode.ACTIVE.equals(operation.mode)) {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
-    if (operation.last_start != null && DEVICE_START_TIME.before(operation.last_start)) {
-      System.err.printf("Device start time %s before last config start %s, terminating.",
-          isoConvert(DEVICE_START_TIME), isoConvert(operation.last_start));
-      restartSystem(false);
+    Date configLastStart = operation.last_start;
+    if (configLastStart != null) {
+      if (DEVICE_START_TIME.before(configLastStart)) {
+        warn(String.format("Device start time %s before last config start %s, terminating.",
+            isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
+        systemLifecycle(SystemMode.TERMINATE);
+      } else if (TRUE.equals(configuration.options.smokeCheck)
+          && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
+        warn(String.format("Device start time %s matches, smoke check indicating success!",
+            isoConvert(configLastStart)));
+        systemLifecycle(SystemMode.SHUTDOWN);
+      }
     }
   }
 
-  private void restartSystem(boolean restart) {
-    deviceState.system.operation.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+  private void systemLifecycle(SystemMode mode) {
+    deviceState.system.operation.mode = mode;
     try {
       publishSynchronousState();
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }
-    int exitCode = restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE;
-    error("Stopping system with extreme prejudice, restart " + restart + " with code " + exitCode);
+    int exitCode = EXIT_CODE_MAP.getOrDefault(mode, UNKNOWN_MODE_EXIT_CODE);
+    error("Stopping system with extreme prejudice, restart " + mode + " with code " + exitCode);
     System.exit(exitCode);
   }
 
@@ -898,7 +910,7 @@ public class Pubber {
       error("Error receiving message " + type, cause);
       if (TRUE.equals(configuration.options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
-        restartSystem(true);
+        systemLifecycle(SystemMode.RESTART);
       }
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
@@ -965,7 +977,7 @@ public class Pubber {
     if (config != null) {
       if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
         error("Empty config system block and configured to restart on bad config!");
-        restartSystem(true);
+        systemLifecycle(SystemMode.RESTART);
       }
       GeneralUtils.copyFields(config, deviceConfig);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
