@@ -1,3 +1,4 @@
+TEST endpoint_failure_and_restart RESULT fail system endpoint_failure_and_restart DISABLED 5 timeout waiting for system mode is INITIAL
 TEST valid_serial_no noLastStart RESULT pass system valid_serial_no ALPHA 5 Sequence complete
 TEST writeback_success noWriteback RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
 TEST writeback_success noPointState RESULT fail writeback writeback_success ALPHA 5 timeout waiting for point filter_differential_pressure_setpoint to have value_state applied
