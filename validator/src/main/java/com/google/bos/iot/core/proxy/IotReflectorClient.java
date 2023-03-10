@@ -192,13 +192,12 @@ public class IotReflectorClient implements MessagePublisher {
   @NotNull
   private Map<String, String> extractAttributes(Map<String, Object> messageMap) {
     Map<String, String> attributes = new TreeMap<>();
-    Envelope envelope = convertTo(Envelope.class, messageMap);
     attributes.put("projectId", projectId);
     attributes.put("deviceRegistryId", registryId);
-    attributes.put("deviceId", envelope.deviceId);
-    attributes.put("subType", envelope.subType.value());
-    attributes.put("subFolder", envelope.subFolder.value());
-    attributes.put("transactionId", envelope.transactionId);
+    attributes.put("deviceId", (String) messageMap.get("deviceId"));
+    attributes.put("subType", (String) messageMap.get("subType"));
+    attributes.put("subFolder", (String) messageMap.get("subFolder"));
+    attributes.put("transactionId", (String) messageMap.get("transactionId"));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);
     return attributes;
   }

@@ -10,7 +10,6 @@ import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -131,6 +130,7 @@ public class Pubber {
           .put(PointsetEvent.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
           .put(InvalidMessage.class, getEventsSuffix("invalid"))
+          .put(InvalidState.class, MqttDevice.STATE_TOPIC)
           .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
           .build();
   private static final int MESSAGE_REPORT_INTERVAL = 10;
@@ -143,6 +143,8 @@ public class Pubber {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
+  private static final List<String> INVALID_REPLACEMENTS = ImmutableList.of(
+      "", "{}", "{{{{{ NOT VALID JSON!");
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -631,16 +633,18 @@ public class Pubber {
    * infrastructure. Uses the sekrit REPLACE_MESSSAGE_WITH field to sneak bad output into the pipe.
    */
   private void sendEmptyMissingBadEvents() {
-    if (TRUE.equals(configuration.options.emptyMissing)) {
-      configuration.options.emptyMissing = FALSE;
-      InvalidMessage invalidMessage = new InvalidMessage();
-      publishDeviceMessage(invalidMessage);
-      invalidMessage.REPLACE_MESSAGE_WITH = "";
-      publishDeviceMessage(invalidMessage);
-      invalidMessage.REPLACE_MESSAGE_WITH = "{}";
-      publishDeviceMessage(invalidMessage);
-      invalidMessage.REPLACE_MESSAGE_WITH = "{{{{{ NOT VALID JSON!";
-      publishDeviceMessage(invalidMessage);
+    if (TRUE.equals(configuration.options.emptyMissing) && (
+        deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0)) {
+      warn("Sending badly formatted messages as per configuration");
+      INVALID_REPLACEMENTS.forEach(replacement -> {
+        InvalidMessage invalidEvent = new InvalidMessage();
+        invalidEvent.REPLACE_MESSAGE_WITH = replacement;
+        publishDeviceMessage(invalidEvent);
+
+        InvalidState invalidState = new InvalidState();
+        invalidState.REPLACE_MESSAGE_WITH = replacement;
+        publishStateMessage(invalidState);
+      });
     }
   }
 
@@ -1488,12 +1492,6 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-    if (delay > 0) {
-      warn(String.format("State update delay %dms", delay));
-      safeSleep(delay);
-    }
-
     deviceState.timestamp = getCurrentTimestamp();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
@@ -1509,9 +1507,19 @@ public class Pubber {
       return;
     }
     stateDirty.set(false);
+    publishStateMessage(deviceState);
+  }
+
+  private void publishStateMessage(Object stateToSend) {
+    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+    if (delay > 0) {
+      warn(String.format("State update delay %dms", delay));
+      safeSleep(delay);
+    }
+
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
-    publishDeviceMessage(deviceState, () -> {
+    publishDeviceMessage(stateToSend, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
     });
@@ -1658,5 +1666,8 @@ public class Pubber {
 
     @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_MESSAGE_WITH;
+  }
+
+  private static class InvalidState extends InvalidMessage {
   }
 }
