@@ -48,7 +48,7 @@ for test in $all_tests; do
 done
 
 mv $TEST_OUT $TEST_OUT.bak
-sort -k 3 < $TEST_OUT.bak > $TEST_OUT
+sort -k 3 < $TEST_OUT.bak | fgrep -v " DISABLED " > $TEST_OUT
 rm $TEST_OUT.bak
 
 echo
