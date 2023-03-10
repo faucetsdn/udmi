@@ -16,6 +16,7 @@ class PubberOptions:
     self.missingPoint = None
     self.extraField = None
     self.redirectRegistry = None
+    self.smokeCheck = None
     self.noPointState = None
     self.disableWriteback = None
     self.noWriteback = None
@@ -36,6 +37,7 @@ class PubberOptions:
     result.missingPoint = source.get('missingPoint')
     result.extraField = source.get('extraField')
     result.redirectRegistry = source.get('redirectRegistry')
+    result.smokeCheck = source.get('smokeCheck')
     result.noPointState = source.get('noPointState')
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
@@ -81,6 +83,8 @@ class PubberOptions:
       result['extraField'] = self.extraField # 5
     if self.redirectRegistry:
       result['redirectRegistry'] = self.redirectRegistry # 5
+    if self.smokeCheck:
+      result['smokeCheck'] = self.smokeCheck # 5
     if self.noPointState:
       result['noPointState'] = self.noPointState # 5
     if self.disableWriteback:
