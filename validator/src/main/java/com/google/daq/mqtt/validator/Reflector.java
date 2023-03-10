@@ -21,6 +21,7 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class Reflector {
 
+  private static final int REQUIRED_FUNCTION_VER = 5;
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;
@@ -102,7 +103,7 @@ public class Reflector {
     executionConfiguration.key_file = keyFile;
     executionConfiguration.project_id = projectId;
     executionConfiguration.udmi_version = Common.getUdmiVersion();
-    client = new IotReflectorClient(executionConfiguration);
+    client = new IotReflectorClient(executionConfiguration, REQUIRED_FUNCTION_VER);
   }
 
   private List<String> parseArgs(List<String> argsList) {

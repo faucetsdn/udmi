@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
@@ -31,9 +32,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -130,6 +128,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
+  private static final int REQUIRED_FUNCTION_VER = 6;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -378,7 +377,7 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config);
+    client = new IotReflectorClient(config, REQUIRED_FUNCTION_VER);
   }
 
   void messageLoop() {
@@ -458,19 +457,10 @@ public class Validator {
     }
   }
 
-  private String sanitizeMessage(String schemaName, Map<String, Object> message) {
-    String nonce = (String) message.remove(SequenceBase.CONFIG_NONCE_KEY);
-    message.values().forEach(this::sanitizeBlock);
+  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_KEY);
       message.remove(TIMESTAMP_KEY);
-    }
-    return nonce;
-  }
-
-  private void sanitizeBlock(Object subBlock) {
-    if (subBlock instanceof Map) {
-      ((Map<?, ?>) subBlock).remove(SequenceBase.CONFIG_NONCE_KEY);
     }
   }
 
@@ -499,6 +489,14 @@ public class Validator {
       if (message.containsKey(EXCEPTION_KEY)) {
         device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
             Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
+      if (message.containsKey(ERROR_KEY)) {
+        String error = (String) message.get(ERROR_KEY);
+        IllegalArgumentException exception = new IllegalArgumentException(
+            "Error in message pipeline: " + error);
+        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
         return device;
       }
 

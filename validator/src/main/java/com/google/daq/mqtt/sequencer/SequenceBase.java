@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,15 +101,15 @@ import udmi.schema.ValidationState;
  */
 public class SequenceBase {
 
-  public static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
-  public static final String TESTS_OUT_DIR = "tests";
-  public static final String SERIAL_NO_MISSING = "//";
-  public static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
-  public static final String EVENT_PREFIX = "event_";
-  public static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
-  public static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
-  public static final int NORM_TIMEOUT_MS = 300 * 1000;
-  public static final String CONFIG_NONCE_KEY = "debug_config_nonce";
+  private static final int FUNCTIONS_VERSION_BETA = 5; // Version required for beta execution.
+  private static final int FUNCTIONS_VERSION_ALPHA = 5; // Version required for alpha execution.
+  private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
+  private static final String TESTS_OUT_DIR = "tests";
+  private static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
+  private static final String EVENT_PREFIX = "event_";
+  private static final String SYSTEM_EVENT_MESSAGE_BASE = "event_system";
+  private static final int CONFIG_UPDATE_DELAY_MS = 8 * 1000;
+  private static final int NORM_TIMEOUT_MS = 300 * 1000;
   private static final String EMPTY_MESSAGE = "{}";
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String DEVICE_MODDATA = "%s/out/devices/%s/metadata_mod.json";
@@ -146,9 +146,11 @@ public class SequenceBase {
       SequenceResult.PASS, Level.WARNING,
       SequenceResult.FAIL, Level.ERROR
   );
+  static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String VALIDATION_STATE_FILE = "sequencer_state.json";
   private static ValidationState validationState;
@@ -310,7 +312,7 @@ public class SequenceBase {
     altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
     try {
-      return new IotReflectorClient(altConfiguration);
+      return new IotReflectorClient(altConfiguration, activeInstance.getRequiredFunctionsVersion());
     } catch (Exception e) {
       System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
       if (traceLogLevel()) {
@@ -320,8 +322,15 @@ public class SequenceBase {
     }
   }
 
+  private int getRequiredFunctionsVersion() {
+    FeatureStage minStage = isNullOrEmpty(validatorConfig.min_stage) ? DEFAULT_MIN_STAGE
+        : FeatureStage.valueOf(validatorConfig.min_stage);
+    return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
+        : FUNCTIONS_VERSION_BETA;
+  }
+
   private static MessagePublisher getReflectorClient() {
-    return new IotReflectorClient(validatorConfig);
+    return new IotReflectorClient(validatorConfig, activeInstance.getRequiredFunctionsVersion());
   }
 
   static void resetState() {
@@ -998,8 +1007,7 @@ public class SequenceBase {
     String transactionId = attributes.get("transactionId");
     if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
       String attributeMark = String.format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-      Object configNonce = message == null ? null : message.get(CONFIG_NONCE_KEY);
-      trace("received command " + attributeMark + " nonce " + configNonce);
+      trace("received command " + attributeMark);
     }
     if (!SequenceBase.getDeviceId().equals(deviceId)) {
       return;
