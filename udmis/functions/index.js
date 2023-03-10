@@ -81,10 +81,10 @@ function reflectMessage(attributes, message) {
 }
 
 function reflectError(attributes, base64, error) {
-  console.log('Captured message error, reflecting:', String(error));
+  const errorStr = String(error) + " for subFolder " + attributes.subFolder;
+  console.log('Captured message error, reflecting:', errorStr);
   const message = {
-    error: String(error),
-    subFolder: attributes.subFolder,
+    error: errorStr,
     data: base64
   }
   attributes.subFolder = ERROR_FOLDER;

@@ -25,6 +25,8 @@ import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import daq.pubber.MqttPublisher.InjectedMessage;
+import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -130,8 +132,8 @@ public class Pubber {
           .put(SystemEvent.class, getEventsSuffix("system"))
           .put(PointsetEvent.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
-          .put(InvalidMessage.class, getEventsSuffix("invalid"))
-          .put(InvalidState.class, MqttDevice.STATE_TOPIC)
+          .put(InjectedMessage.class, getEventsSuffix("invalid"))
+          .put(InjectedState.class, MqttDevice.STATE_TOPIC)
           .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
           .build();
   private static final int MESSAGE_REPORT_INTERVAL = 10;
@@ -144,8 +146,11 @@ public class Pubber {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
-  private static final List<String> INVALID_REPLACEMENTS = ImmutableList.of(
-      "", "{}", "{{{{{ NOT VALID JSON!");
+  private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
+      "events/nostring", "",
+      "events/emptyjson", "{}",
+      "events/badjson", "{ NOT VALID JSON!"
+  );
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -162,6 +167,7 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -634,21 +640,28 @@ public class Pubber {
 
   /**
    * For testing, if configured, send a slate of bad messages for testing by the message handling
-   * infrastructure. Uses the sekrit REPLACE_MESSSAGE_WITH field to sneak bad output into the pipe.
+   * infrastructure. Uses the sekrit REPLACE_MESSAGE_WITH field to sneak bad output into the pipe.
+   *
+   * E.g., Will send a message with "{ INVALID JSON!" as a message payload.
    */
   private void sendEmptyMissingBadEvents() {
     if (TRUE.equals(configuration.options.emptyMissing) && (
         deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0)) {
       warn("Sending badly formatted messages as per configuration");
-      INVALID_REPLACEMENTS.forEach(replacement -> {
-        InvalidMessage invalidEvent = new InvalidMessage();
-        invalidEvent.REPLACE_MESSAGE_WITH = replacement;
-        publishDeviceMessage(invalidEvent);
 
-        InvalidState invalidState = new InvalidState();
-        invalidState.REPLACE_MESSAGE_WITH = replacement;
-        publishStateMessage(invalidState);
+      InjectedMessage invalidEvent = new InjectedMessage();
+      publishDeviceMessage(invalidEvent);
+
+      INVALID_REPLACEMENTS.forEach((key, value) -> {
+        InjectedMessage replacedEvent = new InjectedMessage();
+        replacedEvent.REPLACE_TOPIC_WITH = key;
+        replacedEvent.REPLACE_MESSAGE_WITH = value;
+        publishDeviceMessage(replacedEvent);
       });
+
+      InjectedState invalidState = new InjectedState();
+      invalidState.REPLACE_MESSAGE_WITH = CORRUPT_STATE_MESSAGE;
+      publishStateMessage(invalidState);
     }
   }
 
@@ -1672,14 +1685,4 @@ public class Pubber {
     public Object extraField;
   }
 
-  private static class InvalidMessage {
-    public String version;
-    public Date timestamp;
-
-    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
-    public String REPLACE_MESSAGE_WITH;
-  }
-
-  private static class InvalidState extends InvalidMessage {
-  }
 }

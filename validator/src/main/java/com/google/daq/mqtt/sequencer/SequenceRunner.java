@@ -2,7 +2,6 @@ package com.google.daq.mqtt.sequencer;
 
 import static joptsimple.internal.Strings.isNullOrEmpty;
 
-import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;

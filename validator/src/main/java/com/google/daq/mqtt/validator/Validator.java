@@ -41,6 +41,7 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessageUpgrader;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
@@ -487,13 +488,16 @@ public class Validator {
       }
 
       if (message.containsKey(EXCEPTION_KEY)) {
-        device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
-            Category.VALIDATION_DEVICE_RECEIVE);
+        Exception error = (Exception) message.get(EXCEPTION_KEY);
+        System.err.println(
+            "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(error));
+        device.addError(error, attributes, Category.VALIDATION_DEVICE_RECEIVE);
         return device;
       }
 
       if (message.containsKey(ERROR_KEY)) {
         String error = (String) message.get(ERROR_KEY);
+        System.err.println("Pipeline error " + deviceId + ": " + error);
         IllegalArgumentException exception = new IllegalArgumentException(
             "Error in message pipeline: " + error);
         device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);

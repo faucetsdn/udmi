@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -19,6 +20,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -175,15 +177,13 @@ public class MqttPublisher implements Publisher {
             + "/" + topic;
   }
 
-  @SuppressWarnings("unchecked")
-  private void publishCore(String deviceId, String topicSuffix, Object data,
-      Runnable callback) {
+  private void publishCore(String deviceId, String topicSuffix, Object data, Runnable callback) {
     try {
-      String replaceWith =
-          data instanceof Map ? ((Map<String, String>) data).remove("REPLACE_MESSAGE_WITH") : null;
-      String payload = replaceWith != null ? replaceWith : OBJECT_MAPPER.writeValueAsString(data);
-      debug("Sending message to " + topicSuffix);
-      sendMessage(deviceId, getSendTopic(deviceId, topicSuffix), payload.getBytes());
+      String payload = getMessagePayload(data);
+      String udmiTopic = getMessageTopic(topicSuffix, data);
+      debug("Sending message to " + udmiTopic);
+      info("TAP TAP TAP TAP sending message to " + udmiTopic);
+      sendMessage(deviceId, getSendTopic(deviceId, udmiTopic), payload.getBytes());
       if (callback != null) {
         callback.run();
       }
@@ -200,6 +200,22 @@ public class MqttPublisher implements Publisher {
         close();
       }
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private String getMessageTopic(String topicSuffix, Object data) {
+    String altTopic = data instanceof Map
+        ? ((Map<String, String>) data).remove(InjectedMessage.REPLACE_TOPIC_KEY)
+        : null;
+    return altTopic != null ? altTopic : topicSuffix;
+  }
+
+  @SuppressWarnings("unchecked")
+  private String getMessagePayload(Object data) throws JsonProcessingException {
+    String altMessage = data instanceof Map
+        ? ((Map<String, String>) data).remove(InjectedMessage.REPLACE_MESSAGE_KEY)
+        : null;
+    return altMessage != null ? altMessage : OBJECT_MAPPER.writeValueAsString(data);
   }
 
   private String getSendTopic(String deviceId, String topicSuffix) {
@@ -578,6 +594,24 @@ public class MqttPublisher implements Publisher {
       this.type = type;
       this.phase = phase;
     }
+  }
+
+  static class InjectedMessage {
+
+    public String version;
+    public Date timestamp;
+
+    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
+    public String REPLACE_MESSAGE_WITH;
+    private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
+
+    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
+    public String REPLACE_TOPIC_WITH;
+    private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
+  }
+
+  static class InjectedState extends InjectedMessage {
+
   }
 
   private class MqttCallbackHandler implements MqttCallback {
