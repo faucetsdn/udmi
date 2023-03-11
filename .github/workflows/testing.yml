@@ -148,15 +148,18 @@ jobs:
         if: "${{ env.GCP_TARGET_PROJECT != '' }}"
         run: |
           bin/test_validator $GCP_TARGET_PROJECT
-          more /tmp/validator.out
-      - name: output logs
+      - name: validator result
         if: ${{ always() }}
         run: |
-          cd sites/udmi_site_model/out && more `find . -type f` || true
+          cat /tmp/validator.out || true
       - name: validator logs
         if: ${{ always() }}
         run: |
           cat out/validator.out || true
+      - name: message captures
+        if: ${{ always() }}
+        run: |
+          cd sites/udmi_site_model/out && more `find . -type f` || true
       - name: itemized sequencer tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}

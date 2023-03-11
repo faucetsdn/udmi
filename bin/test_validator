@@ -121,7 +121,6 @@ if [[ -z $outfiles ]]; then
     false
 fi
 
-
 more $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e "s/Validator.java:[0-9]+/redacted/" \
