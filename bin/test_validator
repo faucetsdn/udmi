@@ -111,7 +111,9 @@ TMP_VALIDATOR=/tmp/validator.out
 find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
 echo Found `wc -l $TMP_VALIDATOR` json output files.
 
+echo Out files for AHU-1:
 (cd $site_path/out/devices/AHU-1; ls -lrt *.out)
+echo Out files for AHU-22:
 (cd $site_path/out/devices/AHU-22; ls -lrt *.out)
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
@@ -120,8 +122,7 @@ if [[ -z $outfiles ]]; then
 fi
 
 
-# Include /dev/null so that more has >1 to chomp on and outputs headers.
-more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
+more $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e "s/Validator.java:[0-9]+/redacted/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'
