@@ -23,8 +23,8 @@ VALIDATOR_OUT=out/validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
-ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs -r kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs -r kill || true
 
 rm -rf $site_path/out/devices
 
@@ -92,6 +92,9 @@ function pubber_bg {
         return 1
     fi
 }
+
+echo Sleeping to wait for validator to be ready...
+sleep 10
 
 pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing
