@@ -100,7 +100,7 @@ pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing
 
 echo Waiting for system to run for a bit...
-cat $VALIDATOR_OUT && timeout 50s tail -f $VALIDATOR_OUT || true
+cat $VALIDATOR_OUT && timeout 60s tail -f $VALIDATOR_OUT || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
