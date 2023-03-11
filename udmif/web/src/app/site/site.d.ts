@@ -1,6 +1,7 @@
 import { DeviceError } from '../device-errors/device-errors';
 
 interface SiteModel {
+  uuid: string;
   name: string;
   seenDevicesCount: number;
   totalDevicesCount: number;

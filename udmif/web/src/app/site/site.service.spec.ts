@@ -27,6 +27,7 @@ describe('SiteService', () => {
   it('should return the site', () => {
     const mockSiteResponse: SiteQueryResponse = {
       site: {
+        uuid: '123',
         name: 'site one',
         seenDevicesCount: 0,
         totalDevicesCount: 0,

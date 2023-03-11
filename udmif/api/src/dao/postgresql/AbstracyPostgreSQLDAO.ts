@@ -8,7 +8,7 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
   defaultOrder: Order;
   ID_AS_COUNT = 'uuid as count';
 
-  constructor(private db: Knex, private tableName: string) {}
+  constructor(private db: Knex, private tableName: string) { }
 
   async getAll(searchOptions: ValidatedSearchOptions): Promise<Type[]> {
     return this.getTable()
@@ -17,6 +17,10 @@ export abstract class AbstractPostgreSQLDAO<Type> implements DAO<Type> {
       .where((builder) => this.addWhereClause(searchOptions.filter, builder))
       .limit(searchOptions.batchSize)
       .offset(searchOptions.offset);
+  }
+
+  async getAllIn(field: string, values: readonly string[]): Promise<Type[]> {
+    return this.getTable().select().whereIn(field, values);
   }
 
   async getOne(filterQuery: any): Promise<Type> {

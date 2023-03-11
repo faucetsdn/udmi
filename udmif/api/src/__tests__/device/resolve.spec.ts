@@ -34,6 +34,7 @@ const QUERY_DEVICES = gql`
 const QUERY_DEVICE = gql`
   query {
     device(id: "some-id") {
+      uuid
       id
       name
       make

@@ -92,6 +92,10 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this._refetch();
   };
 
+  devicesTrackBy = (_index: number, item: Device): string => {
+    return item.uuid!;
+  };
+
   private _refetch(offset: number = 0): void {
     this.devicesQuery.refetch({
       searchOptions: {

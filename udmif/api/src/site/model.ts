@@ -15,6 +15,7 @@ export interface SiteArgs {
 }
 
 export interface Site {
+  uuid: string;
   name: string;
   validation?: SiteValidation;
 }

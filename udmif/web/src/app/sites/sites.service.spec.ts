@@ -29,6 +29,7 @@ describe('SitesService', () => {
       sites: {
         sites: [
           {
+            uuid: '123',
             name: 'site one',
             seenDevicesCount: 0,
             totalDevicesCount: 0,
