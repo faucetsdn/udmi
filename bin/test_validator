@@ -100,7 +100,7 @@ pubber_bg AHU-1 extraField=prlagle
 pubber_bg AHU-22 emptyMissing
 
 echo Waiting for system to run for a bit...
-timeout 30s tail -f $VALIDATOR_OUT || true
+cat $VALIDATOR_OUT && timeout 30s tail -f $VALIDATOR_OUT || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
@@ -111,13 +111,13 @@ TMP_VALIDATOR=/tmp/validator.out
 find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
 echo Found `wc -l $TMP_VALIDATOR` json output files.
 
+find $site_path/out/devices -name \*.out | sort
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
     echo No .out files found in $site_path/out/devices
     false
 fi
 
-echo Found out files $outfiles, copying to $TMP_VALIDATOR
 
 # Include /dev/null so that more has >1 to chomp on and outputs headers.
 more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
