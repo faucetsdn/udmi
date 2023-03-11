@@ -625,8 +625,8 @@ public class Pubber {
       updatePoints();
       deferredConfigActions();
       sendDevicePoints();
-      sendEmptyMissingBadEvents(); // Do this between pointset and system for timing control.
       sendSystemEvent();
+      sendEmptyMissingBadEvents();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
