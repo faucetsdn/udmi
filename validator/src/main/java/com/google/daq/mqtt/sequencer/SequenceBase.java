@@ -105,6 +105,7 @@ public class SequenceBase {
 
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
+
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
     checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
@@ -320,7 +321,7 @@ public class SequenceBase {
     altConfiguration.registry_id = altRegistry;
     altConfiguration.alt_registry = null;
     try {
-      return new IotReflectorClient(altConfiguration, activeInstance.getRequiredFunctionsVersion());
+      return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
     } catch (Exception e) {
       System.err.println("Could not connect to alternate registry, disabling: " + e.getMessage());
       if (traceLogLevel()) {
@@ -330,7 +331,7 @@ public class SequenceBase {
     }
   }
 
-  private int getRequiredFunctionsVersion() {
+  private static int getRequiredFunctionsVersion() {
     FeatureStage minStage = isNullOrEmpty(validatorConfig.min_stage) ? DEFAULT_MIN_STAGE
         : FeatureStage.valueOf(validatorConfig.min_stage);
     return SequenceRunner.processGiven(FeatureStage.ALPHA, minStage) ? FUNCTIONS_VERSION_ALPHA
@@ -338,7 +339,7 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getReflectorClient() {
-    return new IotReflectorClient(validatorConfig, activeInstance.getRequiredFunctionsVersion());
+    return new IotReflectorClient(validatorConfig, getRequiredFunctionsVersion());
   }
 
   static void resetState() {
