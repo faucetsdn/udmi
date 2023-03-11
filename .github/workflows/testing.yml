@@ -99,7 +99,7 @@ jobs:
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
-    needs: extended # Access to UDMI-REFLECTOR is mutually exclusive
+    needs: redirect # Access to UDMI-REFLECTOR is mutually exclusive
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v2
