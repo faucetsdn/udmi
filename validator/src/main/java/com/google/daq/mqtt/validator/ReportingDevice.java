@@ -230,7 +230,7 @@ public class ReportingDevice {
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     addError(error, category,
-        String.format("%s_%s: %s", subType, subFolder,
+        String.format("%s: %s", typeFolderPairKey(subType, subFolder),
             Common.getExceptionDetail(error, this.getClass(), ReportingDevice::validationMessage)));
   }
 
@@ -238,18 +238,24 @@ public class ReportingDevice {
     addEntry(makeEntry(error, category, detail));
   }
 
+  public static String typeFolderPairKey(String subType, String subFolder) {
+    return String.format("%s_%s", subType, subFolder);
+  }
+
   /**
    * Get the error Entries associated with this device.
    *
-   * @param now current time for thresholding, or null for everything
+   * @param now          current time for thresholding, or null for everything
+   * @param detailPrefix filter message on details starting with the given prefix
    * @return Entry list or errors.
    */
-  public List<Entry> getErrors(Date now) {
+  public List<Entry> getErrors(Date now, String detailPrefix) {
     if (now == null) {
       return entries;
     }
     return entries.stream()
         .filter(entry -> !entry.timestamp.before(getThreshold(now.toInstant())))
+        .filter(entry -> detailPrefix == null || entry.detail.startsWith(detailPrefix))
         .collect(Collectors.toList());
   }
 

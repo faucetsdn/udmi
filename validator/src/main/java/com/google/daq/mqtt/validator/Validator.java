@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
@@ -579,7 +580,9 @@ public class Validator {
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      event.errors = reportingDevice.getErrors(now);
+      String prefix = String.format("%s:",
+          typeFolderPairKey(origAttributes.get(SUBTYPE_PROPERTY_KEY), subFolder));
+      event.errors = reportingDevice.getErrors(now, prefix);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
@@ -616,7 +619,7 @@ public class Validator {
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
-    String filename = String.format("%03d_%s_%s.json", index, type, folder);
+    String filename = String.format("%03d_%s.json", index, typeFolderPairKey(type, folder));
     File deviceDir = new File(traceDir, deviceId);
     File messageFile = new File(deviceDir, filename);
     try {
@@ -695,7 +698,7 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    return String.format("%s_%s", subType, subFolder);
+    return typeFolderPairKey(subType, subFolder);
   }
 
   private void processValidationReport() {
@@ -713,7 +716,7 @@ public class Validator {
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
         DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
-        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.error_devices.add(deviceId);
         } else {
@@ -722,7 +725,7 @@ public class Validator {
         }
       } else if (deviceInfo.seenRecently(getNow())) {
         DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
-        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.correct_devices.add(deviceId);
         } else {
