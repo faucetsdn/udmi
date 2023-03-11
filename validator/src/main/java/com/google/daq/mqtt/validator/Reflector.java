@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.removeNextArg;
@@ -21,7 +22,6 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class Reflector {
 
-  private static final int REQUIRED_FUNCTION_VER = 5;
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;

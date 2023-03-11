@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +32,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
+import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.Common;
@@ -101,8 +103,14 @@ import udmi.schema.ValidationState;
  */
 public class SequenceBase {
 
-  private static final int FUNCTIONS_VERSION_BETA = 5; // Version required for beta execution.
-  private static final int FUNCTIONS_VERSION_ALPHA = 5; // Version required for alpha execution.
+  private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
+  private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
+  static {
+    // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
+    checkState(FUNCTIONS_VERSION_ALPHA >= FUNCTIONS_VERSION_BETA,
+        "ALPHA functions version should not be > BETA");
+  }
+
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s %s";
   private static final String TESTS_OUT_DIR = "tests";
   private static final String SEQUENCER_CATEGORY = "validation.feature.sequence";
