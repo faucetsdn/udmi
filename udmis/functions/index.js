@@ -6,8 +6,10 @@
  * These version markers are used to automatically check that the deployed cloud functions are suitable for any bit
  * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
  * indicate the MIN/MAX versions supported, while the client determines what is required.
+ *
+ * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
+ * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
  */
-
 const FUNCTIONS_VERSION_MIN = 5;
 const FUNCTIONS_VERSION_MAX = 6;
 
