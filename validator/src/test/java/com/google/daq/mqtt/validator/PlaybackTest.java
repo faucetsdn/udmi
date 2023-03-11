@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static udmi.schema.Level.INFO;
 
 import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.validator.MessageReadingClient.OutputBundle;
@@ -38,8 +39,9 @@ public class PlaybackTest extends TestBase {
       assertEquals("missing devices", 0, finalReport.summary.missing_devices.size());
       assertEquals("error devices", 2, finalReport.summary.error_devices.size());
       assertEquals("device summaries", 4, finalReport.devices.size());
-      assertNull("no AHU-1 status", finalReport.devices.get("AHU-1").status);
-      assertEquals("AHU-22 status", Category.VALIDATION_DEVICE_SCHEMA,
+      assertEquals("AHU-1 status level", (Object) INFO.value(),
+          finalReport.devices.get("AHU-1").status.level);
+      assertEquals("AHU-22 status category", Category.VALIDATION_DEVICE_SCHEMA,
           finalReport.devices.get("AHU-22").status.category);
       assertEquals("SNS-4 status", Category.VALIDATION_DEVICE_MULTIPLE,
           finalReport.devices.get("SNS-4").status.category);
@@ -56,7 +58,7 @@ public class PlaybackTest extends TestBase {
       ValidationEvent lastReport = deviceReports.get(deviceReports.size() - 1);
       assertEquals("missing points", 0, lastReport.pointset.missing.size());
       assertEquals("extra points", 0, lastReport.pointset.extra.size());
-      assertNull("device status", lastReport.status);
+      assertEquals("device status level", (Object) INFO.value(), lastReport.status.level);
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
       throw e;

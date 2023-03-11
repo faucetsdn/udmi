@@ -1,0 +1,40 @@
+{
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "8c:8c:aa:50:bc:72"
+      },
+      "ipv4" : {
+        "addr" : "192.168.8.3"
+      },
+      "ipv6" : {
+        "addr" : "fe80::11a9:496f:6596:b455"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "2023-03-07T16:33:14Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2023-03-07T16:31:51Z",
+      "restart_count" : 2,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-20462",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2023-03-07T16:33:15Z",
+      "level" : 300
+    }
+  },
+  "timestamp": "2023-03-02T19:27:37.819Z",
+  "version" : "1.4.1"
+}

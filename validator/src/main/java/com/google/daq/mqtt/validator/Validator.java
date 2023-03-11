@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_TOOLS;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
+import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
+import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
@@ -31,7 +33,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -81,6 +82,7 @@ import udmi.schema.DeviceValidationEvent;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -93,6 +95,8 @@ import udmi.schema.ValidationSummary;
  * Core class for running site-level validations of data streams.
  */
 public class Validator {
+
+  public static final int REQUIRED_FUNCTION_VER = 6;
 
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
@@ -128,7 +132,7 @@ public class Validator {
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
   private static final Date START_TIME = new Date();
-  private final Map<String, ReportingDevice> expectedDevices = new TreeMap<>();
+  private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
@@ -136,7 +140,8 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final List<String> deviceIds;
+  private final List<String> targetDevices;
+  private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
@@ -164,7 +169,7 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
-    deviceIds = listCopy;
+    targetDevices = listCopy;
   }
 
   /**
@@ -312,6 +317,7 @@ public class Validator {
     File devicesDir = new File(siteDir, DEVICES_SUBDIR);
     List<String> siteDevices = SiteModel.listDevices(devicesDir);
     try {
+      expectedDevices = ImmutableSet.copyOf(siteDevices);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = new ReportingDevice(device);
         try {
@@ -321,9 +327,9 @@ public class Validator {
           System.err.printf("Error while loading device %s: %s%n", device, e);
           reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
         }
-        expectedDevices.put(device, reportingDevice);
+        reportingDevices.put(device, reportingDevice);
       }
-      System.err.println("Loaded " + expectedDevices.size() + " expected devices");
+      System.err.println("Loaded " + reportingDevices.size() + " expected devices");
     } catch (Exception e) {
       throw new RuntimeException(
           "While loading devices directory " + devicesDir.getAbsolutePath(), e);
@@ -374,7 +380,7 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     System.err.println("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config);
+    client = new IotReflectorClient(config, REQUIRED_FUNCTION_VER);
   }
 
   void messageLoop() {
@@ -405,10 +411,8 @@ public class Validator {
   }
 
   private void sendInitializationQuery() {
-    if (!deviceIds.isEmpty()) {
-      System.err.println("Sending initialization query messages for device " + deviceIds);
-    }
-    for (String deviceId : deviceIds) {
+    for (String deviceId : targetDevices) {
+      System.err.println("Sending initialization query messages for device " + deviceId);
       client.publish(deviceId, STATE_QUERY_TOPIC, EMPTY_MESSAGE);
     }
   }
@@ -422,7 +426,7 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    if (deviceId != null && expectedDevices.containsKey(deviceId)) {
+    if (deviceId != null && reportingDevices.containsKey(deviceId)) {
       processedDevices.add(deviceId);
     }
 
@@ -456,19 +460,10 @@ public class Validator {
     }
   }
 
-  private String sanitizeMessage(String schemaName, Map<String, Object> message) {
-    String nonce = (String) message.remove(SequenceBase.CONFIG_NONCE_KEY);
-    message.values().forEach(this::sanitizeBlock);
+  private void sanitizeMessage(String schemaName, Map<String, Object> message) {
     if (schemaName.startsWith(CONFIG_PREFIX) || schemaName.startsWith(STATE_PREFIX)) {
       message.remove(VERSION_KEY);
       message.remove(TIMESTAMP_KEY);
-    }
-    return nonce;
-  }
-
-  private void sanitizeBlock(Object subBlock) {
-    if (subBlock instanceof Map) {
-      ((Map<?, ?>) subBlock).remove(SequenceBase.CONFIG_NONCE_KEY);
     }
   }
 
@@ -477,7 +472,7 @@ public class Validator {
       Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
-    ReportingDevice device = expectedDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
     device.clearMessageEntries();
 
     try {
@@ -488,15 +483,26 @@ public class Validator {
 
       System.err.printf(
           "Processing device #%d/%d: %s/%s%n",
-          processedDevices.size(), expectedDevices.size(), deviceId, schemaName);
+          processedDevices.size(), reportingDevices.size(), deviceId, schemaName);
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
 
       if (message.containsKey(EXCEPTION_KEY)) {
-        device.addError((Exception) message.get(EXCEPTION_KEY), attributes,
-            Category.VALIDATION_DEVICE_RECEIVE);
+        Exception error = (Exception) message.get(EXCEPTION_KEY);
+        System.err.println(
+            "Pipeline exception " + deviceId + ": " + Common.getExceptionMessage(error));
+        device.addError(error, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
+      if (message.containsKey(ERROR_KEY)) {
+        String error = (String) message.get(ERROR_KEY);
+        System.err.println("Pipeline error " + deviceId + ": " + error);
+        IllegalArgumentException exception = new IllegalArgumentException(
+            "Error in message pipeline: " + error);
+        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
         return device;
       }
 
@@ -538,8 +544,8 @@ public class Validator {
       }
 
       if (expectedDevices.isEmpty()) {
-        // No devices configured, so don't check metadata.
-      } else if (expectedDevices.containsKey(deviceId)) {
+        // No devices configured, so don't consider check metadata or consider extra.
+      } else if (expectedDevices.contains(deviceId)) {
         try {
           if (CONTENT_VALIDATORS.containsKey(schemaName)) {
             Class<?> targetClass = CONTENT_VALIDATORS.get(schemaName);
@@ -574,7 +580,9 @@ public class Validator {
       event.sub_folder = subFolder;
       event.sub_type = origAttributes.getOrDefault(SUBTYPE_PROPERTY_KEY, UNKNOWN_TYPE_DEFAULT);
       event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      event.errors = reportingDevice.getErrors(now);
+      String prefix = String.format("%s:",
+          typeFolderPairKey(origAttributes.get(SUBTYPE_PROPERTY_KEY), subFolder));
+      event.errors = reportingDevice.getErrors(now, prefix);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
@@ -611,7 +619,7 @@ public class Validator {
     AtomicInteger messageIndex = deviceMessageIndex.computeIfAbsent(deviceId,
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
-    String filename = String.format("%03d_%s_%s.json", index, type, folder);
+    String filename = String.format("%03d_%s.json", index, typeFolderPairKey(type, folder));
     File deviceDir = new File(traceDir, deviceId);
     File messageFile = new File(deviceDir, filename);
     try {
@@ -639,7 +647,7 @@ public class Validator {
       return false;
     }
 
-    if (!deviceIds.isEmpty() && !deviceIds.contains(deviceId)) {
+    if (!targetDevices.isEmpty() && !targetDevices.contains(deviceId)) {
       return false;
     }
 
@@ -690,38 +698,46 @@ public class Validator {
       subType = UNKNOWN_TYPE_DEFAULT;
     }
 
-    return String.format("%s_%s", subType, subFolder);
+    return typeFolderPairKey(subType, subFolder);
   }
 
   private void processValidationReport() {
     ValidationSummary summary = new ValidationSummary();
     summary.extra_devices = new ArrayList<>(extraDevices);
 
-    summary.missing_devices = new ArrayList<>();
     summary.correct_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
     Map<String, DeviceValidationEvent> devices = new TreeMap<>();
-    Collection<String> summarizeDevices =
-        deviceIds.isEmpty() ? expectedDevices.keySet() : deviceIds;
-    for (String deviceId : summarizeDevices) {
-      ReportingDevice deviceInfo = expectedDevices.get(deviceId);
-      if (deviceInfo == null) {
-        summary.missing_devices.add(deviceId);
-        continue;
-      }
+    Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
+    for (String deviceId : reportingDevices.keySet()) {
+      ReportingDevice deviceInfo = reportingDevices.get(deviceId);
       deviceInfo.expireEntries(getNow());
+      boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
-        summary.error_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
-        deviceValidationEvent.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null));
+        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
+        if (expected) {
+          summary.error_devices.add(deviceId);
+        } else {
+          event.status.category = Category.VALIDATION_DEVICE_EXTRA;
+          event.status.level = Level.WARNING.value();
+        }
       } else if (deviceInfo.seenRecently(getNow())) {
-        summary.correct_devices.add(deviceId);
-        DeviceValidationEvent deviceValidationEvent = getValidationEvent(devices, deviceInfo);
-      } else {
-        summary.missing_devices.add(deviceId);
+        DeviceValidationEvent event = getValidationEvent(devices, deviceInfo);
+        event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
+        if (expected) {
+          summary.correct_devices.add(deviceId);
+        } else {
+          event.status.category = Category.VALIDATION_DEVICE_EXTRA;
+          event.status.level = Level.WARNING.value();
+        }
       }
     }
+
+    summary.missing_devices = new ArrayList(targets);
+    summary.missing_devices.removeAll(summary.error_devices);
+    summary.missing_devices.removeAll(summary.correct_devices);
 
     sendValidationReport(makeValidationReport(summary, devices));
   }

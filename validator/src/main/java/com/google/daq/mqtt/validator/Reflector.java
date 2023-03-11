@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.removeNextArg;
@@ -102,7 +103,7 @@ public class Reflector {
     executionConfiguration.key_file = keyFile;
     executionConfiguration.project_id = projectId;
     executionConfiguration.udmi_version = Common.getUdmiVersion();
-    client = new IotReflectorClient(executionConfiguration);
+    client = new IotReflectorClient(executionConfiguration, REQUIRED_FUNCTION_VER);
   }
 
   private List<String> parseArgs(List<String> argsList) {
