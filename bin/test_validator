@@ -111,7 +111,8 @@ TMP_VALIDATOR=/tmp/validator.out
 find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
 echo Found `wc -l $TMP_VALIDATOR` json output files.
 
-find $site_path/out/devices -name \*.out | sort
+(cd $site_path/out/devices/AHU-1; ls -lrt *.out)
+(cd $site_path/out/devices/AHU-22; ls -lrt *.out)
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
     echo No .out files found in $site_path/out/devices
