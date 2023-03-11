@@ -17,9 +17,6 @@ sites/udmi_site_model/out/devices/AHU-22/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.json
 sites/udmi_site_model/out/devices/AHU-22/state_system.json
 ::::::::::::::
-/dev/null
-::::::::::::::
-::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/config.out
 ::::::::::::::
 {
