@@ -152,10 +152,6 @@ jobs:
         if: ${{ always() }}
         run: |
           cat /tmp/validator.out || true
-      - name: validator logs
-        if: ${{ always() }}
-        run: |
-          cat out/validator.out || true
       - name: message captures
         if: ${{ always() }}
         run: |
