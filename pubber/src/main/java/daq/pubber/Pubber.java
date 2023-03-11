@@ -635,7 +635,8 @@ public class Pubber {
   /**
    * For testing, if configured, send a slate of bad messages for testing by the message handling
    * infrastructure. Uses the sekrit REPLACE_MESSAGE_WITH field to sneak bad output into the pipe.
-   * E.g., Will send a message with "{ INVALID JSON!" as a message payload.
+   * E.g., Will send a message with "{ INVALID JSON!" as a message payload. Inserts a delay before
+   * each message sent to stabelize the output order for testing purposes.
    */
   private void sendEmptyMissingBadEvents() {
     if (TRUE.equals(configuration.options.emptyMissing) && (
@@ -643,6 +644,7 @@ public class Pubber {
       warn("Sending badly formatted messages as per configuration");
 
       InjectedMessage invalidEvent = new InjectedMessage();
+      safeSleep(INJECT_MESSAGE_DELAY_MS);
       publishDeviceMessage(invalidEvent);
 
       INVALID_REPLACEMENTS.forEach((key, value) -> {
@@ -655,7 +657,9 @@ public class Pubber {
 
       InjectedState invalidState = new InjectedState();
       invalidState.REPLACE_MESSAGE_WITH = CORRUPT_STATE_MESSAGE;
+      safeSleep(INJECT_MESSAGE_DELAY_MS);
       publishStateMessage(invalidState);
+      safeSleep(INJECT_MESSAGE_DELAY_MS);
     }
   }
 
