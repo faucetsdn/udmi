@@ -11,7 +11,13 @@
   },
   "devices" : {
     "AHU-1" : {
-      "last_seen" : "1999-10-20T01:02:03Z"
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "Successful validation",
+        "category" : "validation.device.receive",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 200
+      }
     },
     "AHU-22" : {
       "last_seen" : "1999-10-20T01:02:03Z",
@@ -24,7 +30,13 @@
       }
     },
     "GAT-123" : {
-      "last_seen" : "1999-10-20T01:02:03Z"
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "Successful validation",
+        "category" : "validation.device.receive",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 200
+      }
     },
     "SNS-4" : {
       "last_seen" : "1999-10-20T01:02:03Z",

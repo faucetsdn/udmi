@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
 import static java.lang.Boolean.TRUE;
@@ -25,6 +26,8 @@ import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import daq.pubber.MqttPublisher.InjectedMessage;
+import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -78,7 +81,6 @@ import udmi.schema.Enumerate;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
-import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.NetworkDiscoveryConfig;
@@ -125,13 +127,16 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static final Map<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP = ImmutableMap.of(
-      State.class, MqttDevice.STATE_TOPIC,
-      SystemEvent.class, getEventsSuffix("system"),
-      PointsetEvent.class, getEventsSuffix("pointset"),
-      ExtraPointsetEvent.class, getEventsSuffix("pointset"),
-      DiscoveryEvent.class, getEventsSuffix("discovery")
-  );
+  private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
+      new ImmutableMap.Builder<Class<?>, String>()
+          .put(State.class, MqttDevice.STATE_TOPIC)
+          .put(SystemEvent.class, getEventsSuffix("system"))
+          .put(PointsetEvent.class, getEventsSuffix("pointset"))
+          .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
+          .put(InjectedMessage.class, getEventsSuffix("invalid"))
+          .put(InjectedState.class, MqttDevice.STATE_TOPIC)
+          .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
+          .build();
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -142,6 +147,12 @@ public class Pubber {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
+  private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
+      "events/string", "\"\"",
+      "events/emptyjson", "{}",
+      "events/badjson", "{ NOT VALID JSON!"
+  );
+  public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -158,6 +169,8 @@ public class Pubber {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
+  private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -539,14 +552,6 @@ public class Pubber {
     }
   }
 
-  private void safeSleep(long durationMs) {
-    try {
-      Thread.sleep(durationMs);
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Error sleeping", e);
-    }
-  }
-
   private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
     configuration.deviceId = checkNotNull(attributes.deviceId, "deviceId");
     configuration.keyBytes = Base64.getDecoder()
@@ -621,10 +626,47 @@ public class Pubber {
       deferredConfigActions();
       sendDevicePoints();
       sendSystemEvent();
+      sendEmptyMissingBadEvents();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }
+  }
+
+  /**
+   * For testing, if configured, send a slate of bad messages for testing by the message handling
+   * infrastructure. Uses the sekrit REPLACE_MESSAGE_WITH field to sneak bad output into the pipe.
+   * E.g., Will send a message with "{ INVALID JSON!" as a message payload. Inserts a delay before
+   * each message sent to stabelize the output order for testing purposes.
+   */
+  private void sendEmptyMissingBadEvents() {
+    int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
+    if (!TRUE.equals(configuration.options.emptyMissing)
+        || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
+      return;
+    }
+
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
+
+    if (phase == 0) {
+      flushDirtyState();
+      InjectedState invalidState = new InjectedState();
+      invalidState.REPLACE_MESSAGE_WITH = CORRUPT_STATE_MESSAGE;
+      warn("Sending badly formatted state as per configuration");
+      publishStateMessage(invalidState);
+    } else if (phase == 1) {
+      InjectedMessage invalidEvent = new InjectedMessage();
+      warn("Sending badly formatted message type");
+      publishDeviceMessage(invalidEvent);
+    } else {
+      String key = INVALID_KEYS.get(phase - 2);
+      InjectedMessage replacedEvent = new InjectedMessage();
+      replacedEvent.REPLACE_TOPIC_WITH = key;
+      replacedEvent.REPLACE_MESSAGE_WITH = INVALID_REPLACEMENTS.get(key);
+      warn("Sending badly formatted message of type " + key);
+      publishDeviceMessage(replacedEvent);
+    }
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
   }
 
   private void sendSystemEvent() {
@@ -1529,12 +1571,6 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-    if (delay > 0) {
-      warn(String.format("State update delay %dms", delay));
-      safeSleep(delay);
-    }
-
     deviceState.timestamp = getCurrentTimestamp();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
@@ -1550,9 +1586,19 @@ public class Pubber {
       return;
     }
     stateDirty.set(false);
+    publishStateMessage(deviceState);
+  }
+
+  private void publishStateMessage(Object stateToSend) {
+    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+    if (delay > 0) {
+      warn(String.format("State update delay %dms", delay));
+      safeSleep(delay);
+    }
+
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
-    publishDeviceMessage(deviceState, () -> {
+    publishDeviceMessage(stateToSend, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
     });
@@ -1692,4 +1738,5 @@ public class Pubber {
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;
   }
+
 }

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2023-03-02T19:27:35.819Z",
+  "version": 1,
+  "system": {
+    "last_config": "2021-05-14T15:53:26Z",
+    "firmware": {
+      "version": [
+        "D_IP_BW6_V35_6_S14"
+      ]
+    },
+    "operational": true,
+    "make_model": "Delmatic IP_BW6"
+  }
+}

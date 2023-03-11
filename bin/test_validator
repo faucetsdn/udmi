@@ -23,8 +23,8 @@ VALIDATOR_OUT=out/validator.out
 WAITING=10
 
 echo Killing running pubber/validator instances...
-ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
-ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs -r kill || true
+ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs -r kill || true
 
 rm -rf $site_path/out/devices $site_path/devices/*/out
 
@@ -73,7 +73,10 @@ function pubber_bg {
     echo Writing pubber output to $outfile, serial no $serial_no
     cmd="bin/pubber $site_path $project_id $did $serial_no $@"
     echo $cmd
-    $cmd > $outfile 2>&1 &
+
+    date > $outfile
+    echo $cmd >> $outfile
+    $cmd >> $outfile 2>&1 &
 
     # Give a little bit of time to settle before deterministic check
     sleep 10
@@ -93,11 +96,14 @@ function pubber_bg {
     fi
 }
 
+echo Sleeping to wait for validator to be ready...
+sleep 10
+
 pubber_bg AHU-1 extraField=prlagle
-pubber_bg AHU-22
+pubber_bg AHU-22 emptyMissing
 
 echo Waiting for system to run for a bit...
-timeout 30s tail -f $VALIDATOR_OUT || true
+cat $VALIDATOR_OUT && timeout 60s tail -f $VALIDATOR_OUT || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
@@ -108,16 +114,17 @@ TMP_VALIDATOR=/tmp/validator.out
 find $site_path/out/devices -name \*.json | sort > $TMP_VALIDATOR
 echo Found `wc -l $TMP_VALIDATOR` json output files.
 
+echo Out files for AHU-1:
+(cd $site_path/out/devices/AHU-1; ls -lrt *.out)
+echo Out files for AHU-22:
+(cd $site_path/out/devices/AHU-22; ls -lrt *.out)
 outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 if [[ -z $outfiles ]]; then
     echo No .out files found in $site_path/out/devices
     false
 fi
 
-echo Found out files $outfiles, copying to $TMP_VALIDATOR
-
-# Include /dev/null so that more has >1 to chomp on and outputs headers.
-more /dev/null $outfiles | sed -E >> $TMP_VALIDATOR \
+more $outfiles | sed -E >> $TMP_VALIDATOR \
         -e "s/[0-9-]{10}T[0-9:]{8}Z/1999-10-20T01:02:03Z/" \
         -e "s/Validator.java:[0-9]+/redacted/" \
         -e 's/\\t[a-zA-Z .()$0-9]+\.java:[0-9]+\)\\n/\\tredacted\\n/g'

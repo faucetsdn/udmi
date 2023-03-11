@@ -2,7 +2,6 @@ package com.google.daq.mqtt.sequencer;
 
 import static joptsimple.internal.Strings.isNullOrEmpty;
 
-import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
@@ -205,8 +204,7 @@ public class SequenceRunner {
 
   static FeatureStage getFeatureMinStage() {
     String stage = SequenceBase.validatorConfig.min_stage;
-    return isNullOrEmpty(stage) ? IotReflectorClient.DEFAULT_MIN_STAGE
-        : FeatureStage.valueOf(stage);
+    return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {

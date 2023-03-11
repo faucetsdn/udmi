@@ -6,10 +6,12 @@
  * These version markers are used to automatically check that the deployed cloud functions are suitable for any bit
  * of client code. Clients (e.g. sqeuencer) can query this value and check that it's within range. Values
  * indicate the MIN/MAX versions supported, while the client determines what is required.
+ *
+ * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
+ * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
  */
-
 const FUNCTIONS_VERSION_MIN = 5;
-const FUNCTIONS_VERSION_MAX = 5;
+const FUNCTIONS_VERSION_MAX = 6;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -36,6 +38,7 @@ const QUERY_TYPE = 'query';
 
 const UPDATE_FOLDER = 'update';
 const UDMIS_FOLDER = 'udmis';
+const ERROR_FOLDER = 'error';
 
 const ALL_REGIONS = ['us-central1', 'europe-west1', 'asia-east1'];
 let registry_regions = null;
@@ -79,6 +82,17 @@ function reflectMessage(attributes, message) {
   return sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId);
 }
 
+function reflectError(attributes, base64, error) {
+  const errorStr = String(error) + " for subFolder " + attributes.subFolder;
+  console.log('Captured message error, reflecting:', errorStr);
+  const message = {
+    error: errorStr,
+    data: base64
+  }
+  attributes.subFolder = ERROR_FOLDER;
+  reflectMessage(attributes, message);
+}
+
 function sendEnvelope(registryId, deviceId, subType, subFolder, message, transactionId) {
   if (registryId == REFLECT_REGISTRY) {
     console.log('sendEnvelope squash for', registryId);
@@ -89,7 +103,7 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, transac
 
   const messageStr = (typeof message === 'string') ? message : JSON.stringify(message);
   const base64 = Buffer.from(messageStr).toString('base64');
-  
+
   envelope = {
     deviceRegistryId: registryId,
     deviceId: deviceId,
@@ -101,7 +115,7 @@ function sendEnvelope(registryId, deviceId, subType, subFolder, message, transac
 
   return sendCommand(REFLECT_REGISTRY, registryId, null, envelope, transactionId);
 }
-  
+
 function sendCommand(registryId, deviceId, subFolder, message, transactionId) {
   return sendCommandStr(registryId, deviceId, subFolder, JSON.stringify(message), transactionId);
 }
@@ -136,15 +150,19 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
 exports.udmi_target = functions.pubsub.topic('udmi_target').onPublish((event) => {
   const attributes = event.attributes;
   const subType = attributes.subType || EVENT_TYPE;
-  const base64 = event.data;
-  const msgString = Buffer.from(base64, 'base64').toString();
-  const msgObject = JSON.parse(msgString);
-
   if (subType != EVENT_TYPE) {
     return null;
   }
+  const base64 = event.data;
 
-  return reflectMessage(attributes, msgObject);
+  try {
+    const msgString = Buffer.from(base64, 'base64').toString();
+    const msgObject = JSON.parse(msgString);
+
+    return reflectMessage(attributes, msgObject);
+  } catch (e) {
+    return reflectError(attributes, base64, e);
+  }
 });
 
 function getRegistries(region) {
@@ -274,13 +292,17 @@ exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
   const attributes = event.attributes;
   const base64 = event.data;
   const msgString = Buffer.from(base64, 'base64').toString();
-  const msgObject = JSON.parse(msgString);
-
-  if (attributes.subFolder) {
+  try {
+    const msgObject = JSON.parse(msgString);
+    if (attributes.subFolder) {
+      attributes.subType = STATE_TYPE;
+      return process_state_block(attributes, msgObject);
+    } else {
+      return process_state_update(attributes, msgObject);
+    }
+  } catch (e) {
     attributes.subType = STATE_TYPE;
-    return process_state_block(attributes, msgObject);
-  } else {
-    return process_state_update(attributes, msgObject);
+    return reflectError(attributes, base64, e);
   }
 });
 

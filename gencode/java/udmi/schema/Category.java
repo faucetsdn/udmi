@@ -167,6 +167,11 @@ public class Category {
     public static final Level VALIDATION_DEVICE_MULTIPLE_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_DEVICE_MULTIPLE, INFO); }
 
+    // Device was unexpected (not in site model).
+    public static final String VALIDATION_DEVICE_EXTRA = "validation.device.extra";
+    public static final Level VALIDATION_DEVICE_EXTRA_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_EXTRA, INFO); }
+
     // The validation summary report.
     public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
     public static final Level VALIDATION_SUMMARY_REPORT_LEVEL = INFO;

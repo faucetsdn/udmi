@@ -4,19 +4,13 @@
   },
   "Credential" : {
     "DWN-1" : "While loading credentials for local device DWN-1",
-    "DWN-2" : "While loading credentials for local device DWN-2",
-    "DWN-3" : "While loading credentials for local device DWN-3"
+    "DWN-2" : "While loading credentials for local device DWN-2"
   },
   "Files" : {
     "DWN-1" : "devices/DWN-1",
-    "DWN-2" : "devices/DWN-2",
-    "DWN-3" : "devices/DWN-3"
+    "DWN-2" : "devices/DWN-2"
   },
   "Version" : {
-<<<<<<< HEAD
-    "main" : "1.4.0-168-g3fddec34"
-=======
-    "main" : "1.4.0-226-g6d962ee8"
->>>>>>> master
+    "main" : "1.4.0-211-gf31df687"
   }
 }

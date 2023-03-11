@@ -4,7 +4,9 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Level.INFO;
 
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.TestCommon;
@@ -17,6 +19,7 @@ import org.junit.Test;
 import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvent;
 import udmi.schema.DiscoveryEvent;
+import udmi.schema.Level;
 import udmi.schema.PointPointsetEvent;
 import udmi.schema.PointsetEvent;
 import udmi.schema.PointsetState;
@@ -72,7 +75,8 @@ public class BasicTest extends TestBase {
     ValidationState report = getValidationReport();
     assertEquals("No error devices", 1, report.devices.size());
     DeviceValidationEvent deviceValidationEvent = report.devices.get(TestCommon.DEVICE_ID);
-    assertEquals("no report status", null, deviceValidationEvent.status);
+    assertEquals("report status level", (Object) INFO.value(),
+        deviceValidationEvent.status.level);
     String expected = getTimestamp(messageObject.timestamp);
     String lastSeen = getTimestamp(deviceValidationEvent.last_seen);
     assertEquals("status last_seen", expected, lastSeen);
