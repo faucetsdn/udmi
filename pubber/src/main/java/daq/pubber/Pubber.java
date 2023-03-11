@@ -152,6 +152,7 @@ public class Pubber {
       "events/emptyjson", "{}",
       "events/badjson", "{ NOT VALID JSON!"
   );
+  public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
@@ -624,8 +625,8 @@ public class Pubber {
       updatePoints();
       deferredConfigActions();
       sendDevicePoints();
+      sendEmptyMissingBadEvents(); // Do this between pointset and system for timing control.
       sendSystemEvent();
-      sendEmptyMissingBadEvents();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
@@ -639,28 +640,33 @@ public class Pubber {
    * each message sent to stabelize the output order for testing purposes.
    */
   private void sendEmptyMissingBadEvents() {
-    if (TRUE.equals(configuration.options.emptyMissing) && (
-        deviceUpdateCount % MESSAGE_REPORT_INTERVAL == 0)) {
-      warn("Sending badly formatted messages as per configuration");
+    int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
+    if (!TRUE.equals(configuration.options.emptyMissing)
+        || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
+      return;
+    }
 
-      InjectedMessage invalidEvent = new InjectedMessage();
-      safeSleep(INJECT_MESSAGE_DELAY_MS);
-      publishDeviceMessage(invalidEvent);
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
 
-      INVALID_REPLACEMENTS.forEach((key, value) -> {
-        InjectedMessage replacedEvent = new InjectedMessage();
-        replacedEvent.REPLACE_TOPIC_WITH = key;
-        replacedEvent.REPLACE_MESSAGE_WITH = value;
-        safeSleep(INJECT_MESSAGE_DELAY_MS);
-        publishDeviceMessage(replacedEvent);
-      });
-
+    if (phase == 0) {
+      flushDirtyState();
       InjectedState invalidState = new InjectedState();
       invalidState.REPLACE_MESSAGE_WITH = CORRUPT_STATE_MESSAGE;
-      safeSleep(INJECT_MESSAGE_DELAY_MS);
+      warn("Sending badly formatted state as per configuration");
       publishStateMessage(invalidState);
-      safeSleep(INJECT_MESSAGE_DELAY_MS);
+    } else if (phase == 1) {
+      InjectedMessage invalidEvent = new InjectedMessage();
+      warn("Sending badly formatted message type");
+      publishDeviceMessage(invalidEvent);
+    } else {
+      String key = INVALID_KEYS.get(phase - 2);
+      InjectedMessage replacedEvent = new InjectedMessage();
+      replacedEvent.REPLACE_TOPIC_WITH = key;
+      replacedEvent.REPLACE_MESSAGE_WITH = INVALID_REPLACEMENTS.get(key);
+      warn("Sending badly formatted message of type " + key);
+      publishDeviceMessage(replacedEvent);
     }
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
   }
 
   private void sendSystemEvent() {
