@@ -20,6 +20,8 @@ type DeviceError {
 }
 
 type Site {
+  # The unique id of the site
+  uuid: ID!
   # Name of the site
   name: String!
   # Total devices seen by UDMIF on the site
@@ -53,7 +55,7 @@ type Site {
 type Query {
   # Get a list of sites
   sites(searchOptions: SearchOptions) : SitesResponse
-  # Get a site by ID
+  # Get a site by name
   site(name: String!): Site
   # Get a list of sites
   siteNames(searchOptions: DistinctSearchOptions) : [String!]!

@@ -27,8 +27,8 @@ export interface Point {
 }
 
 export interface Device {
-  uuid?: string;
-  id: string;
+  uuid: string;
+  id?: string;
   name: string;
   make?: string;
   model?: string;

@@ -41,8 +41,11 @@ export function ApolloFactory(httpLink: HttpLink, env: EnvService, auth: AuthSer
     link: ApolloLink.from([errorLink, authLink, httpLink.create({ uri: env.apiUri })]),
     cache: new InMemoryCache({
       typePolicies: {
+        Device: {
+          keyFields: ['uuid'],
+        },
         Site: {
-          keyFields: ['name'],
+          keyFields: ['uuid'],
         },
         DeviceError: {
           keyFields: ['message', 'timestamp'],

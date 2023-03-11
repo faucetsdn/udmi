@@ -17,10 +17,10 @@ interface DeviceModel {
   details: string;
   state: string;
   errorsCount: number;
-  lastStateUpdated?: string;
-  lastStateSaved?: string;
-  lastTelemetryUpdated?: string;
-  lastTelemetrySaved?: string;
+  lastStateUpdated: string;
+  lastStateSaved: string;
+  lastTelemetryUpdated: string;
+  lastTelemetrySaved: string;
 }
 
 export type Device = Partial<DeviceModel>;

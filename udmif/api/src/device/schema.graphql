@@ -29,9 +29,9 @@ type Point{
 
 type Device {
   # the unique id of the device
-  uuid: String!
+  uuid: ID!
   # the ID of the device
-  id: ID!
+  id: String
   # the name of the device
   name: String!
   # the make of the device

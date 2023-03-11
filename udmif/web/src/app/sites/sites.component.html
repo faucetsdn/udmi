@@ -21,6 +21,7 @@
   matSort
   (matSortChange)="sortData($event)"
   aria-label="List of sites"
+  [trackBy]="sitesTrackBy"
 >
   <ng-container *ngFor="let column of columns" matColumnDef="{{ column.value }}">
     <ng-container *ngIf="column.isSortable">
@@ -80,7 +81,7 @@
         <li
           *ngFor="
             let item of getSiteErrorSummaryItems(element.deviceErrors) | orderBy: 'count':'desc';
-            trackBy: trackBy
+            trackBy: errorsSummaryTrackBy
           "
         >
           <span class="device-errors-count">{{ item.count }}</span

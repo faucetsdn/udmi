@@ -28,7 +28,10 @@ export default class MockSiteDataSource extends GraphQLDataSource<object> {
   }
 
   async getSiteValidation(name: string): Promise<SiteValidation> {
-    return siteMessage;
+    if (name === 'site1' || name.startsWith('SITE-') || name.startsWith('LOC-')) {
+      return siteMessage;
+    }
+    return null;
   }
 
   async getSiteDeviceStatus(name: string, deviceName: string): Promise<Status> {

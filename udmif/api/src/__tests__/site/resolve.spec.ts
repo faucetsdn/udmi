@@ -31,7 +31,8 @@ const QUERY_SITE_NAMES = gql`
 
 const QUERY_SITE = gql`
   query {
-    site(name: "00000000-0000-0000-0000-0000000001") {
+    site(name: "some-name") {
+      uuid
       name
       seenDevicesCount
       totalDevicesCount
