@@ -1435,30 +1435,32 @@ public class SequenceBase {
         return;
       }
       final String message;
-      final SequenceResult type;
+      final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
         waitingCondition.forEach(condition -> warning("while " + condition));
         error(String.format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
         message = "timeout " + waitingCondition.peek();
-        type = SequenceResult.FAIL;
+        failureType = SequenceResult.FAIL;
       } else if (e instanceof SkipTest) {
         message = e.getMessage();
-        type = SequenceResult.SKIP;
+        failureType = SequenceResult.SKIP;
       } else {
         while (e.getCause() != null) {
           e = e.getCause();
         }
         message = e.getMessage();
-        type = SequenceResult.FAIL;
+        failureType = SequenceResult.FAIL;
       }
       debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
-      recordCompletion(type, description, message);
-      String actioned = type.equals(SequenceResult.SKIP) ? "skipped" : "failed";
+      recordCompletion(failureType, description, message);
+      String actioned = failureType == SequenceResult.SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
-      resetRequired = true;
-      if (debugLogLevel()) {
-        error("Reset required during debug, forcing exit to preserve failing config/state");
-        System.exit(EXIT_CODE_PRESERVE);
+      if (failureType != SequenceResult.SKIP) {
+        resetRequired = true;
+        if (debugLogLevel()) {
+          error("Reset required during debug, forcing exit to preserve failing config/state");
+          System.exit(EXIT_CODE_PRESERVE);
+        }
       }
     }
 
