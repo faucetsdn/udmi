@@ -3,8 +3,8 @@ package com.google.udmi.util;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.base.Joiner;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -15,12 +15,10 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GeneralUtils {
 
@@ -28,6 +26,7 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  private static final Joiner BY_LINE = Joiner.on("\n");
 
   /**
    * Returns a string of enabled options and values.
@@ -198,5 +197,9 @@ public class GeneralUtils {
         }
       }
     }
+  }
+
+  public static String asLines(List<String> changes) {
+    return BY_LINE.join(changes);
   }
 }

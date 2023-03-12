@@ -8,6 +8,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.GeneralUtils.asLines;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -26,9 +27,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator;
@@ -156,7 +157,9 @@ public class SequenceBase {
   );
   static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final ObjectDiffEngine DEVICE_CONFIG_DIFF_ENGINE = new ObjectDiffEngine();
+  private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
+  private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
+  private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -504,7 +507,7 @@ public class SequenceBase {
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
-        DEVICE_CONFIG_DIFF_ENGINE.resetState(deviceConfig);
+        SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
       }
       resetDeviceConfig(false);
@@ -763,7 +766,7 @@ public class SequenceBase {
       String header = String.format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = DEVICE_CONFIG_DIFF_ENGINE.computeChanges(deviceConfig);
+      List<String> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
@@ -1051,11 +1054,11 @@ public class SequenceBase {
   }
 
   private synchronized void handleReflectorMessage(String subTypeRaw,
-      Map<String, Object> message, String transactionId) {
+      Map<String, Object> message, String txnId) {
     try {
       // Do this first to handle all cases of a Config payload, including exceptions.
-      if (CONFIG_SUBTYPE.equals(subTypeRaw) && transactionId != null) {
-        configTransactions.remove(transactionId);
+      if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
+        configTransactions.remove(txnId);
       }
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
@@ -1076,17 +1079,26 @@ public class SequenceBase {
           return;
         }
         Config config = (Config) converted;
-        updateDeviceConfig(config);
-        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp),
-            transactionId));
-        info(String.format("Updated config #%03d", updateCount), stringify(converted));
+        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp), txnId));
+        List<String> changes = updateDeviceConfig(config);
+        if (updateCount == 1) {
+          info(String.format("Initial config #%03d", updateCount), stringify(deviceConfig));
+        } else {
+          String changedLines = changes.isEmpty() ? "(no change)" : asLines(changes);
+          info(String.format("Updated config #%03d", updateCount), changedLines);
+        }
       } else if (converted instanceof AugmentedState) {
         State convertedState = (State) converted;
         if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
         }
-        info(String.format("Updated state #%03d", updateCount), stringify(converted));
+        if (updateCount == 1) {
+          info(String.format("Initial state #%03d", updateCount), stringify(converted));
+        } else {
+          List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
+          info(String.format("Updated state #%03d", updateCount), asLines(stateChanges));
+        }
         deviceState = convertedState;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
@@ -1099,9 +1111,9 @@ public class SequenceBase {
     }
   }
 
-  private void updateDeviceConfig(Config config) {
+  private List<String> updateDeviceConfig(Config config) {
     if (deviceConfig == null) {
-      return;
+      return null;
     }
 
     // These parameters are set by the cloud functions, so explicitly set to maintain parity.
@@ -1111,6 +1123,7 @@ public class SequenceBase {
       setLastStart(SemanticDate.describe("device reported", config.system.operation.last_start));
     }
     sanitizeConfig(deviceConfig);
+    return RECV_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
   }
 
   /**

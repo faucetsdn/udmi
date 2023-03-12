@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
 
 /**
  * Utility class to help with detecting differences in object fields.
