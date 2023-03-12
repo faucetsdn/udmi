@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;

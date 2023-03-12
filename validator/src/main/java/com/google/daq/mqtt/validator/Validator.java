@@ -242,7 +242,8 @@ public class Validator {
   }
 
   private void validatePubSub(String instName) {
-    cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model), config.registry_suffix);
+    cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model),
+        config.registry_suffix);
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
