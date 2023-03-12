@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import udmi.schema.Config;
 
 /**
  * Utility class to help with detecting differences in object fields.
@@ -33,6 +34,15 @@ public class ObjectDiffEngine {
     accumulateDifference("", previous, updated, updates);
     previous = updated;
     return updates;
+  }
+
+  /**
+   * Just quietly reset the internal state. No need for any diff computation.
+   *
+   * @param updatedObject new object state
+   */
+  public void resetState(Object updatedObject) {
+    previous = extractDefinitions(updatedObject);
   }
 
   private Map<String, Object> extractValues(Object thing) {
@@ -175,5 +185,4 @@ public class ObjectDiffEngine {
     accumulateDifference("", left, right, updates);
     return updates;
   }
-
 }

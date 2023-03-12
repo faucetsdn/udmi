@@ -156,7 +156,7 @@ public class SequenceBase {
   );
   static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final ObjectDiffEngine OBJECT_DIFF_ENGINE = new ObjectDiffEngine();
+  private static final ObjectDiffEngine DEVICE_CONFIG_DIFF_ENGINE = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -504,7 +504,7 @@ public class SequenceBase {
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
-        OBJECT_DIFF_ENGINE.computeChanges(deviceConfig);
+        DEVICE_CONFIG_DIFF_ENGINE.resetState(deviceConfig);
         updateConfig("full reset");
       }
       resetDeviceConfig(false);
@@ -763,7 +763,7 @@ public class SequenceBase {
       String header = String.format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = OBJECT_DIFF_ENGINE.computeChanges(deviceConfig);
+      List<String> allDiffs = DEVICE_CONFIG_DIFF_ENGINE.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
