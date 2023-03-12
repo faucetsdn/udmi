@@ -8,7 +8,7 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
-import static com.google.udmi.util.GeneralUtils.asLines;
+import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -1084,8 +1084,7 @@ public class SequenceBase {
         if (updateCount == 1) {
           info(String.format("Initial config #%03d", updateCount), stringify(deviceConfig));
         } else {
-          String changedLines = changes.isEmpty() ? "(no change)" : asLines(changes);
-          info(String.format("Updated config #%03d", updateCount), changedLines);
+          info(String.format("Updated config #%03d", updateCount), changedLines(changes));
         }
       } else if (converted instanceof AugmentedState) {
         State convertedState = (State) converted;
@@ -1097,7 +1096,7 @@ public class SequenceBase {
           info(String.format("Initial state #%03d", updateCount), stringify(converted));
         } else {
           List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
-          info(String.format("Updated state #%03d", updateCount), asLines(stateChanges));
+          info(String.format("Updated state #%03d", updateCount), changedLines(stateChanges));
         }
         deviceState = convertedState;
         updateConfigAcked((AugmentedState) converted);

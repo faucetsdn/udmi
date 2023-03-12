@@ -26,7 +26,8 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  private static final Joiner BY_LINE = Joiner.on("\n");
+  private static final String INDENTED_SEPARATOR = "\n  ";
+  private static final Joiner INDENTED_LINES = Joiner.on(INDENTED_SEPARATOR);
 
   /**
    * Returns a string of enabled options and values.
@@ -199,7 +200,10 @@ public class GeneralUtils {
     }
   }
 
-  public static String asLines(List<String> changes) {
-    return BY_LINE.join(changes);
+  public static String changedLines(List<String> changes) {
+    int changeCount = changes == null ? 0 : changes.size();
+    String changeTerminator = changeCount == 0 ? "." : ":";
+    String header = String.format("%d changes%s%s", changeCount, changeTerminator, INDENTED_SEPARATOR);
+    return (header + INDENTED_LINES.join(changes)).trim();
   }
 }
