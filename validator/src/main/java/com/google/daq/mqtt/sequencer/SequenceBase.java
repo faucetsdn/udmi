@@ -9,6 +9,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -141,6 +142,7 @@ public class SequenceBase {
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
   private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
+  private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
@@ -611,7 +613,15 @@ public class SequenceBase {
       return;
     }
 
-    String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
+    boolean systemEvent = messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE);
+    boolean anyEvent = messageBase.startsWith(EVENT_PREFIX);
+    boolean localUpdate = messageBase.startsWith(LOCAL_PREFIX);
+    boolean updateMessage = messageBase.endsWith(UPDATE_SUBFOLDER);
+    boolean configMessage = messageBase.startsWith(CONFIG_SUBTYPE);
+    boolean stateMessage = messageBase.startsWith(STATE_SUBTYPE);
+    boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
+
+    String prefix = localUpdate ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
     Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
@@ -620,13 +630,14 @@ public class SequenceBase {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
-      String postfix = traceLogLevel() ? (message == null ? "(null)" : stringify(message)) : "";
-      if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
+      if (systemEvent) {
         logSystemEvent(messageBase, message);
-      } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
-        trace(prefix + messageBase, postfix);
       } else {
-        debug(prefix + messageBase, postfix);
+        if (localUpdate || syntheticMessage || anyEvent) {
+          trace(prefix + messageBase, message == null ? "(null)" : stringify(message));
+        } else {
+          debug(prefix + messageBase);
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
@@ -1450,7 +1461,11 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.FAIL;
       }
-      debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
+      if (traceLogLevel()) {
+        trace("ending stack trace", stackTraceString(e));
+      } else {
+        debug("exception message: " + Common.getExceptionMessage(e));
+      }
       recordCompletion(failureType, description, message);
       String actioned = failureType == SequenceResult.SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));

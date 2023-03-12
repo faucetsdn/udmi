@@ -205,7 +205,7 @@ public class GeneralUtils {
   public static String changedLines(List<String> nullableChanges) {
     List<String> changes = Optional.ofNullable(nullableChanges).orElse(ImmutableList.of());
     String terminator = changes.size() == 0 ? "." : ":";
-    String header = String.format("Changed %d lines%s%s", changes.size(), terminator, SEPARATOR);
+    String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
   }
 }
