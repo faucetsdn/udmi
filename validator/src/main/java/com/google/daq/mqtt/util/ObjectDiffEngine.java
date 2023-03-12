@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import udmi.schema.State;
 
 /**
  * Utility class to help with detecting differences in object fields.
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 public class ObjectDiffEngine {
 
   private Map<String, Object> previous;
+  private boolean ignoreSemantics;
 
   public ObjectDiffEngine() {
   }
@@ -28,6 +30,8 @@ public class ObjectDiffEngine {
    * @return list of differences against the previous object
    */
   public List<String> computeChanges(Object updatedObject) {
+    // TODO: Hack alert! State should be handled semantically, but for now show raw changes.
+    ignoreSemantics = updatedObject instanceof State;
     Map<String, Object> updated = extractDefinitions(updatedObject);
     List<String> updates = new ArrayList<>();
     accumulateDifference("", previous, updated, updates);
@@ -139,7 +143,7 @@ public class ObjectDiffEngine {
       return semanticMapValue((Map<String, Object>) value);
     }
     boolean isSemantic = SemanticValue.isSemanticValue(value);
-    if (value instanceof Date && !isSemantic) {
+    if (!ignoreSemantics && value instanceof Date && !isSemantic) {
       throw new IllegalArgumentException(
           "Unexpected non-semantic Date in semantic value calculation");
     }
