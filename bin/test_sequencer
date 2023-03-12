@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# TODO: Replace with proper option for CI
+export UDMI_REGISTRY_SUFFIX=%A
+
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
@@ -83,7 +86,7 @@ else
 fi
 
 cp etc/sequencer.out out/  # Sace for later test/comparison
-bin/sequence_cache
+bin/sequencer_cache
 
 cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
 bin/gencode_seq

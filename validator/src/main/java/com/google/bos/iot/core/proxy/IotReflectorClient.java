@@ -94,8 +94,7 @@ public class IotReflectorClient implements MessagePublisher {
     String cloudRegion =
         iotConfig.reflect_region == null ? iotConfig.cloud_region : iotConfig.reflect_region;
     subscriptionId =
-        String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT,
-            iotConfig.registry_id);
+        String.format("%s/%s/%s/%s", projectId, cloudRegion, UDMS_REFLECT, registryId);
 
     try {
       mqttPublisher = new MqttPublisher(projectId, cloudRegion, UDMS_REFLECT,

@@ -21,6 +21,13 @@ device_id=$3
 serial_no=$4
 shift 4
 
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=$UDMI_REGISTRY_SUFFIX
+else
+    registry_suffix=
+fi
+
 if [ ! -f $site_path/cloud_iot_config.json ]; then
     echo cloud_iot_config.json not found at $site_path
     false
@@ -53,7 +60,7 @@ cat <<EOF > /tmp/pubber_config.json
 {
     "endpoint": {
       "protocol": "mqtt",
-      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id$registry_suffix/devices/$device_id",
       "hostname": "mqtt.googleapis.com"
     },
     "sitePath": "$site_path",
