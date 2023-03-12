@@ -21,13 +21,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ConfigDiffEngine;
+import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.AugmentedState;
@@ -157,7 +156,7 @@ public class SequenceBase {
   );
   static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
+  private static final ObjectDiffEngine OBJECT_DIFF_ENGINE = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -505,7 +504,7 @@ public class SequenceBase {
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
-        configDiffEngine.computeChanges(deviceConfig);
+        OBJECT_DIFF_ENGINE.computeChanges(deviceConfig);
         updateConfig("full reset");
       }
       resetDeviceConfig(false);
@@ -764,7 +763,7 @@ public class SequenceBase {
       String header = String.format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = configDiffEngine.computeChanges(deviceConfig);
+      List<String> allDiffs = OBJECT_DIFF_ENGINE.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
