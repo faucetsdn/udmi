@@ -17,6 +17,7 @@ import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,7 +88,7 @@ public class IotReflectorClient implements MessagePublisher {
     }
 
     this.requiredVersion = requiredVersion;
-    registryId = iotConfig.registry_id;
+    registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = Optional.ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     String cloudRegion =

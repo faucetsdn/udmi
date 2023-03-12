@@ -13,6 +13,7 @@ import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.udmi.util.SiteModel;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class CloudIotManager {
     this.projectId = projectId;
     this.iotConfig = iotConfig;
     projectPath = "projects/" + projectId + "/locations/" + iotConfig.cloud_region;
-    registryId = iotConfig.registry_id;
+    registryId = SiteModel.getRegistryActual(iotConfig);
     try {
       LOG.info("Initializing with default credentials...");
       GoogleCredentials credential =

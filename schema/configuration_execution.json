@@ -28,6 +28,9 @@
     "site_model": {
       "type": "string"
     },
+    "registry_suffix": {
+      "type": "string"
+    },
     "device_id": {
       "type": "string"
     },

@@ -52,11 +52,6 @@ public class Reflector {
   }
 
   private void shutdown() {
-    try {
-      Thread.sleep(5000);
-    } catch (Exception e) {
-      throw new RuntimeException("While sleeping", e);
-    }
     client.close();
   }
 

@@ -43,17 +43,18 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId project id
-   * @param siteDir   site model directory
+   * @param projectId      project id
+   * @param siteDir        site model directory
+   * @param registrySuffix suffix to append to model registry id
    */
-  public CloudIotManager(String projectId, File siteDir) {
+  public CloudIotManager(String projectId, File siteDir, String registrySuffix) {
     Preconditions.checkNotNull(siteDir, "site directory undefined");
     this.projectId = Preconditions.checkNotNull(projectId, "project id undefined");
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), projectId);
-      registryId = executionConfiguration.registry_id;
+      registryId = SiteModel.getRegistryActual(executionConfiguration.registry_id, registrySuffix);
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {

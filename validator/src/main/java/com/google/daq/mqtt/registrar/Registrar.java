@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -47,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
 /**
@@ -74,6 +76,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
+  private static ExecutionConfiguration config;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -93,6 +96,7 @@ public class Registrar {
   private List<String> deviceList;
   private boolean blockUnknown;
   private File siteDir;
+  private String registrySuffix;
 
   /**
    * Main entry point for registrar.
@@ -107,6 +111,9 @@ public class Registrar {
   }
 
   static void processArgs(List<String> argList, Registrar registrar) {
+    if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
+      registrar.processProfile(new File(argList.remove(0)));
+    }
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
@@ -114,7 +121,7 @@ public class Registrar {
           registrar.setToolRoot(argList.remove(0));
           break;
         case "-p":
-          registrar.setProjectId(argList.remove(0));
+          registrar.setProjectId(argList.remove(0), null);
           break;
         case "-s":
           registrar.setSitePath(argList.remove(0));
@@ -143,6 +150,16 @@ public class Registrar {
           registrar.setDeviceList(argList);
           return;
       }
+    }
+  }
+
+  private void processProfile(File profilePath) {
+    ExecutionConfiguration config = ConfigUtil.readExecutionConfiguration(profilePath);
+    setSitePath(config.site_model);
+    setProjectId(config.project_id, config.registry_suffix);
+    setValidateMetadata(true);
+    if (config.project_id != null) {
+      setUpdateFlag(true);
     }
   }
 
@@ -244,7 +261,7 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    cloudIotManager = new CloudIotManager(projectId, siteDir);
+    cloudIotManager = new CloudIotManager(projectId, siteDir, registrySuffix);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -660,11 +677,12 @@ public class Registrar {
     return localDevices;
   }
 
-  protected void setProjectId(String projectId) {
+  protected void setProjectId(String projectId, String registrySuffix) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
     }
     this.projectId = projectId;
+    this.registrySuffix = registrySuffix;
     initializeCloudProject();
   }
 

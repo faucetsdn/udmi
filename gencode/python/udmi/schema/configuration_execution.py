@@ -12,6 +12,7 @@ class ExecutionConfiguration:
     self.feed_name = None
     self.reflect_region = None
     self.site_model = None
+    self.registry_suffix = None
     self.device_id = None
     self.project_id = None
     self.key_file = None
@@ -36,6 +37,7 @@ class ExecutionConfiguration:
     result.feed_name = source.get('feed_name')
     result.reflect_region = source.get('reflect_region')
     result.site_model = source.get('site_model')
+    result.registry_suffix = source.get('registry_suffix')
     result.device_id = source.get('device_id')
     result.project_id = source.get('project_id')
     result.key_file = source.get('key_file')
@@ -81,6 +83,8 @@ class ExecutionConfiguration:
       result['reflect_region'] = self.reflect_region # 5
     if self.site_model:
       result['site_model'] = self.site_model # 5
+    if self.registry_suffix:
+      result['registry_suffix'] = self.registry_suffix # 5
     if self.device_id:
       result['device_id'] = self.device_id # 5
     if self.project_id:

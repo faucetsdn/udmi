@@ -48,7 +48,7 @@ public class RegistrarTest {
     try {
       Registrar registrar = new Registrar();
       registrar.setSitePath(SITE_DIR);
-      registrar.setProjectId(SiteModel.MOCK_PROJECT);
+      registrar.setProjectId(SiteModel.MOCK_PROJECT, null);
       registrar.setToolRoot(TOOL_ROOT);
       if (args != null) {
         Registrar.processArgs(new ArrayList<>(args), registrar);
