@@ -275,7 +275,7 @@ public class SequenceBase {
     }
 
     cloudRegion = validatorConfig.cloud_region;
-    registryId = validatorConfig.registry_id;
+    registryId = SiteModel.getRegistryActual(validatorConfig);
     altRegistry = Strings.emptyToNull(validatorConfig.alt_registry);
 
     deviceMetadata = readDeviceMetadata();
@@ -1199,7 +1199,7 @@ public class SequenceBase {
     log(message, Level.TRACE);
   }
 
-  private void debug(String message, String parts) {
+  protected void debug(String message, String parts) {
     log(message, Level.DEBUG, parts);
   }
 
@@ -1207,7 +1207,7 @@ public class SequenceBase {
     log(message, Level.DEBUG);
   }
 
-  private void info(String message, String parts) {
+  protected void info(String message, String parts) {
     log(message, Level.INFO, parts);
   }
 
@@ -1321,11 +1321,12 @@ public class SequenceBase {
   }
 
   private void updateMirrorConfig(String receivedConfig) {
-    checkNotNull(altClient, "Alternate client used but test not skipped");
-    String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
-    reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
-    // There's a race condition if the mirror command gets delayed, so chill for a bit.
-    safeSleep(ONE_SECOND_MS);
+    if (altClient != null) {
+      String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
+      reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+      // There's a race condition if the mirror command gets delayed, so chill for a bit.
+      safeSleep(ONE_SECOND_MS);
+    }
   }
 
   private MessagePublisher reflector() {
@@ -1472,7 +1473,7 @@ public class SequenceBase {
       if (failureType != SequenceResult.SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
-          error("Reset required during debug, forcing exit to preserve failing config/state");
+          error("Forcing exit to preserve failing config/state " + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
         }
       }
