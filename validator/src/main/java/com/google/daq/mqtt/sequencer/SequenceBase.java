@@ -619,9 +619,7 @@ public class SequenceBase {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
-      boolean traceMessage =
-          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
-      String postfix = traceMessage ? (message == null ? "(null)" : stringify(message)) : "";
+      String postfix = traceLogLevel() ? (message == null ? "(null)" : stringify(message)) : "";
       if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
         logSystemEvent(messageBase, message);
       } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
