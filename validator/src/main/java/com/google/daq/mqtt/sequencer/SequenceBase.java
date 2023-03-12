@@ -105,6 +105,7 @@ public class SequenceBase {
 
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
+  private static final String START_END_MARKER = "################################";
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -1394,7 +1395,7 @@ public class SequenceBase {
 
         startSequenceStatus(description);
 
-        notice("starting test " + testName);
+        notice("starting test " + testName + " " + START_END_MARKER);
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1410,8 +1411,8 @@ public class SequenceBase {
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
-      long stopTimeMs = System.currentTimeMillis();
-      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
+      long testTimeSec = (System.currentTimeMillis() - testStartTimeMs) / 1000;
+      notice("ending test " + testName + " after " + testTimeSec + "s " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
