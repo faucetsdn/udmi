@@ -203,7 +203,7 @@ public class GeneralUtils {
   public static String changedLines(List<String> changes) {
     int changeCount = changes == null ? 0 : changes.size();
     String changeTerminator = changeCount == 0 ? "." : ":";
-    String header = String.format("%d changes%s%s", changeCount, changeTerminator, INDENTED_SEPARATOR);
+    String header = String.format("Changed %d lines%s%s", changeCount, changeTerminator, INDENTED_SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
   }
 }
