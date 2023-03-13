@@ -1,231 +1,51 @@
 {
-  "event_count" : 12,
-  "last_config" : "2023-03-07T16:33:59Z",
+  "event_count" : 10,
+  "last_config" : "2023-03-13T03:04:13Z",
   "logentries" : [ {
-    "message" : "update state 2023-03-07T16:33:56Z last_config 2023-03-07T16:33:46Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:56Z",
-    "level" : 200
-  }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:56Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 200
   }, {
-    "message" : "2023-03-07T16:33:56Z received config 2023-03-07T16:33:56Z",
+    "message" : "2023-03-13T03:04:13Z received config 2023-03-13T03:04:11Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:56Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:33:56Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 300
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:57Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 200
   }, {
-    "message" : "2023-03-07T16:33:57Z received config 2023-03-07T16:33:56Z",
+    "message" : "2023-03-13T03:04:13Z received config 2023-03-13T03:04:13Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:57Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:33:57Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-07T16:33:58Z last_config 2023-03-07T16:33:56Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:58Z",
-    "level" : 200
-  }, {
-    "message" : "Config handler",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:59Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-07T16:33:59Z received config 2023-03-07T16:33:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:33:59Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:33:59Z",
+    "timestamp" : "2023-03-13T03:04:13Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-03-07T16:34:00Z last_config 2023-03-07T16:33:59Z",
+    "message" : "update state 2023-03-13T03:04:15Z last_config 2023-03-13T03:04:13Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:00Z",
+    "timestamp" : "2023-03-13T03:04:15Z",
     "level" : 200
   }, {
-    "message" : "Config handler",
+    "message" : "2023-03-13T03:04:22Z sending test message #10",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:01Z",
+    "timestamp" : "2023-03-13T03:04:22Z",
     "level" : 200
-  }, {
-    "message" : "2023-03-07T16:34:01Z received config 2023-03-07T16:33:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:01Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:34:01Z",
-    "level" : 300
-  }, {
-    "message" : "update state 2023-03-07T16:34:02Z last_config 2023-03-07T16:33:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:02Z",
-    "level" : 200
-  }, {
-    "message" : "Starting new endpoint generation",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:03Z",
-    "level" : 300
-  }, {
-    "message" : "New config blob endpoint detected",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:03Z",
-    "level" : 200
-  }, {
-    "message" : "State update delay 1147ms",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:03Z",
-    "level" : 400
-  }, {
-    "message" : "update state 2023-03-07T16:34:05Z last_config 2023-03-07T16:33:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:05Z",
-    "level" : 200
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:15Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 9",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:15Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:16Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 8",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:16Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:17Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 7",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:17Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:18Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 6",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:18Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:19Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 5",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:19Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:20Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 4",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:20Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:21Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 3",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:21Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:22Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 2",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:22Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:23Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 1",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:23Z",
-    "level" : 500
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:24Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 0",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:24Z",
-    "level" : 500
-  }, {
-    "message" : "update state 2023-03-07T16:34:26Z last_config 2023-03-07T16:33:59Z",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:26Z",
-    "level" : 200
-  }, {
-    "message" : "Connection complete.",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:26Z",
-    "level" : 200
-  }, {
-    "message" : "Endpoint connection restored to last working endpoint",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:26Z",
-    "level" : 300
-  }, {
-    "message" : "While redirecting connection endpoint: While resetting connection",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:34:26Z",
-    "level" : 500
   } ],
   "metrics" : {
     "mem_total_mb" : 252,
-    "mem_free_mb" : 211.42041015625
+    "mem_free_mb" : 213.42236328125
   },
-  "timestamp" : "2023-03-07T16:34:26.013Z",
+  "timestamp" : "2023-03-13T03:04:22.011Z",
   "version" : "1.4.1"
 }

@@ -3,9 +3,9 @@
     "blobs" : {
       "_iot_endpoint_config" : {
         "phase" : "final",
-        "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiCn0=",
-        "sha256" : "2b6b47470d4fa9075f97d3af909088d92b91e444ce7eb2b8cacaead4aa63800e",
-        "generation" : "2023-03-07T16:36:43Z"
+        "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBJUEvZGV2aWNlcy9BSFUtMSIKfQ==",
+        "sha256" : "1e232bf119337ba50af908673c8c429359304706ba1d134dd525395895c99d0a",
+        "generation" : "2023-03-13T03:06:06Z"
       }
     }
   },
@@ -14,7 +14,7 @@
       "ether" : {
         "addr" : "00:50:b6:ed:5f:77"
       },
-      "inet" : {
+      "ipv4" : {
         "addr" : "192.168.2.1"
       }
     }
@@ -39,12 +39,12 @@
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-03-07T16:31:51Z"
+      "last_start" : "2023-03-13T03:02:30Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_bad_hash"
     }
   },
-  "timestamp" : "2023-03-07T16:36:43.925Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-03-13T03:06:07.194Z",
+  "version" : "1.4.0-205-g15f9a1f2"
 }
