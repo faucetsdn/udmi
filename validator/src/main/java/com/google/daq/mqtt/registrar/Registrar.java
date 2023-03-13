@@ -176,7 +176,9 @@ public class Registrar {
 
   void execute() {
     try {
-      initializeCloudProject();
+      if (projectId != null) {
+        initializeCloudProject();
+      }
       if (schemaBase == null) {
         setToolRoot(null);
       }
