@@ -245,6 +245,9 @@ public class SiteModel {
   }
 
   public static String getRegistryActual(String registry_id, String registry_suffix) {
+    if (registry_id == null) {
+      return null;
+    }
     return registry_id + Optional.ofNullable(registry_suffix).orElse("");
   }
 

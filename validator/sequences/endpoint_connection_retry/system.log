@@ -1,99 +1,91 @@
-2023-03-07T16:34:26Z INFO device.log Config handler
-2023-03-07T16:34:26Z INFO device.log 2023-03-07T16:34:26Z received config 2023-03-07T16:33:59Z
-2023-03-07T16:34:26Z INFO device.log Starting executor with send message delay 10000
-2023-03-07T16:34:26Z NOTICE system.config.apply success
-2023-03-07T16:34:26Z INFO device.log Config handler
-2023-03-07T16:34:26Z INFO device.log 2023-03-07T16:34:26Z received config 2023-03-07T16:34:26Z
-2023-03-07T16:34:26Z NOTICE system.config.apply success
-2023-03-07T16:34:28Z INFO device.log update state 2023-03-07T16:34:28Z last_config 2023-03-07T16:34:26Z
-2023-03-07T16:34:36Z INFO device.log update state 2023-03-07T16:34:36Z last_config 2023-03-07T16:34:26Z
-2023-03-07T16:34:45Z INFO device.log update state 2023-03-07T16:34:45Z last_config 2023-03-07T16:34:26Z
-2023-03-07T16:34:45Z INFO device.log Config handler
-2023-03-07T16:34:45Z INFO device.log 2023-03-07T16:34:45Z received config 2023-03-07T16:34:45Z
-2023-03-07T16:34:45Z NOTICE system.config.apply success
-2023-03-07T16:34:47Z INFO device.log Config handler
-2023-03-07T16:34:47Z INFO device.log 2023-03-07T16:34:47Z received config 2023-03-07T16:34:45Z
-2023-03-07T16:34:47Z NOTICE system.config.apply success
-2023-03-07T16:34:47Z INFO device.log update state 2023-03-07T16:34:47Z last_config 2023-03-07T16:34:45Z
-2023-03-07T16:34:48Z INFO device.log Config handler
-2023-03-07T16:34:48Z INFO device.log 2023-03-07T16:34:48Z received config 2023-03-07T16:34:47Z
-2023-03-07T16:34:48Z NOTICE system.config.apply success
-2023-03-07T16:34:49Z INFO device.log Config handler
-2023-03-07T16:34:49Z INFO device.log 2023-03-07T16:34:49Z received config 2023-03-07T16:34:48Z
-2023-03-07T16:34:49Z NOTICE system.config.apply success
-2023-03-07T16:34:50Z INFO device.log update state 2023-03-07T16:34:50Z last_config 2023-03-07T16:34:48Z
-2023-03-07T16:34:51Z INFO device.log Config handler
-2023-03-07T16:34:51Z INFO device.log 2023-03-07T16:34:51Z received config 2023-03-07T16:34:50Z
-2023-03-07T16:34:51Z NOTICE system.config.apply success
-2023-03-07T16:34:52Z INFO device.log update state 2023-03-07T16:34:52Z last_config 2023-03-07T16:34:50Z
-2023-03-07T16:34:56Z NOTICE device.log Starting new endpoint generation
-2023-03-07T16:34:56Z INFO device.log New config blob endpoint detected
-2023-03-07T16:34:56Z INFO device.log update state 2023-03-07T16:34:56Z last_config 2023-03-07T16:34:50Z
-2023-03-07T16:35:06Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:06Z ERROR device.log Attempt failed, retries remaining: 9
-2023-03-07T16:35:07Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:07Z ERROR device.log Attempt failed, retries remaining: 8
-2023-03-07T16:35:08Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:08Z ERROR device.log Attempt failed, retries remaining: 7
-2023-03-07T16:35:09Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:09Z ERROR device.log Attempt failed, retries remaining: 6
-2023-03-07T16:35:10Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:10Z ERROR device.log Attempt failed, retries remaining: 5
-2023-03-07T16:35:11Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:11Z ERROR device.log Attempt failed, retries remaining: 4
-2023-03-07T16:35:12Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:12Z ERROR device.log Attempt failed, retries remaining: 3
-2023-03-07T16:35:13Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:13Z ERROR device.log Attempt failed, retries remaining: 2
-2023-03-07T16:35:14Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:14Z ERROR device.log Attempt failed, retries remaining: 1
-2023-03-07T16:35:15Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:15Z ERROR device.log Attempt failed, retries remaining: 0
-2023-03-07T16:35:16Z INFO device.log update state 2023-03-07T16:35:16Z last_config 2023-03-07T16:34:50Z
-2023-03-07T16:35:16Z INFO device.log Connection complete.
-2023-03-07T16:35:16Z NOTICE device.log Endpoint connection restored to last working endpoint
-2023-03-07T16:35:16Z ERROR device.log While redirecting connection endpoint: While resetting connection
-2023-03-07T16:35:17Z INFO device.log Config handler
-2023-03-07T16:35:17Z INFO device.log 2023-03-07T16:35:17Z received config 2023-03-07T16:34:50Z
-2023-03-07T16:35:17Z INFO device.log Starting executor with send message delay 10000
-2023-03-07T16:35:17Z NOTICE system.config.apply success
-2023-03-07T16:35:17Z INFO device.log Config handler
-2023-03-07T16:35:17Z INFO device.log 2023-03-07T16:35:17Z received config 2023-03-07T16:35:17Z
-2023-03-07T16:35:17Z NOTICE system.config.apply success
-2023-03-07T16:35:19Z INFO device.log update state 2023-03-07T16:35:19Z last_config 2023-03-07T16:35:17Z
-2023-03-07T16:35:27Z NOTICE device.log Starting new endpoint generation
-2023-03-07T16:35:27Z INFO device.log New config blob endpoint detected
-2023-03-07T16:35:27Z INFO device.log update state 2023-03-07T16:35:27Z last_config 2023-03-07T16:35:17Z
-2023-03-07T16:35:37Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:37Z ERROR device.log Attempt failed, retries remaining: 9
-2023-03-07T16:35:38Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:38Z ERROR device.log Attempt failed, retries remaining: 8
-2023-03-07T16:35:39Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:39Z ERROR device.log Attempt failed, retries remaining: 7
-2023-03-07T16:35:40Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:40Z ERROR device.log Attempt failed, retries remaining: 6
-2023-03-07T16:35:41Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:41Z ERROR device.log Attempt failed, retries remaining: 5
-2023-03-07T16:35:42Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:42Z ERROR device.log Attempt failed, retries remaining: 4
-2023-03-07T16:35:43Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:43Z ERROR device.log Attempt failed, retries remaining: 3
-2023-03-07T16:35:44Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:44Z ERROR device.log Attempt failed, retries remaining: 2
-2023-03-07T16:35:45Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:45Z ERROR device.log Attempt failed, retries remaining: 1
-2023-03-07T16:35:46Z ERROR device.log While waiting for connection start: Connection error
-2023-03-07T16:35:46Z ERROR device.log Attempt failed, retries remaining: 0
-2023-03-07T16:35:47Z INFO device.log update state 2023-03-07T16:35:47Z last_config 2023-03-07T16:35:17Z
-2023-03-07T16:35:47Z INFO device.log Connection complete.
-2023-03-07T16:35:47Z NOTICE device.log Endpoint connection restored to last working endpoint
-2023-03-07T16:35:47Z ERROR device.log While redirecting connection endpoint: While resetting connection
-2023-03-07T16:35:48Z INFO device.log Config handler
-2023-03-07T16:35:48Z INFO device.log 2023-03-07T16:35:48Z received config 2023-03-07T16:35:17Z
-2023-03-07T16:35:48Z INFO device.log Starting executor with send message delay 10000
-2023-03-07T16:35:48Z NOTICE system.config.apply success
-2023-03-07T16:35:48Z INFO device.log Config handler
-2023-03-07T16:35:48Z INFO device.log 2023-03-07T16:35:48Z received config 2023-03-07T16:35:48Z
-2023-03-07T16:35:48Z NOTICE system.config.apply success
-2023-03-07T16:35:50Z INFO device.log update state 2023-03-07T16:35:50Z last_config 2023-03-07T16:35:48Z
-2023-03-07T16:35:58Z WARNING validation.feature.sequence Sequence complete
+2023-03-13T03:04:22Z INFO device.log update state 2023-03-13T03:04:22Z last_config 2023-03-13T03:04:13Z
+2023-03-13T03:04:31Z INFO device.log update state 2023-03-13T03:04:31Z last_config 2023-03-13T03:04:13Z
+2023-03-13T03:04:31Z INFO device.log Config handler
+2023-03-13T03:04:31Z INFO device.log 2023-03-13T03:04:31Z received config 2023-03-13T03:04:30Z
+2023-03-13T03:04:31Z NOTICE system.config.apply success
+2023-03-13T03:04:32Z INFO device.log Config handler
+2023-03-13T03:04:32Z INFO device.log 2023-03-13T03:04:32Z received config 2023-03-13T03:04:30Z
+2023-03-13T03:04:32Z NOTICE system.config.apply success
+2023-03-13T03:04:33Z INFO device.log update state 2023-03-13T03:04:33Z last_config 2023-03-13T03:04:30Z
+2023-03-13T03:04:33Z INFO device.log Config handler
+2023-03-13T03:04:33Z INFO device.log 2023-03-13T03:04:33Z received config 2023-03-13T03:04:33Z
+2023-03-13T03:04:33Z NOTICE system.config.apply success
+2023-03-13T03:04:34Z INFO device.log Config handler
+2023-03-13T03:04:34Z INFO device.log 2023-03-13T03:04:34Z received config 2023-03-13T03:04:33Z
+2023-03-13T03:04:34Z NOTICE system.config.apply success
+2023-03-13T03:04:35Z INFO device.log update state 2023-03-13T03:04:35Z last_config 2023-03-13T03:04:33Z
+2023-03-13T03:04:35Z INFO device.log Config handler
+2023-03-13T03:04:35Z INFO device.log 2023-03-13T03:04:35Z received config 2023-03-13T03:04:35Z
+2023-03-13T03:04:35Z NOTICE system.config.apply success
+2023-03-13T03:04:37Z INFO device.log update state 2023-03-13T03:04:37Z last_config 2023-03-13T03:04:35Z
+2023-03-13T03:04:42Z NOTICE device.log Starting new endpoint generation
+2023-03-13T03:04:42Z INFO device.log New config blob endpoint detected
+2023-03-13T03:04:42Z INFO device.log update state 2023-03-13T03:04:42Z last_config 2023-03-13T03:04:35Z
+2023-03-13T03:04:42Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:42Z ERROR device.log Attempt failed, retries remaining: 9
+2023-03-13T03:04:43Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:43Z ERROR device.log Attempt failed, retries remaining: 8
+2023-03-13T03:04:44Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:44Z ERROR device.log Attempt failed, retries remaining: 7
+2023-03-13T03:04:45Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:45Z ERROR device.log Attempt failed, retries remaining: 6
+2023-03-13T03:04:46Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:46Z ERROR device.log Attempt failed, retries remaining: 5
+2023-03-13T03:04:47Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:47Z ERROR device.log Attempt failed, retries remaining: 4
+2023-03-13T03:04:48Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:48Z ERROR device.log Attempt failed, retries remaining: 3
+2023-03-13T03:04:49Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:49Z ERROR device.log Attempt failed, retries remaining: 2
+2023-03-13T03:04:50Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:50Z ERROR device.log Attempt failed, retries remaining: 1
+2023-03-13T03:04:51Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:04:51Z ERROR device.log Attempt failed, retries remaining: 0
+2023-03-13T03:04:53Z INFO device.log update state 2023-03-13T03:04:53Z last_config 2023-03-13T03:04:35Z
+2023-03-13T03:04:53Z INFO device.log Connection complete.
+2023-03-13T03:04:53Z NOTICE device.log Endpoint connection restored to last working endpoint
+2023-03-13T03:04:53Z ERROR device.log While redirecting connection endpoint: While resetting connection
+2023-03-13T03:04:53Z INFO device.log Config handler
+2023-03-13T03:04:53Z INFO device.log 2023-03-13T03:04:53Z received config 2023-03-13T03:04:35Z
+2023-03-13T03:04:53Z INFO device.log Starting executor with send message delay 10000
+2023-03-13T03:04:53Z NOTICE system.config.apply success
+2023-03-13T03:04:53Z INFO device.log Config handler
+2023-03-13T03:04:53Z INFO device.log 2023-03-13T03:04:53Z received config 2023-03-13T03:04:53Z
+2023-03-13T03:04:53Z NOTICE system.config.apply success
+2023-03-13T03:04:55Z INFO device.log update state 2023-03-13T03:04:55Z last_config 2023-03-13T03:04:53Z
+2023-03-13T03:05:03Z NOTICE device.log Starting new endpoint generation
+2023-03-13T03:05:03Z INFO device.log New config blob endpoint detected
+2023-03-13T03:05:03Z INFO device.log update state 2023-03-13T03:05:03Z last_config 2023-03-13T03:04:53Z
+2023-03-13T03:05:03Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:03Z ERROR device.log Attempt failed, retries remaining: 9
+2023-03-13T03:05:04Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:04Z ERROR device.log Attempt failed, retries remaining: 8
+2023-03-13T03:05:05Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:05Z ERROR device.log Attempt failed, retries remaining: 7
+2023-03-13T03:05:06Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:06Z ERROR device.log Attempt failed, retries remaining: 6
+2023-03-13T03:05:07Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:07Z ERROR device.log Attempt failed, retries remaining: 5
+2023-03-13T03:05:08Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:08Z ERROR device.log Attempt failed, retries remaining: 4
+2023-03-13T03:05:09Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:09Z ERROR device.log Attempt failed, retries remaining: 3
+2023-03-13T03:05:10Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:10Z ERROR device.log Attempt failed, retries remaining: 2
+2023-03-13T03:05:11Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:11Z ERROR device.log Attempt failed, retries remaining: 1
+2023-03-13T03:05:12Z ERROR device.log While waiting for connection start: Connection error
+2023-03-13T03:05:12Z ERROR device.log Attempt failed, retries remaining: 0
+2023-03-13T03:05:14Z INFO device.log update state 2023-03-13T03:05:14Z last_config 2023-03-13T03:04:53Z
+2023-03-13T03:05:14Z INFO device.log Connection complete.
+2023-03-13T03:05:14Z NOTICE device.log Endpoint connection restored to last working endpoint
+2023-03-13T03:05:14Z ERROR device.log While redirecting connection endpoint: While resetting connection
+2023-03-13T03:05:14Z INFO device.log Config handler
+2023-03-13T03:05:14Z INFO device.log 2023-03-13T03:05:14Z received config 2023-03-13T03:04:53Z
+2023-03-13T03:05:14Z INFO device.log Starting executor with send message delay 10000
+2023-03-13T03:05:14Z NOTICE system.config.apply success
+2023-03-13T03:05:14Z INFO device.log Config handler
+2023-03-13T03:05:14Z INFO device.log 2023-03-13T03:05:14Z received config 2023-03-13T03:05:14Z
+2023-03-13T03:05:14Z NOTICE system.config.apply success
+2023-03-13T03:05:16Z INFO device.log update state 2023-03-13T03:05:16Z last_config 2023-03-13T03:05:14Z
+2023-03-13T03:05:24Z WARNING validation.feature.sequence Sequence complete

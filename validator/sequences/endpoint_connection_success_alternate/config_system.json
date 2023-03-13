@@ -2,11 +2,11 @@
   "metrics_rate_sec" : 600,
   "min_loglevel" : 200,
   "operation" : {
-    "last_start" : "2023-03-07T16:31:51Z"
+    "last_start" : "2023-03-13T04:49:50Z"
   },
   "testing" : {
     "sequence_name" : "endpoint_connection_success_alternate"
   },
-  "timestamp" : "2023-03-07T16:37:28.432Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-03-13T04:50:55.621Z",
+  "version" : "1.4.0-205-g15f9a1f2"
 }

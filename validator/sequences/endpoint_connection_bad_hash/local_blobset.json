@@ -2,9 +2,9 @@
   "blobs" : {
     "_iot_endpoint_config" : {
       "phase" : "final",
-      "url" : "@@@endpoint url###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBL2RldmljZXMvQUhVLTEiCn0=",
-      "sha256" : "@@@invalid blob data hash###2b6b47470d4fa9075f97d3af909088d92b91e444ce7eb2b8cacaead4aa63800e",
-      "generation" : "2023-03-07T16:36:43Z"
+      "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0Lmdvb2dsZWFwaXMuY29tIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wZXJpbmdrbmlmZS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvWlotVFJJLUZFQ1RBJUEvZGV2aWNlcy9BSFUtMSIKfQ==",
+      "sha256" : "@@@invalid blob data hash###1e232bf119337ba50af908673c8c429359304706ba1d134dd525395895c99d0a",
+      "generation" : "2023-03-13T03:06:06Z"
     }
   }
 }

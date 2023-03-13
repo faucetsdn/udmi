@@ -276,7 +276,7 @@ public class SequenceBase {
 
     cloudRegion = validatorConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(validatorConfig);
-    altRegistry = Strings.emptyToNull(validatorConfig.alt_registry);
+    altRegistry = SiteModel.getRegistryActual(validatorConfig.alt_registry, validatorConfig.registry_suffix);
 
     deviceMetadata = readDeviceMetadata();
 
@@ -324,6 +324,7 @@ public class SequenceBase {
     }
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
     altConfiguration.registry_id = altRegistry;
+    altConfiguration.registry_suffix = null;  // Don't double-dip adding suffix to the registry.
     altConfiguration.alt_registry = null;
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());

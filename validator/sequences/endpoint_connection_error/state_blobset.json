@@ -3,14 +3,14 @@
     "_iot_endpoint_config" : {
       "phase" : "final",
       "status" : {
-        "message" : "While resetting connection",
-        "detail" : "java.lang.RuntimeException: While resetting connection\n\tat daq.pubber.Pubber.resetConnection(Pubber.java:1055)\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1018)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:627)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:599)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:833)\nCaused by: java.lang.RuntimeException: While attempting to start connection\n\tat daq.pubber.Pubber.startConnection(Pubber.java:725)\n\tat daq.pubber.Pubber.resetConnection(Pubber.java:1052)\n\t... 9 more\nCaused by: java.lang.RuntimeException: Failed connection attempt after retries\n\tat daq.pubber.Pubber.startConnection(Pubber.java:722)\n\t... 10 more\n",
+        "message" : "While sending synchronous state",
+        "detail" : "java.lang.RuntimeException: While sending synchronous state\n\tat daq.pubber.Pubber.publishSynchronousState(Pubber.java:1517)\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1092)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:691)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:626)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:833)\nCaused by: java.lang.RuntimeException: Interruped sleep\n\tat com.google.udmi.util.JsonUtil.safeSleep(JsonUtil.java:83)\n\tat daq.pubber.Pubber.publishStateMessage(Pubber.java:1546)\n\tat daq.pubber.Pubber.publishStateMessage(Pubber.java:1539)\n\tat daq.pubber.Pubber.publishSynchronousState(Pubber.java:1515)\n\t... 9 more\nCaused by: java.lang.IllegalArgumentException: sleep too short\n\tat com.google.common.base.Preconditions.checkArgument(Preconditions.java:144)\n\tat com.google.udmi.util.JsonUtil.safeSleep(JsonUtil.java:80)\n\t... 12 more\n",
         "category" : "blobset.blob.apply",
         "level" : 500
       },
-      "generation" : "2023-03-07T16:33:59Z"
+      "generation" : "2023-03-13T03:04:10Z"
     }
   },
-  "timestamp" : "2023-03-07T16:34:28Z",
+  "timestamp" : "2023-03-13T03:04:15Z",
   "version" : "1.4.1"
 }
