@@ -22,6 +22,7 @@ if [[ -n `which rot13` ]]; then
 else
    echo 'Using target project:' $project_id
 fi
+echo Testing sequencer with UDMI_REGISTRY_SUFFIX: $UDMI_REGISTRY_SUFFIX
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
