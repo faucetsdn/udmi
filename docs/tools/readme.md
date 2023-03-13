@@ -13,4 +13,5 @@
 
 ## Setup
 
-[Setup instructions (GCP)](setup.md) are provided to set up the local environment for using tools.
+- [Setup instructions (GCP)](setup.md) are provided to set up the local environment for using tools.
+- [sharding](sharding.md) - ability to run sequencer in shards for parallelism
