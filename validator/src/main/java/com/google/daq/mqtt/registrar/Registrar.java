@@ -97,6 +97,8 @@ public class Registrar {
   private boolean blockUnknown;
   private File siteDir;
   private String registrySuffix;
+  private boolean useAltRegistry;
+  private String altRegistry;
 
   /**
    * Main entry point for registrar.
@@ -126,6 +128,9 @@ public class Registrar {
         case "-s":
           registrar.setSitePath(argList.remove(0));
           break;
+        case "-a":
+          registrar.setUseAltRegistry(true);
+          break;
         case "-f":
           registrar.setFeedTopic(argList.remove(0));
           break;
@@ -153,9 +158,14 @@ public class Registrar {
     }
   }
 
+  private void setUseAltRegistry(boolean useAltRegistry) {
+    this.useAltRegistry = useAltRegistry;
+  }
+
   private void processProfile(File profilePath) {
     ExecutionConfiguration config = ConfigUtil.readExecutionConfiguration(profilePath);
     setSitePath(config.site_model);
+    altRegistry = config.alt_registry;
     setProjectId(config.project_id, config.registry_suffix);
     setValidateMetadata(true);
     if (config.project_id != null) {
@@ -165,6 +175,7 @@ public class Registrar {
 
   void execute() {
     try {
+      initializeCloudProject();
       if (schemaBase == null) {
         setToolRoot(null);
       }
@@ -261,7 +272,11 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    cloudIotManager = new CloudIotManager(projectId, siteDir, registrySuffix);
+    if (useAltRegistry && altRegistry == null) {
+      throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
+    }
+    String useRegistry = useAltRegistry ? altRegistry : null;
+    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -683,7 +698,6 @@ public class Registrar {
     }
     this.projectId = projectId;
     this.registrySuffix = registrySuffix;
-    initializeCloudProject();
   }
 
   protected void setToolRoot(String toolRoot) {
