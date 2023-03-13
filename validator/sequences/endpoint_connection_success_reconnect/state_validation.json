@@ -2,17 +2,6 @@
   "features" : {
     "endpoint" : {
       "sequences" : {
-        "endpoint_connection_retry" : {
-          "summary" : "Check repeated endpoint with same information gets retried.",
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:35:58Z",
-            "level" : 400
-          }
-        },
         "endpoint_connection_success_reconnect" : {
           "summary" : "Check a successful reconnect to the same endpoint.",
           "stage" : "alpha",
@@ -20,80 +9,20 @@
           "status" : {
             "message" : "Starting test",
             "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:35:58Z",
+            "timestamp" : "2023-03-12T23:24:43Z",
             "level" : 200
-          }
-        },
-        "endpoint_connection_error" : {
-          "summary" : "Push endpoint config message to device that results in a connection error.",
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:34:36Z",
-            "level" : 400
-          }
-        }
-      }
-    },
-    "system" : {
-      "sequences" : {
-        "valid_serial_no" : {
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:33:48Z",
-            "level" : 400
-          }
-        }
-      }
-    },
-    "writeback" : {
-      "sequences" : {
-        "writeback_failure" : {
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:33:32Z",
-            "level" : 400
-          }
-        },
-        "writeback_success" : {
-          "summary" : "Implements UDMI writeback and can successfully writeback to a point",
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:32:54Z",
-            "level" : 400
-          }
-        },
-        "writeback_invalid" : {
-          "stage" : "alpha",
-          "result" : "pass",
-          "status" : {
-            "message" : "Sequence complete",
-            "category" : "validation.feature.sequence",
-            "timestamp" : "2023-03-07T16:33:17Z",
-            "level" : 400
           }
         }
       }
     }
   },
-  "start_time" : "2023-03-07T16:32:07Z",
+  "start_time" : "2023-03-12T23:24:43Z",
   "status" : {
     "message" : "Starting sequence run for device AHU-1",
     "category" : "validation.feature.sequence",
-    "timestamp" : "2023-03-07T16:32:07Z",
+    "timestamp" : "2023-03-12T23:24:43Z",
     "level" : 300
   },
-  "timestamp" : "2023-03-07T16:35:58Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-03-12T23:24:43Z",
+  "version" : "1.4.0-205-g15f9a1f2"
 }

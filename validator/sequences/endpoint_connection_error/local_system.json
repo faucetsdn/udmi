@@ -2,7 +2,7 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 600,
   "operation" : {
-    "last_start" : "2023-03-07T16:31:51Z"
+    "last_start" : "2023-03-13T03:02:30Z"
   },
   "testing" : {
     "sequence_name" : "endpoint_connection_error"
