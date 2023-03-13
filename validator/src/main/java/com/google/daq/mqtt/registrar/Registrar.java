@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -94,7 +95,7 @@ public class Registrar {
   private Map<String, Map<String, String>> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
-  private boolean blockUnknown;
+  private Boolean blockUnknown;
   private File siteDir;
   private String registrySuffix;
   private boolean useAltRegistry;
@@ -207,7 +208,6 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
-    Preconditions.checkNotNull(cloudIotManager, "cloudIotManager not yet defined");
     blockUnknown = false;
   }
 
@@ -286,8 +286,9 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
-    blockUnknown = Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
-        DEFAULT_BLOCK_UNKNOWN);
+    blockUnknown = Optional.ofNullable(blockUnknown)
+        .orElse(Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
+            DEFAULT_BLOCK_UNKNOWN));
   }
 
   private String getGenerationString() {
