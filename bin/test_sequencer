@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-# TODO: Replace with proper option for CI
-export UDMI_REGISTRY_SUFFIX=%A
-
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
