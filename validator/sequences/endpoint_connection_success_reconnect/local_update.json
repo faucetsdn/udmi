@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-03-07T16:36:21Z",
-  "version" : "@@@cloud udmi version###1.4.0-221-g632b879b",
+  "timestamp" : "2023-03-12T23:25:08Z",
+  "version" : "@@@cloud udmi version###1.4.0-205-g15f9a1f2",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 600,
     "operation" : {
-      "last_start" : "2023-03-07T16:31:51Z"
+      "last_start" : "2023-03-12T23:24:33Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_success_reconnect"
@@ -16,7 +16,7 @@
       "ether" : {
         "addr" : "00:50:b6:ed:5f:77"
       },
-      "inet" : {
+      "ipv4" : {
         "addr" : "192.168.2.1"
       }
     }

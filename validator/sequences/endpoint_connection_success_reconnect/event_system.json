@@ -1,41 +1,36 @@
 {
-  "event_count" : 20,
-  "last_config" : "2023-03-07T16:36:21Z",
+  "event_count" : 3,
+  "last_config" : "2023-03-12T23:25:08Z",
   "logentries" : [ {
-    "message" : "update state 2023-03-07T16:36:20Z last_config 2023-03-07T16:36:11Z",
+    "message" : "update state 2023-03-12T23:25:07Z last_config 2023-03-12T23:25:00Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:36:20Z",
+    "timestamp" : "2023-03-12T23:25:07Z",
     "level" : 200
   }, {
     "message" : "Config handler",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:36:21Z",
+    "timestamp" : "2023-03-12T23:25:08Z",
     "level" : 200
   }, {
-    "message" : "2023-03-07T16:36:21Z received config 2023-03-07T16:36:21Z",
+    "message" : "2023-03-12T23:25:08Z received config 2023-03-12T23:25:08Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:36:21Z",
+    "timestamp" : "2023-03-12T23:25:08Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2023-03-07T16:36:21Z",
+    "timestamp" : "2023-03-12T23:25:08Z",
     "level" : 300
   }, {
-    "message" : "update state 2023-03-07T16:36:22Z last_config 2023-03-07T16:36:21Z",
+    "message" : "update state 2023-03-12T23:25:10Z last_config 2023-03-12T23:25:08Z",
     "category" : "device.log",
-    "timestamp" : "2023-03-07T16:36:22Z",
-    "level" : 200
-  }, {
-    "message" : "2023-03-07T16:36:28Z sending test message #20",
-    "category" : "device.log",
-    "timestamp" : "2023-03-07T16:36:28Z",
+    "timestamp" : "2023-03-12T23:25:10Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 252,
-    "mem_free_mb" : 168.78414916992188
+    "mem_free_mb" : 215.6640853881836
   },
-  "timestamp" : "2023-03-07T16:36:28.021Z",
+  "timestamp" : "2023-03-12T23:25:15.004Z",
   "version" : "1.4.1"
 }
