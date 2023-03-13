@@ -124,6 +124,7 @@ Schemas
 SDK
 setpoint
 sha
+sharding
 src
 Stackdriver
 stateStatus
