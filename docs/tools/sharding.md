@@ -24,10 +24,23 @@ a system with a registry suffix setting of `%A` would show:
 
 ## Setup
 
-- Creating shadow site_model registry (e.g. registry `ZZ-TRI-FECTA%A`).
-- Creating shadow alternate registry (e.g. registry `ZZ-REDIRECT-NA%A`), and if not some tests will be skipped.
-- Creating shadow reflector registry device entries (e.g. device `ZZ-TRI-FECTA%A` in the `UDMS-REFLECT` registry).
-  - Also device `ZZ-REDIRECT-NA%A` in `UDMS-REFLECT` if necessary for endpoint connection testing.
-- Define `UDMI_REGISTRY_SUFFIX` env variable: either locally or through a GitHub Actions secret.
-- `bin/registrar` with `-a` flag to populate the `ZZ-TRI-FECTA%A` (and maybe `ZZ-REDIRECT-NA%A`) with site devices.
+- Manual creation of GCP IoT Core registries:
+  - Create shadow site_model registry (e.g. registry `ZZ-TRI-FECTA%A`).
+  - Create shadow alternate registry (e.g. registry `ZZ-REDIRECT-NA%A`), and if not some tests will be skipped.
+  - Create shadow reflector registry device entries (e.g. device `ZZ-TRI-FECTA%A` in the `UDMS-REFLECT` registry).
+    - Will need a public key, and the corresponding private key should be put in `sites/udmi_site_model/validator/rsa_private.pkcs8`
+    - Also device `ZZ-REDIRECT-NA%A` in registry `UDMS-REFLECT` if necessary for endpoint connection testing (can use same key).
+- Semi-automated population of registry entries:
+  - Define `UDMI_REGISTRY_SUFFIX` env variable: either locally or through a GitHub Actions secret.
+  - `bin/test_sequencer $PROJECT_ID no_valid_test` to attempt a test run -- this will fail.
+    - Make sure the referenced registry exists: check log output for latest "creating client" line for exact path.
+    - Should be a combination of the target project, registry from the site model, and env registry suffix. See examples above.
+  - `validator/bin/registrar /tmp/validator_config.json`: the config file is generated from the failed `bin/test_sequencer` step.
+    - This should automatically pick up the reflector suffix as defined by `UDMI_REGISTRY_SUFFIX`
+  - `validator/bin/registrar /tmp/validator_config.json -a`: The added `-a` means _alternate_ for the option redirection test registry.
+    - e.g., normally the registry would be `ZZ-TRI-FECTA%A`, but this should then be `ZZ-REDIRECT-NA%A`.
 
+## CI Workflow
+
+If the `UDMI_REGISTRY_SUFFIX` is defined as a GitHub Actions secret, the workflow will automatically skip `bin/test_sequencer` in the
+main flow, and instead run it in a parallal sequencer-only flow. The "skipped" step will still show up but not executed.
