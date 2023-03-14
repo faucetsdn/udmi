@@ -108,55 +108,55 @@ public class Registrar {
    */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
-    Registrar registrar = new Registrar();
-    processArgs(argList, registrar);
-    registrar.execute();
+    new Registrar().processArgs(argList).execute();
   }
 
-  static void processArgs(List<String> argList, Registrar registrar) {
+  Registrar processArgs(List<String> argListRaw) {
+    List<String> argList = new ArrayList<>(argListRaw);
     if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
-      registrar.processProfile(new File(argList.remove(0)));
+      processProfile(new File(argList.remove(0)));
     }
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
         case "-r":
-          registrar.setToolRoot(argList.remove(0));
+          setToolRoot(argList.remove(0));
           break;
         case "-p":
-          registrar.setProjectId(argList.remove(0), null);
+          setProjectId(argList.remove(0), null);
           break;
         case "-s":
-          registrar.setSitePath(argList.remove(0));
+          setSitePath(argList.remove(0));
           break;
         case "-a":
-          registrar.setUseAltRegistry(true);
+          setUseAltRegistry(true);
           break;
         case "-f":
-          registrar.setFeedTopic(argList.remove(0));
+          setFeedTopic(argList.remove(0));
           break;
         case "-u":
-          registrar.setUpdateFlag(true);
+          setUpdateFlag(true);
           break;
         case "-l":
-          registrar.setIdleLimit(argList.remove(0));
+          setIdleLimit(argList.remove(0));
           break;
         case "-t":
-          registrar.setValidateMetadata(true);
+          setValidateMetadata(true);
           break;
         case "--":
-          registrar.setDeviceList(argList);
-          return;
+          setDeviceList(argList);
+          return this;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
           }
           // Add the current non-option back into the list and use it as device names list.
           argList.add(0, option);
-          registrar.setDeviceList(argList);
-          return;
+          setDeviceList(argList);
+          return this;
       }
     }
+    return this;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -164,7 +164,10 @@ public class Registrar {
   }
 
   private void processProfile(File profilePath) {
-    ExecutionConfiguration config = ConfigUtil.readExecutionConfiguration(profilePath);
+    processProfile(ConfigUtil.readExecutionConfiguration(profilePath));
+  }
+
+  Registrar processProfile(ExecutionConfiguration config) {
     setSitePath(config.site_model);
     altRegistry = config.alt_registry;
     setProjectId(config.project_id, config.registry_suffix);
@@ -172,6 +175,7 @@ public class Registrar {
     if (config.project_id != null) {
       setUpdateFlag(true);
     }
+    return this;
   }
 
   void execute() {
