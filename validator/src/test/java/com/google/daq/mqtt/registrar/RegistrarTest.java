@@ -1,14 +1,15 @@
 package com.google.daq.mqtt.registrar;
 
+import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_DIR;
+import static com.google.daq.mqtt.TestCommon.SITE_REGION;
 import static com.google.daq.mqtt.TestCommon.TOOL_ROOT;
 import static com.google.daq.mqtt.util.IotMockProvider.BIND_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.BLOCK_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
 import static com.google.daq.mqtt.util.IotMockProvider.UPDATE_DEVICE_ACTION;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
-import static com.google.udmi.util.SiteModel.MOCK_REGION;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
 
@@ -55,9 +55,8 @@ public class RegistrarTest {
   private Registrar getRegistrar(Consumer<ExecutionConfiguration> profileUpdater,
       List<String> args) {
     ExecutionConfiguration configuration = new ExecutionConfiguration();
-    configuration.alt_registry = MOCK_PROJECT + "-alternate";
+    configuration.alt_registry = ALT_REGISTRY;
     configuration.site_model = SITE_DIR;
-    configuration.cloud_region = MOCK_REGION;
     configuration.project_id = MOCK_PROJECT;
     profileUpdater.accept(configuration);
     Registrar registrar = new Registrar();
@@ -104,27 +103,22 @@ public class RegistrarTest {
   }
 
   @Test
-  public void alternateRegistryTest() {
-    Registrar registrar = getRegistrar(profile -> {
-      profile.registry_suffix = REGISTRY_SUFFIX;
-    }, ImmutableList.of("-a"));
-    registrar.execute();
-    List<Object> mockActions = registrar.getMockActions();
-    String alternateRegistryId = REGISTRY_ID + REGISTRY_SUFFIX;
-    String mockClientString = IotMockProvider.mockClientString(MOCK_PROJECT, alternateRegistryId, MOCK_REGION);
-    List<Object> mismatchItems = mockActions.stream().map(action -> ((MockAction) action).client)
-        .filter(client -> !client.equals(mockClientString))
-        .collect(Collectors.toList());
-    assertEquals("clients not matching " + mockClientString, ImmutableList.of(), mismatchItems);
+  public void registryVariantsTests() {
+    checkRegistration(false, false, REGISTRY_ID);
+    checkRegistration(false, true, REGISTRY_ID + REGISTRY_SUFFIX);
+    checkRegistration(true, false, ALT_REGISTRY);
+    checkRegistration(true, true, ALT_REGISTRY + REGISTRY_SUFFIX);
   }
 
-  @Test
-  public void simpleRegistryTest() {
-    Registrar registrar = getRegistrar(profile -> {}, ImmutableList.of());
+  private void checkRegistration(boolean useAlternate, boolean useSuffix, String expectedRegistry) {
+    List<String> args = useAlternate ? ImmutableList.of("-a") : ImmutableList.of();
+    Registrar registrar = getRegistrar(profile -> {
+      profile.registry_suffix = useSuffix ? REGISTRY_SUFFIX : null;
+    }, args);
     registrar.execute();
     List<Object> mockActions = registrar.getMockActions();
     String mockClientString = IotMockProvider.mockClientString(MOCK_PROJECT,
-        REGISTRY_ID, MOCK_REGION);
+        expectedRegistry, SITE_REGION);
     List<Object> mismatchItems = mockActions.stream().map(action -> ((MockAction) action).client)
         .filter(client -> !client.equals(mockClientString))
         .collect(Collectors.toList());

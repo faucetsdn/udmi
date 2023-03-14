@@ -35,12 +35,12 @@ public class IotMockProvider implements IotProvider {
         cloudRegion);
   }
 
-  private void mockAction(String action, String deviceId, Object paramater) {
+  private void mockAction(String action, String deviceId, Object data) {
     MockAction mockAction = new MockAction();
     mockAction.client = client;
     mockAction.action = action;
     mockAction.deviceId = deviceId;
-    mockAction.data = paramater;
+    mockAction.data = data;
     mockActions.add(mockAction);
   }
 
@@ -67,7 +67,6 @@ public class IotMockProvider implements IotProvider {
   @Override
   public Device fetchDevice(String deviceId) {
     Device device = new Device();
-    SiteModel.Device modelDevice = siteModel.getDevice(deviceId);
     device.setId(deviceId);
     device.setNumId(new BigInteger("" + Objects.hash(deviceId), 10));
     return device;
