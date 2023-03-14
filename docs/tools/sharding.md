@@ -45,4 +45,4 @@ a system with a registry suffix setting of `%A` would show:
 ## CI Workflow
 
 If the `UDMI_REGISTRY_SUFFIX` is defined as a GitHub Actions secret, the workflow will automatically skip `bin/test_sequencer` in the
-main flow, and instead run it in a parallal sequencer-only flow. The "skipped" step will still show up but not executed.
+main flow, and instead run it in a parallel sequencer-only flow. The "skipped" step will still show up but not executed.
