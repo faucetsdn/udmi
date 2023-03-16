@@ -10,31 +10,42 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import udmi.schema.Config;
+import udmi.schema.State;
 
 /**
- * Utility class to help with detecting differences in config values.
+ * Utility class to help with detecting differences in object fields.
  */
-public class ConfigDiffEngine {
+public class ObjectDiffEngine {
 
   private Map<String, Object> previous;
+  private boolean ignoreSemantics;
 
-  public ConfigDiffEngine() {
+  public ObjectDiffEngine() {
   }
 
   /**
-   * Compute the changes in a config object from the previous config, as stored in the class.
+   * Compute the changes in an object from the previous version, as stored in the class.
    *
-   * @param deviceConfig new config
-   * @return list of differences against the previous config
+   * @param updatedObject new object
+   * @return list of differences against the previous object
    */
-  @SuppressWarnings("unchecked")
-  public List<String> computeChanges(Config deviceConfig) {
-    Map<String, Object> updated = extractDefinitions(deviceConfig);
-    List<String> configUpdates = new ArrayList<>();
-    accumulateDifference("", previous, updated, configUpdates);
+  public List<String> computeChanges(Object updatedObject) {
+    // TODO: Hack alert! State should be handled semantically, but for now show raw changes.
+    ignoreSemantics = updatedObject instanceof State;
+    Map<String, Object> updated = extractDefinitions(updatedObject);
+    List<String> updates = new ArrayList<>();
+    accumulateDifference("", previous, updated, updates);
     previous = updated;
-    return configUpdates;
+    return updates;
+  }
+
+  /**
+   * Just quietly reset the internal state. No need for any diff computation.
+   *
+   * @param updatedObject new object state
+   */
+  public void resetState(Object updatedObject) {
+    previous = extractDefinitions(updatedObject);
   }
 
   private Map<String, Object> extractValues(Object thing) {
@@ -94,7 +105,7 @@ public class ConfigDiffEngine {
 
   @SuppressWarnings("unchecked")
   void accumulateDifference(String prefix, Map<String, Object> left, Map<String, Object> right,
-      List<String> configUpdates) {
+      List<String> updates) {
     right.forEach((key, value) -> {
       if (left != null && left.containsKey(key)) {
         Object leftValue = left.get(key);
@@ -102,20 +113,20 @@ public class ConfigDiffEngine {
           return;
         }
         if (isBaseType(value)) {
-          configUpdates.add(String.format("Set `%s%s` = %s", prefix, key, semanticValue(value)));
+          updates.add(String.format("Set `%s%s` = %s", prefix, key, semanticValue(value)));
         } else {
           String newPrefix = prefix + key + ".";
           accumulateDifference(newPrefix, (Map<String, Object>) leftValue,
-              (Map<String, Object>) value, configUpdates);
+              (Map<String, Object>) value, updates);
         }
       } else {
-        configUpdates.add(String.format("Add `%s%s` = %s", prefix, key, semanticValue(value)));
+        updates.add(String.format("Add `%s%s` = %s", prefix, key, semanticValue(value)));
       }
     });
     if (left != null) {
       left.forEach((key, value) -> {
         if (!right.containsKey(key)) {
-          configUpdates.add(String.format("Remove `%s%s`", prefix, key));
+          updates.add(String.format("Remove `%s%s`", prefix, key));
         }
       });
     }
@@ -132,7 +143,7 @@ public class ConfigDiffEngine {
       return semanticMapValue((Map<String, Object>) value);
     }
     boolean isSemantic = SemanticValue.isSemanticValue(value);
-    if (value instanceof Date && !isSemantic) {
+    if (!ignoreSemantics && value instanceof Date && !isSemantic) {
       throw new IllegalArgumentException(
           "Unexpected non-semantic Date in semantic value calculation");
     }
@@ -155,27 +166,26 @@ public class ConfigDiffEngine {
   /**
    * Compare two objects, taking into consideration any semantic tags/values.
    *
-   * @param deviceConfig   one config object
-   * @param receivedConfig another config object
+   * @param oneObject one object to compare
+   * @param twoObject second object to compare
    * @return equality comparison with semantic considerations
    */
-  public boolean equals(Config deviceConfig, Object receivedConfig) {
-    return diff(deviceConfig, receivedConfig).isEmpty();
+  public boolean equals(Object oneObject, Object twoObject) {
+    return diff(oneObject, twoObject).isEmpty();
   }
 
   /**
-   * Return the accumulated differences between two config objects.
+   * Return the accumulated differences between two objects.
    *
-   * @param deviceConfig   device config
-   * @param receivedConfig device received
-   * @return list of differences
+   * @param startObject starting object
+   * @param endObject   ending object
+   * @return list of differences going from start to end objects
    */
-  public List<String> diff(Config deviceConfig, Object receivedConfig) {
-    Map<String, Object> left = extractValues(deviceConfig);
-    Map<String, Object> right = extractValues(receivedConfig);
-    List<String> configUpdates = new ArrayList<>();
-    accumulateDifference("", left, right, configUpdates);
-    return configUpdates;
+  public List<String> diff(Object startObject, Object endObject) {
+    Map<String, Object> left = extractValues(startObject);
+    Map<String, Object> right = extractValues(endObject);
+    List<String> updates = new ArrayList<>();
+    accumulateDifference("", left, right, updates);
+    return updates;
   }
-
 }

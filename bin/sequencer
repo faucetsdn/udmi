@@ -35,6 +35,13 @@ project_id=$2
 device_id=$3
 shift 3
 
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
+else
+    registry_suffix=null
+fi
+
 serial_no=${1:-//}
 shift || true
 
@@ -65,6 +72,7 @@ cat <<EOF > $VALIDATOR_CONFIG
   "site_model": "$site_path",
   "device_id": "$device_id",
   "alt_registry": "$alt_registry",
+  "registry_suffix": $registry_suffix,
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
