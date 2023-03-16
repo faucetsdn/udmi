@@ -11,6 +11,14 @@ site_dir=$(realpath $1)
 project_id=$2
 device_id=$3
 shift 3
+REFLECTOR_CONFIG=/tmp/reflector_config.json
+
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
+else
+    registry_suffix=null
+fi
 
 config_file=generated_config.json
 if [[ -n $1 ]]; then
@@ -29,4 +37,14 @@ jq < ${src_config} .timestamp=\"${now_date}\" |\
     jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
 
 echo Resetting device ${device_id} config...
-validator/bin/reflector ${site_dir} ${project_id} ${device_id} update/config:${dst_config}
+echo Writing config to $REFLECTOR_CONFIG
+cat <<EOF > $REFLECTOR_CONFIG
+{
+  "project_id": "$project_id",
+  "site_model": "$site_dir",
+  "device_id": "$device_id",
+  "registry_suffix": $registry_suffix
+}
+EOF
+
+validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}

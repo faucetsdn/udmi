@@ -16,7 +16,7 @@ public class LocalnetSequences extends SequenceBase {
     }
     untilTrue("localnet families available", () -> deviceState.localnet.families.size() > 0);
     String actual = catchToNull(() -> deviceState.localnet.families.get(family).addr);
-    checkThat(String.format("device family %s address matches", family),
+    checkThat(String.format("device %s address was %s, expected %s", family, actual, expected),
         () -> expected.equals(actual));
   }
 

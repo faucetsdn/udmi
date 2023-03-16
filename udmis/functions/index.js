@@ -222,7 +222,7 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   return registry_promise.then(() => {
     envelope.cloudRegion = registry_regions[envelope.deviceRegistryId];
     if (!envelope.cloudRegion) {
-      console.log('No cloud region found for target registry', envelope.deviceRegistryId);
+      console.error('No cloud region found for target registry', envelope.deviceRegistryId);
       return null;
     }
     if (envelope.subType == QUERY_TYPE) {

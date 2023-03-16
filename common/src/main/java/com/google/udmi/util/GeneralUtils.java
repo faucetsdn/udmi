@@ -3,8 +3,9 @@ package com.google.udmi.util;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -15,12 +16,11 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GeneralUtils {
 
@@ -28,6 +28,8 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  private static final String SEPARATOR = "\n  ";
+  private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
 
   /**
    * Returns a string of enabled options and values.
@@ -180,8 +182,8 @@ public class GeneralUtils {
   }
 
   /**
-   * Shallow all fields from one class to another existing class. This can be used, for example,
-   * if the target class is "final" but the fields themselves need to be updated.
+   * Shallow all fields from one class to another existing class. This can be used, for example, if
+   * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
    * @param to   target object
@@ -198,5 +200,12 @@ public class GeneralUtils {
         }
       }
     }
+  }
+
+  public static String changedLines(List<String> nullableChanges) {
+    List<String> changes = Optional.ofNullable(nullableChanges).orElse(ImmutableList.of());
+    String terminator = changes.size() == 0 ? "." : ":";
+    String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
+    return (header + INDENTED_LINES.join(changes)).trim();
   }
 }

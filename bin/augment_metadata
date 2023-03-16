@@ -30,7 +30,7 @@ default_iface=$(ip route | fgrep default | awk '{print $11, $5}' | sort -n | hea
 ether_addr=$(ip addr show dev $default_iface | fgrep ether | awk '{print $2}')
 ipv4_addr=$(ip addr show dev $default_iface | fgrep 'inet ' | awk '{print $2}')
 ipv4_addr=${ipv4_addr%/*}
-ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | awk '{print $2}')
+ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | tail -n 1 | awk '{print $2}')
 ipv6_addr=${ipv6_addr%/*}
 
 echo Setting $metadata_out ether addr to $ether_addr

@@ -8,6 +8,8 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
+import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -26,9 +28,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.daq.mqtt.util.ConfigDiffEngine;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.ObjectDiffEngine;
 import com.google.daq.mqtt.validator.AugmentedState;
 import com.google.daq.mqtt.validator.AugmentedSystemConfig;
 import com.google.daq.mqtt.validator.Validator;
@@ -105,6 +107,7 @@ public class SequenceBase {
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
   private static final long CONFIG_BARRIER_MS = 1000;
+  private static final String START_END_MARKER = "################################";
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -140,6 +143,7 @@ public class SequenceBase {
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
   private static final String UPDATE_SUBFOLDER = SubFolder.UPDATE.value();
+  private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
@@ -157,7 +161,9 @@ public class SequenceBase {
   );
   static final FeatureStage DEFAULT_MIN_STAGE = FeatureStage.BETA;
   private static final Map<SubFolder, String> sentConfig = new HashMap<>();
-  private static final ConfigDiffEngine configDiffEngine = new ConfigDiffEngine();
+  private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
+  private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
+  private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   public static final String SERIAL_NO_MISSING = "//";
   public static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -270,8 +276,9 @@ public class SequenceBase {
     }
 
     cloudRegion = validatorConfig.cloud_region;
-    registryId = validatorConfig.registry_id;
-    altRegistry = Strings.emptyToNull(validatorConfig.alt_registry);
+    registryId = SiteModel.getRegistryActual(validatorConfig);
+    altRegistry = SiteModel.getRegistryActual(validatorConfig.alt_registry,
+        validatorConfig.registry_suffix);
 
     deviceMetadata = readDeviceMetadata();
 
@@ -319,6 +326,7 @@ public class SequenceBase {
     }
     ExecutionConfiguration altConfiguration = GeneralUtils.deepCopy(validatorConfig);
     altConfiguration.registry_id = altRegistry;
+    altConfiguration.registry_suffix = null;  // Don't double-dip adding suffix to the registry.
     altConfiguration.alt_registry = null;
     try {
       return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
@@ -507,6 +515,7 @@ public class SequenceBase {
         sentConfig.clear();
         configTransactions.clear();
         configDiffEngine.computeChanges(deviceConfig);
+        SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
       }
       resetDeviceConfig(false);
@@ -614,7 +623,15 @@ public class SequenceBase {
       return;
     }
 
-    String prefix = messageBase.startsWith(LOCAL_PREFIX) ? "local " : "received ";
+    boolean systemEvent = messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE);
+    boolean anyEvent = messageBase.startsWith(EVENT_PREFIX);
+    boolean localUpdate = messageBase.startsWith(LOCAL_PREFIX);
+    boolean updateMessage = messageBase.endsWith(UPDATE_SUBFOLDER);
+    boolean configMessage = messageBase.startsWith(CONFIG_SUBTYPE);
+    boolean stateMessage = messageBase.startsWith(STATE_SUBTYPE);
+    boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
+
+    String prefix = localUpdate ? "local " : "received ";
     File messageFile = new File(testDir, messageBase + ".json");
     Object savedException = message == null ? null : message.get(EXCEPTION_KEY);
     try {
@@ -623,15 +640,14 @@ public class SequenceBase {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
       JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
-      boolean traceMessage =
-          traceLogLevel() || (debugLogLevel() && messageBase.equals(LOCAL_CONFIG_UPDATE));
-      String postfix = traceMessage ? (message == null ? "(null)" : stringify(message)) : "";
-      if (messageBase.equals(SYSTEM_EVENT_MESSAGE_BASE)) {
+      if (systemEvent) {
         logSystemEvent(messageBase, message);
-      } else if (traceLogLevel() && !messageBase.startsWith(EVENT_PREFIX)) {
-        trace(prefix + messageBase, postfix);
       } else {
-        debug(prefix + messageBase, postfix);
+        if (localUpdate || syntheticMessage || anyEvent) {
+          trace(prefix + messageBase, message == null ? "(null)" : stringify(message));
+        } else {
+          debug(prefix + messageBase);
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
@@ -771,7 +787,7 @@ public class SequenceBase {
       String header = String.format("Update config%s: ", suffix);
       debug(header + getTimestamp(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
-      List<String> allDiffs = configDiffEngine.computeChanges(deviceConfig);
+      List<String> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<String> filteredDiffs = filterTesting(allDiffs);
       if (!filteredDiffs.isEmpty()) {
         recordSequence(header);
@@ -1066,11 +1082,11 @@ public class SequenceBase {
   }
 
   private synchronized void handleReflectorMessage(String subTypeRaw,
-      Map<String, Object> message, String transactionId) {
+      Map<String, Object> message, String txnId) {
     try {
       // Do this first to handle all cases of a Config payload, including exceptions.
-      if (CONFIG_SUBTYPE.equals(subTypeRaw) && transactionId != null) {
-        configTransactions.remove(transactionId);
+      if (CONFIG_SUBTYPE.equals(subTypeRaw) && txnId != null) {
+        configTransactions.remove(txnId);
       }
       if (message.containsKey(EXCEPTION_KEY)) {
         debug("Ignoring reflector exception:\n" + message.get(EXCEPTION_KEY).toString());
@@ -1091,17 +1107,25 @@ public class SequenceBase {
           return;
         }
         Config config = (Config) converted;
-        updateDeviceConfig(config);
-        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp),
-            transactionId));
-        info(String.format("Updated config #%03d", updateCount), stringify(converted));
+        debug(String.format("Updated config %s, id %s", getTimestamp(config.timestamp), txnId));
+        List<String> changes = updateDeviceConfig(config);
+        if (updateCount == 1) {
+          info(String.format("Initial config #%03d", updateCount), stringify(deviceConfig));
+        } else {
+          info(String.format("Updated config #%03d", updateCount), changedLines(changes));
+        }
       } else if (converted instanceof AugmentedState) {
         State convertedState = (State) converted;
         if (deviceState != null && convertedState.timestamp.before(deviceState.timestamp)) {
           warning("Ignoring out-of-order state update " + convertedState);
           return;
         }
-        info(String.format("Updated state #%03d", updateCount), stringify(converted));
+        if (updateCount == 1) {
+          info(String.format("Initial state #%03d", updateCount), stringify(converted));
+        } else {
+          List<String> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
+          info(String.format("Updated state #%03d", updateCount), changedLines(stateChanges));
+        }
         deviceState = convertedState;
         updateConfigAcked((AugmentedState) converted);
         validSerialNo();
@@ -1114,9 +1138,9 @@ public class SequenceBase {
     }
   }
 
-  private void updateDeviceConfig(Config config) {
+  private List<String> updateDeviceConfig(Config config) {
     if (deviceConfig == null) {
-      return;
+      return null;
     }
 
     // These parameters are set by the cloud functions, so explicitly set to maintain parity.
@@ -1126,6 +1150,7 @@ public class SequenceBase {
       setLastStart(SemanticDate.describe("device reported", config.system.operation.last_start));
     }
     sanitizeConfig(deviceConfig);
+    return RECV_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
   }
 
   /**
@@ -1192,7 +1217,7 @@ public class SequenceBase {
     log(message, Level.TRACE);
   }
 
-  private void debug(String message, String parts) {
+  protected void debug(String message, String parts) {
     log(message, Level.DEBUG, parts);
   }
 
@@ -1200,7 +1225,7 @@ public class SequenceBase {
     log(message, Level.DEBUG);
   }
 
-  private void info(String message, String parts) {
+  protected void info(String message, String parts) {
     log(message, Level.INFO, parts);
   }
 
@@ -1314,11 +1339,12 @@ public class SequenceBase {
   }
 
   private void updateMirrorConfig(String receivedConfig) {
-    checkNotNull(altClient, "Alternate client used but test not skipped");
-    String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
-    reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
-    // There's a race condition if the mirror command gets delayed, so chill for a bit.
-    safeSleep(ONE_SECOND_MS);
+    if (altClient != null) {
+      String topic = UPDATE_SUBFOLDER + "/" + CONFIG_SUBTYPE;
+      reflector(!useAlternateClient).publish(getDeviceId(), topic, receivedConfig);
+      // There's a race condition if the mirror command gets delayed, so chill for a bit.
+      safeSleep(ONE_SECOND_MS);
+    }
   }
 
   private MessagePublisher reflector() {
@@ -1405,7 +1431,7 @@ public class SequenceBase {
 
         startSequenceStatus(description);
 
-        notice("starting test " + testName);
+        notice("starting test " + testName + " " + START_END_MARKER);
         activeInstance = SequenceBase.this;
       } catch (Exception e) {
         e.printStackTrace();
@@ -1421,8 +1447,8 @@ public class SequenceBase {
       if (!testName.equals(description.getMethodName())) {
         throw new IllegalStateException("Unexpected test method name");
       }
-      long stopTimeMs = System.currentTimeMillis();
-      notice("ending test " + testName + " after " + (stopTimeMs - testStartTimeMs) / 1000 + "s");
+      long testTimeSec = (System.currentTimeMillis() - testStartTimeMs) / 1000;
+      notice("ending test " + testName + " after " + testTimeSec + "s " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
@@ -1444,31 +1470,33 @@ public class SequenceBase {
         return;
       }
       final String message;
-      final SequenceResult type;
+      final SequenceResult failureType;
       if (e instanceof TestTimedOutException) {
         waitingCondition.forEach(condition -> warning("while " + condition));
         error(String.format("stage timeout %s at %s", waitingCondition.peek(), timeSinceStart()));
         message = "timeout " + waitingCondition.peek();
-        type = SequenceResult.FAIL;
+        failureType = SequenceResult.FAIL;
       } else if (e instanceof SkipTest) {
         message = e.getMessage();
-        type = SequenceResult.SKIP;
+        failureType = SequenceResult.SKIP;
       } else {
         while (e.getCause() != null) {
           e = e.getCause();
         }
         message = e.getMessage();
-        type = SequenceResult.FAIL;
+        failureType = SequenceResult.FAIL;
       }
       recordCompletion(type, description, message);
       debug("exception message: " + Common.getExceptionMessage(e));
       trace("ending stack trace", GeneralUtils.stackTraceString(e));
       String action = type == SequenceResult.SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
-      resetRequired = true;
-      if (debugLogLevel()) {
-        error("Reset required during debug, forcing exit to preserve failing config/state");
-        System.exit(EXIT_CODE_PRESERVE);
+      if (failureType != SequenceResult.SKIP) {
+        resetRequired = true;
+        if (debugLogLevel()) {
+          error("Reset required during debug, forcing exit to preserve failing config/state");
+          System.exit(EXIT_CODE_PRESERVE);
+        }
       }
     }
 
