@@ -8,16 +8,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.api.client.json.Json;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -57,7 +56,7 @@ public class SiteModel {
       ExecutionConfiguration executionConfig, String deviceId) {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(projectId,
-        executionConfig.cloud_region, executionConfig.registry_id, deviceId);
+        executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
     endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
     return endpoint;
   }
@@ -241,13 +240,24 @@ public class SiteModel {
     return auth_type.value().startsWith("RS") ? "rsa" : "ec";
   }
 
+  public static String getRegistryActual(ExecutionConfiguration iotConfig) {
+    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
+  }
+
+  public static String getRegistryActual(String registry_id, String registry_suffix) {
+    if (registry_id == null) {
+      return null;
+    }
+    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+  }
+
   /**
    * Get the site registry name.
    *
    * @return site registry
    */
   public String getRegistryId() {
-    return executionConfiguration.registry_id;
+    return getRegistryActual(executionConfiguration);
   }
 
   /**

@@ -17,6 +17,7 @@ public class IotMockProvider implements IotProvider {
 
   public static final String MOCK_DEVICE_ID = "MOCK-1";
   private final SiteModel siteModel;
+  private final String client;
   private List<MockAction> mockActions = new ArrayList<>();
   public static final String BLOCK_DEVICE_ACTION = "block";
   public static final String UPDATE_DEVICE_ACTION = "update";
@@ -26,13 +27,20 @@ public class IotMockProvider implements IotProvider {
   IotMockProvider(String projectId, String registryId, String cloudRegion) {
     siteModel = new SiteModel("../sites/udmi_site_model");
     siteModel.initialize();
+    client = mockClientString(projectId, registryId, cloudRegion);
   }
 
-  private void mockAction(String action, String deviceId, Object paramater) {
+  public static String mockClientString(String projectId, String registryId, String cloudRegion) {
+    return String.format("projects/%s/region/%s/registry/%s", projectId, registryId,
+        cloudRegion);
+  }
+
+  private void mockAction(String action, String deviceId, Object data) {
     MockAction mockAction = new MockAction();
+    mockAction.client = client;
     mockAction.action = action;
     mockAction.deviceId = deviceId;
-    mockAction.data = paramater;
+    mockAction.data = data;
     mockActions.add(mockAction);
   }
 
@@ -59,7 +67,6 @@ public class IotMockProvider implements IotProvider {
   @Override
   public Device fetchDevice(String deviceId) {
     Device device = new Device();
-    SiteModel.Device modelDevice = siteModel.getDevice(deviceId);
     device.setId(deviceId);
     device.setNumId(new BigInteger("" + Objects.hash(deviceId), 10));
     return device;
@@ -94,6 +101,7 @@ public class IotMockProvider implements IotProvider {
    * Holder class for mocked actions.
    */
   public static class MockAction {
+    public String client;
     public String action;
     public String deviceId;
     public Object data;

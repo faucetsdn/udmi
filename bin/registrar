@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 ROOT_DIR=$(dirname $0)/..
+REGISTRAR_CONFIG=/tmp/registrar_config.json
 
 if [ $# == 0 ]; then
     echo $0 SITE_PATH [PROJECT_ID] [devices...]
@@ -17,12 +18,33 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
     false
 fi
 
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
+else
+    registry_suffix=null
+fi
+
 echo Building validator...
 $ROOT_DIR/validator/bin/build > /dev/null
 
 echo Running tools version `(cd $ROOT_DIR; git describe)`
 
-$ROOT_DIR/validator/bin/registrar $site_path $project_id $* 2>&1
+if [[ -n $project_id ]]; then
+    quoted_id=\"$project_id\"
+else
+    quoted_id=null
+fi
+
+echo Writing config to $REGISTRAR_CONFIG
+cat <<EOF > $REGISTRAR_CONFIG
+{
+  "project_id": $quoted_id,
+  "site_model": "$site_path",
+  "registry_suffix": $registry_suffix
+}
+EOF
+$ROOT_DIR/validator/bin/registrar $REGISTRAR_CONFIG $* 2>&1
 
 bin/check_version
 

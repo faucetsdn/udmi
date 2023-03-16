@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT;
-import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
@@ -30,7 +29,6 @@ import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.SequenceValidationState.FeatureStage;
 
 
 /**
@@ -104,17 +102,17 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
-    BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
+    String payload = endpointConfigPayload(hostname, registryId);
+    debug("Endpoint config", payload);
+    BlobBlobsetConfig config = makeEndpointConfigBlob(payload, badHash);
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(IOT_BLOB_KEY, config);
   }
 
-  private BlobBlobsetConfig makeEndpointConfigBlob(String hostname, String registryId,
-      boolean badHash) {
-    String payload = endpointConfigPayload(hostname, registryId);
+  private BlobBlobsetConfig makeEndpointConfigBlob(String payload, boolean badHash) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.url = SemanticValue.describe("endpoint url", generateEndpointConfigDataUrl(payload));
+    config.url = SemanticValue.describe("endpoint data", generateEndpointConfigDataUrl(payload));
     config.phase = BlobPhase.FINAL;
     config.generation = SemanticDate.describe("blob generation", new Date());
     String description = badHash ? "invalid blob data hash" : "blob data hash";

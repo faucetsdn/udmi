@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# Force consistent sort order
+export LC_ALL=C
+
 ROOT_DIR=$(dirname $0)/..
 cd $ROOT_DIR
 
@@ -16,11 +19,10 @@ targets=$*
 if [[ -n `which rot13` ]]; then
    # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
    echo 'Using target project (rot13):' $(echo $project_id | rot13)
-   echo 'With SEQUENCER_OPTS (rot13):' $(echo $SEQUENCER_OPTS | rot13)
 else
    echo 'Using target project:' $project_id
-   echo 'With SEQUENCER_OPTS:' $SEQUENCER_OPTS
 fi
+echo Testing sequencer with UDMI_REGISTRY_SUFFIX: $UDMI_REGISTRY_SUFFIX
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
@@ -70,7 +72,8 @@ if [[ $i -eq $WAITING ]]; then
     false
 fi
 
-bin/sequencer -a $SEQUENCER_OPTS $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
+# Run all tests as part of the suite, in debug mode for fail-fast when things go wrong!
+bin/sequencer -a -v $site_path $project_id $device_id $serial_no $targets 2>&1 | tee sequencer.out
 echo Completed execution of sequencer test run.
 
 pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'`
@@ -83,13 +86,13 @@ else
 fi
 
 cp etc/sequencer.out out/  # Sace for later test/comparison
-bin/sequence_cache
-
-cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
-bin/gencode_seq
+bin/sequencer_cache
 
 echo Comparing diff out/sequencer.out etc/sequencer.out
 diff -u out/sequencer.out etc/sequencer.out
+
+cp docs/specs/sequences/generated.md out/  # Save for test/comparison later
+bin/gencode_seq
 
 echo Comparing diff out/generated.md docs/specs/sequences/generated.md
 diff -u out/generated.md docs/specs/sequences/generated.md || (

@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
 
 /**
@@ -74,6 +77,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
+  private static ExecutionConfiguration config;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -91,8 +95,11 @@ public class Registrar {
   private Map<String, Map<String, String>> lastErrorSummary;
   private boolean validateMetadata = false;
   private List<String> deviceList;
-  private boolean blockUnknown;
+  private Boolean blockUnknown;
   private File siteDir;
+  private String registrySuffix;
+  private boolean useAltRegistry;
+  private String altRegistry;
 
   /**
    * Main entry point for registrar.
@@ -101,53 +108,81 @@ public class Registrar {
    */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
-    Registrar registrar = new Registrar();
-    processArgs(argList, registrar);
-    registrar.execute();
+    new Registrar().processArgs(argList).execute();
   }
 
-  static void processArgs(List<String> argList, Registrar registrar) {
+  Registrar processArgs(List<String> argListRaw) {
+    List<String> argList = new ArrayList<>(argListRaw);
+    if (!argList.isEmpty() && !argList.get(0).startsWith("-")) {
+      processProfile(new File(argList.remove(0)));
+    }
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
         case "-r":
-          registrar.setToolRoot(argList.remove(0));
+          setToolRoot(argList.remove(0));
           break;
         case "-p":
-          registrar.setProjectId(argList.remove(0));
+          setProjectId(argList.remove(0), null);
           break;
         case "-s":
-          registrar.setSitePath(argList.remove(0));
+          setSitePath(argList.remove(0));
+          break;
+        case "-a":
+          setUseAltRegistry(true);
           break;
         case "-f":
-          registrar.setFeedTopic(argList.remove(0));
+          setFeedTopic(argList.remove(0));
           break;
         case "-u":
-          registrar.setUpdateFlag(true);
+          setUpdateFlag(true);
           break;
         case "-l":
-          registrar.setIdleLimit(argList.remove(0));
+          setIdleLimit(argList.remove(0));
           break;
         case "-t":
-          registrar.setValidateMetadata(true);
+          setValidateMetadata(true);
           break;
         case "--":
-          registrar.setDeviceList(argList);
-          return;
+          setDeviceList(argList);
+          return this;
         default:
           if (option.startsWith("-")) {
             throw new RuntimeException("Unknown cmdline option " + option);
           }
           // Add the current non-option back into the list and use it as device names list.
           argList.add(0, option);
-          registrar.setDeviceList(argList);
-          return;
+          setDeviceList(argList);
+          return this;
       }
     }
+    return this;
+  }
+
+  private void setUseAltRegistry(boolean useAltRegistry) {
+    this.useAltRegistry = useAltRegistry;
+  }
+
+  private void processProfile(File profilePath) {
+    processProfile(ConfigUtil.readExecutionConfiguration(profilePath));
+  }
+
+  Registrar processProfile(ExecutionConfiguration config) {
+    setSitePath(config.site_model);
+    altRegistry = config.alt_registry;
+    setProjectId(config.project_id, config.registry_suffix);
+    setValidateMetadata(true);
+    if (config.project_id != null) {
+      setUpdateFlag(true);
+    }
+    return this;
   }
 
   void execute() {
     try {
+      if (projectId != null) {
+        initializeCloudProject();
+      }
       if (schemaBase == null) {
         setToolRoot(null);
       }
@@ -179,7 +214,6 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
-    Preconditions.checkNotNull(cloudIotManager, "cloudIotManager not yet defined");
     blockUnknown = false;
   }
 
@@ -244,7 +278,11 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    cloudIotManager = new CloudIotManager(projectId, siteDir);
+    if (useAltRegistry && altRegistry == null) {
+      throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
+    }
+    String useRegistry = useAltRegistry ? altRegistry : null;
+    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -254,8 +292,9 @@ public class Registrar {
     if (cloudIotManager.getUpdateTopic() != null) {
       updatePusher = new PubSubPusher(projectId, cloudIotManager.getUpdateTopic());
     }
-    blockUnknown = Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
-        DEFAULT_BLOCK_UNKNOWN);
+    blockUnknown = Optional.ofNullable(blockUnknown)
+        .orElse(Objects.requireNonNullElse(cloudIotManager.executionConfiguration.block_unknown,
+            DEFAULT_BLOCK_UNKNOWN));
   }
 
   private String getGenerationString() {
@@ -660,12 +699,12 @@ public class Registrar {
     return localDevices;
   }
 
-  protected void setProjectId(String projectId) {
+  protected void setProjectId(String projectId, String registrySuffix) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
     }
     this.projectId = projectId;
-    initializeCloudProject();
+    this.registrySuffix = registrySuffix;
   }
 
   protected void setToolRoot(String toolRoot) {
