@@ -34,6 +34,7 @@
     "subFolder": {
       "enum": [
         "update",
+        "error",
         "discovery",
         "mapping",
         "system",

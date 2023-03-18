@@ -317,9 +317,8 @@ function process_state_update(attributes, msgObject) {
   attributes.subType = STATE_TYPE;
   promises.push(publishPubsubMessage('udmi_target', attributes, msgObject));
 
-  // Check both potential locations for last_start, can be cleaned-up post release.
   const system = msgObject.system;
-  const stateStart = system && (system.operation.last_start || currentTimestamp(1));
+  const stateStart = system && system.operation && system.operation.last_start;
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
                                                    stateStart, currentTimestamp(), null));
 

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -505,6 +504,7 @@ public class SequenceBase {
         setExtraField("reset_config");
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
+        configTransactions.clear();
         configDiffEngine.computeChanges(deviceConfig);
         updateConfig("full reset");
       }
@@ -535,6 +535,7 @@ public class SequenceBase {
   }
 
   private void recordResult(SequenceResult result, Description description, String message) {
+    putSequencerResult(description, result);
     String methodName = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     Bucket bucket = getBucket(feature);
@@ -549,6 +550,10 @@ public class SequenceBase {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
     }
+  }
+
+  private String getResultId(Description description) {
+    return getDeviceId() + "/" + description.getMethodName();
   }
 
   private Bucket getBucket(Description description) {
@@ -711,9 +716,8 @@ public class SequenceBase {
 
   private void assertConfigIsNotPending() {
     if (!configTransactions.isEmpty()) {
-      String transactions = configTransactionsListString();
-      configTransactions.clear();
-      throw new RuntimeException("Unexpected config transactions: " + transactions);
+      throw new RuntimeException(
+          "Unexpected config transactions: " + configTransactionsListString());
     }
   }
 
@@ -1023,11 +1027,18 @@ public class SequenceBase {
     }
     recordRawMessage(message, attributes);
 
-    if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
+    if (SubFolder.ERROR.value().equals(subFolderRaw)) {
+      handlePipelineError(subTypeRaw, message);
+    } else if (SubFolder.UPDATE.value().equals(subFolderRaw)) {
       handleReflectorMessage(subTypeRaw, message, transactionId);
     } else {
       handleDeviceMessage(message, subFolderRaw, subTypeRaw, transactionId);
     }
+  }
+
+  private void handlePipelineError(String subTypeRaw, Map<String, Object> message) {
+    throw new RuntimeException(
+        String.format("Pipeline type %s error: %s", subTypeRaw, message.get("error")));
   }
 
   private void handleDeviceMessage(Map<String, Object> message, String subFolderRaw,
@@ -1366,7 +1377,7 @@ public class SequenceBase {
     protected void starting(@NotNull Description description) {
       try {
         setupSequencer();
-        SequenceRunner.getAllTests().add(getDeviceId() + "/" + description.getMethodName());
+        putSequencerResult(description, SequenceResult.START);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         testName = description.getMethodName();
@@ -1440,10 +1451,11 @@ public class SequenceBase {
         message = e.getMessage();
         type = SequenceResult.FAIL;
       }
-      debug("ending stack trace: " + GeneralUtils.stackTraceString(e));
       recordCompletion(type, description, message);
-      String actioned = type.equals(SequenceResult.SKIP) ? "skipped" : "failed";
-      withRecordSequence(true, () -> recordSequence("Test " + actioned + ": " + message));
+      debug("exception message: " + Common.getExceptionMessage(e));
+      trace("ending stack trace", GeneralUtils.stackTraceString(e));
+      String action = type == SequenceResult.SKIP ? "skipped" : "failed";
+      withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
       resetRequired = true;
       if (debugLogLevel()) {
         error("Reset required during debug, forcing exit to preserve failing config/state");
@@ -1462,6 +1474,11 @@ public class SequenceBase {
       writeSystemLog(logEntry);
       setSequenceStatus(description, result, logEntry);
     }
+  }
+
+  private void putSequencerResult(Description description, SequenceResult result) {
+    String resultId = getDeviceId() + "/" + description.getMethodName();
+    SequenceRunner.getAllTests().put(resultId, result);
   }
 
   private void startSequenceStatus(Description description) {
@@ -1487,7 +1504,6 @@ public class SequenceBase {
     updateValidationState();
   }
 
-  @NotNull
   private FeatureValidationState newFeatureValidationState() {
     FeatureValidationState featureValidationState = new FeatureValidationState();
     featureValidationState.sequences = new HashMap<>();
@@ -1496,10 +1512,13 @@ public class SequenceBase {
 
   private static void updateValidationState() {
     validationState.timestamp = new Date();
-    File stateFile = new File(deviceOutputDir, VALIDATION_STATE_FILE);
-    JsonUtil.writeFile(validationState, stateFile);
+    JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
     client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString);
+  }
+
+  static File getSequencerStateFile() {
+    return new File(deviceOutputDir, VALIDATION_STATE_FILE);
   }
 
   static void processComplete(Exception e) {
