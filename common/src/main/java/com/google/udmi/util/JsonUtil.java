@@ -72,15 +72,13 @@ public abstract class JsonUtil {
   /**
    * Sleep and catch-and-rethrow any exceptions.
    *
-   * @param logClearTimeMs duration to sleep
+   * @param sleepTimeMs duration to sleep
    */
-  public static void safeSleep(long logClearTimeMs) {
+  public static void safeSleep(long sleepTimeMs) {
     try {
-      // Sanity check in case somebody accidentally passes in sec rather than ms.
-      checkArgument(logClearTimeMs <= 0 || logClearTimeMs >= 100, "sleep too short");
-      Thread.sleep(logClearTimeMs);
+      Thread.sleep(sleepTimeMs);
     } catch (Exception e) {
-      throw new RuntimeException("Interruped sleep", e);
+      throw new RuntimeException("Interrupted sleep", e);
     }
   }
 
