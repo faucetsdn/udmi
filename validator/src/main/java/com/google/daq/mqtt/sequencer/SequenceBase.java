@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MockPublisher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
@@ -514,7 +513,6 @@ public class SequenceBase {
         deviceConfig.system.testing.sequence_name = extraField;
         sentConfig.clear();
         configTransactions.clear();
-        configDiffEngine.computeChanges(deviceConfig);
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         updateConfig("full reset");
       }
@@ -1486,9 +1484,9 @@ public class SequenceBase {
         message = e.getMessage();
         failureType = SequenceResult.FAIL;
       }
-      recordCompletion(type, description, message);
       debug("exception message: " + Common.getExceptionMessage(e));
-      trace("ending stack trace", GeneralUtils.stackTraceString(e));
+      trace("ending stack trace", stackTraceString(e));
+      recordCompletion(failureType, description, message);
       String action = type == SequenceResult.SKIP ? "skipped" : "failed";
       withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
       if (failureType != SequenceResult.SKIP) {
