@@ -13,8 +13,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -24,6 +26,7 @@ import org.junit.runner.Result;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
 import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.SequenceValidationState.SequenceResult;
 
 /**
  * Custom test runner that can execute a specific method to test.
@@ -34,7 +37,7 @@ public class SequenceRunner {
   private static final int EXIST_STATUS_FAILURE = 1;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
-  private static final Set<String> allTests = new TreeSet<>();
+  private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
   private List<String> targets = List.of();
 
@@ -94,7 +97,7 @@ public class SequenceRunner {
     config.alt_project = testMode; // Sekrit hack for enabling mock components.
 
     failures.clear();
-    allTests.clear();
+    allTestResults.clear();
 
     SequenceBase.resetState();
 
@@ -112,8 +115,8 @@ public class SequenceRunner {
     return failures;
   }
 
-  public static Set<String> getAllTests() {
-    return allTests;
+  public static Map<String, SequenceResult> getAllTests() {
+    return allTestResults;
   }
 
   private int resultCode() {
@@ -169,10 +172,13 @@ public class SequenceRunner {
       throw new RuntimeException("No tests were executed!");
     }
 
-    allTests.forEach(testName -> {
-      String result = failures.contains(testName) ? "FAIL" : "PASS";
-      System.err.printf("%s %s%n", result, testName);
-    });
+    System.err.println();
+    Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
+        .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
+    resultCounts.forEach(
+        (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
+    String stateAbsolutePath = SequenceBase.getSequencerStateFile().getAbsolutePath();
+    System.err.println("Sequencer validation state summary in " + stateAbsolutePath);
   }
 
   private List<String> getRunMethods(Class<?> clazz) {

@@ -182,7 +182,7 @@ sites/udmi_site_model/out/devices/AHU-22/event_emptyjson.out
     "level" : 500
   }, {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "event_emptyjson: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"emptyjson\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "detail" : "event_emptyjson: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"emptyjson\") not found in enum (possible values: [\"update\",\"error\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -234,7 +234,7 @@ sites/udmi_site_model/out/devices/AHU-22/event_invalid.out
     "level" : 500
   }, {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
+    "detail" : "event_invalid: While converting to json node: 1 schema violations found @Validator.validateMessage(redacted); 1 schema violations found; /subFolder: instance value (\"invalid\") not found in enum (possible values: [\"update\",\"error\",\"discovery\",\"mapping\",\"system\",\"gateway\",\"swarm\",\"localnet\",\"pointset\",\"validation\",\"blobset\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
