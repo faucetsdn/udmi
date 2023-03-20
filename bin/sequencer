@@ -99,5 +99,3 @@ if [[ `wc -l < /tmp/sequencer.out` -eq 0 ]]; then
 fi
 
 bin/check_version
-
-echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`

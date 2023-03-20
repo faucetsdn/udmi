@@ -102,6 +102,7 @@ public class Envelope {
     public enum SubFolder {
 
         UPDATE("update"),
+        ERROR("error"),
         DISCOVERY("discovery"),
         MAPPING("mapping"),
         SYSTEM("system"),
