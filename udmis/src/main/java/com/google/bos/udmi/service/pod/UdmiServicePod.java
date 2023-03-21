@@ -1,19 +1,25 @@
 package com.google.bos.udmi.service.pod;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+
+import com.google.bos.udmi.service.core.StateHandler;
 import com.google.udmi.util.JsonUtil;
+import udmi.schema.PodConfiguration;
 
 public class UdmiServicePod {
 
-  public static final long TEN_SECONDS_MS = 10 * 1000;
+  private final PodConfiguration podConfiguration;
 
   public static void main(String[] args) {
-    new UdmiServicePod();
+    new UdmiServicePod(args);
   }
 
-  public UdmiServicePod() {
-    while (true) {
-      System.out.println("Hello world " + JsonUtil.getTimestamp());
-      JsonUtil.safeSleep(TEN_SECONDS_MS);
-    }
+  public UdmiServicePod(String[] args) {
+    checkState(args.length == 1,"expected exactly one argument: configuration");
+
+    podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
+
+    ifNotNullGet(podConfiguration.udmis_flow, StateHandler::forConfig).activate();
   }
 }

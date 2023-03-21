@@ -157,6 +157,37 @@ public abstract class JsonUtil {
   }
 
   /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file  path of file to load
+   * @param <T>   type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, String file) {
+    return loadFileRequired(clazz, new File(file));
+  }
+
+  /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file  file to load
+   * @param <T>   type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, File file) {
+    if (!file.exists()) {
+      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
+    }
+    try {
+      return OBJECT_MAPPER.readValue(file, clazz);
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
    * Load file with strict(er) error checking, and return an exception, if any.
    *
    * @param clazz class of result
