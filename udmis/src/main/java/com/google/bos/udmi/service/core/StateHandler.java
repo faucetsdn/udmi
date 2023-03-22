@@ -1,9 +1,11 @@
 package com.google.bos.udmi.service.core;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
-import com.google.bos.udmi.service.messaging.MessagePipe.Bundle;
+import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ComponentBase;
-import com.google.common.collect.ImmutableMap;
+import java.util.function.Consumer;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 
 public class StateHandler extends ComponentBase {
@@ -12,13 +14,12 @@ public class StateHandler extends ComponentBase {
 
   public StateHandler(MessagePipe pipe) {
     this.pipe = pipe;
-    pipe.registerHandler(this::handleMessage, null, null);
+    pipe.registerHandler(new HandlerSpecification(Object.class, this::messageHandler));
   }
 
-  private void handleMessage(Bundle message) {
-    message.attributes = ImmutableMap.<String, String>builder().putAll(message.attributes)
-        .put("subType", "state").build();
-    pipe.publish(message);
+  public void messageHandler(Envelope envelope, Object message) {
+    envelope.subType = SubType.STATE;
+    pipe.publish(envelope, message);
   }
 
   public static StateHandler forConfig(MessageConfiguration configuration) {

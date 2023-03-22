@@ -3,11 +3,11 @@ package com.google.bos.udmi.service.messaging;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
-import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
+import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
 
@@ -22,15 +22,33 @@ public interface MessagePipe {
     return IMPLEMENTATIONS.get(config.transport).apply(config);
   }
 
-  void registerHandler(Consumer<Bundle> handler, SubType type, SubFolder folder);
+  <T> void registerHandler(HandlerSpecification messageConsumer);
 
   void activate();
 
-  void publish(Bundle message);
+  void publish(Envelope envelope, Object message);
 
-  class Bundle {
+  /**
+   * Represent a type-happy consumer into a more generic specification.
+   *
+   * @param <T> message type consumed
+   */
+  interface MessageConsumer<T> extends BiConsumer<Envelope, T> {
 
-    public Map<String, String> attributes;
-    Object message;
   }
+
+  /**
+   * Represent a type-happy consumer into a more generic specification.
+   */
+  class HandlerSpecification extends SimpleEntry<Class<?>, MessageConsumer<?>> {
+
+    public <T> HandlerSpecification(Class<T> clazz, MessageConsumer<T> consumer) {
+      super(clazz, consumer);
+    }
+  }
+
+  static <T> HandlerSpecification handlerSpecification(Class<T> clazz, MessageConsumer<T> consumer) {
+    return new HandlerSpecification(clazz, consumer);
+  }
+
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
+import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
 
 public class LocalMessagePipe extends MessageBase {
@@ -38,12 +39,12 @@ public class LocalMessagePipe extends MessageBase {
     processQueue(sourceQueue);
   }
 
-  public void publish(Bundle message) {
+  @Override
+  public void publish(Envelope envelope, Object message) {
     try {
-      destinationQueue.put(message);
+      destinationQueue.put(makeBundle(envelope, message));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
   }
-
 }
