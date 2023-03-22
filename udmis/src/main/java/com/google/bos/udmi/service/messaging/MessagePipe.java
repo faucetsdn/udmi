@@ -7,6 +7,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
@@ -27,12 +28,12 @@ public interface MessagePipe {
 
   void activate();
 
-  void publish(Envelope envelope, Object message);
+  void publish(Object message);
 
   /**
    * Represent a type-happy consumer into a more generic functional specification.
    */
-  interface MessageHandler<T> extends BiConsumer<Envelope, T> {
+  interface MessageHandler<T> extends Consumer<T> {
   }
 
   /**

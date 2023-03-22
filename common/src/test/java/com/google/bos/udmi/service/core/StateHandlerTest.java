@@ -26,14 +26,15 @@ public class StateHandlerTest extends TestCase {
     stateBus.put(testStateBundle);
     Bundle targetBundle = targetBus.take();
     assertNull("original envelope was not null", originalBundle.envelope.subType);
-    assertEquals("received message subType", SubType.STATE, targetBundle.envelope.subType);
+    assertEquals("received message subType mismatch", SubType.STATE, targetBundle.envelope.subType);
     assertNull("original subType was mutated", testStateBundle.envelope.subType);
   }
 
   private Bundle getTestStateBundle() {
-    Object message = "hello";
-    Envelope envelope = new Envelope();
-    return MessageBase.makeBundle(envelope, message);
+    Bundle bundle = new Bundle();
+    bundle.message = "hello";
+    bundle.envelope = new Envelope();
+    return bundle;
   }
 
   private StateHandler getTestHandler() {
