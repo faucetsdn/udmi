@@ -1,8 +1,11 @@
 package com.google.bos.udmi.service.messaging;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Features;
 import com.google.bos.udmi.service.pod.ComponentBase;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
@@ -11,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import udmi.schema.Envelope;
@@ -21,11 +25,18 @@ import udmi.schema.SystemState;
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   public static final Envelope LOOP_EXIT_MARK = null;
+  public static final String DEFAULT_HANDLER = "default_handler";
+  public static final String EXCEPTION_HANDLER = "exception_handler";
   ExecutorService executor = Executors.newSingleThreadExecutor();
-  private BlockingQueue<Bundle> loopQueue;
+  private BlockingQueue<String> loopQueue;
   private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
   private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
   private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
+  private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
+  private final Map<Class<?>, String> specialClasses = ImmutableMap.of(
+      Object.class, DEFAULT_HANDLER,
+      Exception.class, EXCEPTION_HANDLER
+  );
 
   public MessageBase() {
     initializeHandlerTypes();
@@ -46,13 +57,13 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
-    String mapKey = typeClasses.inverse().get(clazz);
+    String mapKey = specialClasses.getOrDefault(clazz, typeClasses.inverse().get(clazz));
     if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + mapKey);
     }
   }
 
-  protected void processQueue(BlockingQueue<Bundle> queue) {
+  protected void handleQueue(BlockingQueue<String> queue) {
     loopQueue = queue;
     executor.submit(this::messageLoop);
   }
@@ -60,7 +71,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   private void messageLoop() {
     try {
       while (true) {
-        Bundle bundle = loopQueue.take();
+        Bundle bundle = JsonUtil.fromString(Bundle.class, loopQueue.take());
         // Lack of envelope can only happen intentionally as a signal to exist the loop.
         if (bundle.envelope == LOOP_EXIT_MARK) {
           return;
@@ -73,6 +84,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   }
 
   private void ignoreMessage(Object message) {
+    info("Ignoring messages " + message);
   }
 
   private void processMessage(Bundle bundle) {
@@ -80,16 +92,22 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
       Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
-        info("Ignoring messages of type/folder " + mapKey);
+        info("Defaulting messages of type/folder " + mapKey);
+        MessageHandler<Object> handler = handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
+        handlers.put(mapKey, handler);
         return Object.class;
       });
       Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
-      MessageHandler<Object> handlerConsumer = handlers.computeIfAbsent(mapKey,
-          key -> this::ignoreMessage);
+      MessageHandler<Object> handlerConsumer = handlers.get(mapKey);
+      messageEnvelopes.put(messageObject, envelope);
       handlerConsumer.accept(messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }
+  }
+
+  public Envelope getEnvelopeFor(Object message) {
+    return messageEnvelopes.get(message);
   }
 
   private void initializeHandlerTypes() {

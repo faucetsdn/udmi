@@ -6,13 +6,18 @@ import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ComponentBase;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.Common;
 import java.util.List;
+import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
+import udmi.schema.State;
 
 public class StateHandler extends ComponentBase {
 
   private final List<HandlerSpecification> MESSAGE_HANDLERS = ImmutableList.of(
-      messageHandlerFor(String.class, this::messageHandler)
+      messageHandlerFor(Object.class, this::defaultHandler),
+      messageHandlerFor(Exception.class, this::exceptionHandler),
+      messageHandlerFor(State.class, this::messageHandler)
   );
 
   private final MessagePipe pipe;
@@ -21,7 +26,16 @@ public class StateHandler extends ComponentBase {
     this.pipe = pipe;
   }
 
-  public void messageHandler(Object message) {
+  private void exceptionHandler(Exception e) {
+    info("Received processing exception: " + Common.getExceptionMessage(e));
+  }
+
+  private void defaultHandler(Object unknown) {
+    Envelope envelope = pipe.getEnvelopeFor(unknown);
+    info("Received unknown message type: " + envelope.subType);
+  }
+
+  public void messageHandler(State message) {
     pipe.publish(message);
   }
 

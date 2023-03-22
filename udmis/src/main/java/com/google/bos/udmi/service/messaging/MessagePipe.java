@@ -30,6 +30,8 @@ public interface MessagePipe {
 
   void publish(Object message);
 
+  Envelope getEnvelopeFor(Object message);
+
   /**
    * Represent a type-happy consumer into a more generic functional specification.
    */

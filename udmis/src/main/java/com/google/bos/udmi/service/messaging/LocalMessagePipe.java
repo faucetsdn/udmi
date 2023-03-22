@@ -1,21 +1,24 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.udmi.util.JsonUtil;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
+import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
 
 public class LocalMessagePipe extends MessageBase {
 
-  private static final Map<String, BlockingQueue<Bundle>> GLOBAL_PIPES = new ConcurrentHashMap<>();
+  private static final Map<String, BlockingQueue<String>> GLOBAL_PIPES = new ConcurrentHashMap<>();
 
   private final String sourceScope;
   private final String destinationScope;
-  private final BlockingQueue<Bundle> sourceQueue;
-  private final BlockingQueue<Bundle> destinationQueue;
+  private final BlockingQueue<String> sourceQueue;
+  private final BlockingQueue<String> destinationQueue;
 
   public LocalMessagePipe(MessageConfiguration config) {
     sourceScope = checkNotNull(config.source, "pipe source is undefined");
@@ -25,7 +28,7 @@ public class LocalMessagePipe extends MessageBase {
     info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
   }
 
-  public static BlockingQueue<Bundle> getQueueForScope(String scope) {
+  public static BlockingQueue<String> getQueueForScope(String scope) {
     return GLOBAL_PIPES.computeIfAbsent(scope, key -> new SynchronousQueue<>());
   }
 
@@ -35,13 +38,13 @@ public class LocalMessagePipe extends MessageBase {
 
   @Override
   public void activate() {
-    processQueue(sourceQueue);
+    handleQueue(sourceQueue);
   }
 
   @Override
   public void publish(Object message) {
     try {
-      destinationQueue.put(makeBundle(message));
+      destinationQueue.put(stringify(makeBundle(message)));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
