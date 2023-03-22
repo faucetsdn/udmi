@@ -4,8 +4,6 @@ import com.google.bos.udmi.service.pod.ComponentBase;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import udmi.schema.Envelope;
 
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
@@ -13,7 +11,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   public static final Envelope LOOP_EXIT_MARK = null;
   ExecutorService executor = Executors.newSingleThreadExecutor();
   private BlockingQueue<Bundle> loopQueue;
-  private MessageConsumer<Object> handler;
+  private MessageHandler<Object> handler;
 
   public static Bundle makeBundle(Envelope envelope, Object message) {
     Bundle bundle = new Bundle();
@@ -29,8 +27,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> void registerHandler(HandlerSpecification specification) {
-    this.handler = (MessageConsumer<Object>) specification.getValue();
+  public <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler) {
+    this.handler = (MessageHandler<Object>) handler;
   }
 
   protected void processQueue(BlockingQueue<Bundle> queue) {

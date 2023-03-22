@@ -1,20 +1,26 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
+
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.bos.udmi.service.pod.ComponentBase;
-import java.util.function.Consumer;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 
 public class StateHandler extends ComponentBase {
 
+  private final List<HandlerSpecification> MESSAGE_HANDLERS = ImmutableList.of(
+      messageHandlerFor(Object.class, this::messageHandler)
+  );
+
   private final MessagePipe pipe;
 
   public StateHandler(MessagePipe pipe) {
     this.pipe = pipe;
-    pipe.registerHandler(new HandlerSpecification(Object.class, this::messageHandler));
   }
 
   public void messageHandler(Envelope envelope, Object message) {
@@ -27,6 +33,7 @@ public class StateHandler extends ComponentBase {
   }
 
   public void activate() {
+    pipe.registerHandlers(MESSAGE_HANDLERS);
     pipe.activate();
   }
 }

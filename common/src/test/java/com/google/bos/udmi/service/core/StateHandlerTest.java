@@ -26,8 +26,8 @@ public class StateHandlerTest extends TestCase {
     stateBus.put(testStateBundle);
     Bundle targetBundle = targetBus.take();
     assertNull("original envelope was not null", originalBundle.envelope.subType);
-    assertNull("original subType was changed", testStateBundle.envelope.subType);
     assertEquals("received message subType", SubType.STATE, targetBundle.envelope.subType);
+    assertNull("original subType was mutated", testStateBundle.envelope.subType);
   }
 
   private Bundle getTestStateBundle() {
