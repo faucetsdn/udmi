@@ -19,6 +19,8 @@ from .config_system import SystemConfig
 from .config_system_testing import TestingSystemConfig
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_execution import ExecutionConfiguration
+from .configuration_message import MessageConfiguration
+from .configuration_pod import PodConfiguration
 from .configuration_pubber import PubberConfiguration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig

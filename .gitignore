@@ -17,6 +17,9 @@ credentials.json
 /validator/build/
 /validator/out/
 /validator/.idea/libraries/
+/udmis/build/
+/udmis/out/
+/udmis/.idea/libraries/
 /pubber/build/
 /pubber/out/
 /pubber/pubber/out/
