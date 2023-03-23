@@ -1,13 +1,13 @@
 package com.google.bos.udmi.service.messaging;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonFormat.Features;
+import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.fromString;
+
 import com.google.bos.udmi.service.pod.ComponentBase;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +17,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -24,32 +25,42 @@ import udmi.schema.SystemState;
 
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
-  public static final Envelope LOOP_EXIT_MARK = null;
-  public static final String DEFAULT_HANDLER = "default_handler";
-  public static final String EXCEPTION_HANDLER = "exception_handler";
-  ExecutorService executor = Executors.newSingleThreadExecutor();
-  private BlockingQueue<String> loopQueue;
+  private static final Envelope LOOP_EXIT_MARK = null;
+  private static final String DEFAULT_HANDLER = "default_handler";
+  private static final String EXCEPTION_HANDLER = "exception_handler";
+  private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES = ImmutableMap.of(
+      getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
+  private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
+  private static final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
+
+  {
+    initializeHandlerTypes();
+  }
+
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
-  private final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
-  private final Map<Class<?>, SimpleEntry<SubType, SubFolder>> classTypes = new HashMap<>();
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
   private final Map<Class<?>, String> specialClasses = ImmutableMap.of(
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
+  private BlockingQueue<String> loopQueue;
 
   public MessageBase() {
     initializeHandlerTypes();
   }
 
-  public static Bundle makeBundle(Object message) {
+  public static Bundle makeMessageBundle(Object message) {
     Bundle bundle = new Bundle();
     bundle.message = message;
     bundle.envelope = new Envelope();
+    bundle.envelope.subType = CLASS_TYPES.get(message.getClass()).getKey();
+    bundle.envelope.subFolder = CLASS_TYPES.get(message.getClass()).getValue();
     return bundle;
   }
 
   public static class Bundle {
+
     public Envelope envelope;
     public Object message;
   }
@@ -71,65 +82,94 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   private void messageLoop() {
     try {
       while (true) {
-        Bundle bundle = JsonUtil.fromString(Bundle.class, loopQueue.take());
-        // Lack of envelope can only happen intentionally as a signal to exist the loop.
-        if (bundle.envelope == LOOP_EXIT_MARK) {
-          return;
+        try {
+          Bundle bundle = fromString(Bundle.class, loopQueue.take());
+          // Lack of envelope can only happen intentionally as a signal to exist the loop.
+          if (bundle.envelope == LOOP_EXIT_MARK) {
+            return;
+          }
+          processMessage(bundle);
+        } catch (Exception e) {
+          processMessage(makeExceptionEnvelope(), EXCEPTION_HANDLER, e);
         }
-        processMessage(bundle);
       }
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message loop", e);
+    } catch (Exception loopException) {
+      info("Message loop exception: " + Common.getExceptionMessage(loopException));
     }
+  }
+
+  private Envelope makeExceptionEnvelope() {
+    return new Envelope();
   }
 
   private void ignoreMessage(Object message) {
     info("Ignoring messages " + message);
   }
 
-  private void processMessage(Bundle bundle) {
+  void processMessage(Bundle bundle) {
     Envelope envelope = bundle.envelope;
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
-      Class<?> handlerType = typeClasses.computeIfAbsent(mapKey, key -> {
+      handlers.computeIfAbsent(mapKey, key -> {
         info("Defaulting messages of type/folder " + mapKey);
-        MessageHandler<Object> handler = handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
-        handlers.put(mapKey, handler);
-        return Object.class;
+        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
       });
-      Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
-      MessageHandler<Object> handlerConsumer = handlers.get(mapKey);
-      messageEnvelopes.put(messageObject, envelope);
-      handlerConsumer.accept(messageObject);
+      Class<?> handlerType = typeClasses.getOrDefault(mapKey, Object.class);
+      Object messageObject = convertTo(handlerType, bundle.message);
+      processMessage(envelope, mapKey, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
     }
   }
 
-  public Envelope getEnvelopeFor(Object message) {
-    return messageEnvelopes.get(message);
+  private void processMessage(Envelope envelope, String mapKey, Object messageObject) {
+    MessageHandler<Object> handlerConsumer = handlers.get(mapKey);
+    messageEnvelopes.put(messageObject, envelope);
+    try {
+      handlerConsumer.accept(messageObject);
+    } finally {
+      messageEnvelopes.remove(messageObject);
+    }
   }
 
-  private void initializeHandlerTypes() {
+  public MessageContinuation getContinuation(Object message) {
+    return new MessageContinuation(this, messageEnvelopes.get(message), message);
+  }
+
+  public abstract void publishBundle(Bundle bundle);
+
+  private static void initializeHandlerTypes() {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
         .forEach(folder -> registerHandlerType(type, folder)));
+    SPECIAL_TYPES.forEach(
+        (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
   }
 
-  private String getMapKey(SubType subType, SubFolder subFolder) {
+  private static String getMapKey(SubType subType, SubFolder subFolder) {
     SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
     return String.format("%s/%s", useType, subFolder);
   }
 
-  private void registerHandlerType(SubType type, SubFolder folder) {
-    String mapKey = getMapKey(type, folder);
+  private static void registerHandlerType(SubType type, SubFolder folder) {
     Class<?> messageClass = getMessageClass(type, folder);
+    registerMessageClass(type, folder, messageClass);
+  }
+
+  private static void registerMessageClass(SubType type, SubFolder folder, Class<?> messageClass) {
+    String mapKey = getMapKey(type, folder);
     if (messageClass != null) {
       typeClasses.put(mapKey, messageClass);
-      classTypes.put(messageClass, new SimpleEntry<>(type, folder));
+      CLASS_TYPES.put(messageClass, getTypeFolderEntry(type, folder));
     }
   }
 
-  private Class<?> getMessageClass(SubType type, SubFolder folder) {
+  @NotNull
+  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
+      SubFolder folder) {
+    return new SimpleEntry<>(type, folder);
+  }
+
+  private static Class<?> getMessageClass(SubType type, SubFolder folder) {
     String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
     String className = SystemState.class.getPackageName() + "." + typeName;
     try {

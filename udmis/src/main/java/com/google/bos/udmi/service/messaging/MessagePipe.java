@@ -6,10 +6,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
 
@@ -30,7 +28,7 @@ public interface MessagePipe {
 
   void publish(Object message);
 
-  Envelope getEnvelopeFor(Object message);
+  MessageContinuation getContinuation(Object message);
 
   /**
    * Represent a type-happy consumer into a more generic functional specification.

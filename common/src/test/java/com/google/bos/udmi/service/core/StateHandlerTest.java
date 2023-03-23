@@ -3,6 +3,8 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static udmi.schema.Envelope.SubFolder.UPDATE;
+import static udmi.schema.Envelope.SubType.STATE;
 
 import com.google.bos.udmi.service.messaging.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
@@ -12,6 +14,7 @@ import java.util.concurrent.BlockingQueue;
 import junit.framework.TestCase;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
@@ -33,7 +36,8 @@ public class StateHandlerTest extends TestCase {
     stateBus.put(stringify(testStateBundle));
     Bundle targetBundle = fromString(Bundle.class, targetBus.take());
     assertNull("original envelope was not null", originalBundle.envelope.subType);
-    assertEquals("received message subType mismatch", SubType.STATE, targetBundle.envelope.subType);
+    assertEquals("received message subType mismatch", STATE, targetBundle.envelope.subType);
+    assertEquals("received message subType mismatch", UPDATE, targetBundle.envelope.subFolder);
     assertNull("original subType was mutated", testStateBundle.envelope.subType);
   }
 

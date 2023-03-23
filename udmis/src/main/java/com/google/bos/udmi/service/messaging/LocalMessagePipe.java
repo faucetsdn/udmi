@@ -3,12 +3,10 @@ package com.google.bos.udmi.service.messaging;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.stringify;
 
-import com.google.udmi.util.JsonUtil;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
-import udmi.schema.Envelope;
 import udmi.schema.MessageConfiguration;
 
 public class LocalMessagePipe extends MessageBase {
@@ -43,8 +41,12 @@ public class LocalMessagePipe extends MessageBase {
 
   @Override
   public void publish(Object message) {
+    publishBundle(makeMessageBundle(message));
+  }
+
+  public void publishBundle(Bundle messageBundle) {
     try {
-      destinationQueue.put(stringify(makeBundle(message)));
+      destinationQueue.put(stringify(messageBundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
