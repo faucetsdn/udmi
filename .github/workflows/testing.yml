@@ -11,6 +11,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  udmis:
+    name: UDMIS Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: Checkout source
+        uses: actions/checkout@v2.3.4
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -41,7 +51,7 @@ jobs:
       - name: bin/run_tests util_tests
         if: ${{ always() }}
         run: bin/run_tests util_tests
-
+        
   spelling:
     name: Docs Spelling Checks
     runs-on: ubuntu-latest
