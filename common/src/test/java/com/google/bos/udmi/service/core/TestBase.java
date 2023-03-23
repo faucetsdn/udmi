@@ -4,9 +4,8 @@ import com.google.bos.udmi.service.messaging.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.MessageBase;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.TestCase;
 
-public class TestBase extends TestCase {
+public class TestBase {
 
   protected static AtomicInteger instanceCount = new AtomicInteger();
 

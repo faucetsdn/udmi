@@ -39,7 +39,8 @@ sourceSets {
 }
 
 test {
-  finalizedBy jacocoTestReport
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
 
 jacocoTestReport {
@@ -77,21 +78,16 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.5'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
-    implementation group: 'com.github.java-json-tools', name: 'json-schema-validator', version: '2.2.14'
-    implementation 'io.jsonwebtoken:jjwt:0.7.0'
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
     implementation 'com.google.guava:guava:30.1.1-jre'
-    implementation 'com.google.cloud:google-cloud-logging:2.3.2'
-    implementation ('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
-      exclude group: 'com.google.guava', module: 'guava-jdk5'
-    }
     implementation 'commons-io:commons-io:2.5'
 
     implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
-    implementation group: 'junit', name: 'junit', version: '4.13.2'
     implementation 'org.jetbrains:annotations:20.1.0'
+
+    implementation group: 'junit', name: 'junit', version: '4.13.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
 }
