@@ -5,6 +5,9 @@ import com.google.bos.udmi.service.messaging.MessageBase;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Common classes and functions for working with UDMIS unit tests.
+ */
 public class TestBase {
 
   protected static AtomicInteger instanceCount = new AtomicInteger();

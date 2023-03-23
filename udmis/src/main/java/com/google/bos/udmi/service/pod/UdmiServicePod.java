@@ -7,6 +7,9 @@ import com.google.bos.udmi.service.core.StateHandler;
 import com.google.udmi.util.JsonUtil;
 import udmi.schema.PodConfiguration;
 
+/**
+ * Main entrypoint wrapper for a UDMI service pod.
+ */
 public class UdmiServicePod {
 
   private final PodConfiguration podConfiguration;
@@ -15,8 +18,11 @@ public class UdmiServicePod {
     new UdmiServicePod(args);
   }
 
+  /**
+   * Core pod to instantiate all the other components as necessary based on configuration.
+   */
   public UdmiServicePod(String[] args) {
-    checkState(args.length == 1,"expected exactly one argument: configuration");
+    checkState(args.length == 1, "expected exactly one argument: configuration");
 
     podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 

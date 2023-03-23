@@ -10,14 +10,10 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.ComponentBase;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.GeneralUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -25,12 +21,17 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.State;
 
+/**
+ * Core UDMIS function to process raw State messages from devices and normalize them for
+ * the rest of the system. Involves tagging the envelope with the appropriate designators,
+ * and splitting up the monolithic block into constituent parts.
+ */
 public class StateHandler extends ComponentBase {
 
-  private static final Set<String> stateSubFolders =
+  private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
-  private final List<HandlerSpecification> MESSAGE_HANDLERS = ImmutableList.of(
+  private final List<HandlerSpecification> messageHandler = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler)
@@ -58,11 +59,11 @@ public class StateHandler extends ComponentBase {
     continuation.reprocess();
   }
 
-  public void messageHandler(State message) {
+  private void messageHandler(State message) {
     info("Sharding state message to pipeline out as incremental updates");
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
-        if (stateSubFolders.contains(field.getName())) {
+        if (STATE_SUB_FOLDERS.contains(field.getName())) {
           ifNotNull(field.get(message), x -> pipe.publish(x));
         }
       } catch (Exception e) {
@@ -76,7 +77,7 @@ public class StateHandler extends ComponentBase {
   }
 
   public void activate() {
-    pipe.registerHandlers(MESSAGE_HANDLERS);
+    pipe.registerHandlers(messageHandler);
     pipe.activate();
   }
 }

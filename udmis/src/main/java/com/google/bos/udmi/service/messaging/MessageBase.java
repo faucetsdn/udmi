@@ -25,13 +25,16 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.SystemState;
 
+/**
+ * Base class for supporting a variety of messaging interfaces.
+ */
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   private static final String LOOP_EXIT_MARK = "loop-exit";
   public static final String DEFAULT_HANDLER = "event/null";
   public static final String EXCEPTION_HANDLER = "exception_handler";
-  private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES = ImmutableMap.of(
-      getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
+  private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES =
+      ImmutableMap.of(getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
 
@@ -53,6 +56,10 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     initializeHandlerTypes();
   }
 
+  /**
+   * Make a new message bundle for the given object, inferring the type and folder from the class
+   * itself (using the predefined lookup map).
+   */
   public static Bundle makeMessageBundle(Object message) {
     Bundle bundle = new Bundle();
     bundle.message = message;
@@ -62,6 +69,9 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return bundle;
   }
 
+  /**
+   * Simple wrapper for a message bundle, including envelope and message.
+   */
   public static class Bundle {
 
     public Envelope envelope;

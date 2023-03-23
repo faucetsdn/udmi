@@ -11,16 +11,16 @@ import java.util.function.Function;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
 
+/**
+ * Basic message pipe interface that logically supports an in-source and out-destination. The
+ * pipe implementation itself sits between, so in the purest form would take messages
+ * from the input and simply push them to the output. Additionally, it includes the facility
+ * to semantically distribute messages to typed handlers based on the Java class.
+ */
 public interface MessagePipe {
 
   Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
       Transport.LOCAL, LocalMessagePipe::from);
-
-  static MessagePipe from(MessageConfiguration config) {
-    checkState(IMPLEMENTATIONS.containsKey(config.transport),
-        "unknown message transport type " + config.transport);
-    return IMPLEMENTATIONS.get(config.transport).apply(config);
-  }
 
   <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
 
@@ -29,6 +29,15 @@ public interface MessagePipe {
   void publish(Object message);
 
   MessageContinuation getContinuation(Object message);
+
+  /**
+   * MessagePipe factory given a message configuration blob.
+   */
+  static MessagePipe from(MessageConfiguration config) {
+    checkState(IMPLEMENTATIONS.containsKey(config.transport),
+        "unknown message transport type " + config.transport);
+    return IMPLEMENTATIONS.get(config.transport).apply(config);
+  }
 
   /**
    * Represent a type-happy consumer into a more generic functional specification.

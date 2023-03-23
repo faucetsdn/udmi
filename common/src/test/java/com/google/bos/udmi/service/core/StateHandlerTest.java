@@ -1,12 +1,12 @@
 package com.google.bos.udmi.service.core;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static com.google.bos.udmi.service.messaging.LocalMessagePipe.getQueueForScope;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static udmi.schema.Envelope.SubFolder.SYSTEM;
 import static udmi.schema.Envelope.SubType.STATE;
 
@@ -21,6 +21,9 @@ import udmi.schema.MessageConfiguration.Transport;
 import udmi.schema.State;
 import udmi.schema.SystemState;
 
+/**
+ * Tests for the StateHandler class, used by UDMIS to process device state updates.
+ */
 public class StateHandlerTest extends TestBase {
 
   public static final String INVALID_MESSAGE = "invalid message";

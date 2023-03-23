@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.common.base.Preconditions;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -13,6 +14,11 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.MessageConfiguration;
 
+/**
+ * A MessagePipe implementation that only uses local resources (in-process). Useful for testing or
+ * other internal coordination. Consists of a global namespace, each supporting a collection of
+ * named pipes to be used, ultimately backed by a standard BlockingQueue.
+ */
 public class LocalMessagePipe extends MessageBase {
 
   private static final Map<String, LocalMessagePipe> GLOBAL_PIPES = new ConcurrentHashMap<>();
@@ -26,8 +32,13 @@ public class LocalMessagePipe extends MessageBase {
   private final BlockingQueue<String> destinationQueue;
   private Future<Void> sourceFuture;
 
+  /**
+   * Create a new local message pipe given a configuration bundle.
+   */
   public LocalMessagePipe(MessageConfiguration config) {
     String namespace = normalizeNamespace(config.namespace);
+    checkState(!GLOBAL_PIPES.containsKey(namespace),
+        "can not create duplicate pipe in namespace " + namespace);
     GLOBAL_PIPES.put(namespace, this);
     sourceScope = checkNotNull(config.source, "pipe source is undefined");
     sourceQueue = getQueueForScope(namespace, sourceScope);
@@ -36,6 +47,10 @@ public class LocalMessagePipe extends MessageBase {
     info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
   }
 
+  /**
+   * Get a pipe from the global namespace. Only valid after the pipe in question has been
+   * instantiated... this is not a factory!
+   */
   public static LocalMessagePipe getPipeForNamespace(String namespace) {
     return GLOBAL_PIPES.get(normalizeNamespace(namespace));
   }
@@ -69,10 +84,12 @@ public class LocalMessagePipe extends MessageBase {
     publishBundle(makeMessageBundle(message));
   }
 
+  /**
+   * Publish a message bundle to this pipe. Pushes it into the outgoing queue!
+   */
   public void publishBundle(Bundle messageBundle) {
     try {
       destinationQueue.put(stringify(messageBundle));
-      info("published");
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
