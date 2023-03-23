@@ -1,0 +1,26 @@
+{
+  "$udmi_version": "1.4.1",
+  "title": "Message Configuration",
+  "description": "Parameters for configuring a message in/out pipeline",
+  "$section": "Tool Configuration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "transport": {
+      "enum": [
+        "local",
+        "pubsub"
+      ]
+    },
+    "namespace": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "destination": {
+      "type": "string"
+    }
+  }
+}
