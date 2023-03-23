@@ -13,6 +13,9 @@
         "pubsub"
       ]
     },
+    "namespace": {
+      "type": "string"
+    },
     "source": {
       "type": "string"
     },

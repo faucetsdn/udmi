@@ -17,6 +17,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -25,9 +27,9 @@ import udmi.schema.SystemState;
 
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
-  private static final Envelope LOOP_EXIT_MARK = null;
-  private static final String DEFAULT_HANDLER = "default_handler";
-  private static final String EXCEPTION_HANDLER = "exception_handler";
+  private static final String LOOP_EXIT_MARK = "loop-exit";
+  public static final String DEFAULT_HANDLER = "event/null";
+  public static final String EXCEPTION_HANDLER = "exception_handler";
   private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES = ImmutableMap.of(
       getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
@@ -44,7 +46,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
-  private BlockingQueue<String> loopQueue;
+
+  public final Map<String, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
 
   public MessageBase() {
     initializeHandlerTypes();
@@ -74,20 +77,31 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  protected void handleQueue(BlockingQueue<String> queue) {
-    loopQueue = queue;
-    executor.submit(this::messageLoop);
+  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
+    try {
+      queue.put(LOOP_EXIT_MARK);
+      queueFuture.get();
+    } catch (Exception e) {
+      throw new RuntimeException("While draining queue", e);
+    }
   }
 
-  private void messageLoop() {
+  @SuppressWarnings("unchecked")
+  protected Future<Void> handleQueue(BlockingQueue<String> queue) {
+    return (Future<Void>) executor.submit(() -> this.messageLoop(queue));
+  }
+
+  private void messageLoop(BlockingQueue<String> queue) {
     try {
       while (true) {
         try {
-          Bundle bundle = fromString(Bundle.class, loopQueue.take());
-          // Lack of envelope can only happen intentionally as a signal to exist the loop.
-          if (bundle.envelope == LOOP_EXIT_MARK) {
+          String bundleString = queue.take();
+          // Lack of value can only happen intentionally as a signal to exist the loop.
+          if (LOOP_EXIT_MARK.equals(bundleString)) {
+            info("Message loop terminated");
             return;
           }
+          Bundle bundle = fromString(Bundle.class, bundleString);
           processMessage(bundle);
         } catch (Exception e) {
           processMessage(makeExceptionEnvelope(), EXCEPTION_HANDLER, e);
@@ -123,10 +137,10 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   }
 
   private void processMessage(Envelope envelope, String mapKey, Object messageObject) {
-    MessageHandler<Object> handlerConsumer = handlers.get(mapKey);
-    messageEnvelopes.put(messageObject, envelope);
+    handlerCounts.computeIfAbsent(mapKey, key -> new AtomicInteger()).incrementAndGet();
     try {
-      handlerConsumer.accept(messageObject);
+      messageEnvelopes.put(messageObject, envelope);
+      handlers.get(mapKey).accept(messageObject);
     } finally {
       messageEnvelopes.remove(messageObject);
     }

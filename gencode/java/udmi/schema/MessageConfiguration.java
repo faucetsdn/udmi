@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "transport",
+    "namespace",
     "source",
     "destination"
 })
@@ -28,6 +29,8 @@ public class MessageConfiguration {
 
     @JsonProperty("transport")
     public MessageConfiguration.Transport transport;
+    @JsonProperty("namespace")
+    public String namespace;
     @JsonProperty("source")
     public String source;
     @JsonProperty("destination")
@@ -36,6 +39,7 @@ public class MessageConfiguration {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.namespace == null)? 0 :this.namespace.hashCode()));
         result = ((result* 31)+((this.destination == null)? 0 :this.destination.hashCode()));
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
@@ -51,7 +55,7 @@ public class MessageConfiguration {
             return false;
         }
         MessageConfiguration rhs = ((MessageConfiguration) other);
-        return ((((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination)))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))));
+        return (((((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace)))&&((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))));
     }
 
     @Generated("jsonschema2pojo")

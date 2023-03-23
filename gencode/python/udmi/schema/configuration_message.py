@@ -6,6 +6,7 @@ class MessageConfiguration:
 
   def __init__(self):
     self.transport = None
+    self.namespace = None
     self.source = None
     self.destination = None
 
@@ -15,6 +16,7 @@ class MessageConfiguration:
       return None
     result = MessageConfiguration()
     result.transport = source.get('transport')
+    result.namespace = source.get('namespace')
     result.source = source.get('source')
     result.destination = source.get('destination')
     return result
@@ -39,6 +41,8 @@ class MessageConfiguration:
     result = {}
     if self.transport:
       result['transport'] = self.transport # 5
+    if self.namespace:
+      result['namespace'] = self.namespace # 5
     if self.source:
       result['source'] = self.source # 5
     if self.destination:
