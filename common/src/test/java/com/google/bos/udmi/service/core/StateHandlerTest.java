@@ -80,7 +80,9 @@ public class StateHandlerTest extends TestBase {
     BlockingQueue<String> stateBus = getQueueForScope(getNamespace(), STATE_BUS_ID);
 
     stateBus.put(INVALID_MESSAGE);
+
     drainPipe();
+
     assertEquals(1, getExceptionCount(), "exception count");
     assertEquals(0, getDefaultCount(), "default handler count");
   }
