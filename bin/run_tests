@@ -12,6 +12,7 @@ where [step] is one of:
   trace_tests
   registrar_tests
   util_tests
+  udmis_tests
   all_tests
 EOF
   false
@@ -43,6 +44,9 @@ case "$1" in
     bin/test_registrar
     bin/test_sites
     ;;
+  udmis_tests)
+    bin/test_udmis
+    ;;
   all_tests)
     bin/run_tests install_dependencies
     bin/run_tests code_tests
@@ -50,6 +54,7 @@ case "$1" in
     bin/run_tests trace_tests
     bin/run_tests registrar_tests
     bin/run_tests util_tests
+    bin/run_tests udmis_tests
     ;;
   *)
     usage

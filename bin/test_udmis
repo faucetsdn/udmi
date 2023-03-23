@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+udmis/bin/build check
