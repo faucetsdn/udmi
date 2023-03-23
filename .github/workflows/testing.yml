@@ -21,6 +21,9 @@ jobs:
           java-version: '11'
       - name: Checkout source
         uses: actions/checkout@v2.3.4
+      - name: Baseline UDMIS tests
+        run: bin/test_udmis
+        
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
