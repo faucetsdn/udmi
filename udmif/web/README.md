@@ -21,7 +21,7 @@ cp src/env.template.js src/.env.js
 ## Running the Project
 ---
 
-1.  Optional: if you just want to spin up the app, skip this step. If you plan to use some of the Angular CLI commands but don't have the Angular CLI installed yet, install it globally on your machine;
+1.  Install the Angular CLI globally on your machine;
     ```
     npm install -g @angular/cli
     ```
@@ -45,8 +45,9 @@ When adding a new env variable, it will need to be added in a few places.
 
 ## Notes
 ---
-- Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`. (requires Step 1 to have been done)
+- Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 - Run `npm build` to build the project. The build artifacts will be stored in the `dist/` directory.
-- Run `npm test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+- Run `npm test` to execute the unit tests via [Karma](https://karma-runner.github.io) using Chrome and keep a watch.
+- Run `./runTests.sh` to execute the tests using headless Chrome once with a coverage report.
 - Run `npm e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
 - This project was generated with Angular CLI version 13.2.5.
