@@ -43,7 +43,7 @@ A Google account that can login to web application at https://web.staging.udmi.b
 
 ### Automated Tests
 
-- Run `npm test` to execute the unit tests via [Jest](https://jestjs.io).
+- Run `./runTests.sh` (could also run `npm test` if all node modules have already been installed) to execute the unit tests via [Jest](https://jestjs.io).
 - Run `npm run testInteractive` to continuously execute the unit tests via [Jest](https://jestjs.io).  The tests will be run every time a src file is saved.
 
 ### Manual Testing
