@@ -15,6 +15,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import udmi.schema.ExecutionConfiguration;
@@ -43,17 +44,22 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId project id
-   * @param siteDir   site model directory
+   * @param projectId      project id
+   * @param siteDir        site model directory
+   * @param altRegistry    alternate registry to use (instead of site registry)
+   * @param registrySuffix suffix to append to model registry id
    */
-  public CloudIotManager(String projectId, File siteDir) {
+  public CloudIotManager(String projectId, File siteDir, String altRegistry,
+      String registrySuffix) {
     Preconditions.checkNotNull(siteDir, "site directory undefined");
     this.projectId = Preconditions.checkNotNull(projectId, "project id undefined");
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), projectId);
-      registryId = executionConfiguration.registry_id;
+      String targetRegistry = Optional.ofNullable(altRegistry)
+          .orElse(executionConfiguration.registry_id);
+      registryId = SiteModel.getRegistryActual(targetRegistry, registrySuffix);
       cloudRegion = executionConfiguration.cloud_region;
       initializeIotProvider();
     } catch (Exception e) {

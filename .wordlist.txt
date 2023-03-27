@@ -13,6 +13,7 @@ bacnet
 BACnet
 blobset
 BMS
+breakpoint
 buildingsiot
 centric
 CLA
@@ -73,6 +74,7 @@ IPv
 JDK
 JS
 json
+JUnit
 JWT
 keygen
 kube
@@ -122,6 +124,7 @@ Schemas
 SDK
 setpoint
 sha
+sharding
 src
 Stackdriver
 stateStatus
@@ -157,3 +160,4 @@ validator
 writeback
 Writeback
 yaml
+localnet

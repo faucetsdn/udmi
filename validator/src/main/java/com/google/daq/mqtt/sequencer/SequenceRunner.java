@@ -1,10 +1,11 @@
 package com.google.daq.mqtt.sequencer;
 
+import static joptsimple.internal.Strings.isNullOrEmpty;
+
 import com.google.common.base.Joiner;
 import com.google.daq.mqtt.WebServerRunner;
-import com.google.daq.mqtt.sequencer.Feature.Stage;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
-import com.google.daq.mqtt.util.Common;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,17 +13,20 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import joptsimple.internal.Strings;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Level;
+import udmi.schema.SequenceValidationState.FeatureStage;
+import udmi.schema.SequenceValidationState.SequenceResult;
 
 /**
  * Custom test runner that can execute a specific method to test.
@@ -31,10 +35,9 @@ public class SequenceRunner {
 
   private static final int EXIT_STATUS_SUCCESS = 0;
   private static final int EXIST_STATUS_FAILURE = 1;
-  public static final Stage DEFAULT_MIN_STAGE = Stage.BETA;
   static ExecutionConfiguration executionConfiguration;
   private static final Set<String> failures = new TreeSet<>();
-  private static final Set<String> allTests = new TreeSet<>();
+  private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private final Set<String> sequenceClasses = Common.allClassesInPackage(ConfigSequences.class);
   private List<String> targets = List.of();
 
@@ -94,7 +97,7 @@ public class SequenceRunner {
     config.alt_project = testMode; // Sekrit hack for enabling mock components.
 
     failures.clear();
-    allTests.clear();
+    allTestResults.clear();
 
     SequenceBase.resetState();
 
@@ -112,8 +115,8 @@ public class SequenceRunner {
     return failures;
   }
 
-  public static Set<String> getAllTests() {
-    return allTests;
+  public static Map<String, SequenceResult> getAllTests() {
+    return allTestResults;
   }
 
   private int resultCode() {
@@ -124,6 +127,16 @@ public class SequenceRunner {
   }
 
   private void process() {
+    try {
+      processRaw();
+      SequenceBase.processComplete(null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      SequenceBase.processComplete(e);
+    }
+  }
+
+  private void processRaw() {
     if (sequenceClasses.isEmpty()) {
       throw new RuntimeException("No testing classes found");
     }
@@ -159,10 +172,13 @@ public class SequenceRunner {
       throw new RuntimeException("No tests were executed!");
     }
 
-    allTests.forEach(testName -> {
-      String result = failures.contains(testName) ? "FAIL" : "PASS";
-      System.err.printf("%s %s%n", result, testName);
-    });
+    System.err.println();
+    Map<SequenceResult, Long> resultCounts = allTestResults.entrySet().stream()
+        .collect(Collectors.groupingBy(Entry::getValue, Collectors.counting()));
+    resultCounts.forEach(
+        (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
+    String stateAbsolutePath = SequenceBase.getSequencerStateFile().getAbsolutePath();
+    System.err.println("Sequencer validation state summary in " + stateAbsolutePath);
   }
 
   private List<String> getRunMethods(Class<?> clazz) {
@@ -184,13 +200,17 @@ public class SequenceRunner {
       return true;
     }
     Feature annotation = method.getAnnotation(Feature.class);
-    Stage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
-    return stage.processGiven(getFeatureMinStage());
+    FeatureStage stage = annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return processGiven(stage, getFeatureMinStage());
   }
 
-  private Stage getFeatureMinStage() {
+  public static boolean processGiven(FeatureStage query, FeatureStage level) {
+    return query.compareTo(level) >= 0;
+  }
+
+  static FeatureStage getFeatureMinStage() {
     String stage = SequenceBase.validatorConfig.min_stage;
-    return Strings.isNullOrEmpty(stage) ? DEFAULT_MIN_STAGE : Stage.valueOf(stage);
+    return isNullOrEmpty(stage) ? SequenceBase.DEFAULT_MIN_STAGE : FeatureStage.valueOf(stage);
   }
 
   public void setTargets(List<String> targets) {

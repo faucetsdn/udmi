@@ -1,0 +1,13 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.4.0",
+  "tools" : "test_trace",
+  "start_time" : "1999-10-20T01:02:03Z",
+  "summary" : {
+    "correct_devices" : [ ],
+    "extra_devices" : [ ],
+    "missing_devices" : [ "AHU-1", "AHU-22", "GAT-123", "SNS-4" ],
+    "error_devices" : [ ]
+  },
+  "devices" : { }
+}

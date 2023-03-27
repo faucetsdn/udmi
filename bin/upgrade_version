@@ -17,7 +17,7 @@
 UPVERSION_LIST=etc/upversion.txt
 TESTS_REGEX="^(\s{0,4}\"version\"\s*:\s*)([0-9.\"]*)(,?)"
 SCHEMA_VERSION_IDENTIFIER=\$udmi_version # must start with $
-ERROR_MARKER=.upversion_error
+ERROR_MARKER=".upversion_error"
 
 # Updates existing $udmi_version in a JSON file. 
 # Usage: update_existing_schema_version FILE_TO_UPDATE NEW_VERSION
@@ -55,7 +55,7 @@ fi
 NEW_VERSION=$1
 shift 1
 
-rm .upversion_error
+rm -f $ERROR_MARKER
 
 if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo ERROR Invalid version: $NEW_VERSION
@@ -96,8 +96,6 @@ if [[ -n $err_schema_version ]]; then
     touch $ERROR_MARKER
 fi
 
-[[ -f $ERROR_MARKER ]] && exit 1
-
 # Check files in upversion list still exist
 while read action file comment; do
     if [[ $action != "#" ]] && ! [[ -f $file ]]; then
@@ -106,8 +104,10 @@ while read action file comment; do
     fi
 done <$UPVERSION_LIST
 if [[ -n $err_stale_file ]]; then
+    touch $ERROR_MARKER
     echo ERROR .. above files etc/upversion.txt no longer exist
 fi
+
 
 # Check files have exactly 1 matched version fields to avoid unexpected 
 # updates. Uses indents to try and match the top level field
@@ -122,7 +122,12 @@ while read action file comment; do
     fi 
 done <$UPVERSION_LIST
 if [[ -n $err_one_version ]]; then
+    touch $ERROR_MARKER
     echo ERROR above files do not have exactly one version field
+fi
+
+if [[ -f $ERROR_MARKER ]]; then
+    exit 1
 fi
 
 echo -n Updating files ..

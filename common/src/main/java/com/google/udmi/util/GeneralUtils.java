@@ -4,16 +4,23 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class GeneralUtils {
 
@@ -21,6 +28,8 @@ public class GeneralUtils {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
       .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  private static final String SEPARATOR = "\n  ";
+  private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
 
   /**
    * Returns a string of enabled options and values.
@@ -137,6 +146,10 @@ public class GeneralUtils {
     return Base64.getEncoder().encodeToString(payload);
   }
 
+  public static String decodeBase64(String payload) {
+    return new String(Base64.getDecoder().decode(payload));
+  }
+
   /**
    * Get a string of the java stack trace.
    *
@@ -149,5 +162,50 @@ public class GeneralUtils {
       e.printStackTrace(ps);
     }
     return outputStream.toString();
+  }
+
+  public static List<String> runtimeExec(String... command) {
+    ProcessBuilder processBuilder = new ProcessBuilder().command(command);
+    try {
+      Process process = processBuilder.start();
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(process.getInputStream()))) {
+        int exitVal = process.waitFor();
+        if (exitVal != 0) {
+          throw new RuntimeException("Process exited with exit code " + exitVal);
+        }
+        return reader.lines().collect(Collectors.toList());
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While executing subprocess " + String.join(" ", command));
+    }
+  }
+
+  /**
+   * Shallow all fields from one class to another existing class. This can be used, for example, if
+   * the target class is "final" but the fields themselves need to be updated.
+   *
+   * @param from source object
+   * @param to   target object
+   * @param <T>  type of object
+   */
+  public static <T> void copyFields(T from, T to) {
+    Field[] fields = to.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      if (!Modifier.isStatic(field.getModifiers())) {
+        try {
+          field.set(to, field.get(from));
+        } catch (Exception e) {
+          throw new RuntimeException("While copying field " + field.getName(), e);
+        }
+      }
+    }
+  }
+
+  public static String changedLines(List<String> nullableChanges) {
+    List<String> changes = Optional.ofNullable(nullableChanges).orElse(ImmutableList.of());
+    String terminator = changes.size() == 0 ? "." : ":";
+    String header = String.format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
+    return (header + INDENTED_LINES.join(changes)).trim();
   }
 }

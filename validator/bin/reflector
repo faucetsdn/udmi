@@ -2,16 +2,14 @@
 
 ROOT=$(realpath $(dirname $0)/../..)
 
-if [[ $# < 4 ]]; then
-    echo Usage: $0 site_dir project_id device_id directive [directives...]
+if [[ $# < 2 ]]; then
+    echo Usage: $0 config_file directive [directives...]
     echo "  Directive is something like update/config:sites/udmi_site_model/devices/AHU-1/out/generated_config.json"
     false
 fi
 
-site_dir=$(realpath $1)
-project_id=$2
-device_id=$3
-shift 3
+config_file=$(realpath $1)
+shift
 cd $ROOT
 
 echo Building validator...
@@ -20,6 +18,6 @@ validator/bin/build
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 mainclass=com.google.daq.mqtt.validator.Reflector
 
-cmd="java -cp $jarfile $mainclass -p $project_id -s $site_dir -d $device_id $*"
+cmd="java -cp $jarfile $mainclass $config_file $*"
 echo $cmd
 $cmd

@@ -38,6 +38,8 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _overridden_: (**WARNING**) The reported value has been overridden locally
     * _failure_: (**ERROR**) The system failed to read/write the point
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
+* _localnet_: Aspects of working with various local networks
+  * _network_: (**INFO**) Aspects of a specific network
 * _discovery_: Handling on-prem discovery flow
   * _family_: Conditions specific to an entire address family (e.g. bacnet)
     * _scan_: (**INFO**) Relating to scanning a particular address family
@@ -59,7 +61,10 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _schema_: (**INFO**) Basic schema and structure validation.
     * _content_: (**INFO**) Errors validating semantic content of the message.
     * _multiple_: (**INFO**) Multiple issues reported.
+    * _extra_: (**INFO**) Device was unexpected (not in site model).
   * _summary_: Conditions specific to an overall site summary.
     * _report_: (**INFO**) The validation summary report.
+  * _feature_: Results of feature sequence testing.
+    * _sequence_: (**INFO**) An individual line-item sequence test.
 * _device_: Device specific messages (ignored by UDMI system)
   * _???_: (**INFO**) Special wildcard category, anything prefixed by 'device.' lands here!

@@ -1,0 +1,63 @@
+{
+  "blobset" : {
+    "blobs" : {
+      "_iot_endpoint_config" : {
+        "phase" : "final",
+        "status" : {
+          "message" : "java.lang.RuntimeException: Blob data hash mismatch",
+          "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1080)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:691)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:626)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:833)\n",
+          "category" : "blobset.blob.apply",
+          "level" : 500
+        },
+        "generation" : "2023-03-13T03:06:06Z"
+      }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "40:1c:83:ca:77:54"
+      },
+      "ipv4" : {
+        "addr" : "10.0.0.142"
+      },
+      "ipv6" : {
+        "addr" : "fe80::134f:c1f5:f225:a441"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : { },
+      "filter_differential_pressure_setpoint" : {
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : { }
+    }
+  },
+  "system" : {
+    "last_config" : "2023-03-13T03:06:07Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2023-03-13T03:02:30Z",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-26247",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2023-03-13T03:06:08Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2023-03-13T03:06:14Z",
+  "version" : "1.4.1"
+}

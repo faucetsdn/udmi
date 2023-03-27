@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Execution Configuration",
   "description": "Parameters for configuring the execution run of a UDMI tool",
   "$section": "Tool Configuration",
@@ -26,6 +26,9 @@
       "type": "string"
     },
     "site_model": {
+      "type": "string"
+    },
+    "registry_suffix": {
       "type": "string"
     },
     "device_id": {

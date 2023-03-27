@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+timestamp=$(date -Is -u)
+
+echo ${timestamp%+*}Z $@

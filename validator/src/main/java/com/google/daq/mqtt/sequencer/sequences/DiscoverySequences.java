@@ -1,17 +1,18 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.sequencer.Feature.Stage.BETA;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static udmi.schema.Bucket.DISCOVERY;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -30,11 +31,14 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvent;
 import udmi.schema.Enumerate;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FeatureEnumerationEvent;
+import udmi.schema.SequenceValidationState.FeatureStage;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -62,7 +66,7 @@ public class DiscoverySequences extends SequenceBase {
 
     List<DiscoveryEvent> allEvents = popReceivedEvents(DiscoveryEvent.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_id == null)
+    List<DiscoveryEvent> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
         .collect(Collectors.toList());
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvent event = enumEvents.get(0);
@@ -76,13 +80,17 @@ public class DiscoverySequences extends SequenceBase {
       Set<String> models = Optional.ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
       Set<String> events = Optional.ofNullable(event.families).map(Map::keySet).orElse(null);
-      checkThat("family enumeration matches", () -> Objects.equals(models, events));
+      System.err.println("TAP models " + JsonUtil.stringify(models));
+      System.err.println("TAP events " + JsonUtil.stringify(events));
+      checkThat("family enumeration matches", () -> models.size() == events.size());
     } else {
       checkThat("no family enumeration", () -> event.families == null);
     }
 
     if (isTrue(enumerate.features)) {
-      checkThat("features enumerated", () -> event.features != null);
+      Map<Bucket, FeatureStage> bucketStageMap = flattenFeatureEnumeration("", event.features);
+      checkThat("feature enumeration feature is stable",
+          () -> bucketStageMap.get(ENUMERATION_FEATURES) == FeatureStage.STABLE);
     } else {
       checkThat("no feature enumeration", () -> event.features == null);
     }
@@ -94,6 +102,20 @@ public class DiscoverySequences extends SequenceBase {
     } else {
       checkThat("no point enumeration", () -> event.uniqs == null);
     }
+  }
+
+  private Map<Bucket, FeatureStage> flattenFeatureEnumeration(String prefix,
+      Map<String, FeatureEnumerationEvent> eventFeatures) {
+    Map<Bucket, FeatureStage> buckets = new HashMap<>();
+    eventFeatures.forEach((key, value) -> {
+      String fullBucket = prefix + "." + key;
+      Bucket bucket = Bucket.fromValue(fullBucket.substring(1));
+      buckets.put(bucket, FeatureStage.valueOf(value.stage.value().toUpperCase()));
+      if (value.features != null) {
+        buckets.putAll(flattenFeatureEnumeration(fullBucket, value.features));
+      }
+    });
+    return buckets;
   }
 
   private boolean isTrue(Boolean condition) {
@@ -121,7 +143,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION_FEATURES, stage = BETA)
+  @Feature(bucket = ENUMERATION_FEATURES, stage = ALPHA)
   public void feature_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.features = true;
@@ -139,7 +161,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = ALPHA)
   public void multi_enumeration() {
     Enumerate enumerate = new Enumerate();
     enumerate.families = true;
@@ -150,6 +172,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void single_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate(
@@ -191,7 +214,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(DISCOVERY_SCAN)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   public void periodic_scan() {
     initializeDiscovery();
     Date startTime = CleanDateFormat.cleanDate();

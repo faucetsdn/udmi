@@ -1,0 +1,72 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# != 2 ]]; then
+    echo Usage: $0 PROJECT_ID PROXY_HOST
+    false
+fi
+
+project_id=$1
+proxy_host=$2
+shift 2
+
+if [[ -n `which rot13` ]]; then
+   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
+   echo 'Using target project (rot13):' $(echo $project_id | rot13)
+   echo 'Using proxy host (rot13):' $(echo $proxy_host | rot13)
+else
+   echo 'Using target project:' $project_id
+   echo 'Using proxy host:' $proxy_host
+fi
+
+options_json='{"smokeCheck":true}'
+site_path=sites/udmi_site_model
+device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+mkdir -p out
+
+out_base=$site_path/devices/$device_id/out # For officially generated files (in repo)
+work_base=$site_path/out/devices/$device_id # For runtime out files (transitory)
+rm -rf $work_base
+
+serial_no=sequencer-$RANDOM
+echo Using pubber with serial $serial_no
+
+site_config=$site_path/cloud_iot_config.json
+cloud_region=$(jq -r .cloud_region $site_config)
+registry_id=$(jq -r .registry_id $site_config)
+
+PUBBER_OUT=pubber.out
+rm -f $PUBBER_OUT.*
+
+validator/bin/build
+pubber/bin/build
+
+echo Killing running pubber instances...
+ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
+
+bin/reset_config $site_path $project_id $device_id
+
+cat <<EOF > /tmp/pubber_config.json
+{
+    "endpoint": {
+      "protocol": "mqtt",
+      "client_id": "projects/$project_id/locations/$cloud_region/registries/$registry_id/devices/$device_id",
+      "hostname": "$proxy_host"
+    },
+    "sitePath": "$site_path",
+    "deviceId": "$device_id",
+    "projectId": "$project_id",
+    "serialNo": "$serial_no",
+    "options": $options_json
+}
+EOF
+
+echo Running configuration in /tmp/pubber_config.json
+cat /tmp/pubber_config.json
+echo
+
+pubber/bin/run /tmp/pubber_config.json
+
+echo Done with proxy connection test.

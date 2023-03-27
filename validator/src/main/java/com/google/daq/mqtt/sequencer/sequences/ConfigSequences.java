@@ -1,28 +1,28 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.ALPHA;
-import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.TimePeriodConstants.ONE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE;
 import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.BETA;
+import static udmi.schema.SequenceValidationState.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import com.google.daq.mqtt.sequencer.SkipTest;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -35,24 +35,21 @@ public class ConfigSequences extends SequenceBase {
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
 
-  private boolean hasInterestingStatus() {
-    return deviceState.system.status != null
-        && deviceState.system.status.level >= Level.WARNING.value();
-  }
-
-  @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that last_update state is correctly set in response to a config update.")
+  @Test(timeout = ONE_MINUTES_MS)
+  @Feature(stage = STABLE, bucket = SYSTEM)
+  @Summary("Check that last_update state is correctly set in response to a config update.")
   public void system_last_update() {
     untilTrue("state last_config matches config timestamp", this::stateMatchesConfigTimestamp);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the min log-level config is honored by the device.")
-  @Feature()
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the min log-level config is honored by the device.")
   public void system_min_loglevel() {
     Integer savedLevel = deviceConfig.system.min_loglevel;
-    assert SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel;
-    assert SYSTEM_CONFIG_APPLY_LEVEL.value() < Level.WARNING.value();
+    checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() >= savedLevel, "invalid saved level");
+    checkState(SYSTEM_CONFIG_APPLY_LEVEL.value() < Level.WARNING.value(),
+        "invalid config apply level");
 
     final Instant startTime = Instant.now();
     deviceConfig.system.min_loglevel = Level.INFO.value();
@@ -62,7 +59,7 @@ public class ConfigSequences extends SequenceBase {
         Instant.now().isBefore(startTime.plusSeconds(CONFIG_THRESHOLD_SEC)));
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
-    updateConfig();
+    updateConfig("warning loglevel");
     // Nothing to actively wait for, so wait for some amount of time instead.
     safeSleep(CONFIG_THRESHOLD_SEC * 2000);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -72,16 +69,18 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device MQTT-acknowledges a sent config.")
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the device MQTT-acknowledges a sent config.")
   public void device_config_acked() {
     untilTrue("config acked", () -> configAcked);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles a broken (non-json) config message.")
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Check that the device correctly handles a broken (non-json) config message.")
   public void broken_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig();
+    updateConfig("starting broken_config");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + getTimestamp(stableConfig));
     untilTrue("state synchronized", () -> dateEquals(stableConfig, deviceState.system.last_config));
@@ -119,8 +118,9 @@ public class ConfigSequences extends SequenceBase {
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
-  @Description("Check that the device correctly handles an extra out-of-schema field")
+  @Test(timeout = ONE_MINUTES_MS)
+  @Feature(stage = BETA, bucket = SYSTEM)
+  @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);

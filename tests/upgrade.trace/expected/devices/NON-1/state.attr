@@ -1,0 +1,9 @@
+{
+  "deviceNumId" : "00000074464529",
+  "subFolder" : "update",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "subType" : "state",
+  "msgSource" : "001_state_update.json",
+  "deviceId" : "NON-1",
+  "projectId" : "playback-project"
+}

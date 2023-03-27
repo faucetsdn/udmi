@@ -19,12 +19,15 @@ from .config_system import SystemConfig
 from .config_system_testing import TestingSystemConfig
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_execution import ExecutionConfiguration
+from .configuration_message import MessageConfiguration
+from .configuration_pod import PodConfiguration
 from .configuration_pubber import PubberConfiguration
 from .envelope import Envelope
 from .equipment_translation import BuildingConfig
 from .event import Event
 from .event_discovery import DiscoveryEvent
 from .event_discovery_family import FamilyDiscoveryEvent
+from .event_discovery_feature import FeatureEnumerationEvent
 from .event_discovery_point import PointEnumerationEvent
 from .event_mapping import MappingEvent
 from .event_mapping_entities import MappingEventEntities
@@ -58,6 +61,8 @@ from .state_blobset_blob import BlobBlobsetState
 from .state_discovery import DiscoveryState
 from .state_discovery_family import FamilyDiscoveryState
 from .state_gateway import GatewayState
+from .state_localnet import LocalnetState
+from .state_localnet_family import FamilyLocalnetState
 from .state_mapping import MappingState
 from .state_mapping_device import DeviceMappingState
 from .state_pointset import PointsetState
@@ -66,4 +71,6 @@ from .state_system import SystemState
 from .state_system_hardware import StateSystemHardware
 from .state_system_operation import StateSystemOperation
 from .state_validation import ValidationState
+from .state_validation_feature import FeatureValidationState
+from .state_validation_sequence import SequenceValidationState
 from .virtual_links import VirtualEquipmentLinks

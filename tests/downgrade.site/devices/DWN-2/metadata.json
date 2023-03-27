@@ -23,10 +23,13 @@
       }
     }
   },
+  "grumpy": {
+    "reason": "This is an intentional schema violation to test the tools"
+  },
   "localnet": {
     "families": {
       "virtual": {
-        "id": "0x65"
+        "addr": "0x65"
       }
     }
   },

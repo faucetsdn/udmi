@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Category",
   "$comment": "Auto-generated category mappings from bin/gencode_categories.",
   "type": "string",
@@ -21,6 +21,7 @@
     { "pattern": "^pointset\\.point\\.overridden$" },
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
+    { "pattern": "^localnet\\.network$" },
     { "pattern": "^discovery\\.family\\.scan$" },
     { "pattern": "^discovery\\.device\\.enumerate$" },
     { "pattern": "^discovery\\.point\\.describe$" },
@@ -32,7 +33,9 @@
     { "pattern": "^validation\\.device\\.schema$" },
     { "pattern": "^validation\\.device\\.content$" },
     { "pattern": "^validation\\.device\\.multiple$" },
+    { "pattern": "^validation\\.device\\.extra$" },
     { "pattern": "^validation\\.summary\\.report$" },
+    { "pattern": "^validation\\.feature\\.sequence$" },
     { "pattern": "^device\\.[a-z]+(_[a-z]+)*$" }
     ]
 }

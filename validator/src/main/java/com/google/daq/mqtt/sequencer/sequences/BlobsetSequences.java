@@ -1,12 +1,15 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.sequencer.Feature.Stage.STABLE;
+import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertNotEquals;
+import static udmi.schema.Bucket.ENDPOINT;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.SequenceValidationState.FeatureStage.ALPHA;
+import static udmi.schema.SequenceValidationState.FeatureStage.DISABLED;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
@@ -99,17 +102,17 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
-    BlobBlobsetConfig config = makeEndpointConfigBlob(hostname, registryId, badHash);
+    String payload = endpointConfigPayload(hostname, registryId);
+    debug("Endpoint config", payload);
+    BlobBlobsetConfig config = makeEndpointConfigBlob(payload, badHash);
     deviceConfig.blobset = new BlobsetConfig();
     deviceConfig.blobset.blobs = new HashMap<>();
     deviceConfig.blobset.blobs.put(IOT_BLOB_KEY, config);
   }
 
-  private BlobBlobsetConfig makeEndpointConfigBlob(String hostname, String registryId,
-      boolean badHash) {
-    String payload = endpointConfigPayload(hostname, registryId);
+  private BlobBlobsetConfig makeEndpointConfigBlob(String payload, boolean badHash) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
-    config.url = SemanticValue.describe("endpoint url", generateEndpointConfigDataUrl(payload));
+    config.url = SemanticValue.describe("endpoint data", generateEndpointConfigDataUrl(payload));
     config.phase = BlobPhase.FINAL;
     config.generation = SemanticDate.describe("blob generation", new Date());
     String description = badHash ? "invalid blob data hash" : "blob data hash";
@@ -122,16 +125,18 @@ public class BlobsetSequences extends SequenceBase {
     return String.format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Summary("Push endpoint config message to device that results in a connection error.")
   @Test
-  @Description("Push endpoint config message to device that results in a connection error.")
   public void endpoint_connection_error() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     untilErrorReported();
     untilClearedRedirect();
   }
 
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Summary("Check repeated endpoint with same information gets retried.")
   @Test
-  @Description("Check repeated endpoint with same information gets retried.")
   public void endpoint_connection_retry() {
     setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
     final Date savedGeneration = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY).generation;
@@ -146,16 +151,18 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Summary("Check a successful reconnect to the same endpoint.")
   @Test
-  @Description("Check a successful reconnect to the same endpoint.")
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, false);
     untilSuccessfulRedirect(BlobPhase.FINAL);
     untilClearedRedirect();
   }
 
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Summary("Failed connection because of bad hash.")
   @Test
-  @Description("Failed connection because of bad hash.")
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(GOOGLE_ENDPOINT_HOSTNAME, registryId, true);
     untilTrue("blobset status is ERROR", () -> {
@@ -172,10 +179,30 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Check connection to an alternate project.")
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    if (altRegistry == null) {
-      throw new SkipTest("No alternate registry defined");
+    check_endpoint_connection_success(false);
+  }
+
+  @Test
+  @Feature(stage = ALPHA, bucket = ENDPOINT)
+  public void endpoint_redirect_and_restart() {
+    check_endpoint_connection_success(true);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = DISABLED, bucket = ENDPOINT)
+  public void endpoint_failure_and_restart() {
+    setDeviceConfigEndpointBlob(BOGUS_ENDPOINT_HOSTNAME, registryId, false);
+    untilErrorReported();
+    check_system_restart();
+    untilClearedRedirect();
+  }
+
+  private void check_endpoint_connection_success(boolean doRestart) {
+    if (altClient == null) {
+      throw new SkipTest("No functional alternate registry defined");
     }
 
     // Phase one: initiate connection to alternate registry.
@@ -189,6 +216,11 @@ public class BlobsetSequences extends SequenceBase {
       untilTrue("alternate last_config matches config timestamp",
           this::stateMatchesConfigTimestamp);
       untilClearedRedirect();
+
+      if (doRestart) {
+        // Phase two.five: restart the system to make sure the change sticks.
+        check_system_restart();
+      }
 
       // Phase three: initiate connection back to initial registry.
       // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
@@ -205,9 +237,13 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   @Test
-  @Description("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = STABLE, bucket = SYSTEM_MODE)
+  @Summary("Restart and connect to same endpoint and expect it returns.")
+  @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
+    check_system_restart();
+  }
+
+  private void check_system_restart() {
     // Prepare for the restart.
     final Date dateZero = new Date(0);
     untilTrue("last_start is not zero",
@@ -253,5 +289,4 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is newer than previous last_start",
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
-
 }

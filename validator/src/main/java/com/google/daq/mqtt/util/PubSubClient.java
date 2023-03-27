@@ -24,6 +24,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
@@ -272,11 +273,11 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   @Override
-  public void publish(String deviceId, String topic, String data) {
+  public String publish(String deviceId, String topic, String data) {
     try {
       if (deviceId == null) {
         System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
-        return;
+        return null;
       }
       String subFolder = String.format("events/%s/%s", deviceId, topic);
       Preconditions.checkNotNull(registryId, "registry id not defined");
@@ -292,6 +293,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       ApiFuture<String> publish = publisher.publish(message);
       publish.get(); // Wait for publish to complete.
       System.err.printf("Published to %s/%s%n", registryId, subFolder);
+      return null;
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }

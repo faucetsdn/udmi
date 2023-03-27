@@ -7,7 +7,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 TEST_LOG=/tmp/test_log.txt
 log_level=INFO
-UDMI_ALT_REGISTRY=ZZ-REDIRECT-NA
+alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=BETA
 
 if [[ $1 == '-a' ]]; then
@@ -35,8 +35,21 @@ project_id=$2
 device_id=$3
 shift 3
 
+if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+    echo Using registry suffix $UDMI_REGISTRY_SUFFIX
+    registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
+else
+    registry_suffix=null
+fi
+
 serial_no=${1:-//}
 shift || true
+
+if [[ $project_id == -- ]]; then
+    echo Configuring for mock project use...
+    project_id=mock-project
+    alt_registry=
+fi
 
 test_names="$@"
 udmi_version=`git describe --always --dirty`
@@ -58,7 +71,8 @@ cat <<EOF > $VALIDATOR_CONFIG
   "project_id": "$project_id",
   "site_model": "$site_path",
   "device_id": "$device_id",
-  "alt_registry": "$UDMI_ALT_REGISTRY",
+  "alt_registry": "$alt_registry",
+  "registry_suffix": $registry_suffix,
   "serial_no": "$serial_no",
   "log_level": "$log_level",
   "min_stage": "$min_stage",
@@ -85,5 +99,3 @@ if [[ `wc -l < /tmp/sequencer.out` -eq 0 ]]; then
 fi
 
 bin/check_version
-
-echo SUMMARY `awk '{print $5}' < /tmp/sequencer.out`

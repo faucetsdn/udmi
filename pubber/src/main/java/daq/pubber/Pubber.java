@@ -8,9 +8,9 @@ import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.optionsString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static daq.pubber.MqttDevice.CONFIG_TOPIC;
 import static daq.pubber.MqttDevice.ERRORS_TOPIC;
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -22,9 +22,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
+import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import daq.pubber.MqttPublisher.InjectedMessage;
+import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.ByteArrayOutputStream;
@@ -82,7 +85,6 @@ import udmi.schema.FamilyDiscoveryEvent;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.Level;
-import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.Operation;
@@ -125,13 +127,16 @@ public class Pubber {
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private static final String MESSAGE_CATEGORY_FORMAT = "system.%s.%s";
-  private static final Map<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP = ImmutableMap.of(
-      State.class, MqttDevice.STATE_TOPIC,
-      SystemEvent.class, getEventsSuffix("system"),
-      PointsetEvent.class, getEventsSuffix("pointset"),
-      ExtraPointsetEvent.class, getEventsSuffix("pointset"),
-      DiscoveryEvent.class, getEventsSuffix("discovery")
-  );
+  private static final ImmutableMap<Class<?>, String> MESSAGE_TOPIC_SUFFIX_MAP =
+      new ImmutableMap.Builder<Class<?>, String>()
+          .put(State.class, MqttDevice.STATE_TOPIC)
+          .put(SystemEvent.class, getEventsSuffix("system"))
+          .put(PointsetEvent.class, getEventsSuffix("pointset"))
+          .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
+          .put(InjectedMessage.class, getEventsSuffix("invalid"))
+          .put(InjectedState.class, MqttDevice.STATE_TOPIC)
+          .put(DiscoveryEvent.class, getEventsSuffix("discovery"))
+          .build();
   private static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final Map<Level, Consumer<String>> LOG_MAP =
       ImmutableMap.<Level, Consumer<String>>builder()
@@ -142,23 +147,34 @@ public class Pubber {
           .put(Level.WARNING, LOG::warn)
           .put(Level.ERROR, LOG::error)
           .build();
+  private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
+      "events/string", "\"\"",
+      "events/emptyjson", "{}",
+      "events/badjson", "{ NOT VALID JSON!"
+  );
+  public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
       "superimposition_reading", makePointPointsetModel(false)
   );
   private static final Date DEVICE_START_TIME = getRoundedStartTime();
-  private static final int RESTART_EXIT_CODE = 192; // After exit, wrapper script should restart.
-  private static final int SHUTDOWN_EXIT_CODE = 193; // After exit, do not restart.
+  private static final Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
+      SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
+      SystemMode.RESTART, 192, // Indicate process to be explicitly restarted.
+      SystemMode.TERMINATE, 193); // Indicates expected shutdown (failure code).
+  private static final Integer UNKNOWN_MODE_EXIT_CODE = -1;
   private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
   private static final int CONNECT_RETRIES = 10;
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
+  private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
+  private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
-  private final PubberConfiguration configuration;
+  protected final PubberConfiguration configuration;
   private final AtomicInteger messageDelayMs = new AtomicInteger(DEFAULT_REPORT_SEC * 1000);
   private final CountDownLatch configLatch = new CountDownLatch(1);
   private final ExtraPointsetEvent devicePoints = new ExtraPointsetEvent();
@@ -167,7 +183,7 @@ public class Pubber {
   private final Semaphore stateLock = new Semaphore(1);
   private final String deviceId;
   private final List<Entry> logentries = new ArrayList<>();
-  Config deviceConfig = new Config();
+  final Config deviceConfig = new Config();
   private int deviceUpdateCount = -1;
   private MqttDevice deviceTarget;
   private ScheduledFuture<?> periodicSender;
@@ -180,9 +196,10 @@ public class Pubber {
   private EndpointConfiguration extractedEndpoint;
   private SiteModel siteModel;
   private PrintStream logPrintWriter;
-  private DevicePersistent persistentData;
+  protected DevicePersistent persistentData;
   private MqttDevice gatewayTarget;
   private int systemEventCount;
+  private LocalnetManager localnetManager;
 
   /**
    * Start an instance from a configuration file.
@@ -387,7 +404,9 @@ public class Pubber {
   private void initializeDevice() {
     deviceState.system = new SystemState();
     deviceState.system.operation = new StateSystemOperation();
-    deviceState.system.operation.last_start = DEVICE_START_TIME;
+    if (!TRUE.equals(configuration.options.noLastStart)) {
+      deviceState.system.operation.last_start = DEVICE_START_TIME;
+    }
     deviceState.system.hardware = new StateSystemHardware();
     deviceState.pointset = new PointsetState();
     deviceState.pointset.points = new HashMap<>();
@@ -437,23 +456,43 @@ public class Pubber {
       deviceState.system.hardware = null;
     }
 
+    localnetManager = new LocalnetManager(this);
     markStateDirty();
   }
 
-  private void initializePersistentStore() {
+  protected DevicePersistent newDevicePersistent() {
+    DevicePersistent data = new DevicePersistent();
+    return data;
+  }
+
+  protected void initializePersistentStore() {
     Preconditions.checkState(persistentData == null, "persistent data already loaded");
     File persistentStore = getPersistentStore();
     if (TRUE.equals(configuration.options.noPersist)) {
       info("Resetting persistent store " + persistentStore.getAbsolutePath());
-      persistentData = new DevicePersistent();
+      persistentData = newDevicePersistent();
     } else {
       info("Initializing from persistent store " + persistentStore.getAbsolutePath());
       persistentData =
           persistentStore.exists() ? fromJsonFile(persistentStore, DevicePersistent.class)
-              : new DevicePersistent();
+              : newDevicePersistent();
     }
     persistentData.restart_count = Objects.requireNonNullElse(persistentData.restart_count, 0) + 1;
     deviceState.system.operation.restart_count = persistentData.restart_count;
+
+    // If the persistentData contains endpoint configuration, prioritize using that.
+    // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
+    if (persistentData.endpoint != null) {
+      info("Loading endpoint from persistent data");
+      configuration.endpoint = persistentData.endpoint;
+    } else if (configuration.endpoint != null) {
+      info("Loading endpoint into persistent data from configuration");
+      persistentData.endpoint = configuration.endpoint;
+    } else {
+      error(
+          "Neither configuration nor persistent data supplies endpoint configuration");
+    }
+
     writePersistentStore();
   }
 
@@ -510,14 +549,6 @@ public class Pubber {
         error("Error pulling swarm message", e);
         safeSleep(WAIT_TIME_SEC);
       }
-    }
-  }
-
-  private void safeSleep(long durationMs) {
-    try {
-      Thread.sleep(durationMs);
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Error sleeping", e);
     }
   }
 
@@ -595,10 +626,47 @@ public class Pubber {
       deferredConfigActions();
       sendDevicePoints();
       sendSystemEvent();
+      sendEmptyMissingBadEvents();
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
     }
+  }
+
+  /**
+   * For testing, if configured, send a slate of bad messages for testing by the message handling
+   * infrastructure. Uses the sekrit REPLACE_MESSAGE_WITH field to sneak bad output into the pipe.
+   * E.g., Will send a message with "{ INVALID JSON!" as a message payload. Inserts a delay before
+   * each message sent to stabelize the output order for testing purposes.
+   */
+  private void sendEmptyMissingBadEvents() {
+    int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
+    if (!TRUE.equals(configuration.options.emptyMissing)
+        || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
+      return;
+    }
+
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
+
+    if (phase == 0) {
+      flushDirtyState();
+      InjectedState invalidState = new InjectedState();
+      invalidState.REPLACE_MESSAGE_WITH = CORRUPT_STATE_MESSAGE;
+      warn("Sending badly formatted state as per configuration");
+      publishStateMessage(invalidState);
+    } else if (phase == 1) {
+      InjectedMessage invalidEvent = new InjectedMessage();
+      warn("Sending badly formatted message type");
+      publishDeviceMessage(invalidEvent);
+    } else {
+      String key = INVALID_KEYS.get(phase - 2);
+      InjectedMessage replacedEvent = new InjectedMessage();
+      replacedEvent.REPLACE_TOPIC_WITH = key;
+      replacedEvent.REPLACE_MESSAGE_WITH = INVALID_REPLACEMENTS.get(key);
+      warn("Sending badly formatted message of type " + key);
+      publishDeviceMessage(replacedEvent);
+    }
+    safeSleep(INJECT_MESSAGE_DELAY_MS);
   }
 
   private void sendSystemEvent() {
@@ -629,28 +697,36 @@ public class Pubber {
     Operation operation = Optional.ofNullable(system.operation).orElseGet(Operation::new);
     if (SystemMode.ACTIVE.equals(deviceState.system.operation.mode)
         && SystemMode.RESTART.equals(operation.mode)) {
-      restartSystem(true);
+      systemLifecycle(SystemMode.RESTART);
     }
     if (SystemMode.ACTIVE.equals(operation.mode)) {
       deviceState.system.operation.mode = SystemMode.ACTIVE;
       markStateDirty();
     }
-    if (operation.last_start != null && DEVICE_START_TIME.before(operation.last_start)) {
-      System.err.printf("Device start time %s before last config start %s, terminating.",
-          isoConvert(DEVICE_START_TIME), isoConvert(operation.last_start));
-      restartSystem(false);
+    Date configLastStart = operation.last_start;
+    if (configLastStart != null) {
+      if (DEVICE_START_TIME.before(configLastStart)) {
+        warn(String.format("Device start time %s before last config start %s, terminating.",
+            isoConvert(DEVICE_START_TIME), isoConvert(configLastStart)));
+        systemLifecycle(SystemMode.TERMINATE);
+      } else if (TRUE.equals(configuration.options.smokeCheck)
+          && CleanDateFormat.dateEquals(DEVICE_START_TIME, configLastStart)) {
+        warn(String.format("Device start time %s matches, smoke check indicating success!",
+            isoConvert(configLastStart)));
+        systemLifecycle(SystemMode.SHUTDOWN);
+      }
     }
   }
 
-  private void restartSystem(boolean restart) {
-    deviceState.system.operation.mode = restart ? SystemMode.RESTART : SystemMode.SHUTDOWN;
+  private void systemLifecycle(SystemMode mode) {
+    deviceState.system.operation.mode = mode;
     try {
       publishSynchronousState();
     } catch (Exception e) {
       error("Squashing error publishing state while shutting down", e);
     }
-    int exitCode = restart ? RESTART_EXIT_CODE : SHUTDOWN_EXIT_CODE;
-    error("Stopping system with extreme prejudice, restart " + restart + " with code " + exitCode);
+    int exitCode = EXIT_CODE_MAP.getOrDefault(mode, UNKNOWN_MODE_EXIT_CODE);
+    error("Stopping system with extreme prejudice, restart " + mode + " with code " + exitCode);
     System.exit(exitCode);
   }
 
@@ -707,7 +783,7 @@ public class Pubber {
     }
   }
 
-  private void startConnection(Function<String, Boolean> connectionDone) {
+  protected void startConnection(Function<String, Boolean> connectionDone) {
     try {
       this.connectionDone = connectionDone;
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -747,7 +823,7 @@ public class Pubber {
     allPoints.add(point);
   }
 
-  private void initialize() {
+  protected void initialize() {
     try {
       initializeDevice();
 
@@ -851,7 +927,7 @@ public class Pubber {
       error("Error receiving message " + type, cause);
       if (TRUE.equals(configuration.options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
-        restartSystem(true);
+        systemLifecycle(SystemMode.RESTART);
       }
     }
     String category = String.format(MESSAGE_CATEGORY_FORMAT, type, phase);
@@ -918,9 +994,9 @@ public class Pubber {
     if (config != null) {
       if (config.system == null && TRUE.equals(configuration.options.barfConfig)) {
         error("Empty config system block and configured to restart on bad config!");
-        restartSystem(true);
+        systemLifecycle(SystemMode.RESTART);
       }
-      deviceConfig = config;
+      GeneralUtils.copyFields(config, deviceConfig);
       info(String.format("%s received config %s", getTimestamp(), isoConvert(config.timestamp)));
       deviceState.system.last_config = config.timestamp;
       actualInterval = updatePointsetConfig(config.pointset);
@@ -936,6 +1012,7 @@ public class Pubber {
     maybeRestartExecutor(useInterval);
   }
 
+  // TODO(x): Consider refactoring this to either return or change an instance variable, not both.
   EndpointConfiguration extractEndpointBlobConfig() {
     if (deviceConfig.blobset == null) {
       extractedEndpoint = null;
@@ -948,6 +1025,8 @@ public class Pubber {
         if (deviceConfig.blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
           BlobBlobsetConfig config = deviceConfig.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
           extractedEndpoint.generation = config.generation;
+          persistentData.endpoint = extractedEndpoint;
+          writePersistentStore();
         }
       }
     } catch (Exception e) {
@@ -1121,20 +1200,8 @@ public class Pubber {
     Enumerate enumerate = config.enumerate;
     discoveryEvent.uniqs = ifTrue(enumerate.uniqs, () -> enumeratePoints(configuration.deviceId));
     discoveryEvent.features = ifTrue(enumerate.features, SupportedFeatures::getFeatures);
-    discoveryEvent.families = ifTrue(enumerate.families, this::enumerateFamilies);
+    discoveryEvent.families = ifTrue(enumerate.families, () -> localnetManager.enumerateFamilies());
     publishDeviceMessage(discoveryEvent);
-  }
-
-  private Map<String, FamilyDiscoveryEvent> enumerateFamilies() {
-    LocalnetModel localnet = siteModel.getMetadata(deviceId).localnet;
-    return localnet == null ? null : localnet.families.keySet().stream()
-        .collect(toMap(key -> key, this::makeFamilyDiscoveryEvent));
-  }
-
-  private FamilyDiscoveryEvent makeFamilyDiscoveryEvent(String familyId) {
-    FamilyDiscoveryEvent familyDiscoveryEvent = new FamilyDiscoveryEvent();
-    familyDiscoveryEvent.id = siteModel.getMetadata(deviceId).localnet.families.get(familyId).id;
-    return familyDiscoveryEvent;
   }
 
   private <T> T ifTrue(Boolean condition, Supplier<T> supplier) {
@@ -1258,15 +1325,15 @@ public class Pubber {
       AtomicInteger sentEvents = new AtomicInteger();
       siteModel.forEachMetadata((deviceId, targetMetadata) -> {
         FamilyLocalnetModel familyLocalnetModel = getFamilyLocalnetModel(family, targetMetadata);
-        if (familyLocalnetModel != null && familyLocalnetModel.id != null) {
+        if (familyLocalnetModel != null && familyLocalnetModel.addr != null) {
           DiscoveryEvent discoveryEvent = new DiscoveryEvent();
           discoveryEvent.generation = scanGeneration;
           discoveryEvent.scan_family = family;
-          discoveryEvent.scan_id = deviceId;
+          discoveryEvent.scan_addr = deviceId;
           discoveryEvent.families = targetMetadata.localnet.families.entrySet().stream()
               .collect(toMap(Map.Entry::getKey, this::eventForTarget));
           discoveryEvent.families.computeIfAbsent("iot",
-              key -> new FamilyDiscoveryEvent()).id = deviceId;
+              key -> new FamilyDiscoveryEvent()).addr = deviceId;
           if (isTrue(() -> deviceConfig.discovery.families.get(family).enumerate)) {
             discoveryEvent.uniqs = enumeratePoints(deviceId);
           }
@@ -1289,7 +1356,7 @@ public class Pubber {
 
   private FamilyDiscoveryEvent eventForTarget(Map.Entry<String, FamilyLocalnetModel> target) {
     FamilyDiscoveryEvent event = new FamilyDiscoveryEvent();
-    event.id = target.getValue().id;
+    event.addr = target.getValue().addr;
     return event;
   }
 
@@ -1454,12 +1521,6 @@ public class Pubber {
   }
 
   private void publishStateMessage() {
-    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
-    if (delay > 0) {
-      warn(String.format("State update delay %dms", delay));
-      safeSleep(delay);
-    }
-
     deviceState.timestamp = getCurrentTimestamp();
     info(String.format("update state %s last_config %s", isoConvert(deviceState.timestamp),
         isoConvert(deviceState.system.last_config)));
@@ -1475,9 +1536,19 @@ public class Pubber {
       return;
     }
     stateDirty.set(false);
+    publishStateMessage(deviceState);
+  }
+
+  private void publishStateMessage(Object stateToSend) {
+    long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+    if (delay > 0) {
+      warn(String.format("State update delay %dms", delay));
+      safeSleep(delay);
+    }
+
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
-    publishDeviceMessage(deviceState, () -> {
+    publishDeviceMessage(stateToSend, () -> {
       lastStateTimeMs = System.currentTimeMillis();
       latch.countDown();
     });
@@ -1590,7 +1661,7 @@ public class Pubber {
     cloudLog(message, Level.DEBUG, detail);
   }
 
-  private void info(String message) {
+  void info(String message) {
     cloudLog(message, Level.INFO);
   }
 
@@ -1617,4 +1688,5 @@ public class Pubber {
     // This extraField exists only to trigger schema parsing errors.
     public Object extraField;
   }
+
 }

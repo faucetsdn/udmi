@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Discovery Event",
   "description": "[Discovery result](../docs/specs/discovery.md) with implicit enumeration",
   "$section": "Messages",
@@ -30,8 +30,8 @@
       "description": "The primary scan discovery address family",
       "type": "string"
     },
-    "scan_id": {
-      "description": "The primary id of the device (for scan_family)",
+    "scan_addr": {
+      "description": "The primary address of the device (for scan_family)",
       "type": "string"
     },
     "families": {
@@ -56,14 +56,7 @@
       }
     },
     "features": {
-      "description": "UDMI Features Supported by this device",
-      "additionalProperties": false,
-      "existingJavaType": "com.google.udmi.util.Features",
-      "patternProperties": {
-        "^[a-z_]+$": {
-          "type": "object"
-        }
-      }
+      "$ref": "file:event_discovery_feature.json#/$defs/features"
     },
     "system": {
       "title": "System Discovery Event",

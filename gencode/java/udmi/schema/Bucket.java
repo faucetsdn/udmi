@@ -8,46 +8,82 @@ import java.util.Map;
 
 public enum Bucket {
 
-    // Basic device property enumeration capability
-    ENUMERATION("enumeration"),
+  // IoT connection endpoint management
+  ENDPOINT("endpoint"),
 
-    // Enumerating available points of a device
-    ENUMERATION_POINTSET("enumeration.pointset"),
+  // Endpoint configuration updates
+  ENDPOINT_CONFIG("endpoint.config"),
 
-    // Enumerating the features a device supports
-    ENUMERATION_FEATURES("enumeration.features"),
+  // Basic device property enumeration capability
+  ENUMERATION("enumeration"),
 
-    // Enumerating the network families of the device
-    ENUMERATION_FAMILIES("enumeration.families"),
+  // Enumerating available points of a device
+  ENUMERATION_POINTSET("enumeration.pointset"),
 
-    // Automated discovery capabilities
-    DISCOVERY("discovery"),
+  // Enumerating the features a device supports
+  ENUMERATION_FEATURES("enumeration.features"),
 
-    // Scanning a network for devices
-    DISCOVERY_SCAN("discovery.scan"),
+  // Enumerating the network families of the device
+  ENUMERATION_FAMILIES("enumeration.families"),
 
-    // IoT connection endpoint management
-    ENDPOINT("endpoint"),
+  // Automated discovery capabilities
+  DISCOVERY("discovery"),
 
-    // Endpoint configuration updates
-    ENDPOINT_CONFIG("endpoint.config"),
+  // Scanning a network for devices
+  DISCOVERY_SCAN("discovery.scan"),
 
-    // Basic system operations
-    SYSTEM("system"),
+  // UDMI gateway capabilities
+  GATEWAY("gateway"),
 
-    // System mode
-    SYSTEM_MODE("system.mode"),
+  // Pointset and telemetry capabilities
+  POINTSET("pointset"),
 
-    // unknown default value
-    UNKNOWN_DEFAULT("unknown");
-    
-    private final String value;
+  // Basic system operations
+  SYSTEM("system"),
 
-    Bucket(String value) {
-        this.value = value;
-    }
+  // System mode
+  SYSTEM_MODE("system.mode"),
 
-    public String value() {
+  // Writeback related operations
+  WRITEBACK("writeback"),
+
+  // unknown default value
+  UNKNOWN_DEFAULT("unknown");
+
+  private final String value;
+
+  private static final Map<String, Bucket> allValues = new HashMap<>();
+
+  Bucket(String value) {
+    this.value = value;
+  }
+
+  public String value() {
     return this.value;
+  }
+
+  public static boolean contains(String key) {
+    return ensureValueMap().containsKey(key);
+  }
+
+  public static Bucket fromValue(String key) {
+    return ensureValueMap().get(key);
+  }
+
+  private static Map<String, Bucket> ensureValueMap() {
+    if (allValues.isEmpty()) {
+      for (Bucket bucket : values()) {
+        allValues.put(bucket.value, bucket);
+      }
+    }
+    return allValues;
+  }
+
+  /**
+   * Return just the trailing part of th full bucket name. So from
+   * "endpoint.mods.gcp" it would return just "gcp", used as a map key.
+   */
+  public String key() {
+    return value.substring(value.lastIndexOf(".") + 1);
   }
 }

@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Metadata",
   "description": "[Metadata](../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`",
   "$section": "Site Model",
@@ -30,6 +30,11 @@
       "description": "Automatically generated field that contains the hash of file contents.",
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
+    },
+    "exception": {
+      "description": "Exception captured during processing or conversion.",
+      "existingJavaType": "Exception",
+      "type": "object"
     },
     "cloud": {
       "$ref": "file:model_cloud.json#"

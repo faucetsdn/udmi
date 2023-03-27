@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.4.0",
+  "$udmi_version": "1.4.1",
   "title": "Pubber Options",
   "description": "Pubber runtime options",
   "additionalProperties": true,
@@ -14,6 +14,9 @@
       "type": "boolean"
     },
     "noPersist": {
+      "type": "boolean"
+    },
+    "noLastStart": {
       "type": "boolean"
     },
     "barfConfig": {
@@ -31,8 +34,14 @@
     "extraField": {
       "type": "string"
     },
+    "emptyMissing": {
+      "type": "boolean"
+    },
     "redirectRegistry": {
       "type": "string"
+    },
+    "smokeCheck": {
+      "type": "boolean"
     },
     "noPointState": {
       "type": "boolean"

@@ -1,0 +1,110 @@
+{
+  "features" : {
+    "endpoint" : {
+      "sequences" : {
+        "endpoint_connection_retry" : {
+          "summary" : "Check repeated endpoint with same information gets retried.",
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:05:24Z",
+            "level" : 400
+          }
+        },
+        "endpoint_connection_bad_hash" : {
+          "summary" : "Failed connection because of bad hash.",
+          "stage" : "alpha",
+          "result" : "start",
+          "status" : {
+            "message" : "Starting test",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:05:54Z",
+            "level" : 200
+          }
+        },
+        "endpoint_connection_success_reconnect" : {
+          "summary" : "Check a successful reconnect to the same endpoint.",
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:05:54Z",
+            "level" : 400
+          }
+        },
+        "endpoint_connection_error" : {
+          "summary" : "Push endpoint config message to device that results in a connection error.",
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:04:22Z",
+            "level" : 400
+          }
+        }
+      }
+    },
+    "system" : {
+      "sequences" : {
+        "valid_serial_no" : {
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:03:58Z",
+            "level" : 400
+          }
+        }
+      }
+    },
+    "writeback" : {
+      "sequences" : {
+        "writeback_failure" : {
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:03:45Z",
+            "level" : 400
+          }
+        },
+        "writeback_success" : {
+          "summary" : "Implements UDMI writeback and can successfully writeback to a point",
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:03:12Z",
+            "level" : 400
+          }
+        },
+        "writeback_invalid" : {
+          "stage" : "alpha",
+          "result" : "pass",
+          "status" : {
+            "message" : "Sequence complete",
+            "category" : "validation.feature.sequence",
+            "timestamp" : "2023-03-13T03:03:29Z",
+            "level" : 400
+          }
+        }
+      }
+    }
+  },
+  "start_time" : "2023-03-13T03:02:41Z",
+  "status" : {
+    "message" : "Starting sequence run for device AHU-1",
+    "category" : "validation.feature.sequence",
+    "timestamp" : "2023-03-13T03:02:41Z",
+    "level" : 300
+  },
+  "timestamp" : "2023-03-13T03:05:54Z",
+  "version" : "1.4.0-205-g15f9a1f2"
+}

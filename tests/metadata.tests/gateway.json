@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
     "location": {
@@ -34,7 +34,7 @@
   "localnet": {
     "families": {
       "bacnet": {
-        "id": "0x991132ec"
+        "addr": "0x991132ec"
       }
     }
   }

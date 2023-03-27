@@ -1,5 +1,7 @@
 package com.google.udmi.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,10 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -50,7 +56,7 @@ public class SiteModel {
       ExecutionConfiguration executionConfig, String deviceId) {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(projectId,
-        executionConfig.cloud_region, executionConfig.registry_id, deviceId);
+        executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
     endpoint.hostname = DEFAULT_ENDPOINT_HOSTNAME;
     return endpoint;
   }
@@ -62,9 +68,9 @@ public class SiteModel {
 
   private static ExecutionConfiguration makeExecutionConfiguration(Envelope attributes) {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
-    executionConfiguration.registry_id = Preconditions.checkNotNull(attributes.deviceRegistryId,
+    executionConfiguration.registry_id = checkNotNull(attributes.deviceRegistryId,
         "deviceRegistryId");
-    executionConfiguration.cloud_region = Preconditions.checkNotNull(
+    executionConfiguration.cloud_region = checkNotNull(
         attributes.deviceRegistryLocation,
         "deviceRegistryLocation");
     return executionConfiguration;
@@ -98,6 +104,17 @@ public class SiteModel {
     return clientInfo;
   }
 
+  public static List<String> listDevices(File devicesDir) {
+    if (!devicesDir.exists()) {
+      System.err.println(
+          "Directory not found, assuming no devices: " + devicesDir.getAbsolutePath());
+      return ImmutableList.of();
+    }
+    String[] devices = requireNonNull(devicesDir.list());
+    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+        .collect(Collectors.toList());
+  }
+
   public EndpointConfiguration makeEndpointConfig(String projectId, String deviceId) {
     return makeEndpointConfig(projectId, executionConfiguration, deviceId);
   }
@@ -105,13 +122,18 @@ public class SiteModel {
   private Set<String> getDeviceIds() {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
     File devicesFile = new File(new File(sitePath), "devices");
-    File[] files = Preconditions.checkNotNull(devicesFile.listFiles(), "no files in site devices/");
-    return Arrays.stream(files).map(File::getName).collect(Collectors.toSet());
+    File[] files = Objects.requireNonNull(devicesFile.listFiles(), "no files in site devices/");
+    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory).collect(Collectors.toSet());
+  }
+
+  private static boolean validDeviceDirectory(String dirName) {
+    return !(dirName.startsWith(".") || dirName.endsWith("~"));
   }
 
   private void loadAllDeviceMetadata() {
-    allMetadata = getDeviceIds().stream().collect(toMap(key -> key, this::loadDeviceMetadata));
-    allDevices = getDeviceIds().stream().collect(toMap(key -> key, this::newDevice));
+    Set<String> deviceIds = getDeviceIds();
+    allMetadata = deviceIds.stream().collect(toMap(key -> key, this::loadDeviceMetadata));
+    allDevices = deviceIds.stream().collect(toMap(key -> key, this::newDevice));
   }
 
   private Device newDevice(String deviceId) {
@@ -119,21 +141,46 @@ public class SiteModel {
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
+    return loadDeviceMetadata(sitePath, deviceId, SiteModel.class);
+  }
+
+  public static Metadata loadDeviceMetadata(String sitePath, String deviceId, Class<?> container) {
     Preconditions.checkState(sitePath != null, "sitePath not defined");
-    File deviceDir = getDeviceDir(deviceId);
+    File deviceDir = getDeviceDir(sitePath, deviceId);
     File deviceMetadataFile = new File(deviceDir, "metadata.json");
     try {
-      return OBJECT_MAPPER.readValue(deviceMetadataFile, Metadata.class);
+      Metadata metadata = JsonUtil.loadFile(Metadata.class, deviceMetadataFile);
+      if (metadata != null) {
+        metadata.exception = captureLoadErrors(deviceMetadataFile, container);
+        // Missing arrays are automatically parsed to an empty list, which is not what
+        // we want, so hacky go through and convert an empty list to null.
+        if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+          metadata.gateway.proxy_ids = null;
+        }
+      }
+      return metadata;
     } catch (Exception e) {
       throw new RuntimeException(
           "While reading metadata file " + deviceMetadataFile.getAbsolutePath(), e);
     }
   }
 
+  private static Exception captureLoadErrors(File deviceMetadataFile, Class<?> container) {
+    try {
+      JsonUtil.loadStrict(Metadata.class, deviceMetadataFile);
+      return null;
+    } catch (Exception e) {
+      return e;
+    }
+  }
+
   private File getDeviceDir(String deviceId) {
+    return getDeviceDir(sitePath, deviceId);
+  }
+
+  private static File getDeviceDir(String sitePath, String deviceId) {
     File devicesFile = new File(new File(sitePath), "devices");
-    File deviceDir = new File(devicesFile, deviceId);
-    return deviceDir;
+    return new File(devicesFile, deviceId);
   }
 
   public Metadata getMetadata(String deviceId) {
@@ -193,13 +240,24 @@ public class SiteModel {
     return auth_type.value().startsWith("RS") ? "rsa" : "ec";
   }
 
+  public static String getRegistryActual(ExecutionConfiguration iotConfig) {
+    return getRegistryActual(iotConfig.registry_id, iotConfig.registry_suffix);
+  }
+
+  public static String getRegistryActual(String registry_id, String registry_suffix) {
+    if (registry_id == null) {
+      return null;
+    }
+    return registry_id + Optional.ofNullable(registry_suffix).orElse("");
+  }
+
   /**
    * Get the site registry name.
    *
    * @return site registry
    */
   public String getRegistryId() {
-    return executionConfiguration.registry_id;
+    return getRegistryActual(executionConfiguration);
   }
 
   /**

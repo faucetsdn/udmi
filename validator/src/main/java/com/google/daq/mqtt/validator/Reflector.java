@@ -1,12 +1,15 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.daq.mqtt.util.Common.GCP_REFLECT_KEY_PKCS8;
-import static com.google.daq.mqtt.util.Common.NO_SITE;
-import static com.google.daq.mqtt.util.Common.removeNextArg;
+import static com.google.daq.mqtt.validator.Validator.REQUIRED_FUNCTION_VER;
+import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
+import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.removeNextArg;
 
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.daq.mqtt.validator.Validator.MessageBundle;
+import com.google.udmi.util.Common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ public class Reflector {
   private File baseDir;
   private IotReflectorClient client;
   private String deviceId;
+  private String registrySuffix;
 
   /**
    * Create an instance of the Reflector class.
@@ -49,11 +53,6 @@ public class Reflector {
   }
 
   private void shutdown() {
-    try {
-      Thread.sleep(5000);
-    } catch (Exception e) {
-      throw new RuntimeException("While sleeping", e);
-    }
     client.close();
   }
 
@@ -85,7 +84,13 @@ public class Reflector {
   }
 
   private void reflect(String topic, String data) {
-    client.publish(deviceId, topic, data);
+    String sendId = client.publish(deviceId, topic, data);
+    String recvId;
+    System.err.println("Waiting for return transaction " + sendId);
+    do {
+      MessageBundle messageBundle = client.takeNextMessage();
+      recvId = messageBundle.attributes.get("transactionId");
+    } while (!sendId.equals(recvId));
   }
 
   private void initialize() {
@@ -93,11 +98,16 @@ public class Reflector {
     System.err.println("Loading reflector key file from " + keyFile);
     executionConfiguration.key_file = keyFile;
     executionConfiguration.project_id = projectId;
-    client = new IotReflectorClient(executionConfiguration);
+    executionConfiguration.registry_suffix = registrySuffix;
+    executionConfiguration.udmi_version = Common.getUdmiVersion();
+    client = new IotReflectorClient(executionConfiguration, REQUIRED_FUNCTION_VER);
   }
 
   private List<String> parseArgs(List<String> argsList) {
     List<String> listCopy = new ArrayList<>(argsList);
+    if (!listCopy.isEmpty() && !listCopy.get(0).startsWith("-")) {
+      processProfile(new File(listCopy.remove(0)));
+    }
     while (!listCopy.isEmpty()) {
       String option = removeNextArg(listCopy);
       try {
@@ -112,14 +122,23 @@ public class Reflector {
             deviceId = removeNextArg(listCopy);
             break;
           default:
-            listCopy.add(option);
-            return listCopy; // default case is the remaining list of reflection directives
+            // Restore removed arg, and return remainder of the list and quit parsing.
+            listCopy.add(0, option);
+            return listCopy;
         }
       } catch (Exception e) {
         throw new RuntimeException("While processing option " + option, e);
       }
     }
     throw new IllegalArgumentException("No reflect directives specified!");
+  }
+
+  private void processProfile(File profilePath) {
+    ExecutionConfiguration config = ConfigUtil.readExecutionConfiguration(profilePath);
+    projectId = config.project_id;
+    deviceId = config.device_id;
+    registrySuffix = config.registry_suffix;
+    setSiteDir(config.site_model);
   }
 
   /**

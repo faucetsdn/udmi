@@ -100,6 +100,11 @@ public class Category {
     public static final Level POINTSET_POINT_INVALID_LEVEL = ERROR;
     static { LEVEL.put(POINTSET_POINT_INVALID, ERROR); }
 
+    // Aspects of a specific network
+    public static final String LOCALNET_NETWORK = "localnet.network";
+    public static final Level LOCALNET_NETWORK_LEVEL = INFO;
+    static { LEVEL.put(LOCALNET_NETWORK, INFO); }
+
     // Relating to scanning a particular address family
     public static final String DISCOVERY_FAMILY_SCAN = "discovery.family.scan";
     public static final Level DISCOVERY_FAMILY_SCAN_LEVEL = INFO;
@@ -155,8 +160,18 @@ public class Category {
     public static final Level VALIDATION_DEVICE_MULTIPLE_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_DEVICE_MULTIPLE, INFO); }
 
+    // Device was unexpected (not in site model).
+    public static final String VALIDATION_DEVICE_EXTRA = "validation.device.extra";
+    public static final Level VALIDATION_DEVICE_EXTRA_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_DEVICE_EXTRA, INFO); }
+
     // The validation summary report.
     public static final String VALIDATION_SUMMARY_REPORT = "validation.summary.report";
     public static final Level VALIDATION_SUMMARY_REPORT_LEVEL = INFO;
     static { LEVEL.put(VALIDATION_SUMMARY_REPORT, INFO); }
+
+    // An individual line-item sequence test.
+    public static final String VALIDATION_FEATURE_SEQUENCE = "validation.feature.sequence";
+    public static final Level VALIDATION_FEATURE_SEQUENCE_LEVEL = INFO;
+    static { LEVEL.put(VALIDATION_FEATURE_SEQUENCE, INFO); }
 }
