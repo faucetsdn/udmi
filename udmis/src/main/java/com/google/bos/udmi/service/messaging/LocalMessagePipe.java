@@ -26,6 +26,7 @@ public class LocalMessagePipe extends MessageBase {
 
   private final Map<String, BlockingQueue<String>> scopedPipes = new ConcurrentHashMap<>();
 
+  private final String namespace;
   private final String sourceScope;
   private final String destinationScope;
   private final BlockingQueue<String> sourceQueue;
@@ -36,7 +37,7 @@ public class LocalMessagePipe extends MessageBase {
    * Create a new local message pipe given a configuration bundle.
    */
   public LocalMessagePipe(MessageConfiguration config) {
-    String namespace = normalizeNamespace(config.namespace);
+    namespace = normalizeNamespace(config.namespace);
     checkState(!GLOBAL_PIPES.containsKey(namespace),
         "can not create duplicate pipe in namespace " + namespace);
     GLOBAL_PIPES.put(namespace, this);
@@ -45,6 +46,19 @@ public class LocalMessagePipe extends MessageBase {
     destinationScope = checkNotNull(config.destination, "pipe destination is undefined");
     destinationQueue = getQueueForScope(namespace, destinationScope);
     info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
+  }
+
+  /**
+   * Create a new local message pipe that's possible the reverse of the original. This intentionally
+   * avoids some of the duplicate checks that would prevent a normal pipe from being created twice.
+   */
+  public LocalMessagePipe(LocalMessagePipe original, boolean reverse) {
+    namespace = original.namespace;
+    sourceScope = reverse ? original.destinationScope : original.sourceScope;
+    sourceQueue = getQueueForScope(namespace, sourceScope);
+    destinationScope = reverse ? original.sourceScope : original.destinationScope;
+    destinationQueue = getQueueForScope(namespace, destinationScope);
+    info(String.format("Created mirror pipe from %s to %s", sourceScope, destinationScope));
   }
 
   /**

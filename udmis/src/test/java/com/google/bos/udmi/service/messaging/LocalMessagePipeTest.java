@@ -6,11 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static udmi.schema.Envelope.SubFolder.LOCALNET;
-import static udmi.schema.Envelope.SubFolder.UPDATE;
-import static udmi.schema.Envelope.SubType.STATE;
 
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
@@ -20,9 +16,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import udmi.schema.Envelope;
-import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
 import udmi.schema.LocalnetState;
 import udmi.schema.MessageConfiguration;
 
@@ -66,7 +59,7 @@ class LocalMessagePipeTest {
   void receiveException() throws InterruptedException {
     LocalMessagePipe pipe = getTestMessagePipe();
     String messageString = "hello";
-    Object received = receiveMessage(messageString);
+    Object received = loopBundle(messageString);
     assertTrue(received instanceof Exception, "Expected received exception");
     pipe.drainSource();
   }
@@ -74,8 +67,9 @@ class LocalMessagePipeTest {
   @Test
   void receiveMessage() throws InterruptedException {
     LocalMessagePipe pipe = getTestMessagePipe();
-    Object testMessage = new StateUpdate();
-    Object received = receiveMessage(makeMessageBundle(testMessage, STATE, UPDATE));
+    LocalMessagePipe reversed = new LocalMessagePipe(pipe, true);
+    reversed.publish(new StateUpdate());
+    Object received = synchronizedReceive();
     assertTrue(received instanceof StateUpdate, "Expected state update message");
     pipe.drainSource();
   }
@@ -84,31 +78,32 @@ class LocalMessagePipeTest {
   @SuppressWarnings("unchecked")
   void receiveDefaultMessage() throws InterruptedException {
     LocalMessagePipe pipe = getTestMessagePipe();
-    Object testMessage = new LocalnetState();
-    Object received = receiveMessage(makeMessageBundle(testMessage, STATE, LOCALNET));
+    LocalMessagePipe reversed = new LocalMessagePipe(pipe, true);
+    reversed.publish(new LocalnetState());
+    Object received = synchronizedReceive();
+    // The default handler warps the received message in an AtomicReference just as a signal.
     assertTrue(received instanceof AtomicReference, "Expected default handler");
     Object receivedObject = ((AtomicReference<Object>) received).get();
     assertTrue(receivedObject instanceof LocalnetState, "Expected localnet message");
     pipe.drainSource();
   }
 
-  private String makeMessageBundle(Object testMessage, SubType type, SubFolder folder) {
-    Bundle bundle = new Bundle();
-    bundle.envelope = new Envelope();
-    bundle.envelope.subType = type;
-    bundle.envelope.subFolder = folder;
-    bundle.message = testMessage;
-    return JsonUtil.stringify(bundle);
-  }
-
-  private Object receiveMessage(String messageString) throws InterruptedException {
+  private Object synchronizedReceive() throws InterruptedException {
     synchronized (LocalMessagePipeTest.class) {
-      BlockingQueue<String> inQueue = getQueueForScope(SIMPLE_NAMESPACE, MESSAGE_SOURCE);
-      assertNull(receivedMessage.get(), "expected null pre-receive message");
-      inQueue.put(messageString);
+      Object existing = receivedMessage.getAndSet(null);
+      if (existing != null) {
+        return existing;
+      }
       LocalMessagePipeTest.class.wait();
       return receivedMessage.getAndSet(null);
     }
+  }
+
+  private Object loopBundle(String bundleString) throws InterruptedException {
+    BlockingQueue<String> inQueue = getQueueForScope(SIMPLE_NAMESPACE, MESSAGE_SOURCE);
+    assertNull(receivedMessage.get(), "expected null pre-receive message");
+    inQueue.put(bundleString);
+    return synchronizedReceive();
   }
 
   private Map<String, Object> testSend(LocalMessagePipe pipe, Object message)
@@ -127,11 +122,8 @@ class LocalMessagePipeTest {
   }
 
   private <T> void defaultHandler(T message) {
-    synchronized (LocalMessagePipeTest.class) {
-      Object previous = receivedMessage.getAndSet(new AtomicReference<>(message));
-      assertNull(previous, "Unexpected previously received message");
-      LocalMessagePipeTest.class.notify();
-    }
+    // Wrap the message in an AtomicReference as a signal that this was the default handler.
+    messageHandler(new AtomicReference<>(message));
   }
 
   @NotNull
