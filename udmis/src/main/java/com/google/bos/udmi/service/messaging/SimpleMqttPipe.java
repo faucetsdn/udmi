@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging;
 
 import com.google.udmi.util.Common;
+import com.google.udmi.util.JsonUtil;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -15,11 +16,15 @@ public class SimpleMqttPipe extends MessageBase {
   private static final int PUBLISH_THREAD_COUNT = 2;
   private static final String TEST_USERNAME = "scrumptus";
   private static final String TEST_PASSWORD = "aardvark";
+  public static final String TOPIC_FORMAT = "%s/%s/%s";
+  private static final Object TOPIC_WILDCARD = "+";
   private final MqttClient mqttClient;
   private final String clientId;
+  private final String namespace;
 
   public SimpleMqttPipe(MessageConfiguration config) {
-    this.clientId = makeClientId();
+    clientId = makeClientId();
+    namespace = config.namespace;
     mqttClient = connectMqttClient(config.broker);
   }
 
@@ -56,12 +61,30 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   protected void publishBundle(Bundle bundle) {
+    try {
+      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to mqtt client", e);
+    }
+  }
 
+  private MqttMessage getMqttMessage(Bundle bundle) {
+    MqttMessage message = new MqttMessage();
+    message.setPayload(JsonUtil.stringify(bundle.message).getBytes());
+    return message;
+  }
+
+  private String getMqttTopic(Bundle bundle) {
+    return String.format(TOPIC_FORMAT, namespace, bundle.envelope.subType, bundle.envelope.subFolder);
   }
 
   @Override
   public void activate() {
-
+    try {
+      mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
+    } catch (Exception e) {
+      throw new RuntimeException("While subscribing to mqtt topics", e);
+    }
   }
 
   private class MqttCallbackHandler implements MqttCallback {
@@ -73,8 +96,8 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-      info("Message arrived");
 
+      info("Message arrived");
     }
 
     @Override

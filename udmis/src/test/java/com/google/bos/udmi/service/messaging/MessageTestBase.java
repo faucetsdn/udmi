@@ -13,6 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import udmi.schema.LocalnetState;
 
@@ -58,8 +59,10 @@ public abstract class MessageTestBase {
 
   protected MessagePipe getTestMessagePipe(boolean reversed) {
     MessagePipe messagePipe = getTestMessagePipeCore(reversed);
-    messagePipe.registerHandlers(messageHandlers);
-    messagePipe.activate();
+    if (messagePipe != null) {
+      messagePipe.registerHandlers(messageHandlers);
+      messagePipe.activate();
+    }
     return messagePipe;
   }
 
@@ -68,10 +71,16 @@ public abstract class MessageTestBase {
     resetForTest();
   }
 
-  protected abstract void resetForTest();
+  protected boolean environmentIsEnabled() {
+    return true;
+  }
+
+  protected void resetForTest() {
+  }
 
   @Test
   void receiveException() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
     getTestMessagePipe(false);
     String messageString = "hello";
     Object received = loopBundle(messageString);
@@ -80,6 +89,7 @@ public abstract class MessageTestBase {
 
   @Test
   void receiveMessage() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
     MessagePipe reversed = getReverseMessagePipe();
     reversed.publish(new StateUpdate());
     Object received = synchronizedReceive();
@@ -89,6 +99,7 @@ public abstract class MessageTestBase {
   @Test
   @SuppressWarnings("unchecked")
   void receiveDefaultMessage() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
     MessagePipe reversed = getReverseMessagePipe();
     reversed.publish(new LocalnetState());
     Object received = synchronizedReceive();
