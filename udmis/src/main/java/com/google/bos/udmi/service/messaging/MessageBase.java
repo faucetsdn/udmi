@@ -1,9 +1,11 @@
 package com.google.bos.udmi.service.messaging;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 
 import com.google.bos.udmi.service.pod.ComponentBase;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -64,8 +66,10 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     Bundle bundle = new Bundle();
     bundle.message = message;
     bundle.envelope = new Envelope();
-    bundle.envelope.subType = CLASS_TYPES.get(message.getClass()).getKey();
-    bundle.envelope.subFolder = CLASS_TYPES.get(message.getClass()).getValue();
+    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+    checkNotNull(messageType, "type entry not found for " + message.getClass());
+    bundle.envelope.subType = messageType.getKey();
+    bundle.envelope.subFolder = messageType.getValue();
     return bundle;
   }
 
@@ -131,7 +135,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   }
 
   void processMessage(Bundle bundle) {
-    Envelope envelope = bundle.envelope;
+    Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
     try {
       handlers.computeIfAbsent(mapKey, key -> {
@@ -156,11 +160,16 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
+  @Override
+  public void publish(Object message) {
+    publishBundle(makeMessageBundle(message));
+  }
+
+  protected abstract void publishBundle(Bundle messageBundle);
+
   public MessageContinuation getContinuation(Object message) {
     return new MessageContinuation(this, messageEnvelopes.get(message), message);
   }
-
-  public abstract void publishBundle(Bundle bundle);
 
   private static void initializeHandlerTypes() {
     Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())

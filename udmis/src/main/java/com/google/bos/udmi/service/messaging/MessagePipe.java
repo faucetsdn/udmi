@@ -20,7 +20,8 @@ import udmi.schema.MessageConfiguration.Transport;
 public interface MessagePipe {
 
   Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
-      Transport.LOCAL, LocalMessagePipe::from);
+      Transport.LOCAL, LocalMessagePipe::from,
+      Transport.MQTT, SimpleMqttPipe::from);
 
   <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
 

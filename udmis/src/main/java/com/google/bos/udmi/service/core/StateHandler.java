@@ -31,7 +31,7 @@ public class StateHandler extends ComponentBase {
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
 
-  private final List<HandlerSpecification> messageHandler = ImmutableList.of(
+  private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler)
@@ -77,7 +77,7 @@ public class StateHandler extends ComponentBase {
   }
 
   public void activate() {
-    pipe.registerHandlers(messageHandler);
+    pipe.registerHandlers(messageHandlers);
     pipe.activate();
   }
 }

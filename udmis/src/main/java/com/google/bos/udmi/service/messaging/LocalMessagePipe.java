@@ -69,6 +69,10 @@ public class LocalMessagePipe extends MessageBase {
     return new LocalMessagePipe(config);
   }
 
+  public static void resetForTest() {
+    GLOBAL_PIPES.clear();
+  }
+
   @Override
   public void activate() {
     checkState(sourceFuture == null, "pipe already activated");
@@ -79,15 +83,10 @@ public class LocalMessagePipe extends MessageBase {
     drainQueue(sourceQueue, sourceFuture);
   }
 
-  @Override
-  public void publish(Object message) {
-    publishBundle(makeMessageBundle(message));
-  }
-
   /**
    * Publish a message bundle to this pipe. Pushes it into the outgoing queue!
    */
-  public void publishBundle(Bundle messageBundle) {
+  protected void publishBundle(Bundle messageBundle) {
     try {
       destinationQueue.put(stringify(messageBundle));
     } catch (Exception e) {

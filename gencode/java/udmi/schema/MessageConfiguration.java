@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "transport",
     "namespace",
+    "broker",
     "source",
     "destination"
 })
@@ -31,6 +32,8 @@ public class MessageConfiguration {
     public MessageConfiguration.Transport transport;
     @JsonProperty("namespace")
     public String namespace;
+    @JsonProperty("broker")
+    public String broker;
     @JsonProperty("source")
     public String source;
     @JsonProperty("destination")
@@ -43,6 +46,7 @@ public class MessageConfiguration {
         result = ((result* 31)+((this.destination == null)? 0 :this.destination.hashCode()));
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
+        result = ((result* 31)+((this.broker == null)? 0 :this.broker.hashCode()));
         return result;
     }
 
@@ -55,14 +59,14 @@ public class MessageConfiguration {
             return false;
         }
         MessageConfiguration rhs = ((MessageConfiguration) other);
-        return (((((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace)))&&((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))));
+        return ((((((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace)))&&((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.broker == rhs.broker)||((this.broker!= null)&&this.broker.equals(rhs.broker))));
     }
 
     @Generated("jsonschema2pojo")
     public enum Transport {
 
         LOCAL("local"),
-        PUBSUB("pubsub");
+        MQTT("mqtt");
         private final String value;
         private final static Map<String, MessageConfiguration.Transport> CONSTANTS = new HashMap<String, MessageConfiguration.Transport>();
 

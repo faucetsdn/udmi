@@ -10,10 +10,13 @@
     "transport": {
       "enum": [
         "local",
-        "pubsub"
+        "mqtt"
       ]
     },
     "namespace": {
+      "type": "string"
+    },
+    "broker": {
       "type": "string"
     },
     "source": {
