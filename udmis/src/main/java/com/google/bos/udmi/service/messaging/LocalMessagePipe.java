@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
-import com.google.common.base.Preconditions;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -102,7 +101,7 @@ public class LocalMessagePipe extends MessageBase {
    */
   protected void publishBundle(Bundle messageBundle) {
     try {
-      destinationQueue.put(stringify(messageBundle));
+      destinationQueue.add(stringify(messageBundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }

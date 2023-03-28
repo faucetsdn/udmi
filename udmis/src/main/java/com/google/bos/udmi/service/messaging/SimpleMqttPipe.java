@@ -13,6 +13,8 @@ public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
+  private static final String TEST_USERNAME = "scrumptus";
+  private static final String TEST_PASSWORD = "aardvark";
   private final MqttClient mqttClient;
   private final String clientId;
 
@@ -30,8 +32,9 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private MqttClient connectMqttClient(String brokerUrl) {
+    String message = String.format("Connecting new mqtt client %s on %s", clientId, brokerUrl);
     try {
-      info(String.format("Connecting new mqtt client %s on %s", clientId, brokerUrl));
+      info(message);
       MqttClient client = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
 
       client.setCallback(new MqttCallbackHandler());
@@ -42,13 +45,13 @@ public class SimpleMqttPipe extends MessageBase {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      // options.setUserName();
-      // options.setPassword(basic.password.toCharArray());
+      options.setUserName(TEST_USERNAME);
+      options.setPassword(TEST_PASSWORD.toCharArray());
 
       client.connect(options);
       return client;
     } catch (Exception e) {
-      throw new RuntimeException("While connecting mqtt client", e);
+      throw new RuntimeException(message, e);
     }
   }
 

@@ -10,7 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static udmi.schema.Envelope.SubFolder.SYSTEM;
 import static udmi.schema.Envelope.SubType.STATE;
 
+import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessagePipe;
+import com.google.bos.udmi.service.messaging.MessageTestBase;
 import java.util.concurrent.BlockingQueue;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -24,19 +27,15 @@ import udmi.schema.SystemState;
 /**
  * Tests for the StateHandler class, used by UDMIS to process device state updates.
  */
-public class StateHandlerTest extends TestBase {
+public class StateHandlerTest extends MessageTestBase {
 
   public static final String INVALID_MESSAGE = "invalid message";
-
-  private static final String STATE_BUS_ID = "udmi_state";
-  private static final String TARGET_BUS_ID = "udmi_target";
-  private static final String TESTING_VERSION = "98.2";
 
   @Test
   public void singleExpansion() throws InterruptedException {
     initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(getNamespace(), STATE_BUS_ID);
-    BlockingQueue<String> targetBus = getQueueForScope(getNamespace(), TARGET_BUS_ID);
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
+    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
 
     Bundle testStateBundle = getTestStateBundle(false);
     Bundle originalBundle = deepCopy(testStateBundle);
@@ -59,8 +58,8 @@ public class StateHandlerTest extends TestBase {
   @Test
   public void multiExpansion() throws InterruptedException {
     initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(getNamespace(), STATE_BUS_ID);
-    BlockingQueue<String> targetBus = getQueueForScope(getNamespace(), TARGET_BUS_ID);
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
+    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
 
     Bundle testStateBundle = getTestStateBundle(true);
 
@@ -80,7 +79,7 @@ public class StateHandlerTest extends TestBase {
   @Test
   public void stateException() throws InterruptedException {
     initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(getNamespace(), STATE_BUS_ID);
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
 
     stateBus.put(INVALID_MESSAGE);
 
@@ -90,11 +89,21 @@ public class StateHandlerTest extends TestBase {
     assertEquals(0, getDefaultCount(), "default handler count");
   }
 
+  @Override
+  protected MessagePipe getTestMessagePipeCore(boolean reversed) {
+    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
+  }
+
   private Bundle getTestStateBundle(boolean includeGateway) {
     Bundle bundle = new Bundle();
     bundle.envelope = getTestStateEnvelope();
     bundle.message = getTestStateMessage(includeGateway);
     return bundle;
+  }
+
+  @Override
+  protected void resetForTest() {
+    LocalMessagePipeTest.resetForTestStatic();
   }
 
   @NotNull
@@ -105,7 +114,7 @@ public class StateHandlerTest extends TestBase {
   @NotNull
   private State getTestStateMessage(boolean includeGateway) {
     State stateMessage = new State();
-    stateMessage.version = TESTING_VERSION;
+    stateMessage.version = TEST_VERSION;
     stateMessage.system = new SystemState();
     stateMessage.gateway = includeGateway ? new GatewayState() : null;
     return stateMessage;
@@ -115,12 +124,11 @@ public class StateHandlerTest extends TestBase {
     instanceCount.incrementAndGet();
     MessageConfiguration config = new MessageConfiguration();
     config.transport = Transport.LOCAL;
-    config.namespace = getNamespace();
-    config.source = STATE_BUS_ID;
-    config.destination = TARGET_BUS_ID;
+    config.namespace = TEST_NAMESPACE;
+    config.source = TEST_SOURCE;
+    config.destination = TEST_DESTINATION;
     StateHandler stateHandler = StateHandler.forConfig(config);
     stateHandler.activate();
-    stateHandler.info("Using test message namespace " + getNamespace());
     return stateHandler;
   }
 
