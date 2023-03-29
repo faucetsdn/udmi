@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.MessageConfiguration;
@@ -23,14 +22,12 @@ public class LocalMessagePipe extends MessageBase {
   private static final Map<String, LocalMessagePipe> GLOBAL_PIPES = new ConcurrentHashMap<>();
   public static final String DEFAULT_NAMESPACE = "default-namespace";
 
-  private final Map<String, BlockingQueue<String>> scopedPipes = new ConcurrentHashMap<>();
+  private final Map<String, BlockingQueue<String>> scopedQueues = new ConcurrentHashMap<>();
 
   private final String namespace;
   private final String sourceScope;
   private final String destinationScope;
-  private final BlockingQueue<String> sourceQueue;
   private final BlockingQueue<String> destinationQueue;
-  private Future<Void> sourceFuture;
 
   /**
    * Create a new local message pipe given a configuration bundle.
@@ -74,7 +71,7 @@ public class LocalMessagePipe extends MessageBase {
   }
 
   public static BlockingQueue<String> getQueueForScope(String namespace, String scope) {
-    return getPipeForNamespace(namespace).scopedPipes
+    return getPipeForNamespace(namespace).scopedQueues
         .computeIfAbsent(scope, key -> new LinkedBlockingDeque<>());
   }
 
@@ -84,16 +81,6 @@ public class LocalMessagePipe extends MessageBase {
 
   public static void resetForTest() {
     GLOBAL_PIPES.clear();
-  }
-
-  @Override
-  public void activate() {
-    checkState(sourceFuture == null, "pipe already activated");
-    sourceFuture = handleQueue(sourceQueue);
-  }
-
-  public void drainSource() {
-    drainQueue(sourceQueue, sourceFuture);
   }
 
   /**

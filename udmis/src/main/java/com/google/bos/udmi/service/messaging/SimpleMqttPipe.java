@@ -70,7 +70,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private MqttMessage getMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
-    message.setPayload(JsonUtil.stringify(bundle.message).getBytes());
+    message.setPayload(JsonUtil.stringify(bundle).getBytes());
     return message;
   }
 
@@ -80,6 +80,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   @Override
   public void activate() {
+    super.activate();
     try {
       mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
     } catch (Exception e) {
@@ -96,8 +97,7 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-
-      info("Message arrived");
+      sourceQueue.add(message.toString());
     }
 
     @Override

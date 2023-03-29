@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static udmi.schema.Envelope.SubFolder.SYSTEM;
 import static udmi.schema.Envelope.SubType.STATE;
 
+import com.google.bos.udmi.service.messaging.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessagePipe;
@@ -30,6 +31,7 @@ import udmi.schema.SystemState;
 public class StateHandlerTest extends MessageTestBase {
 
   public static final String INVALID_MESSAGE = "invalid message";
+  private StateHandler stateHandler;
 
   @Test
   public void singleExpansion() throws InterruptedException {
@@ -120,16 +122,25 @@ public class StateHandlerTest extends MessageTestBase {
     return stateMessage;
   }
 
-  private StateHandler initializeTestHandler() {
+  private void initializeTestHandler() {
     instanceCount.incrementAndGet();
     MessageConfiguration config = new MessageConfiguration();
     config.transport = Transport.LOCAL;
     config.namespace = TEST_NAMESPACE;
     config.source = TEST_SOURCE;
     config.destination = TEST_DESTINATION;
-    StateHandler stateHandler = StateHandler.forConfig(config);
+    stateHandler = StateHandler.forConfig(config);
+    inPipe = LocalMessagePipe.getPipeForNamespace(TEST_NAMESPACE);
     stateHandler.activate();
-    return stateHandler;
+  }
+
+
+  protected int getExceptionCount() {
+    return stateHandler.exceptionCount;
+  }
+
+  protected int getDefaultCount() {
+    return stateHandler.defaultCount;
   }
 
 }

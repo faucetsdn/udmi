@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.messaging;
 
-import static com.google.bos.udmi.service.messaging.LocalMessagePipe.getQueueForScope;
 import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
@@ -33,22 +30,7 @@ public abstract class MessageTestBase {
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler));
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
-
-  protected int getExceptionCount() {
-    LocalMessagePipe messagePipe = LocalMessagePipe.getPipeForNamespace(TEST_NAMESPACE);
-    Map<String, AtomicInteger> handlerCounts = messagePipe.handlerCounts;
-    return handlerCounts.getOrDefault(MessageBase.EXCEPTION_HANDLER, new AtomicInteger()).get();
-  }
-
-  protected int getDefaultCount() {
-    LocalMessagePipe messagePipe = LocalMessagePipe.getPipeForNamespace(TEST_NAMESPACE);
-    Map<String, AtomicInteger> handlerCounts = messagePipe.handlerCounts;
-    return handlerCounts.getOrDefault(MessageBase.DEFAULT_HANDLER, new AtomicInteger()).get();
-  }
-
-  protected void drainPipe() {
-    LocalMessagePipe.getPipeForNamespace(TEST_NAMESPACE).drainSource();
-  }
+  protected MessageBase inPipe;
 
   protected abstract MessagePipe getTestMessagePipeCore(boolean reversed);
 
@@ -62,6 +44,7 @@ public abstract class MessageTestBase {
     if (messagePipe != null) {
       messagePipe.registerHandlers(messageHandlers);
       messagePipe.activate();
+      inPipe = (MessageBase) messagePipe;
     }
     return messagePipe;
   }
@@ -134,9 +117,12 @@ public abstract class MessageTestBase {
   }
 
   private Object loopBundle(String bundleString) throws InterruptedException {
-    BlockingQueue<String> inQueue = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
     assertNull(receivedMessage.get(), "expected null pre-receive message");
-    inQueue.put(bundleString);
+    inPipe.sourceQueue.put(bundleString);
     return synchronizedReceive();
+  }
+
+  protected void drainPipe() {
+    inPipe.drainSource();
   }
 }

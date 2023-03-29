@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
@@ -38,6 +40,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       ImmutableMap.of(getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
   private static final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
+  protected BlockingQueue<String> sourceQueue;
+  private Future<Void> sourceFuture;
 
   {
     initializeHandlerTypes();
@@ -50,8 +54,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
-
-  public final Map<String, AtomicInteger> handlerCounts = new ConcurrentHashMap<>();
 
   public MessageBase() {
     initializeHandlerTypes();
@@ -150,7 +152,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   }
 
   private void processMessage(Envelope envelope, String mapKey, Object messageObject) {
-    handlerCounts.computeIfAbsent(mapKey, key -> new AtomicInteger()).incrementAndGet();
     try {
       messageEnvelopes.put(messageObject, envelope);
       handlers.get(mapKey).accept(messageObject);
@@ -162,6 +163,19 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   @Override
   public void publish(Object message) {
     publishBundle(makeMessageBundle(message));
+  }
+
+  @Override
+  public void activate() {
+    checkState(sourceFuture == null, "pipe already activated");
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
+    }
+    sourceFuture = handleQueue(sourceQueue);
+  }
+
+  public void drainSource() {
+    drainQueue(sourceQueue, sourceFuture);
   }
 
   protected abstract void publishBundle(Bundle messageBundle);

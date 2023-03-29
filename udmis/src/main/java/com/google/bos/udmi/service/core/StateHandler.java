@@ -38,17 +38,21 @@ public class StateHandler extends ComponentBase {
   );
 
   final MessagePipe pipe;
+  int exceptionCount;
+  int defaultCount;
 
   public StateHandler(MessagePipe pipe) {
     this.pipe = pipe;
   }
 
   private void exceptionHandler(Exception e) {
+    exceptionCount++;
     info("Received processing exception: " + Common.getExceptionMessage(e));
     e.printStackTrace();
   }
 
   private void defaultHandler(Object defaultedMessage) {
+    defaultCount++;
     MessageContinuation continuation = pipe.getContinuation(defaultedMessage);
     Envelope envelope = continuation.envelope;
     Preconditions.checkState(envelope.subType == null, "subType is not null");
