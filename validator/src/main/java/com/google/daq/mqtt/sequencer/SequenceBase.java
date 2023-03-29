@@ -1370,6 +1370,12 @@ public class SequenceBase {
     check.accept("interesting system status", this::hasInterestingSystemStatus);
   }
 
+  protected void untilHasInterestingSystemStatus(boolean isInteresting) {
+    BiConsumer<String, Supplier<Boolean>> until =
+        isInteresting ? this::untilTrue : this::untilFalse;
+    until.accept("interesting system status", this::hasInterestingSystemStatus);
+  }
+
   /**
    * Add a summary of a test, with a simple description of what it's testing.
    */

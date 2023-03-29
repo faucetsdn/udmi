@@ -171,6 +171,7 @@ public class Pubber {
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
+  private static final int CONFIG_STATE_UPDATE_DELAY_MS = 10000;
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -200,6 +201,7 @@ public class Pubber {
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
+  private long stateBlockTime;
 
   /**
    * Start an instance from a configuration file.
@@ -936,7 +938,7 @@ public class Pubber {
     publishLogMessage(report);
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishAsynchronousState();
+    publishAsynchronousState(CONFIG_STATE_UPDATE_DELAY_MS);
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
@@ -986,7 +988,8 @@ public class Pubber {
     } catch (Exception e) {
       publisherConfigLog("apply", e);
     }
-    publishAsynchronousState();
+    // Quick check to make sure that delaying the state message doesn't break tests.
+    publishAsynchronousState(CONFIG_STATE_UPDATE_DELAY_MS);
   }
 
   private void processConfigUpdate(Config config) {
@@ -1491,10 +1494,17 @@ public class Pubber {
     }
   }
 
+  private void publishAsynchronousState(int minSendDelayMs) {
+    stateBlockTime = System.currentTimeMillis() + minSendDelayMs;
+    publishAsynchronousState();
+  }
+
   private void publishAsynchronousState() {
     if (stateLock.tryAcquire()) {
       try {
-        long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+        long throttledTime = lastStateTimeMs + STATE_THROTTLE_MS;
+        long targetTime = Math.max(throttledTime, stateBlockTime);
+        long delay = targetTime - System.currentTimeMillis();
         debug(String.format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
