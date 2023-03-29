@@ -938,11 +938,23 @@ public class Pubber {
     publishLogMessage(report);
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishAsynchronousState(CONFIG_STATE_UPDATE_DELAY_MS);
+    publishConfigStateUpdate();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
+  }
+
+  /**
+   * Provision to delay the state update from a config message to (optionally) check for the
+   * case where a device delays a state message (which is legal). Not a good idea to always
+   * do this since it would significantly delay the normal test sequence.
+   */
+  private void publishConfigStateUpdate() {
+    int updateDelay =
+        TRUE.equals(configuration.options.configStateDelay) ? CONFIG_STATE_UPDATE_DELAY_MS : 0;
+    stateBlockTime = System.currentTimeMillis() + updateDelay;
+    publishAsynchronousState();
   }
 
   private boolean shouldLogLevel(int level) {
@@ -988,8 +1000,7 @@ public class Pubber {
     } catch (Exception e) {
       publisherConfigLog("apply", e);
     }
-    // Quick check to make sure that delaying the state message doesn't break tests.
-    publishAsynchronousState(CONFIG_STATE_UPDATE_DELAY_MS);
+    publishConfigStateUpdate();
   }
 
   private void processConfigUpdate(Config config) {
@@ -1492,11 +1503,6 @@ public class Pubber {
     if (shouldLogLevel(report.level)) {
       logentries.add(report);
     }
-  }
-
-  private void publishAsynchronousState(int minSendDelayMs) {
-    stateBlockTime = System.currentTimeMillis() + minSendDelayMs;
-    publishAsynchronousState();
   }
 
   private void publishAsynchronousState() {
