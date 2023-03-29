@@ -3,4 +3,10 @@
 ROOT=$(dirname $0)/..
 cd $ROOT
 
+echo Checking for properly configured mosquitto...
+fgrep -q scrumptus /etc/mosquitto/test_mosquitto.passwd || (echo mosquitto not configured; false)
+
+# This is the local address of the previously configured server
+export MQTT_TEST_BROKER=tcp://localhost:1883
+
 udmis/bin/build check

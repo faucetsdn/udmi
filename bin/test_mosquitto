@@ -9,7 +9,7 @@ if [[ $# != 0 ]]; then
 fi
 
 site_path=sites/udmi_site_model
-device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
+device_id=AHU-1 # Static device for testing
 serial_no=$RANDOM
 
 site_config=$site_path/cloud_iot_config.json
@@ -34,7 +34,7 @@ systemctl status mosquitto
 killall mosquitto_sub || true
 
 echo Subscribing to mqtt/test in the background...
-mosquitto_sub -F "%t %p" -t \# -u ${USERNAME} -P ${PASSWORD} | tee out/mosquitto.sub &
+mosquitto_sub -F "%t %p" -t \# -u ${USERNAME} -P ${PASSWORD} > out/mosquitto.sub &
 
 sleep 1
 
@@ -68,9 +68,13 @@ EOF
 
 kill $(pgrep -f 'java.*pubber-.*jar') || true
 
-$ROOT_DIR/pubber/bin/build
+pubber/bin/build
 
-timeout 10s $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json || true
+# Clean out the persistant data store to ensure a clean state each time.
+rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
+
+echo Running pubber for 10s...
+timeout 10s pubber/bin/run /tmp/pubber_config.json || true
 
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
