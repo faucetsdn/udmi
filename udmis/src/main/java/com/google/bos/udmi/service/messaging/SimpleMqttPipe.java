@@ -10,6 +10,9 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import udmi.schema.MessageConfiguration;
 
+/**
+ * Simple pipe implementation that uses an mqtt broker.
+ */
 public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
@@ -22,6 +25,9 @@ public class SimpleMqttPipe extends MessageBase {
   private final String clientId;
   private final String namespace;
 
+  /**
+   * Create new pipe instance for the given config.
+   */
   public SimpleMqttPipe(MessageConfiguration config) {
     clientId = makeClientId();
     namespace = config.namespace;
@@ -75,7 +81,8 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String getMqttTopic(Bundle bundle) {
-    return String.format(TOPIC_FORMAT, namespace, bundle.envelope.subType, bundle.envelope.subFolder);
+    return String.format(TOPIC_FORMAT, namespace, bundle.envelope.subType,
+        bundle.envelope.subFolder);
   }
 
   @Override

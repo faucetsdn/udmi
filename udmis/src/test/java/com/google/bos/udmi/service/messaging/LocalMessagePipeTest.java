@@ -9,11 +9,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.udmi.util.JsonUtil;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.MessageConfiguration;
 
+/**
+ * Tests for LocalMessagePipe.
+ */
 public class LocalMessagePipeTest extends MessageTestBase {
 
   private static LocalMessagePipe mainPipe;
@@ -61,6 +63,9 @@ public class LocalMessagePipeTest extends MessageTestBase {
     return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
+  /**
+   * Static version of getting a LocalMessagePipe.
+   */
   public static LocalMessagePipe getTestMessagePipeStatic(boolean reversed) {
     if (reversed) {
       checkState(mainPipe != null, "main pipe not instantiated");
