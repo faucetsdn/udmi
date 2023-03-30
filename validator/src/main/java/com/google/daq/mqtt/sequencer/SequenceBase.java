@@ -106,6 +106,7 @@ public class SequenceBase {
   private static final int FUNCTIONS_VERSION_BETA = Validator.REQUIRED_FUNCTION_VER;
   private static final int FUNCTIONS_VERSION_ALPHA = 6; // Version required for alpha execution.
   private static final String START_END_MARKER = "################################";
+  private static final long CONFIG_BARRIER_MS = 1000;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -737,6 +738,8 @@ public class SequenceBase {
 
   protected void updateConfig(String reason) {
     assertConfigIsNotPending();
+    // Add a forced sleep to make sure second-quantized timestamps are unique.
+    safeSleep(CONFIG_BARRIER_MS);
     updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
     updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
     updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
