@@ -106,7 +106,11 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
+    // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field
+    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+    untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     checkThatHasInterestingSystemStatus(false);
     untilTrue("last_config updated",
@@ -114,6 +118,7 @@ public class ConfigSequences extends SequenceBase {
     );
     assertTrue("system operational", deviceState.system.operation.operational);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    // These should not be logged since the level was at INFO until the new config is applied.
     checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
   }
