@@ -32,6 +32,9 @@ public abstract class MessageTestBase {
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected MessageBase inPipe;
 
+  /**
+   * Get a message pipe as defined by the appropriate pipe type subclass.
+   */
   protected abstract MessagePipe getTestMessagePipeCore(boolean reversed);
 
   protected MessagePipe getReverseMessagePipe() {
@@ -61,37 +64,6 @@ public abstract class MessageTestBase {
   protected void resetForTest() {
   }
 
-  @Test
-  void receiveException() throws InterruptedException {
-    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    getTestMessagePipe(false);
-    String messageString = "hello";
-    Object received = loopBundle(messageString);
-    assertTrue(received instanceof Exception, "Expected received exception");
-  }
-
-  @Test
-  void receiveMessage() throws InterruptedException {
-    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    MessagePipe reversed = getReverseMessagePipe();
-    reversed.publish(new StateUpdate());
-    Object received = synchronizedReceive();
-    assertTrue(received instanceof StateUpdate, "Expected state update message");
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void receiveDefaultMessage() throws InterruptedException {
-    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    MessagePipe reversed = getReverseMessagePipe();
-    reversed.publish(new LocalnetState());
-    Object received = synchronizedReceive();
-    // The default handler warps the received message in an AtomicReference just as a signal.
-    assertTrue(received instanceof AtomicReference, "Expected default handler");
-    Object receivedObject = ((AtomicReference<Object>) received).get();
-    assertTrue(receivedObject instanceof LocalnetState, "Expected localnet message");
-  }
-
   protected Object synchronizedReceive() throws InterruptedException {
     synchronized (LocalMessagePipeTest.class) {
       Object existing = receivedMessage.getAndSet(null);
@@ -116,7 +88,7 @@ public abstract class MessageTestBase {
     messageHandler(new AtomicReference<>(message));
   }
 
-  private Object loopBundle(String bundleString) throws InterruptedException {
+  private Object publishAndReceive(String bundleString) throws InterruptedException {
     assertNull(receivedMessage.get(), "expected null pre-receive message");
     inPipe.sourceQueue.put(bundleString);
     return synchronizedReceive();
@@ -124,5 +96,46 @@ public abstract class MessageTestBase {
 
   protected void drainPipe() {
     inPipe.drainSource();
+  }
+
+  /**
+   * Test that receiving a malformed bundle results in a received exception.
+   */
+  @Test
+  void receiveException() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
+    getTestMessagePipe(false);
+    String messageString = "hello";
+    Object received = publishAndReceive(messageString);
+    assertTrue(received instanceof Exception, "Expected received exception");
+  }
+
+  /**
+   * Test that a publish/receive pair results in the right type of object.
+   */
+  @Test
+  void receiveMessage() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
+    MessagePipe reversed = getReverseMessagePipe();
+    reversed.publish(new StateUpdate());
+    Object received = synchronizedReceive();
+    assertTrue(received instanceof StateUpdate, "Expected state update message");
+  }
+
+  /**
+   * Test that received an unregistered message type (no handler) results in the default Object
+   * handler being called.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  void receiveDefaultMessage() throws InterruptedException {
+    Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
+    MessagePipe reversed = getReverseMessagePipe();
+    reversed.publish(new LocalnetState());
+    Object received = synchronizedReceive();
+    // The default handler warps the received message in an AtomicReference just as a signal.
+    assertTrue(received instanceof AtomicReference, "Expected default handler");
+    Object receivedObject = ((AtomicReference<Object>) received).get();
+    assertTrue(receivedObject instanceof LocalnetState, "Expected localnet message");
   }
 }

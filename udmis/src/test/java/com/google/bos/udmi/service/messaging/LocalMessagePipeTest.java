@@ -30,28 +30,6 @@ public class LocalMessagePipeTest extends MessageTestBase {
     LocalMessagePipe.resetForTest();
   }
 
-  @Test
-  @SuppressWarnings("unchecked")
-  void publishBundle() throws InterruptedException {
-    MessagePipe pipe = getTestMessagePipe(false);
-    StateUpdate testMessage = new StateUpdate();
-    testMessage.version = TEST_VERSION;
-    Map<String, Object> received = testSend(pipe, testMessage);
-    Map<String, Object> envelope = (Map<String, Object>) received.get("envelope");
-    assertEquals("state", envelope.get("subType"), "unexpected subtype");
-    assertEquals("update", envelope.get("subFolder"), "unexpected subfolder");
-    Map<String, Object> message = (Map<String, Object>) received.get("message");
-    assertEquals(TEST_VERSION, message.get("version"));
-  }
-
-  @Test
-  void publishUntyped() {
-    MessagePipe pipe = getTestMessagePipe(false);
-    Exception expected = assertThrows(Exception.class,
-        () -> testSend(pipe, new Exception()), "Expected exception");
-    assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");
-  }
-
   private Map<String, Object> testSend(MessagePipe pipe, Object message)
       throws InterruptedException {
     BlockingQueue<String> outQueue = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
@@ -83,5 +61,37 @@ public class LocalMessagePipeTest extends MessageTestBase {
     messageConfiguration.source = TEST_SOURCE;
     messageConfiguration.destination = TEST_DESTINATION;
     return messageConfiguration;
+  }
+
+  static class BespokeObject {
+  }
+
+  /**
+   * Test that publishing a message results in a properly constructed bundle (envelope and
+   * message).
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  void publishedMessageBundle() throws InterruptedException {
+    MessagePipe pipe = getTestMessagePipe(false);
+    StateUpdate testMessage = new StateUpdate();
+    testMessage.version = TEST_VERSION;
+    Map<String, Object> received = testSend(pipe, testMessage);
+    Map<String, Object> envelope = (Map<String, Object>) received.get("envelope");
+    assertEquals("state", envelope.get("subType"), "unexpected subtype");
+    assertEquals("update", envelope.get("subFolder"), "unexpected subfolder");
+    Map<String, Object> message = (Map<String, Object>) received.get("message");
+    assertEquals(TEST_VERSION, message.get("version"));
+  }
+
+  /**
+   * Test that publishing an unexpected type of object results in an appropriate exception.
+   */
+  @Test
+  void publishUntyped() {
+    MessagePipe pipe = getTestMessagePipe(false);
+    Exception expected = assertThrows(Exception.class,
+        () -> testSend(pipe, new BespokeObject()), "Expected exception");
+    assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");
   }
 }

@@ -33,64 +33,6 @@ public class StateHandlerTest extends MessageTestBase {
   public static final String INVALID_MESSAGE = "invalid message";
   private StateHandler stateHandler;
 
-  @Test
-  public void singleExpansion() throws InterruptedException {
-    initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
-    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
-
-    Bundle testStateBundle = getTestStateBundle(false);
-    Bundle originalBundle = deepCopy(testStateBundle);
-
-    stateBus.put(stringify(testStateBundle));
-
-    Bundle targetBundle = fromString(Bundle.class, targetBus.take());
-
-    drainPipe();
-
-    assertNull(originalBundle.envelope.subType, "original envelope was not null");
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertEquals(SYSTEM, targetBundle.envelope.subFolder, "received message subType mismatch");
-    assertNull(testStateBundle.envelope.subType, "original subType was mutated");
-    assertEquals(0, targetBus.size(), "unexpected published message count");
-    assertEquals(0, getExceptionCount(), "exception count");
-    assertEquals(1, getDefaultCount(), "default handler count");
-  }
-
-  @Test
-  public void multiExpansion() throws InterruptedException {
-    initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
-    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
-
-    Bundle testStateBundle = getTestStateBundle(true);
-
-    stateBus.put(stringify(testStateBundle));
-
-    Bundle targetBundle = fromString(Bundle.class, targetBus.take());
-
-    drainPipe();
-
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
-    assertEquals(1, targetBus.size(), "unexpected published message count");
-    assertEquals(0, getExceptionCount(), "exception count");
-    assertEquals(1, getDefaultCount(), "default handler count");
-  }
-
-  @Test
-  public void stateException() throws InterruptedException {
-    initializeTestHandler();
-    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
-
-    stateBus.put(INVALID_MESSAGE);
-
-    drainPipe();
-
-    assertEquals(1, getExceptionCount(), "exception count");
-    assertEquals(0, getDefaultCount(), "default handler count");
-  }
-
   @Override
   protected MessagePipe getTestMessagePipeCore(boolean reversed) {
     return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
@@ -134,7 +76,6 @@ public class StateHandlerTest extends MessageTestBase {
     stateHandler.activate();
   }
 
-
   protected int getExceptionCount() {
     return stateHandler.exceptionCount;
   }
@@ -143,4 +84,71 @@ public class StateHandlerTest extends MessageTestBase {
     return stateHandler.defaultCount;
   }
 
+  /**
+   * Test that a state update with one sub-block results in a received message of the proper type.
+   */
+  @Test
+  public void singleExpansion() throws InterruptedException {
+    initializeTestHandler();
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
+    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
+
+    Bundle testStateBundle = getTestStateBundle(false);
+    Bundle originalBundle = deepCopy(testStateBundle);
+
+    stateBus.put(stringify(testStateBundle));
+
+    Bundle targetBundle = fromString(Bundle.class, targetBus.take());
+
+    drainPipe();
+
+    assertNull(originalBundle.envelope.subType, "original envelope was not null");
+    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
+    assertEquals(SYSTEM, targetBundle.envelope.subFolder, "received message subType mismatch");
+    assertNull(testStateBundle.envelope.subType, "original subType was mutated");
+    assertEquals(0, targetBus.size(), "unexpected published message count");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
+  }
+
+  /**
+   * Test that a state update with multiple sub-blocks results in the expected two messages.
+   */
+  @Test
+  public void multiExpansion() throws InterruptedException {
+    initializeTestHandler();
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
+    BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
+
+    Bundle testStateBundle = getTestStateBundle(true);
+
+    stateBus.put(stringify(testStateBundle));
+
+    Bundle targetBundle = fromString(Bundle.class, targetBus.take());
+
+    drainPipe();
+
+    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
+    assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
+    assertEquals(1, targetBus.size(), "unexpected published message count");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
+  }
+
+  /**
+   * Test that receiving an invalid message results in the appropriate exception handler being
+   * called.
+   */
+  @Test
+  public void stateException() throws InterruptedException {
+    initializeTestHandler();
+    BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
+
+    stateBus.put(INVALID_MESSAGE);
+
+    drainPipe();
+
+    assertEquals(1, getExceptionCount(), "exception count");
+    assertEquals(0, getDefaultCount(), "default handler count");
+  }
 }
