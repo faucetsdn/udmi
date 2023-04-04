@@ -195,3 +195,19 @@ jobs:
         if: ${{ always() }}
         run: |
           cd sites/udmi_site_model/out && more `find . -type f` || true
+
+  udmif:
+    name: UDMIF unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16.16.0
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+      - name: web tests
+        run: udmif/web/runTests
+      - name: api tests
+        run: udmif/api/runTests
