@@ -58,10 +58,6 @@ public abstract class MessageTestBase {
     return messagePipe;
   }
 
-  static MessagePipe getExistingPipe() {
-    return inPipe;
-  }
-
   @AfterEach
   public void resetPipe() {
     inPipe = null;

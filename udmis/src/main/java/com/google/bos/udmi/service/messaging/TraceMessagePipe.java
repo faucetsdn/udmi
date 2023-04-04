@@ -78,10 +78,6 @@ public class TraceMessagePipe extends MessageBase {
     throw new NotImplementedException("Drain output not implemented");
   }
 
-  public static void resetForTest() {
-    GLOBAL_PIPES.clear();
-  }
-
   /**
    * Publish a message bundle to this pipe. Pushes it into the outgoing queue!
    */

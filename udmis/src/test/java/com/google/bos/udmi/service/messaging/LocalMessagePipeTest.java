@@ -60,7 +60,7 @@ public class LocalMessagePipeTest extends MessageTestBase {
     return messageConfiguration;
   }
 
-  static class BespokeObject {
+  private static class BespokeObject {
   }
 
   /**

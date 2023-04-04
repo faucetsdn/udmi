@@ -10,7 +10,6 @@ import static udmi.schema.Envelope.SubType.STATE;
 import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
 import com.google.bos.udmi.service.messaging.MessageBase;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
-import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessageTestBase;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -27,9 +26,7 @@ import udmi.schema.SystemState;
  */
 public class StateHandlerTest extends MessageTestBase {
 
-  public static final String INVALID_MESSAGE = "invalid message";
   private StateHandler stateHandler;
-  private MessagePipe reversePipe;
 
   @Override
   protected MessageBase getTestMessagePipeCore(boolean reversed) {
@@ -71,7 +68,6 @@ public class StateHandlerTest extends MessageTestBase {
     config.destination = TEST_DESTINATION;
     stateHandler = StateHandler.forConfig(config);
     stateHandler.activate();
-    reversePipe = getReverseMessagePipe();
   }
 
   protected int getExceptionCount() {
