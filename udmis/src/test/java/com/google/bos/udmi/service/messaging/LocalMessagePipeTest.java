@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.bos.udmi.service.messaging.LocalMessagePipe.getQueueForScope;
+import static com.google.bos.udmi.service.messaging.MessageBase.normalizeNamespace;
 import static com.google.common.base.Preconditions.checkState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.udmi.util.JsonUtil;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -18,15 +20,12 @@ import udmi.schema.MessageConfiguration;
  */
 public class LocalMessagePipeTest extends MessageTestBase {
 
-  private static LocalMessagePipe mainPipe;
-
-  @AfterEach
+  @Override
   public void resetForTest() {
     resetForTestStatic();
   }
 
   public static void resetForTestStatic() {
-    mainPipe = null;
     LocalMessagePipe.resetForTest();
   }
 
@@ -37,7 +36,7 @@ public class LocalMessagePipeTest extends MessageTestBase {
     return JsonUtil.asMap(outQueue.take());
   }
 
-  public LocalMessagePipe getTestMessagePipeCore(boolean reversed) {
+  public MessageBase getTestMessagePipeCore(boolean reversed) {
     return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
@@ -45,14 +44,12 @@ public class LocalMessagePipeTest extends MessageTestBase {
    * Static version of getting a LocalMessagePipe.
    */
   public static LocalMessagePipe getTestMessagePipeStatic(boolean reversed) {
+    LocalMessagePipe mainPipe = LocalMessagePipe.existing(getConfiguration());
     if (reversed) {
       checkState(mainPipe != null, "main pipe not instantiated");
-      return new LocalMessagePipe(mainPipe, true);
+      return new LocalMessagePipe((LocalMessagePipe) mainPipe, true);
     }
-    LocalMessagePipe localMessagePipe = new LocalMessagePipe(getConfiguration());
-    checkState(mainPipe == null, "duplicate main pipe assignment");
-    mainPipe = localMessagePipe;
-    return localMessagePipe;
+    return Optional.ofNullable(mainPipe).orElseGet(() -> new LocalMessagePipe(getConfiguration()));
   }
 
   private static MessageConfiguration getConfiguration() {
@@ -73,7 +70,7 @@ public class LocalMessagePipeTest extends MessageTestBase {
   @Test
   @SuppressWarnings("unchecked")
   void publishedMessageBundle() throws InterruptedException {
-    MessagePipe pipe = getTestMessagePipe(false);
+    MessagePipe pipe = getTestMessagePipe();
     StateUpdate testMessage = new StateUpdate();
     testMessage.version = TEST_VERSION;
     Map<String, Object> received = testSend(pipe, testMessage);
@@ -89,7 +86,7 @@ public class LocalMessagePipeTest extends MessageTestBase {
    */
   @Test
   void publishUntyped() {
-    MessagePipe pipe = getTestMessagePipe(false);
+    MessagePipe pipe = getTestMessagePipe();
     Exception expected = assertThrows(Exception.class,
         () -> testSend(pipe, new BespokeObject()), "Expected exception");
     assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");

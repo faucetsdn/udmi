@@ -14,6 +14,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -33,20 +33,20 @@ import udmi.schema.SystemState;
  */
 public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
+  private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final String LOOP_EXIT_MARK = "loop-exit";
   public static final String DEFAULT_HANDLER = "event/null";
   public static final String EXCEPTION_HANDLER = "exception_handler";
   private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES =
       ImmutableMap.of(getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
-  private static final BiMap<String, Class<?>> typeClasses = HashBiMap.create();
-  protected BlockingQueue<String> sourceQueue;
-  private Future<Void> sourceFuture;
+  private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
 
-  {
+  static {
     initializeHandlerTypes();
   }
 
+  private Future<Void> sourceFuture;
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
@@ -54,10 +54,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
-
-  public MessageBase() {
-    initializeHandlerTypes();
-  }
+  protected BlockingQueue<String> sourceQueue;
 
   /**
    * Make a new message bundle for the given object, inferring the type and folder from the class
@@ -74,6 +71,11 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return bundle;
   }
 
+  @NotNull
+  static String normalizeNamespace(String configSpace) {
+    return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
+  }
+
   /**
    * Simple wrapper for a message bundle, including envelope and message.
    */
@@ -86,7 +88,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
-    String mapKey = specialClasses.getOrDefault(clazz, typeClasses.inverse().get(clazz));
+    String mapKey = specialClasses.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
     if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + mapKey);
     }
@@ -94,8 +96,10 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
     try {
+      System.err.println("Draining queue " + Objects.hash(queue));
       queue.put(LOOP_EXIT_MARK);
       queueFuture.get();
+      System.err.println("Released queue " + Objects.hash(queue));
     } catch (Exception e) {
       throw new RuntimeException("While draining queue", e);
     }
@@ -113,11 +117,14 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
           String bundleString = queue.take();
           // Lack of value can only happen intentionally as a signal to exist the loop.
           if (LOOP_EXIT_MARK.equals(bundleString)) {
+            System.err.println("Terminating queue " + Objects.hash(queue));
             info("Message loop terminated");
             return;
           }
+          System.err.println("Processing queue " + Objects.hash(queue));
           Bundle bundle = fromString(Bundle.class, bundleString);
           processMessage(bundle);
+          System.err.println("Finished queue " + Objects.hash(queue));
         } catch (Exception e) {
           processMessage(makeExceptionEnvelope(), EXCEPTION_HANDLER, e);
         }
@@ -143,7 +150,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
         info("Defaulting messages of type/folder " + mapKey);
         return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
       });
-      Class<?> handlerType = typeClasses.getOrDefault(mapKey, Object.class);
+      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
       Object messageObject = convertTo(handlerType, bundle.message);
       processMessage(envelope, mapKey, messageObject);
     } catch (Exception e) {
@@ -172,6 +179,11 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       sourceQueue = new LinkedBlockingDeque<>();
     }
     sourceFuture = handleQueue(sourceQueue);
+  }
+
+  @Override
+  public boolean isActive() {
+    return sourceFuture != null && !sourceFuture.isDone();
   }
 
   public void drainSource() {
@@ -204,7 +216,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   private static void registerMessageClass(SubType type, SubFolder folder, Class<?> messageClass) {
     String mapKey = getMapKey(type, folder);
     if (messageClass != null) {
-      typeClasses.put(mapKey, messageClass);
+      TYPE_CLASSES.put(mapKey, messageClass);
       CLASS_TYPES.put(messageClass, getTypeFolderEntry(type, folder));
     }
   }

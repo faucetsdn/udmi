@@ -66,6 +66,7 @@ public class MessageConfiguration {
     public enum Transport {
 
         LOCAL("local"),
+        TRACE("trace"),
         MQTT("mqtt");
         private final String value;
         private final static Map<String, MessageConfiguration.Transport> CONSTANTS = new HashMap<String, MessageConfiguration.Transport>();

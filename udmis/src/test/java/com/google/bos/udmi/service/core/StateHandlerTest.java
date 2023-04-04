@@ -12,9 +12,11 @@ import static udmi.schema.Envelope.SubType.STATE;
 
 import com.google.bos.udmi.service.messaging.LocalMessagePipe;
 import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
+import com.google.bos.udmi.service.messaging.MessageBase;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessageTestBase;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -32,9 +34,10 @@ public class StateHandlerTest extends MessageTestBase {
 
   public static final String INVALID_MESSAGE = "invalid message";
   private StateHandler stateHandler;
+  private MessagePipe reversePipe;
 
   @Override
-  protected MessagePipe getTestMessagePipeCore(boolean reversed) {
+  protected MessageBase getTestMessagePipeCore(boolean reversed) {
     return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
@@ -64,7 +67,7 @@ public class StateHandlerTest extends MessageTestBase {
     return stateMessage;
   }
 
-  private void initializeTestHandler() {
+  private void initializeTestInstance() {
     instanceCount.incrementAndGet();
     MessageConfiguration config = new MessageConfiguration();
     config.transport = Transport.LOCAL;
@@ -72,8 +75,8 @@ public class StateHandlerTest extends MessageTestBase {
     config.source = TEST_SOURCE;
     config.destination = TEST_DESTINATION;
     stateHandler = StateHandler.forConfig(config);
-    inPipe = LocalMessagePipe.getPipeForNamespace(TEST_NAMESPACE);
     stateHandler.activate();
+    reversePipe = getReverseMessagePipe();
   }
 
   protected int getExceptionCount() {
@@ -89,7 +92,7 @@ public class StateHandlerTest extends MessageTestBase {
    */
   @Test
   public void singleExpansion() throws InterruptedException {
-    initializeTestHandler();
+    initializeTestInstance();
     BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
     BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
 
@@ -116,7 +119,7 @@ public class StateHandlerTest extends MessageTestBase {
    */
   @Test
   public void multiExpansion() throws InterruptedException {
-    initializeTestHandler();
+    initializeTestInstance();
     BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
     BlockingQueue<String> targetBus = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
 
@@ -127,10 +130,11 @@ public class StateHandlerTest extends MessageTestBase {
     Bundle targetBundle = fromString(Bundle.class, targetBus.take());
 
     drainPipe();
-
+    
     assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
     assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
-    assertEquals(1, targetBus.size(), "unexpected published message count");
+    System.err.println("Checking queue " + Objects.hash(targetBus));
+    assertEquals(1, targetBus.size(), "unexpected remaining message count");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
   }
@@ -141,7 +145,7 @@ public class StateHandlerTest extends MessageTestBase {
    */
   @Test
   public void stateException() throws InterruptedException {
-    initializeTestHandler();
+    initializeTestInstance();
     BlockingQueue<String> stateBus = getQueueForScope(TEST_NAMESPACE, TEST_SOURCE);
 
     stateBus.put(INVALID_MESSAGE);

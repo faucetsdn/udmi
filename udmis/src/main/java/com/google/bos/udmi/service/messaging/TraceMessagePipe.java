@@ -5,10 +5,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.MessageConfiguration;
 
 /**
@@ -16,9 +17,9 @@ import udmi.schema.MessageConfiguration;
  * other internal coordination. Consists of a global namespace, each supporting a collection of
  * named pipes to be used, ultimately backed by a standard BlockingQueue.
  */
-public class LocalMessagePipe extends MessageBase {
+public class TraceMessagePipe extends MessageBase {
 
-  private static final Map<String, LocalMessagePipe> GLOBAL_PIPES = new ConcurrentHashMap<>();
+  private static final Map<String, TraceMessagePipe> GLOBAL_PIPES = new ConcurrentHashMap<>();
 
   private final Map<String, BlockingQueue<String>> scopedQueues = new ConcurrentHashMap<>();
 
@@ -30,7 +31,7 @@ public class LocalMessagePipe extends MessageBase {
   /**
    * Create a new local message pipe given a configuration bundle.
    */
-  public LocalMessagePipe(MessageConfiguration config) {
+  public TraceMessagePipe(MessageConfiguration config) {
     namespace = normalizeNamespace(config.namespace);
     checkState(!GLOBAL_PIPES.containsKey(namespace),
         "can not create duplicate pipe in namespace " + namespace);
@@ -46,7 +47,7 @@ public class LocalMessagePipe extends MessageBase {
    * Create a new local message pipe that's possible the reverse of the original. This intentionally
    * avoids some of the duplicate checks that would prevent a normal pipe from being created twice.
    */
-  public LocalMessagePipe(LocalMessagePipe original, boolean reverse) {
+  public TraceMessagePipe(TraceMessagePipe original, boolean reverse) {
     namespace = original.namespace;
     sourceScope = reverse ? original.destinationScope : original.sourceScope;
     sourceQueue = getQueueForScope(namespace, sourceScope);
@@ -59,7 +60,7 @@ public class LocalMessagePipe extends MessageBase {
    * Get a pipe from the global namespace. Only valid after the pipe in question has been
    * instantiated... this is not a factory!
    */
-  public static LocalMessagePipe getPipeForNamespace(String namespace) {
+  public static TraceMessagePipe getPipeForNamespace(String namespace) {
     return GLOBAL_PIPES.get(normalizeNamespace(namespace));
   }
 
@@ -69,15 +70,11 @@ public class LocalMessagePipe extends MessageBase {
   }
 
   static MessagePipe from(MessageConfiguration config) {
-    return new LocalMessagePipe(config);
+    return new TraceMessagePipe(config);
   }
 
   public static void resetForTest() {
     GLOBAL_PIPES.clear();
-  }
-
-  public static LocalMessagePipe existing(MessageConfiguration configuration) {
-    return GLOBAL_PIPES.get(normalizeNamespace(configuration.namespace));
   }
 
   /**
@@ -85,7 +82,6 @@ public class LocalMessagePipe extends MessageBase {
    */
   protected void publishBundle(Bundle messageBundle) {
     try {
-      System.err.println("Publishing to queue " + Objects.hash(destinationQueue));
       destinationQueue.add(stringify(messageBundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);

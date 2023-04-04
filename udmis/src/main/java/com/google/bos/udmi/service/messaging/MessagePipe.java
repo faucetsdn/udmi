@@ -21,14 +21,30 @@ public interface MessagePipe {
 
   Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
       Transport.LOCAL, LocalMessagePipe::from,
+      Transport.TRACE, TraceMessagePipe::from,
       Transport.MQTT, SimpleMqttPipe::from);
 
   <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
 
+  /**
+   * Activate the receive loop of the message handler. Usually after handlers are registered!
+   */
   void activate();
 
+  /**
+   * Check if this pipe has been activated (and is still active).
+   */
+  boolean isActive();
+
+  /**
+   * Publish a message to the outgoing channel of this pipe.
+   * @param message
+   */
   void publish(Object message);
 
+  /**
+   * Get a message continuation for the given message.
+   */
   MessageContinuation getContinuation(Object message);
 
   /**

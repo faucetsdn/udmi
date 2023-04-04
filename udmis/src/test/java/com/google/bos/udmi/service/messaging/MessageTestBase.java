@@ -4,9 +4,11 @@ import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFo
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
@@ -30,30 +32,39 @@ public abstract class MessageTestBase {
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler));
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
-  protected MessageBase inPipe;
+  private static MessageBase inPipe;
 
   /**
    * Get a message pipe as defined by the appropriate pipe type subclass.
    */
-  protected abstract MessagePipe getTestMessagePipeCore(boolean reversed);
+  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
 
-  protected MessagePipe getReverseMessagePipe() {
-    getTestMessagePipe(false);
+  protected MessageBase getReverseMessagePipe() {
+    getTestMessagePipe();  // Ensure that the main pipe exists before doing the reverse.
     return getTestMessagePipe(true);
   }
 
-  protected MessagePipe getTestMessagePipe(boolean reversed) {
-    MessagePipe messagePipe = getTestMessagePipeCore(reversed);
-    if (messagePipe != null) {
+  protected MessageBase getTestMessagePipe() {
+    inPipe = Optional.ofNullable(inPipe).orElseGet(() -> getTestMessagePipe(false));
+    return inPipe;
+  }
+
+  private MessageBase getTestMessagePipe(boolean reversed) {
+    MessageBase messagePipe = getTestMessagePipeCore(reversed);
+    if (!messagePipe.isActive()) {
       messagePipe.registerHandlers(messageHandlers);
       messagePipe.activate();
-      inPipe = (MessageBase) messagePipe;
     }
     return messagePipe;
   }
 
+  static MessagePipe getExistingPipe() {
+    return inPipe;
+  }
+
   @AfterEach
   public void resetPipe() {
+    inPipe = null;
     resetForTest();
   }
 
@@ -88,14 +99,15 @@ public abstract class MessageTestBase {
     messageHandler(new AtomicReference<>(message));
   }
 
-  private Object publishAndReceive(String bundleString) throws InterruptedException {
+  private Object publishAndReceive(Bundle bundle) throws InterruptedException {
     assertNull(receivedMessage.get(), "expected null pre-receive message");
-    inPipe.sourceQueue.put(bundleString);
+    getReverseMessagePipe().publishBundle(bundle);
     return synchronizedReceive();
   }
 
   protected void drainPipe() {
-    inPipe.drainSource();
+    getTestMessagePipe().drainSource();
+    getReverseMessagePipe().drainSource();
   }
 
   /**
@@ -104,9 +116,7 @@ public abstract class MessageTestBase {
   @Test
   void receiveException() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    getTestMessagePipe(false);
-    String messageString = "hello";
-    Object received = publishAndReceive(messageString);
+    Object received = publishAndReceive(new Bundle());
     assertTrue(received instanceof Exception, "Expected received exception");
   }
 

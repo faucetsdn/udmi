@@ -18,7 +18,7 @@ class SimpleMqttPipeTest extends MessageTestBase {
     return environmentEnabled;
   }
 
-  protected SimpleMqttPipe getTestMessagePipeCore(boolean reversed) {
+  protected MessageBase getTestMessagePipeCore(boolean reversed) {
     MessageConfiguration messageConfiguration = new MessageConfiguration();
     messageConfiguration.transport = Transport.MQTT;
     messageConfiguration.broker = BROKER_URL;
