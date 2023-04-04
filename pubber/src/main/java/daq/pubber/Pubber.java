@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -171,7 +172,7 @@ public class Pubber {
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
-  private static final int CONFIG_STATE_UPDATE_DELAY_MS = 10000;
+  private static final int FORCED_STATE_TIME_MS = 10000;
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -201,7 +202,6 @@ public class Pubber {
   private MqttDevice gatewayTarget;
   private int systemEventCount;
   private LocalnetManager localnetManager;
-  private long stateBlockTime;
 
   /**
    * Start an instance from a configuration file.
@@ -946,15 +946,22 @@ public class Pubber {
   }
 
   /**
-   * Provision to delay the state update from a config message to (optionally) check for the
-   * case where a device delays a state message (which is legal). Not a good idea to always
-   * do this since it would significantly delay the normal test sequence.
+   * Issue a state update in response to a received config message. This will optionally
+   * add a synthetic delay in so that testing infrastructure can test that related sequence
+   * tests handle this case appropriately.
    */
   private void publishConfigStateUpdate() {
-    int updateDelay =
-        TRUE.equals(configuration.options.configStateDelay) ? CONFIG_STATE_UPDATE_DELAY_MS : 0;
-    stateBlockTime = System.currentTimeMillis() + updateDelay;
+    if (TRUE.equals(configuration.options.configStateDelay)) {
+      delayNextStateUpdate();
+    }
     publishAsynchronousState();
+  }
+
+  private void delayNextStateUpdate() {
+    // Calculate a synthetic last state time that factors in the optional delay.
+    long syntheticType = System.currentTimeMillis() - STATE_THROTTLE_MS + FORCED_STATE_TIME_MS;
+    // And use the synthetic time iff it's later than the actual last state time.
+    lastStateTimeMs = Math.max(lastStateTimeMs, syntheticType);
   }
 
   private boolean shouldLogLevel(int level) {
@@ -1508,9 +1515,8 @@ public class Pubber {
   private void publishAsynchronousState() {
     if (stateLock.tryAcquire()) {
       try {
-        long throttledTime = lastStateTimeMs + STATE_THROTTLE_MS;
-        long targetTime = Math.max(throttledTime, stateBlockTime);
-        long delay = targetTime - System.currentTimeMillis();
+        long soonestAllowedStateUpdate = lastStateTimeMs + STATE_THROTTLE_MS;
+        long delay = soonestAllowedStateUpdate - System.currentTimeMillis();
         debug(String.format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
@@ -1561,7 +1567,6 @@ public class Pubber {
       warn(String.format("State update delay %dms", delay));
       safeSleep(delay);
     }
-
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
     publishDeviceMessage(stateToSend, () -> {
