@@ -13,6 +13,7 @@ import com.google.udmi.util.Common;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -61,6 +62,9 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
    * itself (using the predefined lookup map).
    */
   public static Bundle makeMessageBundle(Object message) {
+    if (message instanceof Bundle || message == null) {
+      return (Bundle) message;
+    }
     Bundle bundle = new Bundle();
     bundle.message = message;
     bundle.envelope = new Envelope();
@@ -75,6 +79,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   static String normalizeNamespace(String configSpace) {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
+
+  public abstract List<Bundle> drainOutput();
 
   /**
    * Simple wrapper for a message bundle, including envelope and message.
@@ -99,7 +105,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       System.err.println("Draining queue " + Objects.hash(queue) + " size " + queue.size());
       queue.put(LOOP_EXIT_MARK);
       queueFuture.get();
-      System.err.println("Released queue " + Objects.hash(queue));
     } catch (Exception e) {
       throw new RuntimeException("While draining queue", e);
     }
@@ -114,18 +119,16 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     try {
       while (true) {
         try {
-          System.err.println("Pending queue " + Objects.hash(queue) + " size " + queue.size());
-          String bundleString = queue.take();
+          final String bundleString;
+          bundleString = queue.take();
+          System.err.println("Received queue " + Objects.hash(queue) + " was " + bundleString);
           // Lack of value can only happen intentionally as a signal to exist the loop.
           if (LOOP_EXIT_MARK.equals(bundleString)) {
-            System.err.println("Terminating queue " + Objects.hash(queue));
             info("Message loop terminated");
             return;
           }
-          System.err.println("Processing queue " + Objects.hash(queue) + " remaining " + queue.size());
-          Bundle bundle = fromString(Bundle.class, bundleString);
+          Bundle bundle = extractBundle(bundleString);
           processMessage(bundle);
-          System.err.println("Finished queue " + Objects.hash(queue));
         } catch (Exception e) {
           processMessage(makeExceptionEnvelope(), EXCEPTION_HANDLER, e);
         }
@@ -133,6 +136,10 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     } catch (Exception loopException) {
       info("Message loop exception: " + Common.getExceptionMessage(loopException));
     }
+  }
+
+  Bundle extractBundle(String bundleString) {
+    return fromString(Bundle.class, bundleString);
   }
 
   private Envelope makeExceptionEnvelope() {

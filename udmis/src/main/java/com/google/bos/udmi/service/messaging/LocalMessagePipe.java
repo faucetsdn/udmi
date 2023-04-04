@@ -4,11 +4,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 import udmi.schema.MessageConfiguration;
 
 /**
@@ -76,6 +78,13 @@ public class LocalMessagePipe extends MessageBase {
     GLOBAL_PIPES.clear();
   }
 
+  @Override
+  public List<Bundle> drainOutput() {
+    System.err.println("Draining queue " + Objects.hash(destinationQueue));
+    return destinationQueue.stream().map(this::extractBundle).collect(
+        Collectors.toList());
+  }
+
   public static LocalMessagePipe existing(MessageConfiguration configuration) {
     return GLOBAL_PIPES.get(normalizeNamespace(configuration.namespace));
   }
@@ -85,8 +94,10 @@ public class LocalMessagePipe extends MessageBase {
    */
   protected void publishBundle(Bundle messageBundle) {
     try {
-      destinationQueue.add(stringify(messageBundle));
-      System.err.println("Publishing to queue " + Objects.hash(destinationQueue) + " size " + destinationQueue.size());
+      String stringify = stringify(messageBundle);
+      System.err.println(
+          "Publishing queue " + Objects.hash(destinationQueue) + " with " + stringify);
+      destinationQueue.add(stringify);
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }

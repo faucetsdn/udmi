@@ -51,7 +51,7 @@ public abstract class MessageTestBase {
 
   private MessageBase getTestMessagePipe(boolean reversed) {
     MessageBase messagePipe = getTestMessagePipeCore(reversed);
-    if (!messagePipe.isActive()) {
+    if (!reversed && !messagePipe.isActive()) {
       messagePipe.registerHandlers(messageHandlers);
       messagePipe.activate();
     }
@@ -105,9 +105,9 @@ public abstract class MessageTestBase {
     return synchronizedReceive();
   }
 
-  protected void drainPipe() {
+  protected List<Bundle> drainPipes() {
     getTestMessagePipe().drainSource();
-    getReverseMessagePipe().drainSource();
+    return getTestMessagePipe().drainOutput();
   }
 
   /**

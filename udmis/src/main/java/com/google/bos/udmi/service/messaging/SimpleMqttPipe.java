@@ -2,6 +2,8 @@ package com.google.bos.udmi.service.messaging;
 
 import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
+import java.util.List;
+import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -93,6 +95,11 @@ public class SimpleMqttPipe extends MessageBase {
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topics", e);
     }
+  }
+
+  @Override
+  public List<Bundle> drainOutput() {
+    throw new NotImplementedException("Drain output not implemented");
   }
 
   private class MqttCallbackHandler implements MqttCallback {

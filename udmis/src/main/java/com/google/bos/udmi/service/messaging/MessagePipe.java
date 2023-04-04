@@ -38,7 +38,6 @@ public interface MessagePipe {
 
   /**
    * Publish a message to the outgoing channel of this pipe.
-   * @param message
    */
   void publish(Object message);
 

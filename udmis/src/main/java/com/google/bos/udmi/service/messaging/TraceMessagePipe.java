@@ -4,12 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.lang3.NotImplementedException;
 import udmi.schema.MessageConfiguration;
 
 /**
@@ -71,6 +71,11 @@ public class TraceMessagePipe extends MessageBase {
 
   static MessagePipe from(MessageConfiguration config) {
     return new TraceMessagePipe(config);
+  }
+
+  @Override
+  public List<Bundle> drainOutput() {
+    throw new NotImplementedException("Drain output not implemented");
   }
 
   public static void resetForTest() {
