@@ -85,8 +85,8 @@ public class LocalMessagePipe extends MessageBase {
    */
   protected void publishBundle(Bundle messageBundle) {
     try {
-      System.err.println("Publishing to queue " + Objects.hash(destinationQueue));
       destinationQueue.add(stringify(messageBundle));
+      System.err.println("Publishing to queue " + Objects.hash(destinationQueue) + " size " + destinationQueue.size());
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }

@@ -130,7 +130,7 @@ public class StateHandlerTest extends MessageTestBase {
     Bundle targetBundle = fromString(Bundle.class, targetBus.take());
 
     drainPipe();
-    
+
     assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
     assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
     System.err.println("Checking queue " + Objects.hash(targetBus));

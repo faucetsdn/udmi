@@ -96,7 +96,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
     try {
-      System.err.println("Draining queue " + Objects.hash(queue));
+      System.err.println("Draining queue " + Objects.hash(queue) + " size " + queue.size());
       queue.put(LOOP_EXIT_MARK);
       queueFuture.get();
       System.err.println("Released queue " + Objects.hash(queue));
@@ -114,6 +114,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     try {
       while (true) {
         try {
+          System.err.println("Pending queue " + Objects.hash(queue) + " size " + queue.size());
           String bundleString = queue.take();
           // Lack of value can only happen intentionally as a signal to exist the loop.
           if (LOOP_EXIT_MARK.equals(bundleString)) {
@@ -121,7 +122,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
             info("Message loop terminated");
             return;
           }
-          System.err.println("Processing queue " + Objects.hash(queue));
+          System.err.println("Processing queue " + Objects.hash(queue) + " remaining " + queue.size());
           Bundle bundle = fromString(Bundle.class, bundleString);
           processMessage(bundle);
           System.err.println("Finished queue " + Objects.hash(queue));
