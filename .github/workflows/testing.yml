@@ -205,7 +205,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16.16.0
-      - name: api tests
-        run: udmif/api/runTests
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
       - name: web tests
         run: udmif/web/runTests
+      - name: api tests
+        run: udmif/api/runTests
