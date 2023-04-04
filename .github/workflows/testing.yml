@@ -195,3 +195,14 @@ jobs:
         if: ${{ always() }}
         run: |
           cd sites/udmi_site_model/out && more `find . -type f` || true
+
+  udmif:
+    name: UDMIF unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - name: api tests
+        run: udmif/api/runTests
+      - name: web tests
+        run: udmif/web/runTests
