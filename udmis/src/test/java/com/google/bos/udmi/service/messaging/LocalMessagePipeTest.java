@@ -18,24 +18,8 @@ import udmi.schema.MessageConfiguration;
  */
 public class LocalMessagePipeTest extends MessageTestBase {
 
-  @Override
-  public void resetForTest() {
-    resetForTestStatic();
-  }
-
   public static void resetForTestStatic() {
     LocalMessagePipe.resetForTest();
-  }
-
-  private Map<String, Object> testSend(Object message) {
-    getTestMessagePipe().publish(message);
-    List<Bundle> bundles = getTestMessagePipe().drainOutput();
-    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
-    return JsonUtil.asMap(bundles.get(0));
-  }
-
-  public MessageBase getTestMessagePipeCore(boolean reversed) {
-    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
   /**
@@ -58,8 +42,20 @@ public class LocalMessagePipeTest extends MessageTestBase {
     return messageConfiguration;
   }
 
-  private static class BespokeObject {
+  @Override
+  public void resetForTest() {
+    resetForTestStatic();
+  }
 
+  private Map<String, Object> testSend(Object message) {
+    getTestMessagePipe().publish(message);
+    List<Bundle> bundles = getTestMessagePipe().drainOutput();
+    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
+    return JsonUtil.asMap(bundles.get(0));
+  }
+
+  public MessageBase getTestMessagePipeCore(boolean reversed) {
+    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
   /**
@@ -87,5 +83,9 @@ public class LocalMessagePipeTest extends MessageTestBase {
     Exception expected = assertThrows(Exception.class,
         () -> testSend(new BespokeObject()), "Expected exception");
     assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");
+  }
+
+  private static class BespokeObject {
+
   }
 }

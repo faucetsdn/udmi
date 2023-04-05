@@ -23,12 +23,31 @@ public interface MessagePipe {
       Transport.LOCAL, LocalMessagePipe::from,
       Transport.MQTT, SimpleMqttPipe::from);
 
-  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
+  /**
+   * MessagePipe factory given a message configuration blob.
+   */
+  static MessagePipe from(MessageConfiguration config) {
+    checkState(IMPLEMENTATIONS.containsKey(config.transport),
+        "unknown message transport type " + config.transport);
+    return IMPLEMENTATIONS.get(config.transport).apply(config);
+  }
+
+  /**
+   * Static factory method for creating handler specifications.
+   */
+  static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, MessageHandler<T> consumer) {
+    return new HandlerSpecification(clazz, consumer);
+  }
 
   /**
    * Activate the receive loop of the message handler. Usually after handlers are registered!
    */
   void activate();
+
+  /**
+   * Get a message continuation for the given message.
+   */
+  MessageContinuation getContinuation(Object message);
 
   /**
    * Check if this pipe has been activated (and is still active).
@@ -40,18 +59,13 @@ public interface MessagePipe {
    */
   void publish(Object message);
 
-  /**
-   * Get a message continuation for the given message.
-   */
-  MessageContinuation getContinuation(Object message);
+  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
 
   /**
-   * MessagePipe factory given a message configuration blob.
+   * Convenience function to register an entire collection of handler specifications.
    */
-  static MessagePipe from(MessageConfiguration config) {
-    checkState(IMPLEMENTATIONS.containsKey(config.transport),
-        "unknown message transport type " + config.transport);
-    return IMPLEMENTATIONS.get(config.transport).apply(config);
+  default void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
+    messageHandlers.forEach(handler -> handler.registerWith(this));
   }
 
   /**
@@ -73,19 +87,5 @@ public interface MessagePipe {
     public <T> void registerWith(MessagePipe pipe) {
       pipe.registerHandler((Class<T>) getKey(), (MessageHandler<T>) getValue());
     }
-  }
-
-  /**
-   * Static factory method for creating handler specifications.
-   */
-  static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, MessageHandler<T> consumer) {
-    return new HandlerSpecification(clazz, consumer);
-  }
-
-  /**
-   * Convenience function to register an entire collection of handler specifications.
-   */
-  default void registerHandlers(Collection<HandlerSpecification> messageHandlers) {
-    messageHandlers.forEach(handler -> handler.registerWith(this));
   }
 }

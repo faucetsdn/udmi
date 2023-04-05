@@ -43,12 +43,12 @@ public class SimpleMqttPipe extends MessageBase {
     mqttClient = connectMqttClient(config.endpoint);
   }
 
-  private String makeClientId() {
-    return "client-" + System.currentTimeMillis();
-  }
-
   static MessagePipe from(MessageConfiguration config) {
     return new SimpleMqttPipe(config);
+  }
+
+  private String makeClientId() {
+    return "client-" + System.currentTimeMillis();
   }
 
   private MqttClient connectMqttClient(EndpointConfiguration endpoint) {

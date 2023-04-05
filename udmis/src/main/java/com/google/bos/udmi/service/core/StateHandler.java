@@ -30,34 +30,21 @@ public class StateHandler extends ComponentBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
-
+  private final MessagePipe pipe;
+  int exceptionCount;
+  int defaultCount;
   private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler),
       messageHandlerFor(StateUpdate.class, this::stateHandler)
   );
 
-  private final MessagePipe pipe;
-  int exceptionCount;
-  int defaultCount;
-
-  public static StateHandler forConfig(MessageConfiguration configuration) {
-    return new StateHandler(MessagePipe.from(configuration));
-  }
-
   public StateHandler(MessagePipe pipe) {
     this.pipe = pipe;
   }
 
-  public void activate() {
-    pipe.registerHandlers(messageHandlers);
-    pipe.activate();
-  }
-
-  private void exceptionHandler(Exception e) {
-    exceptionCount++;
-    info("Received processing exception: " + Common.getExceptionMessage(e));
-    e.printStackTrace();
+  public static StateHandler forConfig(MessageConfiguration configuration) {
+    return new StateHandler(MessagePipe.from(configuration));
   }
 
   private void defaultHandler(Object defaultedMessage) {
@@ -72,6 +59,12 @@ public class StateHandler extends ComponentBase {
     continuation.reprocess();
   }
 
+  private void exceptionHandler(Exception e) {
+    exceptionCount++;
+    info("Received processing exception: " + Common.getExceptionMessage(e));
+    e.printStackTrace();
+  }
+
   private void stateHandler(State message) {
     info("Sharding state message to pipeline out as incremental updates");
     Arrays.stream(State.class.getFields()).forEach(field -> {
@@ -83,5 +76,10 @@ public class StateHandler extends ComponentBase {
         throw new RuntimeException("While extracting field " + field.getName(), e);
       }
     });
+  }
+
+  public void activate() {
+    pipe.registerHandlers(messageHandlers);
+    pipe.activate();
   }
 }
