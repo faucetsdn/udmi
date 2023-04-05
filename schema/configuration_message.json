@@ -17,8 +17,8 @@
     "namespace": {
       "type": "string"
     },
-    "broker": {
-      "type": "string"
+    "endpoint": {
+      "$ref": "file:configuration_endpoint.json"
     },
     "source": {
       "type": "string"

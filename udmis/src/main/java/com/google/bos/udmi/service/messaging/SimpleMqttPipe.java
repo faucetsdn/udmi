@@ -1,8 +1,11 @@
 package com.google.bos.udmi.service.messaging;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -10,6 +13,11 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import udmi.schema.Basic;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 
 /**
@@ -19,10 +27,10 @@ public class SimpleMqttPipe extends MessageBase {
 
   private static final int INITIALIZE_TIME_MS = 1000;
   private static final int PUBLISH_THREAD_COUNT = 2;
-  private static final String TEST_USERNAME = "scrumptus";
-  private static final String TEST_PASSWORD = "aardvark";
-  public static final String TOPIC_FORMAT = "%s/%s/%s";
+  private static final String TOPIC_FORMAT = "%s/%s/%s";
   private static final Object TOPIC_WILDCARD = "+";
+  private static final String BROKER_URL_FORMAT = "%s://%s:%s";
+  private static final Object EXCEPTION_TYPE = "exception";
   private final MqttClient mqttClient;
   private final String clientId;
   private final String namespace;
@@ -33,7 +41,7 @@ public class SimpleMqttPipe extends MessageBase {
   public SimpleMqttPipe(MessageConfiguration config) {
     clientId = makeClientId();
     namespace = config.namespace;
-    mqttClient = connectMqttClient(config.broker);
+    mqttClient = connectMqttClient(config.endpoint);
   }
 
   private String makeClientId() {
@@ -44,11 +52,12 @@ public class SimpleMqttPipe extends MessageBase {
     return new SimpleMqttPipe(config);
   }
 
-  private MqttClient connectMqttClient(String brokerUrl) {
-    String message = String.format("Connecting new mqtt client %s on %s", clientId, brokerUrl);
+  private MqttClient connectMqttClient(EndpointConfiguration endpoint) {
+    String broker = makeBrokerUrl(endpoint);
+    String message = String.format("Connecting new mqtt client %s on %s", clientId, broker);
     try {
       info(message);
-      MqttClient client = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      MqttClient client = new MqttClient(broker, clientId, new MemoryPersistence());
 
       client.setCallback(new MqttCallbackHandler());
       client.setTimeToWait(INITIALIZE_TIME_MS);
@@ -58,14 +67,21 @@ public class SimpleMqttPipe extends MessageBase {
       options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
-      options.setUserName(TEST_USERNAME);
-      options.setPassword(TEST_PASSWORD.toCharArray());
+      Basic basicAuth = checkNotNull(endpoint.auth_provider.basic, "basic auth not defined");
+      options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
+      options.setPassword(
+          checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
 
       client.connect(options);
       return client;
     } catch (Exception e) {
       throw new RuntimeException(message, e);
     }
+  }
+
+  private String makeBrokerUrl(EndpointConfiguration endpoint) {
+    Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
+    return String.format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
   }
 
   protected void publishBundle(Bundle bundle) {
@@ -83,8 +99,10 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String getMqttTopic(Bundle bundle) {
-    return String.format(TOPIC_FORMAT, namespace, bundle.envelope.subType,
-        bundle.envelope.subFolder);
+    Envelope envelope = bundle.envelope;
+    return envelope == null
+        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
   }
 
   @Override

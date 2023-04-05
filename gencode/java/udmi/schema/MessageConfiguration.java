@@ -7,6 +7,7 @@ import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -21,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "transport",
     "namespace",
-    "broker",
+    "endpoint",
     "source",
     "destination"
 })
@@ -32,8 +33,15 @@ public class MessageConfiguration {
     public MessageConfiguration.Transport transport;
     @JsonProperty("namespace")
     public String namespace;
-    @JsonProperty("broker")
-    public String broker;
+    /**
+     * Endpoint Configuration
+     * <p>
+     * Parameters to define an MQTT endpoint
+     * 
+     */
+    @JsonProperty("endpoint")
+    @JsonPropertyDescription("Parameters to define an MQTT endpoint")
+    public EndpointConfiguration endpoint;
     @JsonProperty("source")
     public String source;
     @JsonProperty("destination")
@@ -44,9 +52,9 @@ public class MessageConfiguration {
         int result = 1;
         result = ((result* 31)+((this.namespace == null)? 0 :this.namespace.hashCode()));
         result = ((result* 31)+((this.destination == null)? 0 :this.destination.hashCode()));
+        result = ((result* 31)+((this.endpoint == null)? 0 :this.endpoint.hashCode()));
         result = ((result* 31)+((this.transport == null)? 0 :this.transport.hashCode()));
         result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
-        result = ((result* 31)+((this.broker == null)? 0 :this.broker.hashCode()));
         return result;
     }
 
@@ -59,7 +67,7 @@ public class MessageConfiguration {
             return false;
         }
         MessageConfiguration rhs = ((MessageConfiguration) other);
-        return ((((((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace)))&&((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.broker == rhs.broker)||((this.broker!= null)&&this.broker.equals(rhs.broker))));
+        return ((((((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace)))&&((this.destination == rhs.destination)||((this.destination!= null)&&this.destination.equals(rhs.destination))))&&((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint))))&&((this.transport == rhs.transport)||((this.transport!= null)&&this.transport.equals(rhs.transport))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))));
     }
 
     @Generated("jsonschema2pojo")
