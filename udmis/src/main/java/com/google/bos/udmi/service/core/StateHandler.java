@@ -34,15 +34,24 @@ public class StateHandler extends ComponentBase {
   private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler),
-      messageHandlerFor(StateUpdate.class, this::messageHandler)
+      messageHandlerFor(StateUpdate.class, this::stateHandler)
   );
 
-  final MessagePipe pipe;
+  private final MessagePipe pipe;
   int exceptionCount;
   int defaultCount;
 
+  public static StateHandler forConfig(MessageConfiguration configuration) {
+    return new StateHandler(MessagePipe.from(configuration));
+  }
+
   public StateHandler(MessagePipe pipe) {
     this.pipe = pipe;
+  }
+
+  public void activate() {
+    pipe.registerHandlers(messageHandlers);
+    pipe.activate();
   }
 
   private void exceptionHandler(Exception e) {
@@ -63,25 +72,16 @@ public class StateHandler extends ComponentBase {
     continuation.reprocess();
   }
 
-  private void messageHandler(State message) {
+  private void stateHandler(State message) {
     info("Sharding state message to pipeline out as incremental updates");
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
-          ifNotNull(field.get(message), x -> pipe.publish(x));
+          ifNotNull(field.get(message), pipe::publish);
         }
       } catch (Exception e) {
         throw new RuntimeException("While extracting field " + field.getName(), e);
       }
     });
-  }
-
-  public static StateHandler forConfig(MessageConfiguration configuration) {
-    return new StateHandler(MessagePipe.from(configuration));
-  }
-
-  public void activate() {
-    pipe.registerHandlers(messageHandlers);
-    pipe.activate();
   }
 }

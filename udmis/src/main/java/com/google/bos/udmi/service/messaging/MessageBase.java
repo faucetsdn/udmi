@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,8 +35,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final String LOOP_EXIT_MARK = "loop-exit";
-  public static final String DEFAULT_HANDLER = "event/null";
-  public static final String EXCEPTION_HANDLER = "exception_handler";
+  private static final String DEFAULT_HANDLER = "event/null";
+  private static final String EXCEPTION_HANDLER = "exception_handler";
   private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES =
       ImmutableMap.of(getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE), StateUpdate.class);
   private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
@@ -47,7 +46,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     initializeHandlerTypes();
   }
 
-  private Future<Void> sourceFuture;
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
@@ -55,7 +53,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
-  protected BlockingQueue<String> sourceQueue;
+  private Future<Void> sourceFuture;
+  BlockingQueue<String> sourceQueue;
 
   /**
    * Make a new message bundle for the given object, inferring the type and folder from the class
@@ -75,20 +74,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return bundle;
   }
 
-  @NotNull
   static String normalizeNamespace(String configSpace) {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
-  }
-
-  public abstract List<Bundle> drainOutput();
-
-  /**
-   * Simple wrapper for a message bundle, including envelope and message.
-   */
-  public static class Bundle {
-
-    public Envelope envelope;
-    public Object message;
   }
 
   @Override
@@ -100,14 +87,23 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
-    try {
-      System.err.println("Draining queue " + Objects.hash(queue) + " size " + queue.size());
-      queue.put(LOOP_EXIT_MARK);
-      queueFuture.get();
-    } catch (Exception e) {
-      throw new RuntimeException("While draining queue", e);
+  @Override
+  public void publish(Object message) {
+    publishBundle(makeMessageBundle(message));
+  }
+
+  @Override
+  public void activate() {
+    checkState(sourceFuture == null, "pipe already activated");
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
     }
+    sourceFuture = handleQueue(sourceQueue);
+  }
+
+  @Override
+  public boolean isActive() {
+    return sourceFuture != null && !sourceFuture.isDone();
   }
 
   @SuppressWarnings("unchecked")
@@ -121,8 +117,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
         try {
           final String bundleString;
           bundleString = queue.take();
-          System.err.println("Received queue " + Objects.hash(queue) + " was " + bundleString);
-          // Lack of value can only happen intentionally as a signal to exist the loop.
           if (LOOP_EXIT_MARK.equals(bundleString)) {
             info("Message loop terminated");
             return;
@@ -142,12 +136,26 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return fromString(Bundle.class, bundleString);
   }
 
+  public void drainSource() {
+    drainQueue(sourceQueue, sourceFuture);
+  }
+
+  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
+    try {
+      queue.put(LOOP_EXIT_MARK);
+      queueFuture.get();
+    } catch (Exception e) {
+      throw new RuntimeException("While draining queue", e);
+    }
+  }
+
+  public abstract List<Bundle> drainOutput();
+
   private Envelope makeExceptionEnvelope() {
     return new Envelope();
   }
 
   private void ignoreMessage(Object message) {
-    info("Ignoring messages " + message);
   }
 
   void processMessage(Bundle bundle) {
@@ -173,29 +181,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     } finally {
       messageEnvelopes.remove(messageObject);
     }
-  }
-
-  @Override
-  public void publish(Object message) {
-    publishBundle(makeMessageBundle(message));
-  }
-
-  @Override
-  public void activate() {
-    checkState(sourceFuture == null, "pipe already activated");
-    if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
-    }
-    sourceFuture = handleQueue(sourceQueue);
-  }
-
-  @Override
-  public boolean isActive() {
-    return sourceFuture != null && !sourceFuture.isDone();
-  }
-
-  public void drainSource() {
-    drainQueue(sourceQueue, sourceFuture);
   }
 
   protected abstract void publishBundle(Bundle messageBundle);
@@ -245,4 +230,11 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
+  /**
+   * Simple wrapper for a message bundle, including envelope and message.
+   */
+  public static class Bundle {
+    public Envelope envelope;
+    public Object message;
+  }
 }

@@ -1,17 +1,15 @@
 package com.google.bos.udmi.service.messaging;
 
-import static com.google.bos.udmi.service.messaging.LocalMessagePipe.getQueueForScope;
-import static com.google.bos.udmi.service.messaging.MessageBase.normalizeNamespace;
 import static com.google.common.base.Preconditions.checkState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.MessageConfiguration;
 
@@ -29,11 +27,11 @@ public class LocalMessagePipeTest extends MessageTestBase {
     LocalMessagePipe.resetForTest();
   }
 
-  private Map<String, Object> testSend(MessagePipe pipe, Object message)
-      throws InterruptedException {
-    BlockingQueue<String> outQueue = getQueueForScope(TEST_NAMESPACE, TEST_DESTINATION);
-    pipe.publish(message);
-    return JsonUtil.asMap(outQueue.take());
+  private Map<String, Object> testSend(Object message) {
+    getTestMessagePipe().publish(message);
+    List<Bundle> bundles = getTestMessagePipe().drainOutput();
+    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
+    return JsonUtil.asMap(bundles.get(0));
   }
 
   public MessageBase getTestMessagePipeCore(boolean reversed) {
@@ -44,10 +42,10 @@ public class LocalMessagePipeTest extends MessageTestBase {
    * Static version of getting a LocalMessagePipe.
    */
   public static LocalMessagePipe getTestMessagePipeStatic(boolean reversed) {
-    LocalMessagePipe mainPipe = LocalMessagePipe.existing(getConfiguration());
+    LocalMessagePipe mainPipe = LocalMessagePipe.getPipeForNamespace(getConfiguration().namespace);
     if (reversed) {
       checkState(mainPipe != null, "main pipe not instantiated");
-      return new LocalMessagePipe((LocalMessagePipe) mainPipe, true);
+      return new LocalMessagePipe(mainPipe, true);
     }
     return Optional.ofNullable(mainPipe).orElseGet(() -> new LocalMessagePipe(getConfiguration()));
   }
@@ -61,6 +59,7 @@ public class LocalMessagePipeTest extends MessageTestBase {
   }
 
   private static class BespokeObject {
+
   }
 
   /**
@@ -69,11 +68,10 @@ public class LocalMessagePipeTest extends MessageTestBase {
    */
   @Test
   @SuppressWarnings("unchecked")
-  void publishedMessageBundle() throws InterruptedException {
-    MessagePipe pipe = getTestMessagePipe();
+  void publishedMessageBundle() {
     StateUpdate testMessage = new StateUpdate();
     testMessage.version = TEST_VERSION;
-    Map<String, Object> received = testSend(pipe, testMessage);
+    Map<String, Object> received = testSend(testMessage);
     Map<String, Object> envelope = (Map<String, Object>) received.get("envelope");
     assertEquals("state", envelope.get("subType"), "unexpected subtype");
     assertEquals("update", envelope.get("subFolder"), "unexpected subfolder");
@@ -86,9 +84,8 @@ public class LocalMessagePipeTest extends MessageTestBase {
    */
   @Test
   void publishUntyped() {
-    MessagePipe pipe = getTestMessagePipe();
     Exception expected = assertThrows(Exception.class,
-        () -> testSend(pipe, new BespokeObject()), "Expected exception");
+        () -> testSend(new BespokeObject()), "Expected exception");
     assertTrue(expected.getMessage().contains("type entry not found"), "unexpected message");
   }
 }

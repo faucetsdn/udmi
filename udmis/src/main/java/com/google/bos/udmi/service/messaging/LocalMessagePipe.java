@@ -4,9 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -30,6 +30,22 @@ public class LocalMessagePipe extends MessageBase {
   private final BlockingQueue<String> destinationQueue;
 
   /**
+   * Get a pipe from the global namespace. Only valid after the pipe in question has been
+   * instantiated... this is not a factory!
+   */
+  public static LocalMessagePipe getPipeForNamespace(String namespace) {
+    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
+  }
+
+  public static void resetForTest() {
+    GLOBAL_PIPES.clear();
+  }
+
+  static MessagePipe from(MessageConfiguration config) {
+    return new LocalMessagePipe(config);
+  }
+
+  /**
    * Create a new local message pipe given a configuration bundle.
    */
   public LocalMessagePipe(MessageConfiguration config) {
@@ -37,16 +53,17 @@ public class LocalMessagePipe extends MessageBase {
     checkState(!GLOBAL_PIPES.containsKey(namespace),
         "can not create duplicate pipe in namespace " + namespace);
     GLOBAL_PIPES.put(namespace, this);
-    sourceScope = checkNotNull(config.source, "pipe source is undefined");
+    sourceScope = config.source;
     sourceQueue = getQueueForScope(namespace, sourceScope);
-    destinationScope = checkNotNull(config.destination, "pipe destination is undefined");
+    destinationScope = config.destination;
     destinationQueue = getQueueForScope(namespace, destinationScope);
     info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
   }
 
   /**
    * Create a new local message pipe that's possible the reverse of the original. This intentionally
-   * avoids some of the duplicate checks that would prevent a normal pipe from being created twice.
+   * skips the already-initialized checks that would prevent a normal pipe from being created
+   * twice.
    */
   public LocalMessagePipe(LocalMessagePipe original, boolean reverse) {
     namespace = original.namespace;
@@ -57,47 +74,26 @@ public class LocalMessagePipe extends MessageBase {
     info(String.format("Created mirror pipe from %s to %s", sourceScope, destinationScope));
   }
 
-  /**
-   * Get a pipe from the global namespace. Only valid after the pipe in question has been
-   * instantiated... this is not a factory!
-   */
-  public static LocalMessagePipe getPipeForNamespace(String namespace) {
-    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
-  }
-
-  public static BlockingQueue<String> getQueueForScope(String namespace, String scope) {
+  private BlockingQueue<String> getQueueForScope(String namespace, String scope) {
+    checkNotNull(scope, "pipe scope is null");
     return getPipeForNamespace(namespace).scopedQueues
         .computeIfAbsent(scope, key -> new LinkedBlockingDeque<>());
   }
 
-  static MessagePipe from(MessageConfiguration config) {
-    return new LocalMessagePipe(config);
-  }
-
-  public static void resetForTest() {
-    GLOBAL_PIPES.clear();
-  }
-
   @Override
   public List<Bundle> drainOutput() {
-    System.err.println("Draining queue " + Objects.hash(destinationQueue));
-    return destinationQueue.stream().map(this::extractBundle).collect(
+    ArrayList<String> drained = new ArrayList<>();
+    destinationQueue.drainTo(drained);
+    return drained.stream().map(this::extractBundle).collect(
         Collectors.toList());
   }
 
-  public static LocalMessagePipe existing(MessageConfiguration configuration) {
-    return GLOBAL_PIPES.get(normalizeNamespace(configuration.namespace));
-  }
-
   /**
-   * Publish a message bundle to this pipe. Pushes it into the outgoing queue!
+   * Publish a message bundle to this pipe. Simply pushes it into the outgoing queue!
    */
   protected void publishBundle(Bundle messageBundle) {
     try {
-      String stringify = stringify(messageBundle);
-      System.err.println(
-          "Publishing queue " + Objects.hash(destinationQueue) + " with " + stringify);
-      destinationQueue.add(stringify);
+      destinationQueue.add(stringify(messageBundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }

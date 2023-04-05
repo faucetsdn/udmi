@@ -70,11 +70,11 @@ public class StateHandlerTest extends MessageTestBase {
     stateHandler.activate();
   }
 
-  protected int getExceptionCount() {
+  private int getExceptionCount() {
     return stateHandler.exceptionCount;
   }
 
-  protected int getDefaultCount() {
+  private int getDefaultCount() {
     return stateHandler.defaultCount;
   }
 
@@ -115,7 +115,6 @@ public class StateHandlerTest extends MessageTestBase {
 
     List<Bundle> bundles = drainPipes();
 
-    System.err.println("Processing target bundles " + bundles.size());
     Bundle targetBundle = bundles.remove(0);
 
     assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
