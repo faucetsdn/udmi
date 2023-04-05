@@ -56,26 +56,20 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   BlockingQueue<String> sourceQueue;
   private Future<Void> sourceFuture;
 
-  /**
-   * Make a new message bundle for the given object, inferring the type and folder from the class
-   * itself (using the predefined lookup map).
-   */
-  public static Bundle makeMessageBundle(Object message) {
-    if (message instanceof Bundle || message == null) {
-      return (Bundle) message;
+  private static Class<?> getMessageClass(SubType type, SubFolder folder) {
+    String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
+    String className = SystemState.class.getPackageName() + "." + typeName;
+    try {
+      return Class.forName(className);
+    } catch (ClassNotFoundException e) {
+      return null;
     }
-    Bundle bundle = new Bundle();
-    bundle.message = message;
-    bundle.envelope = new Envelope();
-    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    checkNotNull(messageType, "type entry not found for " + message.getClass());
-    bundle.envelope.subType = messageType.getKey();
-    bundle.envelope.subFolder = messageType.getValue();
-    return bundle;
   }
 
-  static String normalizeNamespace(String configSpace) {
-    return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
+  @NotNull
+  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
+      SubFolder folder) {
+    return new SimpleEntry<>(type, folder);
   }
 
   private static void initializeHandlerTypes() {
@@ -85,9 +79,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
         (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
   }
 
-  private static String getMapKey(SubType subType, SubFolder subFolder) {
-    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
-    return String.format("%s/%s", useType, subFolder);
+  static String normalizeNamespace(String configSpace) {
+    return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
 
   private static void registerHandlerType(SubType type, SubFolder folder) {
@@ -103,36 +96,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  @NotNull
-  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
-      SubFolder folder) {
-    return new SimpleEntry<>(type, folder);
-  }
-
-  private static Class<?> getMessageClass(SubType type, SubFolder folder) {
-    String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
-    String className = SystemState.class.getPackageName() + "." + typeName;
-    try {
-      return Class.forName(className);
-    } catch (ClassNotFoundException e) {
-      return null;
-    }
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
-    String mapKey = specialClasses.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
-    if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
-      throw new RuntimeException("Type handler already defined for " + mapKey);
-    }
-  }
-
-  @Override
-  public void publish(Object message) {
-    publishBundle(makeMessageBundle(message));
-  }
-
   @Override
   public void activate() {
     checkState(sourceFuture == null, "pipe already activated");
@@ -140,11 +103,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       sourceQueue = new LinkedBlockingDeque<>();
     }
     sourceFuture = handleQueue(sourceQueue);
-  }
-
-  @Override
-  public boolean isActive() {
-    return sourceFuture != null && !sourceFuture.isDone();
   }
 
   @SuppressWarnings("unchecked")
@@ -177,28 +135,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return fromString(Bundle.class, bundleString);
   }
 
-  public void drainSource() {
-    drainQueue(sourceQueue, sourceFuture);
-  }
-
-  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
-    try {
-      queue.put(LOOP_EXIT_MARK);
-      queueFuture.get();
-    } catch (Exception e) {
-      throw new RuntimeException("While draining queue", e);
-    }
-  }
-
-  public abstract List<Bundle> drainOutput();
-
-  private Envelope makeExceptionEnvelope() {
-    return new Envelope();
-  }
-
-  private void ignoreMessage(Object message) {
-  }
-
   void processMessage(Bundle bundle) {
     Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
     String mapKey = getMapKey(envelope.subType, envelope.subFolder);
@@ -224,10 +160,74 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  protected abstract void publishBundle(Bundle messageBundle);
+  private Envelope makeExceptionEnvelope() {
+    return new Envelope();
+  }
+
+  private static String getMapKey(SubType subType, SubFolder subFolder) {
+    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
+    return String.format("%s/%s", useType, subFolder);
+  }
+
+  private void ignoreMessage(Object message) {
+  }
 
   public MessageContinuation getContinuation(Object message) {
     return new MessageContinuation(this, messageEnvelopes.get(message), message);
+  }
+
+  @Override
+  public boolean isActive() {
+    return sourceFuture != null && !sourceFuture.isDone();
+  }
+
+  @Override
+  public void publish(Object message) {
+    publishBundle(makeMessageBundle(message));
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
+    String mapKey = specialClasses.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
+    if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
+      throw new RuntimeException("Type handler already defined for " + mapKey);
+    }
+  }
+
+  protected abstract void publishBundle(Bundle messageBundle);
+
+  /**
+   * Make a new message bundle for the given object, inferring the type and folder from the class
+   * itself (using the predefined lookup map).
+   */
+  public static Bundle makeMessageBundle(Object message) {
+    if (message instanceof Bundle || message == null) {
+      return (Bundle) message;
+    }
+    Bundle bundle = new Bundle();
+    bundle.message = message;
+    bundle.envelope = new Envelope();
+    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+    checkNotNull(messageType, "type entry not found for " + message.getClass());
+    bundle.envelope.subType = messageType.getKey();
+    bundle.envelope.subFolder = messageType.getValue();
+    return bundle;
+  }
+
+  public abstract List<Bundle> drainOutput();
+
+  public void drainSource() {
+    drainQueue(sourceQueue, sourceFuture);
+  }
+
+  void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
+    try {
+      queue.put(LOOP_EXIT_MARK);
+      queueFuture.get();
+    } catch (Exception e) {
+      throw new RuntimeException("While draining queue", e);
+    }
   }
 
   /**

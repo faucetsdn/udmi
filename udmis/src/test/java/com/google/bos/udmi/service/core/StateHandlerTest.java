@@ -33,49 +33,31 @@ public class StateHandlerTest extends MessageTestBase {
     return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
-  private Bundle getTestStateBundle(boolean includeGateway) {
-    Bundle bundle = new Bundle();
-    bundle.envelope = getTestStateEnvelope();
-    bundle.message = getTestStateMessage(includeGateway);
-    return bundle;
-  }
-
   @Override
   protected void resetForTest() {
     LocalMessagePipeTest.resetForTestStatic();
   }
 
-  @NotNull
-  private Envelope getTestStateEnvelope() {
-    return new Envelope();
-  }
+  /**
+   * Test that a state update with multiple sub-blocks results in the expected two messages.
+   */
+  @Test
+  public void multiExpansion() {
+    initializeTestInstance();
 
-  @NotNull
-  private State getTestStateMessage(boolean includeGateway) {
-    State stateMessage = new State();
-    stateMessage.version = TEST_VERSION + "x";
-    stateMessage.system = new SystemState();
-    stateMessage.gateway = includeGateway ? new GatewayState() : null;
-    return stateMessage;
-  }
+    Bundle testStateBundle = getTestStateBundle(true);
 
-  private void initializeTestInstance() {
-    instanceCount.incrementAndGet();
-    MessageConfiguration config = new MessageConfiguration();
-    config.transport = Transport.LOCAL;
-    config.namespace = TEST_NAMESPACE;
-    config.source = TEST_SOURCE;
-    config.destination = TEST_DESTINATION;
-    stateHandler = StateHandler.forConfig(config);
-    stateHandler.activate();
-  }
+    getReverseMessagePipe().publish(testStateBundle);
 
-  private int getExceptionCount() {
-    return stateHandler.exceptionCount;
-  }
+    List<Bundle> bundles = drainPipes();
 
-  private int getDefaultCount() {
-    return stateHandler.defaultCount;
+    Bundle targetBundle = bundles.remove(0);
+
+    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
+    assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
+    assertEquals(1, bundles.size(), "unexpected remaining message count");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
   }
 
   /**
@@ -102,26 +84,44 @@ public class StateHandlerTest extends MessageTestBase {
     assertEquals(1, getDefaultCount(), "default handler count");
   }
 
-  /**
-   * Test that a state update with multiple sub-blocks results in the expected two messages.
-   */
-  @Test
-  public void multiExpansion() {
-    initializeTestInstance();
+  private void initializeTestInstance() {
+    instanceCount.incrementAndGet();
+    MessageConfiguration config = new MessageConfiguration();
+    config.transport = Transport.LOCAL;
+    config.namespace = TEST_NAMESPACE;
+    config.source = TEST_SOURCE;
+    config.destination = TEST_DESTINATION;
+    stateHandler = StateHandler.forConfig(config);
+    stateHandler.activate();
+  }
 
-    Bundle testStateBundle = getTestStateBundle(true);
+  private Bundle getTestStateBundle(boolean includeGateway) {
+    Bundle bundle = new Bundle();
+    bundle.envelope = getTestStateEnvelope();
+    bundle.message = getTestStateMessage(includeGateway);
+    return bundle;
+  }
 
-    getReverseMessagePipe().publish(testStateBundle);
+  private int getExceptionCount() {
+    return stateHandler.exceptionCount;
+  }
 
-    List<Bundle> bundles = drainPipes();
+  private int getDefaultCount() {
+    return stateHandler.defaultCount;
+  }
 
-    Bundle targetBundle = bundles.remove(0);
+  @NotNull
+  private Envelope getTestStateEnvelope() {
+    return new Envelope();
+  }
 
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertNotNull(targetBundle.envelope.subFolder, "received message subFolder is null");
-    assertEquals(1, bundles.size(), "unexpected remaining message count");
-    assertEquals(0, getExceptionCount(), "exception count");
-    assertEquals(1, getDefaultCount(), "default handler count");
+  @NotNull
+  private State getTestStateMessage(boolean includeGateway) {
+    State stateMessage = new State();
+    stateMessage.version = TEST_VERSION + "x";
+    stateMessage.system = new SystemState();
+    stateMessage.gateway = includeGateway ? new GatewayState() : null;
+    return stateMessage;
   }
 
   /**

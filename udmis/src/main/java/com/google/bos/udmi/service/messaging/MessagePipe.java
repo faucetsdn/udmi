@@ -12,10 +12,10 @@ import udmi.schema.MessageConfiguration;
 import udmi.schema.MessageConfiguration.Transport;
 
 /**
- * Basic message pipe interface that logically supports an in-source and out-destination. The
- * pipe implementation itself sits between, so in the purest form would take messages
- * from the input and simply push them to the output. Additionally, it includes the facility
- * to semantically distribute messages to typed handlers based on the Java class.
+ * Basic message pipe interface that logically supports an in-source and out-destination. The pipe
+ * implementation itself sits between, so in the purest form would take messages from the input and
+ * simply push them to the output. Additionally, it includes the facility to semantically distribute
+ * messages to typed handlers based on the Java class.
  */
 public interface MessagePipe {
 
@@ -72,6 +72,7 @@ public interface MessagePipe {
    * Represent a type-happy consumer into a more generic functional specification.
    */
   interface MessageHandler<T> extends Consumer<T> {
+
   }
 
   /**
@@ -79,6 +80,7 @@ public interface MessagePipe {
    * calling code cleaner and less cluttered with java-type crazyness.
    */
   class HandlerSpecification extends SimpleEntry<Class<?>, MessageHandler<?>> {
+
     public <T> HandlerSpecification(Class<T> clazz, MessageHandler<T> handler) {
       super(clazz, handler);
     }

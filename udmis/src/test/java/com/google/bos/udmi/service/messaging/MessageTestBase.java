@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,14 +34,9 @@ public abstract class MessageTestBase {
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler));
 
-  /**
-   * Get a message pipe as defined by the appropriate pipe type subclass.
-   */
-  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
-
-  protected MessageBase getReverseMessagePipe() {
-    getTestMessagePipe();  // Ensure that the main pipe exists before doing the reverse.
-    return getTestMessagePipe(true);
+  protected List<Bundle> drainPipes() {
+    getTestMessagePipe().drainSource();
+    return getTestMessagePipe().drainOutput();
   }
 
   protected MessageBase getTestMessagePipe() {
@@ -60,17 +53,18 @@ public abstract class MessageTestBase {
     return messagePipe;
   }
 
-  @AfterEach
-  public void resetPipe() {
-    inPipe = null;
-    resetForTest();
-  }
+  /**
+   * Get a message pipe as defined by the appropriate pipe type subclass.
+   */
+  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
 
   protected boolean environmentIsEnabled() {
     return true;
   }
 
-  protected void resetForTest() {
+  protected MessageBase getReverseMessagePipe() {
+    getTestMessagePipe();  // Ensure that the main pipe exists before doing the reverse.
+    return getTestMessagePipe(true);
   }
 
   protected Object synchronizedReceive() throws InterruptedException {
@@ -84,6 +78,11 @@ public abstract class MessageTestBase {
     }
   }
 
+  private <T> void defaultHandler(T message) {
+    // Wrap the message in an AtomicReference as a signal that this was the default handler.
+    messageHandler(new AtomicReference<>(message));
+  }
+
   private <T> void messageHandler(T message) {
     synchronized (LocalMessagePipeTest.class) {
       Object previous = receivedMessage.getAndSet(message);
@@ -92,20 +91,19 @@ public abstract class MessageTestBase {
     }
   }
 
-  private <T> void defaultHandler(T message) {
-    // Wrap the message in an AtomicReference as a signal that this was the default handler.
-    messageHandler(new AtomicReference<>(message));
-  }
-
   private Object publishAndReceive(Bundle bundle) throws InterruptedException {
     assertNull(receivedMessage.get(), "expected null pre-receive message");
     getReverseMessagePipe().publishBundle(bundle);
     return synchronizedReceive();
   }
 
-  protected List<Bundle> drainPipes() {
-    getTestMessagePipe().drainSource();
-    return getTestMessagePipe().drainOutput();
+  @AfterEach
+  public void resetPipe() {
+    inPipe = null;
+    resetForTest();
+  }
+
+  protected void resetForTest() {
   }
 
   /**

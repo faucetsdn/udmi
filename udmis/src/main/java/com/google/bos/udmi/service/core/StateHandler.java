@@ -22,9 +22,9 @@ import udmi.schema.MessageConfiguration;
 import udmi.schema.State;
 
 /**
- * Core UDMIS function to process raw State messages from devices and normalize them for
- * the rest of the system. Involves tagging the envelope with the appropriate designators,
- * and splitting up the monolithic block into constituent parts.
+ * Core UDMIS function to process raw State messages from devices and normalize them for the rest of
+ * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
+ * monolithic block into constituent parts.
  */
 public class StateHandler extends ComponentBase {
 

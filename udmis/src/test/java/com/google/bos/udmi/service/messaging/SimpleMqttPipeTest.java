@@ -26,12 +26,10 @@ class SimpleMqttPipeTest extends MessageTestBase {
   private static final String TEST_USERNAME = "scrumptus";
   private static final String TEST_PASSWORD = "aardvark";
 
-  protected boolean environmentIsEnabled() {
-    boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
-    if (!environmentEnabled) {
-      System.err.println("Skipping test because no broker defined in " + MQTT_TEST_BROKER);
-    }
-    return environmentEnabled;
+  protected List<Bundle> drainPipes() {
+    // Extra sync time since message broker is external and async.
+    safeSleep(MESSAGE_SYNC_DELAY_MS);
+    return super.drainPipes();
   }
 
   protected MessageBase getTestMessagePipeCore(boolean reversed) {
@@ -42,6 +40,14 @@ class SimpleMqttPipeTest extends MessageTestBase {
     messageConfiguration.source = reversed ? TEST_SOURCE : TEST_DESTINATION;
     messageConfiguration.destination = reversed ? TEST_DESTINATION : TEST_SOURCE;
     return new SimpleMqttPipe(messageConfiguration);
+  }
+
+  protected boolean environmentIsEnabled() {
+    boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
+    if (!environmentEnabled) {
+      System.err.println("Skipping test because no broker defined in " + MQTT_TEST_BROKER);
+    }
+    return environmentEnabled;
   }
 
   private EndpointConfiguration makeMqttEndpoint() {
@@ -62,11 +68,5 @@ class SimpleMqttPipeTest extends MessageTestBase {
     authProvider.basic.username = TEST_USERNAME;
     authProvider.basic.password = TEST_PASSWORD;
     return authProvider;
-  }
-
-  protected List<Bundle> drainPipes() {
-    // Extra sync time since message broker is external and async.
-    safeSleep(MESSAGE_SYNC_DELAY_MS);
-    return super.drainPipes();
   }
 }
