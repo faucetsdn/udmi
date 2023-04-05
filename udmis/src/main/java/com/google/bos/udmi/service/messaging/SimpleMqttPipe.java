@@ -1,9 +1,9 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
@@ -17,7 +17,6 @@ import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Envelope;
-import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 
 /**
@@ -94,7 +93,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private MqttMessage getMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
-    message.setPayload(JsonUtil.stringify(bundle).getBytes());
+    message.setPayload(stringify(bundle).getBytes());
     return message;
   }
 

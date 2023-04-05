@@ -1,9 +1,11 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 
-import com.google.common.base.Preconditions;
+import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.common.base.Strings;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.schema.Auth_provider;
@@ -22,6 +24,7 @@ class SimpleMqttPipeTest extends MessageTestBase {
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
   private static final String TEST_USERNAME = "scrumptus";
   private static final String TEST_PASSWORD = "aardvark";
+  public static final int MESSAGE_SYNC_DELAY_MS = 1000;
 
   protected boolean environmentIsEnabled() {
     boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
@@ -59,5 +62,11 @@ class SimpleMqttPipeTest extends MessageTestBase {
     authProvider.basic.username = TEST_USERNAME;
     authProvider.basic.password = TEST_PASSWORD;
     return authProvider;
+  }
+
+  protected List<Bundle> drainPipes() {
+    // Extra sync time since message broker is external and async.
+    safeSleep(MESSAGE_SYNC_DELAY_MS);
+    return super.drainPipes();
   }
 }
