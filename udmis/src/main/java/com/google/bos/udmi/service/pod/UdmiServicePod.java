@@ -14,10 +14,6 @@ public class UdmiServicePod {
 
   private final PodConfiguration podConfiguration;
 
-  public static void main(String[] args) {
-    new UdmiServicePod(args);
-  }
-
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
    */
@@ -27,5 +23,9 @@ public class UdmiServicePod {
     podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
     ifNotNullGet(podConfiguration.udmis_flow, StateHandler::forConfig).activate();
+  }
+
+  public static void main(String[] args) {
+    new UdmiServicePod(args);
   }
 }

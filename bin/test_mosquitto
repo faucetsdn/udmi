@@ -90,4 +90,5 @@ if [[ $received_no != $serial_no ]]; then
     false
 fi
 
+echo export MQTT_TEST_BROKER=tcp://127.0.0.1:1883
 echo Done with mosquitto pubber check.

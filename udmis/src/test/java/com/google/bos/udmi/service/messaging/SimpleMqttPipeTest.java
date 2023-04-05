@@ -18,13 +18,13 @@ import udmi.schema.MessageConfiguration.Transport;
 class SimpleMqttPipeTest extends MessageTestBase {
 
   public static final String MQTT_TEST_BROKER = "MQTT_TEST_BROKER";
+  public static final int MESSAGE_SYNC_DELAY_MS = 10000;
   // Ex. broker URL: MQTT_TEST_BROKER=tcp://localhost:1883
   private static final String BROKER_URL = System.getenv(MQTT_TEST_BROKER);
   private static final String URL_FORMAT = "(.+)://(.+):(.+)";
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
   private static final String TEST_USERNAME = "scrumptus";
   private static final String TEST_PASSWORD = "aardvark";
-  public static final int MESSAGE_SYNC_DELAY_MS = 1000;
 
   protected boolean environmentIsEnabled() {
     boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);

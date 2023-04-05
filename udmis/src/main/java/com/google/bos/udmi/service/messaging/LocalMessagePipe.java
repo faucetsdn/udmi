@@ -30,22 +30,6 @@ public class LocalMessagePipe extends MessageBase {
   private final BlockingQueue<String> destinationQueue;
 
   /**
-   * Get a pipe from the global namespace. Only valid after the pipe in question has been
-   * instantiated... this is not a factory!
-   */
-  public static LocalMessagePipe getPipeForNamespace(String namespace) {
-    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
-  }
-
-  public static void resetForTest() {
-    GLOBAL_PIPES.clear();
-  }
-
-  static MessagePipe from(MessageConfiguration config) {
-    return new LocalMessagePipe(config);
-  }
-
-  /**
    * Create a new local message pipe given a configuration bundle.
    */
   public LocalMessagePipe(MessageConfiguration config) {
@@ -72,6 +56,22 @@ public class LocalMessagePipe extends MessageBase {
     destinationScope = reverse ? original.sourceScope : original.destinationScope;
     destinationQueue = getQueueForScope(namespace, destinationScope);
     info(String.format("Created mirror pipe from %s to %s", sourceScope, destinationScope));
+  }
+
+  /**
+   * Get a pipe from the global namespace. Only valid after the pipe in question has been
+   * instantiated... this is not a factory!
+   */
+  public static LocalMessagePipe getPipeForNamespace(String namespace) {
+    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
+  }
+
+  public static void resetForTest() {
+    GLOBAL_PIPES.clear();
+  }
+
+  static MessagePipe from(MessageConfiguration config) {
+    return new LocalMessagePipe(config);
   }
 
   private BlockingQueue<String> getQueueForScope(String namespace, String scope) {

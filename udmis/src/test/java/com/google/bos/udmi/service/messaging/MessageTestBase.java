@@ -29,12 +29,12 @@ public abstract class MessageTestBase {
   protected static final String TEST_VERSION = "1.32";
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   protected static AtomicInteger instanceCount = new AtomicInteger();
+  private static MessageBase inPipe;
+  protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::messageHandler),
       messageHandlerFor(StateUpdate.class, this::messageHandler));
-  protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
-  private static MessageBase inPipe;
 
   /**
    * Get a message pipe as defined by the appropriate pipe type subclass.

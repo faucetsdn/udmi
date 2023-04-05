@@ -53,8 +53,8 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
       Object.class, DEFAULT_HANDLER,
       Exception.class, EXCEPTION_HANDLER
   );
-  private Future<Void> sourceFuture;
   BlockingQueue<String> sourceQueue;
+  private Future<Void> sourceFuture;
 
   /**
    * Make a new message bundle for the given object, inferring the type and folder from the class
@@ -76,6 +76,47 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   static String normalizeNamespace(String configSpace) {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
+  }
+
+  private static void initializeHandlerTypes() {
+    Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
+        .forEach(folder -> registerHandlerType(type, folder)));
+    SPECIAL_TYPES.forEach(
+        (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
+  }
+
+  private static String getMapKey(SubType subType, SubFolder subFolder) {
+    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
+    return String.format("%s/%s", useType, subFolder);
+  }
+
+  private static void registerHandlerType(SubType type, SubFolder folder) {
+    Class<?> messageClass = getMessageClass(type, folder);
+    registerMessageClass(type, folder, messageClass);
+  }
+
+  private static void registerMessageClass(SubType type, SubFolder folder, Class<?> messageClass) {
+    String mapKey = getMapKey(type, folder);
+    if (messageClass != null) {
+      TYPE_CLASSES.put(mapKey, messageClass);
+      CLASS_TYPES.put(messageClass, getTypeFolderEntry(type, folder));
+    }
+  }
+
+  @NotNull
+  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
+      SubFolder folder) {
+    return new SimpleEntry<>(type, folder);
+  }
+
+  private static Class<?> getMessageClass(SubType type, SubFolder folder) {
+    String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
+    String className = SystemState.class.getPackageName() + "." + typeName;
+    try {
+      return Class.forName(className);
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
   }
 
   @Override
@@ -189,51 +230,11 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     return new MessageContinuation(this, messageEnvelopes.get(message), message);
   }
 
-  private static void initializeHandlerTypes() {
-    Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
-        .forEach(folder -> registerHandlerType(type, folder)));
-    SPECIAL_TYPES.forEach(
-        (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
-  }
-
-  private static String getMapKey(SubType subType, SubFolder subFolder) {
-    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
-    return String.format("%s/%s", useType, subFolder);
-  }
-
-  private static void registerHandlerType(SubType type, SubFolder folder) {
-    Class<?> messageClass = getMessageClass(type, folder);
-    registerMessageClass(type, folder, messageClass);
-  }
-
-  private static void registerMessageClass(SubType type, SubFolder folder, Class<?> messageClass) {
-    String mapKey = getMapKey(type, folder);
-    if (messageClass != null) {
-      TYPE_CLASSES.put(mapKey, messageClass);
-      CLASS_TYPES.put(messageClass, getTypeFolderEntry(type, folder));
-    }
-  }
-
-  @NotNull
-  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
-      SubFolder folder) {
-    return new SimpleEntry<>(type, folder);
-  }
-
-  private static Class<?> getMessageClass(SubType type, SubFolder folder) {
-    String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
-    String className = SystemState.class.getPackageName() + "." + typeName;
-    try {
-      return Class.forName(className);
-    } catch (ClassNotFoundException e) {
-      return null;
-    }
-  }
-
   /**
    * Simple wrapper for a message bundle, including envelope and message.
    */
   public static class Bundle {
+
     public Envelope envelope;
     public Object message;
   }
