@@ -38,6 +38,46 @@ public class StateHandlerTest extends MessageTestBase {
     LocalMessagePipeTest.resetForTestStatic();
   }
 
+  private int getDefaultCount() {
+    return stateHandler.defaultCount;
+  }
+
+  private int getExceptionCount() {
+    return stateHandler.exceptionCount;
+  }
+
+  private Bundle getTestStateBundle(boolean includeGateway) {
+    Bundle bundle = new Bundle();
+    bundle.envelope = getTestStateEnvelope();
+    bundle.message = getTestStateMessage(includeGateway);
+    return bundle;
+  }
+
+  @NotNull
+  private Envelope getTestStateEnvelope() {
+    return new Envelope();
+  }
+
+  @NotNull
+  private State getTestStateMessage(boolean includeGateway) {
+    State stateMessage = new State();
+    stateMessage.version = TEST_VERSION + "x";
+    stateMessage.system = new SystemState();
+    stateMessage.gateway = includeGateway ? new GatewayState() : null;
+    return stateMessage;
+  }
+
+  private void initializeTestInstance() {
+    instanceCount.incrementAndGet();
+    MessageConfiguration config = new MessageConfiguration();
+    config.transport = Transport.LOCAL;
+    config.namespace = TEST_NAMESPACE;
+    config.source = TEST_SOURCE;
+    config.destination = TEST_DESTINATION;
+    stateHandler = StateHandler.forConfig(config);
+    stateHandler.activate();
+  }
+
   /**
    * Test that a state update with multiple sub-blocks results in the expected two messages.
    */
@@ -58,46 +98,6 @@ public class StateHandlerTest extends MessageTestBase {
     assertEquals(1, bundles.size(), "unexpected remaining message count");
     assertEquals(0, getExceptionCount(), "exception count");
     assertEquals(1, getDefaultCount(), "default handler count");
-  }
-
-  private void initializeTestInstance() {
-    instanceCount.incrementAndGet();
-    MessageConfiguration config = new MessageConfiguration();
-    config.transport = Transport.LOCAL;
-    config.namespace = TEST_NAMESPACE;
-    config.source = TEST_SOURCE;
-    config.destination = TEST_DESTINATION;
-    stateHandler = StateHandler.forConfig(config);
-    stateHandler.activate();
-  }
-
-  private Bundle getTestStateBundle(boolean includeGateway) {
-    Bundle bundle = new Bundle();
-    bundle.envelope = getTestStateEnvelope();
-    bundle.message = getTestStateMessage(includeGateway);
-    return bundle;
-  }
-
-  private int getExceptionCount() {
-    return stateHandler.exceptionCount;
-  }
-
-  private int getDefaultCount() {
-    return stateHandler.defaultCount;
-  }
-
-  @NotNull
-  private Envelope getTestStateEnvelope() {
-    return new Envelope();
-  }
-
-  @NotNull
-  private State getTestStateMessage(boolean includeGateway) {
-    State stateMessage = new State();
-    stateMessage.version = TEST_VERSION + "x";
-    stateMessage.system = new SystemState();
-    stateMessage.gateway = includeGateway ? new GatewayState() : null;
-    return stateMessage;
   }
 
   /**

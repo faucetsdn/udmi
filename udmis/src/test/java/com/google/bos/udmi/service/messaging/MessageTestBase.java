@@ -39,25 +39,6 @@ public abstract class MessageTestBase {
     return getTestMessagePipe().drainOutput();
   }
 
-  protected MessageBase getTestMessagePipe() {
-    inPipe = Optional.ofNullable(inPipe).orElseGet(() -> getTestMessagePipe(false));
-    return inPipe;
-  }
-
-  private MessageBase getTestMessagePipe(boolean reversed) {
-    MessageBase messagePipe = getTestMessagePipeCore(reversed);
-    if (!reversed && !messagePipe.isActive()) {
-      messagePipe.registerHandlers(messageHandlers);
-      messagePipe.activate();
-    }
-    return messagePipe;
-  }
-
-  /**
-   * Get a message pipe as defined by the appropriate pipe type subclass.
-   */
-  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
-
   protected boolean environmentIsEnabled() {
     return true;
   }
@@ -65,6 +46,19 @@ public abstract class MessageTestBase {
   protected MessageBase getReverseMessagePipe() {
     getTestMessagePipe();  // Ensure that the main pipe exists before doing the reverse.
     return getTestMessagePipe(true);
+  }
+
+  protected MessageBase getTestMessagePipe() {
+    inPipe = Optional.ofNullable(inPipe).orElseGet(() -> getTestMessagePipe(false));
+    return inPipe;
+  }
+
+  /**
+   * Get a message pipe as defined by the appropriate pipe type subclass.
+   */
+  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
+
+  protected void resetForTest() {
   }
 
   protected Object synchronizedReceive() throws InterruptedException {
@@ -81,6 +75,15 @@ public abstract class MessageTestBase {
   private <T> void defaultHandler(T message) {
     // Wrap the message in an AtomicReference as a signal that this was the default handler.
     messageHandler(new AtomicReference<>(message));
+  }
+
+  private MessageBase getTestMessagePipe(boolean reversed) {
+    MessageBase messagePipe = getTestMessagePipeCore(reversed);
+    if (!reversed && !messagePipe.isActive()) {
+      messagePipe.registerHandlers(messageHandlers);
+      messagePipe.activate();
+    }
+    return messagePipe;
   }
 
   private <T> void messageHandler(T message) {
@@ -101,9 +104,6 @@ public abstract class MessageTestBase {
   public void resetPipe() {
     inPipe = null;
     resetForTest();
-  }
-
-  protected void resetForTest() {
   }
 
   /**

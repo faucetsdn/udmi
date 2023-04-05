@@ -353,20 +353,6 @@
         <option name="TAB_SIZE" value="2" />
       </indentOptions>
       <arrangement>
-        <groups>
-          <group>
-            <type>GETTERS_AND_SETTERS</type>
-            <order>KEEP</order>
-          </group>
-          <group>
-            <type>OVERRIDDEN_METHODS</type>
-            <order>KEEP</order>
-          </group>
-          <group>
-            <type>DEPENDENT_METHODS</type>
-            <order>BREADTH_FIRST</order>
-          </group>
-        </groups>
         <rules>
           <section>
             <rule>

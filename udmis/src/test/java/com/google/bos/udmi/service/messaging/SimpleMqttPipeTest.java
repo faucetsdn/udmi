@@ -32,6 +32,14 @@ class SimpleMqttPipeTest extends MessageTestBase {
     return super.drainPipes();
   }
 
+  protected boolean environmentIsEnabled() {
+    boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
+    if (!environmentEnabled) {
+      System.err.println("Skipping test because no broker defined in " + MQTT_TEST_BROKER);
+    }
+    return environmentEnabled;
+  }
+
   protected MessageBase getTestMessagePipeCore(boolean reversed) {
     MessageConfiguration messageConfiguration = new MessageConfiguration();
     messageConfiguration.transport = Transport.MQTT;
@@ -42,12 +50,12 @@ class SimpleMqttPipeTest extends MessageTestBase {
     return new SimpleMqttPipe(messageConfiguration);
   }
 
-  protected boolean environmentIsEnabled() {
-    boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);
-    if (!environmentEnabled) {
-      System.err.println("Skipping test because no broker defined in " + MQTT_TEST_BROKER);
-    }
-    return environmentEnabled;
+  private Auth_provider makeBasicAuth() {
+    Auth_provider authProvider = new Auth_provider();
+    authProvider.basic = new Basic();
+    authProvider.basic.username = TEST_USERNAME;
+    authProvider.basic.password = TEST_PASSWORD;
+    return authProvider;
   }
 
   private EndpointConfiguration makeMqttEndpoint() {
@@ -60,13 +68,5 @@ class SimpleMqttPipeTest extends MessageTestBase {
     endpoint.port = Integer.parseInt(matcher.group(3));
     endpoint.auth_provider = makeBasicAuth();
     return endpoint;
-  }
-
-  private Auth_provider makeBasicAuth() {
-    Auth_provider authProvider = new Auth_provider();
-    authProvider.basic = new Basic();
-    authProvider.basic.username = TEST_USERNAME;
-    authProvider.basic.password = TEST_PASSWORD;
-    return authProvider;
   }
 }

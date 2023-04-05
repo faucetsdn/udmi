@@ -18,8 +18,12 @@ import udmi.schema.MessageConfiguration;
  */
 public class LocalMessagePipeTest extends MessageTestBase {
 
-  public MessageBase getTestMessagePipeCore(boolean reversed) {
-    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
+  private static MessageConfiguration getConfiguration() {
+    MessageConfiguration messageConfiguration = new MessageConfiguration();
+    messageConfiguration.namespace = TEST_NAMESPACE;
+    messageConfiguration.source = TEST_SOURCE;
+    messageConfiguration.destination = TEST_DESTINATION;
+    return messageConfiguration;
   }
 
   /**
@@ -34,21 +38,24 @@ public class LocalMessagePipeTest extends MessageTestBase {
     return Optional.ofNullable(mainPipe).orElseGet(() -> new LocalMessagePipe(getConfiguration()));
   }
 
-  private static MessageConfiguration getConfiguration() {
-    MessageConfiguration messageConfiguration = new MessageConfiguration();
-    messageConfiguration.namespace = TEST_NAMESPACE;
-    messageConfiguration.source = TEST_SOURCE;
-    messageConfiguration.destination = TEST_DESTINATION;
-    return messageConfiguration;
+  public static void resetForTestStatic() {
+    LocalMessagePipe.resetForTest();
+  }
+
+  private Map<String, Object> testSend(Object message) {
+    getTestMessagePipe().publish(message);
+    List<Bundle> bundles = getTestMessagePipe().drainOutput();
+    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
+    return JsonUtil.asMap(bundles.get(0));
+  }
+
+  public MessageBase getTestMessagePipeCore(boolean reversed) {
+    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
   }
 
   @Override
   public void resetForTest() {
     resetForTestStatic();
-  }
-
-  public static void resetForTestStatic() {
-    LocalMessagePipe.resetForTest();
   }
 
   private static class BespokeObject {
@@ -70,13 +77,6 @@ public class LocalMessagePipeTest extends MessageTestBase {
     assertEquals("update", envelope.get("subFolder"), "unexpected subfolder");
     Map<String, Object> message = (Map<String, Object>) received.get("message");
     assertEquals(TEST_VERSION, message.get("version"));
-  }
-
-  private Map<String, Object> testSend(Object message) {
-    getTestMessagePipe().publish(message);
-    List<Bundle> bundles = getTestMessagePipe().drainOutput();
-    checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
-    return JsonUtil.asMap(bundles.get(0));
   }
 
   /**

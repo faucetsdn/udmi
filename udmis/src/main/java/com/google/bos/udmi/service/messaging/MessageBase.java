@@ -56,6 +56,11 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
   BlockingQueue<String> sourceQueue;
   private Future<Void> sourceFuture;
 
+  private static String getMapKey(SubType subType, SubFolder subFolder) {
+    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
+    return String.format("%s/%s", useType, subFolder);
+  }
+
   private static Class<?> getMessageClass(SubType type, SubFolder folder) {
     String typeName = Common.capitalize(folder.value()) + Common.capitalize(type.value());
     String className = SystemState.class.getPackageName() + "." + typeName;
@@ -79,6 +84,24 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
         (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
   }
 
+  /**
+   * Make a new message bundle for the given object, inferring the type and folder from the class
+   * itself (using the predefined lookup map).
+   */
+  public static Bundle makeMessageBundle(Object message) {
+    if (message instanceof Bundle || message == null) {
+      return (Bundle) message;
+    }
+    Bundle bundle = new Bundle();
+    bundle.message = message;
+    bundle.envelope = new Envelope();
+    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
+    checkNotNull(messageType, "type entry not found for " + message.getClass());
+    bundle.envelope.subType = messageType.getKey();
+    bundle.envelope.subFolder = messageType.getValue();
+    return bundle;
+  }
+
   static String normalizeNamespace(String configSpace) {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
@@ -96,18 +119,18 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  @Override
-  public void activate() {
-    checkState(sourceFuture == null, "pipe already activated");
-    if (sourceQueue == null) {
-      sourceQueue = new LinkedBlockingDeque<>();
-    }
-    sourceFuture = handleQueue(sourceQueue);
-  }
-
   @SuppressWarnings("unchecked")
   protected Future<Void> handleQueue(BlockingQueue<String> queue) {
     return (Future<Void>) executor.submit(() -> this.messageLoop(queue));
+  }
+
+  protected abstract void publishBundle(Bundle messageBundle);
+
+  private void ignoreMessage(Object message) {
+  }
+
+  private Envelope makeExceptionEnvelope() {
+    return new Envelope();
   }
 
   private void messageLoop(BlockingQueue<String> queue) {
@@ -131,26 +154,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  Bundle extractBundle(String bundleString) {
-    return fromString(Bundle.class, bundleString);
-  }
-
-  void processMessage(Bundle bundle) {
-    Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
-    try {
-      handlers.computeIfAbsent(mapKey, key -> {
-        info("Defaulting messages of type/folder " + mapKey);
-        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
-      });
-      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
-      Object messageObject = convertTo(handlerType, bundle.message);
-      processMessage(envelope, mapKey, messageObject);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
-    }
-  }
-
   private void processMessage(Envelope envelope, String mapKey, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
@@ -160,16 +163,19 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  private Envelope makeExceptionEnvelope() {
-    return new Envelope();
+  @Override
+  public void activate() {
+    checkState(sourceFuture == null, "pipe already activated");
+    if (sourceQueue == null) {
+      sourceQueue = new LinkedBlockingDeque<>();
+    }
+    sourceFuture = handleQueue(sourceQueue);
   }
 
-  private static String getMapKey(SubType subType, SubFolder subFolder) {
-    SubType useType = Optional.ofNullable(subType).orElse(SubType.EVENT);
-    return String.format("%s/%s", useType, subFolder);
-  }
+  public abstract List<Bundle> drainOutput();
 
-  private void ignoreMessage(Object message) {
+  public void drainSource() {
+    drainQueue(sourceQueue, sourceFuture);
   }
 
   public MessageContinuation getContinuation(Object message) {
@@ -195,30 +201,33 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
-  protected abstract void publishBundle(Bundle messageBundle);
-
   /**
-   * Make a new message bundle for the given object, inferring the type and folder from the class
-   * itself (using the predefined lookup map).
+   * Simple wrapper for a message bundle, including envelope and message.
    */
-  public static Bundle makeMessageBundle(Object message) {
-    if (message instanceof Bundle || message == null) {
-      return (Bundle) message;
-    }
-    Bundle bundle = new Bundle();
-    bundle.message = message;
-    bundle.envelope = new Envelope();
-    SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
-    checkNotNull(messageType, "type entry not found for " + message.getClass());
-    bundle.envelope.subType = messageType.getKey();
-    bundle.envelope.subFolder = messageType.getValue();
-    return bundle;
+  public static class Bundle {
+
+    public Envelope envelope;
+    public Object message;
   }
 
-  public abstract List<Bundle> drainOutput();
+  Bundle extractBundle(String bundleString) {
+    return fromString(Bundle.class, bundleString);
+  }
 
-  public void drainSource() {
-    drainQueue(sourceQueue, sourceFuture);
+  void processMessage(Bundle bundle) {
+    Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    try {
+      handlers.computeIfAbsent(mapKey, key -> {
+        info("Defaulting messages of type/folder " + mapKey);
+        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
+      });
+      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
+      Object messageObject = convertTo(handlerType, bundle.message);
+      processMessage(envelope, mapKey, messageObject);
+    } catch (Exception e) {
+      throw new RuntimeException("While processing message key " + mapKey, e);
+    }
   }
 
   void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {
@@ -228,14 +237,5 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     } catch (Exception e) {
       throw new RuntimeException("While draining queue", e);
     }
-  }
-
-  /**
-   * Simple wrapper for a message bundle, including envelope and message.
-   */
-  public static class Bundle {
-
-    public Envelope envelope;
-    public Object message;
   }
 }

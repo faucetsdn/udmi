@@ -44,20 +44,6 @@ public class LocalMessagePipe extends MessageBase {
     info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
   }
 
-  private BlockingQueue<String> getQueueForScope(String namespace, String scope) {
-    checkNotNull(scope, "pipe scope is null");
-    return getPipeForNamespace(namespace).scopedQueues
-        .computeIfAbsent(scope, key -> new LinkedBlockingDeque<>());
-  }
-
-  /**
-   * Get a pipe from the global namespace. Only valid after the pipe in question has been
-   * instantiated... this is not a factory!
-   */
-  public static LocalMessagePipe getPipeForNamespace(String namespace) {
-    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
-  }
-
   /**
    * Create a new local message pipe that's possible the reverse of the original. This intentionally
    * skips the already-initialized checks that would prevent a normal pipe from being created
@@ -76,6 +62,14 @@ public class LocalMessagePipe extends MessageBase {
     return new LocalMessagePipe(config);
   }
 
+  /**
+   * Get a pipe from the global namespace. Only valid after the pipe in question has been
+   * instantiated... this is not a factory!
+   */
+  public static LocalMessagePipe getPipeForNamespace(String namespace) {
+    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
+  }
+
   public static void resetForTest() {
     GLOBAL_PIPES.clear();
   }
@@ -89,6 +83,12 @@ public class LocalMessagePipe extends MessageBase {
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
+  }
+
+  private BlockingQueue<String> getQueueForScope(String namespace, String scope) {
+    checkNotNull(scope, "pipe scope is null");
+    return getPipeForNamespace(namespace).scopedQueues
+        .computeIfAbsent(scope, key -> new LinkedBlockingDeque<>());
   }
 
   @Override

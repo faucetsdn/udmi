@@ -43,8 +43,16 @@ public class SimpleMqttPipe extends MessageBase {
     mqttClient = connectMqttClient(config.endpoint);
   }
 
-  private String makeClientId() {
-    return "client-" + System.currentTimeMillis();
+  static MessagePipe from(MessageConfiguration config) {
+    return new SimpleMqttPipe(config);
+  }
+
+  protected void publishBundle(Bundle bundle) {
+    try {
+      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to mqtt client", e);
+    }
   }
 
   private MqttClient connectMqttClient(EndpointConfiguration endpoint) {
@@ -74,13 +82,26 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
+  private MqttMessage getMqttMessage(Bundle bundle) {
+    MqttMessage message = new MqttMessage();
+    message.setPayload(stringify(bundle).getBytes());
+    return message;
+  }
+
+  private String getMqttTopic(Bundle bundle) {
+    Envelope envelope = bundle.envelope;
+    return envelope == null
+        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
+        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
+  }
+
   private String makeBrokerUrl(EndpointConfiguration endpoint) {
     Transport transport = Optional.ofNullable(endpoint.transport).orElse(Transport.SSL);
     return String.format(BROKER_URL_FORMAT, transport, endpoint.hostname, endpoint.port);
   }
 
-  static MessagePipe from(MessageConfiguration config) {
-    return new SimpleMqttPipe(config);
+  private String makeClientId() {
+    return "client-" + System.currentTimeMillis();
   }
 
   @Override
@@ -91,27 +112,6 @@ public class SimpleMqttPipe extends MessageBase {
     } catch (Exception e) {
       throw new RuntimeException("While subscribing to mqtt topics", e);
     }
-  }
-
-  protected void publishBundle(Bundle bundle) {
-    try {
-      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
-    } catch (Exception e) {
-      throw new RuntimeException("While publishing to mqtt client", e);
-    }
-  }
-
-  private String getMqttTopic(Bundle bundle) {
-    Envelope envelope = bundle.envelope;
-    return envelope == null
-        ? String.format(TOPIC_FORMAT, namespace, EXCEPTION_TYPE, EXCEPTION_TYPE)
-        : String.format(TOPIC_FORMAT, namespace, envelope.subType, envelope.subFolder);
-  }
-
-  private MqttMessage getMqttMessage(Bundle bundle) {
-    MqttMessage message = new MqttMessage();
-    message.setPayload(stringify(bundle).getBytes());
-    return message;
   }
 
   @Override
@@ -127,13 +127,13 @@ public class SimpleMqttPipe extends MessageBase {
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage message) {
-      sourceQueue.add(message.toString());
+    public void deliveryComplete(IMqttDeliveryToken token) {
+      info("Delivery complete");
     }
 
     @Override
-    public void deliveryComplete(IMqttDeliveryToken token) {
-      info("Delivery complete");
+    public void messageArrived(String topic, MqttMessage message) {
+      sourceQueue.add(message.toString());
     }
   }
 }
