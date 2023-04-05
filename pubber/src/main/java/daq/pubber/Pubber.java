@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -171,6 +172,7 @@ public class Pubber {
   private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
   private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
+  private static final int FORCED_STATE_TIME_MS = 10000;
   final State deviceState = new State();
   private final File outDir;
   private final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
@@ -936,11 +938,30 @@ public class Pubber {
     publishLogMessage(report);
     // TODO: Replace this with a heap so only the highest-priority status is reported.
     deviceState.system.status = shouldLogLevel(report.level) ? report : null;
-    publishAsynchronousState();
+    publishConfigStateUpdate();
     if (cause != null && configLatch.getCount() > 0) {
       configLatch.countDown();
       warn("Released startup latch because reported error");
     }
+  }
+
+  /**
+   * Issue a state update in response to a received config message. This will optionally
+   * add a synthetic delay in so that testing infrastructure can test that related sequence
+   * tests handle this case appropriately.
+   */
+  private void publishConfigStateUpdate() {
+    if (TRUE.equals(configuration.options.configStateDelay)) {
+      delayNextStateUpdate();
+    }
+    publishAsynchronousState();
+  }
+
+  private void delayNextStateUpdate() {
+    // Calculate a synthetic last state time that factors in the optional delay.
+    long syntheticType = System.currentTimeMillis() - STATE_THROTTLE_MS + FORCED_STATE_TIME_MS;
+    // And use the synthetic time iff it's later than the actual last state time.
+    lastStateTimeMs = Math.max(lastStateTimeMs, syntheticType);
   }
 
   private boolean shouldLogLevel(int level) {
@@ -986,7 +1007,7 @@ public class Pubber {
     } catch (Exception e) {
       publisherConfigLog("apply", e);
     }
-    publishAsynchronousState();
+    publishConfigStateUpdate();
   }
 
   private void processConfigUpdate(Config config) {
@@ -1544,7 +1565,8 @@ public class Pubber {
   private void publishAsynchronousState() {
     if (stateLock.tryAcquire()) {
       try {
-        long delay = lastStateTimeMs + STATE_THROTTLE_MS - System.currentTimeMillis();
+        long soonestAllowedStateUpdate = lastStateTimeMs + STATE_THROTTLE_MS;
+        long delay = soonestAllowedStateUpdate - System.currentTimeMillis();
         debug(String.format("State update defer %dms", delay));
         if (delay > 0) {
           markStateDirty(delay);
@@ -1595,7 +1617,6 @@ public class Pubber {
       warn(String.format("State update delay %dms", delay));
       safeSleep(delay);
     }
-
     lastStateTimeMs = System.currentTimeMillis();
     CountDownLatch latch = new CountDownLatch(1);
     publishDeviceMessage(stateToSend, () -> {
