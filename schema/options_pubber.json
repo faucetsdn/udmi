@@ -28,6 +28,9 @@
     "extraPoint": {
       "type": "string"
     },
+    "configStateDelay": {
+      "type": "boolean"
+    },
     "missingPoint": {
       "type": "string"
     },
