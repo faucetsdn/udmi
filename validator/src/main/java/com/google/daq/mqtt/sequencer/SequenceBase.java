@@ -545,7 +545,7 @@ public class SequenceBase {
         score, message);
     notice(resultString);
     try (PrintWriter log = new PrintWriter(new FileOutputStream(resultSummary, true))) {
-      log.print(resultString);
+      log.println(resultString);
     } catch (Exception e) {
       throw new RuntimeException("While writing report summary " + resultSummary.getAbsolutePath(),
           e);
