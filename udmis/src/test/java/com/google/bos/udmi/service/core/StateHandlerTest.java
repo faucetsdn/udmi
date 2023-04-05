@@ -60,30 +60,6 @@ public class StateHandlerTest extends MessageTestBase {
     assertEquals(1, getDefaultCount(), "default handler count");
   }
 
-  /**
-   * Test that a state update with one sub-block results in a received message of the proper type.
-   */
-  @Test
-  public void singleExpansion() {
-    initializeTestInstance();
-
-    Bundle testStateBundle = getTestStateBundle(false);
-    Bundle originalBundle = deepCopy(testStateBundle);
-
-    getReverseMessagePipe().publish(testStateBundle);
-
-    List<Bundle> bundles = drainPipes();
-    Bundle targetBundle = bundles.remove(0);
-
-    assertNull(originalBundle.envelope.subType, "original envelope was not null");
-    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
-    assertEquals(SYSTEM, targetBundle.envelope.subFolder, "received message subType mismatch");
-    assertNull(testStateBundle.envelope.subType, "original subType was mutated");
-    assertEquals(0, bundles.size(), "unexpected published message count");
-    assertEquals(0, getExceptionCount(), "exception count");
-    assertEquals(1, getDefaultCount(), "default handler count");
-  }
-
   private void initializeTestInstance() {
     instanceCount.incrementAndGet();
     MessageConfiguration config = new MessageConfiguration();
@@ -122,6 +98,30 @@ public class StateHandlerTest extends MessageTestBase {
     stateMessage.system = new SystemState();
     stateMessage.gateway = includeGateway ? new GatewayState() : null;
     return stateMessage;
+  }
+
+  /**
+   * Test that a state update with one sub-block results in a received message of the proper type.
+   */
+  @Test
+  public void singleExpansion() {
+    initializeTestInstance();
+
+    Bundle testStateBundle = getTestStateBundle(false);
+    Bundle originalBundle = deepCopy(testStateBundle);
+
+    getReverseMessagePipe().publish(testStateBundle);
+
+    List<Bundle> bundles = drainPipes();
+    Bundle targetBundle = bundles.remove(0);
+
+    assertNull(originalBundle.envelope.subType, "original envelope was not null");
+    assertEquals(STATE, targetBundle.envelope.subType, "received message subType mismatch");
+    assertEquals(SYSTEM, targetBundle.envelope.subFolder, "received message subType mismatch");
+    assertNull(testStateBundle.envelope.subType, "original subType was mutated");
+    assertEquals(0, bundles.size(), "unexpected published message count");
+    assertEquals(0, getExceptionCount(), "exception count");
+    assertEquals(1, getDefaultCount(), "default handler count");
   }
 
   /**
