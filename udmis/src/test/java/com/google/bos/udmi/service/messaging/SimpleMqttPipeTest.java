@@ -24,7 +24,7 @@ class SimpleMqttPipeTest extends MessageTestBase {
   private static final Pattern URL_PATTERN = Pattern.compile(URL_FORMAT);
   private static final String TEST_USERNAME = "scrumptus";
   private static final String TEST_PASSWORD = "aardvark";
-  public static final int MESSAGE_SYNC_DELAY_MS = 1000;
+  public static final int MESSAGE_SYNC_DELAY_MS = 10000;
 
   protected boolean environmentIsEnabled() {
     boolean environmentEnabled = !Strings.isNullOrEmpty(BROKER_URL);

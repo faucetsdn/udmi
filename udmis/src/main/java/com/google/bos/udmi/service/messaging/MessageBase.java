@@ -234,6 +234,7 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
    * Simple wrapper for a message bundle, including envelope and message.
    */
   public static class Bundle {
+
     public Envelope envelope;
     public Object message;
   }
