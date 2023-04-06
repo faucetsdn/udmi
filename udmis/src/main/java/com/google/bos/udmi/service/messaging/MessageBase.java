@@ -163,6 +163,22 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     }
   }
 
+  void processMessage(Bundle bundle) {
+    Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
+    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    try {
+      handlers.computeIfAbsent(mapKey, key -> {
+        info("Defaulting messages of type/folder " + mapKey);
+        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
+      });
+      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
+      Object messageObject = convertTo(handlerType, bundle.message);
+      processMessage(envelope, mapKey, messageObject);
+    } catch (Exception e) {
+      throw new RuntimeException("While processing message key " + mapKey, e);
+    }
+  }
+
   @Override
   public void activate() {
     checkState(sourceFuture == null, "pipe already activated");
@@ -212,22 +228,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
 
   Bundle extractBundle(String bundleString) {
     return fromString(Bundle.class, bundleString);
-  }
-
-  void processMessage(Bundle bundle) {
-    Envelope envelope = checkNotNull(bundle.envelope, "bundle envelope is null");
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
-    try {
-      handlers.computeIfAbsent(mapKey, key -> {
-        info("Defaulting messages of type/folder " + mapKey);
-        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
-      });
-      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
-      Object messageObject = convertTo(handlerType, bundle.message);
-      processMessage(envelope, mapKey, messageObject);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
-    }
   }
 
   void drainQueue(BlockingQueue<String> queue, Future<Void> queueFuture) {

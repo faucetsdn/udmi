@@ -53,30 +53,6 @@ public abstract class MessageTestBase {
     return inPipe;
   }
 
-  /**
-   * Get a message pipe as defined by the appropriate pipe type subclass.
-   */
-  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
-
-  protected void resetForTest() {
-  }
-
-  protected Object synchronizedReceive() throws InterruptedException {
-    synchronized (LocalMessagePipeTest.class) {
-      Object existing = receivedMessage.getAndSet(null);
-      if (existing != null) {
-        return existing;
-      }
-      LocalMessagePipeTest.class.wait(RECEIVE_TIMEOUT_MS);
-      return receivedMessage.getAndSet(null);
-    }
-  }
-
-  private <T> void defaultHandler(T message) {
-    // Wrap the message in an AtomicReference as a signal that this was the default handler.
-    messageHandler(new AtomicReference<>(message));
-  }
-
   private MessageBase getTestMessagePipe(boolean reversed) {
     MessageBase messagePipe = getTestMessagePipeCore(reversed);
     if (!reversed && !messagePipe.isActive()) {
@@ -86,11 +62,35 @@ public abstract class MessageTestBase {
     return messagePipe;
   }
 
+  /**
+   * Get a message pipe as defined by the appropriate pipe type subclass.
+   */
+  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
+
+  protected void resetForTest() {
+  }
+
+  protected Object synchronizedReceive() throws InterruptedException {
+    synchronized (this) {
+      Object existing = receivedMessage.getAndSet(null);
+      if (existing != null) {
+        return existing;
+      }
+      wait(RECEIVE_TIMEOUT_MS);
+      return receivedMessage.getAndSet(null);
+    }
+  }
+
+  private <T> void defaultHandler(T message) {
+    // Wrap the message in an AtomicReference as a signal that this was the default handler.
+    messageHandler(new AtomicReference<>(message));
+  }
+
   private <T> void messageHandler(T message) {
-    synchronized (LocalMessagePipeTest.class) {
+    synchronized (this) {
       Object previous = receivedMessage.getAndSet(message);
       assertNull(previous, "Unexpected previously received message");
-      LocalMessagePipeTest.class.notify();
+      notify();
     }
   }
 
