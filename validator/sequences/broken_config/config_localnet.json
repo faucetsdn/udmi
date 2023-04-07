@@ -3,10 +3,10 @@
     "ether" : {
       "addr" : "00:50:b6:ed:5f:77"
     },
-    "inet" : {
+    "ipv4" : {
       "addr" : "192.168.2.1"
     }
   },
-  "timestamp" : "2023-03-07T16:40:17.348Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-04-07T13:08:25.099Z",
+  "version" : "1.4.0-168-ga6fb41bc-dirty"
 }
