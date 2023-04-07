@@ -34,6 +34,8 @@ public class ConfigSequences extends SequenceBase {
 
   // Delay to wait to let a device apply a new config.
   private static final long CONFIG_THRESHOLD_SEC = 10;
+  // Delay after receiving a parse error to ensure an apply entry has not been received.
+  private static final long LOG_APPLY_DELAY_MS = 1000;
 
   @Test(timeout = ONE_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
@@ -104,11 +106,11 @@ public class ConfigSequences extends SequenceBase {
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
     untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
+    safeSleep(LOG_APPLY_DELAY_MS);
     checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field
-    untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
