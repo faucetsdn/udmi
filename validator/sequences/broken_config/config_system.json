@@ -2,11 +2,11 @@
   "metrics_rate_sec" : 600,
   "min_loglevel" : 100,
   "operation" : {
-    "last_start" : "2023-03-07T16:38:08Z"
+    "last_start" : "2023-04-07T13:07:30Z"
   },
   "testing" : {
     "sequence_name" : "broken_config"
   },
-  "timestamp" : "2023-03-07T16:40:18.355Z",
-  "version" : "1.4.0-221-g632b879b"
+  "timestamp" : "2023-04-07T13:08:33.526Z",
+  "version" : "1.4.0-168-ga6fb41bc-dirty"
 }
