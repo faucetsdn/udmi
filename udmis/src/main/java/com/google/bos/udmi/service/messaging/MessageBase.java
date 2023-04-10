@@ -194,10 +194,6 @@ public abstract class MessageBase extends ComponentBase implements MessagePipe {
     drainQueue(sourceQueue, sourceFuture);
   }
 
-  public MessageContinuation getContinuation(Object message) {
-    return new MessageContinuation(this, messageEnvelopes.get(message), message);
-  }
-
   @Override
   public boolean isActive() {
     return sourceFuture != null && !sourceFuture.isDone();

@@ -45,11 +45,6 @@ public interface MessagePipe {
   void activate();
 
   /**
-   * Get a message continuation for the given message.
-   */
-  MessageContinuation getContinuation(Object message);
-
-  /**
    * Check if this pipe has been activated (and is still active).
    */
   boolean isActive();

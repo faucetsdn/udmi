@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.core;
 import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
 import static com.google.udmi.util.GeneralUtils.ifNotNull;
 
-import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -11,6 +10,7 @@ import com.google.bos.udmi.service.pod.ComponentBase;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -49,14 +49,7 @@ public class StateHandler extends ComponentBase {
 
   private void defaultHandler(Object defaultedMessage) {
     defaultCount++;
-    MessageContinuation continuation = pipe.getContinuation(defaultedMessage);
-    Envelope envelope = continuation.envelope;
-    Preconditions.checkState(envelope.subType == null, "subType is not null");
-    Preconditions.checkState(envelope.subFolder == null, "subFolder is not null");
-    info("Processing untyped (assumed state) message into state update");
-    envelope.subType = SubType.STATE;
-    envelope.subFolder = SubFolder.UPDATE;
-    continuation.reprocess();
+    stateHandler(JsonUtil.convertTo(State.class, defaultedMessage));
   }
 
   private void exceptionHandler(Exception e) {
