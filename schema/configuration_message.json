@@ -10,11 +10,15 @@
     "transport": {
       "enum": [
         "local",
-        "pubsub"
+        "trace",
+        "mqtt"
       ]
     },
     "namespace": {
       "type": "string"
+    },
+    "endpoint": {
+      "$ref": "file:configuration_endpoint.json"
     },
     "source": {
       "type": "string"

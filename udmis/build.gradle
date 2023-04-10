@@ -1,0 +1,95 @@
+buildscript {
+    repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+
+    dependencies {
+        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:7.1.2'
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.adarshr.test-logger' version '3.2.0'
+    id 'java'
+    id 'jacoco'
+    id 'checkstyle'
+}
+
+group 'udmis'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.9
+
+sourceSets {
+    main {
+        java {
+            srcDirs '../gencode/java'
+            srcDirs '../common/src/main/java'
+        }
+    }
+    test {
+        java {
+            srcDirs 'src/test/java'
+            srcDirs '../common/src/test/java'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.BuildDirectory.dir('jacocoHtml')
+    }
+}
+
+// TODO(future): jacocoTestCoverageVerification
+
+checkstyle {
+    ignoreFailures = false
+    maxWarnings = 0
+}
+checkstyleMain.source = 'src/main/java'
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.google.bos.udmi.service.pod.UdmiServicePod'
+    }
+}
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://mvnrepository.com' }
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'commons-io:commons-io:2.5'
+
+    implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
+    implementation 'org.jetbrains:annotations:20.1.0'
+    
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+
+    implementation group: 'junit', name: 'junit', version: '4.13.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+}
