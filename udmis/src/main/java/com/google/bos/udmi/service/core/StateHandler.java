@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
 import static com.google.udmi.util.GeneralUtils.ifNotNull;
+import static com.google.udmi.util.JsonUtil.convertTo;
 
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
@@ -9,7 +10,6 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +46,7 @@ public class StateHandler extends ContainerBase {
 
   private void defaultHandler(Object defaultedMessage) {
     defaultCount++;
-    stateHandler(JsonUtil.convertTo(State.class, defaultedMessage));
+    stateHandler(convertTo(State.class, defaultedMessage));
   }
 
   private void exceptionHandler(Exception e) {
