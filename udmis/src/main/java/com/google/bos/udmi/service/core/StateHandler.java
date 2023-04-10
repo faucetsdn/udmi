@@ -6,8 +6,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNull;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.StateUpdate;
-import com.google.bos.udmi.service.pod.ComponentBase;
-import com.google.common.base.Preconditions;
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
@@ -15,9 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
-import udmi.schema.Envelope.SubType;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.State;
 
@@ -26,7 +23,7 @@ import udmi.schema.State;
  * the system. Involves tagging the envelope with the appropriate designators, and splitting up the
  * monolithic block into constituent parts.
  */
-public class StateHandler extends ComponentBase {
+public class StateHandler extends ContainerBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());

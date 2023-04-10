@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 
-import com.google.bos.udmi.service.pod.ComponentBase;
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +31,7 @@ import udmi.schema.SystemState;
 /**
  * Base class for supporting a variety of messaging interfaces.
  */
-public abstract class MessageBase extends ComponentBase implements MessagePipe {
+public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   private static final String DEFAULT_NAMESPACE = "default-namespace";
   private static final String LOOP_EXIT_MARK = "loop-exit";
