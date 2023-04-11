@@ -124,6 +124,11 @@ class IotCoreProvider implements IotProvider {
     }
   }
 
+  @Override
+  public void deleteDevice(String deviceId) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
   static Device convert(CloudModel device) {
     List<DeviceCredential> newCredentials = ofNullable(device.credentials)
         .map(credentials -> credentials.stream()

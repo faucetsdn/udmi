@@ -64,6 +64,11 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
+  public void deleteDevice(String deviceId) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
   public CloudModel fetchDevice(String deviceId) {
     CloudModel device = new CloudModel();
     device.num_id = "" + Objects.hash(deviceId);

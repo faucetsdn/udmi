@@ -287,4 +287,9 @@ public class CloudIotManager {
   public void shutdown() {
     iotProvider.shutdown();
   }
+
+  public void deleteDevice(String deviceId) {
+    iotProvider.deleteDevice(deviceId);
+    deviceMap.remove(deviceId);
+  }
 }

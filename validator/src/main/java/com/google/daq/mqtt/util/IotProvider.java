@@ -46,6 +46,13 @@ public interface IotProvider {
   void createDevice(String deviceId, CloudModel makeDevice);
 
   /**
+   * Delete the specified device from the iot registry.
+   *
+   * @param deviceId device id to delete
+   */
+  void deleteDevice(String deviceId);
+
+  /**
    * Fetch a device for the given id.
    *
    * @param deviceId device id to fetch

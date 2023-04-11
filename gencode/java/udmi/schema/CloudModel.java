@@ -176,6 +176,7 @@ public class CloudModel {
 
         CREATE("CREATE"),
         UPDATE("UPDATE"),
+        DELETE("DELETE"),
         BIND("BIND"),
         BLOCK("BLOCK");
         private final java.lang.String value;

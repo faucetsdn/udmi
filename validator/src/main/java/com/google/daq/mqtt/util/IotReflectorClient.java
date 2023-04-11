@@ -5,12 +5,14 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.Boolean.TRUE;
 
+import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -51,21 +53,30 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
     device.operation = Operation.UPDATE;
-    Map<String, Object> message = transaction(deviceId, CLOUD_MODEL_TOPIC, stringify(device));
-    CloudModel cloudModel = convertToStrict(CloudModel.class, message);
-    if (cloudModel == null || cloudModel.num_id == null) {
-      throw new RuntimeException("Invalid return receipt for update device " + deviceId);
-    }
+    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
   }
 
   @Override
   public void createDevice(String deviceId, CloudModel makeDevice) {
     makeDevice.operation = Operation.CREATE;
-    Map<String, Object> message = transaction(deviceId, CLOUD_MODEL_TOPIC, stringify(makeDevice));
+    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
+  }
+
+  @Override
+  public void deleteDevice(String deviceId) {
+    CloudModel deleteModel = new CloudModel();
+    deleteModel.operation = Operation.DELETE;
+    cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
+  }
+
+  private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
+    Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
+    Map<String, Object> message = transaction(deviceId, topic, stringify(model));
     CloudModel cloudModel = convertToStrict(CloudModel.class, message);
-    if (cloudModel == null || cloudModel.num_id == null) {
-      throw new RuntimeException("Invalid return receipt for create device " + deviceId);
+    if (cloudModel == null || cloudModel.num_id == null || cloudModel.operation != operation) {
+      throw new RuntimeException("Invalid return receipt for " + operation + " on " + deviceId);
     }
+    return cloudModel;
   }
 
   @Override
@@ -79,11 +90,7 @@ public class IotReflectorClient implements IotProvider {
     device.operation = Operation.BIND;
     device.device_ids = new HashMap<>();
     device.device_ids.put(proxyId, new CloudModel());
-    Map<String, Object> message = transaction(gatewayId, CLOUD_MODEL_TOPIC, stringify(device));
-    CloudModel cloudModel = convertToStrict(CloudModel.class, message);
-    if (cloudModel == null || !TRUE.equals(cloudModel.is_gateway)) {
-      throw new RuntimeException("Invalid return receipt for bind device " + proxyId);
-    }
+    cloudModelTransaction(gatewayId, CLOUD_MODEL_TOPIC, device);
   }
 
   @Override

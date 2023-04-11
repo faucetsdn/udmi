@@ -291,6 +291,7 @@ async function udmi_model_create(attributes, msgObject) {
   const message = iotCoreToUdmiDevice(response);
   
   attributes.subType = REPLY_TYPE;
+  message.operation = 'CREATE';
   return reflectMessage(attributes, message);
 }
 
@@ -316,11 +317,11 @@ async function udmi_model_bind(attributes, msgObject) {
     };
 
     const bindPromise = iotClient.bindDeviceToGateway(request)
-          .then(response => {
-            const message = {};
+          .then(response => fetch_cloud_device(attributes))
+          .then(device => {
             attributes.subType = REPLY_TYPE;
-            message.is_gateway = true;
-            return reflectMessage(attributes, message);
+            device.operation = 'BIND';
+            return reflectMessage(attributes, device);
           }).catch(e => {
             return reflectError(attributes, 'bind error', e);
           });
@@ -362,6 +363,7 @@ async function udmi_model_update(attributes, msgObject) {
   const message = iotCoreToUdmiDevice(response);
   
   attributes.subType = REPLY_TYPE;
+  message.operation = 'UPDATE';
   return reflectMessage(attributes, message);
 }
 
@@ -451,7 +453,7 @@ async function udmi_query_cloud_registry(attributes, msgObject) {
   return reflectMessage(attributes, message);
 }
 
-async function udmi_query_cloud_device(attributes, msgObject) {
+async function fetch_cloud_device(attributes) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
@@ -459,10 +461,10 @@ async function udmi_query_cloud_device(attributes, msgObject) {
   const deviceId = attributes.deviceId;
 
   const devicePath = iotClient.devicePath(
-    projectId,
-    cloudRegion,
-    registryId,
-    deviceId
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
   );
 
   // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
@@ -492,10 +494,15 @@ async function udmi_query_cloud_device(attributes, msgObject) {
     name: devicePath,
     fieldMask,
   });
-  const message = iotCoreToUdmiDevice(response);
-  
-  attributes.subType = REPLY_TYPE;
-  return reflectMessage(attributes, message);
+  return iotCoreToUdmiDevice(response);
+}
+
+async function udmi_query_cloud_device(attributes) {
+  return fetch_cloud_device(attributes)
+    .then(device => {
+      attributes.subType = REPLY_TYPE;
+      return reflectMessage(attributes, device);
+    });
 }
 
 function iotCoreToUdmiDevice(core) {

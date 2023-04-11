@@ -99,6 +99,7 @@ public class Registrar {
   private String registrySuffix;
   private boolean useAltRegistry;
   private String altRegistry;
+  private boolean deleteDevices;
 
   /**
    * Main entry point for registrar.
@@ -142,6 +143,9 @@ public class Registrar {
         case "-t":
           setValidateMetadata(true);
           break;
+        case "-d":
+          setDeleteDevices(true);
+          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -156,6 +160,11 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setDeleteDevices(boolean deleteDevices) {
+    Preconditions.checkNotNull(projectId, "delete devices specified with no target project");
+    this.deleteDevices = deleteDevices;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -188,13 +197,14 @@ public class Registrar {
       loadSiteMetadata();
       processDevices();
       writeErrors();
-      shutdown();
     } catch (ExceptionMap em) {
       ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
       throw new RuntimeException("mapped exceptions", em);
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new RuntimeException("main exception", ex);
+    } finally {
+      shutdown();
     }
   }
 
@@ -313,6 +323,10 @@ public class Registrar {
     try {
       localDevices = loadLocalDevices(deviceSet);
       cloudDevices = fetchCloudDevices();
+      if (deleteDevices) {
+        deleteCloudDevices();
+        return;
+      }
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
@@ -339,6 +353,13 @@ public class Registrar {
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
+    }
+  }
+
+  private void deleteCloudDevices() {
+    for (String deviceId : cloudDevices) {
+      System.err.println("Removing " + deviceId + " from registry...");
+      cloudIotManager.deleteDevice(deviceId);
     }
   }
 
@@ -707,6 +728,9 @@ public class Registrar {
   protected void setProjectId(String projectId, String registrySuffix) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
+    }
+    if (projectId.startsWith("-")) {
+      throw new IllegalArgumentException("Project id starts with dash options flag " + projectId);
     }
     this.projectId = projectId;
     this.registrySuffix = registrySuffix;

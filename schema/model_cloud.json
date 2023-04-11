@@ -66,6 +66,7 @@
       "enum": [
         "CREATE",
         "UPDATE",
+        "DELETE",
         "BIND",
         "BLOCK"
       ]
