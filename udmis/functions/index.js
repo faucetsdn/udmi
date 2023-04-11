@@ -261,6 +261,8 @@ function udmi_model(attributes, msgObject) {
     return udmi_model_bind(attributes, msgObject);
   } else if (operation === 'UPDATE') {
     return udmi_model_update(attributes, msgObject);
+  } else if (operation === 'DELETE') {
+    return udmi_model_delete(attributes, msgObject);
   } else {
     throw 'Unknown model operation ' + operation;
   }
@@ -338,10 +340,10 @@ async function udmi_model_update(attributes, msgObject) {
   const deviceId = attributes.deviceId;
 
   const devicePath = iotClient.devicePath(
-    projectId,
-    cloudRegion,
-    registryId,
-    deviceId
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
   );
 
   // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
@@ -357,14 +359,42 @@ async function udmi_model_update(attributes, msgObject) {
     device: udmiToIotCoreDevice(msgObject, devicePath),
     updateMask: fieldMask
   };
-  
+
   const [response] = await iotClient.updateDevice(request);
 
   const message = iotCoreToUdmiDevice(response);
-  
+
   attributes.subType = REPLY_TYPE;
   message.operation = 'UPDATE';
   return reflectMessage(attributes, message);
+}
+
+async function udmi_model_delete(attributes, msgObject) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const devicePath = iotClient.devicePath(
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
+  );
+
+  const request = {
+    name: devicePath
+  };
+
+  const device = await fetch_cloud_device(attributes);
+
+  const [response] = await iotClient.deleteDevice(request);
+  console.log('TAP', response);
+
+  attributes.subType = REPLY_TYPE;
+  device.operation = 'DELETE';
+  return reflectMessage(attributes, device);
 }
 
 function udmi_query(attributes, msgObject) {
