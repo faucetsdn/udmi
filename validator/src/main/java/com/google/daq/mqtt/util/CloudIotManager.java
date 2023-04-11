@@ -46,7 +46,7 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param projectId      project id
+   * @param maybeProjectId project id
    * @param siteDir        site model directory
    * @param altRegistry    alternate registry to use (instead of site registry)
    * @param registrySuffix suffix to append to model registry id
@@ -220,7 +220,16 @@ public class CloudIotManager {
    * @return registered device list
    */
   public Set<String> fetchDeviceIds() {
-    return iotProvider.fetchDeviceIds();
+    return iotProvider.fetchDeviceIds(null);
+  }
+
+  /**
+   * Fetch the list of devices bound to a gateway.
+   *
+   * @return registered device list
+   */
+  public Set<String> fetchBoundDevices(String gatewayId) {
+    return iotProvider.fetchDeviceIds(gatewayId);
   }
 
   public CloudModel fetchDevice(String deviceId) {

@@ -76,7 +76,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static ExecutionConfiguration config;
+  public static final Joiner JOIN_CSV = Joiner.on(", ");
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -337,7 +337,7 @@ public class Registrar {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
         if (!unknowns.isEmpty()) {
           throw new RuntimeException(
-              "Unknown specified devices: " + Joiner.on(", ").join(unknowns));
+              "Unknown specified devices: " + JOIN_CSV.join(unknowns));
         }
       }
 
@@ -578,8 +578,14 @@ public class Registrar {
             localDevice -> {
               String gatewayId = localDevice.getDeviceId();
               try {
+                System.err.println("Binding devices to gateway " + gatewayId);
+                Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
+                System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
+                Preconditions.checkState(boundDevices.size() != cloudDevices.size(),
+                    "all devices including the gateway can't be bound to one gateway!");
                 localDevice.getSettings().proxyDevices.stream()
                     .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
+                    .filter(proxyDeviceId -> !boundDevices.contains(proxyDeviceId))
                     .forEach(
                         proxyDeviceId -> {
                           System.err.println(

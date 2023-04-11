@@ -217,13 +217,16 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds() {
+  public Set<String> fetchDeviceIds(String forGatewayId) {
     Set<Device> allDevices = new HashSet<>();
     String nextPageToken = null;
     try {
       do {
         ListDevicesResponse response = registries.devices().list(getRegistryPath())
-            .setPageToken(nextPageToken).setPageSize(LIST_PAGE_SIZE).execute();
+            .setPageToken(nextPageToken)
+            .setPageSize(LIST_PAGE_SIZE)
+            .setGatewayListOptionsAssociationsGatewayId(forGatewayId)
+            .execute();
         java.util.List<Device> devices = response.getDevices();
         allDevices.addAll(devices == null ? ImmutableList.of() : devices);
         System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());

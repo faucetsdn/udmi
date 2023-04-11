@@ -3,7 +3,6 @@ package com.google.daq.mqtt.util;
 import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static java.lang.Boolean.TRUE;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -94,7 +92,7 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds() {
+  public Set<String> fetchDeviceIds(String forGatewayId) {
     return fetchCloudModel(null).device_ids.keySet();
   }
 

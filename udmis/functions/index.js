@@ -390,7 +390,9 @@ async function udmi_model_delete(attributes, msgObject) {
   const device = await fetch_cloud_device(attributes);
 
   const [response] = await iotClient.deleteDevice(request);
-  console.log('TAP', response);
+  if (Object.keys(response).length !== 0) {
+    throw 'Failed delete response: ' + JSON.stringify(response);
+  }
 
   attributes.subType = REPLY_TYPE;
   device.operation = 'DELETE';

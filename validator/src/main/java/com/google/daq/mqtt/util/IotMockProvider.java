@@ -81,7 +81,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds() {
+  public Set<String> fetchDeviceIds(String forGatewayId) {
     HashSet<String> deviceIds = new HashSet<>(siteModel.allDeviceIds());
     deviceIds.add(MOCK_DEVICE_ID);
     return deviceIds;

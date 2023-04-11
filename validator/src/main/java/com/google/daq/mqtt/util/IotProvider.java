@@ -73,7 +73,7 @@ public interface IotProvider {
    *
    * @return set of registered device ids
    */
-  Set<String> fetchDeviceIds();
+  Set<String> fetchDeviceIds(String forGatewayId);
 
   /**
    * Get the device config blob for the indicated device.
