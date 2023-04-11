@@ -240,6 +240,10 @@ public class Registrar {
   }
 
   private void writeErrors() throws Exception {
+    if (localDevices == null) {
+      return;
+    }
+
     Map<String, Map<String, String>> errorSummary = new TreeMap<>();
     DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
     localDevices
@@ -321,12 +325,13 @@ public class Registrar {
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
-      localDevices = loadLocalDevices(deviceSet);
       cloudDevices = fetchCloudDevices();
       if (deleteDevices) {
         deleteCloudDevices();
         return;
       }
+
+      localDevices = loadLocalDevices(deviceSet);
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
@@ -357,6 +362,10 @@ public class Registrar {
   }
 
   private void deleteCloudDevices() {
+    if (cloudDevices.isEmpty()) {
+      System.err.println("No devices to delete, our work here is done!");
+      return;
+    }
     for (String deviceId : cloudDevices) {
       System.err.println("Removing " + deviceId + " from registry...");
       cloudIotManager.deleteDevice(deviceId);
