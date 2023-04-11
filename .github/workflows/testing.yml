@@ -11,6 +11,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  udmis:
+    name: UDMIS Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: Checkout source
+        uses: actions/checkout@v2.3.4
+      - name: bin/run_tests install_dependencies
+        run: bin/run_tests install_dependencies
+      - name: bin/test_mosquitto
+        run: bin/test_mosquitto
+      - name: bin/run_tests udmis_tests
+        run: bin/run_tests udmis_tests
+
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -68,9 +85,6 @@ jobs:
           java-version: '11'
       - name: base setup
         run: bin/run_tests install_dependencies
-      - name: bin/test_mosquitto
-        run: |
-          bin/test_mosquitto
       - name: bin/test_proxy
         env:
           MQTT_PROXY_HOST: ${{ secrets.MQTT_PROXY_HOST }}

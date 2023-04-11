@@ -72,15 +72,13 @@ public abstract class JsonUtil {
   /**
    * Sleep and catch-and-rethrow any exceptions.
    *
-   * @param logClearTimeMs duration to sleep
+   * @param sleepTimeMs duration to sleep
    */
-  public static void safeSleep(long logClearTimeMs) {
+  public static void safeSleep(long sleepTimeMs) {
     try {
-      // Sanity check in case somebody accidentally passes in sec rather than ms.
-      checkArgument(logClearTimeMs <= 0 || logClearTimeMs >= 100, "sleep too short");
-      Thread.sleep(logClearTimeMs);
+      Thread.sleep(sleepTimeMs);
     } catch (Exception e) {
-      throw new RuntimeException("Interruped sleep", e);
+      throw new RuntimeException("Interrupted sleep", e);
     }
   }
 
@@ -153,6 +151,37 @@ public abstract class JsonUtil {
   public static <T> T loadFile(Class<T> clazz, File file) {
     try {
       return file.exists() ? OBJECT_MAPPER.readValue(file, clazz) : null;
+    } catch (Exception e) {
+      throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file  path of file to load
+   * @param <T>   type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, String file) {
+    return loadFileRequired(clazz, new File(file));
+  }
+
+  /**
+   * Load a file to given type, requiring that it exists.
+   *
+   * @param clazz class of result
+   * @param file  file to load
+   * @param <T>   type of result
+   * @return loaded object
+   */
+  public static <T> T loadFileRequired(Class<T> clazz, File file) {
+    if (!file.exists()) {
+      throw new RuntimeException("Required file not found: " + file.getAbsolutePath());
+    }
+    try {
+      return OBJECT_MAPPER.readValue(file, clazz);
     } catch (Exception e) {
       throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
     }
