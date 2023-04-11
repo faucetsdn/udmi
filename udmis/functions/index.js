@@ -89,6 +89,7 @@ function reflectMessage(attributes, message) {
 function reflectError(attributes, base64, error) {
   const errorStr = String(error) + " for subFolder " + attributes.subFolder;
   console.log('Captured message error, reflecting:', errorStr);
+  console.error('Stack trace:', error);
   const message = {
     error: errorStr,
     data: base64
@@ -454,35 +455,43 @@ function udmi_query_cloud(attributes, msgObject) {
 }
 
 async function udmi_query_cloud_registry(attributes, msgObject) {
+  const devices = await fetch_cloud_registry(attributes);
+
+  const message = {'device_ids': {}};
+  devices.forEach(device => message.device_ids[device.id] = {
+    num_id: device.numId
+  });
+
+  attributes.subType = REPLY_TYPE;
+  return reflectMessage(attributes, message);
+}
+
+async function fetch_cloud_registry(attributes, gatewayId) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
   const cloudRegion = registry_regions[registryId];
 
   const parentName = iotClient.registryPath(
-    projectId,
-    cloudRegion,
-    registryId
+      projectId,
+      cloudRegion,
+      registryId
   );
 
   // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
   const fieldMask = {
-    paths: [ 'id', 'name', 'num_id' ]
+    paths: ['id', 'name', 'num_id']
   };
 
-  const [response] = await iotClient.listDevices({
+  const request = {
     parent: parentName,
+    gatewayListOptions: {
+      associationsGatewayId: gatewayId
+    },
     fieldMask,
-  });
-  const devices = response;
-
-  const message = {'device_ids': {}};
-  devices.forEach(device => message.device_ids[device.id] = {
-    num_id: device.num_id
-  });
-
-  attributes.subType = REPLY_TYPE;
-  return reflectMessage(attributes, message);
+  };
+  const [response] = await iotClient.listDevices(request);
+  return response;
 }
 
 async function fetch_cloud_device(attributes) {
@@ -526,7 +535,16 @@ async function fetch_cloud_device(attributes) {
     name: devicePath,
     fieldMask,
   });
-  return iotCoreToUdmiDevice(response);
+  const udmiDevice = iotCoreToUdmiDevice(response);
+  if (udmiDevice.is_gateway) {
+    console.log('Fetching devices bound to gateway ' + deviceId);
+    const devices = await fetch_cloud_registry(attributes, deviceId);
+    udmiDevice.device_ids = {};
+    devices.forEach(device => udmiDevice.device_ids[device.id] = {
+      num_id: device.numId
+    });
+  }
+  return udmiDevice;
 }
 
 async function udmi_query_cloud_device(attributes) {
@@ -542,7 +560,7 @@ function iotCoreToUdmiDevice(core) {
     auth_type: core.authType,
     num_id: core.numId,
     blocked: core.blocked,
-    metadata: core.metadta,
+    metadata: core.metadata,
     last_event_time: core.lastEventTime,
     is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType == 'GATEWAY',
     credentials: iotCoreToUdmiCredentials(core.credentials),
@@ -555,7 +573,7 @@ function udmiToIotCoreDevice(udmi, devicePath) {
     authType: udmi.auth_type,
     blocked: udmi.blocked,
     numId: udmi.num_id,
-    metadata: udmi.metadta,
+    metadata: udmi.metadata,
     lastEventTime: udmi.last_event_time,
     gatewayConfig: udmiToIotCoreGatewayConfig(udmi.is_gateway),
     credentials: udmiToIotCoreCredentials(udmi.credentials),

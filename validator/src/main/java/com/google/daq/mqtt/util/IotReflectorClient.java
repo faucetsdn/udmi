@@ -3,6 +3,7 @@ package com.google.daq.mqtt.util;
 import static com.google.daq.mqtt.validator.Validator.EMPTY_MESSAGE;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static udmi.schema.CloudModel.Operation.BIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -10,6 +11,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
@@ -85,7 +87,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void bindDeviceToGateway(String proxyId, String gatewayId) {
     CloudModel device = new CloudModel();
-    device.operation = Operation.BIND;
+    device.operation = BIND;
     device.device_ids = new HashMap<>();
     device.device_ids.put(proxyId, new CloudModel());
     cloudModelTransaction(gatewayId, CLOUD_MODEL_TOPIC, device);
@@ -93,7 +95,8 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public Set<String> fetchDeviceIds(String forGatewayId) {
-    return fetchCloudModel(null).device_ids.keySet();
+    return Optional.ofNullable(fetchCloudModel(forGatewayId))
+        .map(model -> model.device_ids.keySet()).orElse(null);
   }
 
   @Nullable

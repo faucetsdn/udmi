@@ -20,12 +20,15 @@ import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
 import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
+import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
+import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Base64;
 import java.util.HashMap;
@@ -111,7 +114,7 @@ class IotCoreProvider implements IotProvider {
           .setUpdateMask(DEVICE_UPDATE_MASK)
           .execute();
     } catch (Exception e) {
-      throw new RuntimeException("Remote error patching device " + deviceId, e);
+      throw new RuntimeException("Error patching device " + deviceId, e);
     }
   }
 
@@ -120,13 +123,31 @@ class IotCoreProvider implements IotProvider {
     try {
       registries.devices().create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
     } catch (Exception e) {
-      throw new RuntimeException("Remote error creating device " + deviceId, e);
+      throw new RuntimeException("Error creating device " + deviceId, e);
     }
   }
 
   @Override
   public void deleteDevice(String deviceId) {
-    throw new RuntimeException("Not yet implemented");
+    try {
+      Set<String> associatedDevices = fetchDeviceIds(deviceId);
+      associatedDevices.forEach(proxyId -> safeUnbind(deviceId, proxyId));
+      registries.devices().delete(getDevicePath(deviceId)).execute();
+    } catch (Exception e) {
+      throw new RuntimeException("Error deleting device " + deviceId, e);
+    }
+  }
+
+  private void safeUnbind(String deviceId, String proxyId) {
+    try {
+      registries.unbindDeviceFromGateway(getRegistryPath(),
+              new UnbindDeviceFromGatewayRequest()
+                  .setDeviceId(proxyId)
+                  .setGatewayId(deviceId))
+          .execute();
+    } catch (Exception e) {
+      throw new RuntimeException("While unbinding " + proxyId + " from " + deviceId, e);
+    }
   }
 
   static Device convert(CloudModel device) {
