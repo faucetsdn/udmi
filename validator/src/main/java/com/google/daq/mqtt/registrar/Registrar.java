@@ -370,6 +370,10 @@ public class Registrar {
       System.err.println("Removing " + deviceId + " from registry...");
       cloudIotManager.deleteDevice(deviceId);
     }
+    Set<String> deviceIds = fetchCloudDevices();
+    if (!deviceIds.isEmpty()) {
+      throw new RuntimeException("Did not delete all devices!");
+    }
   }
 
   private void processLocalDevices(AtomicInteger updatedCount, AtomicInteger processedCount)
@@ -581,7 +585,8 @@ public class Registrar {
                 System.err.println("Binding devices to gateway " + gatewayId);
                 Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
                 System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
-                Preconditions.checkState(boundDevices.size() != cloudDevices.size(),
+                int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
+                Preconditions.checkState(boundDevices.size() != total,
                     "all devices including the gateway can't be bound to one gateway!");
                 localDevice.getSettings().proxyDevices.stream()
                     .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
