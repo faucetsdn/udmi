@@ -1,14 +1,13 @@
 package com.google.daq.mqtt.util;
 
-import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.udmi.util.SiteModel;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
 
 /**
  * Mocked IoT provider for unit testing.
@@ -55,20 +54,19 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void updateDevice(String deviceId, Device device) {
+  public void updateDevice(String deviceId, CloudModel device) {
     mockAction(UPDATE_DEVICE_ACTION, deviceId, device);
   }
 
   @Override
-  public void createDevice(Device makeDevice) {
+  public void createDevice(String deviceId, CloudModel makeDevice) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public Device fetchDevice(String deviceId) {
-    Device device = new Device();
-    device.setId(deviceId);
-    device.setNumId(new BigInteger("" + Objects.hash(deviceId), 10));
+  public CloudModel fetchDevice(String deviceId) {
+    CloudModel device = new CloudModel();
+    device.num_id = "" + Objects.hash(deviceId);
     return device;
   }
 
@@ -87,6 +85,10 @@ public class IotMockProvider implements IotProvider {
   @Override
   public String getDeviceConfig(String deviceId) {
     throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public void shutdown() {
   }
 
   @Override

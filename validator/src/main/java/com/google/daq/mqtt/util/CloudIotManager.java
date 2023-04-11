@@ -1,16 +1,11 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.ConfigUtil.readExecutionConfiguration;
 
-import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
-import com.google.api.services.cloudiot.v1.model.GatewayConfig;
-import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +13,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.NotNull;
+import udmi.schema.CloudModel;
+import udmi.schema.Credential;
+import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -32,13 +31,16 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
+  private static final String REFLECT_PROJECT_PREFIX = "/";
 
   public final ExecutionConfiguration executionConfiguration;
 
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
-  private final Map<String, Device> deviceMap = new ConcurrentHashMap<>();
+  private final Map<String, CloudModel> deviceMap = new ConcurrentHashMap<>();
+  private final File siteDir;
+  private final boolean useReflectClient;
   private IotProvider iotProvider;
 
   /**
@@ -49,14 +51,19 @@ public class CloudIotManager {
    * @param altRegistry    alternate registry to use (instead of site registry)
    * @param registrySuffix suffix to append to model registry id
    */
-  public CloudIotManager(String projectId, File siteDir, String altRegistry,
+  public CloudIotManager(String maybeProjectId, File siteDir, String altRegistry,
       String registrySuffix) {
-    Preconditions.checkNotNull(siteDir, "site directory undefined");
-    this.projectId = Preconditions.checkNotNull(projectId, "project id undefined");
+    checkNotNull(maybeProjectId, "project id undefined");
+    this.siteDir = checkNotNull(siteDir, "site directory undefined");
+    this.useReflectClient = maybeProjectId.startsWith(REFLECT_PROJECT_PREFIX);
+    this.projectId =
+        useReflectClient ? maybeProjectId.substring(REFLECT_PROJECT_PREFIX.length())
+            : maybeProjectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), projectId);
+      executionConfiguration.site_model = siteDir.getPath();
       String targetRegistry = Optional.ofNullable(altRegistry)
           .orElse(executionConfiguration.registry_id);
       registryId = SiteModel.getRegistryActual(targetRegistry, registrySuffix);
@@ -86,9 +93,12 @@ public class CloudIotManager {
       executionConfiguration.registry_id = executionConfiguration.alt_registry;
       executionConfiguration.alt_registry = null;
     }
-    Preconditions.checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
-    Preconditions.checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
-    Preconditions.checkNotNull(executionConfiguration.site_name, "site_name not defined");
+    if (executionConfiguration.project_id == null) {
+      executionConfiguration.project_id = projectId;
+    }
+    checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
+    checkNotNull(executionConfiguration.cloud_region, "cloud_region not defined");
+    checkNotNull(executionConfiguration.site_name, "site_name not defined");
     return executionConfiguration;
   }
 
@@ -99,25 +109,35 @@ public class CloudIotManager {
    * @param keyData   key data
    * @return public key device credential
    */
-  public static DeviceCredential makeCredentials(String keyFormat, String keyData) {
-    PublicKeyCredential publicKeyCredential = new PublicKeyCredential();
-    publicKeyCredential.setFormat(keyFormat);
-    publicKeyCredential.setKey(keyData);
-
-    DeviceCredential deviceCredential = new DeviceCredential();
-    deviceCredential.setPublicKey(publicKeyCredential);
+  public static Credential makeCredentials(String keyFormat, String keyData) {
+    Credential deviceCredential = new Credential();
+    deviceCredential.key_format = Key_format.fromValue(keyFormat);
+    deviceCredential.key_data = keyData;
     return deviceCredential;
   }
 
   private void initializeIotProvider() {
     try {
-      iotProvider = projectId.equals(SiteModel.MOCK_PROJECT)
-          ? new IotMockProvider(projectId, registryId, cloudRegion)
-          : new IotCoreProvider(projectId, registryId, cloudRegion);
+      iotProvider = makeIotProvider();
       System.err.println("Created service for project " + projectId);
     } catch (Exception e) {
       throw new RuntimeException("While initializing Cloud IoT project " + projectId, e);
     }
+  }
+
+  @NotNull
+  private IotProvider makeIotProvider() {
+    if (projectId.equals(SiteModel.MOCK_PROJECT)) {
+      System.err.println("Using mock iot client for special client " + projectId);
+      return new IotMockProvider(projectId, registryId, cloudRegion);
+    }
+    if (useReflectClient) {
+      System.err.println(
+          "Using reflector iot client based on project prefix " + REFLECT_PROJECT_PREFIX);
+      return new IotReflectorClient(executionConfiguration);
+    }
+    System.err.println("Using standard iot client");
+    return new IotCoreProvider(projectId, registryId, cloudRegion);
   }
 
   /**
@@ -129,8 +149,8 @@ public class CloudIotManager {
    */
   public boolean registerDevice(String deviceId, CloudDeviceSettings settings) {
     try {
-      Preconditions.checkNotNull(deviceMap, "deviceMap not initialized");
-      Device device = deviceMap.get(deviceId);
+      checkNotNull(deviceMap, "deviceMap not initialized");
+      CloudModel device = deviceMap.get(deviceId);
       boolean isNewDevice = device == null;
       if (isNewDevice) {
         createDevice(deviceId, settings);
@@ -158,8 +178,8 @@ public class CloudIotManager {
     iotProvider.setBlocked(deviceId, blocked);
   }
 
-  private Device makeDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
-    Map<String, String> metadataMap = oldDevice == null ? null : oldDevice.getMetadata();
+  private CloudModel makeDevice(CloudDeviceSettings settings, CloudModel oldDevice) {
+    HashMap<String, String> metadataMap = oldDevice == null ? null : oldDevice.metadata;
     if (metadataMap == null) {
       metadataMap = new HashMap<>();
     }
@@ -175,29 +195,23 @@ public class CloudIotManager {
       metadataMap.put(KEY_BYTES_KEY, keyBase64);
       metadataMap.put(KEY_ALGORITHM_KEY, settings.keyAlgorithm);
     }
-    return new Device().setId(deviceId).setGatewayConfig(getGatewayConfig(settings))
-        .setCredentials(getCredentials(settings)).setMetadata(metadataMap);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.is_gateway = settings.proxyDevices != null;
+    cloudModel.credentials = getCredentials(settings);
+    cloudModel.metadata = metadataMap;
+    return cloudModel;
   }
 
-  private List<DeviceCredential> getCredentials(CloudDeviceSettings settings) {
+  private List<Credential> getCredentials(CloudDeviceSettings settings) {
     return settings.credentials == null ? ImmutableList.of() : settings.credentials;
   }
 
-  private GatewayConfig getGatewayConfig(CloudDeviceSettings settings) {
-    boolean isGateway = settings.proxyDevices != null;
-    GatewayConfig gwConfig = new GatewayConfig();
-    gwConfig.setGatewayType(isGateway ? "GATEWAY" : "NON_GATEWAY");
-    gwConfig.setGatewayAuthMethod("ASSOCIATION_ONLY");
-    return gwConfig;
+  private void createDevice(String deviceId, CloudDeviceSettings settings) {
+    iotProvider.createDevice(deviceId, makeDevice(settings, null));
   }
 
-  private void createDevice(String deviceId, CloudDeviceSettings settings) throws IOException {
-    iotProvider.createDevice(makeDevice(deviceId, settings, null));
-  }
-
-  private void updateDevice(String deviceId, CloudDeviceSettings settings, Device oldDevice) {
-    Device device = makeDevice(deviceId, settings, oldDevice).setId(null).setNumId(null);
-    iotProvider.updateDevice(deviceId, device);
+  private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
+    iotProvider.updateDevice(deviceId, makeDevice(settings, oldDevice));
   }
 
   /**
@@ -209,11 +223,11 @@ public class CloudIotManager {
     return iotProvider.fetchDeviceIds();
   }
 
-  public Device fetchDevice(String deviceId) {
+  public CloudModel fetchDevice(String deviceId) {
     return deviceMap.computeIfAbsent(deviceId, this::fetchDeviceRaw);
   }
 
-  private Device fetchDeviceRaw(String deviceId) {
+  private CloudModel fetchDeviceRaw(String deviceId) {
     return iotProvider.fetchDevice(deviceId);
   }
 
@@ -266,17 +280,11 @@ public class CloudIotManager {
     iotProvider.bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
   }
 
-  /**
-   * Get the configuration for a device.
-   *
-   * @param deviceId target device
-   * @return device configuration
-   */
-  public String getDeviceConfig(String deviceId) {
-    return iotProvider.getDeviceConfig(deviceId);
-  }
-
   public List<Object> getMockActions() {
     return iotProvider.getMockActions();
+  }
+
+  public void shutdown() {
+    iotProvider.shutdown();
   }
 }

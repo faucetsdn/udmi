@@ -15,7 +15,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.IotMockProvider;
@@ -26,6 +25,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.CloudModel;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -148,7 +148,7 @@ public class RegistrarTest {
   }
 
   private Boolean isNotBlocking(MockAction action) {
-    return !TRUE.equals(((Device) action.data).getBlocked());
+    return !TRUE.equals(((CloudModel) action.data).blocked);
   }
 
   private List<MockAction> filterActions(List<MockAction> mockActions, String actionKey) {

@@ -103,6 +103,7 @@ public class Envelope {
 
         UPDATE("update"),
         ERROR("error"),
+        CLOUD("cloud"),
         DISCOVERY("discovery"),
         MAPPING("mapping"),
         SYSTEM("system"),
@@ -152,9 +153,10 @@ public class Envelope {
 
         EVENT("event"),
         COMMAND("command"),
+        CONFIG("config"),
         STATE("state"),
         QUERY("query"),
-        CONFIG("config"),
+        REPLY("reply"),
         MODEL("model");
         private final String value;
         private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();

@@ -1,14 +1,14 @@
 package com.google.daq.mqtt.util;
 
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import java.util.List;
+import udmi.schema.Credential;
 
 /**
  * Bucket of settings to use for a cloud device entry.
  */
 public class CloudDeviceSettings {
 
-  public List<DeviceCredential> credentials;
+  public List<Credential> credentials;
   public String metadata;
   public List<String> proxyDevices;
   public String config;

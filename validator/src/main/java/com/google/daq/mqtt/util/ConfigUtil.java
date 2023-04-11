@@ -3,10 +3,7 @@ package com.google.daq.mqtt.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,16 +34,6 @@ public abstract class ConfigUtil {
       return OBJECT_MAPPER.readValue(configFile, ExecutionConfiguration.class);
     } catch (Exception e) {
       throw new RuntimeException("While reading config file " + configFile.getAbsolutePath(), e);
-    }
-  }
-
-  static GoogleCredential authorizeServiceAccount(File credFile) {
-    try (FileInputStream credStream = new FileInputStream(credFile)) {
-      return GoogleCredential
-          .fromStream(credStream)
-          .createScoped(CloudIotScopes.all());
-    } catch (Exception e) {
-      throw new RuntimeException("While reading cred file " + credFile.getAbsolutePath(), e);
     }
   }
 

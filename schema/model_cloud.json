@@ -6,6 +6,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "timestamp": {
+      "description": "RFC 3339 Timestamp the state payload was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
     "auth_type": {
       "description": "The key type used for cloud communication.",
       "enum": [
@@ -22,9 +32,63 @@
     "is_gateway": {
       "description": "If the device functions as an IoT Gateway, proxying for other devices using a single logical connection",
       "type": "boolean"
+    },
+    "blocked": {
+      "type": "boolean"
+    },
+    "credentials": {
+      "type": "array",
+      "items": {
+        "properties": {
+          "key_format": {
+            "description": "The key type used for cloud communication.",
+            "enum": [
+              "ES256",
+              "ES256_X509",
+              "RS256",
+              "RS256_X509"
+            ]
+          },
+          "key_data": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "last_event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "num_id": {
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "CREATE",
+        "UPDATE",
+        "BIND",
+        "BLOCK"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "existingJavaType": "java.util.HashMap<String, String>",
+      "patternProperties": {
+        "^[-_a-zA-Z0-9]+$": {
+          "additionalProperties": false,
+          "type": "string"
+        }
+      }
+    },
+    "device_ids": {
+      "description": "If operating on the entire registry, then this manifests as a map of devices not just one device.",
+      "existingJavaType": "java.util.HashMap<String, CloudModel>",
+      "patternProperties": {
+        "^[-_a-zA-Z0-9]+$": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      }
     }
-  },
-  "required": [
-    "auth_type"
-  ]
+  }
 }

@@ -55,6 +55,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String CONFIG_CATEGORY = "config";
   private static final String COMMANDS_CATEGORY = "commands";
   private static final long CONFIG_TIMEOUT_SEC = 10;
+  private static final long MESSAGE_POLL_TIME_SEC = 10;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -284,7 +285,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage() {
     try {
-      return messages.take();
+      return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }

@@ -27,7 +27,6 @@ import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -65,7 +64,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
+import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
+import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -92,6 +93,7 @@ class LocalDevice {
   public static final String EXCEPTION_CREDENTIALS = "Credential";
   public static final String EXCEPTION_ENVELOPE = "Envelope";
   public static final String EXCEPTION_SAMPLES = "Samples";
+  public static final String EXCEPTION_BINDING = "Binding";
   private static final PrettyPrinter PROPER_PRETTY_PRINTER_POLICY = new ProperPrettyPrinterPolicy();
   private static final ObjectMapper OBJECT_MAPPER_RAW =
       new ObjectMapper()
@@ -106,27 +108,23 @@ class LocalDevice {
           .copy()
           .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .enable(SerializationFeature.INDENT_OUTPUT);
-  private static final String RSA_AUTH_TYPE = "RS256";
-  private static final String RSA_CERT_TYPE = "RS256_X509";
-  private static final String RSA_KEY_FORMAT = "RSA_PEM";
-  private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
   private static final String RSA_CERT_PEM = "rsa_cert.pem";
   private static final String RSA_PRIVATE_PEM = "rsa_private.pem";
   private static final String RSA_PRIVATE_PKCS8 = "rsa_private.pkcs8";
-  private static final String ES_AUTH_TYPE = "ES256";
-  private static final String ES_CERT_TYPE = "ES256_X509";
-  private static final String ES_KEY_FORMAT = "ES256_PEM";
-  private static final String ES_CERT_FILE = "ES256_X509_PEM";
   private static final String ES_PUBLIC_PEM = "ec_public.pem";
   private static final String ES2_PUBLIC_PEM = "ec2_public.pem";
   private static final String ES3_PUBLIC_PEM = "ec3_public.pem";
   private static final String ES_CERT_PEM = "ec_cert.pem";
   private static final String ES_PRIVATE_PEM = "ec_private.pem";
   private static final String ES_PRIVATE_PKCS8 = "ec_private.pkcs8";
-  protected static final Map<String, String> PRIVATE_PKCS8_MAP =
+  private static final String RSA_AUTH_TYPE = Auth_type.RS_256.toString();
+  private static final String RSA_CERT_TYPE = Auth_type.RS_256_X_509.toString();
+  private static final String ES_AUTH_TYPE = Auth_type.ES_256.toString();
+  private static final String ES_CERT_TYPE = Auth_type.ES_256_X_509.toString();
+  private static final Map<String, String> PRIVATE_PKCS8_MAP =
       ImmutableMap.of(
           RSA_AUTH_TYPE, RSA_PRIVATE_PKCS8,
           RSA_CERT_TYPE, RSA_PRIVATE_PKCS8,
@@ -179,12 +177,6 @@ class LocalDevice {
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
-  private static final Map<String, String> AUTH_TYPE_MAP =
-      ImmutableMap.of(
-          RSA_AUTH_TYPE, RSA_KEY_FORMAT,
-          RSA_CERT_TYPE, RSA_CERT_FORMAT,
-          ES_AUTH_TYPE, ES_KEY_FORMAT,
-          ES_CERT_TYPE, ES_CERT_FILE);
   private static final String ERROR_FORMAT_INDENT = "  ";
   private static final int MAX_METADATA_LENGTH = 32767;
   private static final String UDMI_VERSION = "1.4.1";
@@ -196,7 +188,7 @@ class LocalDevice {
   private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
-  private final List<DeviceCredential> deviceCredentials = new ArrayList<>();
+  private final List<Credential> deviceCredentials = new ArrayList<>();
   private final Map<String, Object> siteMetadata;
   private final boolean validateMetadata;
 
@@ -384,14 +376,6 @@ class LocalDevice {
         && (metadata.cloud != null && Boolean.TRUE.equals(metadata.cloud.device_key));
   }
 
-  private String getAuthFileType() {
-    String authType = getAuthType();
-    if (!AUTH_TYPE_MAP.containsKey(authType)) {
-      throw new RuntimeException("Invalid auth type: " + authType);
-    }
-    return AUTH_TYPE_MAP.get(authType);
-  }
-
   public void loadCredentials() {
     try {
       deviceCredentials.clear();
@@ -406,11 +390,12 @@ class LocalDevice {
       }
       String authType = getAuthType();
       Set<String> keyFiles =
-          (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+          (authType.equals(ES_CERT_TYPE) || authType.equals(
+              RSA_CERT_TYPE))
               ? ALL_CERT_FILES
               : ALL_KEY_FILES;
       for (String keyFile : keyFiles) {
-        DeviceCredential deviceCredential = getDeviceCredential(keyFile);
+        Credential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
           deviceCredentials.add(deviceCredential);
         }
@@ -424,13 +409,13 @@ class LocalDevice {
     }
   }
 
-  private DeviceCredential getDeviceCredential(String keyFile) throws IOException {
+  private Credential getDeviceCredential(String keyFile) throws IOException {
     File deviceKeyFile = new File(deviceDir, keyFile);
     if (!deviceKeyFile.exists()) {
       return null;
     }
     return CloudIotManager.makeCredentials(
-        getAuthFileType(),
+        getAuthType(),
         IOUtils.toString(new FileInputStream(deviceKeyFile), Charset.defaultCharset()));
   }
 
@@ -445,7 +430,8 @@ class LocalDevice {
     Set<String> privateKeyFiles = getPrivateKeyFiles();
     SetView<String> combined = Sets.union(publicKeyFiles, privateKeyFiles);
     boolean addCertFile =
-        authType != null && (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE));
+        authType != null && (authType.equals(ES_CERT_TYPE) || authType.equals(
+            RSA_CERT_TYPE));
     return addCertFile ? Sets.union(combined, certFile) : combined;
   }
 
@@ -468,7 +454,8 @@ class LocalDevice {
       return Set.of();
     }
     String authType = getAuthType();
-    return (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+    return (authType.equals(ES_CERT_TYPE) || authType.equals(
+        RSA_CERT_TYPE))
         ? Set.of(CERT_FILE_MAP.get(getAuthType()))
         : Set.of();
   }

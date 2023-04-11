@@ -8,8 +8,6 @@ import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -28,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -48,6 +45,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
+import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
@@ -390,11 +389,11 @@ public class Registrar {
       if (idleLimit == null) {
         return false;
       }
-      Device device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
-      if (device == null || device.getLastEventTime() == null || idleLimit == null) {
+      CloudModel device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
+      if (device == null || device.last_event_time == null || idleLimit == null) {
         return false;
       }
-      return Instant.now().minus(idleLimit).isBefore(Instant.parse(device.getLastEventTime()));
+      return Instant.now().minus(idleLimit).isBefore(device.last_event_time.toInstant());
     } catch (Exception e) {
       throw new RuntimeException("While checking device limit " + localDevice.getDeviceId(), e);
     }
@@ -435,12 +434,12 @@ public class Registrar {
     }
 
     updateCloudIoT(localDevice);
-    Device device =
+    CloudModel device =
         Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
-    BigInteger numId =
+    String numId =
         Preconditions.checkNotNull(
-            device.getNumId(), "missing deviceNumId for " + localName);
-    localDevice.setDeviceNumId(numId.toString());
+            device.num_id, "missing deviceNumId for " + localName);
+    localDevice.setDeviceNumId(numId);
   }
 
   private void updateCloudIoT(LocalDevice localDevice) {
@@ -488,7 +487,7 @@ public class Registrar {
     return exceptionMap;
   }
 
-  private Device fetchDevice(String localName) {
+  private CloudModel fetchDevice(String localName) {
     try {
       return cloudIotManager.fetchDevice(localName);
     } catch (Exception e) {
@@ -546,20 +545,23 @@ public class Registrar {
     localDevices.values().stream()
         .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
         .forEach(
-            localDevice ->
+            localDevice -> {
+              String gatewayId = localDevice.getDeviceId();
+              try {
                 localDevice.getSettings().proxyDevices.stream()
                     .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
                     .forEach(
                         proxyDeviceId -> {
-                          try {
-                            String gatewayId = localDevice.getDeviceId();
-                            System.err.println(
-                                "Binding " + proxyDeviceId + " to gateway " + gatewayId);
-                            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-                          } catch (Exception e) {
-                            throw new RuntimeException("While binding device " + proxyDeviceId, e);
-                          }
-                        }));
+                          System.err.println(
+                              "Binding " + proxyDeviceId + " to gateway " + gatewayId);
+                          cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+                        }
+                    );
+              } catch (Exception e) {
+                localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
+              }
+            }
+        );
   }
 
   private void shutdown() {
@@ -568,6 +570,9 @@ public class Registrar {
     }
     if (feedPusher != null) {
       feedPusher.shutdown();
+    }
+    if (cloudIotManager != null) {
+      cloudIotManager.shutdown();
     }
   }
 
@@ -642,14 +647,14 @@ public class Registrar {
   }
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<DeviceCredential, String> usedCredentials = new HashMap<>();
+    Map<Credential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream()
         .filter(LocalDevice::isDirectConnect)
         .forEach(
             localDevice -> {
               CloudDeviceSettings settings = localDevice.getSettings();
               String deviceName = localDevice.getDeviceId();
-              for (DeviceCredential credential : settings.credentials) {
+              for (Credential credential : settings.credentials) {
                 String previous = usedCredentials.put(credential, deviceName);
                 if (previous != null) {
                   RuntimeException exception =
