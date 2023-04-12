@@ -62,6 +62,7 @@ public class CloudIotManager {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
       executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
       executionConfiguration.site_model = siteDir.getPath();
+      executionConfiguration.registry_suffix = registrySuffix;
       String targetRegistry = Optional.ofNullable(altRegistry)
           .orElse(executionConfiguration.registry_id);
       registryId = SiteModel.getRegistryActual(targetRegistry, registrySuffix);

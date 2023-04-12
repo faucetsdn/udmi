@@ -600,7 +600,7 @@ async function udmi_query_cloud_device(attributes) {
 
 function iotCoreToUdmiDevice(core) {
   let lastEventTime = core.lastEventTime &&
-      new Date(Number(core.lastEventTime.seconds())).toISOString();
+      new Date(Number(core.lastEventTime.seconds) * 1000).toISOString();
   console.log('TAP1', core.lastEventTime, lastEventTime);
   return {
     auth_type: core.authType,
