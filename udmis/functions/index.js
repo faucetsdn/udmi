@@ -249,6 +249,7 @@ function udmi_process_reflector_state(attributes, msgObject) {
   subContents.last_state = msgObject.timestamp;
   subContents.functions_min = FUNCTIONS_VERSION_MIN;
   subContents.functions_max = FUNCTIONS_VERSION_MAX;
+  console.log('Setting reflector state', registryId, deviceId, JSON.stringify(subContents));
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
 }
@@ -288,7 +289,9 @@ async function udmi_model_create(attributes, msgObject) {
     parent: registryPath,
     device,
   };
-  
+
+  console.log('udmi_model_create', JSON.stringify(registryPath), deviceId);
+
   const [response] = await iotClient.createDevice(request);
 
   const message = iotCoreToUdmiDevice(response);
@@ -311,8 +314,12 @@ async function udmi_model_bind(attributes, msgObject) {
     registryId,
   );
 
+  const keys = Object.keys(msgObject.device_ids);
+
+  console.log('udmi_model_bind', JSON.stringify(registryPath), keys);
+
   const promises = [];
-  Object.keys(msgObject.device_ids).forEach(proxyId => {
+  keys.forEach(proxyId => {
     const request = {
       parent: registryPath,
       deviceId: proxyId,
@@ -361,6 +368,8 @@ async function udmi_model_update(attributes, msgObject) {
     updateMask: fieldMask
   };
 
+  console.log('udmi_model_update', JSON.stringify(request));
+
   const [response] = await iotClient.updateDevice(request);
 
   const message = iotCoreToUdmiDevice(response);
@@ -370,7 +379,7 @@ async function udmi_model_update(attributes, msgObject) {
   return reflectMessage(attributes, message);
 }
 
-async function udmi_model_delete(attributes, msgObject) {
+async function udmi_model_delete(attributes) {
   await registry_promise;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
@@ -390,6 +399,16 @@ async function udmi_model_delete(attributes, msgObject) {
 
   const device = await fetch_cloud_device(attributes);
 
+  console.log('udmi_model_delete', JSON.stringify(devicePath));
+
+  if (device.device_ids) {
+    const promises = [];
+    Object.keys(device.device_ids).forEach(proxyId => {
+      promises.push(unbind_device(attributes, proxyId));
+    });
+    await Promise.all(promises);
+  }
+
   const [response] = await iotClient.deleteDevice(request);
   if (Object.keys(response).length !== 0) {
     throw 'Failed delete response: ' + JSON.stringify(response);
@@ -398,6 +417,30 @@ async function udmi_model_delete(attributes, msgObject) {
   attributes.subType = REPLY_TYPE;
   device.operation = 'DELETE';
   return reflectMessage(attributes, device);
+}
+
+async function unbind_device(attributes, proxyId) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const registryPath = iotClient.registryPath(
+      projectId,
+      cloudRegion,
+      registryId,
+  );
+
+  const request = {
+    parent: registryPath,
+    deviceId: proxyId,
+    gatewayId: deviceId,
+  };
+
+  console.log('udmi_model_unbind', JSON.stringify(request));
+
+  return iotClient.unbindDeviceFromGateway(request);
 }
 
 function udmi_query(attributes, msgObject) {
@@ -556,12 +599,13 @@ async function udmi_query_cloud_device(attributes) {
 }
 
 function iotCoreToUdmiDevice(core) {
+  let lastEventTime = core.lastEventTime && new Date(core.lastEventTime.seconds).toISOString();
   return {
     auth_type: core.authType,
     num_id: core.numId,
     blocked: core.blocked,
     metadata: core.metadata,
-    last_event_time: core.lastEventTime,
+    last_event_time: lastEventTime,
     is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType == 'GATEWAY',
     credentials: iotCoreToUdmiCredentials(core.credentials),
   };
@@ -572,9 +616,7 @@ function udmiToIotCoreDevice(udmi, devicePath) {
     name: devicePath,
     authType: udmi.auth_type,
     blocked: udmi.blocked,
-    numId: udmi.num_id,
     metadata: udmi.metadata,
-    lastEventTime: udmi.last_event_time,
     gatewayConfig: udmiToIotCoreGatewayConfig(udmi.is_gateway),
     credentials: udmiToIotCoreCredentials(udmi.credentials),
   };
