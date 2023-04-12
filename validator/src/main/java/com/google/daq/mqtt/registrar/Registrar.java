@@ -101,6 +101,7 @@ public class Registrar {
   private boolean useAltRegistry;
   private String altRegistry;
   private boolean deleteDevices;
+  private boolean useReflectorMessages;
 
   /**
    * Main entry point for registrar.
@@ -147,6 +148,9 @@ public class Registrar {
         case "-d":
           setDeleteDevices(true);
           break;
+        case "-m":
+          setUseReflectorMessages(true);
+          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -161,6 +165,10 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setUseReflectorMessages(boolean useReflectorMessages) {
+    this.useReflectorMessages = useReflectorMessages;
   }
 
   private void setDeleteDevices(boolean deleteDevices) {
@@ -296,7 +304,8 @@ public class Registrar {
       throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
     }
     String useRegistry = useAltRegistry ? altRegistry : null;
-    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix);
+    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
+        useReflectorMessages);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -603,7 +612,7 @@ public class Registrar {
                 localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
               }
             }
-    );
+        );
   }
 
   private void shutdown() {

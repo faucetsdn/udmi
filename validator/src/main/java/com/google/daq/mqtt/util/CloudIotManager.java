@@ -31,7 +31,6 @@ public class CloudIotManager {
   private static final String UDMI_UPDATED = "udmi_updated";
   private static final String KEY_BYTES_KEY = "key_bytes";
   private static final String KEY_ALGORITHM_KEY = "key_algorithm";
-  private static final String REFLECT_PROJECT_PREFIX = "/";
 
   public final ExecutionConfiguration executionConfiguration;
 
@@ -46,23 +45,22 @@ public class CloudIotManager {
   /**
    * Create a new CloudIoTManager.
    *
-   * @param maybeProjectId project id
-   * @param siteDir        site model directory
-   * @param altRegistry    alternate registry to use (instead of site registry)
-   * @param registrySuffix suffix to append to model registry id
+   * @param projectId          project id
+   * @param siteDir            site model directory
+   * @param altRegistry        alternate registry to use (instead of site registry)
+   * @param registrySuffix     suffix to append to model registry id
+   * @param useReflectorClient indicates which iot client to use
    */
-  public CloudIotManager(String maybeProjectId, File siteDir, String altRegistry,
-      String registrySuffix) {
-    checkNotNull(maybeProjectId, "project id undefined");
+  public CloudIotManager(String projectId, File siteDir, String altRegistry,
+      String registrySuffix, boolean useReflectorClient) {
+    checkNotNull(projectId, "project id undefined");
     this.siteDir = checkNotNull(siteDir, "site directory undefined");
-    this.useReflectClient = maybeProjectId.startsWith(REFLECT_PROJECT_PREFIX);
-    this.projectId =
-        useReflectClient ? maybeProjectId.substring(REFLECT_PROJECT_PREFIX.length())
-            : maybeProjectId;
+    this.useReflectClient = useReflectorClient;
+    this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
-      executionConfiguration = validate(readExecutionConfiguration(cloudConfig), projectId);
+      executionConfiguration = validate(readExecutionConfiguration(cloudConfig), this.projectId);
       executionConfiguration.site_model = siteDir.getPath();
       String targetRegistry = Optional.ofNullable(altRegistry)
           .orElse(executionConfiguration.registry_id);
@@ -71,7 +69,7 @@ public class CloudIotManager {
       initializeIotProvider();
     } catch (Exception e) {
       throw new RuntimeException(
-          String.format("While initializing project %s from file %s", projectId,
+          String.format("While initializing project %s from file %s", this.projectId,
               cloudConfig.getAbsolutePath()), e);
     }
   }
@@ -132,8 +130,7 @@ public class CloudIotManager {
       return new IotMockProvider(projectId, registryId, cloudRegion);
     }
     if (useReflectClient) {
-      System.err.println(
-          "Using reflector iot client based on project prefix " + REFLECT_PROJECT_PREFIX);
+      System.err.println("Using reflector iot client");
       return new IotReflectorClient(executionConfiguration);
     }
     System.err.println("Using standard iot client");

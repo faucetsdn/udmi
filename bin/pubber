@@ -3,7 +3,7 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
 function cleanup {
-    if [[ -n $PUB_PID ]]; then
+    if [[ -n $PUB_PID && -d /proc/$PUB_PID ]]; then
         echo Killing pubber runner $PUB_PID
         kill $PUB_PID
     fi
@@ -74,4 +74,8 @@ EOF
 # Run in the background to force new process group and get PID
 $ROOT_DIR/pubber/bin/run /tmp/pubber_config.json &
 PUB_PID=$!
-wait
+wait $PUB_PID
+RESULT=$?
+PUB_PID=
+
+exit $RESULT

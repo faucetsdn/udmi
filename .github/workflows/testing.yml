@@ -121,6 +121,14 @@ jobs:
           java-version: '11'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: registrar clean
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+          UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
+          UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
+        if: "${{ env.GCP_TARGET_PROJECT != '' && env.UDMI_REGISTRY_SUFFIX != '' }}"
+        run: |
+          bin/test_regclean $GCP_TARGET_PROJECT
       - name: sequence tests
         env:
           GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
