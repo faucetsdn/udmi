@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.Map;
@@ -109,7 +108,7 @@ public class FileDataSink implements MessagePublisher {
   }
 
   @Override
-  public MessageBundle takeNextMessage() {
+  public MessageBundle takeNextMessage(boolean enableTimeout) {
     throw new RuntimeException("Not implemented for file data sink");
   }
 

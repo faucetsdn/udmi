@@ -181,7 +181,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage() {
+  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     try {
       PubsubMessage message = messages.take();
       long seconds = message.getPublishTime().getSeconds();
@@ -240,7 +240,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void messageLoop() {
     while (isActive()) {
       try {
-        handlerHandler(takeNextMessage());
+        handlerHandler(takeNextMessage(false));
       } catch (Exception e) {
         System.err.println("Exception processing received message:");
         e.printStackTrace();

@@ -50,7 +50,7 @@ public class MockPublisher implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage() {
+  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     try {
       return messages.take();
     } catch (Exception e) {

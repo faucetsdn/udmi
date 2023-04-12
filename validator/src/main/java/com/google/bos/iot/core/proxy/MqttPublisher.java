@@ -186,7 +186,7 @@ class MqttPublisher implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage() {
+  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     throw new IllegalStateException("Can't process message");
   }
 

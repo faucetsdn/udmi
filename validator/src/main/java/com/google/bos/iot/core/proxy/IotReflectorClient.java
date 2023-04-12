@@ -2,7 +2,6 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -10,7 +9,6 @@ import static com.google.udmi.util.JsonUtil.getTimestamp;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.api.client.util.Base64;
-import com.google.daq.mqtt.sequencer.SequenceRunner;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -37,7 +35,6 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.ReflectorConfig;
 import udmi.schema.ReflectorState;
-import udmi.schema.SequenceValidationState.FeatureStage;
 import udmi.schema.SetupReflectorConfig;
 import udmi.schema.SetupReflectorState;
 
@@ -283,9 +280,13 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage() {
+  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     try {
-      return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
+      if (enableTimeout) {
+        return messages.poll(MESSAGE_POLL_TIME_SEC, TimeUnit.SECONDS);
+      } else {
+        return messages.take();
+      }
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
     }

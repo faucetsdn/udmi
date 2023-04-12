@@ -397,7 +397,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          validateMessage(client.takeNextMessage());
+          validateMessage(client.takeNextMessage(false));
         } catch (Exception e) {
           e.printStackTrace();
         }

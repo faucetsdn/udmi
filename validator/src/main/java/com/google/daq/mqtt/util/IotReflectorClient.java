@@ -127,7 +127,7 @@ public class IotReflectorClient implements IotProvider {
 
   private Map<String, Object> waitForReply(String sentId) {
     while (messageClient.isActive()) {
-      MessageBundle messageBundle = messageClient.takeNextMessage();
+      MessageBundle messageBundle = messageClient.takeNextMessage(true);
       if (messageBundle == null) {
         System.err.println("Timeout waiting for reply to " + sentId);
         return null;

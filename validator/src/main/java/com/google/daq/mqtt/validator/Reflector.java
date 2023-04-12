@@ -88,7 +88,7 @@ public class Reflector {
     String recvId;
     System.err.println("Waiting for return transaction " + sendId);
     do {
-      MessageBundle messageBundle = client.takeNextMessage();
+      MessageBundle messageBundle = client.takeNextMessage(false);
       recvId = messageBundle.attributes.get("transactionId");
     } while (!sendId.equals(recvId));
   }
