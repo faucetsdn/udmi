@@ -139,10 +139,10 @@ public class RegistrarTest {
     assertEquals("Devices updated", 4, updateActions.size());
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);
-    assertEquals("bind actions", 2, bindActions.size());
+    assertEquals("bind actions", 1, bindActions.size());
     assertTrue("bind gateway",
         bindActions.stream().allMatch(action -> action.data.equals("GAT-123")));
-    assertEquals("bind devices", ImmutableSet.of("SNS-4", "AHU-22"),
+    assertEquals("bind devices", ImmutableSet.of("AHU-22"),
         bindActions.stream().map(action -> action.deviceId).collect(
             Collectors.toSet()));
   }

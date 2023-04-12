@@ -11,22 +11,21 @@ import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
-import udmi.schema.Gateway_config;
-import udmi.schema.Gateway_config.Gateway_type;
 
+/**
+ * Simple tests for core provider helper functions.
+ */
 public class IotCoreProviderTest {
 
   @Test
   public void conversions() {
     CloudModel original = new CloudModel();
-    original.device_id = "hello";
     original.num_id = "123456782182321390";
     original.metadata = new HashMap<>();
     original.metadata.put("A", "B");
     original.last_event_time = new Date();
     original.blocked = true;
-    original.gateway_config = new Gateway_config();
-    original.gateway_config.gateway_type = Gateway_type.GATEWAY;
+    original.is_gateway = true;
     original.credentials = new LinkedList<>();
     Credential credential = new Credential();
     credential.key_format = Key_format.ES_256;

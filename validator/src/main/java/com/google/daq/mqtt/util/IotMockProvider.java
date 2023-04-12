@@ -15,6 +15,7 @@ import udmi.schema.CloudModel;
 public class IotMockProvider implements IotProvider {
 
   public static final String MOCK_DEVICE_ID = "MOCK-1";
+  public static final String PROXY_DEVICE_ID = "AHU-22";
   private final SiteModel siteModel;
   private final String client;
   private List<MockAction> mockActions = new ArrayList<>();
@@ -84,6 +85,10 @@ public class IotMockProvider implements IotProvider {
   public Set<String> fetchDeviceIds(String forGatewayId) {
     HashSet<String> deviceIds = new HashSet<>(siteModel.allDeviceIds());
     deviceIds.add(MOCK_DEVICE_ID);
+    if (forGatewayId != null) {
+      deviceIds.remove(forGatewayId);
+      deviceIds.remove(PROXY_DEVICE_ID);
+    }
     return deviceIds;
   }
 
