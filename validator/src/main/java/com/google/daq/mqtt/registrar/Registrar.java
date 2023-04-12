@@ -602,7 +602,7 @@ public class Registrar {
                 localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
               }
             }
-        );
+    );
   }
 
   private void shutdown() {
