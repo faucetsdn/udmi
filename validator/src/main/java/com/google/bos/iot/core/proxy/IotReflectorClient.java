@@ -214,7 +214,7 @@ public class IotReflectorClient implements MessagePublisher {
       if (configMatch) {
         System.err.println("UDMIS version " + reflectorConfig.version);
         if (!udmiVersion.equals(reflectorConfig.version)) {
-          System.err.println("UDMIS local/cloud UDMI version mismatch!");
+          System.err.println("UDMIS version mismatch: " + udmiVersion);
         }
 
         System.err.println("UDMIS deployed by " + udmisInfo.deployed_by + " at " + getTimestamp(

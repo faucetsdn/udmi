@@ -9,6 +9,7 @@ TEST_LOG=/tmp/test_log.txt
 log_level=INFO
 alt_registry=${UDMI_ALT_REGISTRY:-ZZ-REDIRECT-NA}
 min_stage=BETA
+export UDMI_VERSION=`cd $ROOT; git describe`
 
 if [[ $1 == '-a' ]]; then
     min_stage=ALPHA

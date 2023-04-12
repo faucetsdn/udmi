@@ -22,6 +22,7 @@ if [[ "$schema" != schema ]]; then
 fi
 
 jarfile=validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+export UDMI_VERSION=`cd $ROOT; git describe`
 
 echo Building validator...
 validator/bin/build
