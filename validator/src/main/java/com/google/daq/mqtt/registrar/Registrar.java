@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -770,7 +771,7 @@ public class Registrar {
 
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
-    try (InputStream schemaStream = new FileInputStream(schemaFile)) {
+    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
       JsonSchema schema =
           JsonSchemaFactory.newBuilder()
               .setLoadingConfiguration(
@@ -812,10 +813,6 @@ public class Registrar {
     }
   }
 
-  protected Map<String, JsonSchema> getSchemas() {
-    return schemas;
-  }
-
   public List<Object> getMockActions() {
     return cloudIotManager.getMockActions();
   }
@@ -825,7 +822,7 @@ public class Registrar {
     @Override
     public InputStream fetch(URI source) {
       try {
-        return new FileInputStream(new File(schemaBase, source.getSchemeSpecificPart()));
+        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
       } catch (Exception e) {
         throw new RuntimeException("While loading sub-schema " + source, e);
       }
