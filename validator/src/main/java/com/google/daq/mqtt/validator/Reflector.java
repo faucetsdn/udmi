@@ -22,6 +22,7 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class Reflector {
 
+  private static final int RETRY_COUNTS = 3;
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;
@@ -88,9 +89,20 @@ public class Reflector {
     String recvId;
     System.err.println("Waiting for return transaction " + sendId);
     do {
-      MessageBundle messageBundle = client.takeNextMessage(true);
+      MessageBundle messageBundle = retryMessageBundle();
       recvId = messageBundle.attributes.get("transactionId");
     } while (!sendId.equals(recvId));
+  }
+
+  private MessageBundle retryMessageBundle() {
+    int retryCount = 0;
+    while (retryCount++ < RETRY_COUNTS) {
+      MessageBundle messageBundle = client.takeNextMessage(true);
+      if (messageBundle != null) {
+        return messageBundle;
+      }
+    }
+    throw new RuntimeException("Retry count limit exceeded");
   }
 
   private void initialize() {
