@@ -720,6 +720,10 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
+    if (metadata.cloud != null && metadata.cloud.credentials != null
+        && metadata.cloud.credentials.isEmpty()) {
+      metadata.cloud.credentials = null;
+    }
     metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();
     String metadataHash = metadataHash();

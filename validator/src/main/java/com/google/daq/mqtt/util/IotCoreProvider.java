@@ -150,6 +150,16 @@ class IotCoreProvider implements IotProvider {
     }
   }
 
+  private static GatewayConfig makeGatewayConfig(Boolean isGateway) {
+    if (!TRUE.equals(isGateway)) {
+      return null;
+    }
+    GatewayConfig gatewayConfig = new GatewayConfig();
+    gatewayConfig.setGatewayType("GATEWAY");
+    gatewayConfig.setGatewayAuthMethod("ASSOCIATION_ONLY");
+    return gatewayConfig;
+  }
+
   static Device convert(CloudModel device) {
     List<DeviceCredential> newCredentials = ofNullable(device.credentials)
         .map(credentials -> credentials.stream()
@@ -163,16 +173,6 @@ class IotCoreProvider implements IotProvider {
         .setGatewayConfig(makeGatewayConfig(device.is_gateway))
         .setLastEventTime(timestamp)
         .setMetadata(device.metadata);
-  }
-
-  private static GatewayConfig makeGatewayConfig(Boolean isGateway) {
-    if (!TRUE.equals(isGateway)) {
-      return null;
-    }
-    GatewayConfig gatewayConfig = new GatewayConfig();
-    gatewayConfig.setGatewayType("GATEWAY");
-    gatewayConfig.setGatewayAuthMethod("ASSOCIATION_ONLY");
-    return gatewayConfig;
   }
 
   static CloudModel convert(Device device) {

@@ -18,6 +18,9 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.ExecutionConfiguration;
 
+/**
+ * IoT provider client that uses the MQTT reflector messaging interface.
+ */
 public class IotReflectorClient implements IotProvider {
 
   // Requires functions that support cloud device manager support.
@@ -28,6 +31,11 @@ public class IotReflectorClient implements IotProvider {
   private static final String UPDATE_CONFIG_TOPIC = "update/config";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
 
+  /**
+   * Create a new client.
+   *
+   * @param executionConfiguration configuration to use for connection
+   */
   public IotReflectorClient(ExecutionConfiguration executionConfiguration) {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
