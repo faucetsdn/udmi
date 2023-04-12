@@ -588,31 +588,32 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     localDevices.values().stream()
         .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
-        .forEach(
-            localDevice -> {
-              String gatewayId = localDevice.getDeviceId();
-              try {
-                System.err.println("Binding devices to gateway " + gatewayId);
-                Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
-                System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
-                int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
-                Preconditions.checkState(boundDevices.size() != total,
-                    "all devices including the gateway can't be bound to one gateway!");
-                localDevice.getSettings().proxyDevices.stream()
-                    .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
-                    .filter(proxyDeviceId -> !boundDevices.contains(proxyDeviceId))
-                    .forEach(
-                        proxyDeviceId -> {
-                          System.err.println(
-                              "Binding " + proxyDeviceId + " to gateway " + gatewayId);
-                          cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-                        }
-                    );
-              } catch (Exception e) {
-                localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
+        .forEach(localDevice -> bindGatewayDevice(localDevices, deviceSet, localDevice));
+  }
+
+  private void bindGatewayDevice(Map<String, LocalDevice> localDevices, Set<String> deviceSet,
+      LocalDevice localDevice) {
+    String gatewayId = localDevice.getDeviceId();
+    try {
+      System.err.println("Binding devices to gateway " + gatewayId);
+      Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
+      System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
+      int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
+      Preconditions.checkState(boundDevices.size() != total,
+          "all devices including the gateway can't be bound to one gateway!");
+      localDevice.getSettings().proxyDevices.stream()
+          .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
+          .filter(proxyDeviceId -> !boundDevices.contains(proxyDeviceId))
+          .forEach(
+              proxyDeviceId -> {
+                System.err.println(
+                    "Binding " + proxyDeviceId + " to gateway " + gatewayId);
+                cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
               }
-            }
-        );
+          );
+    } catch (Exception e) {
+      localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
+    }
   }
 
   private void shutdown() {
