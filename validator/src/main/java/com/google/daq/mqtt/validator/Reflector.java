@@ -86,7 +86,7 @@ public class Reflector {
 
   private void reflect(String topic, String data) {
     int retryCount = RETRY_COUNT;
-    String recvId;
+    String recvId = null;
     String sendId = client.publish(deviceId, topic, data);
     System.err.println("Waiting for return transaction " + sendId);
     do {
