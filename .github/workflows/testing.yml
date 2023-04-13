@@ -88,6 +88,7 @@ jobs:
 
   sanity:
     name: Special GitHub actions sanity checkes
+    runs-on: ubuntu-latest
     env:
       VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
       SECRET_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
