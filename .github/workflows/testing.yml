@@ -94,7 +94,7 @@ jobs:
       GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
       UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
-    if: env.GCP_TARGET_PROJECT != '' && env.UDMI_REGISTRY_SUFFIX != ''
+    if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX != ''
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
@@ -134,7 +134,7 @@ jobs:
       GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
       UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
-    if: env.GCP_TARGET_PROJECT != '' && env.UDMI_REGISTRY_SUFFIX == ''
+    if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
@@ -171,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: sequencer_dep
-    if: "${{ secrets.GCP_TARGET_PROJECT != '' }}"
+    if: "${{ vars.GCP_TARGET_PROJECT != '' }}"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
@@ -217,7 +217,7 @@ jobs:
       UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
       MQTT_PROXY_HOST: ${{ secrets.MQTT_PROXY_HOST }}
-    if: "${{ env.GCP_TARGET_PROJECT != '' }}"
+    if: "${{ vars.GCP_TARGET_PROJECT != '' }}"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
