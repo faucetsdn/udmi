@@ -130,7 +130,6 @@ jobs:
     name: Sequencer Suite
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: comprehensive
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -171,7 +170,8 @@ jobs:
     name: Comprehensive Suite
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: "${{ vars.GCP_TARGET_PROJECT != '' }}"
+    needs: sequencer_dep
+    if: always() && vars.GCP_TARGET_PROJECT != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
       UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
@@ -210,9 +210,9 @@ jobs:
   redirect:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: comprehensive # Access to UDMI-REFLECTOR is mutually exclusive for default registry
+    needs: comprehensive
     timeout-minutes: 10
-    if: "${{ vars.GCP_TARGET_PROJECT != '' }}"
+    if: "always() && ${{ vars.GCP_TARGET_PROJECT != '' }}"
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
       UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
