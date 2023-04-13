@@ -133,7 +133,6 @@ jobs:
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v2
@@ -174,7 +173,6 @@ jobs:
     if: always() && vars.GCP_TARGET_PROJECT != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
     steps:
       - uses: actions/checkout@v2
@@ -212,10 +210,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: comprehensive
     timeout-minutes: 10
-    if: "always() && ${{ vars.GCP_TARGET_PROJECT != '' }}"
+    if: always() && vars.GCP_TARGET_PROJECT != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      UDMI_REGISTRY_SUFFIX: ${{ vars.UDMI_REGISTRY_SUFFIX }}
       UDMI_ALT_REGISTRY: ${{ vars.UDMI_ALT_REGISTRY }}
       MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
     steps:
