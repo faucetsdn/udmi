@@ -17,12 +17,15 @@ targets=$*
 
 [[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
 if [[ -n `which rot13` ]]; then
-   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
+   # env vars are provided as a secret, so obfuscate to prevent redactions in server-side logs.
    echo 'Using target project (rot13):' $(echo $project_id | rot13)
+   echo 'Using UDMI_REGISTRY_SUFFIX (rot13): $(echo $UDMI_REGISTRY_SUFFIX | rot13)
+   echo 'Using UDMI_ALT_REGISTRY (rot13): $(echo $UDMI_ALT_REGISTRY | rot13)
 else
    echo 'Using target project:' $project_id
+   echo 'Using UDMI_REGISTRY_SUFFIX: $UDMI_REGISTRY_SUFFIX
+   echo 'Using UDMI_ALT_REGISTRY: $UDMI_ALT_REGISTRY
 fi
-echo Testing sequencer with UDMI_REGISTRY_SUFFIX: $UDMI_REGISTRY_SUFFIX
 
 site_path=sites/udmi_site_model
 device_id=AHU-1
