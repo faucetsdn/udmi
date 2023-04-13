@@ -171,10 +171,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: sequencer_dep
-    env:
-      GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
-      UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
-      UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
     if: "${{ env.GCP_TARGET_PROJECT != '' }}"
     steps:
       - uses: actions/checkout@v2
@@ -184,6 +180,10 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: registrar clean
+        env:
+          GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+          UDMI_REGISTRY_SUFFIX: ${{ secrets.UDMI_REGISTRY_SUFFIX }}
+          UDMI_ALT_REGISTRY: ${{ secrets.UDMI_ALT_REGISTRY }}
         run: |
           bin/test_regclean $GCP_TARGET_PROJECT
       - name: telemetry validator
