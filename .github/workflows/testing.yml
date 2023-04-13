@@ -86,6 +86,19 @@ jobs:
       - name: api tests
         run: udmif/api/runTests
 
+  sanity:
+    name: Special GitHub actions sanity checkes
+    env:
+      VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
+      SECRET_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+    steps:
+      - name: check var settings
+        run: |
+          echo GCP_TARGET_PROJECT var is $VARS_GCP_TARGET_PROJECT
+          echo GCP_TARGET_PROJECT secret is $SECRETS_GCP_TARGET_PROJECT
+          echo Checking if secret is defined but not var:
+          [[ -z $VARS_GCP_TARGET_PROJECT -a -n $SECRETS_GCP_TARGET_PROJECT ]]
+
   sequencer:
     name: Sequencer Suite
     runs-on: ubuntu-latest
