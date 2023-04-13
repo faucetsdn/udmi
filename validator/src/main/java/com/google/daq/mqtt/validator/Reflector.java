@@ -22,7 +22,7 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class Reflector {
 
-  private static final int RETRY_COUNT = 3;
+  private static final int RETRY_COUNT = 1;
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;

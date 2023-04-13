@@ -242,7 +242,9 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
   }).catch(e => reflectError(envelope, base64, e));
 });
 
-function udmi_process_reflector_state(attributes, msgObject) {
+async function udmi_process_reflector_state(attributes, msgObject) {
+  # Although not strictly needed, include this here so the reflector startup code can retry.
+  await registry_promise;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
