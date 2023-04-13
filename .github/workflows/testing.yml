@@ -90,7 +90,7 @@ jobs:
     name: GitHub Actions sanity
     runs-on: ubuntu-latest
     env:
-      VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
+      VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECTX }}
       SECRETS_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
     steps:
       - name: check secret-not-var set
