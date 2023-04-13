@@ -87,18 +87,18 @@ jobs:
         run: udmif/api/runTests
 
   sanity:
-    name: Special GitHub actions sanity checkes
+    name: GitHub Actions sanity
     runs-on: ubuntu-latest
     env:
       VARS_GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
-      SECRET_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
+      SECRETS_GCP_TARGET_PROJECT: ${{ secrets.GCP_TARGET_PROJECT }}
     steps:
-      - name: check var settings
+      - name: check secret-not-var set
         run: |
           echo GCP_TARGET_PROJECT var is $VARS_GCP_TARGET_PROJECT
           echo GCP_TARGET_PROJECT secret is $SECRETS_GCP_TARGET_PROJECT
           echo Checking if secret is defined but not var:
-          [[ -z $VARS_GCP_TARGET_PROJECT -a -n $SECRETS_GCP_TARGET_PROJECT ]]
+          [[ -n $VARS_GCP_TARGET_PROJECT || -z $SECRETS_GCP_TARGET_PROJECT ]]
 
   sequencer:
     name: Sequencer Suite
