@@ -11,8 +11,6 @@ in the context of UDMI cloud services. It's essentially a unique token that's in
 By adding the `-vv` flag to _sequencer_, the system will output more stuff and also include a special `nonce`
 parameter to config messages and updates.
 
-For GitHub Actions CI testing, setting the `SEQUENCER_OPTS` secret to `-vv` will automatically enable it there.
-
 ## Sequencer Output
 
 If properly enabled, the _nonce_ will show up in the sequencer output, in this case for the specific _system_

@@ -32,7 +32,7 @@ a system with a registry suffix setting of `_A` would show:
     - Should use the same public/private keys as the base device (no `_A`).
   - Create device `ZZ-REDIRECT-NA_A` in registry `UDMS-REFLECT` if necessary for endpoint connection testing.
 - Semi-automated population of registry entries:
-  - Define `UDMI_REGISTRY_SUFFIX` env variable: either locally or through a GitHub Actions secret.
+  - Define `UDMI_REGISTRY_SUFFIX` env variable: either locally or through a GitHub Actions variable.
   - `bin/test_sequencer $PROJECT_ID no_valid_test` to attempt a test run -- this will fail.
     - Make sure any referenced registry exists: check log output for latest "creating client" line for exact path.
     - Should be a combination of the target project, registry from the site model, and env registry suffix. See examples above.
@@ -44,5 +44,5 @@ a system with a registry suffix setting of `_A` would show:
 
 ## CI Workflow
 
-If the `UDMI_REGISTRY_SUFFIX` is defined as a GitHub Actions secret, the workflow will automatically skip `bin/test_sequencer` in the
+If the `UDMI_REGISTRY_SUFFIX` is defined as a GitHub Actions variable, the workflow will automatically skip `bin/test_sequencer` in the
 main flow, and instead run it in a parallel sequencer-only flow. The "skipped" step will still show up but not executed.

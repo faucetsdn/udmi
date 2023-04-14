@@ -15,12 +15,7 @@ function log {
     bin/timestamp $@
 }
 
-if [[ -n `which rot13` ]]; then
-   # Project is provided as a secret, so obfuscate to prevent redactions in server-side logs.
-   log 'Using target project (rot13):' $(echo $project_id | rot13)
-else
-   log 'Using target project:' $project_id
-fi
+log 'Using target project:' $project_id
 
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
