@@ -717,12 +717,13 @@ function process_state_update(attributes, msgObject) {
                                                    stateStart, currentTimestamp(), null));
 
   for (var block in msgObject) {
-    let subMsg = msgObject[block];
+    const subMsg = msgObject[block];
     if (typeof subMsg === 'object') {
-      attributes.subFolder = block;
+      const attrCopy = Object.assign({}, attributes);
+      attrCopy.subFolder = block;
       subMsg.timestamp = msgObject.timestamp;
       subMsg.version = msgObject.version;
-      promises = promises.concat(process_state_block(attributes, subMsg));
+      promises = promises.concat(process_state_block(attrCopy, subMsg));
     }
   }
 
@@ -984,13 +985,13 @@ function publishPubsubMessage(topicName, attributes, data) {
   const subType = attributes.subType || EVENT_TYPE;
   const subFolder = attributes.subFolder || 'unknown';
   const transactionId = attributes.transactionId;
-  const attr_copy = Object.assign({}, attributes);
+  const attrCopy = Object.assign({}, attributes);
 
   console.log('Message publish', topicName, deviceId, subType, subFolder, transactionId);
 
   return pubsub
     .topic(topicName)
-    .publish(dataBuffer, attr_copy)
+    .publish(dataBuffer, attrCopy)
     .then(messageId => {
       console.debug(`Message ${messageId} published to ${topicName}.`);
     });
