@@ -101,19 +101,19 @@ jobs:
         run: |
           echo GCP_TARGET_PROJECT var is $VARS_GCP_TARGET_PROJECT
           echo GCP_TARGET_PROJECT secret is $SECRETS_GCP_TARGET_PROJECT
-          echo Checking if secret is defined but not var:
+          echo Checking if secret is defined but not var
           [[ -n $VARS_GCP_TARGET_PROJECT || -z $SECRETS_GCP_TARGET_PROJECT ]]
       - name: check secret-not-var UDMI_REGISTRY_SUFFIX
         run: |
           echo UDMI_REGISTRY_SUFFIX var is $VARS_UDMI_REGISTRY_SUFFIX
           echo UDMI_REGISTRY_SUFFIX secret is $SECRETS_UDMI_REGISTRY_SUFFIX
-          echo Checking if secret is defined but not var:
+          echo Checking if secret is defined but not var
           [[ -n $VARS_UDMI_REGISTRY_SUFFIX || -z $SECRETS_UDMI_REGISTRY_SUFFIX ]]
       - name: check secret-not-var UDMI_ALT_REGISTRY
         run: |
           echo UDMI_ALT_REGISTRY var is $VARS_UDMI_ALT_REGISTRY
           echo UDMI_ALT_REGISTRY secret is $SECRETS_UDMI_ALT_REGISTRY
-          echo Checking if secret is defined but not var:
+          echo Checking if secret is defined but not var
           [[ -n $VARS_UDMI_ALT_REGISTRY || -z $SECRETS_UDMI_ALT_REGISTRY ]]
 
   sequencer:
