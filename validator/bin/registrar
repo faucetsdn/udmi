@@ -7,7 +7,7 @@ mainclass=com.google.daq.mqtt.registrar.Registrar
 project_opt=
 
 if [ -z "$1" ]; then
-    echo Usage: $0 config_file [devices...]
+    echo Usage: $0 config_file [options...] [devices...]
     false
 fi
 
@@ -21,7 +21,7 @@ export UDMI_VERSION=`cd $ROOT; git describe`
 
 echo Using tool version $UDMI_VERSION
 echo Using tool root $ROOT
-echo Using devices $*
+echo With options/devices $*
 
 error=0
 echo java -cp $jarfile $mainclass $config_file -r $ROOT $*

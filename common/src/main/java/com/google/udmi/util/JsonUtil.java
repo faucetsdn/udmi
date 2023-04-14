@@ -90,6 +90,14 @@ public abstract class JsonUtil {
     }
   }
 
+  private static <T> T fromStringStrict(Class<T> targetClass, String messageString) {
+    try {
+      return STRICT_MAPPER.readValue(messageString, checkNotNull(targetClass, "target class"));
+    } catch (Exception e) {
+      throw new RuntimeException("While converting message to " + targetClass.getName(), e);
+    }
+  }
+
   /**
    * Convert a generic object to a specific class.
    *
@@ -100,6 +108,18 @@ public abstract class JsonUtil {
    */
   public static <T> T convertTo(Class<T> targetClass, Object message) {
     return message == null ? null : fromString(targetClass, stringify(message));
+  }
+
+  /**
+   * Convert a generic object to a specific class with strict field mappings.
+   *
+   * @param targetClass result class
+   * @param message     object to convert
+   * @param <T>         class parameter
+   * @return converted object
+   */
+  public static <T> T convertToStrict(Class<T> targetClass, Object message) {
+    return message == null ? null : fromStringStrict(targetClass, stringify(message));
   }
 
   /**

@@ -15,5 +15,5 @@ public interface MessagePublisher {
 
   boolean isActive();
 
-  MessageBundle takeNextMessage();
+  MessageBundle takeNextMessage(boolean enableTimeout);
 }

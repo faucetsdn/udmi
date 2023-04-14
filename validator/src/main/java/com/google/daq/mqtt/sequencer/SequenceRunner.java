@@ -104,8 +104,8 @@ public class SequenceRunner {
     if (deviceId != null) {
       SequenceRunner.processConfig(config);
     } else {
-      siteModel.forEachDevice(device -> {
-        config.device_id = device.deviceId;
+      siteModel.forEachDeviceId(siteDeviceId -> {
+        config.device_id = siteDeviceId;
         SequenceRunner.processConfig(config);
       });
     }

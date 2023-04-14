@@ -60,15 +60,15 @@ public class MappingSink {
   }
 
   private File mappingConfigFile(String deviceId) {
-    return new File(siteModel.getDevice(deviceId).getFile(), MAPPING_CONFIG_FILE);
+    return new File(siteModel.getDeviceDir(deviceId), MAPPING_CONFIG_FILE);
   }
 
   private File mappingCommandFile(String deviceId) {
-    return new File(siteModel.getDevice(deviceId).getFile(), MAPPING_COMMAND_FILE);
+    return new File(siteModel.getDeviceDir(deviceId), MAPPING_COMMAND_FILE);
   }
 
   private File mappingStateFile(String deviceId) {
-    return new File(siteModel.getDevice(deviceId).getFile(), MAPPING_STATE_FILE);
+    return new File(siteModel.getDeviceDir(deviceId), MAPPING_STATE_FILE);
   }
 
   void updateState(Envelope envelope, DeviceMappingState mappingState) {

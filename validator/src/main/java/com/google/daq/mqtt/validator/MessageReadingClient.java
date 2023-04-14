@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.udmi.util.Common.EXCEPTION_KEY;
-import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 
@@ -172,7 +170,7 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
-  public Validator.MessageBundle takeNextMessage() {
+  public Validator.MessageBundle takeNextMessage(boolean enableTimeout) {
     final String deviceId = getNextDevice();
     final Map<String, Object> message = deviceMessages.remove(deviceId);
     final Map<String, String> attributes = deviceAttributes.remove(deviceId);

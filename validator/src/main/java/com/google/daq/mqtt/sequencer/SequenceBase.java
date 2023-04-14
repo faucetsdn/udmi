@@ -1019,7 +1019,7 @@ public class SequenceBase {
       if (!reflector().isActive()) {
         throw new RuntimeException("Trying to receive message from inactive client");
       }
-      MessageBundle bundle = reflector().takeNextMessage();
+      MessageBundle bundle = reflector().takeNextMessage(false);
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
@@ -1492,7 +1492,7 @@ public class SequenceBase {
       if (failureType != SequenceResult.SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
-          error("Reset required during debug, forcing exit to preserve failing config/state");
+          error("Forcing exit to preserve failing config/state " + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
         }
       }

@@ -1,14 +1,13 @@
 package com.google.daq.mqtt.util;
 
-import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.udmi.util.SiteModel;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
 
 /**
  * Mocked IoT provider for unit testing.
@@ -16,6 +15,7 @@ import java.util.stream.Collectors;
 public class IotMockProvider implements IotProvider {
 
   public static final String MOCK_DEVICE_ID = "MOCK-1";
+  public static final String PROXY_DEVICE_ID = "AHU-22";
   private final SiteModel siteModel;
   private final String client;
   private List<MockAction> mockActions = new ArrayList<>();
@@ -55,20 +55,24 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void updateDevice(String deviceId, Device device) {
+  public void updateDevice(String deviceId, CloudModel device) {
     mockAction(UPDATE_DEVICE_ACTION, deviceId, device);
   }
 
   @Override
-  public void createDevice(Device makeDevice) {
+  public void createDevice(String deviceId, CloudModel makeDevice) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public Device fetchDevice(String deviceId) {
-    Device device = new Device();
-    device.setId(deviceId);
-    device.setNumId(new BigInteger("" + Objects.hash(deviceId), 10));
+  public void deleteDevice(String deviceId) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public CloudModel fetchDevice(String deviceId) {
+    CloudModel device = new CloudModel();
+    device.num_id = "" + Objects.hash(deviceId);
     return device;
   }
 
@@ -78,15 +82,23 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds() {
+  public Set<String> fetchDeviceIds(String forGatewayId) {
     HashSet<String> deviceIds = new HashSet<>(siteModel.allDeviceIds());
     deviceIds.add(MOCK_DEVICE_ID);
+    if (forGatewayId != null) {
+      deviceIds.remove(forGatewayId);
+      deviceIds.remove(PROXY_DEVICE_ID);
+    }
     return deviceIds;
   }
 
   @Override
   public String getDeviceConfig(String deviceId) {
     throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public void shutdown() {
   }
 
   @Override

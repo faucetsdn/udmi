@@ -15,7 +15,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.IotMockProvider;
@@ -26,6 +25,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import udmi.schema.CloudModel;
 import udmi.schema.ExecutionConfiguration;
 
 /**
@@ -139,16 +139,16 @@ public class RegistrarTest {
     assertEquals("Devices updated", 4, updateActions.size());
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);
-    assertEquals("bind actions", 2, bindActions.size());
+    assertEquals("bind actions", 1, bindActions.size());
     assertTrue("bind gateway",
         bindActions.stream().allMatch(action -> action.data.equals("GAT-123")));
-    assertEquals("bind devices", ImmutableSet.of("SNS-4", "AHU-22"),
+    assertEquals("bind devices", ImmutableSet.of("AHU-22"),
         bindActions.stream().map(action -> action.deviceId).collect(
             Collectors.toSet()));
   }
 
   private Boolean isNotBlocking(MockAction action) {
-    return !TRUE.equals(((Device) action.data).getBlocked());
+    return !TRUE.equals(((CloudModel) action.data).blocked);
   }
 
   private List<MockAction> filterActions(List<MockAction> mockActions, String actionKey) {

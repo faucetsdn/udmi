@@ -8,8 +8,6 @@ import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -28,8 +26,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.net.URI;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -48,6 +46,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
+import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
@@ -77,7 +77,7 @@ public class Registrar {
   private static final String CONFIG_SUB_TYPE = "config";
   private static final String MODEL_SUB_TYPE = "model";
   private static final boolean DEFAULT_BLOCK_UNKNOWN = true;
-  private static ExecutionConfiguration config;
+  public static final Joiner JOIN_CSV = Joiner.on(", ");
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private CloudIotManager cloudIotManager;
@@ -100,6 +100,8 @@ public class Registrar {
   private String registrySuffix;
   private boolean useAltRegistry;
   private String altRegistry;
+  private boolean deleteDevices;
+  private boolean useReflectorMessages;
 
   /**
    * Main entry point for registrar.
@@ -143,6 +145,12 @@ public class Registrar {
         case "-t":
           setValidateMetadata(true);
           break;
+        case "-d":
+          setDeleteDevices(true);
+          break;
+        case "-m":
+          setUseReflectorMessages(true);
+          break;
         case "--":
           setDeviceList(argList);
           return this;
@@ -157,6 +165,15 @@ public class Registrar {
       }
     }
     return this;
+  }
+
+  private void setUseReflectorMessages(boolean useReflectorMessages) {
+    this.useReflectorMessages = useReflectorMessages;
+  }
+
+  private void setDeleteDevices(boolean deleteDevices) {
+    Preconditions.checkNotNull(projectId, "delete devices specified with no target project");
+    this.deleteDevices = deleteDevices;
   }
 
   private void setUseAltRegistry(boolean useAltRegistry) {
@@ -189,13 +206,14 @@ public class Registrar {
       loadSiteMetadata();
       processDevices();
       writeErrors();
-      shutdown();
     } catch (ExceptionMap em) {
       ExceptionMap.format(em, ERROR_FORMAT_INDENT).write(System.err);
       throw new RuntimeException("mapped exceptions", em);
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new RuntimeException("main exception", ex);
+    } finally {
+      shutdown();
     }
   }
 
@@ -231,6 +249,10 @@ public class Registrar {
   }
 
   private void writeErrors() throws Exception {
+    if (localDevices == null) {
+      return;
+    }
+
     Map<String, Map<String, String>> errorSummary = new TreeMap<>();
     DeviceExceptionManager dem = new DeviceExceptionManager(siteDir);
     localDevices
@@ -282,7 +304,8 @@ public class Registrar {
       throw new IllegalStateException("No alt_registry supplied with useAltRegistry true");
     }
     String useRegistry = useAltRegistry ? altRegistry : null;
-    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix);
+    cloudIotManager = new CloudIotManager(projectId, siteDir, useRegistry, registrySuffix,
+        useReflectorMessages);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -312,14 +335,19 @@ public class Registrar {
     AtomicInteger updatedCount = new AtomicInteger();
     AtomicInteger processedCount = new AtomicInteger();
     try {
-      localDevices = loadLocalDevices(deviceSet);
       cloudDevices = fetchCloudDevices();
+      if (deleteDevices) {
+        deleteCloudDevices();
+        return;
+      }
+
+      localDevices = loadLocalDevices(deviceSet);
 
       if (deviceSet != null) {
         Set<String> unknowns = Sets.difference(deviceSet, localDevices.keySet());
         if (!unknowns.isEmpty()) {
           throw new RuntimeException(
-              "Unknown specified devices: " + Joiner.on(", ").join(unknowns));
+              "Unknown specified devices: " + JOIN_CSV.join(unknowns));
         }
       }
 
@@ -340,6 +368,21 @@ public class Registrar {
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
+    }
+  }
+
+  private void deleteCloudDevices() {
+    if (cloudDevices.isEmpty()) {
+      System.err.println("No devices to delete, our work here is done!");
+      return;
+    }
+    for (String deviceId : cloudDevices) {
+      System.err.println("Removing " + deviceId + " from registry...");
+      cloudIotManager.deleteDevice(deviceId);
+    }
+    Set<String> deviceIds = fetchCloudDevices();
+    if (!deviceIds.isEmpty()) {
+      throw new RuntimeException("Did not delete all devices!");
     }
   }
 
@@ -390,11 +433,11 @@ public class Registrar {
       if (idleLimit == null) {
         return false;
       }
-      Device device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
-      if (device == null || device.getLastEventTime() == null || idleLimit == null) {
+      CloudModel device = cloudIotManager.fetchDevice(localDevice.getDeviceId());
+      if (device == null || device.last_event_time == null || idleLimit == null) {
         return false;
       }
-      return Instant.now().minus(idleLimit).isBefore(Instant.parse(device.getLastEventTime()));
+      return Instant.now().minus(idleLimit).isBefore(device.last_event_time.toInstant());
     } catch (Exception e) {
       throw new RuntimeException("While checking device limit " + localDevice.getDeviceId(), e);
     }
@@ -435,12 +478,12 @@ public class Registrar {
     }
 
     updateCloudIoT(localDevice);
-    Device device =
+    CloudModel device =
         Preconditions.checkNotNull(fetchDevice(localName), "missing device " + localName);
-    BigInteger numId =
+    String numId =
         Preconditions.checkNotNull(
-            device.getNumId(), "missing deviceNumId for " + localName);
-    localDevice.setDeviceNumId(numId.toString());
+            device.num_id, "missing deviceNumId for " + localName);
+    localDevice.setDeviceNumId(numId);
   }
 
   private void updateCloudIoT(LocalDevice localDevice) {
@@ -488,7 +531,7 @@ public class Registrar {
     return exceptionMap;
   }
 
-  private Device fetchDevice(String localName) {
+  private CloudModel fetchDevice(String localName) {
     try {
       return cloudIotManager.fetchDevice(localName);
     } catch (Exception e) {
@@ -545,21 +588,32 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices, Set<String> deviceSet) {
     localDevices.values().stream()
         .filter(localDevice -> localDevice.getSettings().proxyDevices != null)
-        .forEach(
-            localDevice ->
-                localDevice.getSettings().proxyDevices.stream()
-                    .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
-                    .forEach(
-                        proxyDeviceId -> {
-                          try {
-                            String gatewayId = localDevice.getDeviceId();
-                            System.err.println(
-                                "Binding " + proxyDeviceId + " to gateway " + gatewayId);
-                            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
-                          } catch (Exception e) {
-                            throw new RuntimeException("While binding device " + proxyDeviceId, e);
-                          }
-                        }));
+        .forEach(localDevice -> bindGatewayDevice(localDevices, deviceSet, localDevice));
+  }
+
+  private void bindGatewayDevice(Map<String, LocalDevice> localDevices, Set<String> deviceSet,
+      LocalDevice localDevice) {
+    String gatewayId = localDevice.getDeviceId();
+    try {
+      System.err.println("Binding devices to gateway " + gatewayId);
+      Set<String> boundDevices = cloudIotManager.fetchBoundDevices(gatewayId);
+      System.err.println("Devices already bound: " + JOIN_CSV.join(boundDevices));
+      int total = cloudDevices.size() != 0 ? cloudDevices.size() : localDevices.size();
+      Preconditions.checkState(boundDevices.size() != total,
+          "all devices including the gateway can't be bound to one gateway!");
+      localDevice.getSettings().proxyDevices.stream()
+          .filter(proxyDevice -> deviceSet == null || deviceSet.contains(proxyDevice))
+          .filter(proxyDeviceId -> !boundDevices.contains(proxyDeviceId))
+          .forEach(
+              proxyDeviceId -> {
+                System.err.println(
+                    "Binding " + proxyDeviceId + " to gateway " + gatewayId);
+                cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+              }
+          );
+    } catch (Exception e) {
+      localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e);
+    }
   }
 
   private void shutdown() {
@@ -568,6 +622,9 @@ public class Registrar {
     }
     if (feedPusher != null) {
       feedPusher.shutdown();
+    }
+    if (cloudIotManager != null) {
+      cloudIotManager.shutdown();
     }
   }
 
@@ -642,14 +699,14 @@ public class Registrar {
   }
 
   private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<DeviceCredential, String> usedCredentials = new HashMap<>();
+    Map<Credential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream()
         .filter(LocalDevice::isDirectConnect)
         .forEach(
             localDevice -> {
               CloudDeviceSettings settings = localDevice.getSettings();
               String deviceName = localDevice.getDeviceId();
-              for (DeviceCredential credential : settings.credentials) {
+              for (Credential credential : settings.credentials) {
                 String previous = usedCredentials.put(credential, deviceName);
                 if (previous != null) {
                   RuntimeException exception =
@@ -703,6 +760,9 @@ public class Registrar {
     if (NO_SITE.equals(projectId) || projectId == null) {
       return;
     }
+    if (projectId.startsWith("-")) {
+      throw new IllegalArgumentException("Project id starts with dash options flag " + projectId);
+    }
     this.projectId = projectId;
     this.registrySuffix = registrySuffix;
   }
@@ -721,7 +781,7 @@ public class Registrar {
 
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
-    try (InputStream schemaStream = new FileInputStream(schemaFile)) {
+    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
       JsonSchema schema =
           JsonSchemaFactory.newBuilder()
               .setLoadingConfiguration(
@@ -763,10 +823,6 @@ public class Registrar {
     }
   }
 
-  protected Map<String, JsonSchema> getSchemas() {
-    return schemas;
-  }
-
   public List<Object> getMockActions() {
     return cloudIotManager.getMockActions();
   }
@@ -776,7 +832,7 @@ public class Registrar {
     @Override
     public InputStream fetch(URI source) {
       try {
-        return new FileInputStream(new File(schemaBase, source.getSchemeSpecificPart()));
+        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
       } catch (Exception e) {
         throw new RuntimeException("While loading sub-schema " + source, e);
       }

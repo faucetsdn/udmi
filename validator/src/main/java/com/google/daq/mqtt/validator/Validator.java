@@ -111,7 +111,7 @@ public class Validator {
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String EVENT_POINTSET = "event_pointset";
   private static final String STATE_POINTSET = "state_pointset";
-  private static final String EMPTY_MESSAGE = "{}";
+  public static final String EMPTY_MESSAGE = "{}";
   private static final String CONFIG_PREFIX = "config_";
   private static final String STATE_PREFIX = "state_";
   private static final String UNKNOWN_TYPE_DEFAULT = "event";
@@ -146,7 +146,6 @@ public class Validator {
   private File schemaRoot;
   private String schemaSpec;
   private ExecutionConfiguration config;
-  private CloudIotManager cloudIotManager;
   private MessagePublisher client;
   private Map<String, JsonSchema> schemaMap;
   private File traceDir;
@@ -242,8 +241,8 @@ public class Validator {
   }
 
   private void validatePubSub(String instName) {
-    cloudIotManager = new CloudIotManager(config.project_id, new File(config.site_model),
-        null, config.registry_suffix);
+    CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
+        new File(config.site_model), null, config.registry_suffix, false);
     String registryId = getRegistryId();
     String updateTopic = cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
@@ -398,7 +397,7 @@ public class Validator {
     try {
       while (client.isActive()) {
         try {
-          validateMessage(client.takeNextMessage());
+          validateMessage(client.takeNextMessage(false));
         } catch (Exception e) {
           e.printStackTrace();
         }

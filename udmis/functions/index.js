@@ -9,9 +9,10 @@
  *
  * LEVEL 5: Baseline version using an explicit reflector envelope for type/folder.
  * LEVEL 6: Support for capture and reporting of errors in the pipeline for validating bad device messages.
+ * LEVEL 7: Support for reflector-based GCP IoT Core provider APIs.
  */
 const FUNCTIONS_VERSION_MIN = 5;
-const FUNCTIONS_VERSION_MAX = 6;
+const FUNCTIONS_VERSION_MAX = 7;
 
 // Hacky stuff to work with "maybe have firestore enabled"
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
@@ -35,8 +36,11 @@ const EVENT_TYPE = 'event';
 const CONFIG_TYPE = 'config';
 const STATE_TYPE = 'state';
 const QUERY_TYPE = 'query';
+const REPLY_TYPE = 'reply';
+const MODEL_TYPE = 'model';
 
 const UPDATE_FOLDER = 'update';
+const CLOUD_FOLDER = 'cloud';
 const UDMIS_FOLDER = 'udmis';
 const ERROR_FOLDER = 'error';
 
@@ -85,6 +89,7 @@ function reflectMessage(attributes, message) {
 function reflectError(attributes, base64, error) {
   const errorStr = String(error) + " for subFolder " + attributes.subFolder;
   console.log('Captured message error, reflecting:', errorStr);
+  console.error('Stack trace:', error);
   const message = {
     error: errorStr,
     data: base64
@@ -142,7 +147,7 @@ function sendCommandSafe(registryId, deviceId, subFolder, messageStr, transactio
   };
 
   return iotClient.sendCommandToDevice(request)
-    .catch((e) => {
+    .catch(e => {
       console.error('Command error', e.details);
     });
 }
@@ -226,37 +231,237 @@ exports.udmi_reflect = functions.pubsub.topic('udmi_reflect').onPublish((event) 
       return null;
     }
     if (envelope.subType == QUERY_TYPE) {
-      return udmi_query_event(envelope, payload);
+      return udmi_query(envelope, payload);
+    }
+    if (envelope.subType == MODEL_TYPE) {
+      return udmi_model(envelope, payload);
     }
     const targetFunction = envelope.subType == 'event' ? 'target' : envelope.subType;
     target = 'udmi_' + targetFunction;
     return publishPubsubMessage(target, envelope, payload);
-  });
+  }).catch(e => reflectError(envelope, base64, e));
 });
 
-function udmi_process_reflector_state(attributes, msgObject) {
+async function udmi_process_reflector_state(attributes, msgObject) {
+  // Although not strictly needed for this function, wait for registries to be resolved to avoid startup errors.
+  await registry_promise;
   const registryId = attributes.deviceRegistryId;
   const deviceId = attributes.deviceId;
   const subContents = Object.assign({}, version);
   subContents.last_state = msgObject.timestamp;
   subContents.functions_min = FUNCTIONS_VERSION_MIN;
   subContents.functions_max = FUNCTIONS_VERSION_MAX;
+  console.log('Setting reflector state', registryId, deviceId, JSON.stringify(subContents));
   const startTime = currentTimestamp();
   return modify_device_config(registryId, deviceId, UDMIS_FOLDER, subContents, startTime, null);
 }
 
-function udmi_query_event(attributes, msgObject) {
-  const subFolder = attributes.subFolder;
-  if (subFolder != UPDATE_FOLDER) {
-    throw 'Unknown query folder ' + subFolder;
+function udmi_model(attributes, msgObject) {
+  const operation = msgObject.operation;
+  msgObject.operation = null;
+  if (operation === 'CREATE') {
+    return udmi_model_create(attributes, msgObject);
+  } else if (operation === 'BIND') {
+    return udmi_model_bind(attributes, msgObject);
+  } else if (operation === 'UPDATE') {
+    return udmi_model_update(attributes, msgObject);
+  } else if (operation === 'DELETE') {
+    return udmi_model_delete(attributes, msgObject);
+  } else {
+    throw 'Unknown model operation ' + operation;
+  }
+}
+
+async function udmi_model_create(attributes, msgObject) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const registryPath = iotClient.registryPath(
+    projectId,
+    cloudRegion,
+    registryId,
+  );
+
+  const device = udmiToIotCoreDevice(msgObject, null)
+  device.id = deviceId;
+  const request = {
+    parent: registryPath,
+    device,
+  };
+
+  console.log('udmi_model_create', JSON.stringify(registryPath), deviceId);
+
+  const [response] = await iotClient.createDevice(request);
+
+  const message = iotCoreToUdmiDevice(response);
+  
+  attributes.subType = REPLY_TYPE;
+  message.operation = 'CREATE';
+  return reflectMessage(attributes, message);
+}
+
+async function udmi_model_bind(attributes, msgObject) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const registryPath = iotClient.registryPath(
+    projectId,
+    cloudRegion,
+    registryId,
+  );
+
+  const keys = Object.keys(msgObject.device_ids);
+
+  console.log('udmi_model_bind', JSON.stringify(registryPath), keys);
+
+  const promises = [];
+  keys.forEach(proxyId => {
+    const request = {
+      parent: registryPath,
+      deviceId: proxyId,
+      gatewayId: deviceId,
+    };
+
+    const bindPromise = iotClient.bindDeviceToGateway(request)
+          .then(response => fetch_cloud_device(attributes))
+          .then(device => {
+            attributes.subType = REPLY_TYPE;
+            device.operation = 'BIND';
+            return reflectMessage(attributes, device);
+          }).catch(e => {
+            return reflectError(attributes, 'bind error', e);
+          });
+    promises.push(bindPromise);
+  });
+  return Promise.all(promises);
+}
+
+async function udmi_model_update(attributes, msgObject) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const devicePath = iotClient.devicePath(
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
+  );
+
+  // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
+  const fieldMask = {
+    paths: [
+      'credentials',
+      'blocked',
+      'metadata'
+    ],
+  };
+
+  const request = {
+    device: udmiToIotCoreDevice(msgObject, devicePath),
+    updateMask: fieldMask
+  };
+
+  console.log('udmi_model_update', JSON.stringify(request));
+
+  const [response] = await iotClient.updateDevice(request);
+
+  const message = iotCoreToUdmiDevice(response);
+
+  attributes.subType = REPLY_TYPE;
+  message.operation = 'UPDATE';
+  return reflectMessage(attributes, message);
+}
+
+async function udmi_model_delete(attributes) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const devicePath = iotClient.devicePath(
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
+  );
+
+  const request = {
+    name: devicePath
+  };
+
+  const device = await fetch_cloud_device(attributes);
+
+  console.log('udmi_model_delete', JSON.stringify(devicePath));
+
+  if (device.device_ids) {
+    const promises = [];
+    Object.keys(device.device_ids).forEach(proxyId => {
+      promises.push(unbind_device(attributes, proxyId));
+    });
+    await Promise.all(promises);
   }
 
+  const [response] = await iotClient.deleteDevice(request);
+  if (Object.keys(response).length !== 0) {
+    throw 'Failed delete response: ' + JSON.stringify(response);
+  }
+
+  attributes.subType = REPLY_TYPE;
+  device.operation = 'DELETE';
+  return reflectMessage(attributes, device);
+}
+
+async function unbind_device(attributes, proxyId) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const registryPath = iotClient.registryPath(
+      projectId,
+      cloudRegion,
+      registryId,
+  );
+
+  const request = {
+    parent: registryPath,
+    deviceId: proxyId,
+    gatewayId: deviceId,
+  };
+
+  console.log('udmi_model_unbind', JSON.stringify(request));
+
+  return iotClient.unbindDeviceFromGateway(request);
+}
+
+function udmi_query(attributes, msgObject) {
+  const subFolder = attributes.subFolder;
+  if (subFolder === UPDATE_FOLDER) {
+    return udmi_query_state(attributes, msgObject);
+  } else if (subFolder === CLOUD_FOLDER) {
+    return udmi_query_cloud(attributes, msgObject);
+  } else {
+    throw 'Unknown query folder ' + subFolder;
+  }
+}
+
+function udmi_query_state(attributes, msgObject) {
+  const transactionId = attributes.transactionId;
   const projectId = attributes.projectId;
   const registryId = attributes.deviceRegistryId;
   const cloudRegion = attributes.cloudRegion;
   const deviceId = attributes.deviceId;
-
-  console.log('formattedName', projectId, cloudRegion, registryId, deviceId);
 
   const formattedName = iotClient.devicePath(
     projectId,
@@ -265,7 +470,7 @@ function udmi_query_event(attributes, msgObject) {
     deviceId
   );
 
-  console.log('iot query state', formattedName)
+  console.log('iot query state', formattedName, transactionId)
 
   const request = {
     name: formattedName
@@ -277,15 +482,203 @@ function udmi_query_event(attributes, msgObject) {
   ];
 
   return Promise.all(queries).then(([device, config]) => {
-    const stateBinaryData = device[0].state.binaryData;
-    const stateString = stateBinaryData.toString();
-    const msgObject = JSON.parse(stateString);
+    const stateBinaryData = device[0].state && device[0].state.binaryData;
+    const stateString = stateBinaryData && stateBinaryData.toString();
+    const msgObject = JSON.parse(stateString) || {};
     const lastConfig = config[0].deviceConfigs[0];
     const cloudUpdateTime = lastConfig.cloudUpdateTime.seconds;
     const deviceAckTime = lastConfig.deviceAckTime && lastConfig.deviceAckTime.seconds;
     msgObject.configAcked = String(deviceAckTime >= cloudUpdateTime);
     return process_state_update(attributes, msgObject);
   });
+}
+
+function udmi_query_cloud(attributes, msgObject) {
+  return attributes.deviceId ?
+    udmi_query_cloud_device(attributes, msgObject) :
+    udmi_query_cloud_registry(attributes, msgObject);
+}
+
+async function udmi_query_cloud_registry(attributes, msgObject) {
+  const devices = await fetch_cloud_registry(attributes);
+
+  const message = {'device_ids': {}};
+  devices.forEach(device => message.device_ids[device.id] = {
+    num_id: device.numId
+  });
+
+  attributes.subType = REPLY_TYPE;
+  return reflectMessage(attributes, message);
+}
+
+async function fetch_cloud_registry(attributes, gatewayId) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+
+  const parentName = iotClient.registryPath(
+      projectId,
+      cloudRegion,
+      registryId
+  );
+
+  // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
+  const fieldMask = {
+    paths: ['id', 'name', 'num_id']
+  };
+
+  const request = {
+    parent: parentName,
+    gatewayListOptions: {
+      associationsGatewayId: gatewayId
+    },
+    fieldMask,
+  };
+  const [response] = await iotClient.listDevices(request);
+  return response;
+}
+
+async function fetch_cloud_device(attributes) {
+  await registry_promise;
+  const projectId = attributes.projectId;
+  const registryId = attributes.deviceRegistryId;
+  const cloudRegion = registry_regions[registryId];
+  const deviceId = attributes.deviceId;
+
+  const devicePath = iotClient.devicePath(
+      projectId,
+      cloudRegion,
+      registryId,
+      deviceId
+  );
+
+  // See full list of device fields: https://cloud.google.com/iot/docs/reference/cloudiot/rest/v1/projects.locations.registries.devices
+  const fieldMask = {
+    paths: [
+      'id',
+      'name',
+      'num_id',
+      'credentials',
+      'last_heartbeat_time',
+      'last_event_time',
+      'last_state_time',
+      'last_config_ack_time',
+      'last_config_send_time',
+      'blocked',
+      'last_error_time',
+      'last_error_status',
+      'config',
+      'state',
+      'log_level',
+      'metadata',
+      'gateway_config',
+    ],
+  };
+
+  const [response] = await iotClient.getDevice({
+    name: devicePath,
+    fieldMask,
+  });
+  const udmiDevice = iotCoreToUdmiDevice(response);
+  if (udmiDevice.is_gateway) {
+    console.log('Fetching devices bound to gateway ' + deviceId);
+    const devices = await fetch_cloud_registry(attributes, deviceId);
+    udmiDevice.device_ids = {};
+    devices.forEach(device => udmiDevice.device_ids[device.id] = {
+      num_id: device.numId
+    });
+  }
+  return udmiDevice;
+}
+
+async function udmi_query_cloud_device(attributes) {
+  return fetch_cloud_device(attributes)
+    .then(device => {
+      attributes.subType = REPLY_TYPE;
+      return reflectMessage(attributes, device);
+    });
+}
+
+function iotCoreToUdmiDevice(core) {
+  let lastEventTime = core.lastEventTime &&
+      new Date(Number(core.lastEventTime.seconds) * 1000).toISOString();
+  return {
+    auth_type: core.authType,
+    num_id: core.numId,
+    blocked: core.blocked,
+    metadata: core.metadata,
+    last_event_time: lastEventTime,
+    is_gateway: core.gatewayConfig && core.gatewayConfig.gatewayType == 'GATEWAY',
+    credentials: iotCoreToUdmiCredentials(core.credentials),
+  };
+}
+
+function udmiToIotCoreDevice(udmi, devicePath) {
+  return {
+    name: devicePath,
+    authType: udmi.auth_type,
+    blocked: udmi.blocked,
+    metadata: udmi.metadata,
+    gatewayConfig: udmiToIotCoreGatewayConfig(udmi.is_gateway),
+    credentials: udmiToIotCoreCredentials(udmi.credentials),
+  };
+}
+
+function udmiToIotCoreGatewayConfig(is_gateway) {
+  return {
+    gatewayType: is_gateway ? 'GATEWAY' : 'NON_GATEWAY',
+    gatewayAuthMethod: 'ASSOCIATION_ONLY'
+  }
+}
+
+function udmiToIotCoreCredentials(udmi) {
+  if (udmi == null) {
+    return null;
+  }
+  const core = [];
+  for (let cred of udmi) {
+    core.push({
+      publicKey: {
+        format: udmiToIotCoreKeyFormat(cred.key_format),
+        key: cred.key_data
+      }
+    });
+  }
+  return core;
+}
+
+function iotCoreToUdmiCredentials(core) {
+  if (core == null) {
+    return null;
+  }
+  const udmi = [];
+  for (let cred of core) {
+    const publicKey = cred.publicKey;
+    publicKey && udmi.push({
+      key_format: iotCoreToUdmiKeyFormat(publicKey.format),
+      key_data: publicKey.key
+    });
+  }
+  return udmi;
+}
+
+function iotCoreToUdmiKeyFormat(core) {
+  return {
+    'RSA_PEM': 'RS256',
+    'RSA_X509_PEM': 'RS256_X509',
+    'ES256_PEM': 'ES256',
+    'ES256_X509_PEM': 'ES256_X509'
+  }[core];
+}
+
+function udmiToIotCoreKeyFormat(udmi) {
+  return {
+    'RS256': 'RSA_PEM',
+    'RS256_X509': 'RSA_X509_PEM',
+    'ES256': 'ES256_PEM',
+    'ES256_X509': 'ES256_X509_PEM',
+  }[udmi];
 }
 
 exports.udmi_state = functions.pubsub.topic('udmi_state').onPublish((event) => {
@@ -310,8 +703,9 @@ function process_state_update(attributes, msgObject) {
   let promises = [];
   const deviceId = attributes.deviceId;
   const registryId = attributes.deviceRegistryId;
+  const transactionId = attributes.transactionId;
 
-  promises.push(sendEnvelope(registryId, deviceId, STATE_TYPE, UPDATE_FOLDER, msgObject));
+  promises.push(sendEnvelope(registryId, deviceId, STATE_TYPE, UPDATE_FOLDER, msgObject, transactionId));
 
   attributes.subFolder = UPDATE_FOLDER;
   attributes.subType = STATE_TYPE;
@@ -423,8 +817,9 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
       return;
     }
   } else if (subFolder == 'update') {
-    console.log('Config replace version', version, startTime, transactionId);
+    console.log('Config replace version', deviceId, version, startTime, transactionId);
     newConfig = subContents;
+    newConfig.timestamp = startTime;
   } else {
     const resetConfig = subFolder == 'system' && subContents && subContents.extra_field == 'reset_config';
     newConfig = parse_old_config(oldConfig, resetConfig, deviceId);
@@ -435,7 +830,7 @@ async function modify_device_config(registryId, deviceId, subFolder, subContents
     newConfig.version = UDMI_VERSION;
     newConfig.timestamp = currentTimestamp();
 
-    console.log('Config modify', subFolder, version, startTime, transactionId);
+    console.log('Config modify', deviceId, subFolder, version, startTime, transactionId);
     if (subContents) {
       delete subContents.version;
       delete subContents.timestamp;

@@ -1,0 +1,41 @@
+#!/bin/bash -e
+
+# Force consistent sort order
+export LC_ALL=C
+
+ROOT_DIR=$(dirname $0)/..
+cd $ROOT_DIR
+
+if [[ $# -ne 1 ]]; then
+    echo Usage: $0 PROJECT_ID
+    false
+fi
+
+project_id=$1
+shift
+
+[[ -n $GITHUB_RUN_NUMBER ]] && echo "Workflow run number $GITHUB_RUN_NUMBER" || true
+echo 'Using target project:' $project_id
+echo 'Using UDMI_REGISTRY_SUFFIX:' $UDMI_REGISTRY_SUFFIX
+echo 'Using UDMI_ALT_REGISTRY:' $UDMI_ALT_REGISTRY
+
+site_path=sites/udmi_site_model
+
+echo Clean site out/ director...
+rm -rf $site_path/out
+
+echo Clean out the registry to make sure devices get removes...
+bin/registrar $site_path $project_id -m -d
+
+echo Check for failure in running pubber...
+RESULT=0
+bin/pubber $site_path $project_id AHU-1 54321 smokeCheck || RESULT=$?
+[[ $RESULT != 0 ]]
+
+echo Now recreate the registry from scratch!
+bin/registrar $site_path $project_id -m
+
+echo And check again, but this time with success...
+bin/pubber $site_path $project_id AHU-1 54321 smokeCheck
+
+echo Successful pubber check passed on clean registry.

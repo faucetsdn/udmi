@@ -22,6 +22,7 @@ import udmi.schema.ExecutionConfiguration;
  */
 public class Reflector {
 
+  private static final int RETRY_COUNT = 1;
   private final List<String> reflectCommands;
   private String projectId;
   private String siteDir;
@@ -84,12 +85,20 @@ public class Reflector {
   }
 
   private void reflect(String topic, String data) {
+    int retryCount = RETRY_COUNT;
+    String recvId = null;
     String sendId = client.publish(deviceId, topic, data);
-    String recvId;
     System.err.println("Waiting for return transaction " + sendId);
     do {
-      MessageBundle messageBundle = client.takeNextMessage();
-      recvId = messageBundle.attributes.get("transactionId");
+      MessageBundle messageBundle = client.takeNextMessage(true);
+      if (messageBundle == null) {
+        System.err.println("Receive timeout, retries left: " + --retryCount);
+        if (retryCount == 0) {
+          throw new RuntimeException("Maximum retry count reached");
+        }
+      } else {
+        recvId = messageBundle.attributes.get("transactionId");
+      }
     } while (!sendId.equals(recvId));
   }
 

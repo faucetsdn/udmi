@@ -1,5 +1,9 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.JsonUtil.getTimestamp;
+import static java.lang.Boolean.TRUE;
+import static java.util.Optional.ofNullable;
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -11,21 +15,45 @@ import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.BindDeviceToGatewayRequest;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
+import com.google.api.services.cloudiot.v1.model.DeviceCredential;
+import com.google.api.services.cloudiot.v1.model.GatewayConfig;
 import com.google.api.services.cloudiot.v1.model.ListDevicesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
+import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
+import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayRequest;
+import com.google.api.services.cloudiot.v1.model.UnbindDeviceFromGatewayResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.JsonUtil;
+import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
+import udmi.schema.Credential;
+import udmi.schema.Credential.Key_format;
 
 class IotCoreProvider implements IotProvider {
 
   private static final String DEVICE_UPDATE_MASK = "blocked,credentials,metadata";
   private static final int LIST_PAGE_SIZE = 1000;
+  private static final String RSA_KEY_FORMAT = "RSA_PEM";
+  private static final String RSA_CERT_FORMAT = "RSA_X509_PEM";
+  private static final String ES_KEY_FORMAT = "ES256_PEM";
+  private static final String ES_CERT_FILE = "ES256_X509_PEM";
+  private static final BiMap<Key_format, String> AUTH_TYPE_MAP =
+      ImmutableBiMap.of(
+          Key_format.RS_256, RSA_KEY_FORMAT,
+          Key_format.RS_256_X_509, RSA_CERT_FORMAT,
+          Key_format.ES_256, ES_KEY_FORMAT,
+          Key_format.ES_256_X_509, ES_CERT_FILE);
   private final CloudIot.Projects.Locations.Registries registries;
   private final String projectId;
   private final String cloudRegion;
@@ -47,6 +75,10 @@ class IotCoreProvider implements IotProvider {
     } catch (Exception e) {
       throw new RuntimeException("While creating IoTCoreProvider", e);
     }
+  }
+
+  @Override
+  public void shutdown() {
   }
 
   @Override
@@ -75,29 +107,113 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public void updateDevice(String deviceId, Device device) {
+  public void updateDevice(String deviceId, CloudModel device) {
     try {
-      registries.devices().patch(getDevicePath(deviceId), device).setUpdateMask(DEVICE_UPDATE_MASK)
+      device.num_id = null;
+      registries.devices().patch(getDevicePath(deviceId), convert(device))
+          .setUpdateMask(DEVICE_UPDATE_MASK)
           .execute();
     } catch (Exception e) {
-      throw new RuntimeException("Remote error patching device " + deviceId, e);
+      throw new RuntimeException("Error patching device " + deviceId, e);
     }
   }
 
   @Override
-  public void createDevice(Device makeDevice) {
-    String deviceId = makeDevice.getId();
+  public void createDevice(String deviceId, CloudModel iotDevice) {
     try {
-      registries.devices().create(getRegistryPath(), makeDevice).execute();
+      registries.devices().create(getRegistryPath(), convert(iotDevice).setId(deviceId)).execute();
     } catch (Exception e) {
-      throw new RuntimeException("Remote error creating device " + deviceId, e);
+      throw new RuntimeException("Error creating device " + deviceId, e);
     }
   }
 
   @Override
-  public Device fetchDevice(String deviceId) {
+  public void deleteDevice(String deviceId) {
     try {
-      return registries.devices().get(getDevicePath(deviceId)).execute();
+      Set<String> associatedDevices = fetchDeviceIds(deviceId);
+      associatedDevices.forEach(proxyId -> safeUnbind(deviceId, proxyId));
+      registries.devices().delete(getDevicePath(deviceId)).execute();
+    } catch (Exception e) {
+      throw new RuntimeException("Error deleting device " + deviceId, e);
+    }
+  }
+
+  private void safeUnbind(String deviceId, String proxyId) {
+    try {
+      registries.unbindDeviceFromGateway(getRegistryPath(),
+              new UnbindDeviceFromGatewayRequest()
+                  .setDeviceId(proxyId)
+                  .setGatewayId(deviceId))
+          .execute();
+    } catch (Exception e) {
+      throw new RuntimeException("While unbinding " + proxyId + " from " + deviceId, e);
+    }
+  }
+
+  private static GatewayConfig makeGatewayConfig(Boolean isGateway) {
+    if (!TRUE.equals(isGateway)) {
+      return null;
+    }
+    GatewayConfig gatewayConfig = new GatewayConfig();
+    gatewayConfig.setGatewayType("GATEWAY");
+    gatewayConfig.setGatewayAuthMethod("ASSOCIATION_ONLY");
+    return gatewayConfig;
+  }
+
+  static Device convert(CloudModel device) {
+    List<DeviceCredential> newCredentials = ofNullable(device.credentials)
+        .map(credentials -> credentials.stream()
+            .map(IotCoreProvider::convert).collect(Collectors.toList())).orElse(null);
+    BigInteger numId = device.num_id == null ? null : new BigInteger(device.num_id);
+    String timestamp = device.last_event_time == null ? null : getTimestamp(device.last_event_time);
+    return new Device()
+        .setNumId(numId)
+        .setBlocked(device.blocked)
+        .setCredentials(newCredentials)
+        .setGatewayConfig(makeGatewayConfig(device.is_gateway))
+        .setLastEventTime(timestamp)
+        .setMetadata(device.metadata);
+  }
+
+  static CloudModel convert(Device device) {
+    List<Credential> newCredentials = ofNullable(device.getCredentials())
+        .map(credentials -> credentials.stream()
+            .map(IotCoreProvider::convert).collect(Collectors.toList())).orElse(null);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = device.getNumId().toString();
+    cloudModel.blocked = device.getBlocked();
+    cloudModel.credentials = newCredentials;
+    cloudModel.is_gateway = convert(device.getGatewayConfig());
+    cloudModel.metadata = ofNullable(device.getMetadata()).map(HashMap::new).orElse(null);
+    cloudModel.last_event_time = JsonUtil.getDate(device.getLastEventTime());
+    return cloudModel;
+  }
+
+  private static DeviceCredential convert(Credential iot) {
+    PublicKeyCredential publicKey = new PublicKeyCredential().setKey(iot.key_data)
+        .setFormat(AUTH_TYPE_MAP.get(iot.key_format));
+    return new DeviceCredential().setPublicKey(publicKey);
+  }
+
+  private static Credential convert(DeviceCredential device) {
+    PublicKeyCredential publicKey = device.getPublicKey();
+    Credential credential = new Credential();
+    credential.key_data = publicKey.getKey();
+    credential.key_format = AUTH_TYPE_MAP.inverse().get(publicKey.getFormat());
+    return credential;
+  }
+
+  private static boolean convert(GatewayConfig gatewayConfig) {
+    if (gatewayConfig == null) {
+      return false;
+    }
+    return "GATEWAY".equals(gatewayConfig.getGatewayType());
+  }
+
+  @Override
+  public CloudModel fetchDevice(String deviceId) {
+    try {
+      return convert(registries.devices().get(getDevicePath(deviceId)).execute());
     } catch (Exception e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == 404) {
@@ -122,13 +238,16 @@ class IotCoreProvider implements IotProvider {
   }
 
   @Override
-  public Set<String> fetchDeviceIds() {
+  public Set<String> fetchDeviceIds(String forGatewayId) {
     Set<Device> allDevices = new HashSet<>();
     String nextPageToken = null;
     try {
       do {
         ListDevicesResponse response = registries.devices().list(getRegistryPath())
-            .setPageToken(nextPageToken).setPageSize(LIST_PAGE_SIZE).execute();
+            .setPageToken(nextPageToken)
+            .setPageSize(LIST_PAGE_SIZE)
+            .setGatewayListOptionsAssociationsGatewayId(forGatewayId)
+            .execute();
         java.util.List<Device> devices = response.getDevices();
         allDevices.addAll(devices == null ? ImmutableList.of() : devices);
         System.err.printf("Retrieved %d devices from registry...%n", allDevices.size());

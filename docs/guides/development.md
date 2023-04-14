@@ -53,7 +53,7 @@ The following files need to be update:
 
 To enable the CI tests, there first needs to be a dedicated GCP Project with an IoT Core
 registry which mirrors the [example site model](https://github.com/faucetsdn/udmi_site_model).
-A Github secret must also configured to point to the GCP project
+A Github variable must also configured to point to the GCP project
 
 They key steps to setup the dedicated project are as follows:
 1.  Setup up a GCP Project and IoT Core Registry. The
@@ -74,9 +74,8 @@ They key steps to setup the dedicated project are as follows:
     A `validator_config.json` configuration file is not needed (this is
     generated automatically during the CI test)
     -   The registry name is `ZZ-TRI-FECTA`.
-4.  A Github Secret needs to be added to the project, accessed from the
-    project's _Settings_ page. Note that in the test log output, the GCP Project ID will be
-    presented as rot13 text since GitHub otherwise redacts the secret from the logs.
+4.  A Github variable needs to be added to the project, accessed from the
+    project's _Settings_ page.
     -   **Name**: GCP_TARGET_PROJECT
     -   **Value**: _GCP Project ID_
 5.  Enable Github Actions

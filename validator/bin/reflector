@@ -12,6 +12,8 @@ config_file=$(realpath $1)
 shift
 cd $ROOT
 
+export UDMI_VERSION=`cd $ROOT; git describe`
+
 echo Building validator...
 validator/bin/build
 

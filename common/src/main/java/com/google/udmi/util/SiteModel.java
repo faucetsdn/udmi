@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -45,7 +47,7 @@ public class SiteModel {
 
   final String sitePath;
   private Map<String, Metadata> allMetadata;
-  private Map<String, Device> allDevices;
+  private Map<String, CloudModel> allDevices;
   private ExecutionConfiguration executionConfiguration;
 
   public SiteModel(String sitePath) {
@@ -136,8 +138,9 @@ public class SiteModel {
     allDevices = deviceIds.stream().collect(toMap(key -> key, this::newDevice));
   }
 
-  private Device newDevice(String deviceId) {
-    return new SiteModel.Device(deviceId);
+  private CloudModel newDevice(String deviceId) {
+    CloudModel cloudModel = new CloudModel();
+    return cloudModel;
   }
 
   private Metadata loadDeviceMetadata(String deviceId) {
@@ -174,7 +177,7 @@ public class SiteModel {
     }
   }
 
-  private File getDeviceDir(String deviceId) {
+  public File getDeviceDir(String deviceId) {
     return getDeviceDir(sitePath, deviceId);
   }
 
@@ -187,7 +190,7 @@ public class SiteModel {
     return allMetadata.get(deviceId);
   }
 
-  public Collection<Device> allDevices() {
+  public Collection<CloudModel> allDevices() {
     return allDevices.values();
   }
 
@@ -195,8 +198,8 @@ public class SiteModel {
     return allDevices.keySet();
   }
 
-  public void forEachDevice(Consumer<Device> consumer) {
-    allDevices.values().forEach(consumer);
+  public void forEachDeviceId(Consumer<String> consumer) {
+    allDevices.keySet().forEach(consumer);
   }
 
   public void forEachMetadata(BiConsumer<String, Metadata> consumer) {
@@ -287,7 +290,7 @@ public class SiteModel {
     return executionConfiguration.update_topic;
   }
 
-  public Device getDevice(String deviceId) {
+  public CloudModel getDevice(String deviceId) {
     return allDevices.get(deviceId);
   }
 
@@ -317,18 +320,5 @@ public class SiteModel {
     public String projectId;
     public String registryId;
     public String deviceId;
-  }
-
-  public class Device {
-
-    public final String deviceId;
-
-    public Device(String deviceId) {
-      this.deviceId = deviceId;
-    }
-
-    public File getFile() {
-      return getDeviceDir(deviceId);
-    }
   }
 }
