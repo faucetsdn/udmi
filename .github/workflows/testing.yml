@@ -162,6 +162,7 @@ jobs:
     name: Sequencer Suite
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    needs: comprehensive
     if: vars.GCP_TARGET_PROJECT != '' && vars.UDMI_REGISTRY_SUFFIX == ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
@@ -201,7 +202,6 @@ jobs:
     name: Comprehensive Suite
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: sequencer_dep
     if: always() && vars.GCP_TARGET_PROJECT != ''
     env:
       GCP_TARGET_PROJECT: ${{ vars.GCP_TARGET_PROJECT }}
