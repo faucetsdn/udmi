@@ -297,7 +297,7 @@ async function udmi_model_create(attributes, msgObject) {
   const [response] = await iotClient.createDevice(request);
 
   const message = iotCoreToUdmiDevice(response);
-  
+
   attributes.subType = REPLY_TYPE;
   message.operation = 'CREATE';
   return reflectMessage(attributes, message);
@@ -714,7 +714,7 @@ function process_state_update(attributes, msgObject) {
   const system = msgObject.system;
   const stateStart = system && system.operation && system.operation.last_start;
   stateStart && promises.push(modify_device_config(registryId, deviceId, 'last_start',
-                                                   stateStart, currentTimestamp(), null));
+      stateStart, currentTimestamp(), null));
 
   for (var block in msgObject) {
     const subMsg = msgObject[block];
