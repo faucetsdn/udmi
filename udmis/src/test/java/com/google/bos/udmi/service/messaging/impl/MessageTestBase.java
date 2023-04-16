@@ -1,11 +1,13 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;

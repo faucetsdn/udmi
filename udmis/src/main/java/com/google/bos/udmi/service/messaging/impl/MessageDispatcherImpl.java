@@ -1,9 +1,12 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.convertTo;
 
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessagePipe;
+import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
@@ -34,9 +37,6 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
   private static final String DEFAULT_HANDLER = "event/null";
   private static final String EXCEPTION_KEY = "exception_handler";
-  private final MessagePipe messagePipe;
-  private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
-  private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
 
   static {
     SPECIAL_CLASSES = ImmutableMap.of(
@@ -48,90 +48,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
   }
 
+  private final MessagePipe messagePipe;
+  private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
+  private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
+
   public MessageDispatcherImpl(MessagePipe messagePipe) {
     this.messagePipe = messagePipe;
-  }
-
-  @Override
-  public void activate() {
-    messagePipe.activate(this::processMessage);
-  }
-
-  @Override
-  public boolean isActive() {
-    return messagePipe.isActive();
-  }
-
-  @TestOnly
-  public void drainSource() {
-    ((MessageBase) messagePipe).drainSource();
-  }
-
-  @TestOnly
-  public List<Bundle> drainOutput() {
-    return ((MessageBase) messagePipe).drainOutput();
-  }
-
-  @TestOnly
-  public void publishBundle(Bundle bundle) {
-    messagePipe.publishBundle(bundle);
-  }
-
-  @TestOnly
-  public void resetForTest() {
-    ((MessageBase) messagePipe).resetForTest();
-  }
-
-  @NotNull
-  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
-      SubFolder folder) {
-    return new SimpleEntry<>(type, folder);
-  }
-
-  void processMessage(Envelope envelope, String mapKey, Object messageObject) {
-    try {
-      messageEnvelopes.put(messageObject, envelope);
-      handlers.get(mapKey).accept(messageObject);
-    } finally {
-      messageEnvelopes.remove(messageObject);
-    }
-  }
-
-  /**
-   * Process a received message bundle.
-   */
-  void processMessage(Bundle bundle) {
-    Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
-    boolean isException = bundle.message instanceof Exception;
-    String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
-    try {
-      handlers.computeIfAbsent(mapKey, key -> {
-        info("Defaulting messages of type/folder " + mapKey);
-        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
-      });
-      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
-      Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
-      processMessage(envelope, mapKey, messageObject);
-    } catch (Exception e) {
-      throw new RuntimeException("While processing message key " + mapKey, e);
-    }
-  }
-
-  @Override
-  public void publish(Object message) {
-    messagePipe.publishBundle(makeMessageBundle(message));
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
-    String mapKey = SPECIAL_CLASSES.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
-    if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
-      throw new RuntimeException("Type handler already defined for " + mapKey);
-    }
-  }
-
-  private void ignoreMessage(Object message) {
   }
 
   private static String getMapKey(SubType subType, SubFolder subFolder) {
@@ -147,6 +69,12 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     } catch (ClassNotFoundException e) {
       return null;
     }
+  }
+
+  @NotNull
+  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
+      SubFolder folder) {
+    return new SimpleEntry<>(type, folder);
   }
 
   /**
@@ -178,6 +106,82 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     if (messageClass != null) {
       MessageDispatcherImpl.TYPE_CLASSES.put(mapKey, messageClass);
       MessageDispatcherImpl.CLASS_TYPES.put(messageClass, getTypeFolderEntry(type, folder));
+    }
+  }
+
+  private void ignoreMessage(Object message) {
+  }
+
+  @Override
+  public void activate() {
+    messagePipe.activate(this::processMessage);
+  }
+
+  @TestOnly
+  public List<Bundle> drainOutput() {
+    return ((MessageBase) messagePipe).drainOutput();
+  }
+
+  @TestOnly
+  public void drainSource() {
+    ((MessageBase) messagePipe).drainSource();
+  }
+
+  @Override
+  public boolean isActive() {
+    return messagePipe.isActive();
+  }
+
+  @Override
+  public void publish(Object message) {
+    messagePipe.publish(makeMessageBundle(message));
+  }
+
+  @TestOnly
+  public void publishBundle(Bundle bundle) {
+    messagePipe.publish(bundle);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
+    String mapKey = SPECIAL_CLASSES.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
+    if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
+      throw new RuntimeException("Type handler already defined for " + mapKey);
+    }
+  }
+
+  @TestOnly
+  public void resetForTest() {
+    ((MessageBase) messagePipe).resetForTest();
+  }
+
+  void processMessage(Envelope envelope, String mapKey, Object messageObject) {
+    try {
+      messageEnvelopes.put(messageObject, envelope);
+      handlers.get(mapKey).accept(messageObject);
+    } finally {
+      messageEnvelopes.remove(messageObject);
+    }
+  }
+
+  /**
+   * Process a received message bundle.
+   */
+  void processMessage(Bundle bundle) {
+    Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
+    boolean isException = bundle.message instanceof Exception;
+    String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
+    try {
+      handlers.computeIfAbsent(mapKey, key -> {
+        info("Defaulting messages of type/folder " + mapKey);
+        return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
+      });
+      Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
+      Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
+      processMessage(envelope, mapKey, messageObject);
+    } catch (Exception e) {
+      throw new RuntimeException("While processing message key " + mapKey, e);
     }
   }
 

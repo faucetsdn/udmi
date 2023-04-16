@@ -1,8 +1,9 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.fromString;
 
+import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
 import java.util.List;
@@ -33,28 +34,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
   }
 
-  public void resetForTest() {
-  }
-
-  void messageLoop(BlockingQueue<String> queue) {
-    try {
-      while (true) {
-        try {
-          final String bundleString;
-          bundleString = queue.take();
-          if (LOOP_EXIT_MARK.equals(bundleString)) {
-            info("Message loop terminated");
-            return;
-          }
-          Bundle bundle = extractBundle(bundleString);
-          dispatcher.accept(bundle);
-        } catch (Exception e) {
-          dispatcher.accept(makeExceptionBundle(e));
-        }
-      }
-    } catch (Exception loopException) {
-      info("Message loop exception: " + Common.getExceptionMessage(loopException));
-    }
+  @SuppressWarnings("unchecked")
+  protected Future<Void> handleQueue(BlockingQueue<String> queue) {
+    return (Future<Void>) executor.submit(() -> messageLoop(queue));
   }
 
   private Bundle makeExceptionBundle(Exception e) {
@@ -63,13 +45,6 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     bundle.message = e;
     return bundle;
   }
-
-  @SuppressWarnings("unchecked")
-  protected Future<Void> handleQueue(BlockingQueue<String> queue) {
-    return (Future<Void>) executor.submit(() -> messageLoop(queue));
-  }
-
-  public abstract void publishBundle(Bundle bundle);
 
   @Override
   public void activate(Consumer<Bundle> messageDispatcher) {
@@ -94,6 +69,11 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     return sourceFuture != null && !sourceFuture.isDone();
   }
 
+  public abstract void publish(Bundle bundle);
+
+  public void resetForTest() {
+  }
+
   /**
    * Simple wrapper for a message bundle, including envelope and message.
    */
@@ -101,6 +81,27 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     public Envelope envelope;
     public Object message;
+  }
+
+  void messageLoop(BlockingQueue<String> queue) {
+    try {
+      while (true) {
+        try {
+          final String bundleString;
+          bundleString = queue.take();
+          if (LOOP_EXIT_MARK.equals(bundleString)) {
+            info("Message loop terminated");
+            return;
+          }
+          Bundle bundle = extractBundle(bundleString);
+          dispatcher.accept(bundle);
+        } catch (Exception e) {
+          dispatcher.accept(makeExceptionBundle(e));
+        }
+      }
+    } catch (Exception loopException) {
+      info("Message loop exception: " + Common.getExceptionMessage(loopException));
+    }
   }
 
   Bundle extractBundle(String bundleString) {

@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.messaging;
 
+import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -14,24 +15,24 @@ public interface MessageDispatcher {
     return new MessageDispatcherImpl(MessagePipe.from(configuration));
   }
 
-  void activate();
-
-  boolean isActive();
-
-  /**
-   * Publish a message to the outgoing channel of this pipe. The type of the message object
-   * is extracted at runtime and used to properly reconstruct on the receiving end.
-   */
-  void publish(Object message);
-
-  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
-
   /**
    * Static factory method for creating handler specifications.
    */
   static <T> HandlerSpecification messageHandlerFor(Class<T> clazz, MessageHandler<T> consumer) {
     return new HandlerSpecification(clazz, consumer);
   }
+
+  void activate();
+
+  boolean isActive();
+
+  /**
+   * Publish a message to the outgoing channel of this pipe. The type of the message object is
+   * extracted at runtime and used to properly reconstruct on the receiving end.
+   */
+  void publish(Object message);
+
+  <T> void registerHandler(Class<T> targetClass, MessageHandler<T> handler);
 
   /**
    * Convenience function to register an entire collection of handler specifications.

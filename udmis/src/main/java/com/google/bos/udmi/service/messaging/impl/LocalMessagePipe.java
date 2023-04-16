@@ -1,8 +1,9 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.bos.udmi.service.messaging.MessagePipe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,23 +40,8 @@ public class LocalMessagePipe extends MessageBase {
     info(String.format("Created local pipe from %s to %s", sourceName, destinationName));
   }
 
-  static MessagePipe from(MessageConfiguration config) {
+  public static MessagePipe fromConfig(MessageConfiguration config) {
     return new LocalMessagePipe(config);
-  }
-
-  public void resetForTest() {
-    NAMESPACES.clear();
-  }
-
-  /**
-   * Publish a message bundle to this pipe. Simply pushes it into the outgoing queue!
-   */
-  public void publishBundle(Bundle bundle) {
-    try {
-      destinationQueue.add(stringify(bundle));
-    } catch (Exception e) {
-      throw new RuntimeException("While publishing to destination queue", e);
-    }
   }
 
   private BlockingQueue<String> getQueueForScope(String name) {
@@ -71,5 +57,20 @@ public class LocalMessagePipe extends MessageBase {
     destinationQueue.drainTo(drained);
     return drained.stream().map(this::extractBundle).collect(
         Collectors.toList());
+  }
+
+  /**
+   * Publish a message bundle to this pipe. Simply pushes it into the outgoing queue!
+   */
+  public void publish(Bundle bundle) {
+    try {
+      destinationQueue.add(stringify(bundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to destination queue", e);
+    }
+  }
+
+  public void resetForTest() {
+    NAMESPACES.clear();
   }
 }

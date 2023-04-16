@@ -7,10 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static udmi.schema.Envelope.SubFolder.SYSTEM;
 import static udmi.schema.Envelope.SubType.STATE;
 
-import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
-import com.google.bos.udmi.service.messaging.MessageDispatcher;
-import com.google.bos.udmi.service.messaging.MessageTestBase;
+import com.google.bos.udmi.service.messaging.impl.LocalMessagePipeTest;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;

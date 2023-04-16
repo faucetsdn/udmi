@@ -1,8 +1,9 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.JsonUtil.stringify;
 
+import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.udmi.util.Common;
 import java.util.List;
 import java.util.Optional;
@@ -44,17 +45,8 @@ public class SimpleMqttPipe extends MessageBase {
     mqttClient = connectMqttClient(config.endpoint);
   }
 
-  static MessagePipe from(MessageConfiguration config) {
+  public static MessagePipe fromConfig(MessageConfiguration config) {
     return new SimpleMqttPipe(config);
-  }
-
-  @Override
-  public void publishBundle(Bundle bundle) {
-    try {
-      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
-    } catch (Exception e) {
-      throw new RuntimeException("While publishing to mqtt client", e);
-    }
   }
 
   private MqttClient connectMqttClient(EndpointConfiguration endpoint) {
@@ -119,6 +111,15 @@ public class SimpleMqttPipe extends MessageBase {
   @Override
   public List<Bundle> drainOutput() {
     throw new NotImplementedException("Drain output not implemented");
+  }
+
+  @Override
+  public void publish(Bundle bundle) {
+    try {
+      mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to mqtt client", e);
+    }
   }
 
   private class MqttCallbackHandler implements MqttCallback {

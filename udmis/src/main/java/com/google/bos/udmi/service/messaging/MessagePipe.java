@@ -2,7 +2,9 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.LocalMessagePipe;
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -19,8 +21,8 @@ import udmi.schema.MessageConfiguration.Transport;
 public interface MessagePipe {
 
   Map<Transport, Function<MessageConfiguration, MessagePipe>> IMPLEMENTATIONS = ImmutableMap.of(
-      Transport.LOCAL, LocalMessagePipe::from,
-      Transport.MQTT, SimpleMqttPipe::from);
+      Transport.LOCAL, LocalMessagePipe::fromConfig,
+      Transport.MQTT, SimpleMqttPipe::fromConfig);
 
   /**
    * MessagePipe factory given a message configuration blob.
@@ -41,5 +43,5 @@ public interface MessagePipe {
    */
   boolean isActive();
 
-  void publishBundle(Bundle bundle);
+  void publish(Bundle bundle);
 }

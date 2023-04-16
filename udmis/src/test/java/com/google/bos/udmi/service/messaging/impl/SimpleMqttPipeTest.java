@@ -1,9 +1,10 @@
-package com.google.bos.udmi.service.messaging;
+package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 
-import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.base.Strings;
 import java.util.List;
 import java.util.regex.Matcher;
