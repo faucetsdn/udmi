@@ -9,53 +9,33 @@ import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import udmi.schema.MessageConfiguration;
+import udmi.schema.MessageConfiguration.Transport;
 
 /**
  * Tests for LocalMessagePipe.
  */
 public class LocalMessagePipeTest extends MessageTestBase {
 
-  private static MessageConfiguration getConfiguration() {
+  private MessageConfiguration getConfiguration(boolean reversed) {
     MessageConfiguration messageConfiguration = new MessageConfiguration();
+    messageConfiguration.transport = Transport.LOCAL;
     messageConfiguration.namespace = TEST_NAMESPACE;
-    messageConfiguration.source = TEST_SOURCE;
-    messageConfiguration.destination = TEST_DESTINATION;
+    messageConfiguration.source = reversed ? TEST_DESTINATION : TEST_SOURCE;
+    messageConfiguration.destination = reversed ? TEST_SOURCE : TEST_DESTINATION;
     return messageConfiguration;
   }
 
-  /**
-   * Static version of getting a LocalMessagePipe.
-   */
-  public static LocalMessagePipe getTestMessagePipeStatic(boolean reversed) {
-    LocalMessagePipe mainPipe = LocalMessagePipe.getPipeForNamespace(getConfiguration().namespace);
-    if (reversed) {
-      checkState(mainPipe != null, "main pipe not instantiated");
-      return new LocalMessagePipe(mainPipe, true);
-    }
-    return Optional.ofNullable(mainPipe).orElseGet(() -> new LocalMessagePipe(getConfiguration()));
-  }
-
-  public static void resetForTestStatic() {
-    LocalMessagePipe.resetForTest();
-  }
-
   private Map<String, Object> testSend(Object message) {
-    getTestMessagePipe().publish(message);
-    List<Bundle> bundles = getTestMessagePipe().drainOutput();
+    getTestDispatcher().publish(message);
+    List<Bundle> bundles = getTestDispatcher().drainOutput();
     checkState(bundles.size() == 1, "expected 1 drained message, found " + bundles.size());
     return JsonUtil.asMap(bundles.get(0));
   }
 
-  public MessageBase getTestMessagePipeCore(boolean reversed) {
-    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
-  }
-
-  @Override
-  public void resetForTest() {
-    resetForTestStatic();
+  public MessageDispatcher getTestDispatcherCore(boolean reversed) {
+    return MessageDispatcher.from(getConfiguration(reversed));
   }
 
   private static class BespokeObject {

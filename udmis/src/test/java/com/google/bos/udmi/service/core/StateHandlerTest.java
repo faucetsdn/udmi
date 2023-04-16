@@ -8,8 +8,8 @@ import static udmi.schema.Envelope.SubFolder.SYSTEM;
 import static udmi.schema.Envelope.SubType.STATE;
 
 import com.google.bos.udmi.service.messaging.LocalMessagePipeTest;
-import com.google.bos.udmi.service.messaging.MessageBase;
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageTestBase;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -24,19 +24,9 @@ import udmi.schema.SystemState;
 /**
  * Tests for the StateHandler class, used by UDMIS to process device state updates.
  */
-public class StateHandlerTest extends MessageTestBase {
+public class StateHandlerTest extends LocalMessagePipeTest {
 
   private StateHandler stateHandler;
-
-  @Override
-  protected MessageBase getTestMessagePipeCore(boolean reversed) {
-    return LocalMessagePipeTest.getTestMessagePipeStatic(reversed);
-  }
-
-  @Override
-  protected void resetForTest() {
-    LocalMessagePipeTest.resetForTestStatic();
-  }
 
   private int getDefaultCount() {
     return stateHandler.defaultCount;
@@ -76,6 +66,7 @@ public class StateHandlerTest extends MessageTestBase {
     config.destination = TEST_DESTINATION;
     stateHandler = StateHandler.forConfig(config);
     stateHandler.activate();
+    setTestDispatcher(stateHandler.getDispatcher());
   }
 
   /**
@@ -87,7 +78,7 @@ public class StateHandlerTest extends MessageTestBase {
 
     Bundle testStateBundle = getTestStateBundle(true);
 
-    getReverseMessagePipe().publish(testStateBundle);
+    getReverseDispatcher().publish(testStateBundle);
 
     List<Bundle> bundles = drainPipes();
 
@@ -110,7 +101,7 @@ public class StateHandlerTest extends MessageTestBase {
     Bundle testStateBundle = getTestStateBundle(false);
     Bundle originalBundle = deepCopy(testStateBundle);
 
-    getReverseMessagePipe().publish(testStateBundle);
+    getReverseDispatcher().publish(testStateBundle);
 
     List<Bundle> bundles = drainPipes();
     Bundle targetBundle = bundles.remove(0);
@@ -132,7 +123,7 @@ public class StateHandlerTest extends MessageTestBase {
   public void stateException() {
     initializeTestInstance();
 
-    getReverseMessagePipe().publish(null);
+    getReverseDispatcher().publish(null);
 
     drainPipes();
 

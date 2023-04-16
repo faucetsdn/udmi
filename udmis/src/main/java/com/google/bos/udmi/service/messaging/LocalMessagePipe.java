@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.JsonUtil.stringify;
 
 import java.util.ArrayList;
@@ -20,13 +19,12 @@ import udmi.schema.MessageConfiguration;
  */
 public class LocalMessagePipe extends MessageBase {
 
-  private static final Map<String, LocalMessagePipe> GLOBAL_PIPES = new ConcurrentHashMap<>();
-
-  private final Map<String, BlockingQueue<String>> scopedQueues = new ConcurrentHashMap<>();
+  private static final Map<String, Map<String, BlockingQueue<String>>> NAMESPACES =
+      new ConcurrentHashMap<>();
 
   private final String namespace;
-  private final String sourceScope;
-  private final String destinationScope;
+  private final String sourceName;
+  private final String destinationName;
   private final BlockingQueue<String> destinationQueue;
 
   /**
@@ -34,44 +32,19 @@ public class LocalMessagePipe extends MessageBase {
    */
   public LocalMessagePipe(MessageConfiguration config) {
     namespace = normalizeNamespace(config.namespace);
-    checkState(!GLOBAL_PIPES.containsKey(namespace),
-        "can not create duplicate pipe in namespace " + namespace);
-    GLOBAL_PIPES.put(namespace, this);
-    sourceScope = config.source;
-    sourceQueue = getQueueForScope(namespace, sourceScope);
-    destinationScope = config.destination;
-    destinationQueue = getQueueForScope(namespace, destinationScope);
-    info(String.format("Created local pipe from %s to %s", sourceScope, destinationScope));
-  }
-
-  /**
-   * Create a new local message pipe that's possible the reverse of the original. This intentionally
-   * skips the already-initialized checks that would prevent a normal pipe from being created
-   * twice.
-   */
-  public LocalMessagePipe(LocalMessagePipe original, boolean reverse) {
-    namespace = original.namespace;
-    sourceScope = reverse ? original.destinationScope : original.sourceScope;
-    sourceQueue = getQueueForScope(namespace, sourceScope);
-    destinationScope = reverse ? original.sourceScope : original.destinationScope;
-    destinationQueue = getQueueForScope(namespace, destinationScope);
-    info(String.format("Created mirror pipe from %s to %s", sourceScope, destinationScope));
+    sourceName = config.source;
+    sourceQueue = getQueueForScope(sourceName);
+    destinationName = config.destination;
+    destinationQueue = getQueueForScope(destinationName);
+    info(String.format("Created local pipe from %s to %s", sourceName, destinationName));
   }
 
   static MessagePipe from(MessageConfiguration config) {
     return new LocalMessagePipe(config);
   }
 
-  /**
-   * Get a pipe from the global namespace. Only valid after the pipe in question has been
-   * instantiated... this is not a factory!
-   */
-  public static LocalMessagePipe getPipeForNamespace(String namespace) {
-    return GLOBAL_PIPES.get(normalizeNamespace(namespace));
-  }
-
-  public static void resetForTest() {
-    GLOBAL_PIPES.clear();
+  public void resetForTest() {
+    NAMESPACES.clear();
   }
 
   /**
@@ -85,10 +58,11 @@ public class LocalMessagePipe extends MessageBase {
     }
   }
 
-  private BlockingQueue<String> getQueueForScope(String namespace, String scope) {
-    checkNotNull(scope, "pipe scope is null");
-    return getPipeForNamespace(namespace).scopedQueues
-        .computeIfAbsent(scope, key -> new LinkedBlockingDeque<>());
+  private BlockingQueue<String> getQueueForScope(String name) {
+    checkNotNull(name, "pipe name is null");
+    Map<String, BlockingQueue<String>> namedQueues =
+        NAMESPACES.computeIfAbsent(namespace, key -> new ConcurrentHashMap<>());
+    return namedQueues.computeIfAbsent(name, key -> new LinkedBlockingDeque<>());
   }
 
   @Override

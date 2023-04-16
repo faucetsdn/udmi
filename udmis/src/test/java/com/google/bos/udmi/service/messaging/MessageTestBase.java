@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import udmi.schema.LocalnetModel;
 import udmi.schema.LocalnetState;
 
 /**
@@ -27,48 +28,49 @@ public abstract class MessageTestBase {
   protected static final String TEST_VERSION = "1.32";
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   protected static AtomicInteger instanceCount = new AtomicInteger();
-  private static MessageBase inPipe;
+  private MessageDispatcherImpl dispatcher;
   protected final AtomicReference<Object> receivedMessage = new AtomicReference<>();
   protected final List<HandlerSpecification> messageHandlers = ImmutableList.of(
       messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::messageHandler),
-      messageHandlerFor(StateUpdate.class, this::messageHandler));
+      messageHandlerFor(LocalnetModel.class, this::messageHandler));
 
   protected List<Bundle> drainPipes() {
-    getTestMessagePipe().drainSource();
-    return getTestMessagePipe().drainOutput();
+    getTestDispatcher().drainSource();
+    return getTestDispatcher().drainOutput();
   }
 
   protected boolean environmentIsEnabled() {
     return true;
   }
 
-  protected MessageBase getReverseMessagePipe() {
-    getTestMessagePipe();  // Ensure that the main pipe exists before doing the reverse.
-    return getTestMessagePipe(true);
+  protected MessageDispatcherImpl getReverseDispatcher() {
+    getTestDispatcher();  // Ensure that the main pipe exists before doing the reverse.
+    return getTestDispatcher(true);
   }
 
-  protected MessageBase getTestMessagePipe() {
-    inPipe = Optional.ofNullable(inPipe).orElseGet(() -> getTestMessagePipe(false));
-    return inPipe;
+  protected void setTestDispatcher(MessageDispatcher dispatcher) {
+    this.dispatcher = (MessageDispatcherImpl) dispatcher;
   }
 
-  private MessageBase getTestMessagePipe(boolean reversed) {
-    MessageBase messagePipe = getTestMessagePipeCore(reversed);
-    if (!reversed && !messagePipe.isActive()) {
-      messagePipe.registerHandlers(messageHandlers);
-      messagePipe.activate(this);
+  protected MessageDispatcherImpl getTestDispatcher() {
+    dispatcher = Optional.ofNullable(dispatcher).orElseGet(() -> getTestDispatcher(false));
+    return dispatcher;
+  }
+
+  private MessageDispatcherImpl getTestDispatcher(boolean reversed) {
+    MessageDispatcher dispatcher = getTestDispatcherCore(reversed);
+    if (!reversed && !dispatcher.isActive()) {
+      dispatcher.registerHandlers(messageHandlers);
+      dispatcher.activate();
     }
-    return messagePipe;
+    return (MessageDispatcherImpl) dispatcher;
   }
 
   /**
    * Get a message pipe as defined by the appropriate pipe type subclass.
    */
-  protected abstract MessageBase getTestMessagePipeCore(boolean reversed);
-
-  protected void resetForTest() {
-  }
+  protected abstract MessageDispatcher getTestDispatcherCore(boolean reversed);
 
   protected Object synchronizedReceive() throws InterruptedException {
     synchronized (this) {
@@ -96,14 +98,16 @@ public abstract class MessageTestBase {
 
   private Object publishAndReceive(Bundle bundle) throws InterruptedException {
     assertNull(receivedMessage.get(), "expected null pre-receive message");
-    getReverseMessagePipe().publishBundle(bundle);
+    getReverseDispatcher().publishBundle(bundle);
     return synchronizedReceive();
   }
 
   @AfterEach
-  public void resetPipe() {
-    inPipe = null;
-    resetForTest();
+  void resetPipe() {
+    if (dispatcher != null) {
+      dispatcher.resetForTest();
+      dispatcher = null;
+    }
   }
 
   /**
@@ -122,10 +126,10 @@ public abstract class MessageTestBase {
   @Test
   void receiveMessage() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    MessagePipe reversed = getReverseMessagePipe();
-    reversed.publish(new StateUpdate());
+    MessageDispatcher reversed = getReverseDispatcher();
+    reversed.publish(new LocalnetModel());
     Object received = synchronizedReceive();
-    assertTrue(received instanceof StateUpdate, "Expected state update message");
+    assertTrue(received instanceof LocalnetModel, "Expected state update message");
   }
 
   /**
@@ -136,7 +140,7 @@ public abstract class MessageTestBase {
   @SuppressWarnings("unchecked")
   void receiveDefaultMessage() throws InterruptedException {
     Assumptions.assumeTrue(environmentIsEnabled(), "environment is not enabled");
-    MessagePipe reversed = getReverseMessagePipe();
+    MessageDispatcher reversed = getReverseDispatcher();
     reversed.publish(new LocalnetState());
     Object received = synchronizedReceive();
     // The default handler warps the received message in an AtomicReference just as a signal.

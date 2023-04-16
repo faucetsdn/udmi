@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.TestOnly;
 import udmi.schema.Envelope;
 
 /**
@@ -30,6 +31,9 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   static String normalizeNamespace(String configSpace) {
     return Optional.ofNullable(configSpace).orElse(DEFAULT_NAMESPACE);
+  }
+
+  public void resetForTest() {
   }
 
   void messageLoop(BlockingQueue<String> queue) {
@@ -77,8 +81,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     sourceFuture = handleQueue(sourceQueue);
   }
 
+  @TestOnly
   public abstract List<Bundle> drainOutput();
 
+  @TestOnly
   public void drainSource() {
     drainQueue(sourceQueue, sourceFuture);
   }

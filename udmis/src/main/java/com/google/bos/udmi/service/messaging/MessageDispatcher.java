@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import udmi.schema.MessageConfiguration;
 
+/**
+ * Strongly typed interface for working with message pipes.
+ */
 public interface MessageDispatcher {
 
   static MessageDispatcher from(MessageConfiguration configuration) {
@@ -13,8 +16,11 @@ public interface MessageDispatcher {
 
   void activate();
 
+  boolean isActive();
+
   /**
-   * Publish a message to the outgoing channel of this pipe.
+   * Publish a message to the outgoing channel of this pipe. The type of the message object
+   * is extracted at runtime and used to properly reconstruct on the receiving end.
    */
   void publish(Object message);
 

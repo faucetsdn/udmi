@@ -48,6 +48,7 @@ public class SimpleMqttPipe extends MessageBase {
     return new SimpleMqttPipe(config);
   }
 
+  @Override
   public void publishBundle(Bundle bundle) {
     try {
       mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));

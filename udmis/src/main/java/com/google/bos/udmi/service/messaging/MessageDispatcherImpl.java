@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.JsonUtil.convertTo;
 
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -9,42 +10,42 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.SystemState;
 
+/**
+ * Implementation of the typed message dispatcher interface.
+ */
 public class MessageDispatcherImpl extends ContainerBase implements MessageDispatcher {
 
-  private static final Map<SimpleEntry<SubType, SubFolder>, Class<?>> SPECIAL_TYPES;
-  private static final Map<Class<?>, String> specialClasses;
+  private static final Map<Class<?>, String> SPECIAL_CLASSES;
+  private static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES = new HashMap<>();
+  private static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
   private static final String DEFAULT_HANDLER = "event/null";
-  static final String EXCEPTION_HANDLER = "exception_handler";
+  private static final String EXCEPTION_KEY = "exception_handler";
   private final MessagePipe messagePipe;
   private final Map<Object, Envelope> messageEnvelopes = new ConcurrentHashMap<>();
-  static final Map<Class<?>, SimpleEntry<SubType, SubFolder>> CLASS_TYPES =
-      new HashMap<Class<?>, SimpleEntry<SubType, SubFolder>>();
-  static final BiMap<String, Class<?>> TYPE_CLASSES = HashBiMap.create();
-  final Map<String, MessageHandler<Object>> handlers =
-      new HashMap<String, MessageHandler<Object>>();
+  private final Map<String, MessageHandler<Object>> handlers = new HashMap<>();
 
   static {
-    SPECIAL_TYPES =
-        ImmutableMap.of(getTypeFolderEntry(SubType.STATE, SubFolder.UPDATE),
-            StateUpdate.class);
-    specialClasses = ImmutableMap.of(
+    SPECIAL_CLASSES = ImmutableMap.of(
         Object.class, DEFAULT_HANDLER,
-        Exception.class, EXCEPTION_HANDLER
+        Exception.class, EXCEPTION_KEY
     );
+    Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
+        .forEach(folder -> registerHandlerType(type, folder)));
+    registerMessageClass(SubType.STATE, SubFolder.UPDATE, StateUpdate.class);
   }
 
   public MessageDispatcherImpl(MessagePipe messagePipe) {
@@ -56,6 +57,37 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     messagePipe.activate(this::processMessage);
   }
 
+  @Override
+  public boolean isActive() {
+    return messagePipe.isActive();
+  }
+
+  @TestOnly
+  public void drainSource() {
+    ((MessageBase) messagePipe).drainSource();
+  }
+
+  @TestOnly
+  public List<Bundle> drainOutput() {
+    return ((MessageBase) messagePipe).drainOutput();
+  }
+
+  @TestOnly
+  public void publishBundle(Bundle bundle) {
+    messagePipe.publishBundle(bundle);
+  }
+
+  @TestOnly
+  public void resetForTest() {
+    ((MessageBase) messagePipe).resetForTest();
+  }
+
+  @NotNull
+  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
+      SubFolder folder) {
+    return new SimpleEntry<>(type, folder);
+  }
+
   void processMessage(Envelope envelope, String mapKey, Object messageObject) {
     try {
       messageEnvelopes.put(messageObject, envelope);
@@ -65,29 +97,20 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
   }
 
-  @NotNull
-  private static SimpleEntry<SubType, SubFolder> getTypeFolderEntry(SubType type,
-      SubFolder folder) {
-    return new SimpleEntry<>(type, folder);
-  }
-
-  private static void initializeHandlerTypes() {
-    Arrays.stream(SubType.values()).forEach(type -> Arrays.stream(SubFolder.values())
-        .forEach(folder -> registerHandlerType(type, folder)));
-    MessageDispatcherImpl.SPECIAL_TYPES.forEach(
-        (entry, clazz) -> registerMessageClass(entry.getKey(), entry.getValue(), clazz));
-  }
-
+  /**
+   * Process a received message bundle.
+   */
   void processMessage(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
-    String mapKey = getMapKey(envelope.subType, envelope.subFolder);
+    boolean isException = bundle.message instanceof Exception;
+    String mapKey = isException ? EXCEPTION_KEY : getMapKey(envelope.subType, envelope.subFolder);
     try {
       handlers.computeIfAbsent(mapKey, key -> {
         info("Defaulting messages of type/folder " + mapKey);
         return handlers.getOrDefault(DEFAULT_HANDLER, this::ignoreMessage);
       });
       Class<?> handlerType = TYPE_CLASSES.getOrDefault(mapKey, Object.class);
-      Object messageObject = JsonUtil.convertTo(handlerType, bundle.message);
+      Object messageObject = isException ? bundle.message : convertTo(handlerType, bundle.message);
       processMessage(envelope, mapKey, messageObject);
     } catch (Exception e) {
       throw new RuntimeException("While processing message key " + mapKey, e);
@@ -102,7 +125,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   @Override
   @SuppressWarnings("unchecked")
   public <T> void registerHandler(Class<T> clazz, MessageHandler<T> handler) {
-    String mapKey = specialClasses.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
+    String mapKey = SPECIAL_CLASSES.getOrDefault(clazz, TYPE_CLASSES.inverse().get(clazz));
     if (handlers.put(mapKey, (MessageHandler<Object>) handler) != null) {
       throw new RuntimeException("Type handler already defined for " + mapKey);
     }
@@ -137,7 +160,8 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Bundle bundle = new Bundle();
     bundle.message = message;
     bundle.envelope = new Envelope();
-    SimpleEntry<SubType, SubFolder> messageType = MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
+    SimpleEntry<SubType, SubFolder> messageType =
+        MessageDispatcherImpl.CLASS_TYPES.get(message.getClass());
     checkNotNull(messageType, "type entry not found for " + message.getClass());
     bundle.envelope.subType = messageType.getKey();
     bundle.envelope.subFolder = messageType.getValue();

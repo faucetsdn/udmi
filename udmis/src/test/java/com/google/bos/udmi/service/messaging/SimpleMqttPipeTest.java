@@ -40,14 +40,14 @@ class SimpleMqttPipeTest extends MessageTestBase {
     return environmentEnabled;
   }
 
-  protected MessageBase getTestMessagePipeCore(boolean reversed) {
+  protected MessageDispatcher getTestDispatcherCore(boolean reversed) {
     MessageConfiguration messageConfiguration = new MessageConfiguration();
     messageConfiguration.transport = Transport.MQTT;
     messageConfiguration.endpoint = makeMqttEndpoint();
     messageConfiguration.namespace = TEST_NAMESPACE;
     messageConfiguration.source = reversed ? TEST_SOURCE : TEST_DESTINATION;
     messageConfiguration.destination = reversed ? TEST_DESTINATION : TEST_SOURCE;
-    return new SimpleMqttPipe(messageConfiguration);
+    return MessageDispatcher.from(messageConfiguration);
   }
 
   private Auth_provider makeBasicAuth() {

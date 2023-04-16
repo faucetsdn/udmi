@@ -27,6 +27,7 @@ public class StateHandler extends ContainerBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
+
   private final MessageDispatcher dispatcher;
   int exceptionCount;
   int defaultCount;
@@ -72,4 +73,9 @@ public class StateHandler extends ContainerBase {
     dispatcher.registerHandlers(messageHandlers);
     dispatcher.activate();
   }
+
+  MessageDispatcher getDispatcher() {
+    return dispatcher;
+  }
+
 }
