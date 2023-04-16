@@ -63,7 +63,6 @@ public class StateHandlerTest extends LocalMessagePipeTest {
     config.source = TEST_SOURCE;
     config.destination = TEST_DESTINATION;
     stateHandler = StateHandler.forConfig(config);
-    stateHandler.activate();
     setTestDispatcher(stateHandler.getDispatcher());
   }
 

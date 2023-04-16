@@ -2,8 +2,10 @@ package com.google.bos.udmi.service.pod;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.bos.udmi.service.core.StateHandler;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import udmi.schema.PodConfiguration;
 
@@ -13,6 +15,7 @@ import udmi.schema.PodConfiguration;
 public class UdmiServicePod {
 
   private final PodConfiguration podConfiguration;
+  private final StateHandler stateHandler;
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -22,7 +25,7 @@ public class UdmiServicePod {
 
     podConfiguration = JsonUtil.loadFileRequired(PodConfiguration.class, args[0]);
 
-    ifNotNullGet(podConfiguration.udmis_flow, StateHandler::forConfig).activate();
+    stateHandler = ifNotNullGet(podConfiguration.udmis_flow, StateHandler::forConfig);
   }
 
   public static void main(String[] args) {

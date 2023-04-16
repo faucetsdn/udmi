@@ -59,7 +59,7 @@ public class GeneralUtils {
     return String.join(" ", options);
   }
 
-  public static <T> void ifNotNull(T value, Consumer<T> consumer) {
+  public static <T> void ifNotNullThen(T value, Consumer<T> consumer) {
     Optional.ofNullable(value).ifPresent(consumer);
   }
 

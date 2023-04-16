@@ -1,7 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
-import static com.google.udmi.util.GeneralUtils.ifNotNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.TestOnly;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.MessageConfiguration;
 import udmi.schema.State;
@@ -32,8 +33,8 @@ public class StateHandler extends ContainerBase {
   int exceptionCount;
   int defaultCount;
   private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
-      messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(Exception.class, this::exceptionHandler),
+      messageHandlerFor(Object.class, this::defaultHandler),
       messageHandlerFor(StateUpdate.class, this::stateHandler)
   );
 
@@ -42,7 +43,13 @@ public class StateHandler extends ContainerBase {
   }
 
   public static StateHandler forConfig(MessageConfiguration configuration) {
-    return new StateHandler(MessageDispatcher.from(configuration));
+    return new StateHandler(MessageDispatcher.from(configuration)).activate();
+  }
+
+  private StateHandler activate() {
+    dispatcher.registerHandlers(messageHandlers);
+    dispatcher.activate();
+    return this;
   }
 
   private void defaultHandler(Object defaultedMessage) {
@@ -61,7 +68,7 @@ public class StateHandler extends ContainerBase {
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
-          ifNotNull(field.get(message), dispatcher::publish);
+          ifNotNullThen(field.get(message), dispatcher::publish);
         }
       } catch (Exception e) {
         throw new RuntimeException("While extracting field " + field.getName(), e);
@@ -69,13 +76,8 @@ public class StateHandler extends ContainerBase {
     });
   }
 
-  public void activate() {
-    dispatcher.registerHandlers(messageHandlers);
-    dispatcher.activate();
-  }
-
+  @TestOnly
   MessageDispatcher getDispatcher() {
     return dispatcher;
   }
-
 }
