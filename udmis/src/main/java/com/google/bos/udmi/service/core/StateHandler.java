@@ -1,11 +1,11 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
+import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.udmi.util.GeneralUtils.ifNotNull;
 import static com.google.udmi.util.JsonUtil.convertTo;
 
-import com.google.bos.udmi.service.messaging.MessagePipe;
-import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +27,7 @@ public class StateHandler extends ContainerBase {
 
   private static final Set<String> STATE_SUB_FOLDERS =
       Arrays.stream(SubFolder.values()).map(SubFolder::value).collect(Collectors.toSet());
-  private final MessagePipe pipe;
+  private final MessageDispatcher dispatcher;
   int exceptionCount;
   int defaultCount;
   private final List<HandlerSpecification> messageHandlers = ImmutableList.of(
@@ -36,12 +36,12 @@ public class StateHandler extends ContainerBase {
       messageHandlerFor(StateUpdate.class, this::stateHandler)
   );
 
-  public StateHandler(MessagePipe pipe) {
-    this.pipe = pipe;
+  public StateHandler(MessageDispatcher dispatcher) {
+    this.dispatcher = dispatcher;
   }
 
   public static StateHandler forConfig(MessageConfiguration configuration) {
-    return new StateHandler(MessagePipe.from(configuration));
+    return new StateHandler(MessageDispatcher.from(configuration));
   }
 
   private void defaultHandler(Object defaultedMessage) {
@@ -60,7 +60,7 @@ public class StateHandler extends ContainerBase {
     Arrays.stream(State.class.getFields()).forEach(field -> {
       try {
         if (STATE_SUB_FOLDERS.contains(field.getName())) {
-          ifNotNull(field.get(message), pipe::publish);
+          ifNotNull(field.get(message), dispatcher::publish);
         }
       } catch (Exception e) {
         throw new RuntimeException("While extracting field " + field.getName(), e);
@@ -69,7 +69,7 @@ public class StateHandler extends ContainerBase {
   }
 
   public void activate() {
-    pipe.registerHandlers(messageHandlers);
-    pipe.activate();
+    dispatcher.registerHandlers(messageHandlers);
+    dispatcher.activate();
   }
 }

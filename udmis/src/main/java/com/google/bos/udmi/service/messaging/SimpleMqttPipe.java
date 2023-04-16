@@ -6,6 +6,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import com.google.udmi.util.Common;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -47,7 +48,7 @@ public class SimpleMqttPipe extends MessageBase {
     return new SimpleMqttPipe(config);
   }
 
-  protected void publishBundle(Bundle bundle) {
+  public void publishBundle(Bundle bundle) {
     try {
       mqttClient.publish(getMqttTopic(bundle), getMqttMessage(bundle));
     } catch (Exception e) {
@@ -105,8 +106,8 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  public void activate() {
-    super.activate();
+  public void activate(Consumer<Bundle> callback) {
+    super.activate(callback);
     try {
       mqttClient.subscribe(String.format(TOPIC_FORMAT, namespace, TOPIC_WILDCARD, TOPIC_WILDCARD));
     } catch (Exception e) {

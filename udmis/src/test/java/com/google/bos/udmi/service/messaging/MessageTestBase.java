@@ -1,11 +1,11 @@
 package com.google.bos.udmi.service.messaging;
 
-import static com.google.bos.udmi.service.messaging.MessagePipe.messageHandlerFor;
+import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.MessageBase.Bundle;
-import com.google.bos.udmi.service.messaging.MessagePipe.HandlerSpecification;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public abstract class MessageTestBase {
     MessageBase messagePipe = getTestMessagePipeCore(reversed);
     if (!reversed && !messagePipe.isActive()) {
       messagePipe.registerHandlers(messageHandlers);
-      messagePipe.activate();
+      messagePipe.activate(this);
     }
     return messagePipe;
   }

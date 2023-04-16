@@ -77,9 +77,9 @@ public class LocalMessagePipe extends MessageBase {
   /**
    * Publish a message bundle to this pipe. Simply pushes it into the outgoing queue!
    */
-  protected void publishBundle(Bundle messageBundle) {
+  public void publishBundle(Bundle bundle) {
     try {
-      destinationQueue.add(stringify(messageBundle));
+      destinationQueue.add(stringify(bundle));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to destination queue", e);
     }
